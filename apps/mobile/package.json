@@ -16,10 +16,10 @@
   "dependencies": {
     "@webview-bridge/react-native": "1.8.0",
     "@yapp-plus/app-bridge": "workspace:*",
-    "expo": "57.0.20",
+    "expo": "57.0.21",
     "expo-constants": "57.0.17",
     "expo-linking": "57.0.9",
-    "expo-router": "57.0.19",
+    "expo-router": "57.0.20",
     "expo-system-ui": "57.0.3",
     "react": "catalog:expo",
     "react-dom": "catalog:expo",
