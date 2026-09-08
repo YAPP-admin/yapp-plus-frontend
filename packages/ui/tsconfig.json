@@ -1,0 +1,4 @@
+{
+  "extends": "@yapp-plus/config/typescript/react-library.json",
+  "include": ["src/**/*.ts", "src/**/*.tsx", "vitest.config.ts"]
+}
