@@ -1,0 +1,18 @@
+{
+  "name": "@yapp-plus/config",
+  "version": "0.0.0",
+  "private": true,
+  "files": [
+    "oxlint",
+    "typescript"
+  ],
+  "type": "module",
+  "exports": {
+    "./oxlint/base.json": "./oxlint/base.json",
+    "./typescript/base.json": "./typescript/base.json",
+    "./typescript/nextjs.json": "./typescript/nextjs.json",
+    "./typescript/react-library.json": "./typescript/react-library.json",
+    "./typescript/react-native.json": "./typescript/react-native.json",
+    "./typescript/vite.json": "./typescript/vite.json"
+  }
+}

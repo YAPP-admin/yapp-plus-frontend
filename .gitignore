@@ -1,0 +1,38 @@
+# 의존성과 캐시
+node_modules/
+.pnpm-store/
+.turbo/
+*.tsbuildinfo
+
+# 빌드와 테스트 산출물
+build/
+coverage/
+dist/
+storybook-static/
+.next/
+out/
+.output/
+.open-next/
+
+# Expo CNG 및 로컬 상태
+.expo/
+.expo-shared/
+apps/mobile/android/
+apps/mobile/ios/
+
+# 배포 도구 상태
+.vercel/
+.wrangler/
+.dev.vars
+.dev.vars.*
+!.dev.vars.example
+
+# 환경 변수와 로그
+.env
+.env.*
+!.env.example
+*.log
+
+# 로컬 도구 및 운영체제 파일
+.DS_Store
+lefthook-local.yml

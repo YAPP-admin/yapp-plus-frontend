@@ -1,0 +1,20 @@
+glob_matcher: doublestar
+
+pre-commit:
+  commands:
+    format:
+      glob: '*.{js,jsx,ts,tsx,mjs,cjs,json,jsonc,css,scss,md,mdx,yml,yaml,toml,graphql,gql}'
+      exclude: '**/routeTree.gen.ts'
+      run: mise exec -- pnpm exec oxfmt --no-error-on-unmatched-pattern {staged_files}
+      stage_fixed: true
+    lint:
+      glob: '*.{js,jsx,ts,tsx,mjs,cjs}'
+      exclude: '**/routeTree.gen.ts'
+      run: mise exec -- pnpm exec oxlint --deny-warnings {staged_files}
+
+pre-push:
+  commands:
+    typecheck:
+      run: mise exec -- pnpm typecheck
+    test:
+      run: mise exec -- pnpm test

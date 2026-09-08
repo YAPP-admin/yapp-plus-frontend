@@ -1,0 +1,87 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "extends": ["./packages/config/oxlint/base.json"],
+  "options": {
+    "typeAware": true
+  },
+  "settings": {
+    "next": {
+      "rootDir": "apps/web/"
+    }
+  },
+  "ignorePatterns": [
+    ".agents/**",
+    "packages/api/src/generated/**",
+    "**/routeTree.gen.ts",
+    "**/.expo/**",
+    "**/.next/**",
+    "**/.open-next/**",
+    "**/.output/**",
+    ".specify/**",
+    "**/.turbo/**",
+    "**/.wrangler/**",
+    "**/coverage/**",
+    "**/dist/**",
+    "**/storybook-static/**",
+    "**/node_modules/**"
+  ],
+  "overrides": [
+    {
+      "files": ["apps/web/**/*.{js,jsx,ts,tsx,mjs,cjs}"],
+      "plugins": [
+        "eslint",
+        "typescript",
+        "unicorn",
+        "oxc",
+        "import",
+        "promise",
+        "react",
+        "jsx-a11y",
+        "vitest",
+        "nextjs"
+      ],
+      "rules": {
+        "nextjs/google-font-display": "error",
+        "nextjs/google-font-preconnect": "error",
+        "nextjs/inline-script-id": "error",
+        "nextjs/next-script-for-ga": "error",
+        "nextjs/no-assign-module-variable": "error",
+        "nextjs/no-async-client-component": "error",
+        "nextjs/no-before-interactive-script-outside-document": "error",
+        "nextjs/no-css-tags": "error",
+        "nextjs/no-document-import-in-page": "error",
+        "nextjs/no-duplicate-head": "error",
+        "nextjs/no-head-element": "error",
+        "nextjs/no-head-import-in-document": "error",
+        "nextjs/no-html-link-for-pages": "error",
+        "nextjs/no-img-element": "error",
+        "nextjs/no-page-custom-font": "error",
+        "nextjs/no-script-component-in-head": "error",
+        "nextjs/no-styled-jsx-in-document": "error",
+        "nextjs/no-sync-scripts": "error",
+        "nextjs/no-title-in-document-head": "error",
+        "nextjs/no-typos": "error",
+        "nextjs/no-unwanted-polyfillio": "error"
+      }
+    },
+    {
+      "files": ["**/*.{spec,test}.{js,jsx,ts,tsx}"],
+      "env": {
+        "jest": true,
+        "vitest": true
+      }
+    },
+    {
+      "files": [
+        "apps/mobile/app/**/*.{ts,tsx}",
+        "apps/storybook/.storybook/**/*.{ts,tsx}",
+        "apps/storybook/stories/**/*.stories.{ts,tsx}",
+        "apps/web/src/app/**/*.{ts,tsx}",
+        "**/*.config.{js,ts,mjs,cjs}"
+      ],
+      "rules": {
+        "import/no-default-export": "off"
+      }
+    }
+  ]
+}
