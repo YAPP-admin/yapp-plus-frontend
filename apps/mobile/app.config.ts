@@ -2,7 +2,8 @@
 
 import type { ExpoConfig } from 'expo/config';
 
-const configuredWebUrl = process.env.MOBILE_WEB_URL?.trim();
+const mobileWebUrl = process.env.MOBILE_WEB_URL;
+const configuredWebUrl = typeof mobileWebUrl === 'string' ? mobileWebUrl.trim() : '';
 
 const config: ExpoConfig = {
   name: 'YAPP Plus Mobile (Temporary)',
@@ -22,7 +23,7 @@ const config: ExpoConfig = {
     typedRoutes: true,
   },
   extra: {
-    mobileWebUrl: configuredWebUrl?.length ? configuredWebUrl : null,
+    mobileWebUrl: configuredWebUrl.length > 0 ? configuredWebUrl : null,
   },
 };
 
