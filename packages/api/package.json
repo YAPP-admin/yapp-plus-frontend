@@ -1,0 +1,26 @@
+{
+  "name": "@yapp-plus/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./generated": "./src/generated/index.ts"
+  },
+  "scripts": {
+    "generate": "openapi-ts",
+    "lint": "oxlint --deny-warnings .",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "catalog:",
+    "ky": "2.1.0",
+    "zod": "4.5.4"
+  },
+  "devDependencies": {
+    "@hey-api/openapi-ts": "0.99.0",
+    "@types/node": "catalog:",
+    "@yapp-plus/config": "workspace:*",
+    "typescript": "catalog:"
+  }
+}
