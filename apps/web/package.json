@@ -1,0 +1,39 @@
+{
+  "name": "@yapp-plus/web",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "lint": "oxlint --deny-warnings .",
+    "start": "next start",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@tanstack/react-query": "catalog:",
+    "@vanilla-extract/css": "catalog:",
+    "@yapp-plus/api": "workspace:*",
+    "@yapp-plus/app-bridge": "workspace:*",
+    "@yapp-plus/ui": "workspace:*",
+    "next": "16.3.4",
+    "react": "catalog:",
+    "react-dom": "catalog:"
+  },
+  "devDependencies": {
+    "@testing-library/jest-dom": "catalog:",
+    "@testing-library/react": "catalog:",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@types/react-dom": "catalog:",
+    "@vanilla-extract/next-plugin": "2.5.2",
+    "@vanilla-extract/vite-plugin": "catalog:",
+    "@yapp-plus/config": "workspace:*",
+    "happy-dom": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vitest": "catalog:"
+  }
+}
