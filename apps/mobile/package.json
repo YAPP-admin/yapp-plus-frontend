@@ -1,0 +1,43 @@
+{
+  "name": "@yapp-plus/mobile",
+  "version": "0.0.0",
+  "private": true,
+  "main": "expo-router/entry",
+  "scripts": {
+    "dev": "expo start",
+    "start": "expo start",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
+    "doctor": "expo-doctor",
+    "lint": "oxlint --deny-warnings .",
+    "prebuild": "expo prebuild",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@webview-bridge/react-native": "1.8.0",
+    "@yapp-plus/app-bridge": "workspace:*",
+    "expo": "57.0.20",
+    "expo-constants": "57.0.17",
+    "expo-linking": "57.0.9",
+    "expo-router": "57.0.19",
+    "expo-system-ui": "57.0.3",
+    "react": "catalog:expo",
+    "react-dom": "catalog:expo",
+    "react-native": "0.86.3",
+    "react-native-gesture-handler": "2.32.0",
+    "react-native-reanimated": "4.5.1",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-screens": "4.26.0",
+    "react-native-web": "0.21.2",
+    "react-native-webview": "13.16.1",
+    "react-native-worklets": "0.10.1"
+  },
+  "devDependencies": {
+    "@react-native/metro-config": "0.86.3",
+    "@types/node": "catalog:",
+    "@types/react": "catalog:",
+    "@yapp-plus/config": "workspace:*",
+    "expo-doctor": "catalog:",
+    "typescript": "catalog:"
+  }
+}
