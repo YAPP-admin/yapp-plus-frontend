@@ -35,6 +35,7 @@ pnpm install
 | ------------------ | ---------------------------------------------- |
 | `pnpm dev`         | 웹, 관리자, 모바일 개발 서버 시작              |
 | `pnpm build`       | 워크스페이스 패키지와 배포 가능한 앱 빌드      |
+| `pnpm commitlint`  | 커밋 메시지 규칙 검사                          |
 | `pnpm format`      | Oxfmt가 지원하는 파일 포맷팅                   |
 | `pnpm lint`        | Oxlint로 앱과 패키지 검사                      |
 | `pnpm typecheck`   | 워크스페이스 TypeScript 타입 검사              |
@@ -43,8 +44,13 @@ pnpm install
 | `pnpm storybook`   | 공용 UI Storybook 개발 서버 시작               |
 | `pnpm check`       | 포맷, 린트, 타입 검사, 테스트 품질 게이트 실행 |
 
-Lefthook은 커밋 전에 스테이징된 소스 파일을 포맷팅하고 린트합니다. 타입 검사와 테스트는
-푸시 전에 실행합니다.
+Lefthook은 커밋 전에 스테이징된 소스 파일을 포맷팅하고 린트합니다. 커밋 메시지는
+`<type>(<scope>): <subject>` 형식으로 검사하며 scope는 생략할 수 있습니다. 예를 들어
+`feat(web): 로그인 화면 추가`, `ci: GitHub Actions 설치 안정화`처럼 작성합니다. 타입 검사와
+테스트는 푸시 전에 실행합니다.
+
+커밋 메시지 검사는 로컬 `commit-msg` 훅에서만 실행됩니다. `--no-verify`를 사용하거나 Git
+훅이 설치되지 않은 환경에서 만든 커밋은 자동으로 검사되지 않습니다.
 
 Oxlint는 `oxlint-tsgolint`의 type-aware 규칙과 React Compiler 검증 규칙을 함께 사용합니다.
 Next.js 규칙은 웹 앱에만 적용하고, 프레임워크가 default export를 요구하는 파일은 별도

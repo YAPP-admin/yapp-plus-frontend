@@ -5,6 +5,7 @@
   "scripts": {
     "build": "turbo run build",
     "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "commitlint": "commitlint",
     "dev": "turbo run dev",
     "expo:doctor": "expo-doctor apps/mobile",
     "format": "oxfmt .",
@@ -16,6 +17,8 @@
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
+    "@commitlint/cli": "21.2.2",
+    "@commitlint/config-conventional": "21.2.2",
     "@types/node": "catalog:",
     "expo-doctor": "catalog:",
     "lefthook": "2.1.12",
