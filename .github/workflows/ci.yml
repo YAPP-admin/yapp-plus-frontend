@@ -2,6 +2,8 @@ name: 지속적 통합
 
 on:
   pull_request:
+    branches:
+      - main
   push:
     branches:
       - main
@@ -21,11 +23,12 @@ jobs:
     # Matrix를 사용하지 않아 도구 체인과 의존성 설치가 중복되지 않도록 합니다.
     steps:
       - name: 저장소 체크아웃
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
       - name: 도구 체인 설치
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
+          version: 2026.8.16
           install_args: --locked
 
       - name: 의존성 설치
