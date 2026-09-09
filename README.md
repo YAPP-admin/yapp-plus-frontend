@@ -68,6 +68,45 @@ Storybook은 `packages/ui`의 웹 컴포넌트만 다룹니다. 제품 앱 개�
 웹 앱은 Next.js의 React Compiler와 Turbopack Rust 구현을 사용합니다. Rust 구현은 아직
 실험 기능이므로 Next.js를 올릴 때 관련 변경 사항과 빌드 결과를 함께 확인합니다.
 
+## 배포
+
+웹과 관리자 앱은 `yapp-plus` Vercel scope의 서로 다른 프로젝트로 배포합니다.
+
+| 앱      | Vercel 프로젝트   | Root Directory | Framework      |
+| ------- | ----------------- | -------------- | -------------- |
+| `web`   | `yapp-plus-web`   | `apps/web`     | Next.js        |
+| `admin` | `yapp-plus-admin` | `apps/admin`   | TanStack Start |
+
+`.github/workflows/ci.yml`은 검증을 통과한 내부 브랜치의 Pull Request를 Preview 환경으로
+배포합니다. 외부 fork와 Dependabot Pull Request에서는 배포용 Secret을 사용하지 않습니다.
+`.github/workflows/cd.yml`은 `main`의 CI가 성공하면 검증된 commit을 Production 환경으로
+배포합니다. 각 앱은 독립된 matrix job으로 배포되므로 한 앱의 실패가 다른 앱의 실행을 취소하지
+않습니다. 두 workflow는 `.github/actions/vercel-deploy` 복합 액션을 사용해 같은 Vercel CLI
+버전과 배포 절차를 공유합니다.
+
+배포 전에 `turbo query affected`가 각 앱의 `build` task와 workspace 의존성 그래프를 기준으로
+변경 영향을 계산합니다. 앱 또는 앱이 의존하는 내부 패키지가 영향을 받지 않았다면 해당 앱의
+Vercel build와 배포를 생략합니다. 두 workflow는 `.github/actions/turbo-affected` 복합 액션을
+사용해 같은 판정 및 오류 처리 규칙을 공유합니다. Preview 결과는 Pull Request의 Web 및 Admin
+댓글에 각각 표시하며, 새 commit이 올라오면 기존 댓글을 갱신합니다.
+
+workflow를 사용하려면 저장소의 GitHub Actions 설정에 다음 값을 등록합니다.
+
+| 종류     | 이름                      | 값                                   |
+| -------- | ------------------------- | ------------------------------------ |
+| Secret   | `VERCEL_TOKEN`            | `yapp-plus` scope에 접근 가능한 토큰 |
+| Variable | `VERCEL_ORG_ID`           | `yapp-plus` scope ID                 |
+| Variable | `VERCEL_WEB_PROJECT_ID`   | `yapp-plus-web` 프로젝트 ID          |
+| Variable | `VERCEL_ADMIN_PROJECT_ID` | `yapp-plus-admin` 프로젝트 ID        |
+
+`VERCEL_TOKEN`은 [Vercel Account Tokens](https://vercel.com/account/settings/tokens)에서 만들고
+GitHub 저장소에만 Secret으로 등록합니다. 로컬 Vercel 인증 토큰이나 `.vercel/`, `.env.local`은
+커밋하지 않습니다. 앱이 사용하는 환경 변수는 GitHub Actions가 아니라 각 Vercel 프로젝트의
+Environment Variables에 Preview와 Production 환경별로 등록합니다.
+
+Preview 배포가 실패하면 GitHub Actions의 `CI`, Production 배포가 실패하면 `CD` 실행에서 실패한
+job을 재실행합니다. 같은 commit으로 새 배포가 필요하다면 해당 workflow 전체를 다시 실행합니다.
+
 ## 모바일 셸
 
 Expo 앱은 WebView 셸입니다. 기기에서 불러올 웹 주소를 `MOBILE_WEB_URL`로 설정합니다.
