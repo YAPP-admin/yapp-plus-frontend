@@ -1,0 +1,4 @@
+interface:
+  display_name: "GitHub 작업 흐름"
+  short_description: "이슈부터 Draft PR과 병합까지 안전하게 진행"
+  default_prompt: "$github-workflow을 사용해 이 저장소 작업을 준비하고 각 외부 변경 승인 단계에서 멈춰 주세요."

@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
-    "check": "pnpm format:check && pnpm lint && pnpm typecheck && pnpm test",
+    "check": "node --run format:check && node --run lint && node --run typecheck && node --run test",
     "commitlint": "commitlint",
     "dev": "turbo run dev",
     "expo:doctor": "expo-doctor apps/mobile",
