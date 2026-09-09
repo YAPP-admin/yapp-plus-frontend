@@ -1,4 +1,4 @@
-name: 지속적 통합
+name: CI
 
 on:
   pull_request:
@@ -17,37 +17,38 @@ permissions:
 
 jobs:
   verify:
+    name: Verify
     runs-on: ubuntu-latest
     timeout-minutes: 20
     # Turbo가 각 명령 안에서 앱과 패키지 태스크를 병렬 실행합니다.
     # Matrix를 사용하지 않아 도구 체인과 의존성 설치가 중복되지 않도록 합니다.
     steps:
-      - name: 저장소 체크아웃
+      - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
 
-      - name: 도구 체인 설치
+      - name: Set up toolchain
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           version: 2026.8.16
           install_args: --locked
 
-      - name: 의존성 설치
+      - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: 포맷 검사
+      - name: Check formatting
         run: pnpm format:check
 
-      - name: 린트
+      - name: Lint
         run: pnpm lint
 
-      - name: 타입 검사
+      - name: Typecheck
         run: pnpm typecheck
 
-      - name: 테스트
+      - name: Test
         run: pnpm test
 
-      - name: 빌드
+      - name: Build
         run: pnpm build
 
-      - name: Expo 프로젝트 검사
+      - name: Run Expo Doctor
         run: pnpm expo:doctor
