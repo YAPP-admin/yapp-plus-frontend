@@ -1,0 +1,42 @@
+area/web:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/web/**'
+
+area/admin:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/admin/**'
+
+area/mobile:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/mobile/**'
+
+area/storybook:
+  - changed-files:
+      - any-glob-to-any-file: 'apps/storybook/**'
+
+area/packages:
+  - changed-files:
+      - any-glob-to-any-file: 'packages/**'
+
+area/ci:
+  - changed-files:
+      - any-glob-to-any-file: '.github/**'
+
+area/tooling:
+  - changed-files:
+      - any-glob-to-any-file:
+          - '.agents/**'
+          - '.specify/**'
+          - '.editorconfig'
+          - '.gitignore'
+          - '.npmrc'
+          - 'AGENTS.md'
+          - 'commitlint.config.mjs'
+          - 'lefthook.yml'
+          - 'mise.lock'
+          - 'mise.toml'
+          - 'package.json'
+          - 'pnpm-lock.yaml'
+          - 'pnpm-workspace.yaml'
+          - 'tsconfig.json'
+          - 'turbo.json'
