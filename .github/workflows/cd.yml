@@ -1,0 +1,110 @@
+name: CD
+
+on:
+  workflow_run:
+    workflows:
+      - CI
+    branches:
+      - main
+    types:
+      - completed
+
+concurrency:
+  group: cd-production
+  cancel-in-progress: true
+
+permissions:
+  checks: read
+  contents: read
+
+jobs:
+  deploy-production:
+    name: Deploy ${{ matrix.app }} Production
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - app: Web
+            workspace: '@yapp-plus/web'
+            project_id: ${{ vars.VERCEL_WEB_PROJECT_ID }}
+          - app: Admin
+            workspace: '@yapp-plus/admin'
+            project_id: ${{ vars.VERCEL_ADMIN_PROJECT_ID }}
+    steps:
+      - name: Checkout verified commit
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: ${{ github.event.workflow_run.head_sha }}
+
+      - name: Resolve comparison range
+        id: comparison
+        env:
+          CHECK_SUITE_ID: ${{ github.event.workflow_run.check_suite_id }}
+          GH_TOKEN: ${{ github.token }}
+          HEAD_SHA: ${{ github.event.workflow_run.head_sha }}
+        run: |
+          # workflow_run에는 원래 push의 before SHA가 없으므로 연결된 Check Suite에서 복원합니다.
+          range="$(
+            gh api "repos/$GITHUB_REPOSITORY/check-suites/$CHECK_SUITE_ID" \
+              --jq '[.before, .after] | @tsv'
+          )"
+          IFS=$'\t' read -r base_sha after_sha <<< "$range"
+
+          if [ "$after_sha" != "$HEAD_SHA" ]; then
+            echo "::error title=Invalid comparison range::CI Check Suite의 after SHA가 검증된 commit과 다릅니다."
+            exit 1
+          fi
+
+          if [ -z "$base_sha" ] || [[ "$base_sha" =~ ^0+$ ]]; then
+            echo "force_all=true" >> "$GITHUB_OUTPUT"
+          else
+            git cat-file -e "$base_sha^{commit}"
+            echo "base_sha=$base_sha" >> "$GITHUB_OUTPUT"
+            echo "force_all=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Set up toolchain
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          version: 2026.8.16
+          install_args: --locked
+
+      - name: Detect affected build
+        id: affected
+        uses: ./.github/actions/turbo-affected
+        with:
+          workspace: ${{ matrix.workspace }}
+          base: ${{ steps.comparison.outputs.base_sha }}
+          head: ${{ github.event.workflow_run.head_sha }}
+          force-all: ${{ steps.comparison.outputs.force_all }}
+
+      - name: Write skipped Production summary
+        if: steps.affected.outputs.affected == 'false'
+        run: |
+          echo "### ${{ matrix.app }} Production" >> "$GITHUB_STEP_SUMMARY"
+          echo "빌드 입력에 영향을 주는 변경이 없어 배포를 생략했습니다." >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Deploy Production
+        id: deploy
+        if: steps.affected.outputs.affected == 'true'
+        uses: ./.github/actions/vercel-deploy
+        with:
+          environment: production
+          org-id: ${{ vars.VERCEL_ORG_ID }}
+          project-id: ${{ matrix.project_id }}
+          token: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Write Production summary
+        if: steps.deploy.outcome == 'success'
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          echo "### ${{ matrix.app }} Production" >> "$GITHUB_STEP_SUMMARY"
+          echo "$DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
