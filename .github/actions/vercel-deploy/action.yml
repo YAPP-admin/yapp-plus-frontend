@@ -1,0 +1,72 @@
+name: Deploy to Vercel
+description: Vercel 프로젝트 설정을 가져와 빌드하고 배포합니다.
+
+inputs:
+  environment:
+    description: 배포할 Vercel 환경입니다. preview 또는 production을 사용합니다.
+    required: true
+  org-id:
+    description: Vercel 조직 ID입니다.
+    required: true
+  project-id:
+    description: Vercel 프로젝트 ID입니다.
+    required: true
+  token:
+    description: Vercel 배포 토큰입니다.
+    required: true
+  git-branch:
+    description: Preview 배포에 연결할 Git 브랜치입니다.
+    required: false
+    default: ''
+  cli-version:
+    description: 실행할 Vercel CLI 버전입니다.
+    required: false
+    default: 59.13.1
+
+outputs:
+  deployment-url:
+    description: 생성된 Vercel 배포 URL입니다.
+    value: ${{ steps.deploy.outputs.deployment-url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Build and deploy
+      id: deploy
+      shell: bash
+      env:
+        DEPLOYMENT_ENVIRONMENT: ${{ inputs.environment }}
+        GIT_BRANCH: ${{ inputs.git-branch }}
+        VERCEL_CLI_VERSION: ${{ inputs.cli-version }}
+        VERCEL_ORG_ID: ${{ inputs.org-id }}
+        VERCEL_PROJECT_ID: ${{ inputs.project-id }}
+        VERCEL_TOKEN: ${{ inputs.token }}
+      run: |
+        vercel() {
+          pnpm dlx --allow-build=esbuild "vercel@$VERCEL_CLI_VERSION" "$@"
+        }
+
+        # --yes가 기본 프로젝트를 새로 연결하지 않도록 배포 대상만 명시적으로 확인합니다.
+        if [ -z "$VERCEL_ORG_ID" ] || [ -z "$VERCEL_PROJECT_ID" ]; then
+          echo "::error title=Missing Variable::Vercel 조직 또는 프로젝트 ID를 GitHub Actions Variable에 등록해 주세요."
+          exit 1
+        fi
+
+        case "$DEPLOYMENT_ENVIRONMENT" in
+          preview)
+            vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_TOKEN"
+            vercel build --token="$VERCEL_TOKEN"
+            deployment_url="$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
+            ;;
+          production)
+            vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
+            vercel build --prod --token="$VERCEL_TOKEN"
+            deployment_url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
+            ;;
+          *)
+            echo "::error title=Invalid Input::지원하지 않는 배포 환경입니다: $DEPLOYMENT_ENVIRONMENT"
+            exit 1
+            ;;
+        esac
+
+        echo "deployment-url=$deployment_url" >> "$GITHUB_OUTPUT"
