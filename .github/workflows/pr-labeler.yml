@@ -1,4 +1,4 @@
-name: PR 라벨 자동화
+name: PR Labeler
 
 on:
   pull_request_target:
@@ -18,14 +18,14 @@ permissions:
 
 jobs:
   label:
-    name: 크기 및 경로 라벨 동기화
+    name: Label PR
     runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: write
     steps:
-      - name: 크기 라벨 동기화
+      - name: Assign size label
         uses: pascalgn/size-label-action@56b489b027932ec0cf60438a1a5f1a19c8fc71ff # v0.5.7
         env:
           GITHUB_TOKEN: ${{ github.token }}
@@ -43,7 +43,7 @@ jobs:
               "500": "XL"
             }
 
-      - name: 경로 라벨 동기화
+      - name: Sync path labels
         uses: actions/labeler@bf12e9b00b37c5c0ca2b87b79b2daf7891dbda13 # v7.0.0
         with:
           repo-token: ${{ github.token }}
