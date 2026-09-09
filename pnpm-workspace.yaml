@@ -6,6 +6,19 @@ packages:
 # pnpm의 자체 버전 다운로드를 끄고 lockfile은 프로젝트 의존성만 기록합니다.
 pmOnFail: ignore
 
+# Expo SDK 57 패치 릴리스 직후 CI가 minimumReleaseAge 정책으로 설치를 차단하여
+# 검증된 정확한 버전만 임시 허용합니다. 2026-09-09 22:53 KST 이후 제거합니다.
+minimumReleaseAgeExclude:
+  - '@expo/cli@57.0.23'
+  - '@expo/metro-file-map@57.0.3'
+  - '@expo/ui@57.0.17'
+  - 'babel-preset-expo@57.0.11'
+  - 'expo-glass-effect@57.0.2'
+  - 'expo-modules-core@57.0.17'
+  - 'expo-modules-jsi@57.1.0'
+  - 'expo-router@57.0.20'
+  - 'expo@57.0.21'
+
 # pnpm은 공개된 지 24시간이 지나지 않은 패키지 설치를 기본적으로 지연합니다.
 # 장기간 유지할 minimumReleaseAgeExclude를 추가하지 말고 충분히 검증된 버전을 사용합니다.
 catalog:
