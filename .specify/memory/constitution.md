@@ -1,50 +1,117 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+동기화 영향 보고서
+- 버전 변경: 미정 템플릿 → 1.0.0
+- 추가한 원칙:
+  - I. 사용자 가치 중심의 최소 구현
+  - II. 명시적인 모노레포 경계
+  - III. 계약과 타입을 단일 진실 공급원으로 관리
+  - IV. 위험에 비례하는 검증
+  - V. 안전하고 되돌릴 수 있는 운영
+- 추가한 섹션:
+  - 기술 및 문서 제약
+  - 개발 및 리뷰 절차
+- 제거한 섹션: 없음
+- 후속 TODO: 없음
+-->
+
+# YAPP Plus Frontend Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. 사용자 가치 중심의 최소 구현
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+모든 변경은 사용자, 관리자 또는 개발 흐름에서 확인 가능한 결과와 연결되어야 한다. 새 기능은
+필요한 화면, 상태, API 계약과 검증을 포함하는 가장 작은 수직 단위로 구현해야 한다. 현재 요구에
+사용되지 않는 추상화, 확장 지점, 패키지와 의존성은 추가해서는 안 된다. 추가 복잡성이 필요하면
+PR에 해결하는 문제와 더 단순한 대안을 사용하지 못하는 이유를 기록해야 한다.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+이 원칙은 기반 작업 자체가 목표가 되거나 예상 요구를 위해 코드가 과도하게 확장되는 것을
+방지한다.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### II. 명시적인 모노레포 경계
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+`apps/*`는 독립적으로 실행하거나 배포하는 제품 단위이고, `packages/*`는 재사용 가능한 계약과
+기반 기능이다. 앱은 패키지에 의존할 수 있지만 패키지는 앱에 의존해서는 안 되며, 앱 사이의 직접
+import도 금지한다. 공용 코드는 둘 이상의 실제 소비자가 있거나 API, 브리지, 디자인 토큰처럼
+저장소 차원의 안정된 계약일 때만 패키지로 승격한다.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+각 패키지는 공개 진입점을 통해 기능을 노출해야 한다. 소비자는 다른 워크스페이스의 내부 경로를
+우회해서 가져오면 안 된다. 의존 방향이나 공개 계약을 변경하는 PR은 영향받는 앱과 마이그레이션
+방법을 명시해야 한다.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. 계약과 타입을 단일 진실 공급원으로 관리
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+TypeScript의 엄격한 타입 검사를 유지하고, API 명세와 WebView 브리지 타입을 시스템 경계의 단일
+진실 공급원으로 사용해야 한다. `any`, 무검증 타입 단언, 오류 무시 지시어를 사용할 때는 더 안전한
+표현이 불가능한 이유와 제한 범위를 코드 또는 PR에 남겨야 한다.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+OpenAPI 클라이언트와 라우트 트리처럼 도구가 생성하는 파일은 직접 수정해서는 안 된다. 변경이
+필요하면 생성 설정, 원본 명세 또는 템플릿을 수정한 뒤 다시 생성해야 한다. 외부 입력, 환경 변수와
+브리지 메시지는 신뢰 경계에서 검증하고, 내부 코드에는 검증된 타입만 전달해야 한다.
+
+### IV. 위험에 비례하는 검증
+
+변경에는 실패 가능성을 가장 가까운 계층에서 증명하는 검증이 따라야 한다. 버그 수정은 가능한
+경우 회귀 테스트를 추가하고, 공용 패키지 계약이나 앱 간 경계 변경은 소비자 관점의 통합 검증을
+포함해야 한다. 사용자 인터페이스 변경은 주요 상태와 접근성을 검토하고, 재사용 UI의 상태 변화는
+Storybook 사례로 표현해야 한다.
+
+모든 PR은 영향 범위에 필요한 포맷, 린트, 타입 검사와 테스트를 통과해야 한다. 배포 가능한 앱이나
+빌드 설정을 변경하면 해당 프로덕션 빌드를 확인해야 하며, 모바일 설정이나 의존성을 변경하면
+`expo-doctor`를 실행해야 한다. 검증을 생략한 경우에는 PR에 사유와 남은 위험을 명시해야 한다.
+
+### V. 안전하고 되돌릴 수 있는 운영
+
+비밀 값, 인증 정보와 개인 정보는 저장소, 빌드 산출물 또는 로그에 기록해서는 안 된다. GitHub
+Actions와 배포 자동화는 최소 권한을 사용하고 외부 Action 및 CLI 버전을 재현 가능한 값으로
+고정해야 한다. 프로덕션 배포는 `main`의 검증된 커밋만 대상으로 하며, 배포 결과를 커밋과 연결해
+추적할 수 있어야 한다.
+
+의존성 보호 정책을 전체적으로 비활성화해서는 안 된다. 불가피한 예외는 정확한 패키지와 버전으로
+제한하고 사유와 제거 조건을 함께 기록해야 한다. 데이터, 배포, 인증 또는 공용 계약을 변경하는
+작업은 적용 전에 실패 시 복구 또는 롤백 방법을 정의해야 한다.
+
+## 기술 및 문서 제약
+
+- 저장소가 직접 관리하는 README, 설계 문서, 운영 문서, 코드 주석과 설정 주석은 한국어로
+  작성한다. 패키지명, API 식별자, 환경 변수, 명령어와 파일 경로는 원래 표기를 유지한다.
+- 외부 도구가 생성하는 파일은 직접 번역하거나 편집하지 않는다. 출력 언어나 형식을 바꾸려면 생성
+  설정 또는 원본 템플릿을 수정한다.
+- Node.js와 pnpm 버전은 `mise.toml`, `mise.lock`, `package.json`을 기준으로 재현해야 한다.
+  도구 체인을 바꾸는 변경은 모든 워크스페이스와 CI에 대한 마이그레이션 및 롤백 계획을 포함한다.
+- 공통 의존성 버전은 pnpm catalog에서 관리하고 내부 의존성은 `workspace:*`로 선언한다. 같은 공통
+  의존성의 버전을 앱별로 임의 분산해서는 안 된다.
+- 웹은 모바일 WebView에서 동작한다는 전제를 유지하고, 네이티브 기능은 타입이 지정된
+  `@yapp-plus/app-bridge` 계약을 통해 노출한다. 웹에서 네이티브 런타임을 직접 추정하거나
+  비공개 메시지 형식을 사용해서는 안 된다.
+
+## 개발 및 리뷰 절차
+
+1. 작업은 최신 `origin/main`을 기준으로 시작하고 하나의 PR에는 하나의 검토 가능한 목적만
+   포함한다. 이미 존재하는 사용자 변경이나 관련 없는 파일을 수정해서는 안 된다.
+2. 구현 전에 요구사항, 영향 범위와 완료 조건을 확인한다. 여러 앱, 공용 계약, 인증, 데이터 또는
+   배포 정책에 영향을 주는 작업은 구현 전에 Spec Kit 명세와 계획을 작성한다.
+3. 커밋과 PR 제목은 저장소의 Conventional Commits 규칙을 따른다. `main`은 rebase merge로 선형
+   이력을 유지하며, 각 커밋은 독립적으로 이해할 수 있는 변경 단위여야 한다.
+4. PR에는 무엇을 왜 변경했는지, 실행한 검증, 영향받는 앱과 패키지, 알려진 위험 및 롤백 방법을
+   기록한다. 화면 변경은 필요한 경우 스크린샷이나 녹화를 첨부한다.
+5. 작성자는 `pnpm check`를 기본 품질 게이트로 실행한다. 영향 범위에 따라 `pnpm build`,
+   `pnpm expo:doctor`, Storybook 또는 사용자 흐름 검증을 추가한다. CI가 실패한 PR은 원인을 확인하고
+   해결하기 전까지 병합해서는 안 된다.
+6. AI 에이전트도 같은 절차를 따른다. 에이전트는 불확실한 요구를 임의의 제품 결정으로 확장하지
+   않고, 가정과 검증하지 못한 사항을 명시하며, 요청받지 않은 외부 상태 변경을 수행하지 않는다.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+이 Constitution은 저장소의 다른 개발 관행 문서보다 우선한다. 다른 문서나 자동화가 이 문서와
+충돌하면 Constitution을 따르고, 충돌한 문서를 같은 작업 또는 명시된 후속 작업에서 수정해야 한다.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+원칙의 추가, 제거 또는 의미 변경은 별도 PR에서 변경 이유, 영향을 받는 절차와 필요한 마이그레이션을
+설명해야 한다. 버전은 시맨틱 버저닝을 적용한다. 호환되지 않는 원칙 제거 또는 재정의는 MAJOR,
+새 원칙이나 실질적인 운영 지침 추가는 MINOR, 의미를 바꾸지 않는 명확화는 PATCH로 올린다.
+
+모든 PR 리뷰는 적용 가능한 원칙과 품질 게이트 준수를 확인해야 한다. 예외가 필요한 경우 적용 범위,
+책임자, 종료 조건을 PR에 기록해야 하며 영구 예외로 간주해서는 안 된다. `AGENTS.md`는 이 문서의
+실행 지침으로 유지하고, Constitution이 바뀌면 두 문서의 일치 여부를 함께 점검한다.
+
+**Version**: 1.0.0 | **Ratified**: 2026-09-09 | **Last Amended**: 2026-09-09
