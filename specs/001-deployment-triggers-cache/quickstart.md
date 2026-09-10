@@ -48,10 +48,11 @@ Admin Preview가 배포 성공으로 표시되지만 Vercel URL에서 `404 NOT_F
 
 1. `WARNING! Build not running on Vercel`과 Nitro의 `preset: \`node-server\``가 함께 나타나는지 확인합니다.
 2. `.vercel/output/functions/__server.func`가 생성되지 않았다면 Vercel Functions용 출력이 만들어지지 않은 상태입니다.
-3. `.github/actions/vercel-deploy/action.yml`의 `vercel build` 호출에 다음 환경 변수를 주입합니다.
+3. `.github/actions/vercel-deploy/action.yml`의 `vercel build` 호출에 Nitro 공식 CI/CD 설정인
+   `NITRO_PRESET`을 주입합니다.
 
    ```sh
-   VERCEL=1 VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --token="$VERCEL_TOKEN"
+   NITRO_PRESET=vercel VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --token="$VERCEL_TOKEN"
    ```
 
 4. 다시 빌드했을 때 `[nitro:vercel]` 로그와 `.vercel/output/functions/__server.func`가 생성되는지 확인합니다.
