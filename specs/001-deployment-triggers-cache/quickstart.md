@@ -22,7 +22,7 @@
 
 ### 배포 설정 변경 강제 실행
 
-1. `.github/actions/vercel-deploy/action.yml`, `.github/workflows/deploy-preview.yml`, `.github/workflows/cd.yml` 또는 `.github/workflows/deploy-manual.yml` 등 배포 workflow만 변경한 Pull Request를 생성합니다.
+1. `.github/actions/deployment-config-changed/action.yml`, `.github/actions/vercel-deploy/action.yml`, `.github/workflows/deploy-preview.yml`, `.github/workflows/cd.yml` 또는 `.github/workflows/deploy-manual.yml` 등 배포 workflow만 변경한 Pull Request를 생성합니다.
 2. 앱 코드가 없어도 Web/Admin Preview 배포 단계가 실행되는지 확인합니다.
 3. 같은 변경을 `main`에 반영한 뒤 CD에서 Web/Admin Production 배포 단계가 실행되는지 확인합니다.
 

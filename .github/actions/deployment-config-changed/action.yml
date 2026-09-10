@@ -1,0 +1,42 @@
+name: Detect deployment config changes
+description: Git 변경 범위에 자동 배포 절차를 검증해야 하는 설정 파일이 포함됐는지 확인합니다.
+
+inputs:
+  base:
+    description: 비교를 시작할 Git ref입니다.
+    required: true
+  head:
+    description: 비교를 끝낼 Git ref입니다.
+    required: true
+
+outputs:
+  changed:
+    description: 배포 설정 파일이 변경됐으면 true입니다.
+    value: ${{ steps.detect.outputs.changed }}
+
+runs:
+  using: composite
+  steps:
+    - name: Detect deployment config changes
+      id: detect
+      shell: bash
+      env:
+        BASE_SHA: ${{ inputs.base }}
+        HEAD_SHA: ${{ inputs.head }}
+      run: |
+        changed=false
+
+        # 앱 코드 그래프와 무관하게 배포 자동화 자체를 검증해야 하는 파일만 포함합니다.
+        # PR 라벨러, 제목 검증, 일반 CI 변경은 Preview/Production 배포를 강제하지 않습니다.
+        if git diff --name-only "$BASE_SHA" "$HEAD_SHA" |
+          grep -Fxq \
+            -e .github/workflows/deploy-preview.yml \
+            -e .github/workflows/cd.yml \
+            -e .github/workflows/deploy-manual.yml \
+            -e .github/actions/deployment-config-changed/action.yml \
+            -e .github/actions/turbo-affected/action.yml \
+            -e .github/actions/vercel-deploy/action.yml; then
+          changed=true
+        fi
+
+        echo "changed=$changed" >> "$GITHUB_OUTPUT"

@@ -76,6 +76,14 @@ jobs:
           version: 2026.8.16
           install_args: --locked
 
+      - name: Detect deployment config changes
+        id: deployment-config
+        if: steps.comparison.outputs.force_all != 'true'
+        uses: ./.github/actions/deployment-config-changed
+        with:
+          base: ${{ steps.comparison.outputs.base_sha }}
+          head: ${{ github.event.workflow_run.head_sha }}
+
       - name: Detect affected build
         id: affected
         uses: ./.github/actions/turbo-affected
@@ -83,13 +91,7 @@ jobs:
           workspace: ${{ matrix.workspace }}
           base: ${{ steps.comparison.outputs.base_sha }}
           head: ${{ github.event.workflow_run.head_sha }}
-          force-all: ${{ steps.comparison.outputs.force_all }}
-          deployment-config-paths: |
-            .github/workflows/deploy-preview.yml
-            .github/workflows/cd.yml
-            .github/workflows/deploy-manual.yml
-            .github/actions/turbo-affected/action.yml
-            .github/actions/vercel-deploy/action.yml
+          force-all: ${{ steps.comparison.outputs.force_all == 'true' || steps.deployment-config.outputs.changed == 'true' }}
 
       - name: Write skipped Production summary
         if: steps.affected.outputs.affected == 'false'
