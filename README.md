@@ -114,9 +114,16 @@ workflow를 사용하려면 저장소의 GitHub Actions 설정에 다음 값을 
 | Variable | `VERCEL_ADMIN_PROJECT_ID` | `yapp-plus-admin` 프로젝트 ID        |
 
 `VERCEL_TOKEN`은 [Vercel Account Tokens](https://vercel.com/account/settings/tokens)에서 만들고
-GitHub 저장소에만 Secret으로 등록합니다. 로컬 Vercel 인증 토큰이나 `.vercel/`, `.env.local`은
-커밋하지 않습니다. 앱이 사용하는 환경 변수는 GitHub Actions가 아니라 각 Vercel 프로젝트의
-Environment Variables에 Preview와 Production 환경별로 등록합니다.
+GitHub 저장소에만 Secret으로 등록합니다. 이 토큰은 Vercel 배포와 Turbo 원격 캐시 인증에 함께
+사용하며, workflow는 `TURBO_TOKEN`에 `VERCEL_TOKEN` Secret을 전달하고 `TURBO_TEAM`에는
+`yapp-plus` 팀 slug를 사용합니다. GitHub Actions에 Secret이 없는 fork Pull Request나 로컬
+실행에서는 원격 캐시 없이 로컬 Turbo 캐시로 동작해야 합니다. 로컬 Vercel 인증 토큰이나
+`.vercel/`, `.env.local`은 커밋하지 않습니다. 앱이 사용하는 환경 변수는 GitHub Actions가 아니라
+각 Vercel 프로젝트의 Environment Variables에 Preview와 Production 환경별로 등록합니다.
+
+Vercel GitHub App의 `YAPP-admin/yapp-plus-frontend` 접근 승인이 완료되면 장기 토큰 대신 OIDC 기반
+Turbo 원격 캐시 인증으로 전환할 수 있습니다. OIDC 전환 전까지는 workflow 로그, 실행 요약과 캐시
+artifact에 `VERCEL_TOKEN` 또는 `TURBO_TOKEN` 값을 출력하지 않습니다.
 
 Production 수동 배포를 사용하려면 GitHub 저장소 Settings의 Environments에서 `production`
 Environment를 만들고 deployment branches를 `main`으로 제한합니다. 1인 운영 중에는 Required

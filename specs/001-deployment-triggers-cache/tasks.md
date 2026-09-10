@@ -103,14 +103,14 @@ cache hit을 확인하고, 인증 정보가 없는 환경에서도 로컬 빌드
 
 ### Implementation for User Story 3
 
-- [ ] T029 [P] [US3] Add `TURBO_TOKEN` and `TURBO_TEAM` env wiring to verify job in `.github/workflows/ci.yml`
-- [ ] T030 [P] [US3] Add `TURBO_TOKEN` and `TURBO_TEAM` env wiring to Preview deploy job in `.github/workflows/deploy-preview.yml`
-- [ ] T031 [P] [US3] Add `TURBO_TOKEN` and `TURBO_TEAM` env wiring to Production deploy job in `.github/workflows/cd.yml`
-- [ ] T032 [P] [US3] Add `TURBO_TOKEN` and `TURBO_TEAM` env wiring to manual deploy job in `.github/workflows/deploy-manual.yml`
-- [ ] T033 [US3] Document `TURBO_TEAM=yapp-plus` and Vercel remote cache behavior in `README.md`
+- [x] T029 [P] [US3] Add `TURBO_TOKEN` and `TURBO_TEAM` env wiring to verify job in `.github/workflows/ci.yml`
+- [x] T030 [P] [US3] Add `TURBO_TOKEN` and `TURBO_TEAM` env wiring to Preview deploy job in `.github/workflows/deploy-preview.yml`
+- [x] T031 [P] [US3] Add `TURBO_TOKEN` and `TURBO_TEAM` env wiring to Production deploy job in `.github/workflows/cd.yml`
+- [x] T032 [P] [US3] Add `TURBO_TOKEN` and `TURBO_TEAM` env wiring to manual deploy job in `.github/workflows/deploy-manual.yml`
+- [x] T033 [US3] Document `TURBO_TEAM=yapp-plus` and Vercel remote cache behavior in `README.md`
 - [ ] T034 [US3] Verify repeated workflow cache behavior from `specs/001-deployment-triggers-cache/quickstart.md`
 - [ ] T035 [US3] Check workflow logs for secret exposure after remote cache execution in `.github/workflows/ci.yml`
-- [ ] T036 [US3] Run `node --run check` and `node --run build` for remote cache workflow changes in `package.json`
+- [x] T036 [US3] Run `node --run check` and `node --run build` for remote cache workflow changes in `package.json`
 
 **Checkpoint**: PR 2는 원격 캐시 연결만 변경하며 배포 트리거 정책을 다시 바꾸지 않습니다.
 
