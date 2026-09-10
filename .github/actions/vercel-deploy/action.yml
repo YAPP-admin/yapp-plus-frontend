@@ -55,15 +55,15 @@ runs:
         case "$DEPLOYMENT_ENVIRONMENT" in
           preview)
             vercel pull --yes --environment=preview --git-branch="$GIT_BRANCH" --token="$VERCEL_TOKEN"
-            # GitHub Actions에서 실행하는 prebuilt 빌드는 Vercel 시스템 환경 변수가 자동 주입되지 않습니다.
-            # Nitro가 node-server가 아닌 Vercel Functions용 preset을 선택하도록 빌드 시점에만 명시합니다.
-            VERCEL=1 VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --token="$VERCEL_TOKEN"
+            # GitHub Actions에서 실행하는 prebuilt 빌드는 Vercel 환경 자동 감지에 의존하지 않습니다.
+            # Nitro 공식 CI/CD 설정 방식으로 Vercel Functions용 preset을 빌드 시점에 명시합니다.
+            NITRO_PRESET=vercel VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --token="$VERCEL_TOKEN"
             deployment_url="$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
             ;;
           production)
             vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
             # Production도 동일하게 Vercel preset으로 빌드한 뒤 prebuilt 산출물을 업로드합니다.
-            VERCEL=1 VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --prod --token="$VERCEL_TOKEN"
+            NITRO_PRESET=vercel VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --prod --token="$VERCEL_TOKEN"
             deployment_url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
             ;;
           *)

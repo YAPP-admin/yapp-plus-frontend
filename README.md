@@ -151,10 +151,11 @@ Admin은 TanStack Start와 Nitro를 사용하므로 Vercel Functions용 `vercel`
 
 이 상태에서는 배포가 성공으로 표시되어도 실행할 Vercel Function이 없어 Preview URL이
 플랫폼의 `404 NOT_FOUND`를 반환합니다. `.github/actions/vercel-deploy/action.yml`에서
-`vercel build`를 호출할 때만 다음 환경 변수를 주입해 Nitro가 Vercel preset을 선택하도록 합니다.
+`vercel build`를 호출할 때만 Nitro 공식 CI/CD 설정인 `NITRO_PRESET`을 주입해 Vercel preset을
+명시적으로 선택하도록 합니다.
 
 ```sh
-VERCEL=1 VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --token="$VERCEL_TOKEN"
+NITRO_PRESET=vercel VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --token="$VERCEL_TOKEN"
 ```
 
 정상 빌드에서는 `[nitro:vercel]` 로그와 `.vercel/output/functions/__server.func`가 생성되어야
