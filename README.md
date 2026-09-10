@@ -138,6 +138,32 @@ workflow가 대기 상태로 멈출 수 있습니다.
 Preview 배포가 실패하면 GitHub Actions의 `Deploy Preview`, Production 배포가 실패하면 `CD` 또는
 `Deploy Manual` 실행에서 실패한 job을 재실행합니다.
 
+### Admin Preview가 성공했지만 `404 NOT_FOUND`일 때
+
+Admin은 TanStack Start와 Nitro를 사용하므로 Vercel Functions용 `vercel` preset으로 빌드되어야
+합니다. 현재 배포는 GitHub Actions runner에서 `vercel build`를 실행한 뒤
+`vercel deploy --prebuilt`로 결과를 업로드하므로, Vercel이 제공하는 시스템 환경 변수가 자동으로
+주입되지 않습니다. 다음 로그가 함께 나타나면 Nitro가 `node-server` preset으로 빌드된 것입니다.
+
+- `WARNING! Build not running on Vercel`
+- `[nitro] ... (preset: \`node-server\`)`
+- `.output/public` 또는 `.output/server`만 생성되고 `.vercel/output/functions/__server.func`가 없음
+
+이 상태에서는 배포가 성공으로 표시되어도 실행할 Vercel Function이 없어 Preview URL이
+플랫폼의 `404 NOT_FOUND`를 반환합니다. `.github/actions/vercel-deploy/action.yml`에서
+`vercel build`를 호출할 때만 다음 환경 변수를 주입해 Nitro가 Vercel preset을 선택하도록 합니다.
+
+```sh
+VERCEL=1 VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --token="$VERCEL_TOKEN"
+```
+
+정상 빌드에서는 `[nitro:vercel]` 로그와 `.vercel/output/functions/__server.func`가 생성되어야
+합니다. Vercel 프로젝트 설정은 Framework Preset을 `TanStack Start`, Root Directory를
+`apps/admin`으로 두고 Output Directory override는 비워 둡니다. `.output`을 Output Directory로
+지정하면 정적 출력으로 처리되어 같은 문제가 재발할 수 있습니다. 자세한 preset 자동 감지
+동작은 [Vercel의 TanStack Start 배포 문서](https://vercel.com/docs/frameworks/full-stack/tanstack-start)를
+참고합니다.
+
 ## 모바일 셸
 
 Expo 앱은 WebView 셸입니다. 기기에서 불러올 웹 주소를 `MOBILE_WEB_URL`로 설정합니다.

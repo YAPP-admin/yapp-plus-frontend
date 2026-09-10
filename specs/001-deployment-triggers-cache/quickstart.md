@@ -41,6 +41,23 @@
 4. workflow 로그와 실행 요약에 `VERCEL_TOKEN` 또는 `TURBO_TOKEN` 값이 출력되지 않았는지 확인합니다.
 5. Secret을 제거한 테스트 환경에서는 원격 캐시 없이 로컬 빌드가 계속 성공하는지 확인합니다.
 
+## Admin Preview `404 NOT_FOUND` 진단
+
+Admin Preview가 배포 성공으로 표시되지만 Vercel URL에서 `404 NOT_FOUND`를 반환하면
+`Deploy Manual` 또는 `Deploy Preview`의 Admin job 로그를 확인합니다.
+
+1. `WARNING! Build not running on Vercel`과 Nitro의 `preset: \`node-server\``가 함께 나타나는지 확인합니다.
+2. `.vercel/output/functions/__server.func`가 생성되지 않았다면 Vercel Functions용 출력이 만들어지지 않은 상태입니다.
+3. `.github/actions/vercel-deploy/action.yml`의 `vercel build` 호출에 다음 환경 변수를 주입합니다.
+
+   ```sh
+   VERCEL=1 VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --token="$VERCEL_TOKEN"
+   ```
+
+4. 다시 빌드했을 때 `[nitro:vercel]` 로그와 `.vercel/output/functions/__server.func`가 생성되는지 확인합니다.
+5. Vercel Admin 프로젝트의 Framework Preset은 `TanStack Start`, Root Directory는 `apps/admin`으로
+   설정하고 Output Directory override는 비워 둡니다. `.output`을 직접 지정하지 않습니다.
+
 ## 로컬 정적 검증
 
 저장소 루트에서 실행합니다.
