@@ -59,6 +59,15 @@ Next.js 규칙은 웹 앱에만 적용하고, 프레임워크가 default export�
 Storybook은 `packages/ui`의 웹 컴포넌트만 다룹니다. 제품 앱 개발 서버와 항상 함께 실행하지
 않도록 `pnpm dev`와 분리했으며, 정적 Storybook 빌드는 `pnpm build`에 포함합니다.
 
+Storybook 정적 문서는 [GitHub Pages](https://yapp-admin.github.io/yapp-plus-frontend/)에서 확인할 수
+있습니다. `main`에 Storybook, `packages/ui` 또는 관련 빌드 설정 변경이 반영되면
+`Deploy Storybook` workflow가 정적 산출물을 빌드해 Pages에 게시합니다. 코드 변경 없이 다시
+게시해야 할 때는 GitHub Actions에서 `workflow_dispatch`로 수동 실행합니다.
+
+최초 사용 시 저장소 Settings → Pages → Source를 **GitHub Actions**로 설정해야 합니다. Storybook은
+상대 asset 경로를 사용하므로 `/yapp-plus-frontend/` project site 하위 경로에서도 로드됩니다.
+제품 앱의 Vercel Preview·Production 배포와 Storybook Pages 배포는 서로 독립적으로 실행됩니다.
+
 기본 디자인 토큰과 전역 reset은 `packages/ui`에서 관리합니다. 패키지의 일반 진입점을
 가져오는 것만으로 전역 스타일이 적용되지는 않으며, 각 앱이 루트에서
 `@yapp-plus/ui/styles`를 명시적으로 가져옵니다. 웹의 `global.css.ts`는 스타일을 다시
