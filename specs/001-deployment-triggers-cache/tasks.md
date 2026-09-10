@@ -38,11 +38,11 @@ description: '배포 트리거 및 원격 캐시 개선 작업 목록'
 
 **CRITICAL**: 이 단계가 끝나야 Preview, Production, 수동 배포가 같은 기준으로 동작합니다.
 
-- [x] T006 Add deployment config path input and detection output to `.github/actions/turbo-affected/action.yml`
-- [x] T007 Update affected detection comments and failure behavior in `.github/actions/turbo-affected/action.yml`
-- [x] T008 Verify affected detection with deployment workflow path changes against `.github/actions/turbo-affected/action.yml`
+- [x] T006 Add `.github/actions/deployment-config-changed/action.yml` for deployment config path detection
+- [x] T007 Keep `.github/actions/turbo-affected/action.yml` focused on Turbo build impact detection
+- [x] T008 Verify affected detection with deployment workflow path changes across deployment config and Turbo actions
 
-**Checkpoint**: 배포 설정 변경과 Turbo build 영향이 하나의 `affected` 결과로 합쳐집니다.
+**Checkpoint**: 배포 설정 변경 판정과 Turbo build 영향 판정이 workflow에서 하나의 `affected` 결과로 합쳐집니다.
 
 ---
 

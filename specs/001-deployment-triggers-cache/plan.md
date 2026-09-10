@@ -8,7 +8,7 @@
 
 구현은 두 개의 순차 PR로 나눕니다.
 
-1. **PR 1 — 배포 트리거 개선**: 배포 관련 path 기반 `force-all`과 수동 배포 workflow
+1. **PR 1 — 배포 트리거 개선**: 배포 설정 변경 감지, 앱별 영향 판정과 수동 배포 workflow
 2. **PR 2 — 원격 캐시 활성화**: `TURBO_TOKEN`·`TURBO_TEAM` 연결과 캐시 검증·문서
 
 ## Technical Context
@@ -71,6 +71,7 @@ specs/001-deployment-triggers-cache/
 ```text
 .github/
 ├── actions/
+│   ├── deployment-config-changed/action.yml
 │   ├── turbo-affected/action.yml
 │   └── vercel-deploy/action.yml
 └── workflows/
@@ -83,15 +84,15 @@ turbo.json                         # 필요할 때만 전역 입력 검토
 README.md                          # PR 1·PR 2 운영 절차 갱신
 ```
 
-**Structure Decision**: 기존 GitHub Actions 복합 액션을 유지합니다. CI 검증은 `ci.yml`, PR Preview 배포는 `deploy-preview.yml`, Production 자동 배포는 `cd.yml`로 분리합니다. 배포 트리거 판정은 `turbo-affected`에 path 기반 강제 옵션을 추가하고, 수동 실행은 `deploy-manual.yml`로 분리합니다. 원격 캐시는 workflow job 환경 변수만 변경하며 앱·패키지 코드는 수정하지 않습니다.
+**Structure Decision**: 기존 GitHub Actions 복합 액션을 유지합니다. CI 검증은 `ci.yml`, PR Preview 배포는 `deploy-preview.yml`, Production 자동 배포는 `cd.yml`로 분리합니다. 배포 설정 변경 판정은 `deployment-config-changed`, Turbo build 영향 판정은 `turbo-affected`, 실제 Vercel 배포는 `vercel-deploy`가 담당합니다. 수동 실행은 `deploy-manual.yml`로 분리합니다. 원격 캐시는 workflow job 환경 변수만 변경하며 앱·패키지 코드는 수정하지 않습니다.
 
 ## Implementation Sequence
 
 ### PR 1 — 배포 트리거 개선
 
 1. `ci.yml`의 Preview 배포 job을 `deploy-preview.yml`로 이동하고, `ci.yml`은 검증 job만 담당하도록 분리합니다.
-2. 배포에 직접 영향을 주는 파일 목록을 정의합니다: `deploy-preview.yml`, `cd.yml`, `deploy-manual.yml`, `turbo-affected/action.yml`, `vercel-deploy/action.yml`.
-3. `turbo-affected`가 base/head 범위에서 해당 path가 변경되면 `affected=true`를 반환하도록 확장합니다. 앱 코드 변경은 기존 Turbo query 결과를 그대로 사용합니다.
+2. 배포에 직접 영향을 주는 파일 목록을 정의합니다: `deploy-preview.yml`, `cd.yml`, `deploy-manual.yml`, `deployment-config-changed/action.yml`, `turbo-affected/action.yml`, `vercel-deploy/action.yml`.
+3. `deployment-config-changed`가 base/head 범위에서 해당 path가 변경됐는지 판정하고, 변경된 경우 `turbo-affected`의 `force-all` 입력으로 Web/Admin 배포를 모두 실행합니다. 앱 코드 변경은 기존 Turbo query 결과를 그대로 사용합니다.
 4. `deploy-manual.yml`을 추가합니다.
    - `workflow_dispatch` 입력으로 `app`(`web`, `admin`, `all`)과 `environment`(`preview`, `production`)을 받습니다.
    - Production은 `main`의 검증된 commit을 checkout하고 `production` Environment의 배포 브랜치 정책을 적용합니다. 1인 운영이므로 Required reviewer는 설정하지 않습니다.

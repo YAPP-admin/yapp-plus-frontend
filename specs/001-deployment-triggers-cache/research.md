@@ -2,22 +2,24 @@
 
 ## 1. CI 설정 변경을 영향 범위에 포함하는 방법
 
-**Decision**: 기존 `turbo-affected` 액션에 배포 전용 path 기반 `force-all` 판정을 추가합니다. Preview 배포를 CI 검증 workflow에서 분리해 검증 절차 변경이 불필요한 Preview 배포를 유발하지 않도록 하며, 다음 파일만 배포 설정 변경으로 취급합니다.
+**Decision**: 배포 전용 path 판정은 별도 `deployment-config-changed` 복합 액션으로 분리하고, 기존 `turbo-affected` 액션은 Turbo workspace의 `build` 영향 판정만 담당합니다. Preview 배포를 CI 검증 workflow에서 분리해 검증 절차 변경이 불필요한 Preview 배포를 유발하지 않도록 하며, 다음 파일만 배포 설정 변경으로 취급합니다.
 
 ```text
 .github/workflows/deploy-preview.yml
 .github/workflows/cd.yml
 .github/workflows/deploy-manual.yml
+.github/actions/deployment-config-changed/action.yml
 .github/actions/turbo-affected/action.yml
 .github/actions/vercel-deploy/action.yml
 ```
 
-**Rationale**: 현재 `turbo query affected --tasks build`는 앱과 내부 패키지 그래프를 기준으로 하므로 PR 라벨러·제목 검증·문서 변경은 앱 배포를 유발하지 않습니다. Preview 배포를 별도 workflow로 분리하면 `ci.yml`의 lint·test·typecheck 같은 검증 변경이 배포를 강제하지 않습니다. 배포 절차 자체가 변경된 경우에만 두 앱을 강제로 실행하면 불필요한 배포를 줄이면서 자동화 회귀를 검증할 수 있습니다.
+**Rationale**: 현재 `turbo query affected --tasks build`는 앱과 내부 패키지 그래프를 기준으로 하므로 PR 라벨러·제목 검증·문서 변경은 앱 배포를 유발하지 않습니다. Preview 배포를 별도 workflow로 분리하면 `ci.yml`의 lint·test·typecheck 같은 검증 변경이 배포를 강제하지 않습니다. 배포 절차 자체가 변경된 경우에만 `deployment-config-changed`가 두 앱을 강제로 실행하도록 알려주면, Turbo 판정 액션을 범용으로 유지하면서 자동화 회귀를 검증할 수 있습니다.
 
 **Alternatives considered**:
 
 - `.github/**` 전체를 `globalDependencies`에 추가: 모든 task hash가 무효화되어 lint·test·typecheck까지 전체 재실행되므로 범위가 과도합니다.
-- `dorny/paths-filter` 추가: 동작은 가능하지만 현재 액션이 이미 base/head 범위를 알고 있어 third-party 의존성과 별도 설정을 늘릴 필요가 없습니다.
+- `dorny/paths-filter` 추가: 동작은 가능하지만 단순한 고정 파일 목록 판정만 필요해 third-party 의존성을 늘릴 필요가 없습니다.
+- `turbo-affected`에 path 목록 input 유지: workflow 호출부마다 같은 배포 설정 목록을 넘겨야 하고, Turbo 그래프 판정과 배포 정책 판정 책임이 섞입니다.
 - Preview job을 기존 `ci.yml`에 유지: CI 검증 변경과 Preview 배포 변경의 경계가 섞여 관련 없는 CI 변경도 배포를 강제할 수 있습니다.
 
 참고: [Turborepo globalDependencies](https://turborepo.dev/docs/reference/configuration)
