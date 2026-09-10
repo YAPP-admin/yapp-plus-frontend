@@ -20,6 +20,8 @@ jobs:
     name: Verify
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      TURBO_TEAM: yapp-plus
     # Turbo가 각 명령 안에서 앱과 패키지 태스크를 병렬 실행합니다.
     # Matrix를 사용하지 않아 도구 체인과 의존성 설치가 중복되지 않도록 합니다.
     steps:
@@ -41,15 +43,23 @@ jobs:
         run: pnpm format:check
 
       - name: Lint
+        env:
+          TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: pnpm lint
 
       - name: Typecheck
+        env:
+          TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: pnpm typecheck
 
       - name: Test
+        env:
+          TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: pnpm test
 
       - name: Build
+        env:
+          TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: pnpm build
 
       - name: Run Expo Doctor

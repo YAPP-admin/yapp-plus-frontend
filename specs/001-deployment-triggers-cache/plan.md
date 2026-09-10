@@ -107,8 +107,8 @@ README.md                          # PR 1·PR 2 운영 절차 갱신
 1. Vercel 팀 Remote Cache가 활성화되어 있는지 확인합니다. UI에 토글이 없어도 외부 CI 환경 변수 방식으로 진행할 수 있습니다.
 2. `verify`, `deploy-preview`, `deploy-production` job에 다음 환경 변수를 연결합니다.
    - `TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}`
-   - `TURBO_TEAM: ${{ vars.TURBO_TEAM }}`
-3. GitHub Variable `TURBO_TEAM`에 `yapp-plus` 팀 slug를 등록하고, README의 설정 표를 갱신합니다.
+   - `TURBO_TEAM: yapp-plus`
+3. README에 기존 `VERCEL_TOKEN` Secret 재사용, `TURBO_TEAM=yapp-plus`, OIDC 후속 전환 조건을 문서화합니다.
 4. 동일 commit의 재실행에서 원격 cache hit을 확인하고, 인증 정보가 없는 실행도 로컬 빌드로 실패 없이 진행되는지 확인합니다.
 5. PR 단위 검증: 캐시 hit/miss, 원격 캐시 장애 fallback, 로그 민감 정보 점검, `node --run check`, `node --run build`를 실행합니다.
 

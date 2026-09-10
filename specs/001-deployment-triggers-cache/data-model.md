@@ -38,7 +38,7 @@ Production 수동 배포는 `production` Environment의 배포 브랜치 정책(
 | 필드          | 타입          | 설명                | 저장 위치                             |
 | ------------- | ------------- | ------------------- | ------------------------------------- |
 | `TURBO_TOKEN` | secret string | Vercel Access Token | GitHub Secret `VERCEL_TOKEN`에서 주입 |
-| `TURBO_TEAM`  | string        | Vercel 팀 slug      | GitHub Actions Variable               |
+| `TURBO_TEAM`  | string        | Vercel 팀 slug      | workflow env의 `yapp-plus` literal    |
 
 토큰의 원문은 workflow 입력·출력·실행 요약·캐시 artifact에 기록하지 않습니다.
 

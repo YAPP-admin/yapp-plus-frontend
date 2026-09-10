@@ -62,6 +62,8 @@ jobs:
     needs: select-targets
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      TURBO_TEAM: yapp-plus
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.select-targets.outputs.matrix) }}
@@ -81,6 +83,8 @@ jobs:
       - name: Deploy Preview
         id: deploy
         uses: ./.github/actions/vercel-deploy
+        env:
+          TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         with:
           environment: preview
           org-id: ${{ vars.VERCEL_ORG_ID }}
@@ -110,6 +114,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
+    env:
+      TURBO_TEAM: yapp-plus
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.select-targets.outputs.matrix) }}
@@ -153,6 +159,8 @@ jobs:
       - name: Deploy Production
         id: deploy
         uses: ./.github/actions/vercel-deploy
+        env:
+          TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         with:
           environment: production
           org-id: ${{ vars.VERCEL_ORG_ID }}

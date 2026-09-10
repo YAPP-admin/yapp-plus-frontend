@@ -25,6 +25,8 @@ jobs:
       github.event.workflow_run.event == 'push'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      TURBO_TEAM: yapp-plus
     strategy:
       fail-fast: false
       matrix:
@@ -103,6 +105,8 @@ jobs:
         id: deploy
         if: steps.affected.outputs.affected == 'true'
         uses: ./.github/actions/vercel-deploy
+        env:
+          TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         with:
           environment: production
           org-id: ${{ vars.VERCEL_ORG_ID }}

@@ -7,8 +7,8 @@
   - `VERCEL_ORG_ID`
   - `VERCEL_WEB_PROJECT_ID`
   - `VERCEL_ADMIN_PROJECT_ID`
-  - `TURBO_TEAM` (PR 2 이후)
 - Vercel Token은 `yapp-plus` 팀에 접근할 수 있어야 합니다.
+- Turbo 원격 캐시는 `VERCEL_TOKEN`을 `TURBO_TOKEN`으로 재사용하고 `TURBO_TEAM=yapp-plus`로 실행합니다.
 - GitHub Environment `production`은 `main`만 배포 가능하도록 제한하고, 1인 운영 중에는 Required reviewer를 설정하지 않습니다.
 
 ## PR 1 — 배포 트리거
@@ -35,10 +35,11 @@
 
 ## PR 2 — 원격 캐시
 
-1. GitHub Actions Variables에 `TURBO_TEAM=yapp-plus`를 등록합니다.
+1. `VERCEL_TOKEN`이 `yapp-plus` 팀 scope에 접근 가능한지 확인합니다.
 2. 동일 commit으로 CI 또는 수동 배포를 두 번 실행합니다.
 3. 첫 실행은 원격 cache miss 또는 업로드, 두 번째 실행은 원격 cache hit인지 로그에서 확인합니다.
-4. Secret을 제거한 테스트 환경에서는 원격 캐시 없이 로컬 빌드가 계속 성공하는지 확인합니다.
+4. workflow 로그와 실행 요약에 `VERCEL_TOKEN` 또는 `TURBO_TOKEN` 값이 출력되지 않았는지 확인합니다.
+5. Secret을 제거한 테스트 환경에서는 원격 캐시 없이 로컬 빌드가 계속 성공하는지 확인합니다.
 
 ## 로컬 정적 검증
 

@@ -39,17 +39,17 @@
 
 ## 3. Vercel Remote Cache 인증
 
-**Decision**: 기존 `VERCEL_TOKEN` Secret을 `TURBO_TOKEN`으로 재사용하고, `TURBO_TEAM`에는 `yapp-plus` 팀 slug를 사용합니다. OIDC는 후속 작업으로 미룹니다.
+**Decision**: 기존 `VERCEL_TOKEN` Secret을 `TURBO_TOKEN`으로 재사용하고, `TURBO_TEAM`에는 `yapp-plus` 팀 slug를 직접 사용합니다. OIDC는 Vercel GitHub App 접근 승인 이후 후속 작업으로 전환합니다.
 
-**Rationale**: Vercel은 외부 CI에서 Vercel Access Token과 팀 slug를 환경 변수로 제공하는 방식을 지원합니다. 동일한 팀 범위 토큰을 재사용하면 Secret 수를 늘리지 않고 배포와 원격 캐시의 권한 범위를 일치시킬 수 있습니다.
+**Rationale**: Vercel은 외부 CI에서 Vercel Access Token과 팀 slug를 환경 변수로 제공하는 방식을 지원합니다. 동일한 팀 범위 토큰을 재사용하면 Secret 수를 늘리지 않고 배포와 원격 캐시의 권한 범위를 일치시킬 수 있습니다. `TURBO_TEAM`은 비밀 값이 아니고 현재 팀 slug가 고정되어 있으므로 별도 GitHub Variable을 추가하지 않습니다.
 
 **Alternatives considered**:
 
 - 별도의 `TURBO_TOKEN` Secret: 권한을 분리할 때는 유용하지만 현재 팀 단일 운영에서는 중복 Secret이 됩니다.
-- OIDC: 장기 토큰을 없앨 수 있지만 GitHub·Vercel 신뢰 설정이 추가되어 현재 범위를 넘어섭니다.
+- OIDC: 장기 토큰을 없앨 수 있어 장기적으로 더 적합하지만, 현재는 Vercel GitHub App의 `YAPP-admin/yapp-plus-frontend` 접근 승인이 필요합니다.
 - 로컬 `turbo link`만 사용: 개발자 환경에는 유효하지만 독립 runner인 GitHub CI/CD 인증을 해결하지 못합니다.
 
-참고: [Vercel Remote Caching](https://vercel.com/docs/monorepos/remote-caching)
+참고: [Vercel Remote Caching](https://vercel.com/docs/monorepos/remote-caching), [External CI/CD](https://vercel.com/docs/monorepos/remote-caching/external-ci-cd)
 
 ## 4. 수동 배포 workflow 경계
 
