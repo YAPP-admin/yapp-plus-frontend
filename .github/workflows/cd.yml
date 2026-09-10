@@ -84,12 +84,18 @@ jobs:
           base: ${{ steps.comparison.outputs.base_sha }}
           head: ${{ github.event.workflow_run.head_sha }}
           force-all: ${{ steps.comparison.outputs.force_all }}
+          deployment-config-paths: |
+            .github/workflows/deploy-preview.yml
+            .github/workflows/cd.yml
+            .github/workflows/deploy-manual.yml
+            .github/actions/turbo-affected/action.yml
+            .github/actions/vercel-deploy/action.yml
 
       - name: Write skipped Production summary
         if: steps.affected.outputs.affected == 'false'
         run: |
           echo "### ${{ matrix.app }} Production" >> "$GITHUB_STEP_SUMMARY"
-          echo "빌드 입력에 영향을 주는 변경이 없어 배포를 생략했습니다." >> "$GITHUB_STEP_SUMMARY"
+          echo "빌드 입력과 배포 설정에 영향을 주는 변경이 없어 배포를 생략했습니다." >> "$GITHUB_STEP_SUMMARY"
 
       - name: Deploy Production
         id: deploy

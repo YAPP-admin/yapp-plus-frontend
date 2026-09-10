@@ -77,18 +77,29 @@ Storybook은 `packages/ui`의 웹 컴포넌트만 다룹니다. 제품 앱 개�
 | `web`   | `yapp-plus-web`   | `apps/web`     | Next.js        |
 | `admin` | `yapp-plus-admin` | `apps/admin`   | TanStack Start |
 
-`.github/workflows/ci.yml`은 검증을 통과한 내부 브랜치의 Pull Request를 Preview 환경으로
-배포합니다. 외부 fork와 Dependabot Pull Request에서는 배포용 Secret을 사용하지 않습니다.
-`.github/workflows/cd.yml`은 `main`의 CI가 성공하면 검증된 commit을 Production 환경으로
-배포합니다. 각 앱은 독립된 matrix job으로 배포되므로 한 앱의 실패가 다른 앱의 실행을 취소하지
-않습니다. 두 workflow는 `.github/actions/vercel-deploy` 복합 액션을 사용해 같은 Vercel CLI
-버전과 배포 절차를 공유합니다.
+`.github/workflows/ci.yml`은 Pull Request와 `main` push의 품질 검증만 담당합니다.
+`.github/workflows/deploy-preview.yml`은 내부 브랜치 Pull Request의 `CI`가 성공한 뒤 검증된
+commit을 Preview 환경으로 배포합니다. 외부 fork와 Dependabot Pull Request에서는 배포용 Secret을
+사용하지 않습니다. `.github/workflows/cd.yml`은 `main`의 CI가 성공하면 검증된 commit을
+Production 환경으로 배포합니다. `.github/workflows/deploy-manual.yml`은 GitHub Actions
+`Run workflow`에서 앱과 환경을 선택해 같은 Vercel 배포 절차를 수동 실행합니다. 각 앱은 독립된
+matrix job으로 배포되므로 한 앱의 실패가 다른 앱의 실행을 취소하지 않습니다. 배포 workflow는
+`.github/actions/vercel-deploy` 복합 액션을 사용해 같은 Vercel CLI 버전과 배포 절차를 공유합니다.
 
 배포 전에 `turbo query affected`가 각 앱의 `build` task와 workspace 의존성 그래프를 기준으로
 변경 영향을 계산합니다. 앱 또는 앱이 의존하는 내부 패키지가 영향을 받지 않았다면 해당 앱의
-Vercel build와 배포를 생략합니다. 두 workflow는 `.github/actions/turbo-affected` 복합 액션을
-사용해 같은 판정 및 오류 처리 규칙을 공유합니다. Preview 결과는 Pull Request의 Web 및 Admin
-댓글에 각각 표시하며, 새 commit이 올라오면 기존 댓글을 갱신합니다.
+Vercel build와 배포를 생략합니다. 배포 절차 자체를 바꾸는 다음 파일은 앱 그래프와 무관하게
+Web/Admin 배포를 모두 실행해 workflow 회귀를 검증합니다.
+
+- `.github/workflows/deploy-preview.yml`
+- `.github/workflows/cd.yml`
+- `.github/workflows/deploy-manual.yml`
+- `.github/actions/turbo-affected/action.yml`
+- `.github/actions/vercel-deploy/action.yml`
+
+자동 배포 workflow는 `.github/actions/turbo-affected` 복합 액션을 사용해 같은 판정 및 오류 처리
+규칙을 공유합니다. Preview 결과는 Pull Request의 Web 및 Admin 댓글에 각각 표시하며, 새 commit이
+올라오면 기존 댓글을 갱신합니다.
 
 workflow를 사용하려면 저장소의 GitHub Actions 설정에 다음 값을 등록합니다.
 
@@ -104,8 +115,18 @@ GitHub 저장소에만 Secret으로 등록합니다. 로컬 Vercel 인증 토큰
 커밋하지 않습니다. 앱이 사용하는 환경 변수는 GitHub Actions가 아니라 각 Vercel 프로젝트의
 Environment Variables에 Preview와 Production 환경별로 등록합니다.
 
-Preview 배포가 실패하면 GitHub Actions의 `CI`, Production 배포가 실패하면 `CD` 실행에서 실패한
-job을 재실행합니다. 같은 commit으로 새 배포가 필요하다면 해당 workflow 전체를 다시 실행합니다.
+Production 수동 배포를 사용하려면 GitHub 저장소 Settings의 Environments에서 `production`
+Environment를 만들고 deployment branches를 `main`으로 제한합니다. 1인 운영 중에는 Required
+reviewer를 설정하지 않습니다. Required reviewer를 켜면 본인이 실행한 배포를 본인이 승인할 수 없어
+workflow가 대기 상태로 멈출 수 있습니다.
+
+같은 commit으로 새 배포가 필요하거나 영향 범위 판정을 우회해야 한다면 `Deploy Manual` workflow를
+실행합니다. `app`은 `web`, `admin`, `all` 중 하나를 고르고 `environment`는 `preview` 또는
+`production`을 선택합니다. Preview는 선택한 ref를 배포하고, Production은 항상 `main`을 checkout한
+뒤 해당 commit에 성공한 `CI` push 실행이 있을 때만 배포합니다.
+
+Preview 배포가 실패하면 GitHub Actions의 `Deploy Preview`, Production 배포가 실패하면 `CD` 또는
+`Deploy Manual` 실행에서 실패한 job을 재실행합니다.
 
 ## 모바일 셸
 

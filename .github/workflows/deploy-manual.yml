@@ -1,0 +1,175 @@
+name: Deploy Manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      app:
+        description: 배포할 앱입니다.
+        required: true
+        default: all
+        type: choice
+        options:
+          - all
+          - web
+          - admin
+      environment:
+        description: 배포할 Vercel 환경입니다.
+        required: true
+        default: preview
+        type: choice
+        options:
+          - preview
+          - production
+
+concurrency:
+  group: deploy-manual-${{ github.event.inputs.environment }}-${{ github.event.inputs.app }}
+  cancel-in-progress: false
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  select-targets:
+    name: Select deployment targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.targets.outputs.matrix }}
+    steps:
+      - name: Resolve app matrix
+        id: targets
+        env:
+          APP: ${{ inputs.app }}
+        run: |
+          case "$APP" in
+            all)
+              matrix='{"include":[{"app":"Web","app_id":"web","workspace":"@yapp-plus/web"},{"app":"Admin","app_id":"admin","workspace":"@yapp-plus/admin"}]}'
+              ;;
+            web)
+              matrix='{"include":[{"app":"Web","app_id":"web","workspace":"@yapp-plus/web"}]}'
+              ;;
+            admin)
+              matrix='{"include":[{"app":"Admin","app_id":"admin","workspace":"@yapp-plus/admin"}]}'
+              ;;
+          esac
+
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  deploy-preview:
+    name: Deploy ${{ matrix.app }} Preview
+    if: inputs.environment == 'preview'
+    needs: select-targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select-targets.outputs.matrix) }}
+    steps:
+      - name: Checkout selected ref
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          persist-credentials: false
+          ref: ${{ github.sha }}
+
+      - name: Set up toolchain
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          version: 2026.8.16
+          install_args: --locked
+
+      - name: Deploy Preview
+        id: deploy
+        uses: ./.github/actions/vercel-deploy
+        with:
+          environment: preview
+          org-id: ${{ vars.VERCEL_ORG_ID }}
+          project-id: ${{ matrix.app_id == 'web' && vars.VERCEL_WEB_PROJECT_ID || vars.VERCEL_ADMIN_PROJECT_ID }}
+          token: ${{ secrets.VERCEL_TOKEN }}
+          git-branch: ${{ github.ref_name }}
+
+      - name: Write Preview summary
+        if: steps.deploy.outcome == 'success'
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          echo "### ${{ matrix.app }} Preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: \`${{ github.sha }}\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "$DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Write failed Preview summary
+        if: failure()
+        run: |
+          echo "### ${{ matrix.app }} Preview" >> "$GITHUB_STEP_SUMMARY"
+          echo "Preview 배포에 실패했습니다. 실행 로그에서 실패 원인을 확인해 주세요." >> "$GITHUB_STEP_SUMMARY"
+
+  deploy-production:
+    name: Deploy ${{ matrix.app }} Production
+    if: inputs.environment == 'production'
+    needs: select-targets
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment: production
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.select-targets.outputs.matrix) }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+          ref: main
+
+      - name: Verify main CI success
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          verified_sha="$(git rev-parse HEAD)"
+          run_count="$(
+            gh run list \
+              --workflow CI \
+              --branch main \
+              --commit "$verified_sha" \
+              --event push \
+              --status success \
+              --json databaseId \
+              --jq 'length'
+          )"
+
+          if [ "$run_count" = "0" ]; then
+            echo "::error title=Missing verified CI::main의 현재 commit에 성공한 CI 실행이 없습니다."
+            exit 1
+          fi
+
+          echo "VERIFIED_SHA=$verified_sha" >> "$GITHUB_ENV"
+
+      - name: Set up toolchain
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          version: 2026.8.16
+          install_args: --locked
+
+      - name: Deploy Production
+        id: deploy
+        uses: ./.github/actions/vercel-deploy
+        with:
+          environment: production
+          org-id: ${{ vars.VERCEL_ORG_ID }}
+          project-id: ${{ matrix.app_id == 'web' && vars.VERCEL_WEB_PROJECT_ID || vars.VERCEL_ADMIN_PROJECT_ID }}
+          token: ${{ secrets.VERCEL_TOKEN }}
+
+      - name: Write Production summary
+        if: steps.deploy.outcome == 'success'
+        env:
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.deployment-url }}
+        run: |
+          echo "### ${{ matrix.app }} Production" >> "$GITHUB_STEP_SUMMARY"
+          echo "Commit: \`$VERIFIED_SHA\`" >> "$GITHUB_STEP_SUMMARY"
+          echo "$DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Write failed Production summary
+        if: failure()
+        run: |
+          echo "### ${{ matrix.app }} Production" >> "$GITHUB_STEP_SUMMARY"
+          echo "Production 배포에 실패했습니다. 실행 로그에서 실패 원인을 확인해 주세요." >> "$GITHUB_STEP_SUMMARY"
