@@ -1,3 +1,4 @@
+import { YAPP_PLUS_WEBVIEW_USER_AGENT_TOKEN } from '@yapp-plus/app-bridge';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -14,6 +15,7 @@ export default function WebViewScreen() {
     <View style={styles.container}>
       <BridgeWebView
         automaticallyAdjustContentInsets={false}
+        applicationNameForUserAgent={YAPP_PLUS_WEBVIEW_USER_AGENT_TOKEN}
         contentInsetAdjustmentBehavior="never"
         renderLoading={() => (
           <View style={styles.loading}>
