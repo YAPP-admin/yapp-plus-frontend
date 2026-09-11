@@ -150,7 +150,8 @@ jobs:
           echo "$DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
 
       - name: Update Preview comment
-        if: always() && steps.affected.outcome == 'success'
+        # 영향받은 앱만 댓글을 남기고, 생략 결과는 Job Summary에서만 확인합니다.
+        if: always() && steps.affected.outputs.affected == 'true'
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           number_force: ${{ needs.resolve-pr.outputs.number }}
@@ -158,7 +159,7 @@ jobs:
           message: |
             ### ${{ matrix.app }} Preview
 
-            ${{ steps.affected.outputs.affected != 'true' && '빌드 입력과 배포 설정에 영향을 주는 변경이 없어 새 Preview 배포를 생략했습니다.' || steps.deploy.outcome == 'success' && format('[Preview 배포 열기]({0})', steps.deploy.outputs.deployment-url) || format('Preview 배포에 실패했습니다. [실행 로그 확인]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
+            ${{ steps.deploy.outcome == 'success' && format('[Preview 배포 열기]({0})', steps.deploy.outputs.deployment-url) || format('Preview 배포에 실패했습니다. [실행 로그 확인]({0}/{1}/actions/runs/{2})', github.server_url, github.repository, github.run_id) }}
 
             Commit: `${{ needs.resolve-pr.outputs.head_sha }}`
           skip_unchanged: true
