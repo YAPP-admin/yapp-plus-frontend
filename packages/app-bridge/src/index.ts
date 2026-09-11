@@ -1,5 +1,11 @@
 import type { BridgeStore } from '@webview-bridge/web';
 
+export const YAPP_PLUS_WEBVIEW_USER_AGENT_TOKEN = 'YAPPPlusWebView';
+
+export const isYappPlusWebViewUserAgent = (userAgent: string | null | undefined): boolean =>
+  typeof userAgent === 'string' &&
+  userAgent.split(/\s+/).includes(YAPP_PLUS_WEBVIEW_USER_AGENT_TOKEN);
+
 export type SafeAreaInsets = Readonly<{
   top: number;
   right: number;
