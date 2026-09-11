@@ -17,8 +17,10 @@
 
 1. 문서 또는 PR 관리 workflow만 변경한 Pull Request를 생성합니다.
 2. `CI`가 성공하고 `Deploy Preview` workflow의 Web/Admin 배포가 `skipped` 요약으로 남는지 확인합니다.
-3. Web 또는 Admin 소스, 또는 해당 앱이 의존하는 패키지를 변경한 Pull Request를 생성합니다.
-4. 영향받은 앱의 Preview URL이 Pull Request 댓글에 생성되는지 확인합니다.
+3. Web/Admin에 대한 새 “배포 생략” PR 댓글이 작성되지 않는지 확인합니다.
+4. Web 또는 Admin 소스, 또는 해당 앱이 의존하는 패키지를 변경한 Pull Request를 생성합니다.
+5. 영향받은 앱의 Preview URL이 Pull Request 댓글에 생성되는지 확인합니다.
+6. 이전 Preview sticky 댓글이 있다면 영향 없는 후속 커밋에서도 삭제·수정되지 않는지 확인합니다.
 
 ### 배포 설정 변경 강제 실행
 

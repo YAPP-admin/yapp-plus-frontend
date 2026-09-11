@@ -110,8 +110,9 @@ Web/Admin 배포를 모두 실행해 workflow 회귀를 검증합니다.
 자동 배포 workflow는 `.github/actions/deployment-config-changed` 복합 액션으로 배포 설정 변경을
 먼저 확인하고, `.github/actions/turbo-affected` 복합 액션으로 앱별 Turbo build 영향 범위를
 계산합니다. 배포 설정이 바뀌면 `turbo-affected`의 `force-all` 입력으로 Web/Admin 배포를 모두
-검증하고, 그렇지 않으면 앱별 build 입력이 바뀐 경우에만 배포합니다. Preview 결과는 Pull Request의
-Web 및 Admin 댓글에 각각 표시하며, 새 commit이 올라오면 기존 댓글을 갱신합니다.
+검증하고, 그렇지 않으면 앱별 build 입력이 바뀐 경우에만 배포합니다. 실제 Preview 배포가 실행된
+경우에만 Pull Request의 Web 및 Admin 댓글을 작성하거나 갱신하며, 배포를 생략한 경우에는 Job
+Summary에만 생략 사유를 기록합니다. 생략 시 기존 sticky 댓글은 삭제하거나 수정하지 않습니다.
 
 workflow를 사용하려면 저장소의 GitHub Actions 설정에 다음 값을 등록합니다.
 
