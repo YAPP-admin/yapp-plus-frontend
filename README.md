@@ -182,15 +182,18 @@ Expo 앱은 WebView 셸입니다. 기기에서 불러올 웹 주소를 `MOBILE_W
 타입이 지정된 앱 브리지를 통해 현재 안전 영역 여백을 주입하며, 웹 앱은 이를
 `--safe-area-inset-*` CSS 변수로 제공합니다.
 
-네이티브 `ios` 및 `android` 디렉터리는 의도적으로 커밋하지 않습니다. 네이티브 빌드가
-필요할 때만 다음 명령으로 생성합니다.
+네이티브 디렉터리는 의도적으로 커밋하지 않습니다. 이 워크스페이스는 iOS 셸만 담당하므로 iOS
+네이티브 프로젝트가 필요할 때만 다음 명령으로 생성하고 `apps/mobile/android`는 생성하지
+않습니다.
 
 ```sh
-pnpm --filter @yapp-plus/mobile prebuild
+pnpm --filter @yapp-plus/mobile exec expo prebuild --platform ios
 ```
 
 Kakao 로그인, 푸시 알림, 운영 앱 식별자, URL scheme, EAS 프로젝트 설정은 이후 작업으로
-미뤄 두었습니다.
+미뤄 두었습니다. 모바일 셸은 iOS만 EAS로 빌드하고 Android는 별도 Native 프로젝트에서
+개발합니다. 앱 식별자 협의와 iOS 빌드 준비 절차는
+[`apps/mobile/README.md`](apps/mobile/README.md)를 참고합니다.
 
 ## API 생성
 
