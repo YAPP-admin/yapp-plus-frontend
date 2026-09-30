@@ -12,6 +12,9 @@ catalogs:
     '@seed-design/react':
       specifier: 2.5.0
       version: 2.5.0
+    '@seed-design/vite-plugin':
+      specifier: 2.1.0
+      version: 2.1.0
     '@storybook/addon-a11y':
       specifier: 10.6.0
       version: 10.6.0
@@ -269,6 +272,9 @@ importers:
       '@seed-design/react':
         specifier: 'catalog:'
         version: 2.5.0(@seed-design/css@2.8.3)(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(embla-carousel@8.6.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+      '@seed-design/vite-plugin':
+        specifier: 'catalog:'
+        version: 2.1.0(@seed-design/css@2.8.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.0))
       '@storybook/addon-a11y':
         specifier: 'catalog:'
         version: 10.6.0(storybook@10.6.0(@types/react@19.2.18)(prettier@3.9.6)(react@19.2.8))
@@ -2902,6 +2908,12 @@ packages:
       '@seed-design/css': ^2.8.0
       react: '>=18.0.0'
       react-dom: '>=18.0.0'
+
+  '@seed-design/vite-plugin@2.1.0':
+    resolution: {integrity: sha512-1xsY0byqlM2oayCD1kufi/ggoBa+rsADtGtvbRH7meYaqz+3Jdp2TH9avPUPE3DWtf4M8Nv9KRmE3vukrBFhhA==}
+    peerDependencies:
+      '@seed-design/css': ^2.0.0
+      vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
 
   '@simple-libs/child-process-utils@2.0.0':
     resolution: {integrity: sha512-dvNoRKLijXnD0XoJAz94pbNuB5GQgDr55UhpSPhffDkTT0Cmcqh9jSCOtwfT2d4H6MI9E7c4SgtMuJXZ6F3c6A==}
@@ -9154,6 +9166,11 @@ snapshots:
       - '@types/react'
       - '@types/react-dom'
       - embla-carousel
+
+  '@seed-design/vite-plugin@2.1.0(@seed-design/css@2.8.3)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.0))':
+    dependencies:
+      '@seed-design/css': 2.8.3
+      vite: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.0)
 
   '@simple-libs/child-process-utils@2.0.0':
     dependencies:
