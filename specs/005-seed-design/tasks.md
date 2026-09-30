@@ -3,11 +3,11 @@
 **입력**: [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md),
 [data-model.md](./data-model.md), [계약](./contracts/ui.md), [검증 가이드](./quickstart.md)
 
-**현재 상태**: 사용자 1~3단계 완료·승인. 4단계 문서 리뷰 대기. 5단계 이후 미시작.
+**현재 상태**: 사용자 1~4단계 완료·승인. 5단계 완료·리뷰 대기. 6단계 이후 미시작.
 
 작업 번호는 실행 순서다. `[P]`는 같은 승인 단계 안에서 서로 다른 파일로 독립 수행할 수 있다는 뜻이며
 다음 단계 승인이나 에이전트 추가 실행 권한을 뜻하지 않는다. 작업 체크와 사용자 승인을 구분한다.
-테스트는 이번 명세에서 요구한 공용 계약·상태·회귀에 한정한다.
+테스트는 이번 명세에서 요구한 공용 계약·상태·회귀에 한정한다. 테스트 수를 목표로 삼거나 실제 소비처에 없는 업무 흐름을 만들어 검증하지 않는다.
 
 ## 준비 — 사용자 1~4단계
 
@@ -16,22 +16,22 @@
 - [x] T003 `.agents/skills/seed-design/`에 사용자 지정 명령으로 공식 스킬을 설치하고 `skills-lock.json`과 check 결과를 확인한다.
 - [x] T004 `specs/005-seed-design/`에 공식 지침을 반영한 설계·계약·작업 목록과 `checklists/requirements.md`를 작성·검토한다.
 
-**중단 지점**: 이 문서까지 4단계 결과로 보고한다. 사용자 리뷰 승인 전 T005를 실행하지 않는다.
+**4단계 리뷰**: 사용자 승인 완료. 스킬 설치와 설계 문서는 사용자 요청으로 각각 `454ddae`, `772914e`에 커밋했다.
 
 ## 기반 설정 — 사용자 5단계, 모든 사용자 스토리의 선행 조건
 
-- [ ] T005 `pnpm-workspace.yaml`, `packages/ui/package.json`, `apps/web/package.json`, `apps/admin/package.json`, `apps/storybook/package.json`에 계약의 Seed 버전을 선언하고 `pnpm-lock.yaml`을 갱신한다. UI는 peer+dev, 앱은 catalog 소비로 정렬한다.
-- [ ] T006 `packages/ui/seed-design.json`에 React·TSX·RSC·스니펫 경로·telemetry 설정을 작성한다.
+- [x] T005 `pnpm-workspace.yaml`, `packages/ui/package.json`, `apps/web/package.json`, `apps/admin/package.json`, `apps/storybook/package.json`에 계약의 Seed 버전을 선언하고 `pnpm-lock.yaml`을 갱신한다. UI는 peer+dev, 앱은 catalog 소비로 정렬한다.
+- [x] T006 `packages/ui/seed-design.json`에 React·TSX·RSC·스니펫 경로·telemetry 설정을 작성한다.
 
 ## US1 — 공용 ActionButton 제공, 사용자 5단계 (P1)
 
 **목표**: 공식 스니펫으로 공용 버튼을 제공한다. 기존 소비자를 깨뜨리지 않고 새 API를 검증한다.
 **독립 검증**: 공용 버튼 테스트·CLI compat. 최소 제공 단위는 이 스토리지만 전체 완료 범위를 줄이지 않는다.
 
-- [ ] T007 [US1] `packages/ui/src/action-button.test.tsx`에 클릭, disabled, loading과 disabled의 독립성, 접근 가능한 이름, ref와 명시한 type 전달 테스트를 작성한다. 구현 전 실패를 확인한다.
-- [ ] T008 [US1] CLI 1.7.0으로 `packages/ui/src/seed-design/ui/`에 ActionButton과 필수 loading-indicator·progress-circle을 생성하고 `packages/ui/package.json`의 의존성 소유권을 재확인한다.
-- [ ] T009 [US1] `packages/ui/src/index.ts`에서 ActionButton과 타입을 공개한다. 기존 Button·theme·전역 스타일은 6단계 소비자 이전까지 유지한다.
-- [ ] T010 [US1] `packages/ui/seed-design.json` 기준 compat와 새 버튼 테스트, 루트 `package.json`의 check·build를 실행하고 5단계 결과를 보고한다.
+- [x] T007 [US1] `packages/ui/src/action-button.test.tsx`에 공개 버튼을 직접 렌더링하고 userEvent로 클릭·키보드, disabled, loading과 disabled의 독립성, ref 포커스 이동과 비제출 type을 검증한다. 가상 저장 로직·예시 컴포넌트를 추가하지 않는다. 최초 구현 전 실패·구현 후 통과를 확인했고 리뷰에서 이 범위로 정리했다.
+- [x] T008 [US1] CLI 1.7.0으로 `packages/ui/src/seed-design/ui/`에 ActionButton과 필수 loading-indicator·progress-circle을 생성하고 `packages/ui/package.json`의 의존성 소유권을 재확인한다.
+- [x] T009 [US1] `packages/ui/src/index.ts`에서 ActionButton과 타입을 공개한다. 기존 Button·theme·전역 스타일은 6단계 소비자 이전까지 유지한다.
+- [x] T010 [US1] `packages/ui/seed-design.json` 기준 compat와 새 버튼 테스트, 루트 `package.json`의 check·build를 실행하고 5단계 결과를 보고한다.
 
 **중단 지점**: 5단계 사용자 리뷰 승인 전 T011 이후를 실행하지 않는다.
 
@@ -111,14 +111,24 @@ US2는 토큰 전환을 단독 확인할 수 있지만 US3와 함께 6단계 결
 | ------------------------- | ------------------------------------ |
 | FR-001 공식 스킬          | T003, T004                           |
 | FR-002 버튼               | T007~T010, T020                      |
-| FR-003 전체 UI 전환       | T005, T012~~T014, T019~~T021         |
+| FR-003 전체 UI 전환       | T005, T012–T014, T019–T021           |
 | FR-004 기존 동작          | T011, T013, T014, T024               |
 | FR-005·FR-006 테마·기본값 | T015~T019, T024                      |
 | FR-007 접근성             | T007, T020, T025                     |
 | FR-008 사례·문서          | T020, T027, T028                     |
 | FR-009 리뷰 경계          | 각 중단 지점, T010, T022, T026, T028 |
 
+성공 기준도 같은 작업에 연결한다. 검증 항목이 있다는 사실과 실제 통과 여부는 구분한다.
+
+| 성공 기준                  | 작업                             |
+| -------------------------- | -------------------------------- |
+| SC-001 Seed 화면           | T012–T014, T019–T021, T024, T026 |
+| SC-002 시스템 테마         | T015–T019, T024                  |
+| SC-003 기존 화면·안전 영역 | T011, T013, T014, T024           |
+| SC-004 버튼·접근성         | T007, T020, T025                 |
+| SC-005 문서 재현성         | T023, T027, T028                 |
+
 ## 실행 제한
 
-4단계 승인 전 제품 코드·의존성·스니펫을 변경하지 않는다. 이 목록은 GitHub 이슈 수정, commit,
+현재는 5단계 리뷰 수정 범위다. 사용자 승인 전 6단계를 시작하지 않는다. 이 목록은 GitHub 이슈 수정, commit,
 push, PR, 배포를 승인하지 않는다. 각 단계에서 작업 결과·변경 파일·검증 결과를 보고한 뒤 멈춘다.
