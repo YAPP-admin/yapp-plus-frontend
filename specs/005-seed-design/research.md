@@ -99,3 +99,23 @@ CSS 2.8.3의 size 타입은 xsmall·small·medium·large이며 기본 medium이�
 공식 library-authors의 인덱스 txt 링크는 일부 조회에서 403을 반환해 같은 문서의 HTML로 확인했다.
 레지스트리도 일반 HTTP 조회로 본문을 확인했다. npm 배포본은 메모리에서 읽어 분석했으며
 이번 단계에서 Seed runtime 패키지는 설치하지 않았다. 현재 설계에 남은 미확정 계약은 없다.
+
+## 5단계 구현에서 확인한 사항
+
+- happy-dom 테스트에서 Seed recipe의 CSS를 Node.js가 직접 읽어 실패했다. `packages/ui/vitest.config.ts`의
+  `test.server.deps.inline`에 `@seed-design/react`, `@seed-design/css`를 지정해 Vite가 처리하도록 했다.
+  컴포넌트나 CSS를 mock하지 않고 실제 공개 API를 검증한다.
+  [Vitest 환경 안내](https://vitest.dev/guide/environment)의 외부 의존성 CSS 처리 지침을 따랐다.
+- 공식 스니펫 원문을 유지하려고 Oxfmt의 `packages/ui/src/seed-design/**` 포맷 제외와
+  Oxlint의 해당 경로 `typescript/consistent-type-definitions` 해제를 추가했다. 사용자 리뷰 후
+  React 19용으로 스니펫을 수정하면서 이 두 예외를 제거했다. 세 파일은 기본 규칙으로 검사한다.
+- React 19는 ref를 일반 prop으로 전달할 수 있다. 세 컴포넌트의 forwardRef를 없애고
+  `ComponentProps`로 ref를 포함한 공식 타입을 가져온다. 공식 스니펫은 확장을 허용한다.
+  [React forwardRef 안내](https://react.dev/reference/react/forwardRef)를 확인했다.
+- 테스트는 `@testing-library/user-event` 14.6.7을 catalog와 UI 개발 의존성에 선언해 사용한다.
+  공개 버튼을 직접 렌더링해 클릭·Tab·Enter·Space, disabled, loading의 독립성과
+  ref 포커스 이동·비제출 type을 검증한다. userEvent 지침은 가상의 업무 컴포넌트 작성을 요구하지 않는다.
+  리뷰에서 임의로 추가했던 저장 상태·비동기 저장 예시는 제거했다.
+  [Testing Library user-event 안내](https://testing-library.com/docs/user-event/intro/)를 따른다.
+- 로딩 표시의 progressbar 이름이 버튼의 접근 가능한 이름에 포함된다. 테스트는 로딩 중에도
+  사용자 문구가 이름에 포함되는지 확인하고 loading과 disabled의 독립 동작을 검증한다.

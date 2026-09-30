@@ -17,7 +17,8 @@
 
 ### ActionButton
 
-- props는 공식 스니펫의 `ActionButtonProps`를 그대로 사용하며 자체 size·variant 매핑을 추가하지 않는다.
+- props는 `ComponentProps<typeof SeedActionButton>`으로 공식 컴포넌트에서 가져온다.
+  React 19에 맞게 ref를 일반 prop으로 전달하며 자체 size·variant 매핑을 추가하지 않는다.
 - 기존 primary 사례는 `brandSolid`, secondary 사례는 `neutralWeak`로 전환한다.
 - size는 기존 `small`·`medium` 리터럴을 그대로 사용한다. 공식 기본 size는 `medium`이다.
 - children, className, HTML 버튼 속성, 이벤트와 ref는 공식 컴포넌트 계약을 따른다.
@@ -49,7 +50,9 @@
 
 CLI가 생성한 ActionButton·loading-indicator·progress-circle은 `src/seed-design/ui`가 소유한다.
 상대 import를 유지하고 새로운 경로 alias를 만들지 않는다. use client와 @requires 헤더를 보존한다.
-생성 파일의 주석은 번역하지 않는다. 스니펫 수정이 필요하면 원본·설정·공식 확장 가능 범위를 먼저 확인한다.
+원본의 출처·요구 버전 헤더와 안내는 보존한다. 공식 스니펫은 확장을 허용하며 사용자 리뷰 요청에 따라
+세 컴포넌트의 forwardRef를 제거하고 ref prop 전달과 type 별칭을 사용한다. 저장소 포맷·lint 예외는 두지 않는다.
+향후 CLI로 다시 생성할 때 이 수정 사항을 비교·보존한다.
 
 ## 3. CSS와 디자인 토큰
 
@@ -104,6 +107,9 @@ import { vars } from '@seed-design/css/vars';
 
 ## 5. 테스트 경계
 
-공용 테스트는 버튼 이벤트·disabled·loading·ref와 테마 초기화·변경·fallback을 검증한다.
+버튼은 공개 API에서 직접 렌더링하고 `userEvent`로 클릭·키보드·disabled 동작을 검증한다.
+loading 표시는 disabled와 독립적으로 확인한다. React 19 ref 전달과 명시한 비제출 type은
+최소한의 폼·포커스 이동 구성으로 확인한다. 가상 저장 컴포넌트·상태 메시지·비동기 저장 로직은 만들지 않는다.
+공용 테마 테스트는 프로젝트가 작성하는 초기화·변경·fallback 로직을 검증한다.
 소비 앱 테스트는 기존 화면 의미 구조를 보존하는지 확인한다. CSS 로딩·초기 표시·hydration·접근성은
 web·admin·Storybook 실제 실행 환경에서 별도로 확인한다. 스니펫 내부 구현 자체를 복제하는 테스트는 없다.
