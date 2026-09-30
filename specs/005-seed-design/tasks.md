@@ -3,7 +3,7 @@
 **입력**: [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md),
 [data-model.md](./data-model.md), [계약](./contracts/ui.md), [검증 가이드](./quickstart.md)
 
-**현재 상태**: 사용자 1~4단계 완료·승인. 5단계 완료·리뷰 대기. 6단계 이후 미시작.
+**현재 상태**: 사용자 1~5단계 완료·승인. 6단계 구현 완료·리뷰 대기. 7단계 이후 미시작.
 
 작업 번호는 실행 순서다. `[P]`는 같은 승인 단계 안에서 서로 다른 파일로 독립 수행할 수 있다는 뜻이며
 다음 단계 승인이나 에이전트 추가 실행 권한을 뜻하지 않는다. 작업 체크와 사용자 승인을 구분한다.
@@ -33,40 +33,40 @@
 - [x] T009 [US1] `packages/ui/src/index.ts`에서 ActionButton과 타입을 공개한다. 기존 Button·theme·전역 스타일은 6단계 소비자 이전까지 유지한다.
 - [x] T010 [US1] `packages/ui/seed-design.json` 기준 compat와 새 버튼 테스트, 루트 `package.json`의 check·build를 실행하고 5단계 결과를 보고한다.
 
-**중단 지점**: 5단계 사용자 리뷰 승인 전 T011 이후를 실행하지 않는다.
+**5단계 리뷰**: 사용자 승인 완료. 구현과 리뷰 문서를 각각 `b211b28`, `90a19cb`로 커밋했다.
 
 ## US2 — 기존 화면 전환, 사용자 6단계 (P1)
 
 **목표**: 기존 콘텐츠와 배치를 유지하면서 Seed 토큰·CSS로 전환한다.
 **독립 검증**: 웹 홈·관리자 대시보드 테스트와 각각의 화면 확인.
 
-- [ ] T011 [US2] `apps/web/src/app/page.test.tsx`, `apps/admin/src/routes/index.test.tsx`에서 기존 제목·문구·빈 상태의 의미 구조를 확인하고 필요한 회귀 검증만 보강한다.
-- [ ] T012 [US2] `packages/ui/src/global.css.ts`의 자체 테마 선언을 Seed 공개 토큰으로 바꾸고 컴포넌트 스타일을 덮는 전역 폼 규칙을 제거한다. 앱 기본 스타일의 책임은 유지한다.
-- [ ] T013 [P] [US2] `apps/web/src/app/layout.tsx`, `apps/web/src/app/page.css.ts`에 base.css 로딩과 Seed 토큰·서체 규격을 적용한다. `apps/web/src/app/global.css.ts` 연결과 기존 safe-area를 보존한다.
-- [ ] T014 [P] [US2] `apps/admin/src/routes/__root.tsx`, `apps/admin/src/routes/__root.css.ts`, `apps/admin/src/routes/index.css.ts`에 base.css 로딩과 Seed 토큰·서체 규격을 적용한다.
+- [x] T011 [US2] `apps/web/src/app/page.test.tsx`, `apps/admin/src/routes/index.test.tsx`에서 기존 제목·문구·빈 상태의 의미 구조를 확인하고 필요한 회귀 검증만 보강한다.
+- [x] T012 [US2] `packages/ui/src/global.css.ts`의 자체 테마 선언을 Seed 공개 토큰으로 바꾸고 컴포넌트 스타일을 덮는 전역 폼 규칙을 제거한다. 앱 기본 스타일의 책임은 유지한다.
+- [x] T013 [P] [US2] `apps/web/src/app/layout.tsx`, `apps/web/src/app/page.css.ts`에 base.css 로딩과 Seed 토큰·서체 규격을 적용한다. `apps/web/src/app/global.css.ts` 연결과 기존 safe-area를 보존한다.
+- [x] T014 [P] [US2] `apps/admin/src/routes/__root.tsx`, `apps/admin/src/routes/__root.css.ts`, `apps/admin/src/routes/index.css.ts`에 base.css 로딩과 Seed 토큰·서체 규격을 적용한다.
 
 ## US3 — 시스템 테마, 사용자 6단계 (P1)
 
 **목표**: 서버·브라우저 경계를 지키며 초기 테마와 실행 중 변경을 처리한다.
-**독립 검증**: 공용 스크립트 테스트와 각 문서의 초기 테마·양방향 변경.
+**독립 검증**: 공식 Manual·Vite plugin 연결과 각 문서의 초기 테마·양방향 변경.
 
-- [ ] T015 [US3] `packages/ui/src/theme-script.test.ts`에 최초 light/dark, 양방향 change, addListener, 감지 부재·실패·구독 부재와 서버 import 안전성 테스트를 작성한다. 구현 전 실패를 확인한다.
-- [ ] T016 [US3] `packages/ui/src/theme-script.ts`에 자체 완결 `seedThemeScript` 문자열을 구현하고 `packages/ui/package.json`에 전용 공개 진입점을 추가한다.
-- [ ] T017 [P] [US3] `apps/web/src/app/layout.tsx`의 문서 속성·head 스크립트·color-scheme을 연결하고 문서 루트 속성 차이에만 hydration 예외를 적용한다.
-- [ ] T018 [P] [US3] `apps/admin/src/routes/__root.tsx`에 동일 계약을 연결한다. 클라이언트 라우트 이동마다 스크립트를 재등록하지 않는다.
-- [ ] T019 [P] [US3] `apps/storybook/.storybook/main.ts`의 previewHead에 같은 스크립트와 color-scheme을 연결하고 `apps/storybook/.storybook/preview.tsx`에서 base.css를 로드한다.
+- [x] T015 [US3] 공식 Manual과 Vite 설치 문서, Vite plugin 2.1.0의 계약을 확인하고 TanStack Start SSR에 HTML transform이 적용되는지 실제 응답과 산출물로 확인한다.
+- [x] T016 [US3] `@yapp-plus/ui/seed-theme`에 공식 Manual 스크립트 문자열을 두어 web·admin이 공유하고 Storybook은 `seedDesignPlugin()`을 사용한다. 공식 구현을 복제한 단위 테스트는 두지 않는다.
+- [x] T017 [P] [US3] `apps/web/src/app/layout.tsx`의 문서 속성·head 스크립트·color-scheme을 연결하고 문서 루트 속성 차이에만 hydration 예외를 적용한다.
+- [x] T018 [P] [US3] `apps/admin/src/routes/__root.tsx`에 동일 계약을 연결한다. 클라이언트 라우트 이동마다 스크립트를 재등록하지 않는다.
+- [x] T019 [P] [US3] `apps/storybook/.storybook/main.ts`의 `viteFinal`에 `seedDesignPlugin()`을 연결하고 `apps/storybook/.storybook/preview.tsx`에서 base.css를 로드한다.
 
 ## US4 — 컴포넌트 검토 환경, 사용자 6단계 (P2)
 
 **목표**: 새 API와 상태를 Storybook에서 재현한다.
 **독립 검증**: 각 스토리가 라이트·다크에서 표시되고 controls와 접근성 검토가 가능하다.
 
-- [ ] T020 [US4] `apps/storybook/stories/button.stories.tsx`를 ActionButton 사례로 교체한다. brandSolid·neutralWeak, small·medium, disabled, loading, loading+disabled를 표현하고 비제출 type을 명시한다.
+- [x] T020 [US4] `apps/storybook/stories/button.stories.tsx`를 ActionButton 사례로 교체한다. brandSolid·neutralWeak, small·medium, disabled, loading, loading+disabled를 표현하고 비제출 type을 명시한다.
 
 ## 전환 정리 — 사용자 6단계 종료
 
-- [ ] T021 `packages/ui/src/index.ts`, `packages/ui/package.json`에서 옛 Button·ButtonProps·theme 진입점을 제거하고 `packages/ui/src/button.tsx`, `button.css.ts`, `button.test.tsx`, `theme.css.ts`를 정리한다. 모든 소비자의 옛 참조가 없는지 확인한다.
-- [ ] T022 `package.json`의 check·build와 `packages/ui` 테스트를 실행해 6단계 결과를 보고한다.
+- [x] T021 `packages/ui/src/index.ts`, `packages/ui/package.json`에서 옛 Button·ButtonProps·theme 진입점을 제거하고 `packages/ui/src/button.tsx`, `button.css.ts`, `button.test.tsx`, `theme.css.ts`를 정리한다. 모든 소비자의 옛 참조가 없는지 확인한다.
+- [x] T022 `package.json`의 check·build와 `packages/ui`의 userEvent 버튼 테스트를 실행해 6단계 결과를 보고한다.
 
 **중단 지점**: 6단계 사용자 리뷰 승인 전 통합 검증 단계 T023을 시작하지 않는다.
 
@@ -130,5 +130,5 @@ US2는 토큰 전환을 단독 확인할 수 있지만 US3와 함께 6단계 결
 
 ## 실행 제한
 
-현재는 5단계 리뷰 수정 범위다. 사용자 승인 전 6단계를 시작하지 않는다. 이 목록은 GitHub 이슈 수정, commit,
+현재는 6단계 리뷰 범위다. 사용자 승인 전 7단계를 시작하지 않는다. 이 목록은 GitHub 이슈 수정, commit,
 push, PR, 배포를 승인하지 않는다. 각 단계에서 작업 결과·변경 파일·검증 결과를 보고한 뒤 멈춘다.
