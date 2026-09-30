@@ -33,7 +33,8 @@
 - **근거**: 실제 CSS 2.8.3의 `recipes/action-button.mjs`는 `./action-button.css`를 import한다.
   React 2.5.0 ActionButton이 해당 recipe를 사용하므로 컴포넌트 CSS는 함께 포함된다.
 - **비교**: Manual 문서의 all.css 예제는 전체 스타일을 가져오는 선택지다. 이번 버전에서는
-  base.css와 recipe 자동 로딩을 사용하므로 all.css·개별 컴포넌트 CSS·Seed 플러그인을 중복 추가하지 않는다.
+  base.css와 recipe 자동 로딩을 사용하므로 all.css·개별 컴포넌트 CSS를 중복 추가하지 않는다.
+  Storybook의 Vite plugin과 별개로 base.css import는 명시적으로 유지한다.
   Next.js의 Turbopack을 Webpack으로 전환하지 않는다.
 - **근거 링크**: [Manual](https://seed-design.io/llms/react/getting-started/installation/manual.txt),
   [Library Authors](https://seed-design.io/react/getting-started/library-authors), 위 패키지 배포본.
@@ -63,14 +64,19 @@ pnpm dlx @seed-design/cli@1.7.0 compat --cwd packages/ui
 
 ## 5. 시스템 테마와 서버 렌더링
 
-- **결정**: 공용 스크립트 문자열을 각 문서 head에서 최초 표시 전에 실행한다. 시스템 설정을 읽고
-  Seed의 사용자 색상 속성을 갱신하며 변경 이벤트도 반영한다. 감지 실패 시 light를 사용한다.
-- **근거**: 공식 테마는 HTML의 정책과 사용자 색상 속성으로 제어된다. SSR은 시스템 설정을 모르므로
-  브라우저 초기화가 필요하다. 문서마다 같은 자체 완결 스크립트를 사용해 동작 차이를 줄인다.
+- **결정**: web과 admin은 공용 UI의 `@yapp-plus/ui/seed-theme` 진입점에서 공식 Manual의 시스템
+  테마 스크립트를 가져와 문서 head에 넣는다. Storybook은 Vite builder에 `seedDesignPlugin()`을 연결해
+  preview iframe에 같은 역할의 스크립트와 메타를 주입한다.
+- **근거**: `@seed-design/vite-plugin` 2.1.0은 Vite 8과 CSS 2를 peer로 지원하며 `transformIndexHtml`로
+  테마 스크립트와 color-scheme 메타를 주입한다. Storybook 산출물에서 주입 결과를 확인했다.
+  이 저장소의 admin은 순수 TanStack Router SPA가 아니라 TanStack Start SSR 문서를 직접 렌더링하므로
+  플러그인의 HTML transform이 dev 응답과 프로덕션 산출물에 적용되지 않았다. Next.js도 같은 transform
+  경로가 없어 두 SSR 앱은 Manual 방식을 사용한다.
 - **비교**: useEffect로 늦게 적용하는 방식, 별도 ThemeProvider, localStorage와 테마 선택 UI는 추가하지 않는다.
-  폰트·테마 초기화에 새로운 원격 요청을 만들지 않는다.
-- **근거 링크**: [Theming](https://seed-design.io/llms/react/getting-started/styling/theming.txt),
-  [Manual](https://seed-design.io/llms/react/getting-started/installation/manual.txt).
+  SSR 앱에 효과 없는 Vite plugin을 남기지 않는다. 동일한 Manual 문자열을 두 앱에 복제하지 않고 두 실제
+  소비자가 있는 공용 UI 계약으로 관리하며, 공식 스크립트의 내부 동작을 복제한 테스트는 유지하지 않는다.
+- **근거 링크**: [Manual](https://v1-0.seed-design.io/react/getting-started/installation/manual),
+  [Vite](https://seed-design.io/react/getting-started/installation/vite), Vite plugin 2.1.0 배포본.
 
 ## 6. 공개 토큰과 기존 API 전환
 

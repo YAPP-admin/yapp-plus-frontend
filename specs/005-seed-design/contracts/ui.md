@@ -5,15 +5,16 @@
 
 ## 1. 패키지 공개 진입점
 
-| 진입점                       | 최종 계약                                                                      |
-| ---------------------------- | ------------------------------------------------------------------------------ |
-| `@yapp-plus/ui`              | 공식 스니펫의 `ActionButton`, `ActionButtonProps`를 공개한다.                  |
-| `@yapp-plus/ui/styles`       | Seed 토큰을 사용하는 앱 공통 기본 스타일. 앱이 명시적으로 import한다.          |
-| `@yapp-plus/ui/theme-script` | 외부 값 보간 없는 `seedThemeScript: string`. 서버 import 시 DOM을 읽지 않는다. |
-| `@yapp-plus/ui/theme`        | 6단계에서 제거한다. 소비자는 Seed 공개 vars를 직접 사용한다.                   |
+| 진입점                     | 최종 계약                                                             |
+| -------------------------- | --------------------------------------------------------------------- |
+| `@yapp-plus/ui`            | 공식 스니펫의 `ActionButton`, `ActionButtonProps`를 공개한다.         |
+| `@yapp-plus/ui/seed-theme` | web·admin이 공유하는 공식 Manual의 `seedThemeScript`를 공개한다.      |
+| `@yapp-plus/ui/styles`     | Seed 토큰을 사용하는 앱 공통 기본 스타일. 앱이 명시적으로 import한다. |
+| `@yapp-plus/ui/theme`      | 6단계에서 제거한다. 소비자는 Seed 공개 vars를 직접 사용한다.          |
 
-앱은 공용 UI의 내부 파일에 접근하지 않는다. CSS vars가 필요한 앱은 `@seed-design/css`를 직접
-의존성으로 선언한다. 공용 UI의 일반 export를 가져오는 것으로 전역 base.css를 로드하지 않는다.
+앱은 공용 UI의 내부 파일에 접근하지 않는다. CSS vars나 테마 초기화가 필요한 앱은
+`@seed-design/css`를 직접 의존성으로 선언한다. 공용 UI의 일반 export를 가져오는 것으로 전역
+base.css를 로드하지 않는다.
 
 ### ActionButton
 
@@ -29,12 +30,12 @@
 
 ## 2. 의존성과 스니펫 소유권
 
-| 소유자        | 선언                                                  |
-| ------------- | ----------------------------------------------------- |
-| pnpm catalog  | React 2.5.0, CSS 2.8.3 정확 버전                      |
-| `packages/ui` | React `^2.5.0`·CSS `^2.8.3` peer, 개발 설치는 catalog |
-| web·admin     | Seed React·CSS를 catalog 직접 의존성으로 설치         |
-| Storybook     | Seed React·CSS를 catalog 개발 의존성으로 설치         |
+| 소유자        | 선언                                                      |
+| ------------- | --------------------------------------------------------- |
+| pnpm catalog  | React 2.5.0, CSS 2.8.3, Vite plugin 2.1.0 정확 버전       |
+| `packages/ui` | React `^2.5.0`·CSS `^2.8.3` peer, 개발 설치는 catalog     |
+| web·admin     | Seed React·CSS를 catalog 직접 의존성으로 설치             |
+| Storybook     | Seed React·CSS·Vite plugin을 catalog 개발 의존성으로 설치 |
 
 `packages/ui/seed-design.json`:
 
@@ -96,13 +97,15 @@ import { vars } from '@seed-design/css/vars';
 ## 4. 시스템 테마 계약
 
 - 앱 문서 루트는 `data-seed`, `data-seed-color-mode="system"`, 초기 `data-seed-user-color-scheme="light"`를 갖는다.
-- head에는 `color-scheme: light dark` 메타와 공용 스크립트를 둔다. 초기 스크립트가 첫 콘텐츠 표시 전에 실행된다.
-- 스크립트는 문서 루트의 위 속성을 보장하고 `matchMedia('(prefers-color-scheme: dark)')`로 light/dark를 결정한다.
-- 감지 결과를 즉시 반영한 뒤 change를 구독한다. 구형 addListener도 지원하고 구독 API 부재 시 초기값만 적용한다.
-- matchMedia 부재·실패 시 light로 설정한다. 외부 값을 HTML이나 스크립트에 보간하지 않는다.
-- web·admin은 동일 문자열을 HTML head에 넣고, Storybook main의 previewHead는 preview iframe head에 넣는다.
+- web과 admin은 `@yapp-plus/ui/seed-theme`이 제공하는 공식 Manual의 시스템 테마 스크립트를 문서
+  head에 넣고 `color-scheme: light dark` 메타를 선언한다. Next.js와 TanStack Start SSR 문서는 Vite의
+  `transformIndexHtml` 대상이 아니다.
+- Storybook은 Vite builder의 `viteFinal`에 `seedDesignPlugin()`을 연결한다. 플러그인이 preview iframe
+  head에 시스템 테마 스크립트와 `color-scheme` 메타를 주입한다.
+- Manual 스크립트와 플러그인 생성 코드는 시스템 light/dark의 초기 감지와 change 구독, 구형
+  addListener를 처리한다. 감지 실패 시 문서에 선언한 초기 light 값을 유지한다.
+- 공용 UI 패키지는 두 SSR 앱이 함께 사용하는 Manual 문자열만 공개한다. Vite 플러그인은 재공개하지 않는다.
 - 초기 스크립트가 수정하는 문서 루트 속성 차이만 hydration 예외로 처리한다.
-- 서버 모듈 평가에서는 window·document를 참조하지 않는다. 브라우저 실행 코드만 문자열에 포함한다.
 - 문서당 한 번 실행하고 클라이언트 라우트 이동 시 재등록하지 않는다. 별도 React state·저장소는 없다.
 
 ## 5. 테스트 경계
@@ -110,6 +113,6 @@ import { vars } from '@seed-design/css/vars';
 버튼은 공개 API에서 직접 렌더링하고 `userEvent`로 클릭·키보드·disabled 동작을 검증한다.
 loading 표시는 disabled와 독립적으로 확인한다. React 19 ref 전달과 명시한 비제출 type은
 최소한의 폼·포커스 이동 구성으로 확인한다. 가상 저장 컴포넌트·상태 메시지·비동기 저장 로직은 만들지 않는다.
-공용 테마 테스트는 프로젝트가 작성하는 초기화·변경·fallback 로직을 검증한다.
-소비 앱 테스트는 기존 화면 의미 구조를 보존하는지 확인한다. CSS 로딩·초기 표시·hydration·접근성은
-web·admin·Storybook 실제 실행 환경에서 별도로 확인한다. 스니펫 내부 구현 자체를 복제하는 테스트는 없다.
+소비 앱 테스트는 기존 화면 의미 구조를 보존하는지 확인한다. 공식 Manual 스크립트와 Vite 플러그인의
+내부 구현을 프로젝트 단위 테스트로 복제하지 않는다. CSS 로딩·초기 표시·시스템 테마 변경·hydration·접근성은 web·admin·Storybook
+실제 실행 환경에서 확인한다. 스니펫 내부 구현 자체를 복제하는 테스트는 없다.

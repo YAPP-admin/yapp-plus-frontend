@@ -2,7 +2,7 @@
 
 **브랜치**: `feat/seed-design` | **작성일**: 2026-09-28 | **명세**: [spec.md](./spec.md)  
 **이슈**: [#28](https://github.com/YAPP-admin/yapp-plus-frontend/issues/28)  
-**상태**: 1~4단계 완료·승인. 5단계 공용 UI 구성 완료·리뷰 대기. 6단계 이후 미시작.
+**상태**: 1~5단계 완료·승인. 6단계 소비 앱 전환 구현 완료·리뷰 대기. 7단계 이후 미시작.
 
 ## 요약
 
@@ -17,7 +17,7 @@ web·admin·Storybook에 적용한다. 화면 구조와 동작은 보존하고 v
 | 언어·실행 환경 | TypeScript 6.0.3, Node.js 24.20.0, pnpm 12.3.4                                                  |
 | 앱             | React 19.2.8, Next.js 16.3.4/Turbopack, TanStack Start 1.168.50/Vite 8.2.2                      |
 | UI 도구        | vanilla-extract, Storybook 10.6.0                                                               |
-| 추가 버전      | Seed React 2.5.0, CSS 2.8.3, CLI 1.7.0                                                          |
+| 추가 버전      | Seed React 2.5.0, CSS 2.8.3, Vite plugin 2.1.0, CLI 1.7.0                                       |
 | 검증           | Vitest 5, Testing Library, happy-dom, Oxfmt, Oxlint, TypeScript, Turbo                          |
 | 저장 상태      | DB·API·브라우저 영속 저장소 변경 없음                                                           |
 | 대상           | 일반 웹 브라우저, 기존 모바일 WebView의 웹 콘텐츠, Storybook preview                            |
@@ -35,7 +35,7 @@ web·admin·Storybook에 적용한다. 화면 구조와 동작은 보존하고 v
 - 요청한 ActionButton과 필수 종속 스니펫만 추가한다. 새 스타일 도구·테마 라이브러리는 없다.
 - API·브리지·배포·네이티브 설정을 바꾸지 않는다. 공용 UI 복구 절차를 아래에 명시한다.
 - 버튼 테스트는 userEvent를 사용해 공개 API를 직접 조작한다. 가상의 저장 기능이나 비동기 업무 흐름은 만들지 않는다.
-  프로젝트가 작성하는 테마 로직은 단위 테스트하고, 화면 의미와 접근성은 실제 소비 환경에서도 확인한다.
+  공식 테마 연결은 산출물과 실제 소비 환경에서 확인하며 외부 패키지 내부 로직을 복제해 단위 테스트하지 않는다.
 - 이슈 #28이 생성되어 있다. 각 단계 종료 시 결과를 보고하고 다음 승인 전 멈춘다.
 
 ## 프로젝트 구조
@@ -65,13 +65,12 @@ packages/ui/
 └── src/
     ├── seed-design/ui/                  # 공식 CLI 스니펫
     ├── action-button.test.tsx           # 새 공용 버튼 계약 검증
-    ├── theme-script.ts                 # 서버에서도 안전한 스크립트 문자열
-    ├── theme-script.test.ts            # 초기 테마와 시스템 변경 검증
+    ├── seed-theme.ts                    # web·admin 공용 Manual 테마 문자열
     ├── global.css.ts                   # Seed 토큰을 사용하는 앱 공통 기본 스타일
     └── index.ts                        # ActionButton 공개
 apps/web/src/app/                       # HTML head, CSS 로딩, 홈 스타일
 apps/admin/src/routes/                  # HTML head, CSS 로딩, 헤더·대시보드 스타일
-apps/storybook/.storybook/              # preview CSS, previewHead 테마
+apps/storybook/.storybook/              # preview CSS, Vite plugin 테마
 apps/storybook/stories/                 # ActionButton 상태 사례
 README.md                              # 개발자 사용법
 ```
@@ -81,16 +80,16 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
 
 ## 단계별 구현과 리뷰 경계
 
-| 사용자 단계 | 범위                             | 완료·검증                                   | 리뷰 상태      |
-| ----------- | -------------------------------- | ------------------------------------------- | -------------- |
-| 1           | 브랜치·도구·기존 설치            | Node/pnpm 버전, frozen lockfile 설치, check | 완료·승인      |
-| 2           | 이슈                             | #28 제목·본문·메타데이터 재조회             | 완료·승인      |
-| 3           | 공식 스킬 설치                   | 설치 파일 18개, skills-lock.json, check     | 완료·승인      |
-| 4           | 명세·연구·계약·작업 목록         | 문서 정합성·체크리스트·check                | 완료·승인      |
-| 5           | 의존성·스니펫·ActionButton 추가  | compat, 버튼 테스트, check·build            | 완료·리뷰 대기 |
-| 6           | 소비 앱·토큰·테마·Storybook 전환 | 테마 테스트, 기존 화면 테스트, check·build  | 5단계 리뷰 후  |
-| 7           | 통합 검증                        | 최종 품질 게이트와 브라우저·접근성 검사     | 6단계 리뷰 후  |
-| 8           | README·결과 문서                 | 문서 재현성·변경 범위 최종 확인             | 7단계 리뷰 후  |
+| 사용자 단계 | 범위                             | 완료·검증                                     | 리뷰 상태      |
+| ----------- | -------------------------------- | --------------------------------------------- | -------------- |
+| 1           | 브랜치·도구·기존 설치            | Node/pnpm 버전, frozen lockfile 설치, check   | 완료·승인      |
+| 2           | 이슈                             | #28 제목·본문·메타데이터 재조회               | 완료·승인      |
+| 3           | 공식 스킬 설치                   | 설치 파일 18개, skills-lock.json, check       | 완료·승인      |
+| 4           | 명세·연구·계약·작업 목록         | 문서 정합성·체크리스트·check                  | 완료·승인      |
+| 5           | 의존성·스니펫·ActionButton 추가  | compat, 버튼 테스트, check·build              | 완료·승인      |
+| 6           | 소비 앱·토큰·테마·Storybook 전환 | 공식 테마 연결, 기존 화면 테스트, check·build | 완료·리뷰 대기 |
+| 7           | 통합 검증                        | 최종 품질 게이트와 브라우저·접근성 검사       | 6단계 리뷰 후  |
+| 8           | README·결과 문서                 | 문서 재현성·변경 범위 최종 확인               | 7단계 리뷰 후  |
 
 ### 5단계 — 공용 UI 구성
 
@@ -106,8 +105,8 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
 
 - 앱에서 `@seed-design/css/base.css`를 한 번 import하고 기존 앱 공통 기본 스타일을 뒤에 연결한다.
 - 자체 테마를 Seed 공개 토큰으로 전환한다. 제품 레이아웃 크기·safe-area·반응형 구조는 유지한다.
-- `seedThemeScript: string`을 `@yapp-plus/ui/theme-script`로 공개해 두 앱 head와 Storybook
-  `previewHead`에 넣는다. 스크립트 문자열은 외부 값을 보간하지 않는 자체 완결 코드로 만든다.
+- web·admin 문서 head에는 `@yapp-plus/ui/seed-theme`에서 가져온 공식 Manual의 시스템 테마 문자열을
+  넣는다. Storybook은 `seedDesignPlugin()`이 preview iframe head에 스크립트와 color-scheme 메타를 주입한다.
 - HTML의 `data-seed`, 시스템 모드, 초기 light 속성과 `color-scheme`을 설정한다. 실행 시 감지 결과와
   변경 이벤트로 light/dark를 갱신한다. 브라우저 기능의 존재를 확인하고 실패 시 light로 복구한다.
 - 클라이언트 초기화 전용 React provider나 useEffect는 추가하지 않는다. HTML 속성의 의도된 차이만
@@ -125,7 +124,8 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
 공용 UI·소비 앱·catalog·lockfile은 함께 적용·복구하는 단위다. 미커밋 단계에서는 이번 작업의
 파일 변경만 역적용하며 사용자 변경은 보존한다. 향후 통합 후에는 해당 변경 단위의 revert와
 이전 lockfile 설치로 복구하고 check·build로 확인한다. 사용자 요청에 따라 완료된 3단계와 4단계는
-각각 `454ddae`, `772914e`로 커밋했다. push·PR·배포·revert는 실행하지 않았다.
+각각 `454ddae`, `772914e`로 커밋했다. 5단계도 구현 `b211b28`, 리뷰 문서 `90a19cb`로 나눠 커밋했다.
+6단계는 미커밋 리뷰 상태다. push·PR·배포·revert는 실행하지 않았다.
 
 ### 5단계 검증 결과
 
@@ -138,6 +138,23 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
   이번 테스트·문서 정리에서는 제품 코드·빌드 설정을 바꾸지 않아 빌드를 재실행하지 않았다.
   Storybook에서 500 kB 초과 chunk 경고가 있었으며 빌드 실패는 없었다.
 - userEvent 키보드 검증과 별개로 실제 브라우저 화면·키보드·스크린 리더·터치 검증은 아직 수행하지 않았다. 소비자 전환 후 6~7단계에서 확인한다.
+
+### 6단계 검증 결과 — 2026-09-30
+
+- 기존 web·admin 테스트가 제목·문구·빈 상태를 검증하므로 중복 테스트를 추가하지 않았다.
+- web·admin은 공용 UI가 제공하는 공식 Manual 스크립트를 사용하고 Storybook은 Vite plugin 2.1.0을 사용한다.
+  TanStack Start SSR 응답에는 Vite HTML transform이 적용되지 않는 것을 dev와 build에서 확인해 admin의
+  효과 없는 plugin 연결을 제거했다. 공식 로직을 복제한 테스트 6개도 리뷰 의견에 따라 제거했다.
+- `node --run check` 통과. UI의 userEvent 기반 버튼 테스트 4개와 web·admin 기존 테스트도 통과했다.
+  lint·typecheck는 각각 7개 중 3개, test는 4개 중 1개 작업이 캐시였다.
+- `node --run build` 통과. web·admin·Storybook 3개 모두 캐시 없이 빌드했다.
+  Storybook의 500 kB 초과 chunk 경고는 남아 있다.
+- web·admin 프로덕션 산출물에서 Manual 스크립트와 `data-seed-color-mode="system"` 속성을 확인했다.
+  Storybook iframe 산출물에서는 Vite plugin이 주입한 스크립트와 color-scheme 메타를 확인했다.
+- 소스에서 옛 Button·ButtonProps·theme import를 제거했고 웹 safe-area와 라우트·페이지 콘텐츠를 유지했다.
+- 브라우저로 로컬 화면을 열려 했으나 관리자 정책 확인 불가로 보안 검사에서 접근이 거부됐다.
+  우회하지 않았다. 실제 렌더링·초기 테마·hydration·반응형·키보드·스크린 리더·터치는 미검증이다.
+  7단계는 사용자 리뷰 승인 후 진행하며 이 제한이 해소돼야 실제 브라우저 검증을 완료할 수 있다.
 
 ## 복잡성 기록
 
