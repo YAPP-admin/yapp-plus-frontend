@@ -9,6 +9,9 @@ pmOnFail: ignore
 # pnpm은 공개된 지 24시간이 지나지 않은 패키지 설치를 기본적으로 지연합니다.
 # 장기간 유지할 minimumReleaseAgeExclude를 추가하지 말고 충분히 검증된 버전을 사용합니다.
 catalog:
+  '@testing-library/user-event': 14.6.7
+  '@seed-design/css': 2.8.3
+  '@seed-design/react': 2.5.0
   '@storybook/addon-a11y': 10.6.0
   '@storybook/addon-docs': 10.6.0
   '@storybook/react-vite': 10.6.0

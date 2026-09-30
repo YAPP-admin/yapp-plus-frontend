@@ -13,6 +13,8 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@seed-design/css": "catalog:",
+    "@seed-design/react": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@vanilla-extract/css": "catalog:",
     "@yapp-plus/api": "workspace:*",
