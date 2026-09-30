@@ -2,13 +2,15 @@
 
 **브랜치**: `feat/seed-design` | **작성일**: 2026-09-28 | **명세**: [spec.md](./spec.md)  
 **이슈**: [#28](https://github.com/YAPP-admin/yapp-plus-frontend/issues/28)  
-**상태**: 1~5단계 완료·승인. 6단계 소비 앱 전환 구현 완료·리뷰 대기. 7단계 이후 미시작.
+**상태**: 1~6단계 완료·승인. 7단계 결과 리뷰 승인·브라우저 수동 검증 미완료.
+8단계 문서 정리 완료·최종 리뷰 대기.
 
 ## 요약
 
 설치된 공식 `seed-design` 스킬을 기준으로 공용 ActionButton, Seed 토큰과 시스템 테마를
 web·admin·Storybook에 적용한다. 화면 구조와 동작은 보존하고 vanilla-extract는 배치와
-반응형 스타일에 유지한다. 세 앱에 동일한 수동 CSS·테마 연결을 사용한다.
+반응형 스타일에 유지한다. web·admin은 공용 Manual 스크립트를 사용하고 Storybook은 Vite plugin을
+사용한다.
 
 ## 기술 맥락
 
@@ -49,6 +51,7 @@ specs/005-seed-design/
 ├── research.md
 ├── data-model.md
 ├── quickstart.md
+├── validation.md
 ├── contracts/ui.md
 ├── checklists/requirements.md
 └── tasks.md
@@ -87,9 +90,9 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
 | 3           | 공식 스킬 설치                   | 설치 파일 18개, skills-lock.json, check       | 완료·승인      |
 | 4           | 명세·연구·계약·작업 목록         | 문서 정합성·체크리스트·check                  | 완료·승인      |
 | 5           | 의존성·스니펫·ActionButton 추가  | compat, 버튼 테스트, check·build              | 완료·승인      |
-| 6           | 소비 앱·토큰·테마·Storybook 전환 | 공식 테마 연결, 기존 화면 테스트, check·build | 완료·리뷰 대기 |
-| 7           | 통합 검증                        | 최종 품질 게이트와 브라우저·접근성 검사       | 6단계 리뷰 후  |
-| 8           | README·결과 문서                 | 문서 재현성·변경 범위 최종 확인               | 7단계 리뷰 후  |
+| 6           | 소비 앱·토큰·테마·Storybook 전환 | 공식 테마 연결, 기존 화면 테스트, check·build | 완료·승인      |
+| 7           | 통합 검증                        | 품질 게이트·산출물 통과, 수동 제한 기록       | 결과 승인      |
+| 8           | README·결과 문서                 | 문서 재현성·변경 범위 최종 확인               | 완료·리뷰 대기 |
 
 ### 5단계 — 공용 UI 구성
 
@@ -125,7 +128,7 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
 파일 변경만 역적용하며 사용자 변경은 보존한다. 향후 통합 후에는 해당 변경 단위의 revert와
 이전 lockfile 설치로 복구하고 check·build로 확인한다. 사용자 요청에 따라 완료된 3단계와 4단계는
 각각 `454ddae`, `772914e`로 커밋했다. 5단계도 구현 `b211b28`, 리뷰 문서 `90a19cb`로 나눠 커밋했다.
-6단계는 미커밋 리뷰 상태다. push·PR·배포·revert는 실행하지 않았다.
+6단계는 구현 `0220a14`, 결과 문서 `57ee25e`로 나눠 커밋했다. push·PR·배포·revert는 실행하지 않았다.
 
 ### 5단계 검증 결과
 
@@ -137,7 +140,8 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
 - 직전 React 19 코드 수정 후 `node --run build` 통과. web·admin·Storybook 3개 모두 캐시 없이 빌드했다.
   이번 테스트·문서 정리에서는 제품 코드·빌드 설정을 바꾸지 않아 빌드를 재실행하지 않았다.
   Storybook에서 500 kB 초과 chunk 경고가 있었으며 빌드 실패는 없었다.
-- userEvent 키보드 검증과 별개로 실제 브라우저 화면·키보드·스크린 리더·터치 검증은 아직 수행하지 않았다. 소비자 전환 후 6~7단계에서 확인한다.
+- userEvent 키보드 검증과 별개로 실제 브라우저 화면·키보드·스크린 리더·터치 검증은 7단계에서
+  시도하며, 실행하지 못한 항목은 완료로 표시하지 않는다.
 
 ### 6단계 검증 결과 — 2026-09-30
 
@@ -154,7 +158,18 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
 - 소스에서 옛 Button·ButtonProps·theme import를 제거했고 웹 safe-area와 라우트·페이지 콘텐츠를 유지했다.
 - 브라우저로 로컬 화면을 열려 했으나 관리자 정책 확인 불가로 보안 검사에서 접근이 거부됐다.
   우회하지 않았다. 실제 렌더링·초기 테마·hydration·반응형·키보드·스크린 리더·터치는 미검증이다.
-  7단계는 사용자 리뷰 승인 후 진행하며 이 제한이 해소돼야 실제 브라우저 검증을 완료할 수 있다.
+  이 제한은 7단계에서도 이어져 [검증 결과](./validation.md)에 미완료 항목으로 기록했다.
+
+### 7단계 검증 결과 — 2026-09-30
+
+- CLI compat, frozen lockfile 설치, 의존성 단일 버전 확인, `node --run check`와
+  `node --run build`가 통과했다.
+- web·admin·Storybook 개발 및 프로덕션 응답과 산출물에서 base CSS, Seed 토큰, Manual 스크립트와
+  Vite plugin 주입 결과를 확인했다.
+- ActionButton userEvent 테스트와 기존 web·admin·app-bridge 회귀 테스트가 통과했다.
+- 관리자 정책으로 localhost 브라우저 연결이 거부되어 실제 테마 변경, hydration 콘솔, 반응형,
+  터치와 스크린 리더 검증은 완료하지 못했다. 자동 검증과 수동 검증의 판정은
+  [validation.md](./validation.md)에 구분했다.
 
 ## 복잡성 기록
 

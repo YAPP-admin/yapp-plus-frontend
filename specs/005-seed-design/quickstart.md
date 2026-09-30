@@ -2,9 +2,9 @@
 
 ## 전제
 
-6단계 소비 앱 전환은 구현 후 리뷰 중이며 7단계 통합 검증은 미시작이다. 아래는 검증 절차이고,
-실제 실행 결과와 미실행 항목은 [plan.md](./plan.md)의 검증 기록을 따른다.
-각 사용자 단계가 끝나면 다음 단계 명령을 실행하기 전에 리뷰를 받는다.
+1~7단계는 사용자 리뷰를 마쳤고 8단계 문서 정리까지 수행했다. 아래는 검증 재현 절차이며 실제
+실행 결과와 미실행 항목은 [validation.md](./validation.md)를 따른다. 브라우저 정책으로 완료하지
+못한 항목은 이 절차로 다시 확인한다.
 
 - Node.js 24.20.0, pnpm 12.3.4를 사용한다. 일반 셸의 버전이 다르면 명령 앞에 `mise exec --`를 붙인다.
 - 5단계부터 설치된 lockfile로 `pnpm install --frozen-lockfile`이 성공해야 한다.
@@ -25,11 +25,11 @@ mise exec -- node --run build
 
 ## 개발 화면 실행 — 6~7단계
 
-각 명령을 별도 터미널에서 실행하고 출력된 주소로 접속한다. Storybook 테마 검증은 preview iframe을 대상으로 한다.
+두 명령을 별도 터미널에서 실행하고 출력된 주소로 접속한다. 루트 dev는 web·admin·mobile을 함께
+실행한다. Storybook 테마 검증은 preview iframe을 대상으로 한다.
 
 ```sh
-mise exec -- pnpm --filter @yapp-plus/web dev
-mise exec -- pnpm --filter @yapp-plus/admin dev
+mise exec -- node --run dev
 mise exec -- node --run storybook
 ```
 
