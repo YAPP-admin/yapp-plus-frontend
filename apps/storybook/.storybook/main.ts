@@ -1,3 +1,4 @@
+import { seedDesignPlugin } from '@seed-design/vite-plugin';
 import type { StorybookConfig } from '@storybook/react-vite';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import { mergeConfig } from 'vite';
@@ -14,7 +15,7 @@ const storybookConfig: StorybookConfig = {
   },
   viteFinal(viteConfig) {
     return mergeConfig(viteConfig, {
-      plugins: [vanillaExtractPlugin()],
+      plugins: [seedDesignPlugin(), vanillaExtractPlugin()],
     });
   },
 };

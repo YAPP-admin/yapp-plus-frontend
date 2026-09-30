@@ -8,8 +8,8 @@
   ],
   "exports": {
     ".": "./src/index.ts",
-    "./styles": "./src/global.css.ts",
-    "./theme": "./src/theme.css.ts"
+    "./seed-theme": "./src/seed-theme.ts",
+    "./styles": "./src/global.css.ts"
   },
   "scripts": {
     "lint": "oxlint --deny-warnings .",

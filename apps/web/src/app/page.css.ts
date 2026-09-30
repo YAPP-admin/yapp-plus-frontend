@@ -1,5 +1,5 @@
 import { style } from '@vanilla-extract/css';
-import { vars } from '@yapp-plus/ui/theme';
+import { vars } from '@seed-design/css/vars';
 
 export const page = style({
   display: 'grid',
@@ -15,13 +15,14 @@ export const header = style({
   display: 'flex',
   minHeight: '3.5rem',
   alignItems: 'center',
-  paddingInline: vars.space[6],
-  borderBottom: `1px solid ${vars.color.line}`,
+  paddingInline: vars.$dimension.x6,
+  borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
 });
 
 export const wordmark = style({
-  fontSize: '0.875rem',
-  fontWeight: 700,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  fontWeight: vars.$fontWeight.bold,
   letterSpacing: 0,
 });
 
@@ -30,25 +31,26 @@ export const content = style({
   width: 'min(100%, 68rem)',
   alignContent: 'center',
   justifySelf: 'center',
-  padding: `${vars.space[8]} ${vars.space[6]}`,
+  padding: `${vars.$dimension.x8} ${vars.$dimension.x6}`,
 });
 
 export const intro = style({
   display: 'grid',
   maxWidth: '40rem',
-  gap: vars.space[4],
+  gap: vars.$dimension.x4,
 });
 
 export const title = style({
   margin: 0,
-  fontSize: '3.5rem',
-  fontWeight: 760,
+  fontSize: vars.$fontSize.t9,
+  fontWeight: vars.$fontWeight.bold,
   letterSpacing: 0,
-  lineHeight: 0.96,
+  lineHeight: vars.$lineHeight.t9,
   textWrap: 'balance',
   '@media': {
     'screen and (min-width: 48rem)': {
-      fontSize: '5rem',
+      fontSize: vars.$fontSize.t10,
+      lineHeight: vars.$lineHeight.t10,
     },
   },
 });
@@ -56,15 +58,16 @@ export const title = style({
 export const description = style({
   maxWidth: '34ch',
   margin: 0,
-  color: vars.color.muted,
-  fontSize: '1.0625rem',
-  lineHeight: 1.65,
+  color: vars.$color.fg.neutralMuted,
+  fontSize: vars.$fontSize.t5,
+  fontWeight: vars.$fontWeight.regular,
+  lineHeight: vars.$lineHeight.t5,
   textWrap: 'pretty',
 });
 
 export const accent = style({
   width: '3rem',
   height: '0.25rem',
-  marginTop: vars.space[2],
-  background: vars.color.accent,
+  marginTop: vars.$dimension.x2,
+  background: vars.$color.bg.brandSolid,
 });

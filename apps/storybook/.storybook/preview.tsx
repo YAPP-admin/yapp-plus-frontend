@@ -1,3 +1,4 @@
+import '@seed-design/css/base.css';
 import type { Preview } from '@storybook/react-vite';
 import '@yapp-plus/ui/styles';
 

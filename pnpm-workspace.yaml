@@ -12,6 +12,7 @@ catalog:
   '@testing-library/user-event': 14.6.7
   '@seed-design/css': 2.8.3
   '@seed-design/react': 2.5.0
+  '@seed-design/vite-plugin': 2.1.0
   '@storybook/addon-a11y': 10.6.0
   '@storybook/addon-docs': 10.6.0
   '@storybook/react-vite': 10.6.0
