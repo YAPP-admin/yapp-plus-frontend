@@ -74,7 +74,7 @@
 ## 통합 검증 — 사용자 7단계
 
 - [x] T023 `specs/005-seed-design/quickstart.md`의 최종 compat·check·build·의존성 버전 확인을 실행하고 결과를 `.context/seed-design-validation.md`에 기록한다.
-- [ ] T024 `specs/005-seed-design/quickstart.md`에 따라 세 환경의 초기·실시간 테마, hydration, 390px·1280px 배치와 웹 safe-area를 검증하고 `.context/seed-design-validation.md`에 근거를 남긴다. 관리자 정책으로 localhost 브라우저 연결이 거부되어 미완료다.
+- [ ] T024 `specs/005-seed-design/quickstart.md`에 따라 세 환경의 초기·실시간 테마, hydration, 390px·1280px 배치와 웹 safe-area를 검증하고 `.context/seed-design-validation.md`에 근거를 남긴다. 사용자가 실행 중 시스템 라이트·다크 전환을 확인했다. 최초 진입·hydration·반응형·safe-area는 관리자 정책으로 에이전트의 localhost 브라우저 연결이 거부되어 미완료다.
 - [ ] T025 `specs/005-seed-design/quickstart.md`의 키보드·터치·스크린 리더 확인을 수행하고 `.context/seed-design-validation.md`에 실제 확인 방법과 미실행 항목을 구분한다. userEvent 자동 검증은 통과했지만 실제 터치·스크린 리더 검증은 미완료다.
 - [x] T026 `apps/storybook/storybook-static/`과 web·admin 프로덕션 산출물에서 CSS·테마를 확인하고 `.context/seed-design-validation.md`에 기록한다. 7단계 결과를 보고한다.
 
