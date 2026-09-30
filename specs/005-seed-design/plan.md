@@ -167,9 +167,10 @@ button 구현·CSS·기존 테스트와 theme 계약 파일은 소비자 이전�
 - web·admin·Storybook 개발 및 프로덕션 응답과 산출물에서 base CSS, Seed 토큰, Manual 스크립트와
   Vite plugin 주입 결과를 확인했다.
 - ActionButton userEvent 테스트와 기존 web·admin·app-bridge 회귀 테스트가 통과했다.
-- 관리자 정책으로 localhost 브라우저 연결이 거부되어 실제 테마 변경, hydration 콘솔, 반응형,
-  터치와 스크린 리더 검증은 완료하지 못했다. 자동 검증과 수동 검증의 판정은
-  [validation.md](./validation.md)에 구분했다.
+- 사용자가 macOS 시스템 라이트·다크 실행 중 전환을 직접 확인했다. 관리자 정책으로 에이전트의
+  localhost 브라우저 연결이 거부되어 각 모드의 최초 진입, hydration 콘솔, 반응형, 터치와 스크린
+  리더 검증은 완료하지 못했다. 자동 검증과 수동 검증의 판정은 [validation.md](./validation.md)에
+  구분했다.
 
 ## 복잡성 기록
 
