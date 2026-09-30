@@ -68,11 +68,64 @@ Storybook 정적 문서는 [GitHub Pages](https://yapp-admin.github.io/yapp-plus
 상대 asset 경로를 사용하므로 `/yapp-plus-frontend/` project site 하위 경로에서도 로드됩니다.
 제품 앱의 Vercel Preview·Production 배포와 Storybook Pages 배포는 서로 독립적으로 실행됩니다.
 
-기본 디자인 토큰과 전역 reset은 `packages/ui`에서 관리합니다. 패키지의 일반 진입점을
-가져오는 것만으로 전역 스타일이 적용되지는 않으며, 각 앱이 루트에서
-`@yapp-plus/ui/styles`를 명시적으로 가져옵니다. 웹의 `global.css.ts`는 스타일을 다시
-선언하는 파일이 아니라 Turbopack이 이 외부 스타일 진입점을 추적하게 하는 한 줄짜리
-연결 파일입니다.
+## Seed Design
+
+이 저장소는 당근의 공식 Seed Design 스킬과 React 패키지를 사용합니다. 저장소 루트에서 다음
+명령으로 같은 스킬을 설치할 수 있습니다.
+
+```sh
+pnpm dlx skills add https://github.com/daangn/seed-design --skill seed-design
+```
+
+`packages/ui/seed-design.json`은 React·TSX·RSC 스니펫 경로를 정의하며 telemetry를 끕니다. 현재
+지원하고 검증한 범위는 React 19, `@seed-design/react` 2.5.0, `@seed-design/css` 2.8.3,
+`@seed-design/vite-plugin` 2.1.0, CLI 1.7.0입니다. 공용 UI의 peer 범위는
+`@seed-design/react ^2.5.0`, `@seed-design/css ^2.8.3`, React·ReactDOM 19 이상입니다.
+
+공용 컴포넌트는 `@yapp-plus/ui`에서 가져옵니다. ActionButton은 Seed의 `loading`과 `disabled`를
+독립된 상태로 유지하므로 클릭을 막아야 하는 로딩 사례에서는 두 prop을 함께 전달합니다. Seed
+ActionButton은 기본 `type`을 지정하지 않으므로 폼을 제출하지 않는 버튼은 `type="button"`을
+명시합니다.
+
+```tsx
+import { ActionButton } from '@yapp-plus/ui';
+
+<ActionButton type="button" variant="brandSolid" loading={isLoading} disabled={isLoading}>
+  계속
+</ActionButton>;
+```
+
+각 앱은 문서 진입점에서 Seed base CSS를 먼저 가져오고 공용 앱 스타일을 뒤에 연결합니다.
+
+```ts
+import '@seed-design/css/base.css';
+import '@yapp-plus/ui/styles';
+```
+
+기본 디자인 토큰과 전역 reset은 `packages/ui`가 관리합니다. 패키지의 일반 진입점을 가져오는
+것만으로 전역 스타일이 적용되지는 않습니다. web의 `global.css.ts`는 스타일을 다시 선언하는
+파일이 아니라 Turbopack이 외부 스타일 진입점을 추적하게 하는 연결 파일입니다.
+
+web과 admin은 SSR 문서 head에서 `@yapp-plus/ui/seed-theme`의 공식 Manual 시스템 테마
+스크립트를 사용합니다. Storybook은 Vite builder의 `seedDesignPlugin()`으로 preview iframe에
+테마 스크립트와 `color-scheme` 메타를 주입합니다. Vite plugin은 Storybook만 개발 의존성으로
+소유합니다.
+
+스니펫을 추가하거나 갱신할 때는 `packages/ui`의 설정을 사용하고 생성 결과가 기존 React 19 코드와
+공개 API를 덮어쓰지 않는지 diff를 검토합니다. 새 컴포넌트와 필수 종속 스니펫만 추가합니다.
+
+```sh
+pnpm dlx @seed-design/cli@1.7.0 add ui:action-button --cwd packages/ui
+pnpm dlx @seed-design/cli@1.7.0 compat --cwd packages/ui
+mise exec -- pnpm --filter @yapp-plus/ui test
+mise exec -- node --run check
+mise exec -- node --run build
+```
+
+제품 앱은 `mise exec -- node --run dev`, Storybook은 별도 터미널에서
+`mise exec -- node --run storybook`으로 실행합니다. 버튼 상태와 테마 검증 절차 및 실제 검증 결과는
+[Seed Design 검증 가이드](./specs/005-seed-design/quickstart.md)와
+[검증 결과](./specs/005-seed-design/validation.md)를 따릅니다.
 
 웹 앱은 Next.js의 React Compiler와 Turbopack Rust 구현을 사용합니다. Rust 구현은 아직
 실험 기능이므로 Next.js를 올릴 때 관련 변경 사항과 빌드 결과를 함께 확인합니다.

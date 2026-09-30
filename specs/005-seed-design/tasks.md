@@ -3,7 +3,8 @@
 **입력**: [spec.md](./spec.md), [plan.md](./plan.md), [research.md](./research.md),
 [data-model.md](./data-model.md), [계약](./contracts/ui.md), [검증 가이드](./quickstart.md)
 
-**현재 상태**: 사용자 1~5단계 완료·승인. 6단계 구현 완료·리뷰 대기. 7단계 이후 미시작.
+**현재 상태**: 사용자 1~6단계 완료·승인. 7단계 결과 리뷰 승인·브라우저 수동 검증 미완료.
+8단계 문서 정리 완료·최종 리뷰 대기.
 
 작업 번호는 실행 순서다. `[P]`는 같은 승인 단계 안에서 서로 다른 파일로 독립 수행할 수 있다는 뜻이며
 다음 단계 승인이나 에이전트 추가 실행 권한을 뜻하지 않는다. 작업 체크와 사용자 승인을 구분한다.
@@ -72,17 +73,19 @@
 
 ## 통합 검증 — 사용자 7단계
 
-- [ ] T023 `specs/005-seed-design/quickstart.md`의 최종 compat·check·build·의존성 버전 확인을 실행하고 결과를 `.context/seed-design-validation.md`에 기록한다.
-- [ ] T024 `specs/005-seed-design/quickstart.md`에 따라 세 환경의 초기·실시간 테마, hydration, 390px·1280px 배치와 웹 safe-area를 검증하고 `.context/seed-design-validation.md`에 근거를 남긴다.
-- [ ] T025 `specs/005-seed-design/quickstart.md`의 키보드·터치·스크린 리더 확인을 수행하고 `.context/seed-design-validation.md`에 실제 확인 방법과 미실행 항목을 구분한다.
-- [ ] T026 `apps/storybook/storybook-static/`과 web·admin 프로덕션 산출물에서 CSS·테마를 확인하고 `.context/seed-design-validation.md`에 기록한다. 7단계 결과를 보고한다.
+- [x] T023 `specs/005-seed-design/quickstart.md`의 최종 compat·check·build·의존성 버전 확인을 실행하고 결과를 `.context/seed-design-validation.md`에 기록한다.
+- [ ] T024 `specs/005-seed-design/quickstart.md`에 따라 세 환경의 초기·실시간 테마, hydration, 390px·1280px 배치와 웹 safe-area를 검증하고 `.context/seed-design-validation.md`에 근거를 남긴다. 관리자 정책으로 localhost 브라우저 연결이 거부되어 미완료다.
+- [ ] T025 `specs/005-seed-design/quickstart.md`의 키보드·터치·스크린 리더 확인을 수행하고 `.context/seed-design-validation.md`에 실제 확인 방법과 미실행 항목을 구분한다. userEvent 자동 검증은 통과했지만 실제 터치·스크린 리더 검증은 미완료다.
+- [x] T026 `apps/storybook/storybook-static/`과 web·admin 프로덕션 산출물에서 CSS·테마를 확인하고 `.context/seed-design-validation.md`에 기록한다. 7단계 결과를 보고한다.
+
+**7단계 리뷰**: 자동 검증 통과와 T024·T025 제한을 보고했고 사용자가 8단계 진행을 승인했다.
 
 **중단 지점**: 7단계 사용자 리뷰 승인 전 문서 마무리 T027을 시작하지 않는다.
 
 ## 문서와 인계 — 사용자 8단계
 
-- [ ] T027 `README.md`에 공식 스킬 설치 명령, 공용 API·CSS·테마 책임, 스니펫 추가·검증 방법과 지원 Seed 범위를 기록한다.
-- [ ] T028 `.context/seed-design-validation.md`의 실제 결과를 `specs/005-seed-design/validation.md`로 정리하고 `specs/005-seed-design/tasks.md`·`plan.md` 상태를 갱신한다. 문서 포맷과 최종 diff를 확인해 리뷰를 요청한다.
+- [x] T027 `README.md`에 공식 스킬 설치 명령, 공용 API·CSS·테마 책임, 스니펫 추가·검증 방법과 지원 Seed 범위를 기록한다.
+- [x] T028 `.context/seed-design-validation.md`의 실제 결과를 `specs/005-seed-design/validation.md`로 정리하고 `specs/005-seed-design/tasks.md`·`plan.md` 상태를 갱신한다. 문서 포맷과 최종 diff를 확인해 리뷰를 요청한다.
 
 ## 의존 관계와 단계별 실행
 
@@ -130,5 +133,6 @@ US2는 토큰 전환을 단독 확인할 수 있지만 US3와 함께 6단계 결
 
 ## 실행 제한
 
-현재는 6단계 리뷰 범위다. 사용자 승인 전 7단계를 시작하지 않는다. 이 목록은 GitHub 이슈 수정, commit,
-push, PR, 배포를 승인하지 않는다. 각 단계에서 작업 결과·변경 파일·검증 결과를 보고한 뒤 멈춘다.
+현재는 8단계 최종 리뷰 범위다. T024·T025의 수동 검증 제한을 완료로 바꾸지 않는다. 이 목록은
+GitHub 이슈 수정, push, PR, 배포를 승인하지 않는다. 각 단계에서 작업 결과·변경 파일·검증 결과를
+보고한 뒤 멈춘다.
