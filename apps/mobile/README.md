@@ -3,6 +3,52 @@
 이 앱은 Expo/React Native 기반의 iOS WebView 셸이다. iOS 앱은 이 워크스페이스에서 EAS로
 빌드하고, Android 앱은 별도 Native 프로젝트에서 개발하고 배포한다.
 
+## Pretendard와 SDK 58
+
+네이티브 가변 폰트를 사용하기 위해 Expo 58.0.0과 해당 SDK의 호환 의존성을 고정한다.
+도입 시점에 SDK 58은 beta/next 채널이며 사용자 결정으로 적용했다. 모바일 React와 타입은
+pnpm의 expo catalog에서 웹과 별도로 관리한다.
+
+루트 레이아웃이 로컬 `assets/fonts/PretendardVariable.ttf`를 `useFonts`로 로드한다.
+성공·실패 모두 splash를 해제하며 실패 시 시스템 글꼴로 앱을 시작한다. 원본은 Pretendard
+1.3.9이며 자산 디렉터리에 출처·라이선스·체크섬을 기록했다.
+
+네이티브 텍스트는 다음처럼 서체를 명시한다. 웹 CSS와 달리 앱 전체에 자동 상속되지 않으므로
+Text와 TextInput 각각에 적용한다. 현재 제품 화면에는 별도의 네이티브 텍스트가 없다.
+
+```tsx
+<Text style={{ fontFamily: 'Pretendard Variable', fontWeight: '400' }}>안녕하세요</Text>
+<Text style={{ fontFamily: 'Pretendard Variable', fontWeight: '700' }}>YAPP+</Text>
+<TextInput style={{ fontFamily: 'Pretendard Variable', fontWeight: '500' }} />
+```
+
+iOS의 fontWeight는 폰트가 제공하는 named instance를 선택한다. Pretendard는 100~900의
+9개 기본 굵기를 제공한다. 네이티브 등록과 웹뷰의 웹폰트 로딩은 독립적이다.
+
+### 개발과 검증
+
+SDK 58을 지원하는 Expo Go 또는 SDK 58 개발 빌드를 사용한다. 베타 기간에는 스토어의 Expo Go가
+SDK 58을 지원하지 않을 수 있으므로 공식 배포 안내를 확인한다. `useFonts` 방식은 config plugin
+전용 등록과 달리 호환되는 Expo Go에서도 동작한다.
+
+```sh
+pnpm --filter @yapp-plus/mobile exec expo install --check
+pnpm --filter @yapp-plus/mobile exec expo export --platform ios
+```
+
+실제 iOS에서 한글·영문 굵기 400·500·700, cold launch, 폰트 실패 후 시작, 웹뷰와 safe-area
+브리지를 확인한다. 번들 생성과 의존성 검사는 실제 iOS 폰트 렌더링을 대신하지 않는다.
+SDK 58의 로컬 빌드에는 Xcode 26.4 이상이 필요하다. 전체 검증 기록은
+[폰트 적용 검증](../../specs/006-pretendard-fonts/validation.md)에 둔다.
+
+### 복구
+
+SDK 업그레이드 회귀가 발생하면 모바일 의존성, expo catalog, lockfile과 폰트 초기 로딩 변경을
+함께 이전 SDK 57 상태로 복구하고 다시 설치·빌드한다. 웹폰트 변경은 독립적으로 유지할 수 있다.
+
+- [Expo 폰트 안내](https://docs.expo.dev/develop/user-interface/fonts/)
+- [SDK 58 발표와 개발 환경](https://expo.dev/changelog/sdk-58-beta)
+
 ## 플랫폼 책임 경계
 
 | 항목      | iOS                            | Android                        |
@@ -34,6 +80,10 @@ Apple Developer 계정 관리자가 조직의 명명 규칙과 중복 여부를 
 
 개발용 앱과 운영 앱을 한 기기에 동시에 설치해야 할 요구가 생기기 전에는 별도의 개발용 Bundle
 ID를 만들지 않는다. 로컬 개발은 Expo Go를 사용한다.
+
+자체 빌드에서도 Expo Router가 시작될 수 있도록 현재 임시 Bundle ID와 같은
+`com.yappplus.placeholder.mobile`을 `scheme`으로 명시한다. 앱 식별자를 확정할 때 함께
+변경하고 네이티브 프로젝트를 다시 생성한다. 운영용 딥링크 이름을 확정한 것은 아니다.
 
 ## 설정 전 협의 체크리스트
 

@@ -82,6 +82,17 @@
       "rules": {
         "import/no-default-export": "off"
       }
+    },
+    {
+      "files": ["apps/mobile/app/_layout.tsx"],
+      "rules": {
+        "eslint/no-console": [
+          "warn",
+          {
+            "allow": ["warn"]
+          }
+        ]
+      }
     }
   ]
 }

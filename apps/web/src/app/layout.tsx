@@ -1,4 +1,5 @@
 import '@seed-design/css/base.css';
+import '@yapp-plus/ui/fonts.css';
 import { seedThemeScript } from '@yapp-plus/ui/seed-theme';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
