@@ -8,6 +8,8 @@ const configuredWebUrl = typeof mobileWebUrl === 'string' ? mobileWebUrl.trim() 
 const config: ExpoConfig = {
   name: 'YAPP Plus Mobile (Temporary)',
   slug: 'yapp-plus-mobile-placeholder',
+  // 자체 빌드에서 Expo Router가 초기 URL을 만들 수 있도록 임시 앱 식별자와 맞춥니다.
+  scheme: 'com.yappplus.placeholder.mobile',
   version: '0.0.1',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',

@@ -1,4 +1,5 @@
 import '@seed-design/css/base.css';
+import '@yapp-plus/ui/fonts.css';
 import type { Preview } from '@storybook/react-vite';
 import '@yapp-plus/ui/styles';
 

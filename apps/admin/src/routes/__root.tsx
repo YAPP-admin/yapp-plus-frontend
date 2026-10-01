@@ -2,6 +2,7 @@
 
 import { HeadContent, Link, Scripts, createRootRoute } from '@tanstack/react-router';
 import '@seed-design/css/base.css';
+import '@yapp-plus/ui/fonts.css';
 import { seedThemeScript } from '@yapp-plus/ui/seed-theme';
 import '@yapp-plus/ui/styles';
 import type { ReactNode } from 'react';
