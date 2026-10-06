@@ -28,7 +28,19 @@ jobs:
       - name: Checkout
         uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
         with:
+          fetch-depth: 0
           persist-credentials: false
+
+      - name: Detect mobile changes
+        id: mobile-changes
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if .github/scripts/has-mobile-changes.sh "$BASE_SHA" "$GITHUB_SHA"; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up toolchain
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
@@ -63,4 +75,5 @@ jobs:
         run: pnpm build
 
       - name: Run Expo Doctor
+        if: steps.mobile-changes.outputs.changed == 'true'
         run: pnpm expo:doctor
