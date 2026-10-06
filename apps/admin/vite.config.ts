@@ -5,6 +5,8 @@ import { nitro } from 'nitro/vite';
 import { defineConfig } from 'vite';
 
 export default defineConfig({
+  // SEED의 recipe CSS를 서버에서도 Vite가 처리합니다.
+  ssr: { noExternal: ['@seed-design/react', '@seed-design/css'] },
   server: {
     port: 3001,
   },
