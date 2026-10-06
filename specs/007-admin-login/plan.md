@@ -26,8 +26,8 @@ Node 24.20.0·pnpm 12.3.4를 유지하며 데이터 저장소와 실제 인증�
 
 1440×1080 Figma 구도, 폼 402px, 입력 44px, 버튼 56px을 사용한다.
 768px 미만은 좌우 24px 여백의 세로 배치다. 로그인 영역만 dark-only로 설정한다.
-useForm·form.Field·form.Subscribe로 입력·필드 오류·제출 상태를 관리한다.
-revalidateLogic은 최초 submit, 이후 change 검증이며 인증 응답 오류만 별도 상태로 둔다.
+useForm·form.Field로 입력과 필드 오류를 관리하고 useMutation으로 로그인 요청 상태를 관리한다.
+revalidateLogic은 최초 submit, 이후 change 검증이며 인증 응답 오류는 mutation 결과에서 계산한다.
 첫 오류 필드 포커스, 자동완성, 비밀번호 마스킹, aria 오류 연결과 중복 제출 방지를 구현한다.
 
 ## 검증과 전달

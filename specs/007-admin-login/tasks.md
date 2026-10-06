@@ -20,15 +20,15 @@
 
 독립 검증: 모의 계정 성공·실패·재시도와 프로덕션 비활성 동작을 확인한다.
 
-- [ ] T006 [US2] `apps/admin/src/features/login/login-form.test.tsx`에 폼 상태·오류·제출 테스트를 작성한다.
-- [ ] T007 [US2] `apps/admin/src/features/login/login-form.tsx`에 TanStack Form 검증·제출·접근성을 연결한다.
-- [ ] T008 [US2] `apps/admin/src/features/login/login.mock.test.ts`, `login.mock.ts`, `login.ts`에 내부 계약과 모의 함수를 구현한다.
-- [ ] T009 [US2] `apps/admin/src/routes/login.tsx`에 환경 분기·성공 이동을 연결한다.
+- [x] T006 [US2] `apps/admin/src/features/login/login-form.test.tsx`에 폼 상태·오류·제출 테스트를 작성한다.
+- [x] T007 [US2] `apps/admin/src/features/login/login-form.tsx`에 TanStack Form 검증·제출·접근성을 연결한다.
+- [x] T008 [US2] `apps/admin/src/features/login/login.mock.test.ts`, `login.mock.ts`, `login.ts`에 내부 계약과 모의 함수를 구현한다.
+- [x] T009 [US2] `apps/admin/src/routes/login.tsx`에 환경 분기·성공 이동을 연결한다.
 
 ## 5단계 — 전체 검증
 
-- [ ] T010 `specs/007-admin-login/validation.md`에 check/build·브라우저·번들 검증 결과와 미검증 항목을 기록한다.
-- [ ] T011 `specs/007-admin-login/tasks.md`와 PR 초안에 단계 완료·변경 줄 수·분리 경계를 반영한다.
+- [x] T010 `specs/007-admin-login/validation.md`에 check/build·브라우저·번들 검증 결과와 미검증 항목을 기록한다.
+- [x] T011 `specs/007-admin-login/tasks.md`와 PR 초안에 단계 완료·변경 줄 수·분리 경계를 반영한다.
 
 ## 의존성과 전달
 

@@ -5,7 +5,7 @@
 | username  | 문자열, trim 결과가 비면 오류; 전달 직전 trim                       |
 | password  | 문자열, 빈 문자열만 오류; 원문 전달                                 |
 | 필드 오류 | TanStack Form이 관리하는 한국어 메시지                              |
-| 제출 상태 | TanStack Form의 isSubmitting                                        |
+| 제출 상태 | TanStack Query mutation의 isPending                                 |
 | 인증 오류 | 자격 증명 불일치 또는 서비스 이용 불가, 입력 수정·새 제출 시 초기화 |
 
 초기 → 검증 → 제출 중 → 실패(재입력 가능) 또는 대시보드 이동으로 전이한다.
