@@ -7,9 +7,9 @@ import {
   headingGroup,
   page,
   title,
-} from './index.css';
+} from './_dashboard.index.css';
 
-export const Route = createFileRoute('/')({
+export const Route = createFileRoute('/_dashboard/')({
   component: DashboardPage,
 });
 

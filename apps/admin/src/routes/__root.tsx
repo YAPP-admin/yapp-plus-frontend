@@ -1,13 +1,12 @@
 /// <reference types="vite/client" />
 
-import { HeadContent, Link, Scripts, createRootRoute } from '@tanstack/react-router';
+import { HeadContent, Scripts, createRootRoute } from '@tanstack/react-router';
 import '@seed-design/css/base.css';
 import '@yapp-plus/ui/fonts.css';
 import { seedThemeScript } from '@yapp-plus/ui/seed-theme';
 import '@yapp-plus/ui/styles';
 import type { ReactNode } from 'react';
 import { Providers } from '~/providers';
-import { brand, header, navigation, navigationLink, shell } from './__root.css';
 
 export const Route = createRootRoute({
   head: () => ({
@@ -38,21 +37,7 @@ function RootDocument({ children }: { children: ReactNode }) {
         <HeadContent />
       </head>
       <body>
-        <Providers>
-          <div className={shell}>
-            <header className={header}>
-              <Link className={brand} to="/">
-                YAPP+ Admin
-              </Link>
-              <nav className={navigation} aria-label="주요 메뉴">
-                <Link className={navigationLink} to="/">
-                  대시보드
-                </Link>
-              </nav>
-            </header>
-            {children}
-          </div>
-        </Providers>
+        <Providers>{children}</Providers>
         <Scripts />
       </body>
     </html>

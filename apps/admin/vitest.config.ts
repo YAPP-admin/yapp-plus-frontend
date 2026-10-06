@@ -9,6 +9,7 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
+    server: { deps: { inline: ['@seed-design/react', '@seed-design/css'] } },
     setupFiles: ['./vitest.setup.ts'],
   },
 });
