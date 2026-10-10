@@ -2,14 +2,9 @@ import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import { ActionButton } from '@yapp-plus/ui';
 import { useRef } from 'react';
+import { LOGIN_FIELDS, UNAVAILABLE_MESSAGE } from './login-form.constants';
 import type { Login, LoginInput, LoginResult } from './login';
 import * as styles from './login-form.css';
-
-const fields = [
-  { name: 'username', label: '아이디', type: 'text', autoComplete: 'username' },
-  { name: 'password', label: '비밀번호', type: 'password', autoComplete: 'current-password' },
-] as const;
-const unavailableMessage = '로그인할 수 없어요. 잠시 후 다시 시도해주세요.';
 
 type LoginFormProps = {
   login: Login;
@@ -19,7 +14,7 @@ type LoginFormProps = {
 
 function getSubmissionError(result: LoginResult | undefined, isError: boolean) {
   if (isError || result?.status === 'unavailable') {
-    return unavailableMessage;
+    return UNAVAILABLE_MESSAGE;
   }
 
   if (result?.status === 'invalid-credentials') {
@@ -44,7 +39,7 @@ export function LoginForm({ login, onSuccess, available }: LoginFormProps) {
     defaultValues: { username: '', password: '' },
     validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
     onSubmitInvalid: ({ formApi }) => {
-      const first = fields.find(({ name }) => formApi.getFieldMeta(name)?.errors.length);
+      const first = LOGIN_FIELDS.find(({ name }) => formApi.getFieldMeta(name)?.errors.length);
       const input = first && formElement.current?.elements.namedItem(first.name);
 
       if (input instanceof HTMLInputElement) {
@@ -83,7 +78,7 @@ export function LoginForm({ login, onSuccess, available }: LoginFormProps) {
           }}
         >
           <div className={styles.fields}>
-            {fields.map(({ name, label, type, autoComplete }) => (
+            {LOGIN_FIELDS.map(({ name, label, type, autoComplete }) => (
               <form.Field
                 key={name}
                 name={name}
