@@ -2,6 +2,9 @@
 
 YAPP Plus의 웹, 모바일 셸, 관리자 앱을 관리하는 Turborepo 기반 모노레포입니다.
 
+제품의 목적, 대상 사용자와 핵심 경험은 [YAPP+ 제품 목적과 범위](./docs/mission.md)를
+참고합니다.
+
 ## 사전 준비
 
 [mise](https://mise.jdx.dev/)를 설치합니다. 이 저장소는 `mise.toml`에서 Node.js 버전을
