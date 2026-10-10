@@ -5,6 +5,9 @@ YAPP Plus의 웹, 모바일 셸, 관리자 앱을 관리하는 Turborepo 기반 
 제품의 목적, 대상 사용자와 핵심 경험은 [YAPP+ 제품 목적과 범위](./docs/mission.md)를
 참고합니다.
 
+웹 화면의 폴더 구조와 퍼블리싱 절차는 [웹 작업 가이드](./docs/web-development.md)를
+참고합니다.
+
 ## 사전 준비
 
 [mise](https://mise.jdx.dev/)를 설치합니다. 이 저장소는 `mise.toml`에서 Node.js 버전을
@@ -37,6 +40,7 @@ pnpm install
 | 명령어             | 설명                                           |
 | ------------------ | ---------------------------------------------- |
 | `pnpm dev`         | 웹, 관리자, 모바일 개발 서버 시작              |
+| `pnpm dev:web`     | 웹 앱 개발 서버만 시작                         |
 | `pnpm build`       | 워크스페이스 패키지와 배포 가능한 앱 빌드      |
 | `pnpm commitlint`  | 커밋 메시지 규칙 검사                          |
 | `pnpm format`      | Oxfmt가 지원하는 파일 포맷팅                   |
