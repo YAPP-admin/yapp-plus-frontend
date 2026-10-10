@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
-import { LoginPage } from './login';
+import { LoginRoute } from './login';
 import type * as ReactRouter from '@tanstack/react-router';
 
 vi.mock('@tanstack/react-router', async (importOriginal) => ({
@@ -15,7 +15,7 @@ describe('로그인 화면', () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <LoginPage />
+        <LoginRoute />
       </QueryClientProvider>,
     );
 

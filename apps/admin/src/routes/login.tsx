@@ -1,17 +1,17 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router';
-import { LoginForm } from '~/features/login/login-form';
-import { login } from '~/features/login/login';
+import { login } from '~/features/login';
+import { LoginPage } from '~/pages/login';
 
 export const Route = createFileRoute('/login')({
   head: () => ({ meta: [{ title: '로그인 | YAPP+ Admin' }] }),
-  component: LoginPage,
+  component: LoginRoute,
 });
 
-export function LoginPage() {
+export function LoginRoute() {
   const navigate = useNavigate();
 
   return (
-    <LoginForm
+    <LoginPage
       login={login}
       available={import.meta.env.DEV}
       onSuccess={() => navigate({ to: '/' })}
