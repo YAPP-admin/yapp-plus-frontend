@@ -1,6 +1,15 @@
-import { accent, content, description, header, intro, page, title, wordmark } from './page.css';
+import {
+  accent,
+  content,
+  description,
+  header,
+  intro,
+  page,
+  title,
+  wordmark,
+} from './home-page.css';
 
-export default function HomePage() {
+export function HomePage() {
   return (
     <div className={page}>
       <header className={header}>

@@ -3,8 +3,8 @@ import '@yapp-plus/ui/fonts.css';
 import { seedThemeScript } from '@yapp-plus/ui/seed-theme';
 import type { Metadata, Viewport } from 'next';
 import type { ReactNode } from 'react';
-import './global.css';
-import { Providers } from './providers';
+import '@/app/global.css';
+import { Providers } from '@/app/providers';
 
 export const metadata: Metadata = {
   title: 'YAPP+',
