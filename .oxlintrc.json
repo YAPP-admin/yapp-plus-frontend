@@ -76,7 +76,7 @@
         "apps/mobile/app/**/*.{ts,tsx}",
         "apps/storybook/.storybook/**/*.{ts,tsx}",
         "apps/storybook/stories/**/*.stories.{ts,tsx}",
-        "apps/web/src/app/**/*.{ts,tsx}",
+        "apps/web/app/**/*.{ts,tsx}",
         "**/*.config.{js,ts,mjs,cjs}"
       ],
       "rules": {
