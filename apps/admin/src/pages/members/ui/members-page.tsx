@@ -58,7 +58,12 @@ export function MembersPage({
 }) {
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>회원 관리</h1>
+      <div className={styles.heading}>
+        <h1 className={styles.title}>회원 관리</h1>
+        <Link className={styles.tab} to="/members/import" search={{}}>
+          명단 업로드
+        </Link>
+      </div>
       <nav className={styles.tabs} aria-label="회원 목록 구분">
         <Link
           className={styles.tab}

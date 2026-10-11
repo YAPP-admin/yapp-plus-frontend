@@ -78,3 +78,11 @@ export const tab = style({
 });
 
 export const searchButton = style({ minHeight: '2.75rem' });
+
+export const heading = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: vars.$dimension.x4,
+});
