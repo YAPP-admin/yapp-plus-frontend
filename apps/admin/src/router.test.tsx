@@ -60,6 +60,8 @@ describe('관리자 라우팅', () => {
     '/attendance/session-1/missing',
     '/attendance/scores/missing',
     '/notices/notice-1/missing',
+    '/notices/new/missing',
+    '/notices/notice-123/edit/missing',
   ])('%s 직접 접근에 404와 복귀 링크를 제공한다', async (path) => {
     const router = await renderRoute(path);
 
@@ -508,6 +510,8 @@ describe('공지 목록 URL 상태', () => {
     const filter = await screen.findByRole('combobox', { name: '공지 종류' });
 
     await user.tab();
+    expect(screen.getByRole('link', { name: '공지 작성' })).toHaveFocus();
+    await user.tab();
     expect(filter).toHaveFocus();
   });
 });
@@ -589,5 +593,75 @@ describe('공지 상세 탐색', () => {
     await user.tab({ shift: true });
     await user.keyboard('{Enter}');
     expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveValue('all');
+  });
+});
+
+describe('공지 작성·수정 진입점', () => {
+  it.each([
+    ['/notices/new', '공지 작성'],
+    ['/notices/notice-123/edit', '공지 수정'],
+  ])('%s 직접 접근은 독립된 %s 화면을 표시한다', async (path, heading) => {
+    const router = await renderRoute(path);
+
+    expect(await screen.findByRole('heading', { name: heading })).toBeVisible();
+    expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: '공지 상세 구분' })).not.toBeInTheDocument();
+    expect(
+      router.state.matches.some(
+        (match) =>
+          match.routeId === '/_dashboard/notices' ||
+          match.routeId === '/_dashboard/notices_/$noticeId',
+      ),
+    ).toBe(false);
+
+    expect(screen.queryByText(/공지 ID:/)?.textContent ?? null).toBe(
+      heading === '공지 작성' ? null : '공지 ID: notice-123',
+    );
+  });
+
+  it('작성 진입은 필터를 제거하고 뒤로가기는 복원하며 명시적 복귀는 기본 목록으로 이동한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/notices?category=submission');
+
+    await user.click(await screen.findByRole('link', { name: '공지 작성' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/notices/new'));
+    act(() => router.history.back());
+    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveValue('submission');
+    act(() => router.history.forward());
+    await user.click(await screen.findByRole('link', { name: '공지 목록으로 돌아가기' }));
+    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveValue('all');
+    expect(router.state.location.href).toBe('/notices');
+  });
+
+  it('수정 진입은 ID만 유지하고 뒤로가기는 질문 탭을 복원하며 명시적 복귀는 읽음 탭으로 이동한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/notices/notice-123?tab=questions');
+
+    await user.click(await screen.findByRole('link', { name: '공지 수정' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/notices/notice-123/edit'));
+    act(() => router.history.back());
+    expect(await screen.findByText('질문 목록을 준비 중입니다.')).toBeVisible();
+    act(() => router.history.forward());
+    await user.click(await screen.findByRole('link', { name: '공지 상세로 돌아가기' }));
+    expect(await screen.findByText('읽음 현황을 준비 중입니다.')).toBeVisible();
+    expect(router.state.location.href).toBe('/notices/notice-123');
+  });
+
+  it.each([
+    ['/notices', '공지 작성', '공지 목록으로 돌아가기', '공지 목록'],
+    ['/notices/notice-123', '공지 수정', '공지 상세로 돌아가기', '공지 상세'],
+  ])('%s에서 키보드로 진입하고 복귀한다', async (path, entryName, returnName, heading) => {
+    const user = userEvent.setup();
+    await renderRoute(path);
+
+    screen.getByRole('link', { name: entryName }).focus();
+    await user.keyboard('{Enter}');
+    const returnLink = await screen.findByRole('link', { name: returnName });
+    screen.getByRole('link', { name: '공지 목록' }).focus();
+    await user.tab();
+    expect(returnLink).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('heading', { name: heading })).toBeVisible();
   });
 });

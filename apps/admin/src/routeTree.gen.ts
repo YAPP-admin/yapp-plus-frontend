@@ -20,6 +20,8 @@ import { Route as DashboardAttendanceSessionIdRouteImport } from './routes/_dash
 import { Route as DashboardAttendanceScoresRouteImport } from './routes/_dashboard.attendance.scores'
 import { Route as DashboardMembersImportRouteImport } from './routes/_dashboard.members_.import'
 import { Route as DashboardNoticesNoticeIdRouteImport } from './routes/_dashboard.notices_.$noticeId'
+import { Route as DashboardNoticesNewRouteImport } from './routes/_dashboard.notices_.new'
+import { Route as DashboardNoticesNoticeIdEditRouteImport } from './routes/_dashboard.notices_.$noticeId_.edit'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/_dashboard',
@@ -79,6 +81,17 @@ const DashboardNoticesNoticeIdRoute =
     path: '/notices/$noticeId',
     getParentRoute: () => DashboardRoute,
   } as any)
+const DashboardNoticesNewRoute = DashboardNoticesNewRouteImport.update({
+  id: '/notices_/new',
+  path: '/notices/new',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardNoticesNoticeIdEditRoute =
+  DashboardNoticesNoticeIdEditRouteImport.update({
+    id: '/notices_/$noticeId_/edit',
+    path: '/notices/$noticeId/edit',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
@@ -90,7 +103,9 @@ export interface FileRoutesByFullPath {
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/members/import': typeof DashboardMembersImportRoute
   '/notices/$noticeId': typeof DashboardNoticesNoticeIdRoute
+  '/notices/new': typeof DashboardNoticesNewRoute
   '/attendance/': typeof DashboardAttendanceIndexRoute
+  '/notices/$noticeId/edit': typeof DashboardNoticesNoticeIdEditRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -102,7 +117,9 @@ export interface FileRoutesByTo {
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/members/import': typeof DashboardMembersImportRoute
   '/notices/$noticeId': typeof DashboardNoticesNoticeIdRoute
+  '/notices/new': typeof DashboardNoticesNewRoute
   '/attendance': typeof DashboardAttendanceIndexRoute
+  '/notices/$noticeId/edit': typeof DashboardNoticesNoticeIdEditRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -116,7 +133,9 @@ export interface FileRoutesById {
   '/_dashboard/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/_dashboard/members_/import': typeof DashboardMembersImportRoute
   '/_dashboard/notices_/$noticeId': typeof DashboardNoticesNoticeIdRoute
+  '/_dashboard/notices_/new': typeof DashboardNoticesNewRoute
   '/_dashboard/attendance/': typeof DashboardAttendanceIndexRoute
+  '/_dashboard/notices_/$noticeId_/edit': typeof DashboardNoticesNoticeIdEditRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -130,7 +149,9 @@ export interface FileRouteTypes {
     | '/attendance/scores'
     | '/members/import'
     | '/notices/$noticeId'
+    | '/notices/new'
     | '/attendance/'
+    | '/notices/$noticeId/edit'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -142,7 +163,9 @@ export interface FileRouteTypes {
     | '/attendance/scores'
     | '/members/import'
     | '/notices/$noticeId'
+    | '/notices/new'
     | '/attendance'
+    | '/notices/$noticeId/edit'
   id:
     | '__root__'
     | '/_dashboard'
@@ -155,7 +178,9 @@ export interface FileRouteTypes {
     | '/_dashboard/attendance/scores'
     | '/_dashboard/members_/import'
     | '/_dashboard/notices_/$noticeId'
+    | '/_dashboard/notices_/new'
     | '/_dashboard/attendance/'
+    | '/_dashboard/notices_/$noticeId_/edit'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -242,6 +267,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardNoticesNoticeIdRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/notices_/new': {
+      id: '/_dashboard/notices_/new'
+      path: '/notices/new'
+      fullPath: '/notices/new'
+      preLoaderRoute: typeof DashboardNoticesNewRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/notices_/$noticeId_/edit': {
+      id: '/_dashboard/notices_/$noticeId_/edit'
+      path: '/notices/$noticeId/edit'
+      fullPath: '/notices/$noticeId/edit'
+      preLoaderRoute: typeof DashboardNoticesNoticeIdEditRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
@@ -254,7 +293,9 @@ interface DashboardRouteChildren {
   DashboardAttendanceScoresRoute: typeof DashboardAttendanceScoresRoute
   DashboardMembersImportRoute: typeof DashboardMembersImportRoute
   DashboardNoticesNoticeIdRoute: typeof DashboardNoticesNoticeIdRoute
+  DashboardNoticesNewRoute: typeof DashboardNoticesNewRoute
   DashboardAttendanceIndexRoute: typeof DashboardAttendanceIndexRoute
+  DashboardNoticesNoticeIdEditRoute: typeof DashboardNoticesNoticeIdEditRoute
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
@@ -266,7 +307,9 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAttendanceScoresRoute: DashboardAttendanceScoresRoute,
   DashboardMembersImportRoute: DashboardMembersImportRoute,
   DashboardNoticesNoticeIdRoute: DashboardNoticesNoticeIdRoute,
+  DashboardNoticesNewRoute: DashboardNoticesNewRoute,
   DashboardAttendanceIndexRoute: DashboardAttendanceIndexRoute,
+  DashboardNoticesNoticeIdEditRoute: DashboardNoticesNoticeIdEditRoute,
 }
 
 const DashboardRouteWithChildren = DashboardRoute._addFileChildren(

@@ -32,6 +32,9 @@ export function NoticeDetailPage({ noticeId, tab }: { noticeId: string; tab: Not
           질문
         </Link>
       </nav>
+      <Link className={styles.link} to="/notices/$noticeId/edit" params={{ noticeId }} search={{}}>
+        공지 수정
+      </Link>
       <p className={styles.placeholder}>
         {tab === 'readers' ? '읽음 현황을 준비 중입니다.' : '질문 목록을 준비 중입니다.'}
       </p>

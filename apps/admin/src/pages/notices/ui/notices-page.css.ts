@@ -56,3 +56,19 @@ export const placeholder = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t4,
 });
+
+export const createLink = style({
+  display: 'inline-flex',
+  width: 'fit-content',
+  minHeight: '2.75rem',
+  alignItems: 'center',
+  color: vars.$color.fg.brand,
+  textUnderlineOffset: '0.25em',
+  touchAction: 'manipulation',
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.brand}`,
+      outlineOffset: '0.125rem',
+    },
+  },
+});
