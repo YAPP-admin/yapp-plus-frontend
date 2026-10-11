@@ -45,6 +45,7 @@ export const navigation = style({
 
 export const navigationLink = style({
   display: 'inline-flex',
+  minWidth: '2.75rem',
   minHeight: '2.75rem',
   alignItems: 'center',
   color: vars.$color.fg.neutralMuted,
@@ -54,7 +55,7 @@ export const navigationLink = style({
   textDecoration: 'none',
   touchAction: 'manipulation',
   selectors: {
-    '&[aria-current="page"]': {
+    '&[aria-current]': {
       color: vars.$color.fg.neutral,
       textDecoration: 'underline',
       textUnderlineOffset: '0.25em',

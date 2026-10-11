@@ -53,20 +53,23 @@ describe('관리자 라우팅', () => {
     expect(screen.queryByRole('link', { name: 'YAPP+ Admin' })).not.toBeInTheDocument();
   });
 
-  it.each(['/missing', '/login/missing', '/sessions/not-yet-available'])(
-    '%s 직접 접근에 404와 복귀 링크를 제공한다',
-    async (path) => {
-      const router = await renderRoute(path);
+  it.each([
+    '/missing',
+    '/login/missing',
+    '/sessions/not-yet-available',
+    '/attendance/session-1/missing',
+    '/attendance/scores/missing',
+  ])('%s 직접 접근에 404와 복귀 링크를 제공한다', async (path) => {
+    const router = await renderRoute(path);
 
-      expect(
-        await screen.findByRole('heading', { name: '페이지를 찾을 수 없어요', level: 1 }),
-      ).toBeVisible();
-      expect(router.state.location.pathname).toBe(path);
-      expect(screen.getByRole('link', { name: '대시보드로 이동' })).toHaveAttribute('href', '/');
-      expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
-      expect(screen.queryByRole('textbox', { name: '아이디' })).not.toBeInTheDocument();
-    },
-  );
+    expect(
+      await screen.findByRole('heading', { name: '페이지를 찾을 수 없어요', level: 1 }),
+    ).toBeVisible();
+    expect(router.state.location.pathname).toBe(path);
+    expect(screen.getByRole('link', { name: '대시보드로 이동' })).toHaveAttribute('href', '/');
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox', { name: '아이디' })).not.toBeInTheDocument();
+  });
 
   it('404의 복귀 링크를 키보드로 실행하면 대시보드로 이동한다', async () => {
     const user = userEvent.setup();
@@ -148,6 +151,109 @@ describe('세션 목록 탐색', () => {
     await user.keyboard('{Enter}');
     const filter = await screen.findByRole('combobox', { name: '직군' });
     await user.tab();
+    await user.tab();
+    await user.tab();
     expect(filter).toHaveFocus();
+  });
+});
+
+describe('출석 화면 탐색', () => {
+  it.each([
+    ['/attendance', '출석부', 'all'],
+    ['/attendance?part=common', '출석부', 'common'],
+    ['/attendance?part=unknown', '출석부', 'all'],
+    ['/attendance/session-1?part=web', '세션별 출석부', 'web'],
+    ['/attendance/session-1?part=common', '세션별 출석부', 'all'],
+    ['/attendance/session-1?part=%5B%22web%22%5D', '세션별 출석부', 'all'],
+    ['/attendance/scores?part=ios', '출석 총점', 'ios'],
+    ['/attendance/scores?part=common', '출석 총점', 'all'],
+    ['/attendance/scores?part=true', '출석 총점', 'all'],
+  ])('%s의 제목과 필터를 복원한다', async (path, heading, part) => {
+    await renderRoute(path);
+    expect(await screen.findByRole('heading', { name: heading, level: 1 })).toBeVisible();
+    expect(screen.getByRole('combobox', { name: '직군' })).toHaveValue(part);
+    const menu = within(screen.getByRole('navigation'));
+    expect(menu.getByRole('link', { name: '세션 관리' })).not.toHaveAttribute('aria-current');
+    const activeMenu = heading === '출석 총점' ? '출석 총점' : '출석부';
+    expect(menu.getByRole('link', { name: activeMenu })).toHaveAttribute('aria-current');
+    expect(
+      menu.getByRole('link', {
+        name: activeMenu === '출석부' ? '출석 총점' : '출석부',
+      }),
+    ).not.toHaveAttribute('aria-current');
+  });
+
+  it('scores는 세션 ID로 처리하지 않고 총점 경로를 우선한다', async () => {
+    const router = await renderRoute('/attendance/scores');
+    expect(await screen.findByRole('heading', { name: '출석 총점' })).toBeVisible();
+    expect(
+      router.state.matches.some((match) => match.routeId === '/_dashboard/attendance/$sessionId'),
+    ).toBe(false);
+    expect(screen.queryByText(/세션 ID:/)).not.toBeInTheDocument();
+    expect(screen.queryByRole('option', { name: '전체 직군 대상' })).not.toBeInTheDocument();
+  });
+
+  it.each(['/attendance', '/attendance/session-1', '/attendance/scores'])(
+    '%s에서 필터를 history로 복원하고 기본값은 생략한다',
+    async (path) => {
+      const user = userEvent.setup();
+      const router = await renderRoute(path);
+      const filter = await screen.findByRole('combobox', { name: '직군' });
+      await user.selectOptions(filter, 'web');
+      await waitFor(() => expect(router.state.location.searchStr).toBe('?part=web'));
+      await user.selectOptions(filter, 'ios');
+      await waitFor(() => expect(router.state.location.searchStr).toBe('?part=ios'));
+      act(() => router.history.back());
+      await waitFor(() => expect(filter).toHaveValue('web'));
+      act(() => router.history.forward());
+      await waitFor(() => expect(filter).toHaveValue('ios'));
+      await user.selectOptions(filter, 'all');
+      await waitFor(() => expect(router.state.location.searchStr).toBe(''));
+    },
+  );
+
+  it('typed 세션 탐색과 목록 복귀는 선택 경로를 사용하고 필터를 초기화한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/attendance?part=common');
+    await act(async () =>
+      router.navigate({
+        to: '/attendance/$sessionId',
+        params: { sessionId: 'session-123' },
+        search: { part: 'web' },
+      }),
+    );
+    expect(await screen.findByText('세션 ID: session-123')).toBeVisible();
+    expect(router.state.location.href).toBe('/attendance/session-123?part=web');
+    expect(screen.queryByRole('option', { name: '전체 직군 대상' })).not.toBeInTheDocument();
+    const backLink = screen.getByRole('link', { name: '세션 목록으로 돌아가기' });
+    expect(backLink).toHaveAttribute('href', '/attendance');
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(backLink).toHaveFocus();
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(router.state.location.href).toBe('/attendance'));
+    expect(screen.getByRole('combobox', { name: '직군' })).toHaveValue('all');
+    act(() => router.history.back());
+    expect(await screen.findByText('세션 ID: session-123')).toBeVisible();
+    expect(screen.getByRole('combobox', { name: '직군' })).toHaveValue('web');
+  });
+
+  it('각 메뉴는 자신의 기본 경로로 이동하고 이전 필터를 전달하지 않는다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/sessions?part=common');
+    await user.click(await screen.findByRole('link', { name: '출석부' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/attendance'));
+    await user.selectOptions(screen.getByRole('combobox'), 'common');
+    await user.click(screen.getByRole('link', { name: '출석 총점' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/attendance/scores'));
+    expect(screen.getByRole('combobox')).toHaveValue('all');
+    await user.selectOptions(screen.getByRole('combobox'), 'web');
+    await user.click(screen.getByRole('link', { name: '세션 관리' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/sessions'));
+    expect(screen.getByRole('combobox')).toHaveValue('all');
   });
 });
