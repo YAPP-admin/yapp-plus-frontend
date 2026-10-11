@@ -19,6 +19,7 @@ import { Route as DashboardAttendanceIndexRouteImport } from './routes/_dashboar
 import { Route as DashboardAttendanceSessionIdRouteImport } from './routes/_dashboard.attendance.$sessionId'
 import { Route as DashboardAttendanceScoresRouteImport } from './routes/_dashboard.attendance.scores'
 import { Route as DashboardMembersImportRouteImport } from './routes/_dashboard.members_.import'
+import { Route as DashboardNoticesNoticeIdRouteImport } from './routes/_dashboard.notices_.$noticeId'
 
 const DashboardRoute = DashboardRouteImport.update({
   id: '/_dashboard',
@@ -72,6 +73,12 @@ const DashboardMembersImportRoute = DashboardMembersImportRouteImport.update({
   path: '/members/import',
   getParentRoute: () => DashboardRoute,
 } as any)
+const DashboardNoticesNoticeIdRoute =
+  DashboardNoticesNoticeIdRouteImport.update({
+    id: '/notices_/$noticeId',
+    path: '/notices/$noticeId',
+    getParentRoute: () => DashboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
@@ -82,6 +89,7 @@ export interface FileRoutesByFullPath {
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/members/import': typeof DashboardMembersImportRoute
+  '/notices/$noticeId': typeof DashboardNoticesNoticeIdRoute
   '/attendance/': typeof DashboardAttendanceIndexRoute
 }
 export interface FileRoutesByTo {
@@ -93,6 +101,7 @@ export interface FileRoutesByTo {
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/members/import': typeof DashboardMembersImportRoute
+  '/notices/$noticeId': typeof DashboardNoticesNoticeIdRoute
   '/attendance': typeof DashboardAttendanceIndexRoute
 }
 export interface FileRoutesById {
@@ -106,6 +115,7 @@ export interface FileRoutesById {
   '/_dashboard/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/_dashboard/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/_dashboard/members_/import': typeof DashboardMembersImportRoute
+  '/_dashboard/notices_/$noticeId': typeof DashboardNoticesNoticeIdRoute
   '/_dashboard/attendance/': typeof DashboardAttendanceIndexRoute
 }
 export interface FileRouteTypes {
@@ -119,6 +129,7 @@ export interface FileRouteTypes {
     | '/attendance/$sessionId'
     | '/attendance/scores'
     | '/members/import'
+    | '/notices/$noticeId'
     | '/attendance/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -130,6 +141,7 @@ export interface FileRouteTypes {
     | '/attendance/$sessionId'
     | '/attendance/scores'
     | '/members/import'
+    | '/notices/$noticeId'
     | '/attendance'
   id:
     | '__root__'
@@ -142,6 +154,7 @@ export interface FileRouteTypes {
     | '/_dashboard/attendance/$sessionId'
     | '/_dashboard/attendance/scores'
     | '/_dashboard/members_/import'
+    | '/_dashboard/notices_/$noticeId'
     | '/_dashboard/attendance/'
   fileRoutesById: FileRoutesById
 }
@@ -222,6 +235,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMembersImportRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/notices_/$noticeId': {
+      id: '/_dashboard/notices_/$noticeId'
+      path: '/notices/$noticeId'
+      fullPath: '/notices/$noticeId'
+      preLoaderRoute: typeof DashboardNoticesNoticeIdRouteImport
+      parentRoute: typeof DashboardRoute
+    }
   }
 }
 
@@ -233,6 +253,7 @@ interface DashboardRouteChildren {
   DashboardAttendanceSessionIdRoute: typeof DashboardAttendanceSessionIdRoute
   DashboardAttendanceScoresRoute: typeof DashboardAttendanceScoresRoute
   DashboardMembersImportRoute: typeof DashboardMembersImportRoute
+  DashboardNoticesNoticeIdRoute: typeof DashboardNoticesNoticeIdRoute
   DashboardAttendanceIndexRoute: typeof DashboardAttendanceIndexRoute
 }
 
@@ -244,6 +265,7 @@ const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardAttendanceSessionIdRoute: DashboardAttendanceSessionIdRoute,
   DashboardAttendanceScoresRoute: DashboardAttendanceScoresRoute,
   DashboardMembersImportRoute: DashboardMembersImportRoute,
+  DashboardNoticesNoticeIdRoute: DashboardNoticesNoticeIdRoute,
   DashboardAttendanceIndexRoute: DashboardAttendanceIndexRoute,
 }
 
