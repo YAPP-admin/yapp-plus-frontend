@@ -15,6 +15,7 @@ export const header = style({
   display: 'flex',
   minHeight: '3.5rem',
   alignItems: 'center',
+  gap: vars.$dimension.x3,
   paddingInline: vars.$dimension.x6,
   borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
 });

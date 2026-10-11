@@ -13,7 +13,7 @@
 `apps/web/app`, 화면 코드는 `apps/web/src/pages`, Provider·전역 스타일·공통 페이지 레이아웃은
 `apps/web/src/app`에 있습니다. 페이지에는 제목과 공통 준비 중 안내를 제공합니다.
 홈·일정·공지·마이페이지는 하단 메뉴를 공유하며 홈과 마이페이지에는 바로가기 링크를 제공합니다.
-상세 화면의 뒤로가기와 실제 본문 기능은 후속 단계입니다.
+상세 화면에는 내부 이력 또는 고정 상위 경로로 돌아가는 뒤로가기를 제공합니다. 실제 본문 기능은 후속 단계입니다.
 
 적용 대상은 사용자 웹 앱입니다. 관리자·모바일 앱의 폴더 구조를 이 문서에 맞춰 변경하지
 않습니다.
@@ -48,15 +48,12 @@ apps/web/
 │   │   ├── layout.tsx
 │   │   └── page.tsx    # 홈의 / 경로
 │   ├── notices/        # 공지 상세
-│   │   ├── layout.tsx
 │   │   └── [noticeId]/page.tsx
 │   ├── my/             # 출석 내역·출석 규칙
-│   │   ├── layout.tsx
 │   │   └── attendance/
 │   │       ├── page.tsx
 │   │       └── rules/page.tsx
 │   ├── settings/
-│   │   ├── layout.tsx
 │   │   └── page.tsx
 │   └── (auth)/         # 로그인·가입
 │       └── layout.tsx
@@ -90,8 +87,9 @@ apps/web/
 구현하지 않았습니다.
 
 포괄적인 `(detail)` 그룹은 사용하지 않습니다. 공지 상세·출석·설정은 각각 `notices`, `my`,
-`settings` 아래에 배치하고 해당 기능의 `layout.tsx`에서 `PageShell`을 사용합니다.
-공지 목록과 마이페이지는 `(tabs)` 아래에 있어 이 기능별 레이아웃을 상속하지 않습니다.
+`settings` 아래에 배치합니다. 각 상세 라우트의 `page.tsx`에서 `DetailLayout`과 화면을 조합하고
+직접 접근 시 복귀 경로를 전달합니다. 출석 내역과 규칙에 서로 다른 복귀 경로를 지정하고 중첩
+헤더를 피하기 위한 구조입니다. `DetailLayout`은 `PageShell`의 뒤로가기 슬롯을 사용합니다.
 `(tabs)`는 `PageShell`의 내비게이션 슬롯에 하단 메뉴를 넣고, `(auth)`는 기본 셸을 사용합니다. 헤더와 safe-area는 셸에서 한 번만
 적용하고 페이지 본문에 중복 적용하지 않습니다. 여러 준비 중 페이지의 도메인 비의존 스타일은
 `shared/ui/page.css.ts`를 사용합니다.
