@@ -3,10 +3,16 @@
 `apps/web`에서 화면을 작성하는 디자이너·개발자·AI를 위한 가이드입니다. 제품 목적과 대상은
 [제품 맥락](./mission.md), 설치·실행과 기술 구성은 [README](../README.md)를 참고합니다.
 
+회원 앱의 페이지 경로·화면 상태 분류와 쿼리스트링 정책은
+[라우팅과 URL 상태 규칙](./web-routing.md)에서 확인합니다. 해당 문서는 단계별 구현 예정 범위와
+현재 적용 상태를 구분합니다.
+
 ## 적용 상태
 
-기존 홈에 아래 구조를 적용했습니다. 라우트와 문서 레이아웃은 `apps/web/app`, 홈 화면·스타일·
-테스트는 `apps/web/src/pages/home`, Provider와 전역 스타일은 `apps/web/src/app`에 있습니다.
+13개 회원 페이지의 라우트 진입점과 화면 슬라이스를 구성했습니다. 루트 레이아웃은
+`apps/web/app`, 화면 코드는 `apps/web/src/pages`, Provider·전역 스타일·공통 페이지 레이아웃은
+`apps/web/src/app`에 있습니다. 홈의 본문은 기존 소개 화면을 유지하며 새 페이지에는 제목과
+공통 준비 중 안내만 제공합니다. 하단 메뉴와 화면 간 이동은 후속 단계입니다.
 
 적용 대상은 사용자 웹 앱입니다. 관리자·모바일 앱의 폴더 구조를 이 문서에 맞춰 변경하지
 않습니다.
@@ -19,7 +25,7 @@ FSD의 `app`, `pages`, `features`, `shared`를 사용합니다. 화면 단위로
 | 위치                           | 역할                                                           |
 | ------------------------------ | -------------------------------------------------------------- |
 | `apps/web/app`                 | Next.js 라우트, 문서 레이아웃, 메타데이터 등 프레임워크 진입점 |
-| `apps/web/src/app`             | Provider, 전역 초기화와 스타일 연결                            |
+| `apps/web/src/app`             | Provider, 전역 초기화, 공통 레이아웃과 스타일 연결             |
 | `apps/web/src/pages/<화면>`    | 화면과 해당 화면에서만 사용하는 코드                           |
 | `apps/web/src/features/<기능>` | 여러 화면에서 재사용하는 사용자 행동                           |
 | `apps/web/src/shared`          | 웹 내부에서 공유하는 도메인 비의존 코드                        |
@@ -37,24 +43,57 @@ FSD의 `app`, `pages`, `features`, `shared`를 사용합니다. 화면 단위로
 apps/web/
 ├── app/
 │   ├── layout.tsx
-│   └── page.tsx
+│   ├── (tabs)/          # 홈·일정·공지 목록·마이페이지
+│   │   ├── layout.tsx
+│   │   └── page.tsx    # 홈의 / 경로
+│   ├── notices/        # 공지 상세
+│   │   ├── layout.tsx
+│   │   └── [noticeId]/page.tsx
+│   ├── my/             # 출석 내역·출석 규칙
+│   │   ├── layout.tsx
+│   │   └── attendance/
+│   │       ├── page.tsx
+│   │       └── rules/page.tsx
+│   ├── settings/
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   └── (auth)/         # 로그인·가입
+│       └── layout.tsx
 ├── pages/
 │   └── README.md
 └── src/
     ├── app/
     │   ├── providers.tsx
-    │   └── global.css.ts
-    └── pages/
-        └── home/
-            ├── index.ts
-            └── ui/
-                ├── home-page.tsx
-                ├── home-page.css.ts
-                └── home-page.test.tsx
+    │   ├── global.css.ts
+    │   └── layouts/
+    │       ├── page-shell.tsx
+    │       └── page-shell.css.ts
+    ├── pages/
+    │   ├── home/
+    │   │   ├── index.ts
+    │   │   └── ui/
+    │   │       ├── home-page.tsx
+    │   │       ├── home-page.css.ts
+    │   │       └── home-page.test.tsx
+    │   └── …           # 나머지 페이지도 개별 슬라이스로 구성
+    └── shared/
+        └── ui/
+            └── page.css.ts
 ```
 
 루트의 `app`은 Next.js가 URL과 연결하는 위치이고, `src/app`은 앱의 전역 구성을 담당합니다.
 라우트의 `page.tsx`는 `src/pages`의 화면을 연결하고 화면 구현은 해당 슬라이스에 둡니다.
+
+라우트 그룹 `(tabs)`, `(auth)`는 URL에 포함되지 않습니다. 위 트리는 두 그룹의 화면별 하위
+경로를 생략했습니다. `(tabs)/layout.tsx`는 탭 이동 사이에 유지되는 공통 레이아웃이며,
+후속 단계에서 하단 메뉴를 추가합니다. 페이지 전환 애니메이션 자체는 아직 구현하지 않았습니다.
+
+포괄적인 `(detail)` 그룹은 사용하지 않습니다. 공지 상세·출석·설정은 각각 `notices`, `my`,
+`settings` 아래에 배치하고 해당 기능의 `layout.tsx`에서 `PageShell`을 사용합니다.
+공지 목록과 마이페이지는 `(tabs)` 아래에 있어 이 기능별 레이아웃을 상속하지 않습니다.
+현재 `(tabs)`, `(auth)`도 같은 `PageShell`을 사용합니다. 헤더와 safe-area는 셸에서 한 번만
+적용하고 페이지 본문에 중복 적용하지 않습니다. 여러 준비 중 페이지의 도메인 비의존 스타일은
+`shared/ui/page.css.ts`를 사용합니다.
 
 `apps/web/pages/README.md`는 Next.js가 `src/pages`를 Pages Router로 인식하지 않도록 루트
 `pages` 폴더를 유지하는 이유를 설명합니다. 이 폴더에는 Pages Router 라우트를 추가하지 않습니다.
@@ -111,7 +150,7 @@ apps/web/
 다음은 현재 홈의 연결 방식입니다. `@/*` alias는 `apps/web/src/*`를 가리킵니다.
 
 ```tsx
-// apps/web/app/page.tsx
+// apps/web/app/(tabs)/page.tsx
 export { HomePage as default } from '@/pages/home';
 ```
 
@@ -149,6 +188,7 @@ mise exec -- pnpm --filter @yapp-plus/web dev
 ```
 
 페이지를 추가할 때는 `apps/web/app/<경로>/page.tsx`를 Next.js 라우트 진입점으로 두고,
+하단 메뉴나 인증 화면의 공통 레이아웃이 필요한 경우 `(tabs)` 또는 `(auth)` 아래에 배치합니다.
 실제 화면은 `apps/web/src/pages/<화면>`에 작성합니다. 라우트 파일에서 화면 슬라이스의 공개
 `index.ts`만 가져옵니다.
 
