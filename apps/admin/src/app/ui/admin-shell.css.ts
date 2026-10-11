@@ -7,6 +7,7 @@ export const shell = style({
 
 export const header = style({
   display: 'flex',
+  flexWrap: 'wrap',
   minHeight: '3.5rem',
   alignItems: 'center',
   justifyContent: 'space-between',
@@ -17,6 +18,10 @@ export const header = style({
 });
 
 export const brand = style({
+  display: 'inline-flex',
+  minHeight: '2.75rem',
+  alignItems: 'center',
+  touchAction: 'manipulation',
   color: vars.$color.fg.neutral,
   fontSize: vars.$fontSize.t3,
   lineHeight: vars.$lineHeight.t3,
@@ -45,13 +50,25 @@ export const navigationLink = style({
   lineHeight: vars.$lineHeight.t3,
   fontWeight: vars.$fontWeight.medium,
   textDecoration: 'none',
+  touchAction: 'manipulation',
   selectors: {
-    '&:hover': {
+    '&[aria-current="page"]': {
       color: vars.$color.fg.neutral,
+      textDecoration: 'underline',
+      textUnderlineOffset: '0.25em',
     },
     '&:focus-visible': {
       outline: `2px solid ${vars.$color.fg.brand}`,
       outlineOffset: '0.125rem',
+    },
+  },
+  '@media': {
+    '(hover: hover) and (pointer: fine)': {
+      selectors: {
+        '&:hover': {
+          color: vars.$color.fg.neutral,
+        },
+      },
     },
   },
 });
