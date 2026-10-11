@@ -3,6 +3,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { installSafeAreaBridge } from '@yapp-plus/app-bridge/web';
 import { useEffect, useState, type ReactNode } from 'react';
+import { NavigationHistory } from './navigation/navigation-history';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -18,5 +19,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   useEffect(() => installSafeAreaBridge(), []);
 
-  return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <NavigationHistory>{children}</NavigationHistory>
+    </QueryClientProvider>
+  );
 }
