@@ -1,13 +1,20 @@
 import type { ReactNode } from 'react';
-import { header, shell, wordmark } from './page-shell.css';
+import { header, shell, shellWithNavigation, wordmark } from './page-shell.css';
 
-export function PageShell({ children }: { children: ReactNode }) {
+export function PageShell({
+  children,
+  navigation,
+}: {
+  children: ReactNode;
+  navigation?: ReactNode;
+}) {
   return (
-    <div className={shell}>
+    <div className={navigation ? shellWithNavigation : shell}>
       <header className={header}>
         <span className={wordmark}>YAPP+</span>
       </header>
       {children}
+      {navigation}
     </div>
   );
 }

@@ -1,1 +1,1 @@
-export { PageShell as default } from '@/app/layouts/page-shell';
+export { TabsLayout as default } from '@/app/layouts/tabs-layout';

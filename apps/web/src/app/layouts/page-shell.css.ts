@@ -25,3 +25,11 @@ export const wordmark = style({
   fontWeight: vars.$fontWeight.bold,
   letterSpacing: 0,
 });
+
+export const shellWithNavigation = style([
+  shell,
+  {
+    gridTemplateRows: 'auto 1fr auto',
+    paddingBottom: 0,
+  },
+]);
