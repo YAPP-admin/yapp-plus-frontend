@@ -1,9 +1,18 @@
+import { Link } from '@tanstack/react-router';
 import {
   noticeCategoryLabels,
   noticeCategorySchema,
   type NoticeCategory,
 } from '../model/notice-search';
-import { page, title, description, filter, select, placeholder } from './notices-page.css';
+import {
+  page,
+  title,
+  description,
+  filter,
+  select,
+  placeholder,
+  createLink,
+} from './notices-page.css';
 
 export function NoticesPage({
   category,
@@ -16,6 +25,9 @@ export function NoticesPage({
     <main className={page}>
       <h1 className={title}>공지 목록</h1>
       <p className={description}>종류별 공지를 확인합니다.</p>
+      <Link className={createLink} to="/notices/new" search={{}}>
+        공지 작성
+      </Link>
       <div className={filter}>
         <label htmlFor="notice-category">공지 종류</label>
         <select
