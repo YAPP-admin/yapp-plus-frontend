@@ -59,6 +59,7 @@ describe('관리자 라우팅', () => {
     '/sessions/not-yet-available',
     '/attendance/session-1/missing',
     '/attendance/scores/missing',
+    '/notices/missing',
   ])('%s 직접 접근에 404와 복귀 링크를 제공한다', async (path) => {
     const router = await renderRoute(path);
 
@@ -154,6 +155,7 @@ describe('세션 목록 탐색', () => {
     await user.tab();
     await user.tab();
     await user.tab();
+    await user.tab();
     expect(filter).toHaveFocus();
   });
 });
@@ -228,6 +230,7 @@ describe('출석 화면 탐색', () => {
     expect(screen.queryByRole('option', { name: '전체 직군 대상' })).not.toBeInTheDocument();
     const backLink = screen.getByRole('link', { name: '세션 목록으로 돌아가기' });
     expect(backLink).toHaveAttribute('href', '/attendance');
+    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
@@ -417,7 +420,7 @@ describe('명단 업로드 진입점', () => {
     const user = userEvent.setup();
     await renderRoute('/members');
 
-    for (let index = 0; index < 7; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
@@ -426,7 +429,7 @@ describe('명단 업로드 진입점', () => {
 
     // 화면 전환 후 포커스 시작점을 정하고 실제 Tab 순서로 복귀 링크에 접근한다.
     screen.getByRole('link', { name: 'YAPP+ Admin' }).focus();
-    for (let index = 0; index < 6; index += 1) {
+    for (let index = 0; index < 7; index += 1) {
       await user.tab();
     }
     expect(backLink).toHaveFocus();
@@ -440,5 +443,71 @@ describe('명단 업로드 진입점', () => {
     expect(await screen.findByRole('heading', { name: '페이지를 찾을 수 없어요' })).toBeVisible();
     expect(screen.queryByRole('heading', { name: '명단 업로드' })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+  });
+});
+
+describe('공지 목록 URL 상태', () => {
+  it.each([
+    ['/notices', 'all'],
+    ['/notices?category=all', 'all'],
+    ['/notices?category=session', 'session'],
+    ['/notices?category=submission', 'submission'],
+    ['/notices?category=operation', 'operation'],
+    ['/notices?category=unknown', 'all'],
+    ['/notices?category=%5B%22session%22%5D', 'all'],
+    ['/notices?category=true', 'all'],
+  ])('%s에 직접 접근하면 %s를 선택한다', async (path, category) => {
+    await renderRoute(path);
+
+    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveValue(category);
+    expect(screen.getByRole('heading', { name: '공지 목록', level: 1 })).toBeVisible();
+    expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '회원 관리' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('종류 변경을 history에 추가하고 복원하며 기본값은 URL에서 생략한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/notices');
+    const filter = await screen.findByRole('combobox', { name: '공지 종류' });
+
+    await user.selectOptions(filter, 'session');
+    await waitFor(() => expect(router.state.location.href).toBe('/notices?category=session'));
+    await user.selectOptions(filter, 'submission');
+    await waitFor(() => expect(router.state.location.href).toBe('/notices?category=submission'));
+
+    act(() => router.history.back());
+    await waitFor(() => expect(filter).toHaveValue('session'));
+    act(() => router.history.forward());
+    await waitFor(() => expect(filter).toHaveValue('submission'));
+
+    await user.selectOptions(filter, 'all');
+    await waitFor(() => expect(router.state.location.href).toBe('/notices'));
+  });
+
+  it('다른 메뉴로 이동하면 종류를 전달하지 않고 공지 재진입은 기본값을 사용한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/notices?category=operation');
+
+    await user.click(await screen.findByRole('link', { name: '회원 관리' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/members'));
+    await user.click(screen.getByRole('link', { name: '공지 목록' }));
+
+    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveValue('all');
+    expect(router.state.location.href).toBe('/notices');
+  });
+
+  it('키보드로 공지 메뉴에 진입하고 종류 필터에 접근한다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/');
+
+    for (let index = 0; index < 7; index += 1) {
+      await user.tab();
+    }
+    expect(screen.getByRole('link', { name: '공지 목록' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    const filter = await screen.findByRole('combobox', { name: '공지 종류' });
+
+    await user.tab();
+    expect(filter).toHaveFocus();
   });
 });
