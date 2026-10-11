@@ -24,7 +24,8 @@
     "@yapp-plus/api": "workspace:*",
     "@yapp-plus/ui": "workspace:*",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "catalog:",
