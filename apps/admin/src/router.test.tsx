@@ -153,6 +153,7 @@ describe('세션 목록 탐색', () => {
     await user.tab();
     await user.tab();
     await user.tab();
+    await user.tab();
     expect(filter).toHaveFocus();
   });
 });
@@ -233,6 +234,7 @@ describe('출석 화면 탐색', () => {
     await user.tab();
     await user.tab();
     await user.tab();
+    await user.tab();
     expect(backLink).toHaveFocus();
     await user.keyboard('{Enter}');
     await waitFor(() => expect(router.state.location.href).toBe('/attendance'));
@@ -255,5 +257,120 @@ describe('출석 화면 탐색', () => {
     await user.click(screen.getByRole('link', { name: '세션 관리' }));
     await waitFor(() => expect(router.state.location.href).toBe('/sessions'));
     expect(screen.getByRole('combobox')).toHaveValue('all');
+  });
+});
+
+describe('회원 목록 URL 상태', () => {
+  it('복합 쿼리를 복원하고 탭과 필터 변경 시 다른 조건을 보존한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute(
+      '/members?tab=pending&q=Kim&part=web&role=admin&status=active',
+    );
+    const input = await screen.findByRole('searchbox', { name: '이름 검색' });
+    expect(input).toHaveValue('Kim');
+    expect(screen.getByRole('combobox', { name: '직군' })).toHaveValue('web');
+    expect(screen.getByRole('combobox', { name: '권한' })).toHaveValue('admin');
+    expect(screen.getByRole('combobox', { name: '상태' })).toHaveValue('active');
+    expect(screen.getByRole('link', { name: '가입 대기' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '전체 회원' })).not.toHaveAttribute('aria-current');
+    await user.click(screen.getByRole('link', { name: '전체 회원' }));
+    await waitFor(() => expect(router.state.location.search).not.toHaveProperty('tab'));
+    expect(router.state.location.search).toEqual({
+      q: 'Kim',
+      part: 'web',
+      role: 'admin',
+      status: 'active',
+    });
+    expect(screen.getByRole('link', { name: '전체 회원' })).toHaveAttribute('aria-current', 'page');
+    await user.selectOptions(screen.getByRole('combobox', { name: '직군' }), 'ios');
+    await waitFor(() => expect(router.state.location.search.part).toBe('ios'));
+    expect(router.state.location.search).toMatchObject({
+      q: 'Kim',
+      role: 'admin',
+      status: 'active',
+    });
+  });
+
+  it.each(['/members', '/members?tab=bad&q=%5B%22Kim%22%5D&part=common&role=false&status=bad'])(
+    '%s의 기본 상태를 표시한다',
+    async (path) => {
+      await renderRoute(path);
+      expect(await screen.findByRole('searchbox')).toHaveValue('');
+      for (const filter of screen.getAllByRole('combobox')) {
+        expect(filter).toHaveValue('all');
+      }
+      expect(screen.getByRole('link', { name: '전체 회원' })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+    },
+  );
+
+  it('입력만으로는 URL을 바꾸지 않고 Enter 제출 시 q만 replace한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members?part=web');
+    const input = await screen.findByRole('searchbox');
+    const length = router.history.length;
+
+    await user.type(input, '김민수');
+    expect(router.state.location.search).toEqual({ part: 'web' });
+
+    await user.keyboard('{Enter}');
+    await waitFor(() => expect(router.state.location.search).toEqual({ part: 'web', q: '김민수' }));
+    expect(router.history.length).toBe(length);
+  });
+
+  it('검색 버튼으로 제출하고 빈 검색어 제출 시 q만 생략한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members?tab=pending&role=admin&q=old');
+
+    await user.clear(await screen.findByRole('searchbox'));
+    await user.type(screen.getByRole('searchbox'), 'Kim');
+    await user.click(screen.getByRole('button', { name: '검색' }));
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({ tab: 'pending', role: 'admin', q: 'Kim' }),
+    );
+
+    await user.clear(screen.getByRole('searchbox'));
+    await user.click(screen.getByRole('button', { name: '검색' }));
+    await waitFor(() =>
+      expect(router.state.location.search).toEqual({ tab: 'pending', role: 'admin' }),
+    );
+  });
+
+  it('필터 변경과 history 이동에서는 미제출 입력 대신 URL 검색어를 복원한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members?q=Kim');
+
+    await user.type(await screen.findByRole('searchbox'), '미제출');
+    await user.selectOptions(screen.getByRole('combobox', { name: '직군' }), 'web');
+    await waitFor(() => expect(router.state.location.search.part).toBe('web'));
+    expect(screen.getByRole('searchbox')).toHaveValue('Kim');
+
+    await user.type(screen.getByRole('searchbox'), '미제출');
+    act(() => router.history.back());
+    await waitFor(() => expect(router.state.location.search).toEqual({ q: 'Kim' }));
+    expect(screen.getByRole('searchbox')).toHaveValue('Kim');
+
+    await user.type(screen.getByRole('searchbox'), '미제출');
+    act(() => router.history.forward());
+    await waitFor(() => expect(router.state.location.search.part).toBe('web'));
+    expect(screen.getByRole('searchbox')).toHaveValue('Kim');
+  });
+
+  it('다른 검색 URL과 메뉴로 이동하면 미제출 입력을 버린다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members?q=old');
+
+    await user.type(await screen.findByRole('searchbox'), '미제출');
+    await act(async () => router.navigate({ to: '/members', search: { q: 'new' } }));
+    expect(screen.getByRole('searchbox')).toHaveValue('new');
+
+    await user.type(screen.getByRole('searchbox'), '미제출');
+    await user.click(screen.getByRole('link', { name: '세션 관리' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/sessions'));
+    await user.click(screen.getByRole('link', { name: '회원 관리' }));
+    expect(await screen.findByRole('searchbox')).toHaveValue('');
+    expect(router.state.location.href).toBe('/members');
   });
 });

@@ -47,6 +47,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
           >
             출석 총점
           </Link>
+          <Link
+            className={navigationLink}
+            to="/members"
+            search={{}}
+            activeOptions={{ includeSearch: false }}
+          >
+            회원 관리
+          </Link>
         </nav>
       </header>
       {children}
