@@ -7,13 +7,15 @@
 ## 현재 적용 범위
 
 - PR 1 관련 이슈: [#46](https://github.com/YAPP-admin/yapp-plus-frontend/issues/46).
-- PR 3 출석부·출석 총점까지 구현했습니다. PR 4 이후는 미착수 상태입니다.
+- PR 4 회원 목록·검색·필터까지 구현했습니다. PR 5 이후는 미착수 상태입니다.
 - 검증 기록: [PR 1](./admin-routing-validation.md), [PR 2](./admin-sessions-routing-validation.md).
+- PR 4 관련 이슈: [#53](https://github.com/YAPP-admin/yapp-plus-frontend/issues/53).
+- PR 4 검증: [회원 목록 라우팅 검증](./admin-members-routing-validation.md).
 - PR 3 관련 이슈: [#50](https://github.com/YAPP-admin/yapp-plus-frontend/issues/50).
 - PR 3 검증: [출석 라우팅 검증](./admin-attendance-routing-validation.md).
 - PR 2 관련 이슈: [#49](https://github.com/YAPP-admin/yapp-plus-frontend/issues/49).
 - 현재 제공하는 경로는 `/`, `/login`, `/sessions`, `/attendance`,
-  `/attendance/:sessionId`, `/attendance/scores`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
+  `/attendance/:sessionId`, `/attendance/scores`, `/members`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
 - 대시보드는 공통 셸과 현재 메뉴 표시를 사용합니다. 로그인에는 관리자 메뉴가 없습니다.
 - 알 수 없는 경로는 404 안내와 대시보드 복귀 링크를 제공합니다.
 - 아래 후속 경로와 쿼리는 합의한 계약이며 각 단계에서 구현합니다. 미구현 메뉴는 노출하지 않습니다.
@@ -52,11 +54,11 @@
 - 각 라우트의 `validateSearch`에서 Zod 4로 검증합니다. Zod 4.5.4는 catalog에서 관리하며
   관리자와 API 패키지가 같은 버전을 사용합니다.
 - 누락·잘못된 값은 필드별 기본값으로 처리하고 앱이 생성하는 URL에서는 기본값을 생략합니다.
-- 화면·탭·선택형 필터 변경은 history에 추가합니다. 검색은 300ms debounce 후 `replace`합니다.
+- 화면·탭·선택형 필터 변경은 history에 추가합니다. 이름 검색은 Enter 또는 검색 버튼으로 제출할 때 `replace`합니다.
 - 같은 페이지의 쿼리 변경은 스크롤을 유지합니다. 다른 메뉴에는 이전 페이지 필터를 전달하지 않습니다.
 - 브라우저 뒤로가기는 이전 URL을 복원합니다. 명시적인 목록 복귀 링크는 목록 기본 상태로 이동합니다.
-- 입력 중인 검색어 외에는 쿼리를 React 상태로 복제하지 않습니다. 이동이나 history 복원 후 대기 중인
-  검색 갱신이 새 URL을 덮어쓰지 않도록 취소합니다.
+- 쿼리를 React 상태로 복제하지 않습니다. 이름 검색은 폼의 입력값을 제출 시 읽습니다.
+  URL의 검색 조건이 바뀌면 미제출 입력을 버리고 해당 URL의 검색어로 폼을 초기화합니다.
 - 값은 프런트엔드 URL 계약이며 실제 API 연결 시 API 명세와 경계에서 변환합니다.
 - 이번 단계별 작업에는 페이지네이션·가변 정렬을 추가하지 않습니다.
 
@@ -79,7 +81,7 @@
 | PR 1 | 공통 셸 분리·현재 메뉴·404 | 기존 화면 유지, 잘못된 URL에서 키보드로 대시보드 복귀 |
 | PR 2 | 세션 목록·직군 필터·Zod    | 직접 접근·새로고침·history에서 필터 복원              |
 | PR 3 | 출석 세션 선택·출석부·총점 | typed 탐색·복귀, `scores`와 동적 ID 충돌 방지         |
-| PR 4 | 회원 목록·탭·검색·필터     | 복합 필터 보존, 검색 debounce와 이동 중 갱신 취소     |
+| PR 4 | 회원 목록·탭·검색·필터     | 복합 필터 보존, 검색 제출·URL 복원                    |
 | PR 5 | 명단 업로드 진입점         | 목록에서 업로드 화면 이동·복귀                        |
 | PR 6 | 공지 목록·종류 필터        | `category` 검증·기본값 생략·history 복원              |
 | PR 7 | 공지 상세·읽음/질문 탭     | ID와 탭 직접 접근·복귀                                |
@@ -99,7 +101,7 @@
 - Stacked PR의 첫 base는 `main`, 다음 base는 직전 단계 브랜치입니다.
 - PR별 고유 diff의 추가·삭제 합계에 문서·테스트·생성 파일·lockfile을 모두 포함합니다.
   800줄 이상이면 기능과 관련 테스트를 함께 분리합니다. 앞 PR 변경을 중복 계산하지 않습니다.
-- 회원 목록이 기준을 넘으면 선택형 필터와 이름 검색·debounce를 우선 분리합니다.
+- 회원 목록이 기준을 넘으면 선택형 필터와 이름 검색 제출를 우선 분리합니다.
 - 앞 PR merge 후 다음 PR의 base와 diff를 다시 확인합니다.
 - 제품 정책·API·범위의 불확실성이 생기면 해당 작업 전에 사용자에게 확인합니다.
 

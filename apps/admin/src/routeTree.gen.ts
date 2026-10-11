@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
+import { Route as DashboardMembersRouteImport } from './routes/_dashboard.members'
 import { Route as DashboardSessionsRouteImport } from './routes/_dashboard.sessions'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/_dashboard.attendance.index'
 import { Route as DashboardAttendanceSessionIdRouteImport } from './routes/_dashboard.attendance.$sessionId'
@@ -29,6 +30,11 @@ const LoginRoute = LoginRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardMembersRoute = DashboardMembersRouteImport.update({
+  id: '/members',
+  path: '/members',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSessionsRoute = DashboardSessionsRouteImport.update({
@@ -58,6 +64,7 @@ const DashboardAttendanceScoresRoute =
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/login': typeof LoginRoute
+  '/members': typeof DashboardMembersRoute
   '/sessions': typeof DashboardSessionsRoute
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
@@ -65,6 +72,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/members': typeof DashboardMembersRoute
   '/sessions': typeof DashboardSessionsRoute
   '/': typeof DashboardIndexRoute
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
@@ -75,6 +83,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
+  '/_dashboard/members': typeof DashboardMembersRoute
   '/_dashboard/sessions': typeof DashboardSessionsRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
@@ -86,6 +95,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/members'
     | '/sessions'
     | '/attendance/$sessionId'
     | '/attendance/scores'
@@ -93,6 +103,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/members'
     | '/sessions'
     | '/'
     | '/attendance/$sessionId'
@@ -102,6 +113,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_dashboard'
     | '/login'
+    | '/_dashboard/members'
     | '/_dashboard/sessions'
     | '/_dashboard/'
     | '/_dashboard/attendance/$sessionId'
@@ -137,6 +149,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardIndexRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/members': {
+      id: '/_dashboard/members'
+      path: '/members'
+      fullPath: '/members'
+      preLoaderRoute: typeof DashboardMembersRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/sessions': {
       id: '/_dashboard/sessions'
       path: '/sessions'
@@ -169,6 +188,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface DashboardRouteChildren {
+  DashboardMembersRoute: typeof DashboardMembersRoute
   DashboardSessionsRoute: typeof DashboardSessionsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAttendanceSessionIdRoute: typeof DashboardAttendanceSessionIdRoute
@@ -177,6 +197,7 @@ interface DashboardRouteChildren {
 }
 
 const DashboardRouteChildren: DashboardRouteChildren = {
+  DashboardMembersRoute: DashboardMembersRoute,
   DashboardSessionsRoute: DashboardSessionsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAttendanceSessionIdRoute: DashboardAttendanceSessionIdRoute,
