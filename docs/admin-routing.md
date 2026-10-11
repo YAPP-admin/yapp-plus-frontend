@@ -7,8 +7,10 @@
 ## 현재 적용 범위
 
 - PR 1 관련 이슈: [#46](https://github.com/YAPP-admin/yapp-plus-frontend/issues/46).
-- PR 8 공지 작성·수정 진입점까지 구현했습니다. PR 9는 미착수 상태입니다.
+- PR 1~9의 라우팅 구현과 최종 검증을 완료했습니다. GitHub PR 게시·병합 완료를 뜻하지는 않습니다.
 - 검증 기록: [PR 1](./admin-routing-validation.md), [PR 2](./admin-sessions-routing-validation.md).
+- PR 9 관련 이슈: [#58](https://github.com/YAPP-admin/yapp-plus-frontend/issues/58).
+- PR 9 검증: [알림 내역과 전체 경로 검증](./admin-routing-final-validation.md).
 - PR 8 관련 이슈: [#57](https://github.com/YAPP-admin/yapp-plus-frontend/issues/57).
 - PR 8 검증: [공지 작성·수정 라우팅 검증](./admin-notice-editor-routing-validation.md).
 - PR 7 관련 이슈: [#56](https://github.com/YAPP-admin/yapp-plus-frontend/issues/56).
@@ -24,10 +26,10 @@
 - PR 2 관련 이슈: [#49](https://github.com/YAPP-admin/yapp-plus-frontend/issues/49).
 - 현재 제공하는 경로는 `/`, `/login`, `/sessions`, `/attendance`,
   `/attendance/:sessionId`, `/attendance/scores`, `/members`, `/members/import`, `/notices`, `/notices/:noticeId`,
-  `/notices/new`, `/notices/:noticeId/edit`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
+  `/notices/new`, `/notices/:noticeId/edit`, `/notifications`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
 - 대시보드는 공통 셸과 현재 메뉴 표시를 사용합니다. 로그인에는 관리자 메뉴가 없습니다.
 - 알 수 없는 경로는 404 안내와 대시보드 복귀 링크를 제공합니다.
-- 아래 후속 경로와 쿼리는 합의한 계약이며 각 단계에서 구현합니다. 미구현 메뉴는 노출하지 않습니다.
+- 아래 경로와 쿼리 계약을 모두 구현했습니다. 실제 업무 데이터는 준비 중 안내로 표시합니다.
 - 실제 업무 UI·API·인증·권한 검사·기수 선택은 별도 작업입니다.
 
 ## 페이지와 쿼리 계약
@@ -60,7 +62,7 @@
 - 회원 `status`: `all | active | inactive`.
 - 공지 `category`: `all | session | submission | operation`.
 - 필터 기본값은 `all`, 이름 검색 `q`의 기본값은 빈 문자열입니다.
-- 각 라우트의 `validateSearch`에서 Zod 4로 검증합니다. Zod 4.5.4는 catalog에서 관리하며
+- 쿼리를 사용하는 라우트의 `validateSearch`에서 Zod 4로 검증합니다. Zod 4.5.4는 catalog에서 관리하며
   관리자와 API 패키지가 같은 버전을 사용합니다.
 - 누락·잘못된 값은 필드별 기본값으로 처리하고 앱이 생성하는 URL에서는 기본값을 생략합니다.
 - 화면·탭·선택형 필터 변경은 history에 추가합니다. 이름 검색은 Enter 또는 검색 버튼으로 제출할 때 `replace`합니다.
@@ -76,6 +78,10 @@
 `/attendance`로 이동합니다. 출석 총점은 별도 메뉴로 표시하고 최근 세션 자동 선택은 하지 않습니다.
 실제 세션 행의 링크는 데이터 화면 구현 시 연결하고, 라우팅 단계에서는 typed 탐색을 테스트합니다.
 `scores`는 총점의 정적 경로로 예약하므로 동적 세션 ID로 사용하지 않습니다.
+
+공지 작성의 `new`는 정적 경로로 예약하며 공지 ID로 사용하지 않습니다.
+수정 화면에서 명시적으로 복귀하면 해당 공지의 기본 읽음 탭을 사용합니다.
+공지·출석 ID의 존재 여부는 아직 조회하지 않으므로 임의의 ID도 최소 안내 화면을 표시합니다.
 
 세션 만들기·정보 보기, 회원 수정·가입 승인·거절, 알림 보내기 등의 모달은 로컬 상태입니다.
 명단 업로드·미리보기 단계와 파일, 폼 입력, 출석 코드, 승인 사유와 행 선택은 URL에 넣지 않습니다.
@@ -99,6 +105,14 @@
 
 명단 파일 처리, 공지 편집기·첨부·저장, 알림 발송·예약·취소는 후속 범위입니다.
 
+## 후속 구현 범위
+
+- 실제 목록 데이터·세션 및 공지 행의 상세 링크, 로딩·오류·빈 상태 UI.
+- API 명세와 URL 필터의 매핑, ID 존재 여부 조회와 없는 데이터의 404 처리.
+- 실제 인증·권한 검사와 보호 라우트, 기수 선택 및 데이터 범위.
+- 명단 파일 처리, 회원 승인·수정, 출석 업무, 공지 편집·저장, 알림 발송 기능.
+- 실기기 터치·VoiceOver·실제 한글 IME 검증.
+
 ## 검증과 진행 규칙
 
 - 실제 라우트 트리를 사용해 직접 접근, 이동, 404, 쿼리 복원을 검증합니다.
@@ -110,7 +124,7 @@
 - Stacked PR의 첫 base는 `main`, 다음 base는 직전 단계 브랜치입니다.
 - PR별 고유 diff의 추가·삭제 합계에 문서·테스트·생성 파일·lockfile을 모두 포함합니다.
   800줄 이상이면 기능과 관련 테스트를 함께 분리합니다. 앞 PR 변경을 중복 계산하지 않습니다.
-- 회원 목록이 기준을 넘으면 선택형 필터와 이름 검색 제출를 우선 분리합니다.
+- 회원 목록이 기준을 넘으면 선택형 필터와 이름 검색 제출을 우선 분리합니다.
 - 앞 PR merge 후 다음 PR의 base와 diff를 다시 확인합니다.
 - 제품 정책·API·범위의 불확실성이 생기면 해당 작업 전에 사용자에게 확인합니다.
 

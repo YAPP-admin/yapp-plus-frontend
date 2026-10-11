@@ -14,6 +14,7 @@ import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
 import { Route as DashboardMembersRouteImport } from './routes/_dashboard.members'
 import { Route as DashboardNoticesRouteImport } from './routes/_dashboard.notices'
+import { Route as DashboardNotificationsRouteImport } from './routes/_dashboard.notifications'
 import { Route as DashboardSessionsRouteImport } from './routes/_dashboard.sessions'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/_dashboard.attendance.index'
 import { Route as DashboardAttendanceSessionIdRouteImport } from './routes/_dashboard.attendance.$sessionId'
@@ -45,6 +46,11 @@ const DashboardMembersRoute = DashboardMembersRouteImport.update({
 const DashboardNoticesRoute = DashboardNoticesRouteImport.update({
   id: '/notices',
   path: '/notices',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
+  id: '/notifications',
+  path: '/notifications',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSessionsRoute = DashboardSessionsRouteImport.update({
@@ -98,6 +104,7 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/members': typeof DashboardMembersRoute
   '/notices': typeof DashboardNoticesRoute
+  '/notifications': typeof DashboardNotificationsRoute
   '/sessions': typeof DashboardSessionsRoute
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
@@ -111,6 +118,7 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/members': typeof DashboardMembersRoute
   '/notices': typeof DashboardNoticesRoute
+  '/notifications': typeof DashboardNotificationsRoute
   '/sessions': typeof DashboardSessionsRoute
   '/': typeof DashboardIndexRoute
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
@@ -127,6 +135,7 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/_dashboard/members': typeof DashboardMembersRoute
   '/_dashboard/notices': typeof DashboardNoticesRoute
+  '/_dashboard/notifications': typeof DashboardNotificationsRoute
   '/_dashboard/sessions': typeof DashboardSessionsRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
@@ -144,6 +153,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/members'
     | '/notices'
+    | '/notifications'
     | '/sessions'
     | '/attendance/$sessionId'
     | '/attendance/scores'
@@ -157,6 +167,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/members'
     | '/notices'
+    | '/notifications'
     | '/sessions'
     | '/'
     | '/attendance/$sessionId'
@@ -172,6 +183,7 @@ export interface FileRouteTypes {
     | '/login'
     | '/_dashboard/members'
     | '/_dashboard/notices'
+    | '/_dashboard/notifications'
     | '/_dashboard/sessions'
     | '/_dashboard/'
     | '/_dashboard/attendance/$sessionId'
@@ -223,6 +235,13 @@ declare module '@tanstack/react-router' {
       path: '/notices'
       fullPath: '/notices'
       preLoaderRoute: typeof DashboardNoticesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
+    '/_dashboard/notifications': {
+      id: '/_dashboard/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof DashboardNotificationsRouteImport
       parentRoute: typeof DashboardRoute
     }
     '/_dashboard/sessions': {
@@ -287,6 +306,7 @@ declare module '@tanstack/react-router' {
 interface DashboardRouteChildren {
   DashboardMembersRoute: typeof DashboardMembersRoute
   DashboardNoticesRoute: typeof DashboardNoticesRoute
+  DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardSessionsRoute: typeof DashboardSessionsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAttendanceSessionIdRoute: typeof DashboardAttendanceSessionIdRoute
@@ -301,6 +321,7 @@ interface DashboardRouteChildren {
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardMembersRoute: DashboardMembersRoute,
   DashboardNoticesRoute: DashboardNoticesRoute,
+  DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardSessionsRoute: DashboardSessionsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAttendanceSessionIdRoute: DashboardAttendanceSessionIdRoute,

@@ -61,6 +61,7 @@ describe('관리자 라우팅', () => {
     '/attendance/scores/missing',
     '/notices/notice-1/missing',
     '/notices/new/missing',
+    '/notifications/missing',
     '/notices/notice-123/edit/missing',
   ])('%s 직접 접근에 404와 복귀 링크를 제공한다', async (path) => {
     const router = await renderRoute(path);
@@ -158,6 +159,7 @@ describe('세션 목록 탐색', () => {
     await user.tab();
     await user.tab();
     await user.tab();
+    await user.tab();
     expect(filter).toHaveFocus();
   });
 });
@@ -232,6 +234,7 @@ describe('출석 화면 탐색', () => {
     expect(screen.queryByRole('option', { name: '전체 직군 대상' })).not.toBeInTheDocument();
     const backLink = screen.getByRole('link', { name: '세션 목록으로 돌아가기' });
     expect(backLink).toHaveAttribute('href', '/attendance');
+    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
@@ -422,7 +425,7 @@ describe('명단 업로드 진입점', () => {
     const user = userEvent.setup();
     await renderRoute('/members');
 
-    for (let index = 0; index < 8; index += 1) {
+    for (let index = 0; index < 9; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
@@ -431,7 +434,7 @@ describe('명단 업로드 진입점', () => {
 
     // 화면 전환 후 포커스 시작점을 정하고 실제 Tab 순서로 복귀 링크에 접근한다.
     screen.getByRole('link', { name: 'YAPP+ Admin' }).focus();
-    for (let index = 0; index < 7; index += 1) {
+    for (let index = 0; index < 8; index += 1) {
       await user.tab();
     }
     expect(backLink).toHaveFocus();
@@ -510,6 +513,8 @@ describe('공지 목록 URL 상태', () => {
     const filter = await screen.findByRole('combobox', { name: '공지 종류' });
 
     await user.tab();
+    expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveFocus();
+    await user.tab();
     expect(screen.getByRole('link', { name: '공지 작성' })).toHaveFocus();
     await user.tab();
     expect(filter).toHaveFocus();
@@ -579,7 +584,7 @@ describe('공지 상세 탐색', () => {
     const user = userEvent.setup();
     await renderRoute('/notices/notice-123');
 
-    screen.getByRole('link', { name: '공지 목록' }).focus();
+    screen.getByRole('link', { name: '알림 발송 내역' }).focus();
     await user.tab();
     expect(screen.getByRole('link', { name: '공지 목록으로 돌아가기' })).toHaveFocus();
     await user.tab();
@@ -658,10 +663,49 @@ describe('공지 작성·수정 진입점', () => {
     screen.getByRole('link', { name: entryName }).focus();
     await user.keyboard('{Enter}');
     const returnLink = await screen.findByRole('link', { name: returnName });
-    screen.getByRole('link', { name: '공지 목록' }).focus();
+    screen.getByRole('link', { name: '알림 발송 내역' }).focus();
     await user.tab();
     expect(returnLink).toHaveFocus();
     await user.keyboard('{Enter}');
     expect(await screen.findByRole('heading', { name: heading })).toBeVisible();
+  });
+});
+
+describe('알림 발송 내역 탐색', () => {
+  it('직접 접근하면 알림 안내와 현재 메뉴를 표시한다', async () => {
+    await renderRoute('/notifications');
+
+    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
+    expect(screen.getByText('알림 발송 내역을 준비 중입니다.')).toBeVisible();
+    expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(screen.getByRole('link', { name: '공지 목록' })).not.toHaveAttribute('aria-current');
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+  });
+
+  it('메뉴 진입은 이전 쿼리를 제거하고 뒤로가기는 복원한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/notices?category=operation');
+
+    await user.click(await screen.findByRole('link', { name: '알림 발송 내역' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/notifications'));
+    act(() => router.history.back());
+    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveValue('operation');
+    act(() => router.history.forward());
+    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
+  });
+
+  it('키보드로 알림 메뉴에 진입한다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/');
+
+    for (let index = 0; index < 8; index += 1) {
+      await user.tab();
+    }
+    expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
   });
 });
