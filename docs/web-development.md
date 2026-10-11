@@ -4,8 +4,8 @@
 [제품 맥락](./mission.md), 설치·실행과 기술 구성은 [README](../README.md)를 참고합니다.
 
 회원 앱의 페이지 경로·화면 상태 분류와 쿼리스트링 정책은
-[라우팅과 URL 상태 규칙](./web-routing.md)에서 확인합니다. 해당 문서는 단계별 구현 예정 범위와
-현재 적용 상태를 구분합니다.
+[라우팅과 URL 상태 규칙](./web-routing.md)에서 확인합니다. 해당 문서는 구현 완료 범위와 후속 기능 정책,
+검증 결과를 구분합니다.
 
 ## 적용 상태
 
@@ -67,9 +67,13 @@ apps/web/
     ├── app/
     │   ├── providers.tsx
     │   ├── global.css.ts
+    │   ├── navigation/ # 내부 방문 이력과 뒤로가기
     │   └── layouts/
     │       ├── page-shell.tsx
-    │       └── page-shell.css.ts
+    │       ├── page-shell.css.ts
+    │       ├── tabs-layout.tsx
+    │       ├── bottom-navigation.tsx
+    │       └── detail-layout.tsx
     ├── pages/
     │   ├── home/
     │   │   ├── index.ts
@@ -101,7 +105,7 @@ apps/web/
 `apps/web/pages/README.md`는 Next.js가 `src/pages`를 Pages Router로 인식하지 않도록 루트
 `pages` 폴더를 유지하는 이유를 설명합니다. 이 폴더에는 Pages Router 라우트를 추가하지 않습니다.
 
-`features`와 `shared`는 실제 사용처가 생길 때 생성합니다. 빈 레이어·역할별 폴더·슬라이스 그룹을
+새 `features` 슬라이스와 `shared` 하위 모듈은 실제 사용처가 생길 때 생성합니다. 빈 레이어·역할별 폴더·슬라이스 그룹을
 미리 만들지 않습니다.
 
 ## 파일을 어디에 둘지 결정하기
