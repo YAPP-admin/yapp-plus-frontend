@@ -15,7 +15,7 @@ describe('PageShell', () => {
     expect(screen.getAllByRole('main')).toHaveLength(1);
     expect(screen.getByRole('banner')).toHaveTextContent('YAPP+');
     expect(screen.getByRole('main')).toContainElement(
-      screen.getByRole('heading', { level: 1, name: 'YAPP+' }),
+      screen.getByRole('heading', { level: 1, name: '홈' }),
     );
   });
 });
