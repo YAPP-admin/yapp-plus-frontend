@@ -13,6 +13,7 @@ import { Route as DashboardRouteImport } from './routes/_dashboard'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
 import { Route as DashboardMembersRouteImport } from './routes/_dashboard.members'
+import { Route as DashboardNoticesRouteImport } from './routes/_dashboard.notices'
 import { Route as DashboardSessionsRouteImport } from './routes/_dashboard.sessions'
 import { Route as DashboardAttendanceIndexRouteImport } from './routes/_dashboard.attendance.index'
 import { Route as DashboardAttendanceSessionIdRouteImport } from './routes/_dashboard.attendance.$sessionId'
@@ -36,6 +37,11 @@ const DashboardIndexRoute = DashboardIndexRouteImport.update({
 const DashboardMembersRoute = DashboardMembersRouteImport.update({
   id: '/members',
   path: '/members',
+  getParentRoute: () => DashboardRoute,
+} as any)
+const DashboardNoticesRoute = DashboardNoticesRouteImport.update({
+  id: '/notices',
+  path: '/notices',
   getParentRoute: () => DashboardRoute,
 } as any)
 const DashboardSessionsRoute = DashboardSessionsRouteImport.update({
@@ -71,6 +77,7 @@ export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/login': typeof LoginRoute
   '/members': typeof DashboardMembersRoute
+  '/notices': typeof DashboardNoticesRoute
   '/sessions': typeof DashboardSessionsRoute
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
@@ -80,6 +87,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/members': typeof DashboardMembersRoute
+  '/notices': typeof DashboardNoticesRoute
   '/sessions': typeof DashboardSessionsRoute
   '/': typeof DashboardIndexRoute
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
@@ -92,6 +100,7 @@ export interface FileRoutesById {
   '/_dashboard': typeof DashboardRouteWithChildren
   '/login': typeof LoginRoute
   '/_dashboard/members': typeof DashboardMembersRoute
+  '/_dashboard/notices': typeof DashboardNoticesRoute
   '/_dashboard/sessions': typeof DashboardSessionsRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
@@ -105,6 +114,7 @@ export interface FileRouteTypes {
     | '/'
     | '/login'
     | '/members'
+    | '/notices'
     | '/sessions'
     | '/attendance/$sessionId'
     | '/attendance/scores'
@@ -114,6 +124,7 @@ export interface FileRouteTypes {
   to:
     | '/login'
     | '/members'
+    | '/notices'
     | '/sessions'
     | '/'
     | '/attendance/$sessionId'
@@ -125,6 +136,7 @@ export interface FileRouteTypes {
     | '/_dashboard'
     | '/login'
     | '/_dashboard/members'
+    | '/_dashboard/notices'
     | '/_dashboard/sessions'
     | '/_dashboard/'
     | '/_dashboard/attendance/$sessionId'
@@ -168,6 +180,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMembersRouteImport
       parentRoute: typeof DashboardRoute
     }
+    '/_dashboard/notices': {
+      id: '/_dashboard/notices'
+      path: '/notices'
+      fullPath: '/notices'
+      preLoaderRoute: typeof DashboardNoticesRouteImport
+      parentRoute: typeof DashboardRoute
+    }
     '/_dashboard/sessions': {
       id: '/_dashboard/sessions'
       path: '/sessions'
@@ -208,6 +227,7 @@ declare module '@tanstack/react-router' {
 
 interface DashboardRouteChildren {
   DashboardMembersRoute: typeof DashboardMembersRoute
+  DashboardNoticesRoute: typeof DashboardNoticesRoute
   DashboardSessionsRoute: typeof DashboardSessionsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAttendanceSessionIdRoute: typeof DashboardAttendanceSessionIdRoute
@@ -218,6 +238,7 @@ interface DashboardRouteChildren {
 
 const DashboardRouteChildren: DashboardRouteChildren = {
   DashboardMembersRoute: DashboardMembersRoute,
+  DashboardNoticesRoute: DashboardNoticesRoute,
   DashboardSessionsRoute: DashboardSessionsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAttendanceSessionIdRoute: DashboardAttendanceSessionIdRoute,

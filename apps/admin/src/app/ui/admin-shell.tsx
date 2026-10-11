@@ -55,6 +55,14 @@ export function AdminShell({ children }: { children: ReactNode }) {
           >
             회원 관리
           </Link>
+          <Link
+            className={navigationLink}
+            to="/notices"
+            search={{}}
+            activeOptions={{ includeSearch: false }}
+          >
+            공지 목록
+          </Link>
         </nav>
       </header>
       {children}
