@@ -1,8 +1,26 @@
 import { render, screen, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+
 import { HomePage } from './home-page';
 
+afterEach(() => vi.unstubAllEnvs());
+
 describe('HomePage', () => {
+  it.each(['production', 'test'])('%s에서는 개발용 링크를 노출하지 않는다', (environment) => {
+    vi.stubEnv('NODE_ENV', environment);
+    render(<HomePage />);
+    expect(screen.queryByRole('link', { name: '개발용 화면 목록' })).not.toBeInTheDocument();
+  });
+
+  it('개발 환경에서만 화면 목록으로 이동할 수 있다', () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    render(<HomePage />);
+    expect(screen.getByRole('link', { name: '개발용 화면 목록' })).toHaveAttribute(
+      'href',
+      '/dev/routes',
+    );
+  });
+
   it('준비 중 안내와 일정·공지·출석 바로가기를 제공한다', () => {
     render(<HomePage />);
     expect(screen.getByRole('heading', { level: 1, name: '홈' })).toBeVisible();

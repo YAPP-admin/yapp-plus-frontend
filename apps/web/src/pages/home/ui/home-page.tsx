@@ -18,6 +18,11 @@ export function HomePage() {
           최근 출석 전체보기
         </Link>
       </nav>
+      {process.env.NODE_ENV === 'development' && (
+        <Link className={link} href="/dev/routes">
+          개발용 화면 목록
+        </Link>
+      )}
     </main>
   );
 }
