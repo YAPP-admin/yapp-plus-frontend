@@ -374,3 +374,71 @@ describe('회원 목록 URL 상태', () => {
     expect(router.state.location.href).toBe('/members');
   });
 });
+
+describe('명단 업로드 진입점', () => {
+  it('직접 접근하면 공통 메뉴와 업로드 안내만 표시한다', async () => {
+    const router = await renderRoute('/members/import');
+
+    expect(await screen.findByRole('heading', { name: '명단 업로드', level: 1 })).toBeVisible();
+    expect(screen.getByRole('link', { name: '회원 관리' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '회원 목록으로 돌아가기' })).toHaveAttribute(
+      'href',
+      '/members',
+    );
+    expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation', { name: '회원 목록 구분' })).not.toBeInTheDocument();
+    expect(router.state.matches.some((match) => match.routeId === '/_dashboard/members')).toBe(
+      false,
+    );
+  });
+
+  it('목록과 업로드의 명시적 이동은 필터를 초기화하고 뒤로가기는 이전 조건을 복원한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute(
+      '/members?tab=pending&q=Kim&part=web&role=admin&status=active',
+    );
+    const initialSearch = router.state.location.search;
+
+    await user.click(await screen.findByRole('link', { name: '명단 업로드' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/members/import'));
+
+    act(() => router.history.back());
+    expect(await screen.findByRole('searchbox')).toHaveValue('Kim');
+    expect(router.state.location.search).toEqual(initialSearch);
+
+    act(() => router.history.forward());
+    await user.click(await screen.findByRole('link', { name: '회원 목록으로 돌아가기' }));
+    expect(await screen.findByRole('searchbox')).toHaveValue('');
+    expect(router.state.location.href).toBe('/members');
+  });
+
+  it('키보드로 업로드 화면에 진입하고 목록에 복귀한다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/members');
+
+    for (let index = 0; index < 7; index += 1) {
+      await user.tab();
+    }
+    expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    const backLink = await screen.findByRole('link', { name: '회원 목록으로 돌아가기' });
+
+    // 화면 전환 후 포커스 시작점을 정하고 실제 Tab 순서로 복귀 링크에 접근한다.
+    screen.getByRole('link', { name: 'YAPP+ Admin' }).focus();
+    for (let index = 0; index < 6; index += 1) {
+      await user.tab();
+    }
+    expect(backLink).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(await screen.findByRole('searchbox')).toHaveValue('');
+  });
+
+  it('업로드 경로의 알 수 없는 하위 주소는 404를 표시한다', async () => {
+    await renderRoute('/members/import/missing');
+
+    expect(await screen.findByRole('heading', { name: '페이지를 찾을 수 없어요' })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: '명단 업로드' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+  });
+});

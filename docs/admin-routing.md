@@ -7,15 +7,17 @@
 ## 현재 적용 범위
 
 - PR 1 관련 이슈: [#46](https://github.com/YAPP-admin/yapp-plus-frontend/issues/46).
-- PR 4 회원 목록·검색·필터까지 구현했습니다. PR 5 이후는 미착수 상태입니다.
+- PR 5 명단 업로드 진입점까지 구현했습니다. PR 6 이후는 미착수 상태입니다.
 - 검증 기록: [PR 1](./admin-routing-validation.md), [PR 2](./admin-sessions-routing-validation.md).
+- PR 5 관련 이슈: [#54](https://github.com/YAPP-admin/yapp-plus-frontend/issues/54).
+- PR 5 검증: [명단 업로드 라우팅 검증](./admin-member-import-routing-validation.md).
 - PR 4 관련 이슈: [#53](https://github.com/YAPP-admin/yapp-plus-frontend/issues/53).
 - PR 4 검증: [회원 목록 라우팅 검증](./admin-members-routing-validation.md).
 - PR 3 관련 이슈: [#50](https://github.com/YAPP-admin/yapp-plus-frontend/issues/50).
 - PR 3 검증: [출석 라우팅 검증](./admin-attendance-routing-validation.md).
 - PR 2 관련 이슈: [#49](https://github.com/YAPP-admin/yapp-plus-frontend/issues/49).
 - 현재 제공하는 경로는 `/`, `/login`, `/sessions`, `/attendance`,
-  `/attendance/:sessionId`, `/attendance/scores`, `/members`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
+  `/attendance/:sessionId`, `/attendance/scores`, `/members`, `/members/import`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
 - 대시보드는 공통 셸과 현재 메뉴 표시를 사용합니다. 로그인에는 관리자 메뉴가 없습니다.
 - 알 수 없는 경로는 404 안내와 대시보드 복귀 링크를 제공합니다.
 - 아래 후속 경로와 쿼리는 합의한 계약이며 각 단계에서 구현합니다. 미구현 메뉴는 노출하지 않습니다.
