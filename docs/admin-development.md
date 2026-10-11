@@ -10,12 +10,15 @@
 탐색하고 생성 파일이 참조하는 프레임워크 경계이므로 라우트 파일을 FSD 레이어로 옮기지
 않습니다. 라우트 파일은 URL·head·레이아웃을 연결하고, 화면 UI는 FSD 슬라이스에서 가져옵니다.
 
-이번 적용 대상은 기존 로그인과 대시보드입니다. API·인증 정책·관리자 기능의 동작은 변경하지
+현재 적용 대상은 로그인·대시보드·404 화면과 관리자 공통 셸입니다. API·인증 정책은 변경하지
 않습니다. `entities`와 `widgets`는 도입하지 않으며, `features`와 `shared`는 실제 사용처가
 생겼을 때만 만듭니다.
 
 로그인과 대시보드의 화면 구현·스타일·테스트를 `pages`로 옮겼습니다. route 파일은 URL·head와
 라우터 연결만 담당합니다.
+
+페이지별 URL·쿼리 계약과 단계별 작업은 [관리자 라우팅 계획](./admin-routing.md)을 따릅니다.
+문서의 후속 경로는 계획이며 해당 단계 구현 전에는 404로 처리됩니다.
 
 ## 현재 구조와 목표 구조
 
@@ -23,6 +26,7 @@
 apps/admin/src/
 ├── providers.tsx              # TanStack Start 앱 Provider 진입점
 ├── router.tsx                 # routeTree 연결 진입점
+├── app/ui/                    # AdminShell과 관리자 셸 스타일
 ├── routes/                    # TanStack Router 진입점·레이아웃 어댑터
 │   ├── __root.tsx
 │   ├── _dashboard.tsx
@@ -32,7 +36,10 @@ apps/admin/src/
 │   ├── dashboard/
 │   │   ├── index.ts
 │   │   └── ui/
-│   └── login/
+│   ├── login/
+│   │   ├── index.ts
+│   │   └── ui/
+│   └── not-found/
 │       ├── index.ts
 │       └── ui/
 ├── features/
@@ -42,11 +49,12 @@ apps/admin/src/
 
 현재 `routes/_dashboard.index.tsx`의 화면 구현과 스타일·테스트는 `pages/dashboard`,
 `routes/login.tsx`의 화면 연결은 `pages/login`으로 옮겼습니다. `routes/_dashboard.tsx`의
-레이아웃은 여러 관리자 route에서 실제로 공유할 때 `app/ui`로 분리합니다.
+레이아웃은 `app/ui/admin-shell.tsx`의 `AdminShell`에 `Outlet`을 전달합니다.
+로그인에는 이 셸이 적용되지 않으며, 루트의 `notFoundComponent`는 `pages/not-found`를 연결합니다.
+404 화면은 독립적인 안내와 대시보드 복귀 링크를 제공하고 관리자 메뉴를 표시하지 않습니다.
 
 `providers.tsx`와 `router.tsx`는 TanStack Start와 생성된 `routeTree.gen.ts`가 기대하는 앱
-진입점이므로 현재 위치를 유지합니다. 공통 관리자 셸이 생기면 `app/ui`를 만들고 route
-레이아웃 어댑터에서 조합합니다.
+진입점이므로 현재 위치를 유지합니다. 공통 관리자 셸은 route 레이아웃 어댑터에서 조합합니다.
 
 ## 레이어와 배치 기준
 
@@ -101,3 +109,6 @@ mise exec -- node --run build
 
 로그인 입력의 키보드 포커스·오류·비밀번호 필드와 대시보드의 제목·빈 상태·메뉴 링크를
 브라우저에서 확인합니다. 구조 변경만으로 새로운 제품 상태나 API를 추가하지 않습니다.
+
+`src/router.test.tsx`는 실제 라우트 트리를 메모리 history로 실행하여 셸·로그인 분리, 404 직접
+접근과 키보드 복귀를 검증합니다. HTTP 404 상태 코드는 실행 중인 서버에서도 확인합니다.

@@ -7,6 +7,7 @@ import { seedThemeScript } from '@yapp-plus/ui/seed-theme';
 import '@yapp-plus/ui/styles';
 import type { ReactNode } from 'react';
 import { Providers } from '~/providers';
+import { NotFoundPage } from '~/pages/not-found';
 
 export const Route = createRootRoute({
   head: () => ({
@@ -21,6 +22,7 @@ export const Route = createRootRoute({
     ],
   }),
   shellComponent: RootDocument,
+  notFoundComponent: NotFoundPage,
 });
 
 function RootDocument({ children }: { children: ReactNode }) {
