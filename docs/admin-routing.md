@@ -7,10 +7,13 @@
 ## 현재 적용 범위
 
 - PR 1 관련 이슈: [#46](https://github.com/YAPP-admin/yapp-plus-frontend/issues/46).
-- PR 1 공통 셸과 PR 2 세션 목록 구현을 완료했습니다. PR 3 이후는 미착수 상태입니다.
+- PR 3 출석부·출석 총점까지 구현했습니다. PR 4 이후는 미착수 상태입니다.
 - 검증 기록: [PR 1](./admin-routing-validation.md), [PR 2](./admin-sessions-routing-validation.md).
+- PR 3 관련 이슈: [#50](https://github.com/YAPP-admin/yapp-plus-frontend/issues/50).
+- PR 3 검증: [출석 라우팅 검증](./admin-attendance-routing-validation.md).
 - PR 2 관련 이슈: [#49](https://github.com/YAPP-admin/yapp-plus-frontend/issues/49).
-- 현재 제공하는 경로는 `/` 대시보드, `/login`, `/sessions`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
+- 현재 제공하는 경로는 `/`, `/login`, `/sessions`, `/attendance`,
+  `/attendance/:sessionId`, `/attendance/scores`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
 - 대시보드는 공통 셸과 현재 메뉴 표시를 사용합니다. 로그인에는 관리자 메뉴가 없습니다.
 - 알 수 없는 경로는 404 안내와 대시보드 복귀 링크를 제공합니다.
 - 아래 후속 경로와 쿼리는 합의한 계약이며 각 단계에서 구현합니다. 미구현 메뉴는 노출하지 않습니다.
@@ -25,6 +28,7 @@
 | `/`                       | 대시보드       | 없음                                 | 기존 유지 |
 | `/login`                  | 로그인         | 없음                                 | 기존 유지 |
 | `/sessions`               | 세션 목록      | `part`                               | PR 2      |
+| `/attendance`             | 출석 세션 선택 | `part`                               | PR 3      |
 | `/attendance/:sessionId`  | 세션별 출석부  | `part`                               | PR 3      |
 | `/attendance/scores`      | 출석 총점      | `part`                               | PR 3      |
 | `/members`                | 회원 목록      | `tab`, `q`, `part`, `role`, `status` | PR 4      |
@@ -39,7 +43,7 @@
 
 - 회원 `tab`: `all | pending`, 기본값 `all`.
 - 공지 상세 `tab`: `readers | questions`, 기본값 `readers`.
-- `part`: `all | pm | design | android | ios | web | server`. 세션 목록만 `common`을 추가해
+- `part`: `all | pm | design | android | ios | web | server`. 세션 관리 목록과 출석 세션 선택만 `common`을 추가해
   전체 직군 대상 세션을 구분합니다.
 - 회원 `role`: `all | admin | active-member | regular-member`.
 - 회원 `status`: `all | active | inactive`.
@@ -56,9 +60,11 @@
 - 값은 프런트엔드 URL 계약이며 실제 API 연결 시 API 명세와 경계에서 변환합니다.
 - 이번 단계별 작업에는 페이지네이션·가변 정렬을 추가하지 않습니다.
 
-출석부 메뉴는 `/sessions`에서 세션을 고른 뒤 `/attendance/:sessionId`로 이동합니다.
-별도 선택 화면이나 최근 세션 자동 선택은 추가하지 않습니다. 실제 세션 행의 링크는 데이터 화면
-구현 시 연결하고, 라우팅 단계에서는 typed 탐색을 테스트합니다.
+출석부 메뉴는 `/attendance`에서 세션을 고른 뒤 `/attendance/:sessionId`로 이동합니다.
+세션 관리(`/sessions`)와 출석부는 메뉴·URL을 분리합니다. 상세의 목록 복귀는 필터 없는
+`/attendance`로 이동합니다. 출석 총점은 별도 메뉴로 표시하고 최근 세션 자동 선택은 하지 않습니다.
+실제 세션 행의 링크는 데이터 화면 구현 시 연결하고, 라우팅 단계에서는 typed 탐색을 테스트합니다.
+`scores`는 총점의 정적 경로로 예약하므로 동적 세션 ID로 사용하지 않습니다.
 
 세션 만들기·정보 보기, 회원 수정·가입 승인·거절, 알림 보내기 등의 모달은 로컬 상태입니다.
 명단 업로드·미리보기 단계와 파일, 폼 입력, 출석 코드, 승인 사유와 행 선택은 URL에 넣지 않습니다.
@@ -72,7 +78,7 @@
 | ---- | -------------------------- | ----------------------------------------------------- |
 | PR 1 | 공통 셸 분리·현재 메뉴·404 | 기존 화면 유지, 잘못된 URL에서 키보드로 대시보드 복귀 |
 | PR 2 | 세션 목록·직군 필터·Zod    | 직접 접근·새로고침·history에서 필터 복원              |
-| PR 3 | 출석부·출석 총점·메뉴 연결 | typed 탐색·복귀, `scores`와 동적 ID 충돌 방지         |
+| PR 3 | 출석 세션 선택·출석부·총점 | typed 탐색·복귀, `scores`와 동적 ID 충돌 방지         |
 | PR 4 | 회원 목록·탭·검색·필터     | 복합 필터 보존, 검색 debounce와 이동 중 갱신 취소     |
 | PR 5 | 명단 업로드 진입점         | 목록에서 업로드 화면 이동·복귀                        |
 | PR 6 | 공지 목록·종류 필터        | `category` 검증·기본값 생략·history 복원              |
