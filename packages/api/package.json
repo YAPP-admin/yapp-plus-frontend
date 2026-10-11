@@ -15,7 +15,7 @@
   "dependencies": {
     "@tanstack/react-query": "catalog:",
     "ky": "2.1.0",
-    "zod": "4.5.4"
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@hey-api/openapi-ts": "0.99.0",

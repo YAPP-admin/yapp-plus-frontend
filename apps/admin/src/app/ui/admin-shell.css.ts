@@ -38,6 +38,8 @@ export const brand = style({
 
 export const navigation = style({
   display: 'flex',
+  flexWrap: 'wrap',
+  gap: vars.$dimension.x6,
   alignItems: 'center',
 });
 

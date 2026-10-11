@@ -1,4 +1,4 @@
-import { act, render, screen, within } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
@@ -91,5 +91,63 @@ describe('관리자 라우팅', () => {
 
     expect(await screen.findByRole('heading', { name: 'YAPP Admin' })).toBeVisible();
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
+  });
+});
+
+describe('세션 목록 탐색', () => {
+  it.each([
+    ['/sessions', 'all'],
+    ['/sessions?part=common', 'common'],
+    ['/sessions?part=web', 'web'],
+    ['/sessions?part=unknown', 'all'],
+    ['/sessions?part=%5B%22web%22%5D', 'all'],
+    ['/sessions?part=true', 'all'],
+  ])('%s에 직접 접근하면 %s를 선택한다', async (path, part) => {
+    await renderRoute(path);
+    expect(await screen.findByRole('combobox', { name: '직군' })).toHaveValue(part);
+    expect(screen.getByRole('link', { name: '세션 관리' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.getByRole('link', { name: '대시보드' })).not.toHaveAttribute('aria-current');
+  });
+
+  it('필터 변경을 history에 추가하고 기본값은 URL에서 생략한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/sessions');
+    const filter = await screen.findByRole('combobox', { name: '직군' });
+    await user.selectOptions(filter, 'common');
+    await waitFor(() => expect(router.state.location.searchStr).toBe('?part=common'));
+    await user.selectOptions(filter, 'web');
+    await waitFor(() => expect(router.state.location.searchStr).toBe('?part=web'));
+    act(() => router.history.back());
+    await waitFor(() => expect(filter).toHaveValue('common'));
+    act(() => router.history.forward());
+    await waitFor(() => expect(filter).toHaveValue('web'));
+    await user.selectOptions(filter, 'all');
+    await waitFor(() => expect(router.state.location.href).toBe('/sessions'));
+  });
+
+  it.each(['대시보드', 'YAPP+ Admin'])(
+    '%s 이동 시 필터를 전달하지 않고 세션 재진입도 기본값을 사용한다',
+    async (name) => {
+      const user = userEvent.setup();
+      const router = await renderRoute('/sessions?part=web');
+      await user.click(await screen.findByRole('link', { name }));
+      await waitFor(() => expect(router.state.location.href).toBe('/'));
+      await user.click(screen.getByRole('link', { name: '세션 관리' }));
+      expect(await screen.findByRole('combobox', { name: '직군' })).toHaveValue('all');
+      expect(router.state.location.href).toBe('/sessions');
+    },
+  );
+
+  it('메뉴에서 키보드로 세션 페이지에 진입하고 직군 필터에 도달한다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/');
+    await user.tab();
+    await user.tab();
+    await user.tab();
+    expect(screen.getByRole('link', { name: '세션 관리' })).toHaveFocus();
+    await user.keyboard('{Enter}');
+    const filter = await screen.findByRole('combobox', { name: '직군' });
+    await user.tab();
+    expect(filter).toHaveFocus();
   });
 });

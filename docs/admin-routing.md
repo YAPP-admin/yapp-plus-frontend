@@ -7,8 +7,10 @@
 ## 현재 적용 범위
 
 - PR 1 관련 이슈: [#46](https://github.com/YAPP-admin/yapp-plus-frontend/issues/46).
-- PR 1 구현과 [검증 기록](./admin-routing-validation.md)을 완료했습니다. PR 2 이후는 미착수 상태입니다.
-- 현재 제공하는 경로는 `/` 대시보드와 `/login`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
+- PR 1 공통 셸과 PR 2 세션 목록 구현을 완료했습니다. PR 3 이후는 미착수 상태입니다.
+- 검증 기록: [PR 1](./admin-routing-validation.md), [PR 2](./admin-sessions-routing-validation.md).
+- PR 2 관련 이슈: [#49](https://github.com/YAPP-admin/yapp-plus-frontend/issues/49).
+- 현재 제공하는 경로는 `/` 대시보드, `/login`, `/sessions`입니다. 로그인 성공 후 `/` 이동을 유지합니다.
 - 대시보드는 공통 셸과 현재 메뉴 표시를 사용합니다. 로그인에는 관리자 메뉴가 없습니다.
 - 알 수 없는 경로는 404 안내와 대시보드 복귀 링크를 제공합니다.
 - 아래 후속 경로와 쿼리는 합의한 계약이며 각 단계에서 구현합니다. 미구현 메뉴는 노출하지 않습니다.
@@ -43,8 +45,8 @@
 - 회원 `status`: `all | active | inactive`.
 - 공지 `category`: `all | session | submission | operation`.
 - 필터 기본값은 `all`, 이름 검색 `q`의 기본값은 빈 문자열입니다.
-- 각 라우트의 `validateSearch`에서 Zod 4로 검증합니다. Zod는 실제 사용이 생기는 PR 2에서
-  catalog와 관리자 의존성에 추가합니다.
+- 각 라우트의 `validateSearch`에서 Zod 4로 검증합니다. Zod 4.5.4는 catalog에서 관리하며
+  관리자와 API 패키지가 같은 버전을 사용합니다.
 - 누락·잘못된 값은 필드별 기본값으로 처리하고 앱이 생성하는 URL에서는 기본값을 생략합니다.
 - 화면·탭·선택형 필터 변경은 history에 추가합니다. 검색은 300ms debounce 후 `replace`합니다.
 - 같은 페이지의 쿼리 변경은 스크롤을 유지합니다. 다른 메뉴에는 이전 페이지 필터를 전달하지 않습니다.
