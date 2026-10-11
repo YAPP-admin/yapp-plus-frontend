@@ -4,13 +4,16 @@ import { header, shell, shellWithNavigation, wordmark } from './page-shell.css';
 export function PageShell({
   children,
   navigation,
+  backButton,
 }: {
   children: ReactNode;
   navigation?: ReactNode;
+  backButton?: ReactNode;
 }) {
   return (
     <div className={navigation ? shellWithNavigation : shell}>
       <header className={header}>
+        {backButton}
         <span className={wordmark}>YAPP+</span>
       </header>
       {children}
