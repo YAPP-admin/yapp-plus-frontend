@@ -1,3 +1,4 @@
+import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import {
@@ -17,27 +18,16 @@ function PartFilter<T extends AttendanceSessionPart>({
   options,
   allLabel = '모든 직군',
 }: FilterProps<T> & { options: readonly T[]; allLabel?: string }) {
+  const labels = { ...partLabels, all: allLabel };
   return (
-    <div className={styles.filter}>
-      <label htmlFor="attendance-part">직군</label>
-      <select
-        id="attendance-part"
-        className={styles.select}
-        value={part}
-        onChange={(event) => {
-          const nextPart = options.find((option) => option === event.currentTarget.value);
-          if (nextPart !== undefined) {
-            onPartChange(nextPart);
-          }
-        }}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {option === 'all' ? allLabel : partLabels[option]}
-          </option>
-        ))}
-      </select>
-    </div>
+    <FilterSelect
+      className={styles.filter}
+      label="직군"
+      value={part}
+      options={options}
+      labels={labels}
+      onChange={onPartChange}
+    />
   );
 }
 
