@@ -21,28 +21,10 @@ export const description = style({
   lineHeight: vars.$lineHeight.t4,
 });
 export const filter = style({
-  display: 'grid',
+  display: 'flex',
+  flexWrap: 'wrap',
   gap: vars.$dimension.x2,
-  width: 'min(100%, 20rem)',
   marginBlock: vars.$dimension.x4,
-  fontSize: vars.$fontSize.t4,
-});
-export const select = style({
-  width: '100%',
-  minHeight: '2.75rem',
-  paddingInline: vars.$dimension.x3,
-  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
-  borderRadius: vars.$dimension.x2,
-  background: vars.$color.bg.layerDefault,
-  color: vars.$color.fg.neutral,
-  fontSize: '1rem',
-  touchAction: 'manipulation',
-  selectors: {
-    '&:focus-visible': {
-      outline: `2px solid ${vars.$color.fg.brand}`,
-      outlineOffset: '0.125rem',
-    },
-  },
 });
 export const placeholder = style({
   margin: 0,

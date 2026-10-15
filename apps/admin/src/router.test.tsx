@@ -153,42 +153,43 @@ describe('관리자 라우팅', () => {
 
 describe('세션 목록 탐색', () => {
   it.each([
-    ['/sessions', 'all'],
-    ['/sessions?part=common', 'common'],
-    ['/sessions?part=web', 'web'],
-    ['/sessions?part=unknown', 'all'],
-    ['/sessions?part=%5B%22web%22%5D', 'all'],
-    ['/sessions?part=true', 'all'],
-  ])('%s에 직접 접근하면 %s를 선택한다', async (path, part) => {
+    ['/sessions', '전체'],
+    ['/sessions?type=offline', '오프라인'],
+    ['/sessions?type=team', '팀 세션'],
+    ['/sessions?type=unknown', '전체'],
+    ['/sessions?type=%5B%22team%22%5D', '전체'],
+    ['/sessions?type=true', '전체'],
+    ['/sessions?part=web', '전체'],
+    ['/sessions?type=offline&part=web', '오프라인'],
+  ])('%s에 직접 접근하면 %s를 선택한다', async (path, label) => {
     await renderRoute(path);
 
-    expect(await screen.findByRole('combobox', { name: '직군' })).toHaveValue(part);
+    expect(await screen.findByRole('radio', { name: label })).toBeChecked();
     expect(screen.getByRole('link', { name: '세션 관리' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: '대시보드' })).not.toHaveAttribute('aria-current');
   });
 
   it('필터 변경을 history에 추가하고 기본값은 URL에서 생략한다', async () => {
     const user = userEvent.setup();
-    const router = await renderRoute('/sessions');
-    const filter = await screen.findByRole('combobox', { name: '직군' });
+    const router = await renderRoute('/sessions?part=web');
 
-    await user.selectOptions(filter, 'common');
+    await user.click(await screen.findByRole('radio', { name: '오프라인' }));
 
-    await waitFor(() => expect(router.state.location.searchStr).toBe('?part=common'));
+    await waitFor(() => expect(router.state.location.searchStr).toBe('?type=offline'));
 
-    await user.selectOptions(filter, 'web');
+    await user.click(screen.getByRole('radio', { name: '팀 세션' }));
 
-    await waitFor(() => expect(router.state.location.searchStr).toBe('?part=web'));
+    await waitFor(() => expect(router.state.location.searchStr).toBe('?type=team'));
 
     act(() => router.history.back());
 
-    await waitFor(() => expect(filter).toHaveValue('common'));
+    await waitFor(() => expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked());
 
     act(() => router.history.forward());
 
-    await waitFor(() => expect(filter).toHaveValue('web'));
+    await waitFor(() => expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked());
 
-    await user.selectOptions(filter, 'all');
+    await user.click(screen.getByRole('radio', { name: '전체' }));
 
     await waitFor(() => expect(router.state.location.href).toBe('/sessions'));
   });
@@ -197,7 +198,7 @@ describe('세션 목록 탐색', () => {
     '%s 이동 시 필터를 전달하지 않고 세션 재진입도 기본값을 사용한다',
     async (name) => {
       const user = userEvent.setup();
-      const router = await renderRoute('/sessions?part=web');
+      const router = await renderRoute('/sessions?type=team');
 
       await user.click(await screen.findByRole('link', { name }));
 
@@ -205,12 +206,12 @@ describe('세션 목록 탐색', () => {
 
       await user.click(screen.getByRole('link', { name: '세션 관리' }));
 
-      expect(await screen.findByRole('combobox', { name: '직군' })).toHaveValue('all');
+      expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
       expect(router.state.location.href).toBe('/sessions');
     },
   );
 
-  it('메뉴에서 키보드로 세션 페이지에 진입하고 직군 필터에 도달한다', async () => {
+  it('메뉴에서 키보드로 세션 페이지에 진입하고 유형 필터를 선택한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
 
@@ -221,7 +222,7 @@ describe('세션 목록 탐색', () => {
     expect(screen.getByRole('link', { name: '세션 관리' })).toHaveFocus();
 
     await user.keyboard('{Enter}');
-    const filter = await screen.findByRole('combobox', { name: '직군' });
+    const filter = await screen.findByRole('radio', { name: '전체' });
 
     await user.tab();
     await user.tab();
@@ -231,6 +232,10 @@ describe('세션 목록 탐색', () => {
     await user.tab();
 
     expect(filter).toHaveFocus();
+
+    await user.keyboard('{ArrowRight}');
+
+    await waitFor(() => expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked());
   });
 });
 
@@ -374,7 +379,7 @@ describe('출석 화면 탐색', () => {
     await user.click(screen.getByRole('link', { name: '세션 관리' }));
 
     await waitFor(() => expect(router.state.location.href).toBe('/sessions'));
-    expect(screen.getByRole('combobox')).toHaveValue('all');
+    expect(screen.getByRole('radio', { name: '전체' })).toBeChecked();
   });
 });
 

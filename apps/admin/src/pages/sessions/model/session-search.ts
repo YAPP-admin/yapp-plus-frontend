@@ -1,28 +1,15 @@
 import { z } from 'zod';
+import { sessionTypeSchema } from './session';
 
-export const sessionPartSchema = z.enum([
-  'all',
-  'common',
-  'pm',
-  'design',
-  'android',
-  'ios',
-  'web',
-  'server',
-]);
-export type SessionPart = z.infer<typeof sessionPartSchema>;
+export const sessionFilterSchema = z.enum(['all', ...sessionTypeSchema.options]);
+export type SessionFilter = z.infer<typeof sessionFilterSchema>;
 
 export const sessionSearchSchema = z.object({
-  part: sessionPartSchema.default('all').catch('all'),
+  type: sessionFilterSchema.default('all').catch('all'),
 });
 
-export const sessionPartLabels = {
-  all: '모든 세션',
-  common: '전체 직군 대상',
-  pm: 'PM',
-  design: '디자인',
-  android: 'Android',
-  ios: 'iOS',
-  web: 'Web',
-  server: 'Server',
-} satisfies Record<SessionPart, string>;
+export const sessionFilterLabels = {
+  all: '전체',
+  offline: '오프라인',
+  team: '팀 세션',
+} satisfies Record<SessionFilter, string>;
