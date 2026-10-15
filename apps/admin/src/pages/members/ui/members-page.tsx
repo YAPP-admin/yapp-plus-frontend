@@ -1,3 +1,4 @@
+import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
 import {
   memberPartSchema,
@@ -10,42 +11,6 @@ import {
 } from '../model/member-search';
 import { ActionButton } from '@yapp-plus/ui';
 import * as styles from './members-page.css';
-
-function Filter<T extends string>({
-  label,
-  value,
-  options,
-  labels,
-  onChange,
-}: {
-  label: string;
-  value: T;
-  options: readonly T[];
-  labels: Record<T, string>;
-  onChange: (value: T) => void;
-}) {
-  return (
-    <label className={styles.field}>
-      {label}
-      <select
-        className={styles.control}
-        value={value}
-        onChange={(event) => {
-          const next = options.find((option) => option === event.currentTarget.value);
-          if (next !== undefined) {
-            onChange(next);
-          }
-        }}
-      >
-        {options.map((option) => (
-          <option key={option} value={option}>
-            {labels[option]}
-          </option>
-        ))}
-      </select>
-    </label>
-  );
-}
 
 export function MembersPage({
   search,
@@ -113,21 +78,21 @@ export function MembersPage({
             검색
           </ActionButton>
         </form>
-        <Filter
+        <FilterSelect
           label="직군"
           value={search.part}
           options={memberPartSchema.options}
           labels={partLabels}
           onChange={(part) => onFilterChange({ part })}
         />
-        <Filter
+        <FilterSelect
           label="권한"
           value={search.role}
           options={memberRoleSchema.options}
           labels={roleLabels}
           onChange={(role) => onFilterChange({ role })}
         />
-        <Filter
+        <FilterSelect
           label="상태"
           value={search.status}
           options={memberStatusSchema.options}
