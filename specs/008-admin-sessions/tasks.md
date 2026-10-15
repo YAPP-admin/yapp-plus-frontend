@@ -1,6 +1,6 @@
 # 작업 목록: 관리자 세션 관리
 
-**상태**: 4단계 승인 완료 — 5단계 진행 예정
+**상태**: 6단계 승인 완료 — 7단계 진행 대기
 **기준**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [UI 계약](contracts/session-ui.md)
 
 ## 실행 규칙과 현재 상태
@@ -52,22 +52,36 @@
 
 독립 검증: UI 없이 입력 스키마·정렬·독립 저장소의 생성·조회·삭제를 검증한다.
 
-- [ ] T011 `apps/admin/src/pages/sessions/model/session.ts`에 생성·조회 스키마와 추론 타입, 정렬 함수를 구현한다.
-- [ ] T012 `apps/admin/src/pages/sessions/model/sessions.mock.ts`에 익명 fixture·독립 저장소 factory·브라우저 인스턴스를 구현한다.
-- [ ] T013 `apps/admin/src/pages/sessions/model/sessions.ts`에 DEV·브라우저 가드와 list/create/delete 함수를 구현한다.
-- [ ] T014 `apps/admin/src/pages/sessions/model/session.test.ts`와 `sessions.mock.test.ts`, `sessions.test.ts`에서 날짜·시간·공백·집계·상태 격리·환경 가드를 검증한다.
+- [x] T011 `apps/admin/src/pages/sessions/model/session.ts`에 생성·조회 스키마와 추론 타입, 정렬 함수를 구현한다.
+- [x] T012 `apps/admin/src/pages/sessions/model/sessions.mock.ts`에 익명 fixture·독립 저장소 factory·브라우저 인스턴스를 구현한다.
+- [x] T013 `apps/admin/src/pages/sessions/model/sessions.ts`에 DEV·브라우저 가드와 list/create/delete 함수를 구현한다.
+- [x] T014 `apps/admin/src/pages/sessions/model/session.test.ts`와 `sessions.mock.test.ts`, `sessions.test.ts`에서 날짜·시간·공백·집계·상태 격리·환경 가드를 검증한다.
 
-**중단점**: 단계 5 승인 대기. 출석 화면의 기존 직군 모델은 수정하지 않는다.
+**중단점**: 사용자 “이해했어. 그렇게 진행해” 지시로 단계 5 승인 완료. 출석 화면의 기존 직군 모델은 수정하지 않았다.
+
+- 입력·조회 스키마, 날짜·시간 정렬, 독립 메모리 저장소 및 DEV·브라우저 전용 서비스를 구현했다.
+- 추가 29개를 포함한 관리자 207개 테스트와 `node --run check`, `node --run build`가 통과했다.
+- 저장소는 동기 메모리 연산이고, UI에 제공할 서비스는 Promise 기반이다. 환경 가드 테스트 외에 서비스 mock은 사용하지 않았다.
+- 운영 빌드에서 fixture 식별자·저장소 오류 문구가 검색되지 않았다. 현재 UI 미연결 상태이므로 목록 연결 후에도 재확인한다.
+- 새로고침 초기화는 모듈 재시작 테스트로 검증했다. 실제 화면 이동·새로고침 검증은 목록 연결 후 수행한다.
+- 화면 변경과 새 스크린샷은 없다. 수정 서비스는 T037에서 구현한다.
+- 5단계 변경은 앞선 레이아웃·Select 변경과 분리해 데이터 기반 PR로 제출한다. 5~6단계는 목적별 로컬 커밋으로 분리하며 push·PR 변경은 수행하지 않는다.
 
 ## 단계 6 — US1 필터와 URL (PR 3)
 
 독립 검증: 유형 URL 직접 진입과 뒤로 가기·앞으로 가기를 기존 페이지에서 확인한다.
 
-- [ ] T015 [US1] `apps/admin/src/pages/sessions/model/session-search.ts`와 공개 진입점에 type 검색 스키마·라벨을 정의한다.
-- [ ] T016 [US1] `apps/admin/src/routes/_dashboard/sessions.tsx`와 `pages/sessions/ui/sessions-page.tsx`를 유형 필터 계약으로 교체한다.
-- [ ] T017 [US1] `apps/admin/src/pages/sessions/model/session-search.test.ts`와 `apps/admin/src/router.test.tsx`에서 유효·잘못된·구형 검색값과 history를 검증한다.
+- [x] T015 [US1] `apps/admin/src/pages/sessions/model/session-search.ts`와 공개 진입점에 type 검색 스키마·라벨을 정의한다.
+- [x] T016 [US1] `apps/admin/src/routes/_dashboard/sessions.tsx`와 `pages/sessions/ui/sessions-page.tsx`를 유형 필터 계약으로 교체한다.
+- [x] T017 [US1] `apps/admin/src/pages/sessions/model/session-search.test.ts`와 `apps/admin/src/router.test.tsx`에서 유효·잘못된·구형 검색값과 history를 검증한다.
 
-**중단점**: 단계 6 승인 대기. 현재 목록 준비 안내는 다음 단계까지 유지한다.
+**중단점**: 사용자 “확인 했어. 여기까지 나눠서 커밋해봐.” 지시로 단계 6 승인 완료. 현재 목록 준비 안내는 다음 단계까지 유지한다.
+
+- 설치된 SEED 2.x의 Chip과 RadioGroup primitive를 조합해 전체·오프라인·팀 세션 단일 선택 칩을 제공한다.
+- `type` URL 복원·잘못된 값·구형 `part` 무시·필터 변경 시 구형 검색값 제거·history·키보드 선택을 검증했다.
+- `node --run check`, `node --run build` 통과. 관리자 204개 테스트 통과(기존 직군 경우를 유형 경우로 교체).
+- 브라우저에서 URL 진입은 시도했으나 개발자 도구가 열린 상태와 사용자 탭 전환으로 시각 검증을 완료하지 못했다. 스크린샷·실제 터치·스크린 리더 검증은 미완료다.
+- 7단계 카드·목록·Query 연결은 시작하지 않았다. 사용자 승인에 따라 여기까지 로컬 커밋하며 push는 수행하지 않는다.
 
 ## 단계 7 — US1 카드와 목록 (PR 4)
 
