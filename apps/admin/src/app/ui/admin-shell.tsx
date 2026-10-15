@@ -1,79 +1,52 @@
-import { Link, useRouterState } from '@tanstack/react-router';
+import { Badge, SideNavigation, Text, useBreakpointValue } from '@seed-design/react';
+import { useMatches } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { brand, header, navigation, navigationLink, shell } from './admin-shell.css';
+import { AdminSidebar } from './admin-sidebar';
+import { AdminMobileNavigation } from './admin-mobile-navigation';
+import { navigationItems } from './admin-navigation';
+import * as styles from './admin-shell.css';
 
 export function AdminShell({ children }: { children: ReactNode }) {
-  const isSessionAttendance = useRouterState({
-    select: (state) =>
-      state.matches.some((match) => match.routeId === '/_dashboard/attendance/$sessionId'),
+  const isNarrow = useBreakpointValue({ base: true, lg: false });
+  const navigation = useMatches({
+    select: (matches) => matches.at(-1)?.staticData.navigation,
   });
+  if (!navigation) {
+    throw new Error('관리자 페이지의 staticData.navigation 설정이 필요합니다.');
+  }
+  const currentItem = navigationItems[navigation.menu];
+
   return (
-    <div className={shell}>
-      <header className={header}>
-        <Link className={brand} to="/" search={{}}>
-          YAPP+ Admin
-        </Link>
-        <nav className={navigation} aria-label="주요 메뉴">
-          <Link
-            className={navigationLink}
-            to="/"
-            search={{}}
-            activeOptions={{ exact: true, includeSearch: false }}
-          >
-            대시보드
-          </Link>
-          <Link
-            className={navigationLink}
-            to="/sessions"
-            search={{}}
-            activeOptions={{ includeSearch: false }}
-          >
-            세션 관리
-          </Link>
-          <Link
-            className={navigationLink}
-            to="/attendance"
-            search={{}}
-            activeOptions={{ exact: true, includeSearch: false }}
-            inactiveProps={isSessionAttendance ? { 'aria-current': 'location' } : {}}
-          >
-            출석부
-          </Link>
-          <Link
-            className={navigationLink}
-            to="/attendance/scores"
-            search={{}}
-            activeOptions={{ exact: true, includeSearch: false }}
-          >
-            출석 총점
-          </Link>
-          <Link
-            className={navigationLink}
-            to="/members"
-            search={{}}
-            activeOptions={{ includeSearch: false }}
-          >
-            회원 관리
-          </Link>
-          <Link
-            className={navigationLink}
-            to="/notices"
-            search={{}}
-            activeOptions={{ includeSearch: false }}
-          >
-            공지 목록
-          </Link>
-          <Link
-            className={navigationLink}
-            to="/notifications"
-            search={{}}
-            activeOptions={{ exact: true, includeSearch: false }}
-          >
-            알림 발송 내역
-          </Link>
-        </nav>
-      </header>
-      {children}
+    <div className={styles.shell} data-seed-color-mode="dark-only">
+      <SideNavigation.Provider collapsed={false}>
+        {!isNarrow && <AdminSidebar menu={navigation.menu} />}
+        <div className={styles.workspace}>
+          <header className={styles.header}>
+            {isNarrow && <AdminMobileNavigation menu={navigation.menu} />}
+            <nav aria-label="현재 위치">
+              <ol className={styles.breadcrumbs}>
+                <li>
+                  <Text textStyle="t3Regular" color="fg.neutralMuted">
+                    {currentItem.section}
+                  </Text>
+                </li>
+                <li aria-hidden="true" className={styles.separator}>
+                  /
+                </li>
+                <li aria-current="page">
+                  <Text textStyle="t3Bold">{navigation.pageLabel}</Text>
+                </li>
+              </ol>
+            </nav>
+            {import.meta.env.DEV && (
+              <Badge className={styles.environmentBadge} variant="weak" tone="informative">
+                개발 환경
+              </Badge>
+            )}
+          </header>
+          <div className={styles.content}>{children}</div>
+        </div>
+      </SideNavigation.Provider>
     </div>
   );
 }
