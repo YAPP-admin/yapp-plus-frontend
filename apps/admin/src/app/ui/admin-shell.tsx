@@ -93,6 +93,28 @@ export function AdminShell({ children }: { children: ReactNode }) {
           </aside>
         </SideNavigation.Root>
         <div className={styles.workspace}>
+          <header className={styles.header}>
+            <nav aria-label="현재 위치">
+              <ol className={styles.breadcrumbs}>
+                <li>
+                  <Text textStyle="t3Regular" color="fg.neutralMuted">
+                    {currentItem.section}
+                  </Text>
+                </li>
+                <li aria-hidden="true" className={styles.separator}>
+                  /
+                </li>
+                <li aria-current="page">
+                  <Text textStyle="t3Bold">{navigation.pageLabel}</Text>
+                </li>
+              </ol>
+            </nav>
+            {import.meta.env.DEV && (
+              <Badge variant="weak" tone="informative">
+                개발 환경
+              </Badge>
+            )}
+          </header>
           <div className={styles.content}>{children}</div>
         </div>
       </SideNavigation.Provider>
