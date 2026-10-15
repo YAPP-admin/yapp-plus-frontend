@@ -1,7 +1,8 @@
 import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 import { NoticesPage, noticeSearchSchema } from '~/pages/notices';
 
-export const Route = createFileRoute('/_dashboard/notices')({
+export const Route = createFileRoute('/_dashboard/notices/')({
+  staticData: { navigation: { menu: 'notices', pageLabel: '공지 목록' } },
   validateSearch: noticeSearchSchema,
   search: { middlewares: [stripSearchParams({ category: 'all' })] },
   head: () => ({ meta: [{ title: '공지 목록 | YAPP+ Admin' }] }),

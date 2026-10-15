@@ -2,6 +2,7 @@ import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
 import { SessionAttendancePage, attendanceSearchSchema } from '~/pages/attendance';
 
 export const Route = createFileRoute('/_dashboard/attendance/$sessionId')({
+  staticData: { navigation: { menu: 'attendance', pageLabel: '세션별 출석부' } },
   validateSearch: attendanceSearchSchema,
   search: { middlewares: [stripSearchParams({ part: 'all' })] },
   head: () => ({ meta: [{ title: '세션별 출석부 | YAPP+ Admin' }] }),

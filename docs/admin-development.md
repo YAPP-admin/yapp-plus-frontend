@@ -29,8 +29,17 @@ apps/admin/src/
 ├── app/ui/                    # AdminShell과 관리자 셸 스타일
 ├── routes/                    # TanStack Router 진입점·레이아웃 어댑터
 │   ├── __root.tsx
-│   ├── _dashboard.tsx
-│   ├── _dashboard.index.tsx
+│   ├── _dashboard/
+│   │   ├── route.tsx          # URL에 포함되지 않는 관리자 공통 레이아웃
+│   │   ├── index.tsx
+│   │   ├── sessions.tsx
+│   │   ├── notifications.tsx
+│   │   ├── attendance/        # index.tsx, $sessionId.tsx, scores.tsx
+│   │   ├── members/           # index.tsx, import.tsx
+│   │   └── notices/
+│   │       ├── index.tsx
+│   │       ├── new.tsx
+│   │       └── $noticeId/     # index.tsx, edit.tsx
 │   └── login.tsx
 ├── pages/
 │   ├── dashboard/
@@ -47,9 +56,10 @@ apps/admin/src/
 └── shared/                    # 도메인 비의존 코드가 반복될 때만 생성
 ```
 
-현재 `routes/_dashboard.index.tsx`의 화면 구현과 스타일·테스트는 `pages/dashboard`,
-`routes/login.tsx`의 화면 연결은 `pages/login`으로 옮겼습니다. `routes/_dashboard.tsx`의
+현재 `routes/_dashboard/index.tsx`의 화면 구현과 스타일·테스트는 `pages/dashboard`,
+`routes/login.tsx`의 화면 연결은 `pages/login`으로 옮겼습니다. `routes/_dashboard/route.tsx`의
 레이아웃은 `app/ui/admin-shell.tsx`의 `AdminShell`에 `Outlet`을 전달합니다.
+목록·상세 화면은 `index.tsx`에 두어 작성·수정 화면을 감싸지 않게 합니다.
 로그인에는 이 셸이 적용되지 않으며, 루트의 `notFoundComponent`는 `pages/not-found`를 연결합니다.
 404 화면은 독립적인 안내와 대시보드 복귀 링크를 제공하고 관리자 메뉴를 표시하지 않습니다.
 
@@ -84,7 +94,7 @@ TanStack Router의 route 파일에서 페이지 슬라이스를 연결할 때는
 페이지 내부에서는 인접 파일에 상대 경로를 사용합니다.
 
 ```tsx
-// apps/admin/src/routes/_dashboard.index.tsx
+// apps/admin/src/routes/_dashboard/index.tsx
 import { createFileRoute } from '@tanstack/react-router';
 import { DashboardPage } from '~/pages/dashboard';
 
