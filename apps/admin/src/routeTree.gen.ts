@@ -9,22 +9,22 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
-import { Route as DashboardRouteImport } from './routes/_dashboard'
+import { Route as DashboardRouteRouteImport } from './routes/_dashboard/route'
 import { Route as LoginRouteImport } from './routes/login'
-import { Route as DashboardIndexRouteImport } from './routes/_dashboard.index'
-import { Route as DashboardMembersRouteImport } from './routes/_dashboard.members'
-import { Route as DashboardNoticesRouteImport } from './routes/_dashboard.notices'
-import { Route as DashboardNotificationsRouteImport } from './routes/_dashboard.notifications'
-import { Route as DashboardSessionsRouteImport } from './routes/_dashboard.sessions'
-import { Route as DashboardAttendanceIndexRouteImport } from './routes/_dashboard.attendance.index'
-import { Route as DashboardAttendanceSessionIdRouteImport } from './routes/_dashboard.attendance.$sessionId'
-import { Route as DashboardAttendanceScoresRouteImport } from './routes/_dashboard.attendance.scores'
-import { Route as DashboardMembersImportRouteImport } from './routes/_dashboard.members_.import'
-import { Route as DashboardNoticesNoticeIdRouteImport } from './routes/_dashboard.notices_.$noticeId'
-import { Route as DashboardNoticesNewRouteImport } from './routes/_dashboard.notices_.new'
-import { Route as DashboardNoticesNoticeIdEditRouteImport } from './routes/_dashboard.notices_.$noticeId_.edit'
+import { Route as DashboardIndexRouteImport } from './routes/_dashboard/index'
+import { Route as DashboardNotificationsRouteImport } from './routes/_dashboard/notifications'
+import { Route as DashboardSessionsRouteImport } from './routes/_dashboard/sessions'
+import { Route as DashboardAttendanceIndexRouteImport } from './routes/_dashboard/attendance/index'
+import { Route as DashboardAttendanceSessionIdRouteImport } from './routes/_dashboard/attendance/$sessionId'
+import { Route as DashboardAttendanceScoresRouteImport } from './routes/_dashboard/attendance/scores'
+import { Route as DashboardMembersIndexRouteImport } from './routes/_dashboard/members/index'
+import { Route as DashboardMembersImportRouteImport } from './routes/_dashboard/members/import'
+import { Route as DashboardNoticesIndexRouteImport } from './routes/_dashboard/notices/index'
+import { Route as DashboardNoticesNewRouteImport } from './routes/_dashboard/notices/new'
+import { Route as DashboardNoticesNoticeIdIndexRouteImport } from './routes/_dashboard/notices/$noticeId/index'
+import { Route as DashboardNoticesNoticeIdEditRouteImport } from './routes/_dashboard/notices/$noticeId/edit'
 
-const DashboardRoute = DashboardRouteImport.update({
+const DashboardRouteRoute = DashboardRouteRouteImport.update({
   id: '/_dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
@@ -36,167 +36,167 @@ const LoginRoute = LoginRouteImport.update({
 const DashboardIndexRoute = DashboardIndexRouteImport.update({
   id: '/',
   path: '/',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardMembersRoute = DashboardMembersRouteImport.update({
-  id: '/members',
-  path: '/members',
-  getParentRoute: () => DashboardRoute,
-} as any)
-const DashboardNoticesRoute = DashboardNoticesRouteImport.update({
-  id: '/notices',
-  path: '/notices',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardNotificationsRoute = DashboardNotificationsRouteImport.update({
   id: '/notifications',
   path: '/notifications',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardSessionsRoute = DashboardSessionsRouteImport.update({
   id: '/sessions',
   path: '/sessions',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
 const DashboardAttendanceIndexRoute =
   DashboardAttendanceIndexRouteImport.update({
     id: '/attendance/',
     path: '/attendance/',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardAttendanceSessionIdRoute =
   DashboardAttendanceSessionIdRouteImport.update({
     id: '/attendance/$sessionId',
     path: '/attendance/$sessionId',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
 const DashboardAttendanceScoresRoute =
   DashboardAttendanceScoresRouteImport.update({
     id: '/attendance/scores',
     path: '/attendance/scores',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
+const DashboardMembersIndexRoute = DashboardMembersIndexRouteImport.update({
+  id: '/members/',
+  path: '/members/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardMembersImportRoute = DashboardMembersImportRouteImport.update({
-  id: '/members_/import',
+  id: '/members/import',
   path: '/members/import',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
-const DashboardNoticesNoticeIdRoute =
-  DashboardNoticesNoticeIdRouteImport.update({
-    id: '/notices_/$noticeId',
-    path: '/notices/$noticeId',
-    getParentRoute: () => DashboardRoute,
-  } as any)
+const DashboardNoticesIndexRoute = DashboardNoticesIndexRouteImport.update({
+  id: '/notices/',
+  path: '/notices/',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardNoticesNewRoute = DashboardNoticesNewRouteImport.update({
-  id: '/notices_/new',
+  id: '/notices/new',
   path: '/notices/new',
-  getParentRoute: () => DashboardRoute,
+  getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardNoticesNoticeIdIndexRoute =
+  DashboardNoticesNoticeIdIndexRouteImport.update({
+    id: '/notices/$noticeId/',
+    path: '/notices/$noticeId/',
+    getParentRoute: () => DashboardRouteRoute,
+  } as any)
 const DashboardNoticesNoticeIdEditRoute =
   DashboardNoticesNoticeIdEditRouteImport.update({
-    id: '/notices_/$noticeId_/edit',
+    id: '/notices/$noticeId/edit',
     path: '/notices/$noticeId/edit',
-    getParentRoute: () => DashboardRoute,
+    getParentRoute: () => DashboardRouteRoute,
   } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof DashboardIndexRoute
   '/login': typeof LoginRoute
-  '/members': typeof DashboardMembersRoute
-  '/notices': typeof DashboardNoticesRoute
   '/notifications': typeof DashboardNotificationsRoute
   '/sessions': typeof DashboardSessionsRoute
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/members/import': typeof DashboardMembersImportRoute
-  '/notices/$noticeId': typeof DashboardNoticesNoticeIdRoute
   '/notices/new': typeof DashboardNoticesNewRoute
   '/attendance/': typeof DashboardAttendanceIndexRoute
+  '/members/': typeof DashboardMembersIndexRoute
+  '/notices/': typeof DashboardNoticesIndexRoute
   '/notices/$noticeId/edit': typeof DashboardNoticesNoticeIdEditRoute
+  '/notices/$noticeId/': typeof DashboardNoticesNoticeIdIndexRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
-  '/members': typeof DashboardMembersRoute
-  '/notices': typeof DashboardNoticesRoute
   '/notifications': typeof DashboardNotificationsRoute
   '/sessions': typeof DashboardSessionsRoute
   '/': typeof DashboardIndexRoute
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/members/import': typeof DashboardMembersImportRoute
-  '/notices/$noticeId': typeof DashboardNoticesNoticeIdRoute
   '/notices/new': typeof DashboardNoticesNewRoute
   '/attendance': typeof DashboardAttendanceIndexRoute
+  '/members': typeof DashboardMembersIndexRoute
+  '/notices': typeof DashboardNoticesIndexRoute
   '/notices/$noticeId/edit': typeof DashboardNoticesNoticeIdEditRoute
+  '/notices/$noticeId': typeof DashboardNoticesNoticeIdIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/_dashboard': typeof DashboardRouteWithChildren
+  '/_dashboard': typeof DashboardRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/_dashboard/members': typeof DashboardMembersRoute
-  '/_dashboard/notices': typeof DashboardNoticesRoute
   '/_dashboard/notifications': typeof DashboardNotificationsRoute
   '/_dashboard/sessions': typeof DashboardSessionsRoute
   '/_dashboard/': typeof DashboardIndexRoute
   '/_dashboard/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/_dashboard/attendance/scores': typeof DashboardAttendanceScoresRoute
-  '/_dashboard/members_/import': typeof DashboardMembersImportRoute
-  '/_dashboard/notices_/$noticeId': typeof DashboardNoticesNoticeIdRoute
-  '/_dashboard/notices_/new': typeof DashboardNoticesNewRoute
+  '/_dashboard/members/import': typeof DashboardMembersImportRoute
+  '/_dashboard/notices/new': typeof DashboardNoticesNewRoute
   '/_dashboard/attendance/': typeof DashboardAttendanceIndexRoute
-  '/_dashboard/notices_/$noticeId_/edit': typeof DashboardNoticesNoticeIdEditRoute
+  '/_dashboard/members/': typeof DashboardMembersIndexRoute
+  '/_dashboard/notices/': typeof DashboardNoticesIndexRoute
+  '/_dashboard/notices/$noticeId/edit': typeof DashboardNoticesNoticeIdEditRoute
+  '/_dashboard/notices/$noticeId/': typeof DashboardNoticesNoticeIdIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
     | '/login'
-    | '/members'
-    | '/notices'
     | '/notifications'
     | '/sessions'
     | '/attendance/$sessionId'
     | '/attendance/scores'
     | '/members/import'
-    | '/notices/$noticeId'
     | '/notices/new'
     | '/attendance/'
+    | '/members/'
+    | '/notices/'
     | '/notices/$noticeId/edit'
+    | '/notices/$noticeId/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
-    | '/members'
-    | '/notices'
     | '/notifications'
     | '/sessions'
     | '/'
     | '/attendance/$sessionId'
     | '/attendance/scores'
     | '/members/import'
-    | '/notices/$noticeId'
     | '/notices/new'
     | '/attendance'
+    | '/members'
+    | '/notices'
     | '/notices/$noticeId/edit'
+    | '/notices/$noticeId'
   id:
     | '__root__'
     | '/_dashboard'
     | '/login'
-    | '/_dashboard/members'
-    | '/_dashboard/notices'
     | '/_dashboard/notifications'
     | '/_dashboard/sessions'
     | '/_dashboard/'
     | '/_dashboard/attendance/$sessionId'
     | '/_dashboard/attendance/scores'
-    | '/_dashboard/members_/import'
-    | '/_dashboard/notices_/$noticeId'
-    | '/_dashboard/notices_/new'
+    | '/_dashboard/members/import'
+    | '/_dashboard/notices/new'
     | '/_dashboard/attendance/'
-    | '/_dashboard/notices_/$noticeId_/edit'
+    | '/_dashboard/members/'
+    | '/_dashboard/notices/'
+    | '/_dashboard/notices/$noticeId/edit'
+    | '/_dashboard/notices/$noticeId/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
-  DashboardRoute: typeof DashboardRouteWithChildren
+  DashboardRouteRoute: typeof DashboardRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
 }
 
@@ -206,7 +206,7 @@ declare module '@tanstack/react-router' {
       id: '/_dashboard'
       path: ''
       fullPath: '/'
-      preLoaderRoute: typeof DashboardRouteImport
+      preLoaderRoute: typeof DashboardRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/login': {
@@ -221,124 +221,124 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof DashboardIndexRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/members': {
-      id: '/_dashboard/members'
-      path: '/members'
-      fullPath: '/members'
-      preLoaderRoute: typeof DashboardMembersRouteImport
-      parentRoute: typeof DashboardRoute
-    }
-    '/_dashboard/notices': {
-      id: '/_dashboard/notices'
-      path: '/notices'
-      fullPath: '/notices'
-      preLoaderRoute: typeof DashboardNoticesRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/notifications': {
       id: '/_dashboard/notifications'
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof DashboardNotificationsRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/sessions': {
       id: '/_dashboard/sessions'
       path: '/sessions'
       fullPath: '/sessions'
       preLoaderRoute: typeof DashboardSessionsRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/attendance/': {
       id: '/_dashboard/attendance/'
       path: '/attendance'
       fullPath: '/attendance/'
       preLoaderRoute: typeof DashboardAttendanceIndexRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/attendance/$sessionId': {
       id: '/_dashboard/attendance/$sessionId'
       path: '/attendance/$sessionId'
       fullPath: '/attendance/$sessionId'
       preLoaderRoute: typeof DashboardAttendanceSessionIdRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
     '/_dashboard/attendance/scores': {
       id: '/_dashboard/attendance/scores'
       path: '/attendance/scores'
       fullPath: '/attendance/scores'
       preLoaderRoute: typeof DashboardAttendanceScoresRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
-    '/_dashboard/members_/import': {
-      id: '/_dashboard/members_/import'
+    '/_dashboard/members/': {
+      id: '/_dashboard/members/'
+      path: '/members'
+      fullPath: '/members/'
+      preLoaderRoute: typeof DashboardMembersIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/members/import': {
+      id: '/_dashboard/members/import'
       path: '/members/import'
       fullPath: '/members/import'
       preLoaderRoute: typeof DashboardMembersImportRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
-    '/_dashboard/notices_/$noticeId': {
-      id: '/_dashboard/notices_/$noticeId'
-      path: '/notices/$noticeId'
-      fullPath: '/notices/$noticeId'
-      preLoaderRoute: typeof DashboardNoticesNoticeIdRouteImport
-      parentRoute: typeof DashboardRoute
+    '/_dashboard/notices/': {
+      id: '/_dashboard/notices/'
+      path: '/notices'
+      fullPath: '/notices/'
+      preLoaderRoute: typeof DashboardNoticesIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
     }
-    '/_dashboard/notices_/new': {
-      id: '/_dashboard/notices_/new'
+    '/_dashboard/notices/new': {
+      id: '/_dashboard/notices/new'
       path: '/notices/new'
       fullPath: '/notices/new'
       preLoaderRoute: typeof DashboardNoticesNewRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
-    '/_dashboard/notices_/$noticeId_/edit': {
-      id: '/_dashboard/notices_/$noticeId_/edit'
+    '/_dashboard/notices/$noticeId/': {
+      id: '/_dashboard/notices/$noticeId/'
+      path: '/notices/$noticeId'
+      fullPath: '/notices/$noticeId/'
+      preLoaderRoute: typeof DashboardNoticesNoticeIdIndexRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
+    '/_dashboard/notices/$noticeId/edit': {
+      id: '/_dashboard/notices/$noticeId/edit'
       path: '/notices/$noticeId/edit'
       fullPath: '/notices/$noticeId/edit'
       preLoaderRoute: typeof DashboardNoticesNoticeIdEditRouteImport
-      parentRoute: typeof DashboardRoute
+      parentRoute: typeof DashboardRouteRoute
     }
   }
 }
 
-interface DashboardRouteChildren {
-  DashboardMembersRoute: typeof DashboardMembersRoute
-  DashboardNoticesRoute: typeof DashboardNoticesRoute
+interface DashboardRouteRouteChildren {
   DashboardNotificationsRoute: typeof DashboardNotificationsRoute
   DashboardSessionsRoute: typeof DashboardSessionsRoute
   DashboardIndexRoute: typeof DashboardIndexRoute
   DashboardAttendanceSessionIdRoute: typeof DashboardAttendanceSessionIdRoute
   DashboardAttendanceScoresRoute: typeof DashboardAttendanceScoresRoute
   DashboardMembersImportRoute: typeof DashboardMembersImportRoute
-  DashboardNoticesNoticeIdRoute: typeof DashboardNoticesNoticeIdRoute
   DashboardNoticesNewRoute: typeof DashboardNoticesNewRoute
   DashboardAttendanceIndexRoute: typeof DashboardAttendanceIndexRoute
+  DashboardMembersIndexRoute: typeof DashboardMembersIndexRoute
+  DashboardNoticesIndexRoute: typeof DashboardNoticesIndexRoute
   DashboardNoticesNoticeIdEditRoute: typeof DashboardNoticesNoticeIdEditRoute
+  DashboardNoticesNoticeIdIndexRoute: typeof DashboardNoticesNoticeIdIndexRoute
 }
 
-const DashboardRouteChildren: DashboardRouteChildren = {
-  DashboardMembersRoute: DashboardMembersRoute,
-  DashboardNoticesRoute: DashboardNoticesRoute,
+const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardNotificationsRoute: DashboardNotificationsRoute,
   DashboardSessionsRoute: DashboardSessionsRoute,
   DashboardIndexRoute: DashboardIndexRoute,
   DashboardAttendanceSessionIdRoute: DashboardAttendanceSessionIdRoute,
   DashboardAttendanceScoresRoute: DashboardAttendanceScoresRoute,
   DashboardMembersImportRoute: DashboardMembersImportRoute,
-  DashboardNoticesNoticeIdRoute: DashboardNoticesNoticeIdRoute,
   DashboardNoticesNewRoute: DashboardNoticesNewRoute,
   DashboardAttendanceIndexRoute: DashboardAttendanceIndexRoute,
+  DashboardMembersIndexRoute: DashboardMembersIndexRoute,
+  DashboardNoticesIndexRoute: DashboardNoticesIndexRoute,
   DashboardNoticesNoticeIdEditRoute: DashboardNoticesNoticeIdEditRoute,
+  DashboardNoticesNoticeIdIndexRoute: DashboardNoticesNoticeIdIndexRoute,
 }
 
-const DashboardRouteWithChildren = DashboardRoute._addFileChildren(
-  DashboardRouteChildren,
+const DashboardRouteRouteWithChildren = DashboardRouteRoute._addFileChildren(
+  DashboardRouteRouteChildren,
 )
 
 const rootRouteChildren: RootRouteChildren = {
-  DashboardRoute: DashboardRouteWithChildren,
+  DashboardRouteRoute: DashboardRouteRouteWithChildren,
   LoginRoute: LoginRoute,
 }
 export const routeTree = rootRouteImport
