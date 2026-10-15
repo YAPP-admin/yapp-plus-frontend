@@ -67,7 +67,7 @@ export function MembersPage({
       <nav className={styles.tabs} aria-label="회원 목록 구분">
         <Link
           className={styles.tab}
-          from="/members"
+          from="/members/"
           to="/members"
           search={(previous) => ({ ...previous, tab: 'all' })}
           resetScroll={false}
@@ -77,7 +77,7 @@ export function MembersPage({
         </Link>
         <Link
           className={styles.tab}
-          from="/members"
+          from="/members/"
           to="/members"
           search={(previous) => ({ ...previous, tab: 'pending' })}
           resetScroll={false}

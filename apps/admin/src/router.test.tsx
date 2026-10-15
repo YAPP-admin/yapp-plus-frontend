@@ -396,7 +396,7 @@ describe('명단 업로드 진입점', () => {
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: '회원 목록 구분' })).not.toBeInTheDocument();
-    expect(router.state.matches.some((match) => match.routeId === '/_dashboard/members')).toBe(
+    expect(router.state.matches.some((match) => match.routeId === '/_dashboard/members/')).toBe(
       false,
     );
   });
@@ -615,8 +615,8 @@ describe('공지 작성·수정 진입점', () => {
     expect(
       router.state.matches.some(
         (match) =>
-          match.routeId === '/_dashboard/notices' ||
-          match.routeId === '/_dashboard/notices_/$noticeId',
+          match.routeId === '/_dashboard/notices/' ||
+          match.routeId === '/_dashboard/notices/$noticeId/',
       ),
     ).toBe(false);
 
