@@ -1,18 +1,11 @@
+import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
 import {
   noticeCategoryLabels,
   noticeCategorySchema,
   type NoticeCategory,
 } from '../model/notice-search';
-import {
-  page,
-  title,
-  description,
-  filter,
-  select,
-  placeholder,
-  createLink,
-} from './notices-page.css';
+import { page, title, description, filter, placeholder, createLink } from './notices-page.css';
 
 export function NoticesPage({
   category,
@@ -28,23 +21,14 @@ export function NoticesPage({
       <Link className={createLink} to="/notices/new" search={{}}>
         공지 작성
       </Link>
-      <div className={filter}>
-        <label htmlFor="notice-category">공지 종류</label>
-        <select
-          id="notice-category"
-          className={select}
-          value={category}
-          onChange={(event) =>
-            onCategoryChange(noticeCategorySchema.parse(event.currentTarget.value))
-          }
-        >
-          {noticeCategorySchema.options.map((value) => (
-            <option key={value} value={value}>
-              {noticeCategoryLabels[value]}
-            </option>
-          ))}
-        </select>
-      </div>
+      <FilterSelect
+        className={filter}
+        label="공지 종류"
+        value={category}
+        options={noticeCategorySchema.options}
+        labels={noticeCategoryLabels}
+        onChange={onCategoryChange}
+      />
       <p className={placeholder}>공지 목록을 준비 중입니다.</p>
     </main>
   );
