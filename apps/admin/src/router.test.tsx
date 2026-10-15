@@ -27,6 +27,33 @@ async function renderRoute(path: string) {
 }
 
 describe('관리자 라우팅', () => {
+  it.each([
+    ['/', '대시보드'],
+    ['/sessions', '세션 관리'],
+    ['/attendance', '출석부'],
+    ['/members', '회원 관리'],
+    ['/notices', '공지 목록'],
+    ['/notices/notice-123', '공지 목록'],
+    ['/attendance/session-1', '출석부'],
+    ['/attendance/scores', '출석 총점'],
+    ['/members/import', '회원 관리'],
+    ['/notices/new', '공지 목록'],
+    ['/notices/notice-123/edit', '공지 목록'],
+    ['/notifications', '알림 발송 내역'],
+  ])('%s에서 하나의 활성 관리 메뉴를 표시한다', async (path, label) => {
+    await renderRoute(path);
+
+    const menu = screen.getByRole('navigation', { name: '주요 메뉴' });
+    const activeLinks = [
+      ...within(menu).queryAllByRole('link', { current: 'page' }),
+      ...within(menu).queryAllByRole('link', { current: 'location' }),
+    ];
+    expect(activeLinks).toHaveLength(1);
+    expect(activeLinks[0]).toHaveAccessibleName(label);
+    expect(screen.queryByRole('button', { name: '로그아웃' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /기수/ })).not.toBeInTheDocument();
+  });
+
   it('대시보드 내용과 현재 메뉴, 키보드 탐색 순서를 유지한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
@@ -35,8 +62,9 @@ describe('관리자 라우팅', () => {
     expect(screen.getByText('표시할 데이터가 없습니다')).toBeVisible();
     const menu = within(screen.getByRole('navigation', { name: '주요 메뉴' })).getByRole('link', {
       name: '대시보드',
+      current: 'page',
     });
-    expect(menu).toHaveAttribute('aria-current', 'page');
+    expect(menu).toBeVisible();
     await user.tab();
     expect(screen.getByRole('link', { name: 'YAPP+ Admin' })).toHaveFocus();
     await user.tab();
@@ -179,7 +207,7 @@ describe('출석 화면 탐색', () => {
     await renderRoute(path);
     expect(await screen.findByRole('heading', { name: heading, level: 1 })).toBeVisible();
     expect(screen.getByRole('combobox', { name: '직군' })).toHaveValue(part);
-    const menu = within(screen.getByRole('navigation'));
+    const menu = within(screen.getByRole('navigation', { name: '주요 메뉴' }));
     expect(menu.getByRole('link', { name: '세션 관리' })).not.toHaveAttribute('aria-current');
     const activeMenu = heading === '출석 총점' ? '출석 총점' : '출석부';
     expect(menu.getByRole('link', { name: activeMenu })).toHaveAttribute('aria-current');
