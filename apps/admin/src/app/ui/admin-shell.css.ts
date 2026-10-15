@@ -125,6 +125,28 @@ export const profileText = style({ display: 'grid', gap: vars.$dimension.x1 });
 
 export const workspace = style({ flex: 1, minWidth: 0 });
 
+export const header = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: vars.$dimension.x4,
+  minHeight: '4.25rem',
+  paddingInline: vars.$dimension.x8,
+  borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  background: vars.$color.bg.layerDefault,
+});
+
+export const breadcrumbs = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: vars.$dimension.x3,
+  margin: 0,
+  padding: 0,
+  listStyle: 'none',
+});
+
+export const separator = style({ color: vars.$color.fg.neutralSubtle });
+
 export const content = style({
   width: '100%',
   maxWidth: '75rem',
