@@ -1,5 +1,8 @@
 import { style } from '@vanilla-extract/css';
+import { breakpoints } from '@seed-design/css/breakpoints';
 import { vars } from '@seed-design/css/vars';
+
+const narrowScreen = `(width < ${breakpoints.lg}px)`;
 
 export const shell = style({
   display: 'flex',
@@ -15,8 +18,19 @@ export const sidebar = style({
       top: 0,
       height: '100dvh',
       background: vars.$color.bg.layerFloating,
+      color: vars.$color.fg.neutral,
       borderRight: `1px solid ${vars.$color.stroke.neutralMuted}`,
       transition: 'none',
+      '@media': {
+        [narrowScreen]: {
+          position: 'static',
+          height: 'auto',
+          flex: 1,
+          minHeight: 0,
+          width: '100%',
+          borderRight: 'none',
+        },
+      },
     },
   },
 });
@@ -90,6 +104,7 @@ export const groupLabel = style({
 export const navigationLink = style({
   textDecoration: 'none',
   touchAction: 'manipulation',
+  minHeight: '2.75rem',
 });
 
 export const navigationLabel = style({
@@ -134,6 +149,7 @@ export const header = style({
   paddingInline: vars.$dimension.x8,
   borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
   background: vars.$color.bg.layerDefault,
+  '@media': { [narrowScreen]: { paddingInline: vars.$dimension.x4, gap: vars.$dimension.x3 } },
 });
 
 export const breadcrumbs = style({
@@ -143,6 +159,8 @@ export const breadcrumbs = style({
   margin: 0,
   padding: 0,
   listStyle: 'none',
+  flexWrap: 'wrap',
+  '@media': { [narrowScreen]: { columnGap: vars.$dimension.x2, rowGap: 0 } },
 });
 
 export const separator = style({ color: vars.$color.fg.neutralSubtle });
@@ -152,4 +170,53 @@ export const content = style({
   maxWidth: '75rem',
   marginInline: 'auto',
   paddingInline: vars.$dimension.x5,
+  overflowX: 'auto',
+  '@media': { [narrowScreen]: { paddingInline: 0 } },
+});
+
+export const menuButton = style({
+  minWidth: '2.75rem',
+  minHeight: '2.75rem',
+  flexShrink: 0,
+  touchAction: 'manipulation',
+});
+export const environmentBadge = style({ '@media': { '(width < 480px)': { display: 'none' } } });
+export const mobilePanel = style({
+  selectors: {
+    '&&': {
+      width: 'min(20rem, calc(100vw - 3rem))',
+      maxWidth: '100%',
+      height: '100dvh',
+      maxHeight: '100dvh',
+      borderRadius: 0,
+      overflow: 'hidden',
+    },
+  },
+  '@media': { '(prefers-reduced-motion: reduce)': { transition: 'none', animation: 'none' } },
+});
+export const panelBackdrop = style({
+  '@media': { '(prefers-reduced-motion: reduce)': { transition: 'none', animation: 'none' } },
+});
+export const srOnly = style({
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  margin: -1,
+  overflow: 'hidden',
+  clipPath: 'inset(50%)',
+  whiteSpace: 'nowrap',
+  border: 0,
+});
+
+export const closeButton = style({
+  selectors: {
+    '&&': {
+      width: '3.25rem',
+      height: '3.25rem',
+      padding: '0.875rem',
+      color: vars.$color.fg.neutral,
+      touchAction: 'manipulation',
+    },
+  },
 });
