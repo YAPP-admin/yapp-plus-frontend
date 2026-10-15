@@ -1,3 +1,4 @@
+import type * as SeedDesign from '@seed-design/react';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router';
@@ -6,6 +7,12 @@ import { describe, expect, it, vi } from 'vitest';
 import { Providers } from './providers';
 import { getRouter } from './router';
 import type * as RootRouteModule from './routes/__root';
+
+// 기존 라우팅 회귀는 데스크톱 레이아웃에서 검증합니다.
+vi.mock('@seed-design/react', async (importOriginal) => ({
+  ...(await importOriginal<typeof SeedDesign>()),
+  useBreakpointValue: () => false,
+}));
 
 vi.mock('./routes/__root', async (importOriginal) => {
   const original = await importOriginal<typeof RootRouteModule>();

@@ -1,11 +1,13 @@
-import { Badge, SideNavigation, Text } from '@seed-design/react';
+import { Badge, SideNavigation, Text, useBreakpointValue } from '@seed-design/react';
 import { useMatches } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { AdminSidebar } from './admin-sidebar';
+import { AdminMobileNavigation } from './admin-mobile-navigation';
 import { navigationItems } from './admin-navigation';
 import * as styles from './admin-shell.css';
 
 export function AdminShell({ children }: { children: ReactNode }) {
+  const isNarrow = useBreakpointValue({ base: true, lg: false });
   const navigation = useMatches({
     select: (matches) => matches.at(-1)?.staticData.navigation,
   });
@@ -17,9 +19,10 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className={styles.shell} data-seed-color-mode="dark-only">
       <SideNavigation.Provider collapsed={false}>
-        <AdminSidebar menu={navigation.menu} />
+        {!isNarrow && <AdminSidebar menu={navigation.menu} />}
         <div className={styles.workspace}>
           <header className={styles.header}>
+            {isNarrow && <AdminMobileNavigation menu={navigation.menu} />}
             <nav aria-label="현재 위치">
               <ol className={styles.breadcrumbs}>
                 <li>
@@ -36,7 +39,7 @@ export function AdminShell({ children }: { children: ReactNode }) {
               </ol>
             </nav>
             {import.meta.env.DEV && (
-              <Badge variant="weak" tone="informative">
+              <Badge className={styles.environmentBadge} variant="weak" tone="informative">
                 개발 환경
               </Badge>
             )}
