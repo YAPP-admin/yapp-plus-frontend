@@ -1,17 +1,35 @@
+import { body, footer, heading, screen } from '@/shared/ui/step-screen.css';
+import { ActionButton, Text } from '@yapp-plus/ui';
+import Image from 'next/image';
 import Link from 'next/link';
-import { content, description, title } from '../../../shared/ui/page.css';
-import { link } from '../../../shared/ui/page-links.css';
+import { contents, illustration } from './signup-complete-page.css';
 
+// 피그마 Sign-up_success. 라우팅 정책에 따라 뒤로가기 대신 홈으로 이동합니다.
 export function SignupCompletePage() {
   return (
-    <main className={content}>
-      <h1 className={title}>가입 완료</h1>
-      <p className={description}>
-        가입 완료 안내를 준비하고 있어요. 현재 가입 결과는 표시되지 않아요.
-      </p>
-      <Link className={link} href="/">
-        홈으로 이동
-      </Link>
+    <main className={screen}>
+      <div className={`${body} ${contents}`}>
+        <div className={heading}>
+          <Text as="h1" textStyle="t10Bold" color="fg.neutral">
+            회원가입을 완료했어요!
+          </Text>
+          <Text as="p" textStyle="t5Regular" color="fg.neutralMuted">
+            YAPP의 새로운 멤버가 되신 걸 진심으로 환영해요
+          </Text>
+        </div>
+        <Image
+          src="/images/signup-complete.svg"
+          alt=""
+          width={350}
+          height={180}
+          className={illustration}
+        />
+      </div>
+      <div className={footer}>
+        <ActionButton asChild size="large" variant="brandSolid">
+          <Link href="/">시작하기</Link>
+        </ActionButton>
+      </div>
     </main>
   );
 }

@@ -3,10 +3,11 @@ import { describe, expect, it } from 'vitest';
 import { SignupCompletePage } from './signup-complete-page';
 
 describe('SignupCompletePage', () => {
-  it('가입 결과를 표시하지 않는 준비 화면에서 홈으로 이동할 수 있다', () => {
+  it('가입 완료 안내와 홈으로 가는 시작하기 링크를 제공한다', () => {
     render(<SignupCompletePage />);
-    expect(screen.getByText(/현재 가입 결과는 표시되지 않아요/)).toBeVisible();
-    expect(screen.getByRole('link', { name: '홈으로 이동' })).toHaveAttribute('href', '/');
-    expect(screen.queryByRole('button')).not.toBeInTheDocument();
+    expect(
+      screen.getByRole('heading', { level: 1, name: '회원가입을 완료했어요!' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '시작하기' })).toHaveAttribute('href', '/');
   });
 });

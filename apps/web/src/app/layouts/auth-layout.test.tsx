@@ -9,8 +9,8 @@ vi.mock('next/navigation', () => ({
 }));
 
 describe('AuthLayout', () => {
-  it('가입 정보 입력 화면에만 뒤로가기를 표시한다', () => {
-    location.segments = ['signup'];
+  it.each([[['signup']], [['signup', 'status']]])('%j 화면에 뒤로가기를 표시한다', (segments) => {
+    location.segments = segments;
     render(
       <AuthLayout>
         <main>본문</main>
