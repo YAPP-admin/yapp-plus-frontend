@@ -1,5 +1,10 @@
 import { vars } from '@seed-design/css/vars';
-import { keyframes, style, type CSSProperties } from '@vanilla-extract/css';
+import { style } from '@vanilla-extract/css';
+import {
+  keyframeTrack as track,
+  playOnce as play,
+  reducedMotion,
+} from '@/shared/lib/keyframe-track';
 
 // 피그마 Graphic-point(222:40179) 350x180 좌표계를 컨테이너 폭에 맞춰 비례 축소합니다.
 const STAGE_WIDTH = 350;
@@ -15,21 +20,7 @@ const FRAME_TOP = 40;
 // 피그마 타임라인(222:40171) 3200ms. 반복하지 않고 한 번 재생한 뒤 마지막 프레임에 멈춥니다.
 const DURATION = '3.2s';
 
-type Ease = 'linear' | 'ease-in' | 'ease-out' | 'ease-in-out';
-
-// motion.dev 스니펫의 times/values/ease 배열을 구간별 easing이 있는 CSS 키프레임으로 옮깁니다.
-function track(times: readonly number[], frames: readonly CSSProperties[], eases: readonly Ease[]) {
-  return keyframes(
-    Object.fromEntries(
-      times.map((time, index) => [
-        `${Number((time * 100).toFixed(2))}%`,
-        { ...frames[index], ...(eases[index] && { animationTimingFunction: eases[index] }) },
-      ]),
-    ),
-  );
-}
-
-const playOnce = (...names: string[]) => names.map((name) => `${name} ${DURATION} both`).join(', ');
+const playOnce = (...names: string[]) => play(DURATION, ...names);
 
 const riseOpacity = track(
   [0, 0.0625, 1],
@@ -55,14 +46,14 @@ const steam = track(
 
 // 별은 투명도와 크기의 구간 시점이 달라 키프레임을 나눕니다. 피그마의 x/y 이동값은 좌상단 기준
 // 확대를 중앙 기준으로 보정한 값이므로, 중앙 기준 scale만으로 같은 결과를 냅니다.
-const STAR_EASES: readonly Ease[] = [
+const STAR_EASES = [
   'ease-in-out',
   'ease-out',
   'ease-in-out',
   'ease-in-out',
   'ease-in-out',
   'ease-in-out',
-];
+] as const;
 
 function starAnimation(opacityTimes: readonly number[], scaleTimes: readonly number[]) {
   const opacity = track(
@@ -82,10 +73,6 @@ const ANIMATIONS = {
   rise: playOnce(riseOpacity, riseY),
   steam: playOnce(steam),
 };
-
-const reducedMotion = {
-  '@media': { '(prefers-reduced-motion: reduce)': { animation: 'none' } },
-} as const;
 
 export const illustration = style({
   position: 'relative',

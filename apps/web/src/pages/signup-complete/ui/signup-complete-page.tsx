@@ -1,8 +1,8 @@
 import { body, footer, heading, screen } from '@/shared/ui/step-screen.css';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import Image from 'next/image';
 import Link from 'next/link';
 import { contents, illustration } from './signup-complete-page.css';
+import { CompleteIllustration } from './complete-illustration';
 
 // 피그마 Sign-up_success. 라우팅 정책에 따라 뒤로가기 대신 홈으로 이동합니다.
 export function SignupCompletePage() {
@@ -17,13 +17,7 @@ export function SignupCompletePage() {
             YAPP의 새로운 멤버가 되신 걸 진심으로 환영해요
           </Text>
         </div>
-        <Image
-          src="/images/signup-complete.svg"
-          alt=""
-          width={350}
-          height={180}
-          className={illustration}
-        />
+        <CompleteIllustration className={illustration} />
       </div>
       <div className={footer}>
         <ActionButton asChild size="large" variant="brandSolid">
