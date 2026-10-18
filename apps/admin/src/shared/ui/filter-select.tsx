@@ -1,3 +1,4 @@
+/** 관리자 선택 필드의 레이블과 SEED 선택 메뉴를 연결합니다. */
 import { Field, Select } from '@seed-design/react';
 
 export function FilterSelect<T extends string>({
@@ -7,6 +8,7 @@ export function FilterSelect<T extends string>({
   labels,
   onChange,
   className,
+  disabled = false,
 }: {
   label: string;
   value: T;
@@ -14,13 +16,15 @@ export function FilterSelect<T extends string>({
   labels: Record<T, string>;
   onChange: (value: T) => void;
   className?: string;
+  disabled?: boolean;
 }) {
   return (
-    <Field.Root className={className}>
+    <Field.Root className={className} disabled={disabled}>
       <Field.Header>
         <Field.Label>{label}</Field.Label>
       </Field.Header>
       <Select.Root
+        disabled={disabled}
         value={[value]}
         onValueChange={(values) => {
           const next = options.find((option) => option === values[0]);
