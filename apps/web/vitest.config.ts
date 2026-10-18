@@ -4,6 +4,8 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   resolve: { tsconfigPaths: true },
   plugins: [vanillaExtractPlugin()],
+  // tsconfig의 `@/*` 경로 별칭을 테스트에서도 사용합니다.
+  resolve: { tsconfigPaths: true },
   test: {
     environment: 'happy-dom',
     server: {

@@ -26,3 +26,14 @@ export const description = style({
   lineHeight: vars.$lineHeight.t5,
   textWrap: 'pretty',
 });
+
+// 인증·가입 화면의 큰 제목 (피그마 scale/t10-bold)
+export const headline = style({
+  margin: 0,
+  color: vars.$color.fg.neutral,
+  fontSize: vars.$fontSize.t10,
+  lineHeight: vars.$lineHeight.t10,
+  fontWeight: vars.$fontWeight.bold,
+  whiteSpace: 'pre-line',
+  wordBreak: 'keep-all',
+});

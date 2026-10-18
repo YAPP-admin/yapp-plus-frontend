@@ -34,3 +34,18 @@ export const shellWithNavigation = style([
     paddingBottom: 0,
   },
 ]);
+
+// 인증 화면: Figma처럼 흰색(layerDefault) 배경에 구분선이 없는 상단 영역을 사용합니다.
+export const shellPlain = style([
+  shell,
+  {
+    background: vars.$color.bg.layerDefault,
+  },
+]);
+
+export const headerPlain = style([
+  header,
+  {
+    borderBottom: 'none',
+  },
+]);

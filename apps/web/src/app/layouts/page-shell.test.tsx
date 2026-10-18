@@ -18,4 +18,16 @@ describe('PageShell', () => {
       screen.getByRole('heading', { level: 1, name: '홈' }),
     );
   });
+
+  it('plain 셸은 YAPP+ 문구 없이 헤더 영역과 본문을 하나씩만 렌더링한다', () => {
+    render(
+      <PageShell plain>
+        <main>본문</main>
+      </PageShell>,
+    );
+
+    expect(screen.getAllByRole('banner')).toHaveLength(1);
+    expect(screen.getAllByRole('main')).toHaveLength(1);
+    expect(screen.queryByText('YAPP+')).not.toBeInTheDocument();
+  });
 });
