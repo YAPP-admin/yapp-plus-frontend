@@ -1,10 +1,14 @@
 /** 세션 생성 모달의 여섯 입력과 제출 콜백을 제공하며 저장소 연결은 부모가 담당합니다. */
 import { ActionButton, Dialog, Field, Portal, TextField } from '@seed-design/react';
-import { useForm } from '@tanstack/react-form';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { X } from 'lucide-react';
 import { useRef, useState, type ReactNode, type Ref } from 'react';
 import { FilterSelect } from '~/shared/ui/filter-select';
-import { sessionTypeSchema, type CreateSessionInput } from '../model/session';
+import {
+  createSessionInputSchema,
+  sessionTypeSchema,
+  type CreateSessionInput,
+} from '../model/session';
 import { sessionFilterLabels } from '../model/session-search';
 import * as styles from './session-create-dialog.css';
 
@@ -28,23 +32,47 @@ const SESSION_TEXT_FIELDS = [
 export function SessionCreateDialog({
   trigger,
   onSubmit,
+  pending = false,
+  error,
 }: {
   trigger: ReactNode;
-  onSubmit: (input: CreateSessionInput) => void;
+  onSubmit: (input: CreateSessionInput) => void | Promise<void>;
+  pending?: boolean;
+  error?: string;
 }) {
+  const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
   const [open, setOpen] = useState(false);
   const form = useForm({
     defaultValues: INITIAL_SESSION_VALUES,
-    onSubmit: ({ value }) => onSubmit(value),
+    validationLogic: revalidateLogic(),
+    validators: { onDynamic: createSessionInputSchema },
+    onSubmitInvalid: ({ formApi }) => {
+      const first = SESSION_TEXT_FIELDS.find(
+        ({ name }) => formApi.getFieldMeta(name)?.errors.length,
+      );
+      const input = first && formRef.current?.elements.namedItem(first.name);
+      if (input instanceof HTMLInputElement) {
+        input.focus();
+      }
+    },
+    onSubmit: async ({ value }) => {
+      if (!pending) {
+        await onSubmit(createSessionInputSchema.parse(value));
+      }
+    },
   });
 
-  function changeOpen(nextOpen: boolean) {
+  const changeOpen = (nextOpen: boolean) => {
+    if (pending) {
+      return;
+    }
+
     if (nextOpen) {
       form.reset();
     }
     setOpen(nextOpen);
-  }
+  };
 
   return (
     <Dialog.Root open={open} onOpenChange={changeOpen} closeOnInteractOutside={false}>
@@ -61,13 +89,16 @@ export function SessionCreateDialog({
               }
             }}
           >
-            <SessionDialogHeader titleRef={titleRef} />
+            <SessionDialogHeader titleRef={titleRef} pending={pending} />
             <form
+              ref={formRef}
               className={styles.form}
               noValidate
               onSubmit={(event) => {
                 event.preventDefault();
-                void form.handleSubmit();
+                if (!pending) {
+                  void form.handleSubmit();
+                }
               }}
             >
               <div className={styles.fields}>
@@ -75,10 +106,16 @@ export function SessionCreateDialog({
                   <form.Field key={name} name={name}>
                     {(field) => (
                       <SessionTextInput
+                        className={type === 'time' ? undefined : styles.fullWidth}
                         name={name}
                         label={label}
                         type={type}
                         {...inputProps}
+                        disabled={pending}
+                        error={field.state.meta.errors
+                          .map((issue) => issue?.message)
+                          .filter(Boolean)
+                          .join(' ')}
                         value={field.state.value}
                         onChange={field.handleChange}
                         onBlur={field.handleBlur}
@@ -91,6 +128,7 @@ export function SessionCreateDialog({
                     <FilterSelect
                       className={styles.fullWidth}
                       label="유형"
+                      disabled={pending}
                       value={field.state.value}
                       options={sessionTypeSchema.options}
                       labels={sessionFilterLabels}
@@ -99,7 +137,12 @@ export function SessionCreateDialog({
                   )}
                 </form.Field>
               </div>
-              <SessionFormActions />
+              {error && (
+                <p className={styles.error} role="alert">
+                  {error}
+                </p>
+              )}
+              <SessionFormActions pending={pending} />
             </form>
           </Dialog.Content>
         </Dialog.Positioner>
@@ -108,7 +151,13 @@ export function SessionCreateDialog({
   );
 }
 
-function SessionDialogHeader({ titleRef }: { titleRef: Ref<HTMLHeadingElement> }) {
+function SessionDialogHeader({
+  titleRef,
+  pending,
+}: {
+  titleRef: Ref<HTMLHeadingElement>;
+  pending: boolean;
+}) {
   return (
     <Dialog.Header className={styles.header}>
       <Dialog.Title ref={titleRef} tabIndex={-1}>
@@ -119,6 +168,7 @@ function SessionDialogHeader({ titleRef }: { titleRef: Ref<HTMLHeadingElement> }
       </Dialog.Description>
       <Dialog.Action asChild>
         <ActionButton
+          disabled={pending}
           className={styles.close}
           variant="ghost"
           size="small"
@@ -132,6 +182,7 @@ function SessionDialogHeader({ titleRef }: { titleRef: Ref<HTMLHeadingElement> }
 }
 
 function SessionTextInput({
+  className,
   name,
   label,
   type,
@@ -139,7 +190,10 @@ function SessionTextInput({
   value,
   onChange,
   onBlur,
+  disabled,
+  error,
 }: {
+  className?: string;
   name: (typeof SESSION_TEXT_FIELDS)[number]['name'];
   label: string;
   type: 'text' | 'date' | 'time';
@@ -147,9 +201,11 @@ function SessionTextInput({
   value: string;
   onChange: (value: string) => void;
   onBlur: () => void;
+  disabled: boolean;
+  error: string;
 }) {
   return (
-    <Field.Root className={type === 'time' ? undefined : styles.fullWidth}>
+    <Field.Root invalid={Boolean(error)} disabled={disabled} className={className}>
       <Field.Header>
         <Field.Label>{label}</Field.Label>
       </Field.Header>
@@ -164,20 +220,21 @@ function SessionTextInput({
           onBlur={onBlur}
         />
       </TextField.Root>
+      {error && <Field.ErrorMessage>{error}</Field.ErrorMessage>}
     </Field.Root>
   );
 }
 
-function SessionFormActions() {
+function SessionFormActions({ pending }: { pending: boolean }) {
   return (
     <Dialog.Footer className={styles.actions}>
       <Dialog.Action asChild>
-        <ActionButton type="button" variant="neutralWeak">
+        <ActionButton type="button" variant="neutralWeak" disabled={pending}>
           취소
         </ActionButton>
       </Dialog.Action>
-      <ActionButton type="submit" variant="neutralSolid">
-        저장
+      <ActionButton type="submit" variant="neutralSolid" disabled={pending} loading={pending}>
+        {pending ? '저장 중' : '저장'}
       </ActionButton>
     </Dialog.Footer>
   );
