@@ -1,6 +1,6 @@
 # 작업 목록: 관리자 세션 관리
 
-**상태**: 11단계 구현 완료 — 사용자 리뷰 대기
+**상태**: 12-1단계 구현 완료 — 사용자 리뷰 대기
 **기준**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [UI 계약](contracts/session-ui.md)
 
 ## 실행 규칙과 현재 상태
@@ -172,15 +172,20 @@
 - 사용자 리뷰에 따라 초기 로딩은 SEED Skeleton, 재조회는 ProgressCircle, 빈 목록·오류는 공식 스니펫 기반 ResultSection으로 통일했다. 두 진입점과 저장 후 닫기를 위해 생성 모달은 제어형을 유지한다.
 - 생성 연결과 상태 UI 정리는 필요 시 별도 후속 PR로 나누고 각 PR을 800줄 미만으로 유지한다.
 
-**중단점**: 단계 11 승인 대기.
+**중단점**: 사용자 “draft pr까지 작성해. 그리고 다음 작업 진행해” 지시로 단계 11 승인 완료.
 
 ## 단계 12-1 — US3 수정 폼과 초기값 (PR 7)
 
 독립 검증: 기존 세션의 여섯 항목을 편집할 수 있고 취소·다시 열기 및 대상 전환 시 마지막 저장값을 표시한다.
 
-- [ ] T034 [US3] `apps/admin/src/pages/sessions/ui/session-form-dialog.tsx`로 생성 폼의 공통 입력·검증을 추출하고 기존 생성 동작을 유지한다.
-- [ ] T035 [US3] `apps/admin/src/pages/sessions/ui/session-edit-dialog.tsx`에 초기값·저장·취소·pending·error를 연결한다. 페이지 메뉴는 저장 연결 후 노출한다.
-- [ ] T036 [US3] `apps/admin/src/pages/sessions/ui/session-edit-dialog.test.tsx`에서 초기값·검증·취소 초기화·다른 대상 전환을 검증하고 생성 폼 회귀를 실행한다.
+- [x] T034 [US3] `apps/admin/src/pages/sessions/ui/session-form-dialog.tsx`로 생성 폼의 공통 입력·검증을 추출하고 기존 생성 동작을 유지한다.
+- [x] T035 [US3] `apps/admin/src/pages/sessions/ui/session-edit-dialog.tsx`에 초기값·저장·취소·pending·error를 연결한다. 페이지 메뉴는 저장 연결 후 노출한다.
+- [x] T036 [US3] `apps/admin/src/pages/sessions/ui/session-edit-dialog.test.tsx`에서 초기값·검증·취소 초기화·다른 대상 전환을 검증하고 생성 폼 회귀를 실행한다.
+
+- 생성·수정의 여섯 입력과 검증은 `session-form-dialog.tsx`로 추출하고 스타일도 `session-form-dialog.css.ts`로 이동했다. 생성의 취소 후 입력 보존·성공 후 초기화는 유지한다.
+- 수정은 열 때 저장값으로 초기화하고 대상 id가 바뀌면 폼을 새로 구성한다. 검증·제출 잠금·실패 시 편집값 보존을 공유하며 저장소는 아직 연결하지 않는다.
+- 초기값·제출 입력·취소 재진입·대상 전환·검증·pending/error를 테스트했다. 브라우저에서 저장값 표시와 취소 후 초기화를 확인하고 `.context/sessions-step-12-1.png`를 기록했다.
+- 임시 수정 미리보기 연결은 제거했다. 실제 카드 메뉴와 저장·성공 후 닫기는 12-2단계에서 연결한다. 실제 터치·스크린 리더 검증은 남아 있다.
 
 **중단점**: 단계 12-1 승인 대기. 임시 개발용 렌더링을 `.context/sessions-step-12-1.png`에 기록한다.
 
@@ -189,7 +194,7 @@
 독립 검증: `세션 정보`에서 수정해 저장하고 실패·재시도·필터·정렬·집계 보존을 확인한다.
 
 - [ ] T037 [US3] `apps/admin/src/pages/sessions/model/session.ts`, `sessions.ts`, `sessions.mock.ts`에 수정 입력·updateSession을 구현하고 id·집계 보존·없는 id 오류를 모델 테스트에서 검증한다.
-- [ ] T038 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`에 수정 Mutation·조회 취소·성공 캐시 교체를 연결한다.
+- [ ] T038 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`에 수정 mutationOptions·성공 후 목록 무효화 및 재조회를 연결한다.
 - [ ] T039 [US3] `apps/admin/src/pages/sessions/ui/session-card.tsx`와 `sessions-page.tsx`에 세션 정보 메뉴·수정 폼·완료 안내·포커스 복귀를 연결한다.
 - [ ] T040 [US3] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 성공·실패·취소·없는 id·유형 변경에 따른 카드 제거·정렬·집계 보존을 검증한다.
 

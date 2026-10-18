@@ -1,4 +1,4 @@
-/** 세션 생성 모달의 화면 내 스크롤과 입력·작업 버튼 배치를 정의합니다. */
+/** 세션 생성·수정 모달의 화면 내 스크롤과 입력·작업 버튼 배치를 정의합니다. */
 import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 
