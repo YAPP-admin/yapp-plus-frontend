@@ -1,3 +1,4 @@
+/** 개발용 브라우저 저장소에 접근하고 세션 입출력을 검증하는 비동기 서비스입니다. */
 import { createSessionInputSchema, sessionSchema, type CreateSessionInput } from './session';
 
 async function getStore() {

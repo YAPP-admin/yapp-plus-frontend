@@ -1,3 +1,4 @@
+/** 세션 서비스의 실행 환경 제한과 입력 검증, 저장소 연결을 검증합니다. */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createSessionInputSchema } from './session';
 

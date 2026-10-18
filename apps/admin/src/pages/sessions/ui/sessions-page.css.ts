@@ -1,3 +1,4 @@
+/** 세션 관리 페이지와 유형 필터, 목록의 배치 및 안내 스타일을 정의합니다. */
 import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 

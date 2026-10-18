@@ -1,3 +1,4 @@
+/** 세션 유형 필터의 URL 검색 값과 화면 표시 이름을 정의합니다. */
 import { z } from 'zod';
 import { sessionTypeSchema } from './session';
 

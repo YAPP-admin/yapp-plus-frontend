@@ -1,3 +1,4 @@
+/** 세션 유형 검색 값의 기본값과 잘못된 입력 처리를 검증합니다. */
 import { describe, expect, it } from 'vitest';
 import { sessionFilterSchema, sessionSearchSchema } from './session-search';
 

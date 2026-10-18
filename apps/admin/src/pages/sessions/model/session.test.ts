@@ -1,3 +1,4 @@
+/** 세션 입력 검증과 조회 데이터 요건, 정렬 규칙을 독립적인 사례로 검증합니다. */
 import { describe, expect, it } from 'vitest';
 import {
   createSessionInputSchema,

@@ -1,3 +1,4 @@
+/** 정보 표시용 세션 카드의 상세 정보와 출석 집계 배치를 정의합니다. */
 import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 
