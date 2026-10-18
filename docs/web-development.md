@@ -99,7 +99,7 @@ apps/web/
 `settings` 아래에 배치합니다. 각 상세 라우트의 `page.tsx`에서 `DetailLayout`과 화면을 조합하고
 직접 접근 시 복귀 경로를 전달합니다. 출석 내역과 규칙에 서로 다른 복귀 경로를 지정하고 중첩
 헤더를 피하기 위한 구조입니다. `DetailLayout`은 `PageShell`의 뒤로가기 슬롯을 사용합니다.
-`(tabs)`는 `PageShell`의 내비게이션 슬롯에 하단 메뉴를 넣고, `(auth)`는 `AuthLayout`으로 `PageShell`의 `plain` 옵션을 사용해 YAPP+ 문구와 구분선 없이 흰색 배경으로 표시합니다. 헤더와 safe-area는 셸에서 한 번만
+`(tabs)`는 `PageShell`의 내비게이션 슬롯에 하단 메뉴를 넣고, `(auth)`는 `AuthLayout`으로 `PageShell`의 `plain` 옵션을 사용해 YAPP+ 문구와 구분선 없이 흰색 배경으로 표시합니다. 가입 정보 입력(`/signup`) 화면에서만 헤더에 아이콘 뒤로가기를 표시하고, 이력이 없으면 `/login`으로 돌아갑니다. 헤더와 safe-area는 셸에서 한 번만
 적용하고 페이지 본문에 중복 적용하지 않습니다. 여러 준비 중 페이지의 도메인 비의존 스타일은
 `shared/ui/page.css.ts`를 사용합니다.
 
