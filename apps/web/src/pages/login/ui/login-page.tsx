@@ -1,7 +1,6 @@
 'use client';
 
-import { headline } from '@/shared/ui/page.css';
-import { ActionButton, PrefixIcon } from '@yapp-plus/ui';
+import { ActionButton, PrefixIcon, Text } from '@yapp-plus/ui';
 import { useRouter } from 'next/navigation';
 import {
   buttonGroup,
@@ -26,11 +25,11 @@ export function LoginPage() {
 
   return (
     <main className={container}>
-      <h1 className={headline}>
+      <Text as="h1" textStyle="t10Bold" color="fg.neutral" whiteSpace="pre-line">
         당신의 작은 아이디어가
         {'\n'}
         세상을 바꿉니다
-      </h1>
+      </Text>
 
       <div className={content}>
         <section className={illustrationSection} aria-label="YAPP 마스코트 일러스트">
