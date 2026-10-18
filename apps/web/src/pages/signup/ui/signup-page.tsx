@@ -2,7 +2,8 @@
 
 import { ActionButton, Text, TextField, TextFieldInput } from '@yapp-plus/ui';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { bottom, contents, form, page, submitButton } from './signup-page.css';
+import { body, footer, screen } from '@/shared/ui/step-screen.css';
+import { fields, form } from './signup-page.css';
 
 type Step = 'name' | 'phone';
 
@@ -33,9 +34,9 @@ export function SignupPage() {
   }
 
   return (
-    <main className={page}>
+    <main className={screen}>
       <form className={form} onSubmit={handleSubmit}>
-        <div className={contents}>
+        <div className={`${body} ${fields}`}>
           <Text as="h1" id={titleId} textStyle="t10Bold" color="fg.neutral">
             {step === 'name' ? '이름을 입력해 주세요' : '휴대폰 번호를 입력해 주세요'}
           </Text>
@@ -64,14 +65,8 @@ export function SignupPage() {
           )}
         </div>
 
-        <div className={bottom}>
-          <ActionButton
-            type="submit"
-            size="large"
-            variant="brandSolid"
-            className={submitButton}
-            disabled={!canSubmit}
-          >
+        <div className={footer}>
+          <ActionButton type="submit" size="large" variant="brandSolid" disabled={!canSubmit}>
             다음
           </ActionButton>
         </div>
