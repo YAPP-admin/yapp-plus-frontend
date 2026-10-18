@@ -1,3 +1,4 @@
+/** 카드의 세션 정보와 다섯 출석 집계가 빠짐없이 표시되는지 검증합니다. */
 import { render, screen, within } from '@testing-library/react';
 import { expect, it } from 'vitest';
 import { sessionSchema } from '../model/session';

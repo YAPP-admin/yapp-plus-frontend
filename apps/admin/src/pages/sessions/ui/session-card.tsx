@@ -1,3 +1,4 @@
+/** 세션의 유형·일정·장소와 출석 집계를 이동 동작 없는 카드로 표시합니다. */
 import { Badge } from '@seed-design/react';
 import type { Session, SessionAttendanceSummary } from '../model/session';
 import { sessionFilterLabels } from '../model/session-search';

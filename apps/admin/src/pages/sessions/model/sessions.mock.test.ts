@@ -1,3 +1,4 @@
+/** 세션 메모리 저장소의 조회·생성·삭제와 데이터 격리를 검증합니다. */
 import { describe, expect, it } from 'vitest';
 import { createSessionInputSchema } from './session';
 import { createSessionStore } from './sessions.mock';

@@ -1,3 +1,4 @@
+/** 화면 이동 중 변경을 유지하고 새로고침하면 초기화되는 개발용 세션 메모리 저장소입니다. */
 import {
   createSessionInputSchema,
   sessionSchema,
