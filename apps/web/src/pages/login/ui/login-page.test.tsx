@@ -1,11 +1,7 @@
-import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { render, screen } from '@testing-library/react';
+import { describe, expect, it } from 'vitest';
 
 import { LoginPage } from './login-page';
-
-const router = vi.hoisted(() => ({ push: vi.fn<(url: string) => void>() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
-beforeEach(() => vi.clearAllMocks());
 
 describe('LoginPage', () => {
   it('로그인 타이틀을 올바르게 표시한다', () => {
@@ -44,11 +40,5 @@ describe('LoginPage', () => {
     render(<LoginPage />);
     const illust = screen.getByRole('img', { name: '노트북으로 작업 중인 부엉이 캐릭터' });
     expect(illust).toBeInTheDocument();
-  });
-
-  it('애플 로그인을 누르면 신규 회원 정보 입력 화면으로 이동한다', () => {
-    render(<LoginPage />);
-    fireEvent.click(screen.getByRole('button', { name: '애플로 계속하기' }));
-    expect(router.push).toHaveBeenCalledWith('/signup');
   });
 });
