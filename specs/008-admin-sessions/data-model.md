@@ -7,7 +7,7 @@
 | ------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------ |
 | SessionType              | `regular`, `team`                                          | 전체는 저장값이 아니다.                                      |
 | CreateSessionInput       | `name`, `location`, `date`, `startTime`, `endTime`, `type` | 여섯 항목 필수.                                              |
-| UpdateSessionInput       | CreateSessionInput과 같은 여섯 항목                        | 생성 스키마를 재사용하며 수정 대상 id는 별도 인자다.         |
+| UpdateSessionInput       | id와 input(CreateSessionInput)                             | input은 생성 스키마를 재사용하며 id는 수정 대상을 지정한다.  |
 | SessionAttendanceSummary | `present`, `late`, `absent`, `pending`, `reported`         | 각각 0 이상의 정수. 화면 집계만 표현한다.                    |
 | Session                  | 생성 입력 + `id`, `attendance`                             | id는 비어 있지 않은 문자열이며 모의 생성 시 UUID를 부여한다. |
 
@@ -23,12 +23,12 @@
 
 ## 내부 서비스
 
-| 함수          | 입력                        | 성공 결과            | 실패                                     |
-| ------------- | --------------------------- | -------------------- | ---------------------------------------- |
-| listSessions  | 없음                        | `Promise<Session[]>` | 조회 오류를 throw한다.                   |
-| createSession | CreateSessionInput          | `Promise<Session>`   | 검증·생성 오류를 throw한다.              |
-| updateSession | 세션 id, UpdateSessionInput | `Promise<Session>`   | 없는 id 또는 검증·수정 오류를 throw한다. |
-| deleteSession | 세션 id                     | `Promise<void>`      | 없는 id 또는 삭제 오류를 throw한다.      |
+| 함수          | 입력               | 성공 결과            | 실패                                     |
+| ------------- | ------------------ | -------------------- | ---------------------------------------- |
+| listSessions  | 없음               | `Promise<Session[]>` | 조회 오류를 throw한다.                   |
+| createSession | CreateSessionInput | `Promise<Session>`   | 검증·생성 오류를 throw한다.              |
+| updateSession | UpdateSessionInput | `Promise<Session>`   | 없는 id 또는 검증·수정 오류를 throw한다. |
+| deleteSession | 세션 id            | `Promise<void>`      | 없는 id 또는 삭제 오류를 throw한다.      |
 
 - 모의 저장소는 목록 복사본을 반환한다. 반환값 수정이 내부 배열을 바꾸지 않도록 중첩 집계도 복사한다.
 - 생성은 저장된 세션을 반환하고 모든 출석 집계를 0으로 시작한다. 삭제는 해당 id만 제거한다.

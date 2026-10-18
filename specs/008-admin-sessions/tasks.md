@@ -1,6 +1,6 @@
 # 작업 목록: 관리자 세션 관리
 
-**상태**: 12-1단계 구현 완료 — 사용자 리뷰 대기
+**상태**: 13단계 승인 완료 — 14단계 전체 검증 진행
 **기준**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [UI 계약](contracts/session-ui.md)
 
 ## 실행 규칙과 현재 상태
@@ -187,29 +187,38 @@
 - 초기값·제출 입력·취소 재진입·대상 전환·검증·pending/error를 테스트했다. 브라우저에서 저장값 표시와 취소 후 초기화를 확인하고 `.context/sessions-step-12-1.png`를 기록했다.
 - 임시 수정 미리보기 연결은 제거했다. 실제 카드 메뉴와 저장·성공 후 닫기는 12-2단계에서 연결한다. 실제 터치·스크린 리더 검증은 남아 있다.
 
-**중단점**: 단계 12-1 승인 대기. 임시 개발용 렌더링을 `.context/sessions-step-12-1.png`에 기록한다.
+**리뷰 결과**: 단계 12-1 승인 및 `2d931c4` 커밋 완료. 임시 개발용 렌더링을 `.context/sessions-step-12-1.png`에 기록한다.
 
 ## 단계 12-2 — US3 수정 저장과 목록 반영 (PR 7)
 
 독립 검증: `세션 정보`에서 수정해 저장하고 실패·재시도·필터·정렬·집계 보존을 확인한다.
 
-- [ ] T037 [US3] `apps/admin/src/pages/sessions/model/session.ts`, `sessions.ts`, `sessions.mock.ts`에 수정 입력·updateSession을 구현하고 id·집계 보존·없는 id 오류를 모델 테스트에서 검증한다.
-- [ ] T038 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`에 수정 mutationOptions·성공 후 목록 무효화 및 재조회를 연결한다.
-- [ ] T039 [US3] `apps/admin/src/pages/sessions/ui/session-card.tsx`와 `sessions-page.tsx`에 세션 정보 메뉴·수정 폼·완료 안내·포커스 복귀를 연결한다.
-- [ ] T040 [US3] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 성공·실패·취소·없는 id·유형 변경에 따른 카드 제거·정렬·집계 보존을 검증한다.
+- [x] T037 [US3] `apps/admin/src/pages/sessions/model/session.ts`, `sessions.ts`, `sessions.mock.ts`에 수정 입력·updateSession을 구현하고 id·집계 보존·없는 id 오류를 모델 테스트에서 검증한다.
+- [x] T038 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`에 수정 mutationOptions·성공 후 목록 무효화 및 재조회를 연결한다.
+- [x] T039 [US3] `apps/admin/src/pages/sessions/ui/session-card.tsx`와 `sessions-page.tsx`에 세션 정보 메뉴·수정 폼·완료 안내를 연결한다.
+- [x] T040 [US3] 페이지 테스트에서 성공·실패·없는 id·유형 변경에 따른 카드 제거·집계 보존을, 공통 수정 폼 테스트에서 취소를, 모델 테스트에서 날짜 정렬을 검증한다.
 
-**중단점**: 단계 12-2 승인 대기. `.context/sessions-step-12-2.png`와 check/build 결과로 리뷰받는다.
+- 수정 성공 후 목록을 무효화하고 재조회하며 현재 필터를 유지한다. 실패하면 입력을 보존하고 재시도 또는 닫고 목록 새로고침을 제공한다.
+- 브라우저에서 메뉴 진입·저장·목록 반영을 확인했다. 리뷰에 따라 수정 후 포커스 보정 effect와 관련 테스트 기대값을 제거하고 SEED 기본 동작을 사용한다. 실제 터치·스크린 리더 검증은 최종 단계에 남아 있다.
+- PR 7은 공통 폼(12-1)과 수정 연결(12-2)로 나눈다. 합산 시 800줄을 초과하므로 수정 연결 PR의 base는 공통 폼 PR로 둔다.
+
+**리뷰 결과**: 단계 12-2 승인 완료. 수정 다이얼로그는 onClose로 단순화하고 포커스 보정은 제거했다.
 
 ## 단계 13 — US3 삭제 (PR 8)
 
 독립 검증: 삭제 취소·성공·실패·마지막 항목 삭제를 각각 확인한다.
 
-- [ ] T041 [US3] `apps/admin/src/pages/sessions/ui/session-delete-dialog.tsx`와 스타일에 대상명·확인·pending·error·재시도를 구현한다.
-- [ ] T042 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`와 `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 삭제 Mutation·캐시 갱신·필터 유지·포커스 복구를 연결한다.
-- [ ] T043 [US3] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 삭제 취소·실패 보존·성공 개수·마지막 항목·없는 ID를 검증한다.
-- [ ] T044 [US3] `.context/sessions-step-13.png`에 삭제 화면을 기록하고 사용자 리뷰를 요청한다.
+- [x] T041 [US3] `apps/admin/src/pages/sessions/ui/session-delete-dialog.tsx`와 스타일에 대상명·확인·pending·error·재시도를 구현한다.
+- [x] T042 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`와 `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 삭제 mutationOptions·목록 무효화 및 재조회·필터 유지를 연결한다. 포커스는 SEED 기본 동작에 맡긴다.
+- [x] T043 [US3] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 삭제 취소·실패 보존·성공 개수·마지막 항목·없는 ID를 검증한다.
+- [x] T044 [US3] `.context/sessions-step-13.png`에 삭제 화면을 기록하고 사용자 리뷰를 요청한다.
 
-**중단점**: 단계 13 승인 대기.
+- 카드 메뉴의 삭제에서 SEED Dialog 확인창을 연다. 대상명과 관련 출석 기록 삭제 정책을 안내하며 실제 출석 API 연동은 제외한다.
+- 삭제 중 중복 제출·취소·Esc를 막고 실패하면 확인창과 대상을 유지한다. 재시도와 닫고 목록 새로고침을 제공한다.
+- 취소·성공 개수·전체/필터 빈 상태·실패 재시도·중복 제출·없는 id를 테스트했다. `node --run check`(관리자 252개 테스트), `node --run build`를 통과했다.
+- 브라우저에서 메뉴→삭제 확인→삭제 성공과 개수 갱신을 확인하고 `.context/sessions-step-13.png`에 기록했다. 실제 스크린 리더·터치와 전체 회귀 검증은 14단계에 남아 있다.
+
+**리뷰 결과**: 단계 13 승인 완료. 수정 저장소·수정 폼 인터페이스·목록 작업 연결·정책 문서를 별도 커밋으로 나눈다. 수정·삭제 연결은 공통 폼 PR 다음의 독립 PR로 묶고 실제 변경량이 800줄 미만인지 확인한다.
 
 ## 단계 14 — 전체 검증과 전달 (PR 8 또는 수정 PR)
 
