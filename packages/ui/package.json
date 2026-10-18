@@ -19,6 +19,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@karrotmarket/react-monochrome-icon": "catalog:",
     "@vanilla-extract/css": "catalog:"
   },
   "devDependencies": {

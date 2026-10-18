@@ -130,6 +130,10 @@ web과 admin은 SSR 문서 head에서 `@yapp-plus/ui/seed-theme`의 공식 Manua
 테마 스크립트와 `color-scheme` 메타를 주입합니다. Vite plugin은 Storybook만 개발 의존성으로
 소유합니다.
 
+현재 공용 UI는 ActionButton과 TextField 스니펫을 제공합니다. 아이콘은 Seed 공식 아이콘 패키지
+`@karrotmarket/react-monochrome-icon`을 사용하고, Seed 아이콘 래퍼 `Icon`·`PrefixIcon`은
+`@yapp-plus/ui`에서 가져옵니다. Seed에 없는 브랜드 로고만 화면에서 SVG로 관리합니다.
+
 스니펫을 추가하거나 갱신할 때는 `packages/ui`의 설정을 사용하고 생성 결과가 기존 React 19 코드와
 공개 API를 덮어쓰지 않는지 diff를 검토합니다. 새 컴포넌트와 필수 종속 스니펫만 추가합니다.
 

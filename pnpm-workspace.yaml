@@ -15,6 +15,7 @@ catalog:
   '@tiptap/pm': 3.32.0
   '@tiptap/starter-kit': 3.32.0
   '@tiptap/extension-placeholder': 3.32.0
+  '@karrotmarket/react-monochrome-icon': 1.30.0
   '@testing-library/user-event': 14.6.7
   '@seed-design/css': 2.8.3
   '@seed-design/react': 2.5.0
