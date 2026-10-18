@@ -32,4 +32,11 @@ describe('BackButton', () => {
       expect(navigation.back).not.toHaveBeenCalled();
     },
   );
+
+  it('아이콘 버튼도 같은 이름과 이동 규칙을 사용한다', () => {
+    navigation.canGoBack.mockReturnValue(false);
+    render(<BackButton fallback="/login" iconOnly />);
+    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+    expect(navigation.replace).toHaveBeenCalledWith('/login');
+  });
 });

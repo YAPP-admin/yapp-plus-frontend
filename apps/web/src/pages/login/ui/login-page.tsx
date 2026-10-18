@@ -2,6 +2,7 @@
 
 import { headline } from '@/shared/ui/page.css';
 import { ActionButton, PrefixIcon } from '@yapp-plus/ui';
+import { useRouter } from 'next/navigation';
 import {
   buttonGroup,
   container,
@@ -16,11 +17,13 @@ function handleGoogleLogin() {
   // 향후 Google OAuth SDK / API 연동
 }
 
-function handleAppleLogin() {
-  // 향후 Apple OAuth SDK / API 연동
-}
-
 export function LoginPage() {
+  const router = useRouter();
+
+  function handleAppleLogin() {
+    router.push('/signup');
+  }
+
   return (
     <main className={container}>
       <h1 className={headline}>
