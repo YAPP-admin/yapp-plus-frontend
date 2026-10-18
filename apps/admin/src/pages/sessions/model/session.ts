@@ -37,6 +37,12 @@ export const sessionSchema = createSessionInputSchema.safeExtend({
 export type SessionType = z.infer<typeof sessionTypeSchema>;
 export type CreateSessionInput = z.infer<typeof createSessionInputSchema>;
 export type SessionAttendanceSummary = z.infer<typeof sessionAttendanceSummarySchema>;
+export const updateSessionInputSchema = z.object({
+  id: z.string().trim().min(1),
+  input: createSessionInputSchema,
+});
+export type UpdateSessionInput = z.infer<typeof updateSessionInputSchema>;
+
 export type Session = z.infer<typeof sessionSchema>;
 
 export function sortSessions(sessions: readonly Session[]): Session[] {
