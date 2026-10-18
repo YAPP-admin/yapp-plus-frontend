@@ -1,6 +1,6 @@
 # 작업 목록: 관리자 세션 관리
 
-**상태**: 6단계 승인 완료 — 7단계 진행 대기
+**상태**: 7단계 구현·자동 검증 완료 — 사용자 리뷰 대기 (스크린샷 미완료)
 **기준**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [UI 계약](contracts/session-ui.md)
 
 ## 실행 규칙과 현재 상태
@@ -85,14 +85,22 @@
 
 ## 단계 7 — US1 카드와 목록 (PR 4)
 
-독립 검증: 모든 예시 세션이 정렬되고 필터·개수·카드 링크가 일치하는지 확인한다.
+독립 검증: 모든 예시 세션이 정렬되고 필터·개수·카드 정보가 일치하는지 확인한다.
 
-- [ ] T018 [US1] `apps/admin/src/pages/sessions/model/session-queries.ts`에 전체 목록 Query와 클라이언트 조회 활성화를 구현한다.
-- [ ] T019 [US1] `apps/admin/src/pages/sessions/ui/session-card.tsx`와 스타일에 세션·집계 표시 및 출석 화면 링크를 구현한다.
-- [ ] T020 [US1] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 필터 칩·목록·개수·정렬을 연결한다. 미연결 생성·메뉴 작업은 노출하지 않는다.
-- [ ] T021 [US1] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`와 `session-card.test.tsx`에서 필터·정렬·링크를 검증하고 `.context/sessions-step-07.png`를 기록한다.
+- [x] T018 [US1] `apps/admin/src/pages/sessions/model/session-queries.ts`에 전체 목록 Query와 클라이언트 조회 활성화를 구현한다.
+- [x] T019 [US1] `apps/admin/src/pages/sessions/ui/session-card.tsx`와 스타일에 1열 목록의 세션·집계 표시를 구현하고 카드 본문은 비대화형으로 둔다.
+- [x] T020 [US1] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 필터 칩·목록·개수·정렬을 연결한다. 미연결 생성·메뉴 작업은 노출하지 않는다.
+- [ ] T021 [US1] `apps/admin/src/router.test.tsx`와 `pages/sessions/ui/session-card.test.tsx`에서 필터·정렬·카드 클릭 시 화면 유지를 검증하고 `.context/sessions-step-07.png`를 기록한다.
 
-**중단점**: 단계 7 승인 대기.
+**중단점**: 단계 7 사용자 리뷰 대기. 8단계 상태 UI는 시작하지 않는다.
+
+- 전체 목록 Query 하나를 사용하며 `useHydrated` 이후 DEV 브라우저에서만 조회한다.
+- 유형 필터·최신순 정렬·결과 개수·정보 표시용 세션 카드를 연결했다. 사용자 리뷰에 따라 1열 배치와 본문 클릭 시 화면 유지 정책을 적용했다. 생성·수정·삭제 메뉴는 노출하지 않는다.
+- 카드의 정보·다섯 출석 집계는 독립 테스트로, 목록·필터·카드 클릭 시 화면 유지는 기존 router 테스트에서 검증했다. 서비스 mock이나 루트 mock을 추가하지 않았다.
+- `node --run check`, `node --run build` 통과. 관련 자동 테스트 통과.
+- 실제 브라우저의 오프라인 카드·1개 표시를 접근성 트리에서 확인했다. 이후 캡처 도구가 실패·시간 초과하여 스크린샷은 저장하지 못했다. T021은 캡처 완료 전까지 미완료로 유지한다.
+- 좁은 화면·스크린 리더·실제 터치·많은 항목의 스크롤은 아직 수동 검증하지 않았다.
+- 기존 제출한 데이터·필터 PR #73 위에 후속 목록 PR로 분리한다. 카드, 목록 연결, 명세, 모델 테스트 정리를 각각 독립 커밋으로 구성한다.
 
 ## 단계 8 — US1 목록 상태 (PR 4)
 
