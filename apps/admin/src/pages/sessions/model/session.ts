@@ -1,7 +1,7 @@
 /** 세션 입력·조회·출석 집계의 스키마와 타입, 최신 일정순 정렬 규칙을 정의합니다. */
 import { z } from 'zod';
 
-export const sessionTypeSchema = z.enum(['offline', 'team']);
+export const sessionTypeSchema = z.enum(['regular', 'team']);
 
 const timeSchema = z
   .string()

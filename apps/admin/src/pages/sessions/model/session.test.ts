@@ -13,7 +13,7 @@ const input = {
   date: '2028-02-29',
   startTime: '09:00',
   endTime: '10:00',
-  type: 'offline',
+  type: 'regular',
 };
 
 const attendance = { present: 0, late: 0, absent: 0, pending: 0, reported: 0 };

@@ -10,13 +10,13 @@ import {
 // 실제 운영 일정이나 회원 정보가 아닌 화면 검증용 예시입니다.
 const fixtures: Session[] = [
   {
-    id: 'demo-offline-session',
-    name: '개발용 오프라인 세션',
+    id: 'demo-regular-session',
+    name: '개발용 정규 세션',
     location: '예시 교육장',
     date: '2026-10-17',
     startTime: '14:00',
     endTime: '17:00',
-    type: 'offline',
+    type: 'regular',
     attendance: { present: 30, late: 2, absent: 1, pending: 5, reported: 3 },
   },
   {

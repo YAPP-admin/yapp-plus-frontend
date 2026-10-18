@@ -1,4 +1,4 @@
-/** 전체·오프라인·팀 세션을 선택하는 SEED 칩 그룹을 표시합니다. */
+/** 전체·정규 세션·팀 세션을 선택하는 SEED 칩 그룹을 표시합니다. */
 import { Chip } from '@seed-design/react';
 import { RadioGroup } from '@seed-design/react/primitive';
 import {

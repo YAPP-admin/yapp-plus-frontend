@@ -1,3 +1,4 @@
+/** 관리자 라우트 탐색과 URL 필터, 화면 연결 동작을 검증합니다. */
 import type * as SeedDesign from '@seed-design/react';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -154,13 +155,13 @@ describe('관리자 라우팅', () => {
 describe('세션 목록 탐색', () => {
   it.each([
     ['/sessions', '전체'],
-    ['/sessions?type=offline', '오프라인'],
+    ['/sessions?type=regular', '정규 세션'],
     ['/sessions?type=team', '팀 세션'],
     ['/sessions?type=unknown', '전체'],
     ['/sessions?type=%5B%22team%22%5D', '전체'],
     ['/sessions?type=true', '전체'],
     ['/sessions?part=web', '전체'],
-    ['/sessions?type=offline&part=web', '오프라인'],
+    ['/sessions?type=regular&part=web', '정규 세션'],
   ])('%s에 직접 접근하면 %s를 선택한다', async (path, label) => {
     await renderRoute(path);
 
@@ -173,9 +174,9 @@ describe('세션 목록 탐색', () => {
     const user = userEvent.setup();
     const router = await renderRoute('/sessions?part=web');
 
-    await user.click(await screen.findByRole('radio', { name: '오프라인' }));
+    await user.click(await screen.findByRole('radio', { name: '정규 세션' }));
 
-    await waitFor(() => expect(router.state.location.searchStr).toBe('?type=offline'));
+    await waitFor(() => expect(router.state.location.searchStr).toBe('?type=regular'));
 
     await user.click(screen.getByRole('radio', { name: '팀 세션' }));
 
@@ -183,7 +184,7 @@ describe('세션 목록 탐색', () => {
 
     act(() => router.history.back());
 
-    await waitFor(() => expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked());
+    await waitFor(() => expect(screen.getByRole('radio', { name: '정규 세션' })).toBeChecked());
 
     act(() => router.history.forward());
 
@@ -235,7 +236,7 @@ describe('세션 목록 탐색', () => {
 
     await user.keyboard('{ArrowRight}');
 
-    await waitFor(() => expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked());
+    await waitFor(() => expect(screen.getByRole('radio', { name: '정규 세션' })).toBeChecked());
   });
 });
 
@@ -922,13 +923,13 @@ describe('세션 관리 목록', () => {
 
     expect(cards).toHaveLength(2);
     expect(cards[0]).toHaveAccessibleName('개발용 팀 세션');
-    expect(cards[1]).toHaveAccessibleName('개발용 오프라인 세션');
+    expect(cards[1]).toHaveAccessibleName('개발용 정규 세션');
     expect(screen.getByRole('status')).toHaveTextContent('전체 2개');
 
-    await user.click(screen.getByRole('radio', { name: '오프라인' }));
+    await user.click(screen.getByRole('radio', { name: '정규 세션' }));
 
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('오프라인 1개'));
-    expect(within(list).getByRole('heading', { name: '개발용 오프라인 세션' })).toBeVisible();
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('정규 세션 1개'));
+    expect(within(list).getByRole('heading', { name: '개발용 정규 세션' })).toBeVisible();
     expect(within(list).queryByRole('heading', { name: '개발용 팀 세션' })).not.toBeInTheDocument();
   });
 

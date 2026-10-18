@@ -7,7 +7,7 @@ describe('세션 유형 쿼리', () => {
     expect(sessionSearchSchema.parse({ type })).toEqual({ type });
   });
 
-  it.each([undefined, null, '', 'unknown', 'OFFLINE', 1, true, ['team'], { type: 'team' }])(
+  it.each([undefined, null, '', 'unknown', 'REGULAR', 1, true, ['team'], { type: 'team' }])(
     '잘못된 외부 입력 %j를 전체로 처리한다',
     (type) => {
       expect(sessionSearchSchema.parse({ type })).toEqual({ type: 'all' });
