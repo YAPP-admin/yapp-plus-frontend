@@ -1,6 +1,6 @@
 # 작업 목록: 관리자 세션 관리
 
-**상태**: 13단계 승인 완료 — 14단계 전체 검증 진행
+**상태**: 14단계 자동·브라우저 검증 완료 — 최종 리뷰 대기(실제 터치·스크린 리더 미검증)
 **기준**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [UI 계약](contracts/session-ui.md)
 
 ## 실행 규칙과 현재 상태
@@ -222,9 +222,11 @@
 
 ## 단계 14 — 전체 검증과 전달 (PR 8 또는 수정 PR)
 
-- [ ] T045 `specs/008-admin-sessions/quickstart.md`의 시나리오를 수행하고 필요 시 해당 admin 파일에서 발견한 결함만 수정한다.
-- [ ] T046 `specs/008-admin-sessions/validation.md`에 check/build, production mock 제외, 실제 환경별 검증과 미검증 사항을 기록한다.
-- [ ] T047 `.context/`에 최종 데스크톱·좁은 화면·모달 이미지를 저장하고 PR별 변경량 및 남은 위험과 함께 최종 리뷰를 요청한다.
+- [x] T045 `specs/008-admin-sessions/quickstart.md`의 시나리오를 수행하고 필요 시 해당 admin 파일에서 발견한 결함만 수정한다.
+- [x] T046 `specs/008-admin-sessions/validation.md`에 check/build, production mock 제외, 실제 환경별 검증과 미검증 사항을 기록한다.
+- [x] T047 `.context/`에 최종 데스크톱·좁은 화면·모달 이미지를 저장하고 PR별 변경량 및 남은 위험과 함께 최종 리뷰를 요청한다.
+
+- 검증 결과와 미실행 항목은 [validation.md](validation.md)에 기록했다. 실제 터치·스크린 리더와 다량 데이터의 브라우저 부하 검증은 남아 있으며 완료로 간주하지 않는다.
 
 **중단점**: 단계 14 승인 대기. 최종 리뷰가 merge 승인을 의미하지 않는다.
 
