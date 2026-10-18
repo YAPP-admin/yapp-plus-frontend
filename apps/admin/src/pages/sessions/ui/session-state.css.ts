@@ -15,21 +15,14 @@ export const panel = style({
   border: `1px solid ${vars.$color.stroke.neutralMuted}`,
   borderRadius: vars.$radius.r3,
 });
-export const icon = style({ marginBottom: vars.$dimension.x4, color: vars.$color.fg.neutralMuted });
-export const title = style({
-  margin: 0,
-  fontSize: vars.$fontSize.t5,
-  lineHeight: vars.$lineHeight.t5,
-  fontWeight: vars.$fontWeight.bold,
+export const loadingCard = style({
+  padding: vars.$dimension.x6,
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r3,
 });
-export const description = style({
-  margin: 0,
+export const loadingStatus = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: vars.$dimension.x2,
   color: vars.$color.fg.neutralMuted,
-  fontSize: vars.$fontSize.t4,
-  lineHeight: vars.$lineHeight.t4,
-});
-
-export const message = style({
-  display: 'grid',
-  gap: vars.$dimension.x4,
 });

@@ -29,7 +29,7 @@ const session = sessionSchema.parse({
 
 function ResultsPreview({ initialType }: { initialType: SessionFilter }) {
   const [type, setType] = useState(initialType);
-  return <SessionResults type={type} onResetFilter={() => setType('all')} />;
+  return <SessionResults type={type} onResetFilter={() => setType('all')} onCreate={() => {}} />;
 }
 
 function renderResults(type: 'all' | 'team' = 'all') {
@@ -80,8 +80,7 @@ it('전체 데이터가 없으면 등록된 세션이 없다고 안내한다', a
   renderResults();
 
   expect(await screen.findByRole('heading', { name: '아직 만든 세션이 없어요' })).toBeVisible();
-  expect(screen.getByRole('button', { name: '세션 만들기' })).toBeDisabled();
-  expect(screen.getByText('세션 생성 기능을 준비 중입니다.')).toBeVisible();
+  expect(screen.getByRole('button', { name: '세션 만들기' })).toBeEnabled();
 });
 
 it('다른 유형의 데이터만 있으면 유형 변경을 안내한다', async () => {
