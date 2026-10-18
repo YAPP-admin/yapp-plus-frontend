@@ -1,4 +1,4 @@
-/** 세션 메모리 저장소의 조회·생성·삭제와 데이터 격리를 검증합니다. */
+/** 세션 메모리 저장소의 조회·생성·수정·삭제와 데이터 격리를 검증합니다. */
 import { describe, expect, it } from 'vitest';
 import { createSessionInputSchema } from './session';
 import { createSessionStore } from './sessions.mock';
@@ -79,4 +79,32 @@ describe('세션 메모리 저장소', () => {
     expect(createSessionStore().listSessions()).toEqual(original);
     expect(first.listSessions()).toHaveLength(original.length + 1);
   });
+});
+
+it('수정 시 id·집계를 보존하고 변경한 일정순으로 정렬하며 반환값을 격리한다', () => {
+  const store = createSessionStore();
+  const original = store.listSessions().find((session) => session.id === 'demo-regular-session');
+  const updated = store.updateSession({
+    id: 'demo-regular-session',
+    input: { ...input, date: '2026-12-01' },
+  });
+  expect(updated.id).toBe('demo-regular-session');
+  expect(updated.attendance).toEqual(original?.attendance);
+  expect(store.listSessions()[0]).toEqual(updated);
+  updated.name = '외부 변경';
+  updated.attendance.present = 999;
+  expect(store.listSessions()[0]?.name).toBe(input.name);
+  expect(store.listSessions()[0]?.attendance).toEqual(original?.attendance);
+});
+
+it('없는 세션이나 잘못된 입력은 수정하거나 생성하지 않는다', () => {
+  const store = createSessionStore();
+  const before = store.listSessions();
+  expect(() => store.updateSession({ id: 'missing', input })).toThrow(
+    '수정할 세션을 찾을 수 없습니다.',
+  );
+  expect(() =>
+    store.updateSession({ id: 'demo-regular-session', input: { ...input, name: '' } }),
+  ).toThrow('세션명을 입력하세요.');
+  expect(store.listSessions()).toEqual(before);
 });

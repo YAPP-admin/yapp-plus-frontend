@@ -2,6 +2,8 @@
 import {
   createSessionInputSchema,
   sessionSchema,
+  updateSessionInputSchema,
+  type UpdateSessionInput,
   sortSessions,
   type CreateSessionInput,
   type Session,
@@ -49,6 +51,17 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
 
       sessions = [...sessions, session];
       return sessionSchema.parse(session);
+    },
+
+    updateSession(input: UpdateSessionInput): Session {
+      const { id, input: fields } = updateSessionInputSchema.parse(input);
+      const existing = sessions.find((session) => session.id === id);
+      if (!existing) {
+        throw new Error('수정할 세션을 찾을 수 없습니다.');
+      }
+      const updated = sessionSchema.parse({ ...existing, ...fields });
+      sessions = sessions.map((session) => (session.id === id ? updated : session));
+      return sessionSchema.parse(updated);
     },
 
     deleteSession(id: string): void {
