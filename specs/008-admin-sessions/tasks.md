@@ -1,6 +1,6 @@
 # 작업 목록: 관리자 세션 관리
 
-**상태**: 10단계 구현 완료 — 사용자 리뷰 대기
+**상태**: 11단계 구현 완료 — 사용자 리뷰 대기
 **기준**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [UI 계약](contracts/session-ui.md)
 
 ## 실행 규칙과 현재 상태
@@ -122,12 +122,12 @@
 독립 검증: 아직 페이지에 연결하지 않은 폼을 컴포넌트 테스트에서 열고 입력·취소한다.
 
 - [x] T025 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.tsx`와 스타일에 SEED 기반 여섯 입력·모달·저장·취소 및 submit 콜백을 구현한다.
-- [x] T026 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.test.tsx`에서 레이블·입력·취소 초기화·Esc와 배경 클릭 정책을 검증한다.
+- [x] T026 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.test.tsx`에서 레이블·입력·취소 후 보존·Esc와 배경 클릭 정책을 검증한다.
 
 **중단점**: 사용자 “나눠서 커밋 진행하고 다음 작업 진행해” 지시로 단계 9 승인 완료.
 
 - SEED Dialog·TextField·Select와 TanStack Form으로 여섯 입력과 제출 콜백을 구현했다. 유형 기본값은 정규 세션이며 나머지 입력은 빈 값이다.
-- 입력 전달·취소 후 초기화·Esc 및 트리거 포커스 복귀를 자동 검증한다. 브라우저에서 제목 포커스·유형 선택·배경 클릭 유지·Esc 복귀를 확인했다.
+- 입력 전달·취소 후 보존·Esc 및 트리거 포커스 복귀를 자동 검증한다. 브라우저에서 제목 포커스·유형 선택·배경 클릭 유지·Esc 복귀를 확인했다.
 - 모달은 최대 680px이며 좁은 화면에서는 한 열로 표시하고 높이가 부족하면 내부 스크롤을 제공한다. 실제 터치·스크린 리더 검증은 남아 있다.
 - 임시 미리보기로 `.context/sessions-step-09.png`를 기록한 뒤 페이지 연결 코드는 원복했다. 검증 메시지·제출 상태는 10단계, 실제 목록 저장은 11단계다.
 
@@ -149,17 +149,28 @@
 - 실제 SEED 컴포넌트로 여섯 테스트를 실행했다. 첫 제출 시점·오류 설명 연결·시간 비교 재검증·잠금·실패 후 수정과 재시도를 포함한다.
 - 브라우저에서 빈 제출 오류와 첫 입력 포커스를 확인하고 `.context/sessions-step-10.png`를 저장했다. 임시 페이지 연결은 원복했다. 실제 스크린 리더·터치 검증은 남아 있다.
 
-**중단점**: 단계 10 승인 대기. 임시 개발용 렌더링의 오류 상태를 `.context/sessions-step-10.png`에 기록한다.
+**중단점**: 사용자 “그러면 다음 작업 진행해” 지시로 단계 10 승인 완료. 임시 개발용 렌더링의 오류 상태를 `.context/sessions-step-10.png`에 기록한다.
 실제 페이지 연결 후 접근성 최종 확인은 단계 11에서 수행한다.
 
 ## 단계 11 — US2 생성 연결 (PR 6)
 
 독립 검증: 실제 페이지의 버튼으로 생성하여 목록 반영·필터 초기화·완료 안내를 확인한다.
 
-- [ ] T030 [US2] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 Mutation과 조회 취소·성공 캐시 갱신을 연결한다.
-- [ ] T031 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 생성 버튼·모달·전체 필터 전환·완료 안내를 연결한다.
-- [ ] T032 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 생성 성공·실패·필터 전환·목록 갱신을 검증한다.
+- [x] T030 [US2] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 mutationOptions와 성공 후 목록 무효화·재조회을 연결한다.
+- [x] T031 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 생성 버튼·모달·전체 필터 전환·완료 안내를 연결한다.
+- [x] T032 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 생성 성공·실패·필터 전환·목록 갱신을 검증한다.
 - [ ] T033 [US2] `.context/sessions-step-11.png`에 생성 화면을 기록하고 실제 모달 포커스·터치·낮은 높이 및 check/build를 확인한다.
+
+- 생성 모달의 열림 감시 effect와 formKey를 제거했다. 취소 후 입력을 보존하며, 성공 콜백으로 전달한 form.reset()을 mutation 성공 시에만 실행한다. Snackbar Provider는 앱 루트로 이동했다.
+- 상단 생성 버튼과 전체 빈 목록 CTA에서 같은 제어형 모달을 연다. 필터 빈 결과의 CTA는 필터 초기화를 유지한다.
+- 생성은 mutationOptions와 mutate를 사용한다. 성공 후 invalidateQueries로 전체 목록을 다시 조회하며 수동 캐시 갱신과 별도 조회 취소는 하지 않는다. 전체 필터 전환·모달 닫기·SEED Snackbar를 연결했다. 포커스는 SEED 기본 동작에 맡기고 별도 보정 effect는 제거했다.
+- 생성 실패는 입력과 모달을 유지하며 재시도할 수 있다. 프로덕션에는 생성 버튼을 노출하지 않는다.
+- 서비스 경계만 대체한 페이지 테스트로 성공·실패 후 재시도·빈 목록 CTA·이전 조회와의 경합·프로덕션 차단을 검증한다.
+- 브라우저에서 팀 필터 상태로 생성 후 URL의 type 제거, 전체 3개·새 카드·0명 집계와 포커스 복귀를 확인했다. 실제 373×480 뷰포트에서 한 열 입력·내부 스크롤·하단 취소 접근과 가로 넘침 없음을 확인했다.
+- `.context/sessions-step-11-success.png`, `.context/sessions-step-11-narrow.png`에 기록했다. 실제 터치·스크린 리더는 미검증이므로 T033은 남겨 둔다.
+- `node --run check`, `node --run build`가 통과했다. 생성 버튼 추가에 따른 키보드 탐색 순서도 회귀 테스트에 반영했다.
+- 사용자 리뷰에 따라 초기 로딩은 SEED Skeleton, 재조회는 ProgressCircle, 빈 목록·오류는 공식 스니펫 기반 ResultSection으로 통일했다. 두 진입점과 저장 후 닫기를 위해 생성 모달은 제어형을 유지한다.
+- 생성 연결과 상태 UI 정리는 필요 시 별도 후속 PR로 나누고 각 PR을 800줄 미만으로 유지한다.
 
 **중단점**: 단계 11 승인 대기.
 
@@ -215,5 +226,5 @@
 ## 빈 상태 CTA 정책 (8단계 리뷰 반영)
 
 - 전체 필터의 빈 목록은 중앙 패널에 제목·설명·`세션 만들기` CTA를 표시한다.
-- 생성 CTA는 8단계에서 비활성으로 표시하고 준비 중임을 안내한다. 9~11단계에서 생성 폼과 연결한다.
+- 생성 CTA는 개발 환경에서 활성화하며 상단 생성 버튼과 같은 폼을 연다. 8단계의 비활성·준비 중 안내는 11단계 연결로 대체한다.
 - 필터 선택 중 빈 목록은 전체 데이터 유무에 관계없이 `필터 초기화` CTA를 제공한다. 기존 URL 필터 변경 경로로 전체 목록을 표시하고 뒤로 가기 이력을 유지한다.

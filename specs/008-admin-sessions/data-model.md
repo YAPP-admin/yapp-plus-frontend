@@ -35,7 +35,7 @@
 - 수정은 기존 id·attendance를 보존하고 여섯 필드만 교체한 세션을 반환한다. 없는 id로 새 항목을 만들지 않는다.
 - 브라우저 전용 모듈은 저장소 하나를 유지하고 테스트는 생성 함수를 사용해 매번 독립 인스턴스를 만든다.
 - `sessionQueries`에서 공통 키 `['admin', 'sessions']`와 목록 조회 옵션·키 `['admin', 'sessions', 'list']`를 함께 관리한다. 기본 staleTime을 유지하고 오류 자동 재시도는 끈다.
-- 성공한 mutation 결과만 캐시에 반영한다. 진행 중 목록 조회가 옛 결과로 덮지 않게 취소 후 갱신한다.
+- 생성은 mutationOptions 팩토리로 정의하고 mutate로 실행한다. 성공 후 invalidateQueries로 목록을 다시 조회하며 수동 캐시 추가·별도 cancelQueries는 사용하지 않는다.
 - UI 상태는 목록의 loading/error/success, 생성·수정·삭제의 idle/pending/error/success로 제한한다.
 
 ## 유형 표시 이름
