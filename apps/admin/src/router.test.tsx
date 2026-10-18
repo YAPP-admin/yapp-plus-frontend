@@ -3,7 +3,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Providers } from './providers';
 import { getRouter } from './router';
 import type * as RootRouteModule from './routes/__root';
@@ -906,5 +906,43 @@ describe('알림 발송 내역 탐색', () => {
     await user.keyboard('{Enter}');
 
     expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
+  });
+});
+
+describe('세션 관리 목록', () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it('실제 모의 저장소의 세션을 최신순으로 표시하고 유형별 개수를 갱신한다', async () => {
+    vi.stubEnv('SSR', false);
+    const user = userEvent.setup();
+    await renderRoute('/sessions');
+
+    const list = await screen.findByRole('list', { name: '세션 목록' });
+    const cards = within(list).getAllByRole('heading');
+
+    expect(cards).toHaveLength(2);
+    expect(cards[0]).toHaveAccessibleName('개발용 팀 세션');
+    expect(cards[1]).toHaveAccessibleName('개발용 오프라인 세션');
+    expect(screen.getByRole('status')).toHaveTextContent('전체 2개');
+
+    await user.click(screen.getByRole('radio', { name: '오프라인' }));
+
+    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('오프라인 1개'));
+    expect(within(list).getByRole('heading', { name: '개발용 오프라인 세션' })).toBeVisible();
+    expect(within(list).queryByRole('heading', { name: '개발용 팀 세션' })).not.toBeInTheDocument();
+  });
+
+  it('카드 본문을 눌러도 세션 관리 화면과 필터를 유지한다', async () => {
+    vi.stubEnv('SSR', false);
+    const user = userEvent.setup();
+    const router = await renderRoute('/sessions?type=team');
+    const title = await screen.findByRole('heading', { name: '개발용 팀 세션' });
+
+    await user.click(title);
+
+    expect(router.state.location.href).toBe('/sessions?type=team');
+    expect(screen.getByRole('status')).toHaveTextContent('팀 세션 1개');
+    expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
+    expect(within(screen.getByRole('article')).queryByRole('link')).not.toBeInTheDocument();
   });
 });

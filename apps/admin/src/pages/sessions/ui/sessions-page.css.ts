@@ -33,3 +33,17 @@ export const placeholder = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t4,
 });
+
+export const list = style({
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  gap: vars.$dimension.x4,
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+});
+export const count = style({
+  margin: 0,
+  color: vars.$color.fg.neutralMuted,
+  fontSize: vars.$fontSize.t4,
+});
