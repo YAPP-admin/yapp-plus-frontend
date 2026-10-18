@@ -2,7 +2,7 @@
 import { ActionButton, Dialog, Field, Portal, TextField } from '@seed-design/react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { X } from 'lucide-react';
-import { useRef, useState, type ReactNode, type Ref } from 'react';
+import { useRef, type ComponentProps, type ReactNode, type Ref } from 'react';
 import { FilterSelect } from '~/shared/ui/filter-select';
 import {
   createSessionInputSchema,
@@ -11,6 +11,7 @@ import {
 } from '../model/session';
 import { sessionFilterLabels } from '../model/session-search';
 import * as styles from './session-create-dialog.css';
+import { SessionScheduleField } from './session-schedule-field';
 
 const INITIAL_SESSION_VALUES: CreateSessionInput = {
   name: '',
@@ -31,18 +32,21 @@ const SESSION_TEXT_FIELDS = [
 
 export function SessionCreateDialog({
   trigger,
+  open,
+  onOpenChange,
   onSubmit,
   pending = false,
   error,
 }: {
   trigger: ReactNode;
-  onSubmit: (input: CreateSessionInput) => void | Promise<void>;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  onSubmit: (input: CreateSessionInput, onSuccess: () => void) => void;
   pending?: boolean;
   error?: string;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const [open, setOpen] = useState(false);
   const form = useForm({
     defaultValues: INITIAL_SESSION_VALUES,
     validationLogic: revalidateLogic(),
@@ -52,13 +56,13 @@ export function SessionCreateDialog({
         ({ name }) => formApi.getFieldMeta(name)?.errors.length,
       );
       const input = first && formRef.current?.elements.namedItem(first.name);
-      if (input instanceof HTMLInputElement) {
+      if (input instanceof HTMLInputElement || input instanceof HTMLButtonElement) {
         input.focus();
       }
     },
-    onSubmit: async ({ value }) => {
+    onSubmit: ({ value }) => {
       if (!pending) {
-        await onSubmit(createSessionInputSchema.parse(value));
+        onSubmit(createSessionInputSchema.parse(value), () => form.reset());
       }
     },
   });
@@ -68,18 +72,15 @@ export function SessionCreateDialog({
       return;
     }
 
-    if (nextOpen) {
-      form.reset();
-    }
-    setOpen(nextOpen);
+    onOpenChange(nextOpen);
   };
 
   return (
     <Dialog.Root open={open} onOpenChange={changeOpen} closeOnInteractOutside={false}>
       <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
       <Portal>
-        <Dialog.Backdrop />
         <Dialog.Positioner>
+          <Dialog.Backdrop />
           <Dialog.Content
             className={styles.content}
             data-seed-color-mode="dark-only"
@@ -105,7 +106,7 @@ export function SessionCreateDialog({
                 {SESSION_TEXT_FIELDS.map(({ name, label, type, ...inputProps }) => (
                   <form.Field key={name} name={name}>
                     {(field) => (
-                      <SessionTextInput
+                      <SessionFormInput
                         className={type === 'time' ? undefined : styles.fullWidth}
                         name={name}
                         label={label}
@@ -179,6 +180,14 @@ function SessionDialogHeader({
       </Dialog.Action>
     </Dialog.Header>
   );
+}
+
+function SessionFormInput(props: ComponentProps<typeof SessionTextInput>) {
+  if (props.type === 'text') {
+    return <SessionTextInput {...props} />;
+  }
+
+  return <SessionScheduleField {...props} type={props.type} />;
 }
 
 function SessionTextInput({

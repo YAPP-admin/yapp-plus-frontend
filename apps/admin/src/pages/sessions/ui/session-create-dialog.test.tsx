@@ -1,13 +1,22 @@
 /** 생성 모달의 입력 전달과 취소·Esc·재진입 동작을 실제 SEED 컴포넌트로 검증합니다. */
+import { selectDate, selectTime } from './session-picker.test-utils';
 import { ActionButton } from '@seed-design/react';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { useState, type ComponentProps } from 'react';
 import { expect, it, vi } from 'vitest';
 import type { CreateSessionInput } from '../model/session';
-import { SessionCreateDialog } from './session-create-dialog';
+import { SessionCreateDialog as ControlledDialog } from './session-create-dialog';
+
+function SessionCreateDialog(
+  props: Omit<ComponentProps<typeof ControlledDialog>, 'open' | 'onOpenChange'>,
+) {
+  const [open, setOpen] = useState(false);
+  return <ControlledDialog {...props} open={open} onOpenChange={setOpen} />;
+}
 
 function renderDialog() {
-  const onSubmit = vi.fn<(input: CreateSessionInput) => void>();
+  const onSubmit = vi.fn<(input: CreateSessionInput, onSuccess: () => void) => void>();
   render(
     <SessionCreateDialog trigger={<ActionButton>새 세션</ActionButton>} onSubmit={onSubmit} />,
   );
@@ -22,26 +31,29 @@ it('입력한 여섯 항목을 저장 콜백에 전달한다', async () => {
 
   await user.type(screen.getByLabelText('세션명'), '팀 발표');
   await user.type(screen.getByLabelText('장소'), '교육장');
-  await user.type(screen.getByLabelText('날짜'), '2026-11-01');
-  await user.type(screen.getByLabelText('시작 시간'), '14:00');
-  await user.type(screen.getByLabelText('종료 시간'), '17:00');
+  await selectDate(user);
+  await selectTime(user, '시작 시간', 14, 0);
+  await selectTime(user, '종료 시간', 17, 0);
   screen.getByRole('combobox', { name: '유형' }).focus();
   await user.keyboard('{ArrowDown}{ArrowDown}{Enter}');
   await user.click(screen.getByRole('button', { name: '저장' }));
 
   await waitFor(() =>
-    expect(onSubmit).toHaveBeenCalledWith({
-      name: '팀 발표',
-      location: '교육장',
-      date: '2026-11-01',
-      startTime: '14:00',
-      endTime: '17:00',
-      type: 'team',
-    }),
+    expect(onSubmit).toHaveBeenCalledWith(
+      {
+        name: '팀 발표',
+        location: '교육장',
+        date: '2026-11-01',
+        startTime: '14:00',
+        endTime: '17:00',
+        type: 'team',
+      },
+      expect.any(Function),
+    ),
   );
 });
 
-it('취소하면 제출하지 않고 다음에 열 때 입력을 초기화한다', async () => {
+it('취소하면 제출하지 않고 다음에 열 때 입력을 유지한다', async () => {
   const { user, onSubmit } = renderDialog();
 
   await user.click(screen.getByRole('button', { name: '새 세션' }));
@@ -53,7 +65,7 @@ it('취소하면 제출하지 않고 다음에 열 때 입력을 초기화한다
 
   await user.click(screen.getByRole('button', { name: '새 세션' }));
 
-  expect(await screen.findByLabelText('세션명')).toHaveValue('');
+  expect(await screen.findByLabelText('세션명')).toHaveValue('작성 중');
   expect(screen.getByRole('combobox', { name: '유형' })).toHaveTextContent('정규 세션');
 });
 
@@ -95,17 +107,16 @@ it('종료 시간이 시작 시간보다 늦지 않으면 제출하지 않는다
   await user.click(screen.getByRole('button', { name: '새 세션' }));
   await user.type(screen.getByLabelText('세션명'), '발표');
   await user.type(screen.getByLabelText('장소'), '교육장');
-  await user.type(screen.getByLabelText('날짜'), '2026-11-01');
-  await user.type(screen.getByLabelText('시작 시간'), '14:00');
-  await user.type(screen.getByLabelText('종료 시간'), '13:00');
+  await selectDate(user);
+  await selectTime(user, '시작 시간', 14, 0);
+  await selectTime(user, '종료 시간', 13, 0);
   await user.click(screen.getByRole('button', { name: '저장' }));
 
   expect(await screen.findByText('종료 시간은 시작 시간보다 늦어야 합니다.')).toBeVisible();
-  expect(screen.getByLabelText('종료 시간')).toHaveFocus();
+  expect(screen.getByRole('button', { name: /^종료 시간 선택/ })).toHaveFocus();
   expect(onSubmit).not.toHaveBeenCalled();
 
-  await user.clear(screen.getByLabelText('시작 시간'));
-  await user.type(screen.getByLabelText('시작 시간'), '12:00');
+  await selectTime(user, '시작 시간', 12, 0);
 
   expect(screen.queryByText('종료 시간은 시작 시간보다 늦어야 합니다.')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: '저장' }));
@@ -113,7 +124,7 @@ it('종료 시간이 시작 시간보다 늦지 않으면 제출하지 않는다
 });
 
 it('저장 중에는 입력과 닫기를 잠그고 실패 후 입력을 보존하여 재시도한다', async () => {
-  const onSubmit = vi.fn<(input: CreateSessionInput) => void>();
+  const onSubmit = vi.fn<(input: CreateSessionInput, onSuccess: () => void) => void>();
   const user = userEvent.setup();
   const trigger = <ActionButton>새 세션</ActionButton>;
   const { rerender } = render(<SessionCreateDialog trigger={trigger} onSubmit={onSubmit} />);
@@ -121,9 +132,9 @@ it('저장 중에는 입력과 닫기를 잠그고 실패 후 입력을 보존�
   await user.click(screen.getByRole('button', { name: '새 세션' }));
   await user.type(screen.getByLabelText('세션명'), '발표');
   await user.type(screen.getByLabelText('장소'), '교육장');
-  await user.type(screen.getByLabelText('날짜'), '2026-11-01');
-  await user.type(screen.getByLabelText('시작 시간'), '14:00');
-  await user.type(screen.getByLabelText('종료 시간'), '17:00');
+  await selectDate(user);
+  await selectTime(user, '시작 시간', 14, 0);
+  await selectTime(user, '종료 시간', 17, 0);
   await user.click(screen.getByRole('button', { name: '저장' }));
   await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
 
@@ -149,12 +160,94 @@ it('저장 중에는 입력과 닫기를 잠그고 실패 후 입력을 보존�
 
   expect(screen.getByRole('alert')).toHaveTextContent('저장하지 못했어요.');
   expect(screen.getByLabelText('세션명')).toHaveValue('발표');
-  expect(screen.getByLabelText('종료 시간')).toHaveValue('17:00');
+  expect(screen.getByRole('button', { name: /^종료 시간 선택/ })).toHaveAccessibleName(
+    '종료 시간 선택, 오후 5:00',
+  );
 
   await user.clear(screen.getByLabelText('세션명'));
   await user.type(screen.getByLabelText('세션명'), '수정한 발표');
   await user.click(screen.getByRole('button', { name: '저장' }));
 
   await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(2));
-  expect(onSubmit).toHaveBeenLastCalledWith(expect.objectContaining({ name: '수정한 발표' }));
+  expect(onSubmit).toHaveBeenLastCalledWith(
+    expect.objectContaining({ name: '수정한 발표' }),
+    expect.any(Function),
+  );
+});
+
+it('달력에서 선택한 날짜를 입력에 반영한다', async () => {
+  const { user } = renderDialog();
+  await user.click(screen.getByRole('button', { name: '새 세션' }));
+  await selectDate(user);
+  await user.click(screen.getByRole('button', { name: /^날짜 선택/ }));
+  await user.click(screen.getByRole('button', { name: /2026년 11월 15일/ }));
+  await user.click(screen.getByRole('button', { name: '확인' }));
+
+  expect(screen.getByRole('button', { name: /^날짜 선택/ })).toHaveAccessibleName(
+    '날짜 선택, 2026-11-15',
+  );
+});
+
+it('시간 휠의 키보드 선택을 24시간 형식으로 반영한다', async () => {
+  const { user } = renderDialog();
+  await user.click(screen.getByRole('button', { name: '새 세션' }));
+  await selectTime(user, '시작 시간', 14, 13);
+  await user.click(screen.getByRole('button', { name: /^시작 시간 선택/ }));
+  screen.getByRole('spinbutton', { name: '분' }).focus();
+  await user.keyboard('{ArrowDown}');
+
+  await waitFor(() =>
+    expect(screen.getByRole('spinbutton', { name: '분', value: { text: '14' } })).toBeVisible(),
+  );
+});
+
+it('시간 선택을 Esc로 취소하면 기존 값을 유지하고 입력 버튼으로 돌아온다', async () => {
+  const { user } = renderDialog();
+  await user.click(screen.getByRole('button', { name: '새 세션' }));
+  await selectTime(user, '시작 시간', 14);
+  await user.click(screen.getByRole('button', { name: '시작 시간 선택, 오후 2:00' }));
+  await screen.findByRole('dialog', { name: '시작 시간 선택' });
+  screen.getByRole('spinbutton', { name: '분' }).focus();
+  await user.keyboard('{ArrowDown}');
+  await waitFor(() =>
+    expect(screen.getByRole('spinbutton', { name: '분', value: { text: '01' } })).toBeVisible(),
+  );
+  await user.keyboard('{Escape}');
+
+  const button = await screen.findByRole('button', { name: '시작 시간 선택, 오후 2:00' });
+  await waitFor(() => expect(button).toHaveFocus());
+  expect(screen.getByRole('dialog', { name: '세션 만들기' })).toBeVisible();
+});
+
+it('날짜 선택을 취소하면 이전 날짜를 유지한다', async () => {
+  const { user } = renderDialog();
+  await user.click(screen.getByRole('button', { name: '새 세션' }));
+  await selectDate(user);
+  await user.click(screen.getByRole('button', { name: /^날짜 선택/ }));
+  await screen.findByRole('dialog', { name: '날짜 선택' });
+  await user.click(screen.getByRole('button', { name: /2026년 11월 15일/ }));
+  await user.click(screen.getByRole('button', { name: '취소' }));
+
+  expect(await screen.findByRole('button', { name: '날짜 선택, 2026-11-01' })).toBeVisible();
+});
+
+it('연도 휠에서 변경한 연도의 날짜를 선택하여 반영한다', async () => {
+  const { user } = renderDialog();
+  await user.click(screen.getByRole('button', { name: '새 세션' }));
+  await selectDate(user);
+  await user.click(screen.getByRole('button', { name: /^날짜 선택/ }));
+  await screen.findByRole('dialog', { name: '날짜 선택' });
+  await user.click(screen.getByRole('button', { name: '2026년 11월' }));
+  screen.getByRole('spinbutton', { name: '연도' }).focus();
+  await user.keyboard('{ArrowDown}');
+  await waitFor(() =>
+    expect(
+      screen.getByRole('spinbutton', { name: '연도', value: { text: '2027년' } }),
+    ).toBeVisible(),
+  );
+  await user.click(screen.getByRole('button', { name: '2026년 11월' }));
+  await user.click(screen.getByRole('button', { name: /2027년 11월 15일/ }));
+  await user.click(screen.getByRole('button', { name: '확인' }));
+
+  expect(await screen.findByRole('button', { name: '날짜 선택, 2027-11-15' })).toBeVisible();
 });
