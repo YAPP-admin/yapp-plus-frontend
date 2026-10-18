@@ -1,6 +1,7 @@
 'use client';
 
 import { ActionButton, PrefixIcon, Text } from '@yapp-plus/ui';
+import { useRouter } from 'next/navigation';
 import {
   buttonGroup,
   container,
@@ -15,11 +16,13 @@ function handleGoogleLogin() {
   // 향후 Google OAuth SDK / API 연동
 }
 
-function handleAppleLogin() {
-  // 향후 Apple OAuth SDK / API 연동
-}
-
 export function LoginPage() {
+  const router = useRouter();
+
+  function handleAppleLogin() {
+    router.push('/signup');
+  }
+
   return (
     <main className={container}>
       <Text as="h1" textStyle="t10Bold" color="fg.neutral" whiteSpace="pre-line">
