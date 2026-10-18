@@ -1,4 +1,5 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+/** 로그인 입력 검증과 제출·실패·재시도 동작을 검증합니다. */
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
@@ -83,7 +84,9 @@ describe('로그인 폼', () => {
     expect(password).toHaveAttribute('readonly');
     expect(submit).toHaveAttribute('aria-busy', 'true');
 
-    fireEvent.submit(screen.getByRole('form', { name: '관리자 로그인' }));
+    await user.click(password);
+    await user.keyboard('{Enter}');
+    await user.click(submit);
 
     expect(login).toHaveBeenCalledOnce();
 
@@ -157,7 +160,7 @@ describe('로그인 폼', () => {
 
     await user.type(username, 'admin-demo');
     await user.type(password, 'demo-password{Enter}');
-    fireEvent.submit(screen.getByRole('form', { name: '관리자 로그인' }));
+    await user.click(submit);
 
     expect(login).not.toHaveBeenCalled();
   });
