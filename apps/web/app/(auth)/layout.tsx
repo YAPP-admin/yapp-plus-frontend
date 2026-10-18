@@ -1,1 +1,1 @@
-export { PageShell as default } from '@/app/layouts/page-shell';
+export { AuthLayout as default } from '@/app/layouts/auth-layout';
