@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 
 import { SignupPage } from './signup-page';
@@ -38,7 +38,7 @@ describe('SignupPage', () => {
     expect(next).toBeEnabled();
   });
 
-  it('이름 다음에 휴대폰 번호를 입력받고 하이픈을 넣어 표시한다', () => {
+  it('이름 다음에 휴대폰 번호 입력 단계를 표시한다', () => {
     render(<SignupPage />);
     const phone = goToPhoneStep();
 
@@ -46,22 +46,10 @@ describe('SignupPage', () => {
       screen.getByRole('heading', { level: 1, name: '휴대폰 번호를 입력해 주세요' }),
     ).toBeInTheDocument();
     expect(phone).toHaveFocus();
-    expect(phone).toHaveAttribute('inputmode', 'numeric');
+    expect(phone).toHaveAttribute('type', 'tel');
     expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
 
-    fireEvent.change(phone, { target: { value: '01012345678' } });
-    expect(phone).toHaveValue('010-1234-5678');
+    fireEvent.change(phone, { target: { value: '010-1234-5678' } });
     expect(screen.getByRole('button', { name: '다음' })).toBeEnabled();
-  });
-
-  it('휴대폰 번호 단계에서 뒤로가면 입력한 이름이 남은 이름 단계로 돌아온다', () => {
-    render(<SignupPage />);
-    goToPhoneStep();
-
-    act(() => {
-      window.dispatchEvent(new PopStateEvent('popstate'));
-    });
-
-    expect(screen.getByRole('textbox', { name: '이름을 입력해 주세요' })).toHaveValue('김야뿌');
   });
 });

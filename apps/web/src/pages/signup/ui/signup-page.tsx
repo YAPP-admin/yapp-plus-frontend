@@ -2,7 +2,6 @@
 
 import { ActionButton, Text, TextField, TextFieldInput } from '@yapp-plus/ui';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
-import { formatPhoneNumber, isMobilePhoneNumber } from '../lib/phone-number';
 import { bottom, contents, form, page, submitButton } from './signup-page.css';
 
 type Step = 'name' | 'phone';
@@ -13,16 +12,8 @@ export function SignupPage() {
   const [step, setStep] = useState<Step>('name');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
-  const canSubmit = step === 'name' ? name.trim().length > 0 : isMobilePhoneNumber(phone);
-
-  // 같은 URL에 이력을 하나 쌓아 휴대폰 번호 단계의 뒤로가기가 이름 단계로 돌아오게 합니다.
-  useEffect(() => {
-    function handlePopState() {
-      setStep('name');
-    }
-    window.addEventListener('popstate', handlePopState);
-    return () => window.removeEventListener('popstate', handlePopState);
-  }, []);
+  // 피그마 시안처럼 값이 비어 있으면 다음 버튼을 비활성화합니다. 형식 검증은 서버 계약에서 정합니다.
+  const canSubmit = (step === 'name' ? name : phone).trim().length > 0;
 
   useEffect(() => {
     if (step === 'phone') {
@@ -36,7 +27,6 @@ export function SignupPage() {
       return;
     }
     if (step === 'name') {
-      window.history.pushState(null, '', window.location.href);
       setStep('phone');
     }
     // 향후 이름·휴대폰 번호로 가입 요청
@@ -60,17 +50,12 @@ export function SignupPage() {
               />
             </TextField>
           ) : (
-            <TextField
-              key="phone"
-              value={phone}
-              onValueChange={({ value }) => setPhone(formatPhoneNumber(value))}
-            >
+            <TextField key="phone" value={phone} onValueChange={({ value }) => setPhone(value)}>
               <TextFieldInput
                 ref={inputRef}
                 aria-labelledby={titleId}
                 name="phone"
                 type="tel"
-                inputMode="numeric"
                 autoComplete="tel-national"
                 enterKeyHint="done"
                 placeholder="휴대폰 번호를 입력해 주세요"
