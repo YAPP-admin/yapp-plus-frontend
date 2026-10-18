@@ -48,14 +48,18 @@ export function SessionCard({
                   <Menu.Content data-seed-color-mode="dark-only">
                     <Menu.Group>
                       {onEdit && (
-                        <Menu.Item onClick={() => onEdit(session)}>
+                        <Menu.Item className={styles.menuItem} onClick={() => onEdit(session)}>
                           <Menu.ItemBody>
                             <Menu.ItemLabel>세션 정보</Menu.ItemLabel>
                           </Menu.ItemBody>
                         </Menu.Item>
                       )}
                       {onDelete && (
-                        <Menu.Item tone="critical" onClick={() => onDelete(session)}>
+                        <Menu.Item
+                          className={styles.menuItem}
+                          tone="critical"
+                          onClick={() => onDelete(session)}
+                        >
                           <Menu.ItemBody>
                             <Menu.ItemLabel>삭제</Menu.ItemLabel>
                           </Menu.ItemBody>
