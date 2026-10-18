@@ -48,3 +48,11 @@ export const count = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t4,
 });
+
+export const header = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  flexWrap: 'wrap',
+  gap: vars.$dimension.x4,
+});

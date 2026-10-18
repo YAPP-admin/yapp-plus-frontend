@@ -2,6 +2,7 @@
 import { useSessionsQuery } from '../model/session-queries';
 import { sortSessions } from '../model/session';
 import { type SessionFilter } from '../model/session-search';
+import { SessionLoadingState, SessionRefreshingState } from './session-loading-state';
 import { SessionList } from './session-list';
 import { SessionEmptyState } from './session-empty-state';
 import { SessionErrorState } from './session-error-state';
@@ -10,9 +11,11 @@ import { placeholder } from './sessions-page.css';
 export function SessionResults({
   type,
   onResetFilter,
+  onCreate,
 }: {
   type: SessionFilter;
   onResetFilter: () => void;
+  onCreate: () => void;
 }) {
   const query = useSessionsQuery();
 
@@ -21,7 +24,7 @@ export function SessionResults({
   }
 
   if (query.isPending) {
-    return <output className={placeholder}>세션 목록을 불러오는 중입니다.</output>;
+    return <SessionLoadingState />;
   }
 
   if (query.isError) {
@@ -33,8 +36,13 @@ export function SessionResults({
   );
 
   if (sessions.length === 0) {
-    return <SessionEmptyState type={type} onResetFilter={onResetFilter} />;
+    return <SessionEmptyState type={type} onResetFilter={onResetFilter} onCreate={onCreate} />;
   }
 
-  return <SessionList sessions={sessions} type={type} />;
+  return (
+    <>
+      {query.isFetching && <SessionRefreshingState />}
+      <SessionList sessions={sessions} type={type} />
+    </>
+  );
 }

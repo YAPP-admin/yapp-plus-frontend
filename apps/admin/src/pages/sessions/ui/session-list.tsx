@@ -7,7 +7,7 @@ import { list, count } from './sessions-page.css';
 export function SessionList({ sessions, type }: { sessions: Session[]; type: SessionFilter }) {
   return (
     <>
-      <output className={count}>
+      <output className={count} aria-label="세션 개수">
         {sessionFilterLabels[type]} {sessions.length}개
       </output>
       <ul className={list} aria-label="세션 목록">
