@@ -16,7 +16,7 @@ export function SessionCard({ session }: { session: Session }) {
   return (
     <article className={styles.card}>
       <div className={styles.heading}>
-        <Badge variant="weak" tone={session.type === 'offline' ? 'informative' : 'neutral'}>
+        <Badge variant="weak" tone={session.type === 'regular' ? 'informative' : 'neutral'}>
           {sessionFilterLabels[session.type]}
         </Badge>
       </div>

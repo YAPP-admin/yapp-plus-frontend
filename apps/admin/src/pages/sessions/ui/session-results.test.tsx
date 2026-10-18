@@ -17,10 +17,10 @@ afterEach(() => {
 });
 
 const session = sessionSchema.parse({
-  id: 'offline',
-  name: '오프라인 모임',
+  id: 'regular',
+  name: '정규 세션 모임',
   location: '교육장',
-  type: 'offline',
+  type: 'regular',
   date: '2026-10-18',
   startTime: '09:00',
   endTime: '10:00',
@@ -55,7 +55,7 @@ it('조회가 끝날 때까지 로딩을 안내하고 완료되면 목록을 표
 
   complete([session]);
 
-  expect(await screen.findByRole('heading', { name: '오프라인 모임' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: '정규 세션 모임' })).toBeVisible();
 });
 
 it('조회 실패 후 다시 시도하면 목록을 복구한다', async () => {
@@ -70,7 +70,7 @@ it('조회 실패 후 다시 시도하면 목록을 복구한다', async () => {
 
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
 
-  expect(await screen.findByRole('heading', { name: '오프라인 모임' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: '정규 세션 모임' })).toBeVisible();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
 
@@ -93,7 +93,7 @@ it('다른 유형의 데이터만 있으면 유형 변경을 안내한다', asyn
 
   await userEvent.setup().click(screen.getByRole('button', { name: '필터 초기화' }));
 
-  expect(await screen.findByRole('heading', { name: '오프라인 모임' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: '정규 세션 모임' })).toBeVisible();
   expect(screen.getByRole('status')).toHaveTextContent('전체 1개');
 });
 

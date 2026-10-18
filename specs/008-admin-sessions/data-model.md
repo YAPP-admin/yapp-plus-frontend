@@ -5,7 +5,7 @@
 
 | 타입                     | 필드 또는 값                                               | 검증·의미                                                    |
 | ------------------------ | ---------------------------------------------------------- | ------------------------------------------------------------ |
-| SessionType              | `offline`, `team`                                          | 전체는 저장값이 아니다.                                      |
+| SessionType              | `regular`, `team`                                          | 전체는 저장값이 아니다.                                      |
 | CreateSessionInput       | `name`, `location`, `date`, `startTime`, `endTime`, `type` | 여섯 항목 필수.                                              |
 | UpdateSessionInput       | CreateSessionInput과 같은 여섯 항목                        | 생성 스키마를 재사용하며 수정 대상 id는 별도 인자다.         |
 | SessionAttendanceSummary | `present`, `late`, `absent`, `pending`, `reported`         | 각각 0 이상의 정수. 화면 집계만 표현한다.                    |
@@ -37,3 +37,7 @@
 - Query key는 `['admin', 'sessions']` 하나다. 기본 staleTime을 유지하고 오류 자동 재시도는 끈다.
 - 성공한 mutation 결과만 캐시에 반영한다. 진행 중 목록 조회가 옛 결과로 덮지 않게 취소 후 갱신한다.
 - UI 상태는 목록의 loading/error/success, 생성·수정·삭제의 idle/pending/error/success로 제한한다.
+
+## 유형 표시 이름
+
+- 화면의 유형은 `정규 세션 / 팀 세션`이다. 내부 값과 URL은 `regular / team`으로 통일한다. 실제 API 계약 확정 시 내부 값을 조정한다.

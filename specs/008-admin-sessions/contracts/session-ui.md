@@ -2,7 +2,7 @@
 
 ## 라우트와 공개 진입점
 
-- 기존 `/sessions`를 유지한다. 검색값은 `type=offline|team`이며 전체는 생략한다.
+- 기존 `/sessions`를 유지한다. 검색값은 `type=regular|team`이며 전체는 생략한다.
 - `type` 누락·잘못된 값과 예전 `part`만 있는 URL은 전체로 해석한다.
 - `type`과 `part`가 함께 있으면 유효한 type만 사용한다. 필터 탐색 시 type만 기록한다.
 - 초기 방문 시 강제 redirect를 추가하지 않는다. 필터 변경은 history에 기록하고 스크롤을 리셋하지 않는다.

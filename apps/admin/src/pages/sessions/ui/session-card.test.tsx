@@ -7,9 +7,9 @@ import { SessionCard } from './session-card';
 it('세션 정보와 서로 다른 다섯 출석 집계를 생략 없이 표시한다', () => {
   const session = sessionSchema.parse({
     id: 'sample-session',
-    name: '긴 세션명도 전체 내용으로 제공하는 오프라인 세션',
+    name: '긴 세션명도 전체 내용으로 제공하는 정규 세션',
     location: '서울 예시 교육장 3층 다목적 강의실',
-    type: 'offline',
+    type: 'regular',
     date: '2026-12-31',
     startTime: '09:05',
     endTime: '18:30',
@@ -21,7 +21,7 @@ it('세션 정보와 서로 다른 다섯 출석 집계를 생략 없이 표시�
   const card = screen.getByRole('article');
   expect(within(card).getByRole('heading', { name: session.name })).toBeVisible();
   expect(within(card).getByText(session.location)).toBeVisible();
-  expect(within(card).getByText('오프라인')).toBeVisible();
+  expect(within(card).getByText('정규 세션')).toBeVisible();
   expect(within(card).getByText('2026.12.31 · 09:05')).toBeVisible();
   expect(within(card).getByText('18:30')).toBeVisible();
 

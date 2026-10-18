@@ -32,7 +32,7 @@ describe('개발용 세션 서비스 경계', () => {
         date: '2026-11-01',
         startTime: '14:00',
         endTime: '17:00',
-        type: 'offline',
+        type: 'regular',
       });
 
       await expect(service.listSessions()).rejects.toThrow('세션 관리 기능을 준비 중입니다.');
@@ -52,7 +52,7 @@ describe('개발용 세션 서비스 경계', () => {
       date: '2026-11-01',
       startTime: '14:00',
       endTime: '17:00',
-      type: 'offline',
+      type: 'regular',
     });
 
     const created = await service.createSession(input);

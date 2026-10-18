@@ -11,6 +11,6 @@ export const sessionSearchSchema = z.object({
 
 export const sessionFilterLabels = {
   all: '전체',
-  offline: '오프라인',
+  regular: '정규 세션',
   team: '팀 세션',
 } satisfies Record<SessionFilter, string>;
