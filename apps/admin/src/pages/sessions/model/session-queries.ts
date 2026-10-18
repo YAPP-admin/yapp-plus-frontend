@@ -8,7 +8,7 @@ import {
   type QueryClient,
 } from '@tanstack/react-query';
 import { useHydrated } from '@tanstack/react-router';
-import { createSession, listSessions } from './sessions';
+import { createSession, deleteSession, listSessions, updateSession } from './sessions';
 
 export const sessionQueries = {
   all: () => ['admin', 'sessions'] as const,
@@ -29,8 +29,20 @@ export function useSessionsQuery() {
   });
 }
 
-/** 생성 옵션과 성공 후 목록 무효화를 같은 팩토리에서 관리합니다. */
+/** 생성·수정·삭제 옵션과 성공 후 목록 무효화를 같은 팩토리에서 관리합니다. */
 export const sessionMutations = {
+  delete: (client: QueryClient) =>
+    mutationOptions({
+      mutationKey: [...sessionQueries.all(), 'delete'],
+      mutationFn: deleteSession,
+      onSuccess: () => client.invalidateQueries({ queryKey: sessionQueries.list().queryKey }),
+    }),
+  update: (client: QueryClient) =>
+    mutationOptions({
+      mutationKey: [...sessionQueries.all(), 'update'],
+      mutationFn: updateSession,
+      onSuccess: () => client.invalidateQueries({ queryKey: sessionQueries.list().queryKey }),
+    }),
   create: (client: QueryClient) =>
     mutationOptions({
       mutationKey: [...sessionQueries.all(), 'create'],
@@ -42,4 +54,14 @@ export const sessionMutations = {
 export function useCreateSessionMutation() {
   const client = useQueryClient();
   return useMutation(sessionMutations.create(client));
+}
+
+export function useUpdateSessionMutation() {
+  const client = useQueryClient();
+  return useMutation(sessionMutations.update(client));
+}
+
+export function useDeleteSessionMutation() {
+  const client = useQueryClient();
+  return useMutation(sessionMutations.delete(client));
 }

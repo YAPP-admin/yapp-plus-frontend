@@ -1,4 +1,4 @@
-/** 정보 표시용 세션 카드의 상세 정보와 출석 집계 배치를 정의합니다. */
+/** 세션 카드의 상세 정보·출석 집계 배치와 메뉴 버튼의 클릭 영역을 정의합니다. */
 import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 
@@ -25,6 +25,11 @@ export const heading = style({
   justifyContent: 'space-between',
   gap: vars.$dimension.x3,
 });
+export const menuButton = style({
+  minWidth: 44,
+  minHeight: 44,
+});
+
 export const name = style({
   margin: `${vars.$dimension.x4} 0`,
   fontSize: vars.$fontSize.t6,

@@ -1,5 +1,7 @@
-/** 세션의 유형·일정·장소와 출석 집계를 이동 동작 없는 카드로 표시합니다. */
-import { Badge } from '@seed-design/react';
+/** 세션의 유형·일정·장소와 출석 집계를 표시하고 세션 정보·삭제 메뉴를 제공합니다. */
+import { ActionButton, Badge, Menu, Portal } from '@seed-design/react';
+import { EllipsisVertical } from 'lucide-react';
+import { useState } from 'react';
 import type { Session, SessionAttendanceSummary } from '../model/session';
 import { sessionFilterLabels } from '../model/session-search';
 import * as styles from './session-card.css';
@@ -12,13 +14,60 @@ const attendanceFields = [
   { key: 'reported', label: '출결 보고' },
 ] satisfies { key: keyof SessionAttendanceSummary; label: string }[];
 
-export function SessionCard({ session }: { session: Session }) {
+export function SessionCard({
+  session,
+  onEdit,
+  onDelete,
+}: {
+  session: Session;
+  onEdit?: (session: Session) => void;
+  onDelete?: (session: Session) => void;
+}) {
+  const [menuOpen, setMenuOpen] = useState(false);
   return (
     <article className={styles.card}>
       <div className={styles.heading}>
         <Badge variant="weak" tone={session.type === 'regular' ? 'informative' : 'neutral'}>
           {sessionFilterLabels[session.type]}
         </Badge>
+        {(onEdit ?? onDelete) && (
+          <Menu.Root placement="bottom-end" open={menuOpen} onOpenChange={setMenuOpen}>
+            <Menu.Trigger asChild>
+              <ActionButton
+                variant="ghost"
+                size="small"
+                aria-label={`${session.name} 메뉴`}
+                className={styles.menuButton}
+              >
+                <EllipsisVertical size={24} aria-hidden="true" />
+              </ActionButton>
+            </Menu.Trigger>
+            {menuOpen && (
+              <Portal>
+                <Menu.Positioner>
+                  <Menu.Content data-seed-color-mode="dark-only">
+                    <Menu.Group>
+                      {onEdit && (
+                        <Menu.Item onClick={() => onEdit(session)}>
+                          <Menu.ItemBody>
+                            <Menu.ItemLabel>세션 정보</Menu.ItemLabel>
+                          </Menu.ItemBody>
+                        </Menu.Item>
+                      )}
+                      {onDelete && (
+                        <Menu.Item tone="critical" onClick={() => onDelete(session)}>
+                          <Menu.ItemBody>
+                            <Menu.ItemLabel>삭제</Menu.ItemLabel>
+                          </Menu.ItemBody>
+                        </Menu.Item>
+                      )}
+                    </Menu.Group>
+                  </Menu.Content>
+                </Menu.Positioner>
+              </Portal>
+            )}
+          </Menu.Root>
+        )}
       </div>
       <h2 className={styles.name}>{session.name}</h2>
       <SessionDetails session={session} />

@@ -1,6 +1,6 @@
 /** 세션 조회 상태에 따라 로딩·오류·빈 상태 또는 정렬된 목록을 표시합니다. */
 import { useSessionsQuery } from '../model/session-queries';
-import { sortSessions } from '../model/session';
+import { sortSessions, type Session } from '../model/session';
 import { type SessionFilter } from '../model/session-search';
 import { SessionLoadingState, SessionRefreshingState } from './session-loading-state';
 import { SessionList } from './session-list';
@@ -12,10 +12,14 @@ export function SessionResults({
   type,
   onResetFilter,
   onCreate,
+  onEdit,
+  onDelete,
 }: {
   type: SessionFilter;
   onResetFilter: () => void;
   onCreate: () => void;
+  onEdit?: (session: Session) => void;
+  onDelete?: (session: Session) => void;
 }) {
   const query = useSessionsQuery();
 
@@ -42,7 +46,7 @@ export function SessionResults({
   return (
     <>
       {query.isFetching && <SessionRefreshingState />}
-      <SessionList sessions={sessions} type={type} />
+      <SessionList sessions={sessions} type={type} onEdit={onEdit} onDelete={onDelete} />
     </>
   );
 }
