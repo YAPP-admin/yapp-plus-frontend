@@ -30,15 +30,17 @@ export function SessionFormDialog({
   onSubmit,
   pending = false,
   error,
+  errorAction,
 }: {
   initialValues: CreateSessionInput;
   mode: 'create' | 'edit';
-  trigger: ReactNode;
+  trigger?: ReactNode;
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSubmit: (input: CreateSessionInput, onSuccess: () => void) => void;
   pending?: boolean;
   error?: string;
+  errorAction?: ReactNode;
 }) {
   const formRef = useRef<HTMLFormElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -75,7 +77,7 @@ export function SessionFormDialog({
 
   return (
     <Dialog.Root open={open} onOpenChange={changeOpen} closeOnInteractOutside={false}>
-      <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>
+      {trigger && <Dialog.Trigger asChild>{trigger}</Dialog.Trigger>}
       <Portal>
         <Dialog.Positioner>
           <Dialog.Backdrop />
@@ -145,6 +147,7 @@ export function SessionFormDialog({
                   {error}
                 </p>
               )}
+              {error && errorAction}
               <SessionFormActions pending={pending} />
             </form>
           </Dialog.Content>
