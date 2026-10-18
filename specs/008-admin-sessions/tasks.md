@@ -1,6 +1,6 @@
 # 작업 목록: 관리자 세션 관리
 
-**상태**: 9단계 구현 완료 — 사용자 리뷰 대기
+**상태**: 10단계 구현 완료 — 사용자 리뷰 대기
 **기준**: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [UI 계약](contracts/session-ui.md)
 
 ## 실행 규칙과 현재 상태
@@ -124,7 +124,7 @@
 - [x] T025 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.tsx`와 스타일에 SEED 기반 여섯 입력·모달·저장·취소 및 submit 콜백을 구현한다.
 - [x] T026 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.test.tsx`에서 레이블·입력·취소 초기화·Esc와 배경 클릭 정책을 검증한다.
 
-**중단점**: 단계 9 승인 대기.
+**중단점**: 사용자 “나눠서 커밋 진행하고 다음 작업 진행해” 지시로 단계 9 승인 완료.
 
 - SEED Dialog·TextField·Select와 TanStack Form으로 여섯 입력과 제출 콜백을 구현했다. 유형 기본값은 정규 세션이며 나머지 입력은 빈 값이다.
 - 입력 전달·취소 후 초기화·Esc 및 트리거 포커스 복귀를 자동 검증한다. 브라우저에서 제목 포커스·유형 선택·배경 클릭 유지·Esc 복귀를 확인했다.
@@ -138,9 +138,16 @@
 
 독립 검증: 제출 콜백을 제어하여 필드 오류·pending·서버 오류 표시를 검증한다.
 
-- [ ] T027 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.tsx`에 Form 검증·첫 오류 포커스·오류 연결을 구현한다.
-- [ ] T028 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.tsx`에서 pending/error 입력을 받아 중복 제출·닫기를 차단하고 실패 시 입력을 보존한다.
-- [ ] T029 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.test.tsx`에서 검증 시점·시간 비교·실패 후 수정·재시도를 검증한다.
+- [x] T027 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.tsx`에 Form 검증·첫 오류 포커스·오류 연결을 구현한다.
+- [x] T028 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.tsx`에서 pending/error 입력을 받아 중복 제출·닫기를 차단하고 실패 시 입력을 보존한다.
+- [x] T029 [US2] `apps/admin/src/pages/sessions/ui/session-create-dialog.test.tsx`에서 검증 시점·시간 비교·실패 후 수정·재시도를 검증한다.
+
+- `SessionTextInput`은 입력·레이블·오류 표시를 담당하고, 배치는 부모가 className으로 전달한다.
+- `node --run check`, `node --run build`가 통과했다.
+- 기존 생성 스키마를 Form 검증에 재사용한다. 첫 제출 후 변경 시 재검증하고 첫 오류 입력으로 포커스를 이동한다.
+- 부모의 pending/error를 받아 입력·유형·저장·취소·닫기·Esc를 잠그고 실패 시 입력을 보존한다. 저장소 호출과 오류 상태 관리는 11단계에서 연결한다.
+- 실제 SEED 컴포넌트로 여섯 테스트를 실행했다. 첫 제출 시점·오류 설명 연결·시간 비교 재검증·잠금·실패 후 수정과 재시도를 포함한다.
+- 브라우저에서 빈 제출 오류와 첫 입력 포커스를 확인하고 `.context/sessions-step-10.png`를 저장했다. 임시 페이지 연결은 원복했다. 실제 스크린 리더·터치 검증은 남아 있다.
 
 **중단점**: 단계 10 승인 대기. 임시 개발용 렌더링의 오류 상태를 `.context/sessions-step-10.png`에 기록한다.
 실제 페이지 연결 후 접근성 최종 확인은 단계 11에서 수행한다.
