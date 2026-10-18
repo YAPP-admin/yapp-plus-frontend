@@ -1,7 +1,11 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SignupPage } from './signup-page';
+
+const router = vi.hoisted(() => ({ push: vi.fn<(url: string) => void>() }));
+vi.mock('next/navigation', () => ({ useRouter: () => router }));
+beforeEach(() => vi.clearAllMocks());
 
 function goToPhoneStep() {
   fireEvent.change(screen.getByRole('textbox', { name: '이름을 입력해 주세요' }), {
@@ -51,5 +55,15 @@ describe('SignupPage', () => {
 
     fireEvent.change(phone, { target: { value: '010-1234-5678' } });
     expect(screen.getByRole('button', { name: '다음' })).toBeEnabled();
+  });
+
+  it('휴대폰 번호를 입력하고 다음을 누르면 승인 대기 화면으로 이동한다', () => {
+    render(<SignupPage />);
+    const phone = goToPhoneStep();
+    expect(router.push).not.toHaveBeenCalled();
+
+    fireEvent.change(phone, { target: { value: '010-1234-5678' } });
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    expect(router.push).toHaveBeenCalledWith('/signup/status');
   });
 });
