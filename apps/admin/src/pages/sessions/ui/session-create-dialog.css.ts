@@ -35,3 +35,9 @@ export const actions = style({
 export const header = style({
   selectors: { '&&': { paddingRight: vars.$dimension.x16, paddingBottom: vars.$dimension.x6 } },
 });
+
+export const error = style({
+  margin: 0,
+  paddingInline: vars.$dimension.x6,
+  color: vars.$color.fg.critical,
+});
