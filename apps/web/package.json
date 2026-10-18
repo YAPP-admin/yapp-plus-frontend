@@ -13,6 +13,7 @@
     "test:watch": "vitest"
   },
   "dependencies": {
+    "@karrotmarket/react-monochrome-icon": "catalog:",
     "@seed-design/css": "catalog:",
     "@seed-design/react": "catalog:",
     "@tanstack/react-query": "catalog:",
