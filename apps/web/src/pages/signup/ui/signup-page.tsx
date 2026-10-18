@@ -1,6 +1,7 @@
 'use client';
 
 import { ActionButton, Text, TextField, TextFieldInput } from '@yapp-plus/ui';
+import { useRouter } from 'next/navigation';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { body, footer, screen } from '@/shared/ui/step-screen.css';
 import { fields, form } from './signup-page.css';
@@ -8,6 +9,7 @@ import { fields, form } from './signup-page.css';
 type Step = 'name' | 'phone';
 
 export function SignupPage() {
+  const router = useRouter();
   const titleId = useId();
   const inputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>('name');
@@ -29,8 +31,10 @@ export function SignupPage() {
     }
     if (step === 'name') {
       setStep('phone');
+      return;
     }
-    // 향후 이름·휴대폰 번호로 가입 요청
+    // 향후 이름·휴대폰 번호로 가입 요청 후 결과에 따라 이동
+    router.push('/signup/status');
   }
 
   return (
