@@ -1,4 +1,6 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+/** 내부 방문 이력에 따라 뒤로가기 또는 대체 경로 이동을 검증합니다. */
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { BackButton } from './back-button';
 
@@ -14,20 +16,24 @@ vi.mock('./navigation-history', () => ({
 beforeEach(() => vi.clearAllMocks());
 
 describe('BackButton', () => {
-  it('확인된 내부 이력이 있으면 실제 브라우저 뒤로가기를 사용한다', () => {
+  it('확인된 내부 이력이 있으면 실제 브라우저 뒤로가기를 사용한다', async () => {
+    const user = userEvent.setup();
     navigation.canGoBack.mockReturnValue(true);
     render(<BackButton fallback="/my" />);
-    fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }));
     expect(navigation.back).toHaveBeenCalledOnce();
     expect(navigation.replace).not.toHaveBeenCalled();
   });
 
   it.each(['/my', '/my/attendance', '/notices'])(
     '내부 이력이 없으면 %s로 replace한다',
-    (fallback) => {
+    async (fallback) => {
+      const user = userEvent.setup();
       navigation.canGoBack.mockReturnValue(false);
       render(<BackButton fallback={fallback} />);
-      fireEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+
+      await user.click(screen.getByRole('button', { name: '뒤로가기' }));
       expect(navigation.replace).toHaveBeenCalledWith(fallback);
       expect(navigation.back).not.toHaveBeenCalled();
     },
