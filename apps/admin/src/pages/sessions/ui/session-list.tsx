@@ -4,7 +4,17 @@ import { sessionFilterLabels, type SessionFilter } from '../model/session-search
 import { SessionCard } from './session-card';
 import { list, count } from './sessions-page.css';
 
-export function SessionList({ sessions, type }: { sessions: Session[]; type: SessionFilter }) {
+export function SessionList({
+  sessions,
+  type,
+  onEdit,
+  onDelete,
+}: {
+  sessions: Session[];
+  type: SessionFilter;
+  onEdit?: (session: Session) => void;
+  onDelete?: (session: Session) => void;
+}) {
   return (
     <>
       <output className={count} aria-label="세션 개수">
@@ -13,7 +23,7 @@ export function SessionList({ sessions, type }: { sessions: Session[]; type: Ses
       <ul className={list} aria-label="세션 목록">
         {sessions.map((session) => (
           <li key={session.id}>
-            <SessionCard session={session} />
+            <SessionCard session={session} onEdit={onEdit} onDelete={onDelete} />
           </li>
         ))}
       </ul>
