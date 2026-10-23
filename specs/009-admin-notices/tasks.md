@@ -29,10 +29,12 @@
 
 ## 5a — 공통 데이터 기반
 
+연결 이슈: [#87](https://github.com/YAPP-admin/yapp-plus-frontend/issues/87). 구현 완료, 사용자 리뷰 대기.
+
 검증: 네 대상·제출 직군·시간 경계·읽음 교집합 보존을 UI 없이 검증한다.
 
-- [ ] T007 `feature/model/notice.test.ts`에 제목·본문·제출 입력과 대상·마감·읽음 경계 테스트를 작성한다.
-- [ ] T008 `feature/model/notice.ts`에 Zod 저장/입력 스키마와 `notice-audience.ts`, `notice-summary.ts`에 대상·집계·마감 계산을 구현한다.
+- [x] T007 `feature/model/notice.test.ts`에 제목·본문·제출 입력과 대상·마감·읽음 경계 테스트를 작성한다.
+- [x] T008 `feature/model/notice.ts`에 Zod 저장/입력 스키마와 `notice-audience.ts`, `notice-summary.ts`에 대상·집계·마감 계산을 구현한다.
 
 ## 5b — 공통 모의 CRUD·Query
 
@@ -52,11 +54,11 @@
 
 ## 7 — US4 상세·읽음
 
-독립 검증: 목록과 같은 집계·전체 회원 정렬·없는 공지·질문 준비 중 안내를 확인한다.
+독립 검증: 목록과 같은 집계·전체 회원 기본/컬럼 정렬·없는 공지·질문 준비 중 안내를 확인한다.
 
 - [ ] T015 [US4] `apps/admin/src/pages/notice-detail/ui/notice-detail-page.tsx`에 메타·본문·읽음 집계·오류/없는 공지·질문 탭을 연결한다.
-- [ ] T016 [US4] `apps/admin/src/pages/notice-detail/ui/notice-readers.tsx`와 `.css.ts`에 전체 대상 표·미열람 표시·좁은 화면 스크롤을 구현한다.
-- [ ] T017 [US4] `apps/admin/src/pages/notice-detail/ui/notice-detail-page.test.tsx`에 집계 일치·정렬·0명·조회 실패와 없는 공지 구분을 검증한다.
+- [ ] T016 [US4] `apps/admin/src/pages/notice-detail/ui/notice-readers.tsx`와 `.css.ts`에 TanStack Table 기반 전체 대상 표·미열람 표시·좁은 화면 스크롤을 구현한다. 해당 단계에서 의존성을 catalog에 추가하고, 헤더 클릭/키보드 조작으로 컬럼 정렬·방향 표시·정렬 해제 시 기본 순서 복원을 연결한다.
+- [ ] T017 [US4] `apps/admin/src/pages/notice-detail/ui/notice-detail-page.test.tsx`에 집계 일치·기본 정렬·컬럼별 오름차순/내림차순·정렬 해제·동률/미열람 시각·키보드 및 aria-sort·0명·조회 실패와 없는 공지 구분을 검증한다.
 
 ## 8a — US2 공통 폼
 
