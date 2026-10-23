@@ -4,7 +4,7 @@
 
 | 개념          | 필드·관계                                                                                                          | 불변 조건                                                      |
 | ------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------- |
-| Notice        | id, category, title, bodyMarkdown, createdAt, audience, submission, attachments, readAtByMemberId, unansweredCount | id 고유, 작성일 수정 금지, 질문 수 0 이상                      |
+| Notice        | id, category, title, bodyDocument, createdAt, audience, submission, attachments, readAtByMemberId, unansweredCount | id 고유, 작성일 수정 금지, 질문 수 0 이상                      |
 | Member        | id, name, cohort, job, membership                                                                                  | 합성 명단만 사용; 직군은 PM/Design/Mobile/Web/Server/AI Native |
 | Audience      | 일반: all/active/regular/completed, 제출: all 또는 jobs 배열                                                       | 제출은 활동회원만, all과 개별 직군 배타, 중복 제거·1개 이상    |
 | Submission    | deadlineAt, method 또는 null                                                                                       | 제출 종류에서만 존재; method는 name과 HTTP(S) url 모두 필요    |
@@ -34,3 +34,5 @@
 
 읽은 회원은 최초 확인 시각 내림차순, 미열람은 한국어 이름순이다. 동률은 id로 안정 정렬한다.
 읽음 비율은 반올림한 정수다. 목록은 createdAt 내림차순, 동률은 id로 안정 정렬한다.
+
+본문은 Tiptap `JSONContent`를 그대로 저장한다. Document·Paragraph·Text·H1~H6·HardBreak·BulletList·OrderedList·ListItem·CodeBlock·Blockquote·HorizontalRule과 Bold·Link·Code·Italic·Strike·Underline 마크만 허용한다. 외부 데이터 검증과 빈 본문 저장 방지는 모의 저장소·폼 구현 단계에서 처리한다.

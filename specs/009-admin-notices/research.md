@@ -1,14 +1,15 @@
 # 설계 결정과 확인 근거
 
-## 서식 편집과 Markdown
+## 서식 편집과 JSON
 
-- 결정: Tiptap의 React·StarterKit·Markdown 확장을 사용하고 지원 서식만 활성화한다.
-- 이유: 사용자가 선택한 시각적 편집과 Markdown 저장을 함께 제공한다. Monaco는 코드 편집 중심이라 같은 작성 경험을 위해 별도 구현이 필요하다.
-- 대안: 원문 textarea·미리보기는 확정 범위와 다르다. 별도 HTML 변환기를 병용하면 왕복 변환 경계가 늘어난다.
-- 근거: [Markdown 설치](https://tiptap.dev/docs/editor/markdown/getting-started/installation), [React 설치](https://tiptap.dev/docs/editor/getting-started/install/react), [StarterKit](https://tiptap.dev/docs/editor/extensions/functionality/starterkit).
-- Markdown 확장은 Beta이므로 지원 서식의 의미 보존을 4a에서 검증한다. 문자열 완전 일치 대신 문서 구조·텍스트·링크 의미를 비교한다.
-- SSR 초기 렌더에서는 편집기를 생성하지 않는다. 외부 값 복원은 변경 콜백 재발생과 커서 초기화가 없도록 구분한다.
-- 패키지 후보 3.32.0은 앞선 조사 기준이다. 3단계에서 registry·peerDependencies·보안 정책을 재확인하며 임의 업그레이드하지 않는다.
+- 결정: 사용자 변경 요청에 따라 Tiptap JSON을 별도 래퍼 없이 저장한다. Markdown 의존성과 변환은 제거한다.
+- 이유: 편집 문서 구조를 그대로 보존하며 지원 노드·마크를 스키마로 검증한다. 버전 변경 시 별도 마이그레이션을 검토한다.
+- 확장: StarterKit 기본 기능을 사용하되 제목은 H1~H6을 사용하고 본문 링크 검증은 Tiptap 기본 정책에 맡긴다. 인용문·구분선·기울임·취소선·밑줄·끝 문단 자동 추가와 자동 링크 변환을 활성화한다. 툴바 구성은 유지한다.
+- Placeholder 3.32.0을 추가한다. 빈 편집기에 안내를 표시하고 예시 본문은 넣지 않는다. CSS 가상 요소이므로 저장 문서에는 포함되지 않는다.
+- 근거: [React 설치](https://tiptap.dev/docs/editor/getting-started/install/react), [StarterKit](https://tiptap.dev/docs/editor/extensions/functionality/starterkit), [Placeholder](https://tiptap.dev/docs/editor/extensions/functionality/placeholder).
+- 초기 데이터 로딩 후 initialValue로 생성하며 편집 상태는 Tiptap이 관리한다. 부모 재렌더·재조회로 본문을 덮어쓰지 않는다.
+- 다른 공지나 명시적 초기화는 key 변경으로 처리한다. 컴포넌트의 직접 effect 없이 접근성 속성은 useEditor 옵션에 선언한다.
+- 읽기 전용 상세 표시는 상세 단계에서 별도로 구현한다. 실제 편집기는 빈 상태부터 직접 작성해 검증한다.
 
 ## 모의 데이터와 조회
 
