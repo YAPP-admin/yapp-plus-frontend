@@ -38,11 +38,13 @@
 
 ## 5b — 공통 모의 CRUD·Query
 
+사용자 승인으로 이슈 없이 로컬 구현했다. 5a와 분리된 `DongjaJ/notice-mock-query`에서 사용자 리뷰를 기다린다.
+
 검증: 성공·실패·없는 id·대상 변경·환경 차단·모듈 초기화를 검증한다.
 
-- [ ] T009 `feature/model/notices.mock.ts`에 합성 명단·예시 공지·원자적 CRUD와 읽음 보존을 구현하고 `notices.mock.test.ts`로 검증한다.
-- [ ] T010 `feature/model/notices.ts`에 개발 브라우저 가드·동적 import·입출력 검증을 구현하고 `notices.test.ts`로 DEV/SSR/window 차단을 검증한다.
-- [ ] T011 `feature/model/notice-queries.ts`에 hydration 조회·변경 훅·캐시 갱신을 구현하고 인접 테스트 및 `feature/index.ts` 공개 진입점을 추가한다.
+- [x] T009 `feature/model/notices.mock.ts`에 합성 명단·예시 공지·원자적 CRUD와 읽음 보존을 구현하고 `notices.mock.test.ts`로 검증한다.
+- [x] T010 `feature/model/notices.ts`에 개발 브라우저 가드·동적 import·입출력 검증을 구현하고 `notices.test.ts`로 DEV/SSR/window 차단을 검증한다.
+- [x] T011 `feature/model/notice-queries.ts`에 hydration 조회·변경 훅·캐시 갱신을 구현하고 인접 테스트 및 `feature/index.ts` 공개 진입점을 추가한다.
 
 ## 6 — US1 목록
 

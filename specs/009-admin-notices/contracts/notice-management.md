@@ -5,9 +5,10 @@
 `apps/admin/src/features/notice-management/index.ts`는 필요한 타입·Query 훅·UI만 노출한다.
 모의 저장소는 공개하지 않는다. 본문은 Tiptap JSONContent 계약을 사용한다. 네트워크 API 계약을 새로 만들지 않는다.
 
+- listNoticeMembers(): 읽음 대상 계산에 사용할 합성 회원 전체 명단을 반환한다. 명단 Query 키는 ['admin', 'notice-members']다.
 - listNotices(): 전체 공지 반환. 종류 필터와 전체/필터 개수는 같은 조회 결과에서 계산한다.
 - getNotice(id): 공지 또는 null 반환. null은 찾을 수 없음, 예외는 조회 오류다.
-- createNotice(input), updateNotice(id, input): 검증된 저장 결과 반환. deleteNotice(id): 삭제 성공 반환.
+- createNotice(input), updateNotice(id, input): noticeInputSchema로 정규화한 NoticeContent를 받고 검증된 저장 결과 반환. deleteNotice(id): 삭제 성공 반환.
 - 모든 호출은 비동기이며 개발 브라우저 외에는 실행을 차단한다. Query enabled도 DEV와 hydration을 함께 검사한다.
 - 키는 ['admin', 'notices'], 상세는 그 뒤 id로 구분한다. 읽음은 상세에서 파생한다.
 - 변경 성공 후 목록·해당 상세를 갱신한다. 삭제 시 상세 캐시도 제거한다. 실패 시 낙관적 변경은 하지 않는다.
