@@ -1,7 +1,7 @@
 # 구현 계획: 관리자 공지 관리
 
 **브랜치**: `DongjaJ/term-specification-review` | **작성일**: 2026-10-19
-**명세**: [spec.md](spec.md) | **상태**: 4b 기본 구현 수용 · 남은 검증 보류 · 5a 진행 승인
+**명세**: [spec.md](spec.md) | **상태**: 4b 기본 구현 수용 · 남은 검증 보류 · 5a 구현 완료 · 사용자 리뷰 대기
 
 ## 요약과 기술 맥락
 
@@ -11,6 +11,7 @@ JSON만 저장한다. 이미지 첨부는 별도 상태로 관리한다. 실제 
 - TypeScript 6·React 19, TanStack Start/Router/Query/Form, Zod 4, SEED·vanilla-extract를 유지한다.
 - Node.js·pnpm은 mise와 저장소 고정 버전을 사용한다. 테스트는 기존 Vitest·Testing Library를 쓴다.
 - 데이터는 개발 브라우저 탭의 모듈 메모리에 보관한다. SSR·프로덕션·영속 저장에는 사용하지 않는다.
+- 7단계 읽음 표에는 TanStack Table을 사용한다. 전체 대상 행을 클라이언트에서 컬럼별로 정렬하며, 기본 순서는 기존 도메인 정렬 함수를 사용한다. 의존성은 7단계에서 호환 버전을 확인해 pnpm catalog와 admin manifest에 추가한다.
 - 대상 플랫폼은 관리자 웹의 데스크톱·375px이다. 목록·읽음 표는 전체 결과를 스크롤한다.
 - 새 성능 SLA나 가상화는 도입하지 않는다. 모의 회원 전체에서 중복 대상 계산 없이 집계를 공유한다.
 - Tiptap 후보는 core/react/pm/starter-kit/extension-placeholder 3.32.0 동일 버전이며 설치·호환 검증은 3단계다.

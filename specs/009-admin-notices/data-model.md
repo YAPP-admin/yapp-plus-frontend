@@ -7,7 +7,7 @@
 | Notice        | id, category, title, bodyDocument, createdAt, audience, submission, attachments, readAtByMemberId, unansweredCount | id 고유, 작성일 수정 금지, 질문 수 0 이상                      |
 | Member        | id, name, cohort, job, membership                                                                                  | 합성 명단만 사용; 직군은 PM/Design/Mobile/Web/Server/AI Native |
 | Audience      | 일반: all/active/regular/completed, 제출: all 또는 jobs 배열                                                       | 제출은 활동회원만, all과 개별 직군 배타, 중복 제거·1개 이상    |
-| Submission    | deadlineAt, method 또는 null                                                                                       | 제출 종류에서만 존재; method는 name과 HTTP(S) url 모두 필요    |
+| Submission    | deadlineAt, method 또는 null                                                                                       | 제출 종류에서만 존재; method는 name과 url 입력 모두 필요       |
 | Attachment    | id, name, mimeType, size, blob                                                                                     | JPG·PNG·WebP, 각 10MiB 이하, 합계 5개 이하                     |
 | ReaderRow     | member, readAt 또는 null                                                                                           | 현재 대상마다 정확히 한 행, 원본 공지에서 파생                 |
 | NoticeSummary | readCount, unreadCount, targetCount, readPercentage                                                                | 목록·상세가 동일 함수 사용; 대상 0이면 비율 0                  |
@@ -16,7 +16,7 @@
 
 - category는 session/submission/operation이며 일반 공지는 session·operation이다.
 - 제목은 trim 후 1~60자다. 본문은 지원 문서의 텍스트가 공백뿐이면 거절하며 빈 문단도 동일하다.
-- 본문에 임의 HTML·실행 가능한 URL을 허용하지 않는다. 링크는 HTTP(S)만 보존하고 표시도 같은 스키마를 사용한다.
+- 본문은 편집기가 생성한 JSON을 그대로 저장하며 공백뿐인 본문만 거절한다. 문서 구조·서식·속성은 중복 검증하지 않는다. 본문 링크에 별도 URL 검사를 추가하지 않으며 Tiptap 기본 링크 처리를 유지한다.
 - 날짜·시간은 한국 시간 입력을 검증한 뒤 UTC ISO 문자열로 저장한다. 브라우저 현지 시간대를 사용하지 않는다.
 - 과거 마감도 유효하다. now >= deadlineAt이면 마감, 이전이면 한국 날짜 차이로 D-day/D-N을 계산한다.
 - 폼 입력의 빈 문자열·선택 상태와 저장 모델을 분리한다. 일반 종류로 저장하면 제출 전용 필드는 제거한다.
@@ -35,4 +35,4 @@
 읽은 회원은 최초 확인 시각 내림차순, 미열람은 한국어 이름순이다. 동률은 id로 안정 정렬한다.
 읽음 비율은 반올림한 정수다. 목록은 createdAt 내림차순, 동률은 id로 안정 정렬한다.
 
-본문은 Tiptap `JSONContent`를 그대로 저장한다. Document·Paragraph·Text·H1~H6·HardBreak·BulletList·OrderedList·ListItem·CodeBlock·Blockquote·HorizontalRule과 Bold·Link·Code·Italic·Strike·Underline 마크만 허용한다. 외부 데이터 검증과 빈 본문 저장 방지는 모의 저장소·폼 구현 단계에서 처리한다.
+본문은 Tiptap `JSONContent`를 그대로 저장한다. Document·Paragraph·Text·H1~H6·HardBreak·BulletList·OrderedList·ListItem·CodeBlock·Blockquote·HorizontalRule과 Bold·Link·Code·Italic·Strike·Underline 마크만 허용한다. 지원 서식은 편집기 확장이 관리하며 저장 단계에서는 빈 본문만 검사한다.

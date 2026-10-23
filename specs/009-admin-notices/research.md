@@ -3,7 +3,7 @@
 ## 서식 편집과 JSON
 
 - 결정: 사용자 변경 요청에 따라 Tiptap JSON을 별도 래퍼 없이 저장한다. Markdown 의존성과 변환은 제거한다.
-- 이유: 편집 문서 구조를 그대로 보존하며 지원 노드·마크를 스키마로 검증한다. 버전 변경 시 별도 마이그레이션을 검토한다.
+- 이유: 편집기가 생성한 JSON을 그대로 보존하고, 저장 단계에서는 빈 본문만 검사한다. 버전 변경 시 별도 마이그레이션을 검토한다.
 - 확장: StarterKit 기본 기능을 사용하되 제목은 H1~H6을 사용하고 본문 링크 검증은 Tiptap 기본 정책에 맡긴다. 인용문·구분선·기울임·취소선·밑줄·끝 문단 자동 추가와 자동 링크 변환을 활성화한다. 툴바 구성은 유지한다.
 - Placeholder 3.32.0을 추가한다. 빈 편집기에 안내를 표시하고 예시 본문은 넣지 않는다. CSS 가상 요소이므로 저장 문서에는 포함되지 않는다.
 - 근거: [React 설치](https://tiptap.dev/docs/editor/getting-started/install/react), [StarterKit](https://tiptap.dev/docs/editor/extensions/functionality/starterkit), [Placeholder](https://tiptap.dev/docs/editor/extensions/functionality/placeholder).
@@ -33,3 +33,9 @@
 - 대안: 검증 프레임워크를 새로 추가하지 않는다. 필요한 브라우저 시나리오는 quickstart에 남긴다.
 - Storybook 앱에서 admin을 import하지 않는다. 11a에 admin 자체 설정과 로컬 사례를 추가하고 기존 catalog 버전을 재사용한다.
 - 3단계에서 의존성 설치 후 기본 품질 게이트와 빌드를 통과했다. 결과는 quickstart의 검증 기록에 둔다.
+
+## 읽음 표의 클라이언트 정렬
+
+- 사용자 결정: 기본 도메인 정렬은 유지하고, 헤더 조작에 따른 화면 정렬은 TanStack Table에 맡긴다. 구현은 읽음 표가 추가되는 7단계에 수행한다.
+- 전체 대상 데이터를 이미 조회하므로 클라이언트 정렬을 사용한다. 의존성·버전별 API는 7단계에 확정한다.
+- 근거: [TanStack Table 정렬 안내](https://tanstack.com/table/latest/docs/framework/react/guide/sorting).
