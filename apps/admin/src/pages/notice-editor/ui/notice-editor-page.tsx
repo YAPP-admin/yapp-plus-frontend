@@ -1,3 +1,4 @@
+import { NoticeEditor } from '~/features/notice-management';
 import { Link } from '@tanstack/react-router';
 import * as styles from './notice-editor-page.css';
 
@@ -5,7 +6,19 @@ export function NoticeCreatePage() {
   return (
     <main className={styles.page}>
       <h1 className={styles.title}>공지 작성</h1>
-      <p className={styles.description}>공지 작성 기능을 준비 중입니다.</p>
+      {import.meta.env.DEV ? (
+        <>
+          <p className={styles.description}>
+            본문 편집기를 먼저 사용해 보세요. 입력 내용은 아직 저장되지 않습니다.
+          </p>
+          <h2 id="notice-body-label" className={styles.description}>
+            공지 내용
+          </h2>
+          <NoticeEditor labelId="notice-body-label" />
+        </>
+      ) : (
+        <p className={styles.description}>공지 작성 기능을 준비 중입니다.</p>
+      )}
       <Link className={styles.returnLink} to="/notices" search={{}}>
         공지 목록으로 돌아가기
       </Link>

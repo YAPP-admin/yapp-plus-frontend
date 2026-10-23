@@ -786,7 +786,7 @@ describe('공지 작성·수정 진입점', () => {
 
     expect(await screen.findByRole('heading', { name: heading })).toBeVisible();
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: '공지 종류' })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: '공지 상세 구분' })).not.toBeInTheDocument();
     expect(
       router.state.matches.some(
@@ -852,7 +852,9 @@ describe('공지 작성·수정 진입점', () => {
     const returnLink = await screen.findByRole('link', { name: returnName });
     screen.getByRole('link', { name: '알림 발송 내역' }).focus();
 
-    await user.tab();
+    for (let step = 0; step < 12 && document.activeElement !== returnLink; step += 1) {
+      await user.tab();
+    }
 
     expect(returnLink).toHaveFocus();
 
