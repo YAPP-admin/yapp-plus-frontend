@@ -604,7 +604,7 @@ describe('공지 목록 URL 상태', () => {
   ])('%s에 직접 접근하면 %s를 선택한다', async (path, category) => {
     await renderRoute(path);
 
-    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveTextContent(category);
+    expect(await screen.findByRole('radio', { name: category })).toBeChecked();
     expect(screen.getByRole('heading', { name: '공지 목록', level: 1 })).toBeVisible();
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: '회원 관리' })).not.toHaveAttribute('aria-current');
@@ -613,28 +613,25 @@ describe('공지 목록 URL 상태', () => {
   it('종류 변경을 history에 추가하고 복원하며 기본값은 URL에서 생략한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/notices');
-    const filter = await screen.findByRole('combobox', { name: '공지 종류' });
+    await screen.findByRole('radio', { name: '전체' });
 
-    await user.click(filter);
-    await user.click(await screen.findByRole('option', { name: '세션' }));
+    await user.click(await screen.findByRole('radio', { name: '세션' }));
 
     await waitFor(() => expect(router.state.location.href).toBe('/notices?category=session'));
 
-    await user.click(filter);
-    await user.click(await screen.findByRole('option', { name: '제출' }));
+    await user.click(await screen.findByRole('radio', { name: '제출' }));
 
     await waitFor(() => expect(router.state.location.href).toBe('/notices?category=submission'));
 
     act(() => router.history.back());
 
-    await waitFor(() => expect(filter).toHaveTextContent('세션'));
+    await waitFor(() => expect(screen.getByRole('radio', { name: '세션' })).toBeChecked());
 
     act(() => router.history.forward());
 
-    await waitFor(() => expect(filter).toHaveTextContent('제출'));
+    await waitFor(() => expect(screen.getByRole('radio', { name: '제출' })).toBeChecked());
 
-    await user.click(filter);
-    await user.click(await screen.findByRole('option', { name: '전체' }));
+    await user.click(await screen.findByRole('radio', { name: '전체' }));
 
     await waitFor(() => expect(router.state.location.href).toBe('/notices'));
   });
@@ -649,7 +646,7 @@ describe('공지 목록 URL 상태', () => {
 
     await user.click(screen.getByRole('link', { name: '공지 목록' }));
 
-    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveTextContent(/전체/);
+    expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
     expect(router.state.location.href).toBe('/notices');
   });
 
@@ -663,7 +660,7 @@ describe('공지 목록 URL 상태', () => {
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveFocus();
 
     await user.keyboard('{Enter}');
-    const filter = await screen.findByRole('combobox', { name: '공지 종류' });
+    const filter = await screen.findByRole('radio', { name: '전체' });
 
     await user.tab();
 
@@ -738,12 +735,12 @@ describe('공지 상세 탐색', () => {
 
     act(() => router.history.back());
 
-    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveTextContent('세션');
+    expect(await screen.findByRole('radio', { name: '세션' })).toBeChecked();
 
     act(() => router.history.forward());
     await user.click(await screen.findByRole('link', { name: '공지 목록으로 돌아가기' }));
 
-    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveTextContent(/전체/);
+    expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
     expect(router.state.location.href).toBe('/notices');
   });
 
@@ -773,7 +770,7 @@ describe('공지 상세 탐색', () => {
     await user.tab({ shift: true });
     await user.keyboard('{Enter}');
 
-    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveTextContent(/전체/);
+    expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
   });
 });
 
@@ -786,7 +783,7 @@ describe('공지 작성·수정 진입점', () => {
 
     expect(await screen.findByRole('heading', { name: heading })).toBeVisible();
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.queryByRole('combobox', { name: '공지 종류' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('radiogroup', { name: '공지 종류' })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: '공지 상세 구분' })).not.toBeInTheDocument();
     expect(
       router.state.matches.some(
@@ -811,12 +808,12 @@ describe('공지 작성·수정 진입점', () => {
 
     act(() => router.history.back());
 
-    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveTextContent('제출');
+    expect(await screen.findByRole('radio', { name: '제출' })).toBeChecked();
 
     act(() => router.history.forward());
     await user.click(await screen.findByRole('link', { name: '공지 목록으로 돌아가기' }));
 
-    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveTextContent(/전체/);
+    expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
     expect(router.state.location.href).toBe('/notices');
   });
 
@@ -889,7 +886,7 @@ describe('알림 발송 내역 탐색', () => {
 
     act(() => router.history.back());
 
-    expect(await screen.findByRole('combobox', { name: '공지 종류' })).toHaveTextContent('운영');
+    expect(await screen.findByRole('radio', { name: '운영' })).toBeChecked();
 
     act(() => router.history.forward());
 

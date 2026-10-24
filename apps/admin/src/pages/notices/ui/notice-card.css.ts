@@ -1,0 +1,110 @@
+/** 데스크톱에서는 한 행, 좁은 화면에서는 정보와 집계를 두 행으로 배치한다. */
+import { globalStyle, style } from '@vanilla-extract/css';
+import { vars } from '@seed-design/css/vars';
+
+export const card = style({
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr) 180px 110px 44px',
+  alignItems: 'center',
+  gap: 24,
+  minHeight: 106,
+  padding: '20px 24px',
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: 12,
+  background: vars.$color.bg.layerFloating,
+  '@media': {
+    '(width < 1000px)': { gridTemplateColumns: 'minmax(0, 1fr) 90px 44px', gap: 16 },
+    '(width < 480px)': { padding: 16, gap: 12 },
+  },
+});
+export const identity = style({
+  minWidth: 0,
+  '@media': { '(width < 1000px)': { gridColumn: '1 / 3' } },
+});
+export const heading = style({ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 });
+export const title = style({
+  minWidth: 0,
+  margin: 0,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  fontWeight: vars.$fontWeight.bold,
+  overflowWrap: 'anywhere',
+});
+globalStyle(`${title} a`, { color: vars.$color.fg.neutral, textDecoration: 'none' });
+globalStyle(`${title} a:hover`, { textDecoration: 'underline', textUnderlineOffset: 3 });
+export const meta = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: 8,
+  margin: '12px 0 0',
+  color: vars.$color.fg.neutralMuted,
+  fontSize: vars.$fontSize.t2,
+  overflowWrap: 'anywhere',
+});
+export const reading = style({
+  display: 'grid',
+  gap: 8,
+  minWidth: 0,
+  color: vars.$color.fg.neutralMuted,
+  fontSize: vars.$fontSize.t1,
+});
+export const readingLabel = style({ display: 'flex', justifyContent: 'space-between', gap: 8 });
+export const progress = style({
+  display: 'block',
+  appearance: 'none',
+  width: '100%',
+  height: 4,
+  border: 0,
+  borderRadius: 2,
+  overflow: 'hidden',
+  background: vars.$color.stroke.neutralMuted,
+  color: vars.$color.fg.brand,
+});
+globalStyle(`${progress}::-webkit-progress-bar`, { background: vars.$color.stroke.neutralMuted });
+globalStyle(`${progress}::-webkit-progress-value`, { background: vars.$color.fg.brand });
+globalStyle(`${progress}::-moz-progress-bar`, { background: vars.$color.fg.brand });
+export const percentage = style({ textAlign: 'right' });
+export const questions = style({
+  display: 'grid',
+  gap: 6,
+  margin: 0,
+  paddingLeft: 16,
+  borderLeft: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  textAlign: 'center',
+  color: vars.$color.fg.neutralMuted,
+  fontSize: vars.$fontSize.t1,
+});
+globalStyle(`${questions} dd`, {
+  margin: 0,
+  color: vars.$color.fg.neutral,
+  fontSize: vars.$fontSize.t4,
+  fontWeight: vars.$fontWeight.bold,
+});
+export const menu = style({
+  position: 'relative',
+  '@media': { '(width < 1000px)': { gridColumn: 3, gridRow: 1 } },
+});
+export const menuButton = style({
+  minWidth: 44,
+  minHeight: 44,
+  listStyle: 'none',
+});
+globalStyle(`${menuButton}::-webkit-details-marker`, { display: 'none' });
+export const menuContent = style({
+  display: 'grid',
+  gap: 4,
+  position: 'absolute',
+  right: 0,
+  top: 'calc(100% + 4px)',
+  zIndex: 2,
+  minWidth: 100,
+  padding: 4,
+  borderRadius: 8,
+  background: vars.$color.bg.layerFloating,
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  boxShadow: '0 8px 24px #0004',
+});
+globalStyle(`${card} :is(a, summary, button):focus-visible`, {
+  outline: `2px solid ${vars.$color.fg.brand}`,
+  outlineOffset: 3,
+});
