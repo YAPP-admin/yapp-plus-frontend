@@ -1,9 +1,11 @@
+/** 본문 서식 선택과 링크 편집 동작을 제공한다. */
 import { useState } from 'react';
 import type { Editor } from '@tiptap/core';
 import { useEditorState } from '@tiptap/react';
 import { Bold, Code, Link, List } from 'lucide-react';
-import * as styles from './notice-editor.css';
+import * as styles from './notice-editor-toolbar.css';
 
+/** 편집기의 선택 상태를 구독하고 사용자 이벤트로 서식을 적용한다. */
 export function NoticeEditorToolbar({ editor }: { editor: Editor }) {
   const [linkOpen, setLinkOpen] = useState(false);
   const [url, setUrl] = useState('');
