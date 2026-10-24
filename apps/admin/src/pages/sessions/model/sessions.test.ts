@@ -27,7 +27,12 @@ describe('개발용 세션 서비스 경계', () => {
       const service = await import('./sessions');
       const input = createSessionInputSchema.parse({
         name: '세션',
-        location: '교육장',
+        location: {
+          roadAddress: '서울특별시 중구 세종대로 110',
+          detailAddress: '예시 교육장',
+          latitude: 37.5665,
+          longitude: 126.978,
+        },
         date: '2026-11-01',
         startTime: '14:00',
         endTime: '17:00',
@@ -47,7 +52,12 @@ describe('개발용 세션 서비스 경계', () => {
     const before = await service.listSessions();
     const input = createSessionInputSchema.parse({
       name: '세션',
-      location: '교육장',
+      location: {
+        roadAddress: '서울특별시 중구 세종대로 110',
+        detailAddress: '예시 교육장',
+        latitude: 37.5665,
+        longitude: 126.978,
+      },
       date: '2026-11-01',
       startTime: '14:00',
       endTime: '17:00',

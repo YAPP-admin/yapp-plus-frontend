@@ -6,19 +6,39 @@ const timeSchema = z
   .string()
   .regex(/^([01]\d|2[0-3]):[0-5]\d$/, '시간을 HH:mm 형식으로 입력하세요.');
 
+const commonFields = {
+  name: z.string().trim().min(1, '세션명을 입력하세요.'),
+  date: z.iso.date('올바른 날짜를 입력하세요.'),
+  startTime: timeSchema,
+  endTime: timeSchema,
+};
+
+const offlineInputSchema = z.object({
+  ...commonFields,
+  type: z.literal('offline'),
+  location: z.object({
+    roadAddress: z.string().trim().min(1, '주소를 선택하세요.'),
+    detailAddress: z.string().trim(),
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+  }),
+});
+const teamInputSchema = z.object({
+  ...commonFields,
+  type: z.literal('team'),
+  location: z.object({ guide: z.string().trim() }),
+});
+
+const validSchedule = ({ startTime, endTime }: { startTime: string; endTime: string }) =>
+  endTime > startTime;
+const scheduleError = {
+  message: '종료 시간은 시작 시간보다 늦어야 합니다.',
+  path: ['endTime'],
+};
+
 export const createSessionInputSchema = z
-  .object({
-    name: z.string().trim().min(1, '세션명을 입력하세요.'),
-    location: z.string().trim().min(1, '장소를 입력하세요.'),
-    date: z.iso.date('올바른 날짜를 입력하세요.'),
-    startTime: timeSchema,
-    endTime: timeSchema,
-    type: sessionTypeSchema,
-  })
-  .refine(({ startTime, endTime }) => endTime > startTime, {
-    message: '종료 시간은 시작 시간보다 늦어야 합니다.',
-    path: ['endTime'],
-  });
+  .discriminatedUnion('type', [offlineInputSchema, teamInputSchema])
+  .refine(validSchedule, scheduleError);
 
 export const sessionAttendanceSummarySchema = z.object({
   present: z.number().int().nonnegative(),
@@ -28,10 +48,16 @@ export const sessionAttendanceSummarySchema = z.object({
   reported: z.number().int().nonnegative(),
 });
 
-export const sessionSchema = createSessionInputSchema.safeExtend({
+const storedFields = {
   id: z.string().trim().min(1),
   attendance: sessionAttendanceSummarySchema,
-});
+};
+export const sessionSchema = z
+  .discriminatedUnion('type', [
+    offlineInputSchema.extend(storedFields),
+    teamInputSchema.extend(storedFields),
+  ])
+  .refine(validSchedule, scheduleError);
 
 export type SessionType = z.infer<typeof sessionTypeSchema>;
 export type CreateSessionInput = z.infer<typeof createSessionInputSchema>;

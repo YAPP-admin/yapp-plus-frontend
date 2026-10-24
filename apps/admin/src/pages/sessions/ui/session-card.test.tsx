@@ -7,7 +7,12 @@ it('세션 정보와 서로 다른 다섯 출석 집계를 생략 없이 표시�
   const session = sessionSchema.parse({
     id: 'sample-session',
     name: '긴 세션명도 전체 내용으로 제공하는 오프라인 세션',
-    location: '서울 예시 교육장 3층 다목적 강의실',
+    location: {
+      roadAddress: '서울특별시 중구 세종대로 110',
+      detailAddress: '예시 교육장',
+      latitude: 37.5665,
+      longitude: 126.978,
+    },
     type: 'offline',
     date: '2026-12-31',
     startTime: '09:05',
@@ -19,7 +24,7 @@ it('세션 정보와 서로 다른 다섯 출석 집계를 생략 없이 표시�
 
   const card = screen.getByRole('article');
   expect(within(card).getByRole('heading', { name: session.name })).toBeVisible();
-  expect(within(card).getByText(session.location)).toBeVisible();
+  expect(within(card).getByText('서울특별시 중구 세종대로 110 예시 교육장')).toBeVisible();
   expect(within(card).getByText('오프라인')).toBeVisible();
   expect(within(card).getByText('2026.12.31 · 09:05')).toBeVisible();
   expect(within(card).getByText('18:30')).toBeVisible();
@@ -43,4 +48,19 @@ it('세션 정보와 서로 다른 다섯 출석 집계를 생략 없이 표시�
     '4명',
     '5명',
   ]);
+});
+
+it.each(['', '팀에서 정한 장소'])('팀 안내 %s를 표시한다', (guide) => {
+  const session = sessionSchema.parse({
+    id: 'team',
+    name: '팀 세션',
+    type: 'team',
+    location: { guide },
+    date: '2026-12-31',
+    startTime: '09:00',
+    endTime: '10:00',
+    attendance: { present: 0, late: 0, absent: 0, pending: 0, reported: 0 },
+  });
+  render(<SessionCard session={session} />);
+  expect(screen.getByText(guide || '팀별 자율 장소')).toBeVisible();
 });

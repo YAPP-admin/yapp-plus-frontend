@@ -4,7 +4,7 @@ import { createSessionStore } from './sessions.mock';
 
 const input = createSessionInputSchema.parse({
   name: '새 세션',
-  location: '교육장',
+  location: { guide: '교육장' },
   date: '2026-11-01',
   startTime: '14:00',
   endTime: '17:00',
@@ -48,11 +48,21 @@ describe('세션 메모리 저장소', () => {
 
     for (const session of seed) {
       session.attendance.present = 999;
+      if (session.type === 'offline') {
+        session.location.roadAddress = '외부 변경';
+      } else {
+        session.location.guide = '외부 변경';
+      }
     }
 
     const listed = store.listSessions();
     for (const session of listed) {
       session.attendance.present = 888;
+      if (session.type === 'offline') {
+        session.location.latitude = 0;
+      } else {
+        session.location.guide = '조회값 변경';
+      }
     }
 
     listed.pop();
@@ -61,10 +71,14 @@ describe('세션 메모리 저장소', () => {
 
     const created = store.createSession(input);
     created.name = '외부 수정';
+    if (created.type === 'team') {
+      created.location.guide = '외부 수정';
+    }
     created.attendance.present = 777;
 
     expect(store.listSessions().find(({ id }) => id === created.id)).toMatchObject({
       name: input.name,
+      location: input.location,
       attendance: { present: 0 },
     });
   });

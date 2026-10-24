@@ -26,11 +26,11 @@ export function SessionCard({ session }: { session: Session }) {
   );
 }
 
-function SessionDetails({
-  session,
-}: {
-  session: Pick<Session, 'date' | 'startTime' | 'endTime' | 'location'>;
-}) {
+function SessionDetails({ session }: { session: Session }) {
+  const locationLabel =
+    session.type === 'offline'
+      ? [session.location.roadAddress, session.location.detailAddress].filter(Boolean).join(' ')
+      : session.location.guide || '팀별 자율 장소';
   return (
     <dl className={styles.details}>
       <div className={styles.detail}>
@@ -45,7 +45,7 @@ function SessionDetails({
       </div>
       <div className={styles.detail}>
         <dt className={styles.term}>장소</dt>
-        <dd className={styles.value}>{session.location}</dd>
+        <dd className={styles.value}>{locationLabel}</dd>
       </div>
     </dl>
   );
