@@ -7,11 +7,17 @@ import {
 } from './session';
 
 // 실제 운영 일정이나 회원 정보가 아닌 화면 검증용 예시입니다.
+// 오프라인 위치는 서울시청 테스트 좌표이며 실제 세션 장소가 아닙니다.
 const fixtures: Session[] = [
   {
     id: 'demo-offline-session',
     name: '개발용 오프라인 세션',
-    location: '예시 교육장',
+    location: {
+      roadAddress: '서울특별시 중구 세종대로 110',
+      detailAddress: '예시 교육장',
+      latitude: 37.5665,
+      longitude: 126.978,
+    },
     date: '2026-10-17',
     startTime: '14:00',
     endTime: '17:00',
@@ -21,7 +27,7 @@ const fixtures: Session[] = [
   {
     id: 'demo-team-session',
     name: '개발용 팀 세션',
-    location: '팀별 자율 장소',
+    location: { guide: '' },
     date: '2026-10-24',
     startTime: '13:00',
     endTime: '16:00',

@@ -8,7 +8,12 @@ import {
 
 const input = {
   name: '세션',
-  location: '교육장',
+  location: {
+    roadAddress: '서울특별시 중구 세종대로 110',
+    detailAddress: '예시 교육장',
+    latitude: 37.5665,
+    longitude: 126.978,
+  },
   date: '2028-02-29',
   startTime: '09:00',
   endTime: '10:00',
@@ -25,9 +30,16 @@ describe('세션 입력 검증', () => {
   });
 
   it('장소의 앞뒤 공백을 제거한다', () => {
-    const result = createSessionInputSchema.safeParse({ ...input, location: ' 교육장 ' });
+    const result = createSessionInputSchema.safeParse({
+      ...input,
+      location: {
+        ...input.location,
+        roadAddress: ' 서울특별시 중구 세종대로 110 ',
+        detailAddress: ' 예시 교육장 ',
+      },
+    });
 
-    expect(result.data?.location).toBe('교육장');
+    expect(result.data?.location).toEqual(input.location);
   });
 
   it('윤년의 2월 29일을 허용한다', () => {
@@ -53,7 +65,10 @@ describe('세션 입력 검증', () => {
   });
 
   it('공백만 있는 장소를 거부한다', () => {
-    const result = createSessionInputSchema.safeParse({ ...input, location: ' ' });
+    const result = createSessionInputSchema.safeParse({
+      ...input,
+      location: { ...input.location, roadAddress: ' ' },
+    });
 
     expect(result.success).toBe(false);
   });
@@ -227,5 +242,62 @@ describe('세션 정렬', () => {
     sortSessions(sessions);
 
     expect(sessions).toEqual([previousDay, afternoon, morning]);
+  });
+});
+
+describe('유형별 장소 경계', () => {
+  it('상세주소가 비어 있어도 주소와 좌표로 저장한다', () => {
+    expect(
+      createSessionInputSchema.safeParse({
+        ...input,
+        location: { ...input.location, detailAddress: '' },
+      }).success,
+    ).toBe(true);
+  });
+  it('팀 안내 공백은 빈 값으로 저장하고 오프라인 필드는 제거한다', () => {
+    const result = createSessionInputSchema.parse({
+      ...input,
+      type: 'team',
+      location: { ...input.location, guide: '  ' },
+    });
+    expect(result.location).toEqual({ guide: '' });
+  });
+  it('오프라인 장소만 가진 팀 입력을 거부한다', () => {
+    expect(createSessionInputSchema.safeParse({ ...input, type: 'team' }).success).toBe(false);
+  });
+  it.each([undefined, '', '37.5', NaN, Infinity, -Infinity, -90.1, 90.1])(
+    '잘못된 위도 %s를 거부한다',
+    (latitude) => {
+      expect(
+        createSessionInputSchema.safeParse({ ...input, location: { ...input.location, latitude } })
+          .success,
+      ).toBe(false);
+    },
+  );
+  it.each([undefined, '', '127', NaN, Infinity, -Infinity, -180.1, 180.1])(
+    '잘못된 경도 %s를 거부한다',
+    (longitude) => {
+      expect(
+        createSessionInputSchema.safeParse({ ...input, location: { ...input.location, longitude } })
+          .success,
+      ).toBe(false);
+    },
+  );
+  it.each([
+    [0, 0],
+    [-90, -180],
+    [90, 180],
+  ])('좌표 경계 %s/%s를 허용한다', (latitude, longitude) => {
+    expect(
+      createSessionInputSchema.safeParse({
+        ...input,
+        location: { ...input.location, latitude, longitude },
+      }).success,
+    ).toBe(true);
+  });
+  it('저장된 세션도 시간 역전을 거부한다', () => {
+    expect(
+      sessionSchema.safeParse({ ...input, id: 'invalid', attendance, endTime: '08:00' }).success,
+    ).toBe(false);
   });
 });
