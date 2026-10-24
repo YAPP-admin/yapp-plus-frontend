@@ -1,8 +1,8 @@
 {
   "extends": "@yapp-plus/config/typescript/vite.json",
   "compilerOptions": {
-    "target": "ES2023",
-    "lib": ["DOM", "DOM.Iterable", "ES2023"],
+    "target": "ESNext",
+    "lib": ["DOM", "DOM.Iterable", "ESNext"],
     "paths": {
       "~/*": ["./src/*"]
     }
