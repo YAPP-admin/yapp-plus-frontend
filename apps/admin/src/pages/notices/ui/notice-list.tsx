@@ -3,7 +3,7 @@ import { ActionButton } from '@yapp-plus/ui';
 import type { useNoticesQuery, useNoticeMembersQuery } from '~/features/notice-management';
 import type { NoticeCategory } from '../model/notice-search';
 import { NoticeCard } from './notice-card';
-import * as styles from './notices-page.css';
+import * as styles from './notice-list.css';
 
 /** 조회·필터 변경으로 렌더링할 때 현재 시각으로 마감을 다시 계산한다. */
 export function NoticeList({

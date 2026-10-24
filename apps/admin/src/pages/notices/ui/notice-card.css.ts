@@ -6,15 +6,18 @@ export const card = style({
   display: 'grid',
   gridTemplateColumns: 'minmax(0, 1fr) 180px 110px 44px',
   alignItems: 'center',
-  gap: 24,
+  gap: vars.$dimension.x6,
   minHeight: 106,
-  padding: '20px 24px',
+  padding: `${vars.$dimension.x5} ${vars.$dimension.x6}`,
   border: `1px solid ${vars.$color.stroke.neutralMuted}`,
   borderRadius: 12,
   background: vars.$color.bg.layerFloating,
   '@media': {
-    '(width < 1000px)': { gridTemplateColumns: 'minmax(0, 1fr) 90px 44px', gap: 16 },
-    '(width < 480px)': { padding: 16, gap: 12 },
+    '(width < 1000px)': {
+      gridTemplateColumns: 'minmax(0, 1fr) 90px 44px',
+      gap: vars.$dimension.x4,
+    },
+    '(width < 480px)': { padding: vars.$dimension.x4, gap: vars.$dimension.x3 },
   },
 });
 
@@ -23,7 +26,12 @@ export const identity = style({
   '@media': { '(width < 1000px)': { gridColumn: '1 / 3' } },
 });
 
-export const heading = style({ display: 'flex', flexWrap: 'wrap', alignItems: 'center', gap: 8 });
+export const heading = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: vars.$dimension.x2,
+});
 
 export const title = style({
   minWidth: 0,
@@ -44,22 +52,33 @@ export const titleLink = style({
 export const meta = style({
   display: 'flex',
   flexWrap: 'wrap',
-  gap: 8,
-  margin: '12px 0 0',
+  gap: vars.$dimension.x2,
+  margin: `${vars.$dimension.x3} 0 0`,
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t2,
   overflowWrap: 'anywhere',
 });
 
-export const reading = style({
-  display: 'grid',
-  gap: 8,
-  minWidth: 0,
+/** 읽음·질문 집계에 공통으로 사용하는 보조 문구 표현이다. */
+const summaryText = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t1,
 });
 
-export const readingLabel = style({ display: 'flex', justifyContent: 'space-between', gap: 8 });
+export const reading = style([
+  summaryText,
+  {
+    display: 'grid',
+    gap: vars.$dimension.x2,
+    minWidth: 0,
+  },
+]);
+
+export const readingLabel = style({
+  display: 'flex',
+  justifyContent: 'space-between',
+  gap: vars.$dimension.x2,
+});
 
 export const progress = style({
   display: 'block',
@@ -80,16 +99,17 @@ export const progress = style({
 
 export const percentage = style({ textAlign: 'right' });
 
-export const questions = style({
-  display: 'grid',
-  gap: 6,
-  margin: 0,
-  paddingLeft: 16,
-  borderLeft: `1px solid ${vars.$color.stroke.neutralMuted}`,
-  textAlign: 'center',
-  color: vars.$color.fg.neutralMuted,
-  fontSize: vars.$fontSize.t1,
-});
+export const questions = style([
+  summaryText,
+  {
+    display: 'grid',
+    gap: 6,
+    margin: 0,
+    paddingLeft: vars.$dimension.x4,
+    borderLeft: `1px solid ${vars.$color.stroke.neutralMuted}`,
+    textAlign: 'center',
+  },
+]);
 
 export const questionCount = style({
   margin: 0,
@@ -112,13 +132,13 @@ export const menuButton = style({
 
 export const menuContent = style({
   display: 'grid',
-  gap: 4,
+  gap: vars.$dimension.x1,
   position: 'absolute',
   right: 0,
   top: 'calc(100% + 4px)',
   zIndex: 2,
   minWidth: 100,
-  padding: 4,
+  padding: vars.$dimension.x1,
   borderRadius: 8,
   background: vars.$color.bg.layerFloating,
   border: `1px solid ${vars.$color.stroke.neutralMuted}`,
