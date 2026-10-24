@@ -23,6 +23,7 @@ export function NoticesPage({
   const hydrated = useHydrated();
   const noticesQuery = useNoticesQuery();
   const membersQuery = useNoticeMembersQuery();
+
   return (
     <main className={styles.page}>
       <NoticeListHeader
