@@ -10,42 +10,49 @@ export const page = style({
   padding: '48px 44px 110px',
   '@media': { '(width < 768px)': { padding: '32px 16px 100px' } },
 });
+
 export const header = style({
   display: 'flex',
   alignItems: 'end',
   justifyContent: 'space-between',
   gap: 16,
 });
+
 export const eyebrow = style({
   margin: '0 0 8px',
   fontSize: vars.$fontSize.t1,
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.brand,
 });
+
 export const title = style({
   margin: 0,
   fontSize: vars.$fontSize.t12,
   lineHeight: vars.$lineHeight.t12,
   fontWeight: vars.$fontWeight.bold,
 });
+
 export const description = style({
   margin: '10px 0 0',
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
 });
+
 export const total = style({
   flexShrink: 0,
   margin: 0,
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t2,
 });
+
 export const filter = style({
   display: 'flex',
   gap: 24,
   marginTop: 22,
   borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
 });
+
 export const filterItem = style({
   display: 'flex',
   alignItems: 'center',
@@ -63,6 +70,7 @@ export const filterItem = style({
     '&:focus-visible': { outline: `2px solid ${vars.$color.fg.brand}`, outlineOffset: 2 },
   },
 });
+
 export const results = style({
   display: 'flex',
   justifyContent: 'space-between',
@@ -71,6 +79,7 @@ export const results = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t1,
 });
+
 export const list = style({
   display: 'grid',
   gridTemplateColumns: 'minmax(0, 1fr)',
@@ -79,12 +88,14 @@ export const list = style({
   margin: 0,
   listStyle: 'none',
 });
+
 export const placeholder = style({
   margin: 0,
   paddingBlock: 32,
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t4,
 });
+
 export const createLink = style({
   position: 'fixed',
   right: 24,

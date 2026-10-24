@@ -19,6 +19,7 @@ const audienceLabels = {
   regular: '정회원',
   completed: '수료회원',
 };
+
 const dateFormat = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
   year: 'numeric',
@@ -50,7 +51,7 @@ export function NoticeCard({
       <NoticeReadSummary notice={notice} members={members} />
       <dl className={styles.questions}>
         <dt>미답변 질문</dt>
-        <dd>{notice.unansweredCount}</dd>
+        <dd className={styles.questionCount}>{notice.unansweredCount}</dd>
       </dl>
       <NoticeActions notice={notice} />
     </article>
@@ -71,7 +72,12 @@ function NoticeIdentity({ notice, now }: { notice: Notice; now: Date }) {
           </Badge>
         )}
         <h2 className={styles.title}>
-          <Link to="/notices/$noticeId" params={{ noticeId: notice.id }} search={{}}>
+          <Link
+            className={styles.titleLink}
+            to="/notices/$noticeId"
+            params={{ noticeId: notice.id }}
+            search={{}}
+          >
             {notice.title}
           </Link>
         </h2>
@@ -88,6 +94,7 @@ function NoticeIdentity({ notice, now }: { notice: Notice; now: Date }) {
 /** 상세와 같은 계산 함수로 대상 회원의 읽음 현황을 표시한다. */
 function NoticeReadSummary({ notice, members }: { notice: Notice; members: Member[] }) {
   const summary = getNoticeSummary(getNoticeAudience(notice, members), notice.readAtByMemberId);
+
   return (
     <div className={styles.reading}>
       <div className={styles.readingLabel}>

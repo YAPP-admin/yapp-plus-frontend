@@ -26,6 +26,7 @@ export function NoticeList({
   if (!available) {
     return <p className={styles.placeholder}>공지 관리 기능을 준비 중입니다.</p>;
   }
+
   if (noticesQuery.isError || membersQuery.isError) {
     return (
       <div role="alert" className={styles.placeholder}>
@@ -40,12 +41,15 @@ export function NoticeList({
       </div>
     );
   }
+
   if (!noticesQuery.isSuccess || !membersQuery.isSuccess) {
     return <output className={styles.placeholder}>공지 목록을 불러오는 중입니다.</output>;
   }
+
   const notices = noticesQuery.data;
   const filtered = notices.filter((notice) => category === 'all' || notice.category === category);
   const now = new Date();
+
   return (
     <>
       <div className={styles.results}>
