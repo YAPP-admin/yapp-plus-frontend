@@ -38,7 +38,7 @@
 
 ## 5b — 공통 모의 CRUD·Query
 
-사용자 승인으로 이슈 없이 로컬 구현했다. 5a와 분리된 `DongjaJ/notice-mock-query`에서 사용자 리뷰를 기다린다.
+사용자 승인으로 이슈 없이 로컬 구현했다. 사용자 리뷰 후 `DongjaJ/notice-mock-query`에 구현·검증 문서를 나누어 커밋했다.
 
 검증: 성공·실패·없는 id·대상 변경·환경 차단·모듈 초기화를 검증한다.
 
@@ -50,9 +50,11 @@
 
 독립 검증: 모의 공지를 필터링하고 URL·집계·상태 화면을 확인한다.
 
-- [ ] T012 [US1] `apps/admin/src/pages/notices/ui/notices-page.tsx`에 목록 조회·필터·로딩·오류·빈 상태·개수를 연결한다.
-- [ ] T013 [US1] `apps/admin/src/pages/notices/ui/notice-card.tsx`와 `.css.ts`에 제목 링크·집계·마감·관리 메뉴를 구현한다.
-- [ ] T014 [US1] `apps/admin/src/pages/notices/ui/notices-page.test.tsx`와 `apps/admin/src/router.test.tsx`에서 최신순·필터·뒤로가기·잘못된 검색값을 검증한다.
+`DongjaJ/notice-list`에서 구현과 자동 검증을 완료했다. 사용자 리뷰를 반영하고 다음 단계 진행을 승인받았다. 실제 화면·좁은 화면·스크린 리더·터치 검증은 Chrome 새 탭의 비정상 종료로 남아 있다.
+
+- [x] T012 [US1] `apps/admin/src/pages/notices/ui/notices-page.tsx`에 목록 조회·필터·로딩·오류·빈 상태·개수를 연결한다.
+- [x] T013 [US1] `apps/admin/src/pages/notices/ui/notice-card.tsx`와 `.css.ts`에 제목 링크·집계·마감·관리 메뉴를 구현한다.
+- [x] T014 [US1] `apps/admin/src/pages/notices/ui/notices-page.test.tsx`와 `apps/admin/src/router.test.tsx`에서 최신순·필터·뒤로가기·잘못된 검색값을 검증한다.
 
 ## 7 — US4 상세·읽음
 
