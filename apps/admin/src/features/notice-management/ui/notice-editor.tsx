@@ -1,3 +1,4 @@
+/** Tiptap 본문과 서식 도구를 조합하는 공지 편집기다. */
 import { useState } from 'react';
 import { EditorContent, useEditor } from '@tiptap/react';
 import { Placeholder } from '@tiptap/extension-placeholder';
@@ -13,6 +14,7 @@ type NoticeEditorProps = {
   errorId?: string;
 };
 
+/** 초기 본문을 한 번 설정하고 편집 결과를 상위로 전달한다. */
 export function NoticeEditor({ initialValue, onChange, labelId, errorId }: NoticeEditorProps) {
   const [content] = useState(() => initialValue);
   const [extensions] = useState(() => [
