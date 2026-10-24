@@ -8,3 +8,5 @@ export {
   useNoticeMembersQuery,
   useNoticeMutations,
 } from './model/notice-queries';
+export { getNoticeAudience } from './model/notice-audience';
+export { getNoticeSummary, getNoticeDeadline } from './model/notice-summary';
