@@ -1,4 +1,4 @@
-/** 목록 헤더의 제목·설명·전체 개수 스타일을 소유한다. */
+/** 목록 헤더의 제목·설명 스타일을 소유한다. */
 import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 
@@ -28,11 +28,4 @@ export const description = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
-});
-
-export const total = style({
-  flexShrink: 0,
-  margin: 0,
-  color: vars.$color.fg.neutralMuted,
-  fontSize: vars.$fontSize.t2,
 });
