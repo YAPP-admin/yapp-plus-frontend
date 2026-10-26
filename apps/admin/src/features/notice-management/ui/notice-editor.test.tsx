@@ -1,4 +1,4 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import type { JSONContent } from '@tiptap/core';
 import { NoticeEditor } from './notice-editor';
@@ -16,14 +16,11 @@ describe('공지 에디터', () => {
     render(<NoticeEditor labelId="label" onChange={onChange} />);
     const textbox = await screen.findByRole('textbox');
     expect(textbox).toHaveAttribute('contenteditable', 'true');
-    const paragraph = textbox.querySelector('p');
+    const paragraph = within(textbox).getByRole('paragraph');
     expect(paragraph).toHaveAttribute('data-placeholder', '공지 내용을 입력하세요');
     expect(paragraph).toHaveClass('is-editor-empty');
     expect(textbox.textContent).toBe('');
     expect(onChange).not.toHaveBeenCalled();
-    if (!paragraph) {
-      throw new Error('문단이 없습니다.');
-    }
     paragraph.textContent = '직접 작성';
     await waitFor(() => expect(onChange).toHaveBeenCalled());
     expect(onChange).toHaveBeenLastCalledWith(body('직접 작성'));
