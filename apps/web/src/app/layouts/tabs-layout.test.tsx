@@ -45,6 +45,17 @@ describe('TabsLayout', () => {
     expect(within(navigation).getByRole('link', { current: 'page' })).toHaveTextContent('공지');
   });
 
+  it('홈 탭에서는 상단 헤더에 YAPP 로고와 알림 링크를 렌더링한다', () => {
+    location.pathname = '/';
+    render(
+      <TabsLayout>
+        <main>홈</main>
+      </TabsLayout>,
+    );
+    expect(screen.getByRole('link', { name: 'YAPP 홈' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: '알림' })).toHaveAttribute('href', '/notices');
+  });
+
   it('상세·인증 화면에서 사용하는 기본 셸에는 주요 메뉴가 없다', () => {
     render(
       <PageShell>
