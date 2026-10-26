@@ -1,4 +1,5 @@
 /** 세션 폼에 넣는 주소 검색 영역입니다. 선택값은 부모가 소유하고 검색 요청만 내부에서 관리합니다. */
+import { useForm, useStore } from '@tanstack/react-form';
 import { useQuery } from '@tanstack/react-query';
 import { useId, useState } from 'react';
 import { Field, TextField } from '@seed-design/react';
@@ -31,90 +32,112 @@ function addressIdentity(item: AddressSearchItemViewModel): string {
   ]);
 }
 
-/** 입력한 검색어와 페이지를 Query 조건으로 사용해 자동 검색합니다. */
+/** 입력이 300ms 동안 멈추면 검색하고 페이지 이동은 즉시 조회합니다. */
 export function AddressSearch({ value, onSelect, disabled = false }: Props) {
   const id = useId();
-  const [keyword, setKeyword] = useState('');
-  const [page, setPage] = useState(1);
-  const searchKeyword = keyword.trim();
+  const [conditions, setConditions] = useState({ keyword: '', page: 1 });
+  const form = useForm({
+    defaultValues: { keyword: '' },
+    listeners: {
+      onChangeDebounceMs: 300,
+      onChange: ({ formApi }) =>
+        setConditions({ keyword: formApi.state.values.keyword.trim(), page: 1 }),
+    },
+  });
+  const keyword = useStore(form.store, (state) => state.values.keyword.trim());
+  const searchKeyword = conditions.keyword;
   const unavailable = !isAddressSearchAvailable();
-  const options = addressSearchQueryOptions({ keyword: searchKeyword, page });
-  const query = useQuery({ ...options, enabled: options.enabled && !disabled });
-  const loading = query.isFetching;
-  // 재조회 중이나 실패 후에는 캐시된 이전 결과를 선택할 수 없게 합니다.
+  const options = addressSearchQueryOptions(conditions);
+  const query = useQuery({ ...options, enabled: options.enabled && !!keyword && !disabled });
+  const loading = !!keyword && (keyword !== searchKeyword || query.isFetching);
+  // 새 결과가 올 때까지 목록을 유지하되 조회 중 선택과 페이지 이동은 막습니다.
   const data =
-    !loading && !query.isError && query.data?.status === 'success' ? query.data.data : undefined;
+    keyword && !query.isError && query.data?.status === 'success' ? query.data.data : undefined;
   const serviceError = query.data?.status === 'service-error' ? query.data.code : undefined;
-  const error = loading ? null : getAddressSearchError(query.error, serviceError);
+  const error =
+    !keyword || loading || query.isPlaceholderData
+      ? null
+      : getAddressSearchError(query.error, serviceError);
 
   return (
     <section className={styles.root} aria-label="주소 검색">
       <div className={styles.searchRow}>
-        <Field.Root className={styles.field} disabled={disabled || unavailable}>
-          <Field.Label>도로명주소 검색</Field.Label>
-          <TextField.Root
-            value={keyword}
-            onValueChange={(text) => {
-              setKeyword(text);
-              setPage(1);
-            }}
-          >
-            <TextField.Input
-              type="search"
-              placeholder="예: 세종대로 110"
-              autoComplete="off"
-              spellCheck={false}
-              aria-describedby={`${id}-hint`}
-              onKeyDown={(event) => {
-                if (event.key !== 'Enter') {
-                  return;
-                }
-                event.preventDefault();
-                event.stopPropagation();
-              }}
-            />
-          </TextField.Root>
-        </Field.Root>
+        <form.Field name="keyword">
+          {(field) => (
+            <Field.Root className={styles.field} disabled={disabled || unavailable}>
+              <Field.Label>도로명주소 검색</Field.Label>
+              <TextField.Root
+                value={field.state.value}
+                onValueChange={(text) => {
+                  field.handleChange(text);
+                  if (!text.trim()) {
+                    setConditions({ keyword: '', page: 1 });
+                  }
+                }}
+              >
+                <TextField.Input
+                  type="search"
+                  placeholder="예: 세종대로 110"
+                  autoComplete="off"
+                  spellCheck={false}
+                  aria-describedby={`${id}-hint`}
+                  onKeyDown={(event) => {
+                    if (event.key !== 'Enter') {
+                      return;
+                    }
+                    event.preventDefault();
+                    event.stopPropagation();
+                  }}
+                />
+              </TextField.Root>
+            </Field.Root>
+          )}
+        </form.Field>
       </div>
       <p id={`${id}-hint`} className={styles.hint}>
         도로명과 건물번호를 입력하면 자동으로 검색합니다.
       </p>
-      {unavailable && (
-        <p role="alert">주소 검색 설정이 준비되지 않았습니다. 관리자에게 문의해 주세요.</p>
-      )}
       {value && (
         <div className={styles.selection}>
           <span>선택한 주소</span>
           <strong>{value.roadAddress}</strong>
         </div>
       )}
-      <output aria-live="polite" className={styles.hint}>
-        {loading && '주소를 검색하고 있습니다.'}
-        {data &&
-          `“${searchKeyword}” 검색 결과 ${data.totalCount.toLocaleString('ko-KR')}개 · ${data.page}페이지`}
-        {!loading && !data && !error && !unavailable && '검색 결과에서 세션 장소를 선택해 주세요.'}
-      </output>
-      {error && (
-        <div className={styles.error}>
-          <p role="alert">{error.message}</p>
-          {error.retry && (
-            <ActionButton
-              type="button"
-              variant="neutralWeak"
-              disabled={disabled}
-              onClick={() => void query.refetch({ cancelRefetch: false })}
-            >
-              다시 검색
-            </ActionButton>
-          )}
-        </div>
-      )}
+      <div className={styles.status}>
+        {unavailable || error ? (
+          <p role="alert" className={styles.statusMessage}>
+            {unavailable
+              ? '주소 검색 설정이 준비되지 않았습니다. 관리자에게 문의해 주세요.'
+              : error?.message}
+          </p>
+        ) : (
+          <output aria-live="polite" className={styles.statusMessage}>
+            {loading && '주소를 검색하고 있습니다.'}
+            {!loading && !data && '검색 결과에서 세션 장소를 선택해 주세요.'}
+            {!loading &&
+              data?.items.length === 0 &&
+              '검색 결과가 없습니다. 검색어를 바꿔 다시 검색해 주세요.'}
+            {!loading &&
+              data &&
+              data.items.length > 0 &&
+              `“${searchKeyword}” 검색 결과 ${data.totalCount.toLocaleString('ko-KR')}개 · ${data.page}페이지`}
+          </output>
+        )}
+        {error?.retry && (
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            disabled={disabled}
+            onClick={() => void query.refetch({ cancelRefetch: false })}
+          >
+            다시 검색
+          </ActionButton>
+        )}
+      </div>
       {data && (
         <>
-          {data.items.length === 0 ? (
-            <p className={styles.empty}>검색 결과가 없습니다. 검색어를 바꿔 다시 검색해 주세요.</p>
-          ) : (
-            <ul className={styles.results} aria-label="주소 검색 결과">
+          {data.items.length > 0 && (
+            <ul className={styles.results} aria-label="주소 검색 결과" aria-busy={loading}>
               {data.items.map((item) => {
                 const selected = !!value && addressIdentity(value) === addressIdentity(item);
                 return (
@@ -122,7 +145,7 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
                     <button
                       type="button"
                       className={styles.result}
-                      disabled={disabled}
+                      disabled={disabled || loading || query.isPlaceholderData}
                       aria-pressed={selected}
                       onClick={() => {
                         if (!selected) {
@@ -143,8 +166,8 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
               <ActionButton
                 type="button"
                 variant="neutralWeak"
-                disabled={disabled || !data.hasPreviousPage}
-                onClick={() => setPage(data.page - 1)}
+                disabled={disabled || loading || query.isPlaceholderData || !data.hasPreviousPage}
+                onClick={() => setConditions({ keyword: searchKeyword, page: data.page - 1 })}
               >
                 이전
               </ActionButton>
@@ -154,8 +177,8 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
               <ActionButton
                 type="button"
                 variant="neutralWeak"
-                disabled={disabled || !data.hasNextPage}
-                onClick={() => setPage(data.page + 1)}
+                disabled={disabled || loading || query.isPlaceholderData || !data.hasNextPage}
+                onClick={() => setConditions({ keyword: searchKeyword, page: data.page + 1 })}
               >
                 다음
               </ActionButton>

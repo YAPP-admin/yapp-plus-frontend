@@ -1,5 +1,5 @@
 /** 주소 검색 조건을 Query 옵션으로 변환하고 승인키 접근을 화면에서 숨깁니다. */
-import { queryOptions } from '@tanstack/react-query';
+import { keepPreviousData, queryOptions } from '@tanstack/react-query';
 import { getAddressSearchKey } from './location-config';
 import { searchAddresses } from './juso-search';
 
@@ -11,6 +11,7 @@ export function isAddressSearchAvailable(): boolean {
 
 export function addressSearchQueryOptions(conditions: AddressSearchConditions) {
   return queryOptions({
+    placeholderData: keepPreviousData,
     staleTime: 0,
     gcTime: 0,
     queryKey: ['admin', 'address-search', conditions.keyword, conditions.page],

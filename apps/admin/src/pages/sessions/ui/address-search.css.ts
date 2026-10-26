@@ -14,8 +14,22 @@ export const selection = style({
   background: vars.$color.bg.neutralWeak,
   overflowWrap: 'anywhere',
 });
-export const error = style({ display: 'grid', justifyItems: 'start', gap: 8 });
-export const empty = style({ margin: 0, paddingBlock: 24, color: vars.$color.fg.neutralMuted });
+// 안내 두 줄과 재시도 버튼을 한 행에 배치해 과도한 여백 없이 높이를 유지합니다.
+export const status = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: 8,
+  minHeight: 40,
+});
+export const statusMessage = style({
+  margin: 0,
+  flex: 1,
+  minWidth: 0,
+  fontSize: 14,
+  lineHeight: '20px',
+  color: vars.$color.fg.neutralMuted,
+  overflowWrap: 'anywhere',
+});
 export const results = style({
   display: 'grid',
   listStyle: 'none',
