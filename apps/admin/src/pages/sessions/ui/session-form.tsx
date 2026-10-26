@@ -92,7 +92,8 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
           <Portal>
             <ContentDialog.Backdrop />
             <ContentDialog.Positioner>
-              <ContentDialog.Content className={styles.dialog}>
+              {/* Portal 밖의 어드민 셸과 같은 다크 테마를 적용합니다. */}
+              <ContentDialog.Content className={styles.dialog} data-seed-color-mode="dark-only">
                 <ContentDialog.Header>
                   <ContentDialog.Title>
                     {initialValues ? '세션 수정' : '세션 추가'}

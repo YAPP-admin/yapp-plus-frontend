@@ -1,12 +1,14 @@
 /** 목록 조회 상태를 구분하며 필터는 라우터가 소유합니다. */
 import { useHydrated } from '@tanstack/react-router';
+import { useState } from 'react';
 import { ActionButton } from '@yapp-plus/ui';
 import type { SessionFilter } from '../model/session-search';
-import { useSessionsQuery } from '../model/session-queries';
+import { useCreateSessionMutation, useSessionsQuery } from '../model/session-queries';
 import { sortSessions } from '../model/session';
 import { SessionTypeFilter } from './session-type-filter';
 import { SessionList } from './session-list';
-import { page, title, description, placeholder } from './sessions-page.css';
+import { SessionForm } from './session-form';
+import { page, title, description, placeholder, createButton } from './sessions-page.css';
 
 export function SessionsPage({
   type,
@@ -17,6 +19,8 @@ export function SessionsPage({
 }) {
   const hydrated = useHydrated();
   const sessionsQuery = useSessionsQuery();
+  const createSession = useCreateSessionMutation();
+  const [creating, setCreating] = useState(false);
 
   function renderList() {
     if (!hydrated) {
@@ -51,8 +55,26 @@ export function SessionsPage({
       <h1 className={title}>세션 관리</h1>
       <p className={description}>유형별 세션을 확인합니다.</p>
       <p className={description}>예시 데이터입니다. 변경사항은 새로고침하면 초기화됩니다.</p>
+      <ActionButton
+        className={createButton}
+        type="button"
+        disabled={!hydrated}
+        onClick={() => setCreating(true)}
+      >
+        세션 추가
+      </ActionButton>
       <SessionTypeFilter value={type} onValueChange={onTypeChange} />
       {renderList()}
+      {creating && (
+        <SessionForm
+          onSubmit={async (input) => {
+            await createSession.mutateAsync(input);
+            setCreating(false);
+            onTypeChange('all');
+          }}
+          onClose={() => setCreating(false)}
+        />
+      )}
     </main>
   );
 }
