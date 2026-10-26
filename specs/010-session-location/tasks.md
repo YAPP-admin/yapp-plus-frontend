@@ -1,6 +1,6 @@
 # 작업 목록: 세션 장소 검색과 위치 설정
 
-**상태**: 3-5 리뷰 반영 완료, 3-6 진행 예정 | **입력**: [계획](plan.md), [명세](spec.md)
+**상태**: 3-6 구현·실제 연동 검증 완료, 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
 
 3-3까지 사용자 리뷰 후 3-4 코드·단위 검증을 완료했다. 실제 좌표 API 검증은 승인키 설정 후 진행한다. 준비 항목의 미확인 내용은 체크박스로 유지한다. **각 2-1·2-2… 세부 단계가 끝나면 반드시 멈추고 사용자 리뷰와 진행 지시를 받는다.**
 작업 개수가 적다는 이유로 다음 단계까지 묶어 실행하지 않는다.
@@ -23,7 +23,7 @@
 ## US1 — 생성
 
 - [x] T010 [US1] **3-5** 검색 UI·페이지 이동·Enter 분리·주소 재선택·자동 검색·응답 분리 테스트: `apps/admin/src/pages/sessions/ui/address-search.tsx, apps/admin/src/pages/sessions/ui/address-search.test.tsx`
-- [ ] T011 [US1] **3-6** React 지도 SDK catalog 등록·앱 로더·클릭/드래그·수동 조정·초기 복귀와 실패 복구 검증: `pnpm-workspace.yaml, apps/admin/package.json, apps/admin/src/pages/sessions/model/location/kakao-loader.ts, apps/admin/src/pages/sessions/ui/session-location-map.tsx, apps/admin/src/pages/sessions/ui/session-location-map.test.tsx`
+- [x] T011 [US1] **3-6** React 지도 SDK catalog 등록·기본 로더 훅·마커 드래그·읽기 전용 좌표·초기 복귀와 실패 복구 검증: `pnpm-workspace.yaml, apps/admin/package.json, apps/admin/src/pages/sessions/ui/session-location-map.tsx, apps/admin/src/pages/sessions/ui/session-location-map.test.tsx`
 - [ ] T012 [US1] **3-7** 공통 폼·유형 초안·단일 최종 좌표·검증·저장중 닫기 차단과 테스트: `apps/admin/src/pages/sessions/ui/session-form.tsx, apps/admin/src/pages/sessions/ui/session-form.test.tsx`
 - [ ] T013 [US1] **4-1** 목록 로딩·실패·재시도·전체/필터 빈 상태·프로덕션 안내 검증: `apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
 - [ ] T014 [US1] **4-2** 생성 진입·Mutation·캐시·전체 필터·집계0·성공/취소 테스트: `apps/admin/src/pages/sessions/model/session-queries.ts, apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
@@ -64,5 +64,5 @@ US1의 응답 파싱 테스트와 검색 UI 사례, US2의 저장소 테스트�
 ## 준비 단계 진행 상태
 
 주소 검색 키 발급과 카카오 설정은 사용자 확인을 받았다. 2-5에서 주소 검색 페이지 이동·JSON 객체 응답과
-카카오 지도 타일·마커 표시를 실제 브라우저로 확인했다. 좌표 키는 처리중이며 T003·T005는 완료가 아니다.
+카카오 지도 타일·마커 표시를 실제 브라우저로 확인했다. 좌표 키는 Doppler 설정 후 3-6에서 실제 JSON 조회와 지도 표시를 확인했다. T003·T005의 발급 메타데이터와 나머지 준비 문서 확인은 별도로 남긴다.
 상세 증거와 미검증 항목은 quickstart.md에 기록했다.
