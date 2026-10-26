@@ -1,7 +1,7 @@
 import { createSessionInputSchema, sessionSchema, type CreateSessionInput } from './session';
 
 async function getStore() {
-  if (!import.meta.env.DEV || import.meta.env.SSR || typeof window === 'undefined') {
+  if (import.meta.env.SSR || typeof window === 'undefined') {
     throw new Error('세션 관리 기능을 준비 중입니다.');
   }
 

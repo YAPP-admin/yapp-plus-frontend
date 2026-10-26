@@ -69,8 +69,8 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
 let browserStore: ReturnType<typeof createSessionStore> | undefined;
 
 export function getBrowserSessionStore() {
-  if (!import.meta.env.DEV || import.meta.env.SSR || typeof window === 'undefined') {
-    throw new Error('모의 세션 저장소는 개발 브라우저에서만 사용할 수 있습니다.');
+  if (import.meta.env.SSR || typeof window === 'undefined') {
+    throw new Error('모의 세션 저장소는 브라우저에서만 사용할 수 있습니다.');
   }
 
   browserStore ??= createSessionStore();
