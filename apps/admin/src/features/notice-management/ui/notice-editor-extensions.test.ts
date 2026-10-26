@@ -1,3 +1,4 @@
+import { within } from '@testing-library/react';
 import { Editor } from '@tiptap/core';
 import { describe, expect, it, vi } from 'vitest';
 import { noticeExtensions } from './notice-editor-extensions';
@@ -10,7 +11,7 @@ describe('공지 에디터 확장', () => {
       content: '<p><a href="https://example.com">링크</a></p>',
     });
     try {
-      const link = editor.view.dom.querySelector('a');
+      const link = within(editor.view.dom).getByRole('link', { name: '링크' });
       const event = new MouseEvent('click', { button: 0 });
       Object.defineProperty(event, 'target', { value: link });
       editor.view.someProp('handleClick', (handler) => handler(editor.view, 1, event));

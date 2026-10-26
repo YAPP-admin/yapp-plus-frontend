@@ -1,6 +1,6 @@
 /** 작성 기본값과 수정 초기화·재조회 중 입력 보존을 검증한다. */
 import { useState } from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -74,7 +74,7 @@ it('재조회 성공·실패·삭제 결과에도 입력을 보존하고 ID 변�
   await user.type(title, '수정 중');
 
   const body = await screen.findByRole('textbox', { name: '공지 내용' });
-  const paragraph = body.querySelector('p');
+  const paragraph = within(body).getAllByRole('paragraph')[0];
 
   if (!paragraph) {
     throw new Error('본문 문단이 필요합니다.');
