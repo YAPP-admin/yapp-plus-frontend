@@ -77,3 +77,6 @@ globalStyle(`${editorRoot} .tiptap hr`, {
   borderTop: `1px solid ${vars.$color.stroke.neutralMuted}`,
   margin: `${vars.$dimension.x5} 0`,
 });
+
+/** 상세 본문은 입력 공간을 확보하지 않고 실제 내용 높이만 사용한다. */
+globalStyle(`${editorRoot} .tiptap[contenteditable="false"]`, { minHeight: 0 });
