@@ -24,16 +24,17 @@ export const item = style({
   justifyContent: 'center',
   gap: '4px',
   padding: `${vars.$dimension.x1} ${vars.$dimension.x2}`,
-  color: vars.$color.fg.neutralMuted,
+  color: vars.$color.palette.gray600,
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
-  fontWeight: vars.$fontWeight.bold,
+  fontWeight: vars.$fontWeight.medium,
   textDecoration: 'none',
   touchAction: 'manipulation',
   transition: 'color 150ms ease, transform 100ms ease',
   selectors: {
     '&[aria-current="page"]': {
       color: vars.$color.fg.neutral,
+      fontWeight: vars.$fontWeight.bold,
     },
     '&:active': {
       transform: 'scale(0.96)',
@@ -57,6 +58,6 @@ export const iconWrapper = style({
 export const itemLabel = style({
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
-  fontWeight: vars.$fontWeight.bold,
+  fontWeight: 'inherit',
   letterSpacing: '-0.2px',
 });
