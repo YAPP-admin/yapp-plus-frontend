@@ -1,9 +1,8 @@
 # 작업 목록: 세션 장소 검색과 위치 설정
 
-**상태**: 1-4 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
+**상태**: 3-3 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
 
-1-1~1-3은 문서 리뷰를 마쳤다. 1-4 산출물은 작성되어 이번 리뷰를 기다린다.
-아래 구현 작업은 모두 미착수다. **각 2-1·2-2… 세부 단계가 끝나면 반드시 멈추고 사용자 리뷰와 진행 지시를 받는다.**
+3-1·3-2 이후 3-3 구현을 완료하여 리뷰를 기다린다. 준비 항목의 미확인 내용은 체크박스로 유지한다. **각 2-1·2-2… 세부 단계가 끝나면 반드시 멈추고 사용자 리뷰와 진행 지시를 받는다.**
 작업 개수가 적다는 이유로 다음 단계까지 묶어 실행하지 않는다.
 
 ## 준비
@@ -12,13 +11,13 @@
 - [ ] T002 **2-2** 주소 검색 개발용 키 신청 조건과 유효기간·발급 결과 기록: `specs/010-session-location/quickstart.md`
 - [ ] T003 **2-3** 좌표 키 신청·본인 확인·사용 목적과 발급 결과 기록: `specs/010-session-location/quickstart.md`
 - [ ] T004 **2-4** 카카오 JavaScript 키·Maps 활성화·허용 도메인 확인: `specs/010-session-location/quickstart.md`
-- [ ] T005 **2-5** 환경 변수 예시와 검증을 준비하고 실제 조회·JSONP 콜백 계약 확인: `apps/admin/.env.example, apps/admin/src/pages/sessions/model/location/env.ts, specs/010-session-location/contracts/location.md`
+- [ ] T005 **2-5** 환경 변수 예시와 검증을 준비하고 실제 조회·JSON 응답·CORS 계약 확인: `apps/admin/.env.example, apps/admin/src/pages/sessions/model/location/env.ts, specs/010-session-location/contracts/location.md`
 
 ## 공통 기반
 
 - [x] T006 **3-1** 유형별 스키마·fixture·카드와 기존 테스트를 함께 전환: `apps/admin/src/pages/sessions/model/session.ts, apps/admin/src/pages/sessions/model/sessions.mock.ts, apps/admin/src/pages/sessions/ui/session-card.tsx`
-- [ ] T007 **3-2** 10초 타임아웃·정리·늦은 콜백 무시 JSONP 구현 및 테스트: `apps/admin/src/pages/sessions/model/location/jsonp.ts, apps/admin/src/pages/sessions/model/location/jsonp.test.ts`
-- [ ] T008 **3-3** 검색·페이지·업무 오류·DTO 검증 및 ViewModel 매핑 구현·테스트: `apps/admin/src/pages/sessions/model/location/location-view-model.ts, apps/admin/src/pages/sessions/model/location/juso-search.ts, apps/admin/src/pages/sessions/model/location/juso-search.test.ts`
+- [x] T007 **3-2** 10초 타임아웃·AbortController 취소·정리 JSON 전송 구현 및 테스트: `apps/admin/src/pages/sessions/model/location/address-request.ts, apps/admin/src/pages/sessions/model/location/address-request.test.ts`
+- [x] T008 **3-3** 검색·페이지·업무 오류·DTO 검증 및 ViewModel 매핑 구현·테스트: `apps/admin/src/pages/sessions/model/location/location-view-model.ts, apps/admin/src/pages/sessions/model/location/juso-search.ts, apps/admin/src/pages/sessions/model/location/juso-search.test.ts`
 - [ ] T009 **3-4** proj4 catalog 등록, 읽기 쉬운 식별 정보의 요청 역매핑·응답 매칭·좌표 ViewModel 변환·독립 기준점 검증: `pnpm-workspace.yaml, apps/admin/package.json, apps/admin/src/pages/sessions/model/location/coordinates.ts, apps/admin/src/pages/sessions/model/location/coordinates.test.ts`
 
 ## US1 — 생성
@@ -64,6 +63,6 @@ US1의 응답 파싱 테스트와 검색 UI 사례, US2의 저장소 테스트�
 
 ## 준비 단계 진행 상태
 
-주소 검색 키 발급과 카카오 설정은 사용자 확인을 받았다. 2-5에서 주소 검색 페이지 이동·JSONP 객체 응답과
+주소 검색 키 발급과 카카오 설정은 사용자 확인을 받았다. 2-5에서 주소 검색 페이지 이동·JSON 객체 응답과
 카카오 지도 타일·마커 표시를 실제 브라우저로 확인했다. 좌표 키는 처리중이며 T003·T005는 완료가 아니다.
 상세 증거와 미검증 항목은 quickstart.md에 기록했다.
