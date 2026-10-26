@@ -3,6 +3,7 @@ import { Link } from '@tanstack/react-router';
 import { ActionButton } from '@yapp-plus/ui';
 import {
   NoticeBody,
+  NoticeAttachments,
   getNoticeAudience,
   getNoticeSummary,
   getNoticeReaders,
@@ -54,6 +55,8 @@ export function NoticeDetailContent({
       </ActionButton>
 
       <NoticeBody document={notice.bodyDocument} />
+
+      <NoticeAttachments attachments={notice.attachments ?? []} />
 
       {notice.category === 'submission' && <NoticeSubmission submission={notice.submission} />}
 

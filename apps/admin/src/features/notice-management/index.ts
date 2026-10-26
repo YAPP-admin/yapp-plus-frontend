@@ -16,3 +16,6 @@ export { getNoticeSummary, getNoticeDeadline, getNoticeReaders } from './model/n
 
 export { getNoticeFormValues } from './model/notice-form';
 export { NoticeQueryBoundary } from './ui/notice-query-boundary';
+
+export { NoticeAttachmentInput } from './ui/notice-attachment-input';
+export { NoticeAttachments } from './ui/notice-attachments';

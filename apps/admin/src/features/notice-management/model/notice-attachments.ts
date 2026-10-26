@@ -1,4 +1,5 @@
 /** SEED의 기본 파일 검증에 공지의 묶음 제한과 이미지 읽기 확인을 더한다. */
+import type { NoticeAttachment } from './notice';
 import type { AttachmentInputRootProps } from '@seed-design/react';
 import type { FileEntry, FileRejection } from '@seed-design/react/primitive';
 
@@ -52,4 +53,13 @@ async function canReadImage({ file }: FileEntry) {
   } catch {
     return false;
   }
+}
+
+/** 저장 Blob을 SEED가 사용하는 편집용 File 목록으로 변환한다. 원본 배열은 바꾸지 않는다. */
+export function getNoticeAttachmentEntries(attachments: NoticeAttachment[]): FileEntry[] {
+  return attachments.map(({ id, name, blob }) => ({
+    id,
+    file: new File([blob], name, { type: blob.type }),
+    status: 'success',
+  }));
 }
