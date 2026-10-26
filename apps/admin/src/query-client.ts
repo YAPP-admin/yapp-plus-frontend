@@ -1,17 +1,16 @@
-/** 어드민 QueryClient와 주소 검색의 명시적 조회 정책을 구성합니다. */
+/** 어드민 전체의 재시도·자동 재조회 기본 정책을 구성합니다. */
 import { QueryClient } from '@tanstack/react-query';
 
 export function createAdminQueryClient() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { staleTime: 30_000 } },
+  return new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 30_000,
+        retry: false,
+        refetchOnWindowFocus: false,
+        refetchOnReconnect: false,
+        refetchOnMount: false,
+      },
+    },
   });
-  client.setQueryDefaults(['admin', 'address-search'], {
-    staleTime: 0,
-    retry: false,
-    refetchOnWindowFocus: false,
-    refetchOnReconnect: false,
-    refetchOnMount: false,
-    gcTime: 0,
-  });
-  return client;
 }
