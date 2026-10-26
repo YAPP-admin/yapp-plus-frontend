@@ -19,6 +19,12 @@ export async function createSession(input: CreateSessionInput) {
   return sessionSchema.parse(store.createSession(createSessionInputSchema.parse(input)));
 }
 
+/** 생성과 같은 입력 계약으로 브라우저 예시 세션을 수정합니다. */
+export async function updateSession(id: string, input: CreateSessionInput) {
+  const store = await getStore();
+  return sessionSchema.parse(store.updateSession(id, createSessionInputSchema.parse(input)));
+}
+
 export async function deleteSession(id: string) {
   const store = await getStore();
   store.deleteSession(id);
