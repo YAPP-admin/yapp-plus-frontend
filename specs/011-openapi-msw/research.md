@@ -1,6 +1,6 @@
 # 조사와 결정
 
-**작성일**: 2026-10-26 | **상태**: 1단계 조사 기록
+**작성일**: 2026-10-26 | **상태**: 단계별 조사 기록
 
 ## 기존 도구를 유지한다
 
@@ -79,3 +79,28 @@
 - 별도의 임시 검증 명세로 같은 설정을 실행해 전체 응답 예제는 200과 예제 본문을 반환하고,
   예제가 없는 응답은 501을 반환하는 것을 확인했다. 검증 명세는 `.context/`에만 두었고
   실제 API 원문·생성물을 보정하는 데 사용하지 않았다.
+
+## 4단계 Faker 적용
+
+- 사용자 승인에 따라 @faker-js/faker 10.6.0을 catalog에 고정했다. Node 24.20.0과 호환되며 설치 정책의
+  예외 없이 설치됐다. 기존 MSW의 버전별 postinstall 차단 정책은 유지했다.
+- Hey API 플러그인은 compatibilityVersion 10·locale en·requests false·includeInEntry false로 설정했다.
+  실제 생성 경로는 src/generated/@faker-js/faker.gen.ts다. 일반 index와 분리한 subpath로 공개한다.
+- 현재 MSW 플러그인은 Faker source 이름을 타입으로 허용하지만 실제 handler 생성 코드는 examples만
+  사용한다. 공용 handlers에서 생성 Faker 함수를 명시적으로 호출하는 방식을 사용했다.
+- 기본 Faker 생성기는 int32 형식만으로 정수 범위를 제한하지 않았다. 실제 응답 계약 검증에서 확인한
+  count·generationNumber·displayOrder·scoreDelta·출석 code에 nameRules를 설정하고 재생성했다.
+  기본 count 규칙이 suffix override보다 먼저 적용되므로 count 필드는 이름을 명시했다.
+- Faker 응답은 요청별 독립 en·base 인스턴스로 생성한다. base locale은 MIME 등 공통 데이터에 필요하다.
+  전역 seed를 변경하지 않으며 기준 날짜도 고정했다. 생성 Zod의 검증 결과만 확인하고 JSON 원본을 반환한다.
+- 생성 파일의 nullable enum에는 도구가 `as any`를 출력한다. 생성물을 직접 편집하지 않았으며,
+  수동 코드에는 any나 검증 없는 단언을 추가하지 않았다. 성공 응답은 실행 시 Zod 검증을 거친다.
+- 자동 데이터는 도메인 관계까지 보장하지 않는다. 대표 다섯 API는 합성 고정 데이터로 보완한다.
+- 성공 본문 스키마가 unknown인 출석 API 4개와 OAuth 리다이렉트 6개는 임의 성공으로 채우지 않고 501을 유지한다.
+- 현재 Ky 생성 클라이언트는 204의 data를 null로 반환한다. 테스트는 HTTP 본문이 없다는 조건과
+  이 런타임 동작을 확인하며 생성 SDK를 직접 수정하지 않는다.
+
+- MSW 2.15.0의 setupServer 호환 콜백 print.error는 메시지만 출력하고 요청을 통과시켰다.
+  미등록 .test 요청이 DNS 조회로 진행되는 회귀 테스트에서 이를 발견했다. 공개 onUnhandledRequest(request,
+  'error')의 Promise를 기다리도록 수정해 MSW InternalError로 요청을 중단했다. 단순 fetch 실패만으로는
+  차단을 입증할 수 없으므로 테스트는 Cannot bypass 오류까지 확인한다.

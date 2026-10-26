@@ -6,7 +6,9 @@
   "exports": {
     ".": "./src/index.ts",
     "./generated": "./src/generated/index.ts",
-    "./generated/msw": "./src/generated/msw.gen.ts"
+    "./generated/msw": "./src/generated/msw.gen.ts",
+    "./generated/faker": "./src/generated/@faker-js/faker.gen.ts",
+    "./mocks": "./src/mocks/index.ts"
   },
   "scripts": {
     "generate": "openapi-ts",
@@ -14,6 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@faker-js/faker": "catalog:",
     "@tanstack/react-query": "catalog:",
     "ky": "catalog:",
     "msw": "catalog:",

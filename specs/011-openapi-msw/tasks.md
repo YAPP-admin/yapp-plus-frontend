@@ -2,7 +2,7 @@
 
 **입력**: [spec.md](spec.md), [plan.md](plan.md), [research.md](research.md),
 [data-model.md](data-model.md), [공개 계약](contracts/api-mocking.md)
-**현재 상태**: 3단계 완료, 사용자 리뷰 대기. 이슈 #107 연결. 4단계 착수 승인 없음.
+**현재 상태**: 5단계 리뷰 수정 완료, 사용자 리뷰 대기. 이슈 #107 연결. 6단계 착수 승인 없음.
 
 ## 진행 규칙
 
@@ -44,38 +44,39 @@
 
 ## 4단계 — 대표 응답과 핸들러 (US2, P2)
 
-- [ ] T013 [US2] apps/admin/src/mocks/api-contract.test.ts에 fixture 계약·대상 범위·미구현 실패 검증을 작성한다.
-- [ ] T014 [US2] packages/api/src/mocks/fixtures.ts에 명세에서 자동 생성된 응답을 확인하고 다섯 대표 API의 부족한 합성 고정 응답과 빈 결과를 보완한다.
-- [ ] T015 [US2] packages/api/src/mocks/handlers.ts에 base URL 검증·자동 예제를 유지하는 전체 핸들러 구성·대표 응답 보완·응답 부재 시 501 처리를 구현한다.
-- [ ] T016 [US2] packages/api/src/mocks/index.ts와 packages/api/package.json에서 수동 구성 함수와 미등록 요청 처리만 공개한다.
-- [ ] T017 [US2] apps/admin/src/mocks/api-contract.test.ts에서 생성 Zod·SDK·명시적 Node MSW 수명주기로 검증하고 validation.md에 기록한다.
+- [x] T013 [US2] fixture 계약·대상 범위·미구현 실패를 확인한다. 당시 작성한 api-contract.test.ts는 5단계 리뷰 요청에 따라 제거했다.
+- [x] T014 [US2] Faker 의존성·생성 설정·별도 공개 진입점을 추가·재생성하고 packages/api/src/mocks/fixtures.ts에서 다섯 대표 API의 부족한 합성 고정 응답과 빈 결과를 보완한다.
+- [x] T015 [US2] packages/api/src/mocks/handlers.ts에 base URL 검증·전체 핸들러 구성·Faker 응답 연결·대표 응답 보완·응답 부재 시 501 처리를 구현한다.
+- [x] T016 [US2] packages/api/src/mocks/index.ts와 packages/api/package.json에서 수동 구성 함수와 미등록 요청 처리만 공개한다.
+- [x] T017 [US2] 생성 Zod·SDK·Node MSW로 확인한 결과를 validation.md에 기록한다. 모킹 전용 테스트 파일은 유지하지 않는다.
 
-**독립 검증**: 전역 setup 없이 테스트 파일 내부의 Node server로 fixture·경로·실패 정책을 검증한다.
+**독립 검증**: 생성 타입·응답의 실행 시 Zod 검증과 브라우저에서 fixture·경로·실패 정책을 확인한다.
 **중단점**: 데이터와 실패 정책을 리뷰받는다. 앱의 browser 초기화는 아직 연결하지 않는다.
 
 ## 5단계 — 개발 브라우저 연결 (US2, P2)
 
-- [ ] T018 [US2] apps/admin/src/mocks/mock-api-boundary.test.tsx와 apps/web/src/mocks/mock-api-boundary.test.tsx에 준비·실패·비활성·초기 렌더 검증을 작성한다.
-- [ ] T019 [US2] 각 앱의 public/mockServiceWorker.js를 MSW CLI로 생성하고 package.json의 worker 경로를 기록한다.
-- [ ] T020 [US2] apps/admin/src/mocks/browser.ts와 apps/web/src/mocks/browser.ts에 worker·시작 Promise·대상 요청 정책을 구성한다.
-- [ ] T021 [US2] 각 앱 src/mocks/mock-api-boundary.tsx를 만들고 apps/admin/src/providers.tsx 및 apps/web/src/app/providers.tsx에 연결한다.
-- [ ] T022 [US2] apps/admin/.env.example, apps/web/.env.example, turbo.json에 모킹 플래그 기본값·전달을 반영하고 잘못된 값을 검증한다.
-- [ ] T023 [US2] 두 앱의 브라우저 초기화와 기존 UI·safe-area 회귀 확인 결과를 specs/011-openapi-msw/validation.md에 기록한다.
+- [x] T018 [US2] 준비·실패·비활성·초기 렌더 동작을 확인한다. 당시 작성한 초기화 전용 테스트·보조 코드는 5단계 리뷰 요청에 따라 제거했다.
+- [x] T019 [US2] 각 앱의 public/mockServiceWorker.js를 MSW CLI로 생성하고 package.json의 worker 경로를 기록한다.
+- [x] T020 [US2] apps/admin/src/mocks/browser.ts와 apps/web/src/mocks/browser.ts에 worker·시작 Promise·대상 요청 정책을 구성한다.
+- [x] T021 [US2] 각 앱 src/mocks/mock-api-boundary.tsx를 만들고 apps/admin/src/providers.tsx 및 apps/web/src/app/providers.tsx에 연결한다.
+- [x] T022 [US2] apps/admin/.env.example, apps/web/.env.example, turbo.json에 모킹 플래그 기본값·전달을 반영하고 잘못된 값을 검증한다.
+- [x] T023 [US2] 두 앱의 브라우저 초기화와 기존 UI·safe-area 회귀 확인 결과를 specs/011-openapi-msw/validation.md에 기록한다.
 
-**독립 검증**: 플래그별 렌더·시작 경쟁·실패를 테스트하고 실제 브라우저에서 대표 요청이 가로채지는지 확인한다.
+**독립 검증**: 실제 브라우저에서 초기화·실패 처리와 대표 요청 가로채기를 확인한다. 모킹 전용 단위 테스트는 유지하지 않는다.
 **중단점**: 브라우저 동작을 리뷰받는다. 기존 직접 mock 서비스는 전환하지 않는다.
 
-## 6단계 — Vitest 연결과 회귀 테스트 (US3, P3)
+## 6단계 — 기능 테스트용 최소 MSW 설정 (US3, P3)
 
 - [ ] T024 [US3] apps/admin/src/mocks/server.ts와 apps/web/src/mocks/server.ts에 앱별 테스트 server를 만든다.
 - [ ] T025 [US3] apps/admin/vitest.setup.ts와 apps/web/vitest.setup.ts에 listen·resetHandlers·close를 연결하고 cleanup을 유지한다.
-- [ ] T026 [US3] apps/admin/src/mocks/api-contract.test.ts의 파일 내부 server를 공통 setup 수명주기로 전환해 중복 interception을 제거한다.
-- [ ] T027 [US3] apps/admin/src/mocks/api.test.ts에 생성 SDK의 성공·401·네트워크 오류·204·501·요청 파라미터 검증을 작성한다.
-- [ ] T028 [US3] apps/web/src/mocks/api.test.ts에 이번 주 세션·null·미구현 요청·응답 override 초기화 검증을 작성한다.
-- [ ] T029 [US3] 두 앱의 테스트를 실행하고 실제 서버 요청 없음·테스트 격리 결과를 specs/011-openapi-msw/validation.md에 기록한다.
+- T026 [US3] **취소** — 모킹 전용 계약 테스트를 제거했으므로 공통 setup으로 옮길 테스트가 없다.
+- T027 [US3] **취소** — 어드민 SDK·모킹 전용 회귀 테스트를 추가하지 않는다.
+- T028 [US3] **취소** — 웹 SDK·모킹 전용 회귀 테스트를 추가하지 않는다.
+- [ ] T029 [US3] 두 앱의 기존 기능 테스트를 실행하고 server 수명주기 설정과 실행 결과를 specs/011-openapi-msw/validation.md에 기록한다.
 
-**독립 검증**: 두 앱 테스트가 실서버 없이 통과하며 override가 다음 테스트로 새지 않는다.
-**중단점**: 테스트와 결과를 리뷰받는다.
+**독립 검증**: listen·resetHandlers·close 설정을 확인하고 기존 기능 테스트가 통과한다.
+기능별 응답 override와 성공·오류 사례는 실제 기능을 구현할 때 해당 테스트에 추가한다.
+**중단점**: 최소 설정과 기존 테스트 실행 결과를 리뷰받는다.
 
 ## 7단계 — 전체 검증 (공통 품질)
 
@@ -104,16 +105,20 @@ US1 완료가 최소 생성 기반이며 US2·US3은 그 결과를 소비한다.
 
 ## 리뷰 기록
 
-| 단계 | 작업 상태         | 사용자 리뷰                          |
-| ---- | ----------------- | ------------------------------------ |
-| 1    | 문서 작성 완료    | 사용자 “진행해”로 승인               |
-| 2    | 의존성·설정 완료  | 사용자 “커밋하고 다음 진행해”로 승인 |
-| 3    | API·MSW 생성 완료 | 승인 대기                            |
-| 4    | 미착수            | 승인 없음                            |
-| 5    | 미착수            | 승인 없음                            |
-| 6    | 미착수            | 승인 없음                            |
-| 7    | 미착수            | 승인 없음                            |
-| 8    | 미착수            | 승인 없음                            |
+| 단계 | 작업 상태               | 사용자 리뷰                          |
+| ---- | ----------------------- | ------------------------------------ |
+| 1    | 문서 작성 완료          | 사용자 “진행해”로 승인               |
+| 2    | 의존성·설정 완료        | 사용자 “커밋하고 다음 진행해”로 승인 |
+| 3    | API·MSW 생성 완료       | 사용자 “커밋하고 다음 진행해”로 승인 |
+| 4    | Faker·대표 응답 완료    | 사용자 “다음 진행해”로 승인          |
+| 5    | 개발 브라우저 연결 완료 | 완료 리뷰 대기                       |
+| 6    | 미착수                  | 승인 없음                            |
+| 7    | 미착수                  | 승인 없음                            |
+| 8    | 미착수                  | 승인 없음                            |
 
-3단계 리뷰 수정: 사용자 “그렇게 진행해”로 명세 예제 활용을 승인했다. source 설정 제거와 재생성만
-수행하며, 4단계 대표 응답 보완의 착수 승인은 별도로 기다린다.
+3단계 리뷰 수정에서 사용자 “그렇게 진행해”로 명세 예제 활용을 승인받아 source 설정 제거와 재생성을 수행했다.
+
+사용자는 이어서 3단계 커밋과 4단계 진행·Faker 추가를 승인했다. 이후 사용자 “다음 진행해”로 4단계 리뷰와 5단계 착수를 승인했다. 현재 승인 범위는 5단계까지다.
+
+5단계 리뷰에서 사용자 “그렇게 수정해”로 모킹 전용 테스트 제거와 6단계 계획 축소를 승인했다.
+이번 변경은 5단계 리뷰 수정이며 6단계 구현은 아직 시작하지 않는다.

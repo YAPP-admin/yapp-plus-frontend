@@ -7,7 +7,7 @@
     },
     "dev": {
       "cache": false,
-      "env": ["MOBILE_WEB_URL"],
+      "env": ["MOBILE_WEB_URL", "VITE_API_MOCKING", "NEXT_PUBLIC_API_MOCKING"],
       "persistent": true
     },
     "lint": {

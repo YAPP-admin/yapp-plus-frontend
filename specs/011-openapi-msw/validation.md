@@ -62,7 +62,7 @@ pnpm peers check는 기존 모바일 react-native-worklets 0.13.0의 peer 범위
 
 ## 3단계 — 전체 API·MSW 생성
 
-**일자**: 2026-10-26 | **상태**: 생성·계약 검증 완료, 사용자 리뷰 대기
+**일자**: 2026-10-26 | **상태**: 생성·계약 검증 완료, 사용자 다음 단계 승인
 
 ### 커밋과 입력
 
@@ -127,8 +127,129 @@ Zod의 int64 출력은 bigint이고 생성 DTO는 number다. SDK 자동 검증·
 - 빌드는 다시 실행하지 않았다. 생성 코드가 이전 빌드 입력과 동일하고 앱·의존성·빌드 설정 변경은 없다.
   브라우저 실행과 대표 응답 구성은 여전히 후속 단계다.
 
+## 4단계 — Faker·대표 응답·공용 핸들러
+
+**일자**: 2026-10-26 | **상태**: 완료, 사용자 “다음 진행해”로 리뷰 승인
+
+### 승인·변경
+
+- 사용자 승인으로 3단계를 13c6286 (`feat(api): OpenAPI 클라이언트와 MSW 핸들러 생성`)에 커밋했다.
+  Git hook의 포맷·lint·commitlint가 통과했고, 커밋 직후 작업 트리가 깨끗함을 확인했다. push는 하지 않았다.
+- 사용자가 Faker 추가와 4단계 진행을 승인해 요구사항·계획·공개 계약과 작업 목록에 반영했다.
+- Faker 10.6.0을 catalog와 API 패키지 dependencies에 추가했다. 기존 생성 도구 버전은 유지했다.
+- 스키마 63개와 응답 168개(성공 38개·오류 130개)의 Faker factory를 생성했다.
+  요청 operation factory는 생성하지 않았다. 기존 생성 파일 19개는 바뀌지 않고 Faker 파일 1개가 추가됐다.
+- generated/faker와 mocks 공개 진입점을 추가했다. 일반 생성 index에는 Faker·MSW export가 없다.
+- 공용 핸들러는 Faker 30개·대표 다섯 API·기타 204 세 개를 연결해 38개 성공 응답을 제공한다.
+  Faker는 고정 seed·날짜의 독립 인스턴스로 호출하고 JSON 응답을 생성 Zod로 검증한다.
+- 대표 응답은 운영진 로그인·로그아웃·세션 목록·이번 주 세션·공지 수신자다. 빈 시나리오도 제공한다.
+- base URL 정규화와 대상 origin·경로 경계를 구현했다. 미등록 대상은 차단하고 외부 서비스는 제외한다.
+- apps/admin의 계약 테스트만 파일 내부 Node server로 실행한다. 앱 초기화와 전역 Vitest setup은 유지했다.
+
+### 검증·발견 사항
+
+- 설치와 frozen-lockfile 설치가 통과했다. 신규 package version은 Faker 하나이며 기존 Vitest optional peer
+  snapshot 중복은 pnpm이 정리했다. 모바일 manifest·lockfile importer는 변경되지 않았다.
+- 첫 테스트는 아직 없는 mocks 공개 구현을 import할 수 없어 실패했다. 이후 구현과 검증으로 통과시켰다.
+- Faker 기본 생성값의 int32 초과를 발견해 nameRules를 보완하고 재생성했다. 생성 파일은 직접 수정하지 않았다.
+- Zod가 bigint로 변환한 출력 대신 검증 전 JSON을 사용한다. 잘못된 모의 응답은 501로 실패한다.
+- MSW 콜백 print.error만으로는 미등록 요청이 차단되지 않았다. 초기 .test 주소의 DNS 실패를 발견한 뒤
+  공개 오류 처리 함수로 수정했다. 최종 회귀 테스트는 MSW의 Cannot bypass 오류로 차단됨을 확인한다.
+- 22개 계약 테스트가 통과했다. 대표 응답·빈 시나리오·재현성·override 복구·잘못된 데이터 거부·
+  전체 48개 경로·base URL 검증·외부 경로 제외를 포함한다.
+- 실제 서버에 인증·데이터 요청을 보내지 않았다. HTTP 검증 대상은 api.yapp.test이고 외부 테스트 요청도 MSW로 처리했다.
+- 동일 입력으로 재생성한 20개 파일의 SHA-256이 모두 일치한다. 원문은 3단계와 동일한 snapshot이다.
+  로컬 검증 스크립트는 `.context/verify-openapi-stage-4.mjs`, 해시는 `.context/openapi-msw-stage-4-generated-hashes.json`이다.
+
+### 최종 품질 게이트
+
+| 항목                           | 결과                                                                       |
+| ------------------------------ | -------------------------------------------------------------------------- |
+| node --run check               | 포맷·lint·typecheck·테스트 통과                                            |
+| 테스트                         | admin 237(신규 22 포함), web 29, app-bridge 17·ui 6(캐시 재사용), 총 289개 |
+| node --run build               | admin·web·Storybook 빌드 모두 통과                                         |
+| pnpm install --frozen-lockfile | 통과                                                                       |
+| 재생성                         | 20개 생성 파일의 SHA-256 일치                                              |
+| git diff --check               | 통과                                                                       |
+
+전체 검사와 빌드 로그는 `.context/openapi-msw-stage-4-check.log`,
+`.context/openapi-msw-stage-4-build.log`, 개별 계약 테스트는 `.context/openapi-msw-stage-4-test.log`에 있다.
+
+### 남은 범위·제한
+
+- OAuth 리다이렉트 6개와 성공 응답 스키마가 비어 있는 출석 close·cancel·override·badge 4개는 501이다.
+  임의로 응답 본문을 정하지 않았다. API가 서버에 구현되지 않았다는 뜻은 아니다.
+- Faker 데이터의 도메인 관계는 보장하지 않는다. 대표 응답 외 CRUD 상태·필터·인증 검증은 구현하지 않았다.
+- MSW 생성 factory만 직접 사용하면 Faker가 연결되지 않는다. 공용 createApiMockHandlers를 사용해야 한다.
+- 브라우저 worker와 두 앱 초기화는 5단계, 전역 테스트 수명주기는 6단계다. 이 단계에서는 연결하지 않았다.
+- 모바일 변경이 없어 expo:doctor는 실행하지 않았다. 프로덕션 번들·실제 브라우저의 상세 검증은 후속 단계다.
+
+## 5단계 — 개발 브라우저 연결
+
+**일자**: 2026-10-26 | **상태**: 완료, 사용자 리뷰 대기
+
+### 승인·변경
+
+- 사용자 “다음 진행해”로 4단계 리뷰와 5단계 착수를 승인받았다. 6단계는 착수하지 않았다.
+- origin/main을 다시 fetch해 25c1b7e임을 확인했다. 현재 브랜치와 4단계 미커밋 변경을 유지했다.
+- MSW 2.15.0 CLI로 두 public/mockServiceWorker.js를 생성하고 각 package.json에 workerDirectory를 기록했다.
+  생성 파일은 직접 수정하지 않았다.
+- 각 앱 browser.ts는 생성 client의 base URL과 공용 핸들러·미등록 요청 정책을 사용한다.
+  시작 Promise를 공유하고 실패한 시작은 새로고침 전까지 유지한다.
+- MockApiBoundary를 기존 Provider에 연결했다. SSR와 첫 클라이언트 렌더는 같은 준비 안내를 출력하고,
+  worker 준비 후 자식을 마운트한다. 초기화 실패·잘못된 플래그는 자식을 마운트하지 않고 안내한다.
+- 어드민 VITE_API_MOCKING, 웹 NEXT_PUBLIC_API_MOCKING은 미지정·false가 기본 비활성이다.
+  true는 development에서만 동작하며 production·test에서는 무시한다. 각 .env.example과 Turbo dev.env에 반영했다.
+- QueryClient 설정과 웹 safe-area effect를 유지했다. 전역 Vitest setup과 기존 화면 API 서비스는 변경하지 않았다.
+
+### 검증
+
+- 두 앱에 신규 테스트 각 15개를 추가했다. 준비 전 요청 방지, 실패, 미지정·false·잘못된 값,
+  production·test 비활성, SSR 초기 마크업, 해제 후 완료, 동시 시작과 실패 Promise 재사용을 검증했다.
+- StrictMode Provider 통합 테스트에서 실제 browser 모듈과 가짜 worker를 사용해 시작 1회와
+  QueryClient staleTime 유지를 확인했다. 웹 safe-area 초기화·cleanup도 유지됨을 확인했다.
+- 실제 Chromium에서 두 앱의 worker 등록 1회, 대표 다섯 API의 200·204, 미구현 응답 501을 확인했다.
+  대상 API의 실네트워크 경로에 차단 장치를 두었으며 이 경로로 빠진 요청은 0건이다.
+- 미등록 요청은 브라우저에서 MSW가 만든 HTTP 500 InternalError(Cannot bypass)로 종료된다.
+  Node에서는 같은 정책이 Promise rejection으로 나타난다. 두 경우 모두 실서버로 전달되지 않는다.
+- worker 등록 실패를 브라우저에서 주입해 오류 안내와 화면 차단을 확인했다. 정상 시작 시
+  hydration·페이지 오류는 없었다. 어드민 대시보드와 웹 홈·하단 탐색, 키보드 초점,
+  라이트·다크에서 가로 넘침이 없음을 확인했다. 모바일 WebView 실기기 검증은 범위 밖이다.
+- node --run check 통과: admin 252, web 44, app-bridge 17·ui 6(캐시 재사용), 총 319개 테스트.
+- node --run build로 admin·web·Storybook 빌드를 확인했다. 프로덕션 실행 번들의 상세 배제 검증은 7단계에 남긴다.
+- 모바일 설정·의존성을 변경하지 않아 expo:doctor는 실행하지 않았다.
+
+검증 로그는 .context/openapi-msw-stage-5-check.log, .context/openapi-msw-stage-5-build.log,
+.context/openapi-msw-stage-5-browser.log에 있다. 브라우저 재검증 스크립트는
+.context/check-stage-5-browser.mjs이며 실행 환경에 이미 설치된 Playwright와 Chromium을 사용했다.
+검증용 의존성은 프로젝트에 추가하지 않았다. 화면 기록은 .context/openapi-msw-stage-5-admin.png와
+.context/openapi-msw-stage-5-web.png다.
+
+### 복구·남은 범위
+
+플래그를 false로 바꾸고 개발 서버를 재시작한 뒤 페이지를 새로고침하면 기존 화면을 바로 사용한다.
+브라우저 모킹은 클라이언트 요청에만 적용하며 SSR 요청은 범위 밖이다. 기존 화면을 생성 SDK로
+전환하는 작업도 포함하지 않는다. 전체 CRUD 상태·OAuth redirect·미정의 응답의 한계는 4단계와 같다.
+
 ## 다음 단계
 
-3단계 생성물·공개 진입점·검증 결과를 사용자에게 리뷰받는다.
-명시적 승인 후에만 4단계 대표 응답·공용 핸들러 구성에 착수한다.
-리뷰 수정은 3단계 범위에서 반영하며 현재 생성물은 아직 커밋하지 않았다.
+5단계 개발 브라우저 연결을 리뷰받는다. 현재 4·5단계 변경은 커밋하지 않았다.
+승인 후 6단계에서 기능 테스트용 Node server와 Vitest 공통 수명주기만 연결한다.
+
+## 5단계 리뷰 수정 — 모킹 전용 테스트 제거
+
+사용자 “그렇게 수정해”에 따라 api-contract 테스트 1개와 두 앱의 browser·mock-api-boundary·
+providers 테스트 6개를 제거했다. 해당 테스트만 사용하던 deferred 보조 파일 2개도 제거했다.
+제거한 테스트 사례는 총 52개다. 위의 4·5단계 테스트 결과는 제거 전 검증 이력이며,
+현재 유지하는 테스트 수와 구분한다.
+
+모킹 런타임·생성 코드·응답의 Zod 검증·브라우저 초기화는 변경하지 않았다.
+요구사항·계획·작업 목록·실행 안내를 함께 수정했다. 6단계 T026~T028은 취소하고,
+T024·T025·T029의 Node server·공통 수명주기·기존 기능 테스트 확인만 남겼다.
+실제 기능별 성공·오류 검증은 해당 기능 구현 시 작성한다. 6단계 구현이나 commit·push는 하지 않았다.
+
+수정 후 node --run check가 통과했다. 기존 테스트 267개(admin 215, web 29, app-bridge 17,
+ui 6)가 통과했으며 app-bridge·ui는 캐시를 재사용했다. 로그는
+.context/openapi-msw-stage-5-review-check.log에 있다. git diff --check도 통과했다.
+이번 수정은 테스트 삭제와 문서 변경뿐이므로 빌드·브라우저 검증은 재실행하지 않았으며,
+런타임이 동일한 5단계의 기존 통과 기록을 유지한다.
