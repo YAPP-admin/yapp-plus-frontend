@@ -3,7 +3,7 @@
 **브랜치**: `DongjaJ/api-docs-implementation-check`
 **작성일**: 2026-10-26
 **이슈**: [#107](https://github.com/YAPP-admin/yapp-plus-frontend/issues/107)
-**상태**: 7단계 완료 — 사용자 리뷰 대기
+**상태**: 1~8단계 완료 — 최종 사용자 리뷰 승인
 **요청**: 같은 OpenAPI에서 API 코드와 MSW 기반을 만들고, 단계마다 리뷰 후 다음으로 진행한다.
 
 ## 사용자 시나리오와 검증
