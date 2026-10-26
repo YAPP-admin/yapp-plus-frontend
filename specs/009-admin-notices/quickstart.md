@@ -114,3 +114,13 @@
 - 스크린 리더·실제 터치 기기는 미검증이며 최종 접근성 검증 단계에 남긴다.
 - 설치 시 나타난 expo-modules-core와 react-native-worklets peer 경고는 기존 모바일 의존성 문제다. 모바일 설정·의존성은 변경하지 않았다.
 - `node --run check`·`node --run build` 통과. 관리자 테스트 307개(신규 상세·정렬 15개), 라우터 회귀를 확인했다.
+
+## 2026-10-26 Oxc React Compiler 검증
+
+- 상세·읽음 표 작업을 `a99148d`(의존성), `c35bcb1`(구현·테스트), `3790454`(문서)로 나누어 커밋했다.
+- Compiler 변경은 `3790454`를 base로 별도 PR로 제출한다. 상세 PR과 합치면 800줄 제한을 초과하므로 같은 PR에 포함하지 않는다.
+- 관리자 앱에 `oxc-transform-react` 0.155.0을 추가하고 Vite와 Vitest 모두 `react({ compiler: true })`로 설정했다. Oxc 통합은 experimental이며 기존 React 19 런타임을 사용한다.
+- `node --run check`·`node --run build`와 Compiler를 활성화한 관리자 테스트 307개가 통과했다. 빌드 산출물에서 메모이제이션 코드 생성도 확인했다.
+- Chrome에서 공지 상세 렌더링과 기수 정렬의 오름차순·내림차순·기본 순서 복원을 확인했다. 브라우저 오류는 없었다.
+- 문제 발생 시 Vite와 Vitest의 `compiler: true`를 제거하면 Compiler 적용 전 변환으로 돌아간다.
+- 개발 서버는 http://127.0.0.1:3001/notices/demo-session 에서 확인한다.
