@@ -198,8 +198,8 @@ export const quickCardSubtitle = style({
 
 export const quickCardGraphicSession = style({
   position: 'absolute',
-  left: '74px',
-  top: '-4px',
+  right: '-48px',
+  bottom: '-32px',
   width: '150px',
   height: '106px',
   pointerEvents: 'none',
@@ -208,8 +208,8 @@ export const quickCardGraphicSession = style({
 
 export const quickCardGraphicAttendance = style({
   position: 'absolute',
-  left: '74px',
-  top: '-1px',
+  right: '-48px',
+  bottom: '-35px',
   width: '150px',
   height: '106px',
   pointerEvents: 'none',
@@ -320,7 +320,7 @@ export const noticeChevron = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: vars.$color.fg.neutralMuted,
+  color: vars.$color.palette.gray400,
   flexShrink: 0,
 });
 
