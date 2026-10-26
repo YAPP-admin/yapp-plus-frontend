@@ -68,10 +68,12 @@
 
 ## 8a — US2 공통 폼
 
+연결 이슈: [#95](https://github.com/YAPP-admin/yapp-plus-frontend/issues/95). 구현·검증 완료, 사용자 리뷰 대기.
+
 독립 검증: 일반 네 대상·제출 배타 선택·한국 마감·선택 제출 방법의 검증을 확인한다.
 
-- [ ] T018 [US2] `feature/ui/notice-form.tsx`와 `.css.ts`에 TanStack Form 입력·오류 연결·제출 조건부 입력을 구현한다.
-- [ ] T019 [US2] `feature/ui/notice-form.test.tsx`에서 제목·대상·마감·방법·일반 종류 전환 시 제출 필드 제거를 검증한다.
+- [x] T018 [US2] `feature/ui/notice-form.tsx`와 `.css.ts`에 TanStack Form 입력·오류 연결·제출 조건부 입력을 구현한다.
+- [x] T019 [US2] `feature/ui/notice-form.test.tsx`에서 제목·대상·마감·방법·일반 종류 전환 시 제출 필드 제거를 검증한다.
 
 ## 8b — US2·US5 초기값과 본문
 
