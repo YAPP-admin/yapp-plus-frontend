@@ -34,6 +34,7 @@
     "proj4": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
+    "react-kakao-maps-sdk": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -47,6 +48,7 @@
     "@vitejs/plugin-react": "6.1.1",
     "@yapp-plus/config": "workspace:*",
     "happy-dom": "catalog:",
+    "kakao.maps.d.ts": "catalog:",
     "msw": "catalog:",
     "nitro": "3.0.260903-beta",
     "oxc-transform-react": "catalog:",

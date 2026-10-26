@@ -81,6 +81,9 @@ catalogs:
     happy-dom:
       specifier: 20.14.0
       version: 20.14.0
+    kakao.maps.d.ts:
+      specifier: 0.1.40
+      version: 0.1.40
     ky:
       specifier: 2.1.0
       version: 2.1.0
@@ -102,6 +105,9 @@ catalogs:
     react-dom:
       specifier: 19.2.8
       version: 19.2.8
+    react-kakao-maps-sdk:
+      specifier: 1.2.2
+      version: 1.2.2
     storybook:
       specifier: 10.6.0
       version: 10.6.0
@@ -225,6 +231,9 @@ importers:
       react-dom:
         specifier: 'catalog:'
         version: 19.2.8(react@19.2.8)
+      react-kakao-maps-sdk:
+        specifier: 'catalog:'
+        version: 1.2.2(kakao.maps.d.ts@0.1.40)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       zod:
         specifier: 'catalog:'
         version: 4.5.4
@@ -259,6 +268,9 @@ importers:
       happy-dom:
         specifier: 'catalog:'
         version: 20.14.0
+      kakao.maps.d.ts:
+        specifier: 'catalog:'
+        version: 0.1.40
       msw:
         specifier: 'catalog:'
         version: 2.15.0(@types/node@24.13.3)(typescript@6.0.3)
@@ -5232,6 +5244,9 @@ packages:
   jsonc-parser@3.3.1:
     resolution: {integrity: sha512-HUgH65KyejrUFPvHFPbqOY0rsFip3Bo5wb4ngvdi1EpCYWUQDC5V+Y7mZws+DLkr4M//zQJoanu1SP+87Dv1oQ==}
 
+  kakao.maps.d.ts@0.1.40:
+    resolution: {integrity: sha512-nX69MB1ok04epe3OqS+/tEeWBbU31GSQbvDPJmQRRltzzqn6t4jBsO5v1nzalUjCKzwcH2CptOc767NZ7Hbu3g==}
+
   kleur@3.0.3:
     resolution: {integrity: sha512-eTIzlVOSUR+JxdDFepEYcBMtZ9Qqdef+rnzWdRZuMbOywu5tO2w2N7rqjoANZ5k9vywhL6Br1VRjUIgTQx4E8w==}
     engines: {node: '>=6'}
@@ -6037,6 +6052,13 @@ packages:
 
   react-is@19.2.8:
     resolution: {integrity: sha512-s5un28nYxKJw5gvUHyW5PCC28CvBqLu9r3cWgzHT4Vo/5fqqkFcdRYsGcKf50WMPpjjFZS5d76fn3YCo2njKwQ==}
+
+  react-kakao-maps-sdk@1.2.2:
+    resolution: {integrity: sha512-UBSUKsq7Ju3pYKlm3NuzyredY5Ww2UCGnXzI0DsiWOan0w/ErJdOruSHm8BCSmw1/3T0PpnvJv6XL3wM3X7crg==}
+    peerDependencies:
+      kakao.maps.d.ts: ^0.1.40
+      react: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
+      react-dom: ^16.8.0 || ^17.0.0 || ^18.0.0 || ^19.0.0
 
   react-native-drawer-layout@4.2.10:
     resolution: {integrity: sha512-O6TQdZ5LSm3dqnuR4rX9KPtE+9dVg7jsezEYz1l01rkQTe4fQvYZIoPu2sZFl5X2N70uhRdjnPULySVR3sBUwA==}
@@ -11935,6 +11957,8 @@ snapshots:
 
   jsonc-parser@3.3.1: {}
 
+  kakao.maps.d.ts@0.1.40: {}
+
   kleur@3.0.3: {}
 
   ky@2.1.0: {}
@@ -12891,6 +12915,14 @@ snapshots:
   react-is@18.3.1: {}
 
   react-is@19.2.8: {}
+
+  react-kakao-maps-sdk@1.2.2(kakao.maps.d.ts@0.1.40)(react-dom@19.2.8(react@19.2.8))(react@19.2.8):
+    dependencies:
+      '@babel/runtime': 7.29.7
+      kakao.maps.d.ts: 0.1.40
+      react: 19.2.8
+      react-dom: 19.2.8(react@19.2.8)
+      use-sync-external-store: 1.6.0(react@19.2.8)
 
   react-native-drawer-layout@4.2.10(a11f6fc98eb31f8d49cff31670078b70):
     dependencies:
