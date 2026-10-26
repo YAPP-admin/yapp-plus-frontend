@@ -26,6 +26,9 @@ export const filter = style({
   gap: vars.$dimension.x2,
   marginBlock: vars.$dimension.x4,
 });
+export const createButton = style({
+  justifySelf: 'start',
+});
 export const placeholder = style({
   margin: 0,
   paddingBlock: vars.$dimension.x8,
