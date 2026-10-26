@@ -8,3 +8,15 @@ export function getAddressSearchKey(): string | null {
   const result = approvalKeySchema.safeParse(import.meta.env.VITE_JUSO_SEARCH_KEY);
   return result.success ? result.data : null;
 }
+
+/** 좌표 승인키는 요청 경계에서만 읽습니다. */
+export function getCoordinatesKey(): string | null {
+  const result = approvalKeySchema.safeParse(import.meta.env.VITE_JUSO_COORD_KEY);
+  return result.success ? result.data : null;
+}
+
+/** 지도 JavaScript 키가 없으면 로딩 대신 설정 안내를 제공합니다. */
+export function getKakaoMapKey(): string | null {
+  const result = approvalKeySchema.safeParse(import.meta.env.VITE_KAKAO_MAP_JS_KEY);
+  return result.success ? result.data : null;
+}
