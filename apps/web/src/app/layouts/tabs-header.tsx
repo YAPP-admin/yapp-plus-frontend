@@ -1,6 +1,6 @@
 'use client';
 
-import { IconBellLine } from '@karrotmarket/react-monochrome-icon';
+import { IconBellFill } from '@karrotmarket/react-monochrome-icon';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -22,7 +22,7 @@ export function TabsHeader() {
           <Image src="/images/home/yapp-logo.svg" alt="YAPP" width={80} height={30} priority />
         </Link>
         <Link href="/notices" className={bellButton} aria-label="알림">
-          <IconBellLine width={24} height={24} />
+          <IconBellFill width={24} height={24} />
         </Link>
       </div>
     );

@@ -1,6 +1,6 @@
 'use client';
 
-import { IconChevronRightLine, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
+import { IconChevronRightFill, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton } from '@yapp-plus/ui';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -155,7 +155,7 @@ export function HomePage() {
                   <p className={noticeTitle}>{notice.title}</p>
                 </div>
                 <span className={noticeChevron} aria-hidden="true">
-                  <IconChevronRightLine width={20} height={20} />
+                  <IconChevronRightFill width={20} height={20} />
                 </span>
               </Link>
             ))}
