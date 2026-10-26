@@ -1,7 +1,7 @@
 # 구현 계획: OpenAPI 클라이언트와 MSW 개발 환경
 
 **브랜치**: `DongjaJ/api-docs-implementation-check` | **작성일**: 2026-10-26
-**상태**: 5단계 개발 브라우저 연결 완료 — 사용자 리뷰 대기
+**상태**: 7단계 전체 검증 완료 — 사용자 리뷰 대기
 **이슈**: [#107](https://github.com/YAPP-admin/yapp-plus-frontend/issues/107)
 **명세**: [spec.md](spec.md) | **작업 목록**: [tasks.md](tasks.md)
 
@@ -23,7 +23,7 @@
 - 헌법은 미작성 템플릿이므로 AGENTS.md를 적용하며 임의의 헌법을 새로 만들지 않는다.
 - 한국어 문서, 앱 간 직접 import 금지, 공용 계약의 패키지 공개 진입점 사용을 따른다.
 - 생성물을 직접 편집하지 않고 도구·명세·설정에서 해결한다. 타입 단언으로 계약 오류를 숨기지 않는다.
-- 의존성·코드·생성물·환경 설정 변경은 해당 단계 승인 후 시작한다. 현재 5단계까지만 승인되었다.
+- 의존성·코드·생성물·환경 설정 변경은 해당 단계 승인 후 시작한다. 현재 7단계까지만 승인되었다.
 - 모킹 플래그 해제와 변경 되돌리기로 복구할 수 있으며 인증·외부 데이터 마이그레이션은 없다.
 - 설계 후 재검토: 기존 UI 서비스와 프로덕션 인증 동작을 바꾸지 않는 범위다.
 
@@ -62,7 +62,8 @@
 - 비활성·프로덕션에서는 기존 children을 즉시 반환한다. QueryClient와 safe-area 초기화를 유지한다.
 - 앱별 `public/mockServiceWorker.js`는 CLI로 생성하고 포맷터·린터에서 제외한다. 범용 정적 worker가
   배포 폴더에 남는 것과 모의 데이터·등록 코드가 실행 번들에 들어가는 것은 구분해 검증한다.
-- Vitest setup에 listen → 테스트별 resetHandlers → close를 추가한다. 기존 cleanup은 유지한다.
+- Vitest setup에 listen → 테스트별 resetHandlers → close를 연결한다. 기존 cleanup은 유지한다.
+  매 테스트 시작 전에 생성 client의 base URL을 https://api.yapp.test로 설정한다.
 - 테스트 override와 fixture는 공개 생성 타입을 사용한다. SDK 자동 검증 활성화와 fixture 검증을 혼동하지 않는다.
 - 모킹 자체의 단위·계약 테스트는 유지하지 않는다. 생성 타입·실행 시 Zod·브라우저 확인으로 검증하고,
   기능별 성공·오류 테스트는 실제 기능 구현 시 작성한다. 6단계는 server와 공통 수명주기 연결만 수행한다.
