@@ -28,25 +28,25 @@ NEXT_PUBLIC_API_MOCKING=true mise exec -- node --run dev:web
 기존 화면은 직접 mock 호출을 유지하므로 화면만 열었다고 SDK 가로채기를 검증한 것으로 기록하지 않는다.
 브라우저 Network 또는 개발 도구에서 계약의 다섯 대표 API를 명시적으로 요청해 모의 응답을 확인한다.
 로그인 검증에는 합성 입력만 사용한다. 자동·수동 응답이 모두 없는 알려진 API는 501, 알 수 없는 대상 경로는 오류여야 한다.
-명세의 응답 전체 예제가 있으면 자동 응답으로 활용하며, 부족한 대표 사례만 수동 보완한다.
+생성 Faker factory를 공용 핸들러에서 연결하고 대표 사례를 수동 보완한다. 연결하지 않은 API는
+명세의 응답 전체 예제를 활용하거나 501을 반환한다. 생성 msw factory만 사용하면 Faker는 연결되지 않는다.
 정적 자원·HMR·외부 서비스는 정상이어야 한다. worker 실패 시 자식 화면이 열리지 않아야 한다.
-worker 준비와 첫 SDK 요청의 순서는 초기화 경계 테스트와 브라우저 요청 기록으로 확인한다.
+worker 준비와 첫 SDK 요청의 순서는 브라우저 요청 기록으로 확인한다.
 
 두 변수를 false로 바꾸고 개발 서버를 재시작하면 기존 화면이 즉시 렌더되어야 한다.
 모킹 활성 상태의 SSR와 첫 hydration은 같은 준비 안내를 사용하며 hydration 경고가 없어야 한다.
 
-## 4·6단계: 테스트
+## 6단계: 기능 테스트용 MSW 설정
 
 ```sh
 mise exec -- pnpm --filter @yapp-plus/admin test
 mise exec -- pnpm --filter @yapp-plus/web test
 ```
 
-- 생성 SDK를 테스트 전용 base URL로 호출하고 성공·빈 결과·401·network error·204·501을 확인한다.
-- path·query·body가 resolver에 전달되는지 필요한 요청에서 확인한다.
-- 생성 Zod로 대표 응답을 검증하고 read 누락 거부·readAt null 허용을 확인한다.
-- 한 테스트의 server.use override가 다음 테스트에 남지 않는지 확인한다.
-- 준비 전 호출 없음, 준비 후 렌더, 실패 시 호출 없음, 비활성 시 즉시 렌더를 확인한다.
+6단계에서는 앱별 Node server와 Vitest의 listen·resetHandlers·close만 연결한다.
+위 명령으로 기존 기능 테스트가 정상 실행되는지 확인한다. 모킹 자체를 검증하는 전용 테스트는 추가하지 않는다.
+실제 기능을 구현할 때 해당 기능 테스트에서 server.use로 필요한 성공·오류 응답을 지정한다.
+모의 응답은 생성 타입 검사와 공용 핸들러의 실행 시 Zod 검증을 사용한다.
 
 ## 7단계: 전체 품질과 배포 산출물
 
@@ -64,3 +64,10 @@ fixture의 고유한 합성 문자열과 초기화 모듈을 기준으로 client
 
 개발 플래그를 끄고 서버를 재시작한다. 코드 복구가 필요하면 앱 초기화 → 수동 mocks → 생성 설정 순으로
 관련 변경을 되돌린다. 실제 데이터·인증 저장소를 바꾸지 않으므로 데이터 마이그레이션은 없다.
+
+## 4단계까지 제공하는 공개 진입점
+
+- `@yapp-plus/api/generated/faker`: Hey API가 생성한 Faker factory다. 직접 호출 시 자동 검증은 하지 않는다.
+- `@yapp-plus/api/mocks`: 검증·seed·대표 응답을 적용한 createApiMockHandlers와 onUnhandledApiRequest다.
+- `createApiMockHandlers(baseUrl, { scenario: 'empty' })`로 대표 목록이 비어 있는 경우를 선택할 수 있다.
+- 브라우저는 5단계에서 연결했다. Node server 연결은 6단계 승인 후 제공한다.

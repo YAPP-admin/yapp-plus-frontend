@@ -15,7 +15,12 @@
 
 - `AdminPostRecipientResponse.read`는 생략 불가 Boolean이다. `isRead`를 추가하지 않는다.
 - `readAt`은 필수 키이며 미열람 사례에서는 null, 읽음 사례에서는 고정된 ISO 시각이다.
-- ID·이름·날짜·토큰은 합성 고정값을 사용한다. 현재 시각이나 난수에 의존하지 않는다.
+- 대표 fixture의 ID·이름·날짜·토큰은 합성 고정값을 사용한다. 현재 시각이나 난수에 의존하지 않는다.
+- 나머지 Faker 응답은 seed 107, 기준 날짜 2026-10-26T00:00:00Z, en·base locale의 독립 인스턴스를
+  요청마다 사용한다. 응답 순서나 전역 Faker 호출의 영향을 받지 않는다.
+- Faker는 필드 타입과 형식을 제공하지만 개수·읽음 상태·요일 등 관계를 재현하지 않는다. 이 관계는
+  대표 응답에서 보완하며 CRUD 저장·필터·권한 검증은 구현하지 않는다.
+- 빈 시나리오는 createApiMockHandlers(baseUrl, { scenario: 'empty' })로 선택한다.
 - fixture는 생성 타입으로 정적 확인하고 생성 Zod로 실행 검증한다. SDK validator 기본값은 별개다.
 - 성공·빈 결과·오류는 독립 fixture다. 로그인 후 상태 유지, CRUD 저장, 토큰 갱신 로직은 없다.
 

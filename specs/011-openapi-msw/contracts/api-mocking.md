@@ -2,19 +2,21 @@
 
 ## 공개 진입점
 
-| 진입점                       | 공개 내용                                     | 소비자             |
-| ---------------------------- | --------------------------------------------- | ------------------ |
-| @yapp-plus/api/generated     | Ky 클라이언트·SDK·타입·Zod·Query 옵션         | 앱의 실제 API 호출 |
-| @yapp-plus/api/generated/msw | Hey API가 생성한 MSW 함수·타입                | 개발 모킹·테스트   |
-| @yapp-plus/api/mocks         | createApiMockHandlers와 onUnhandledApiRequest | 두 앱의 초기화     |
+| 진입점                         | 공개 내용                                     | 소비자             |
+| ------------------------------ | --------------------------------------------- | ------------------ |
+| @yapp-plus/api/generated       | Ky 클라이언트·SDK·타입·Zod·Query 옵션         | 앱의 실제 API 호출 |
+| @yapp-plus/api/generated/faker | Faker 스키마·응답 factory                     | 개발 모킹·테스트   |
+| @yapp-plus/api/generated/msw   | Hey API가 생성한 MSW 함수·타입                | 개발 모킹·테스트   |
+| @yapp-plus/api/mocks           | createApiMockHandlers와 onUnhandledApiRequest | 두 앱의 초기화     |
 
-기존 기본 진입점을 없애지 않는다. 일반 생성 index에서 MSW 모듈과 수동 fixture를 export하지 않는다.
+기존 기본 진입점을 없애지 않는다. 일반 생성 index에서 MSW·Faker 모듈과 수동 fixture를 export하지 않는다.
 수동 응답은 패키지 내부에서 관리하고 테스트에서 필요한 응답 변경은 생성 factory로 제공한다.
 
 ## 수동 구성 함수
 
-- `createApiMockHandlers(baseUrl: string): HttpHandler[]`: 절대 HTTP(S) URL을 검증하고 끝 slash를
-  정규화한다. 그 API URL에만 일치하는 전체 handler를 구성하고 대표 다섯 응답을 덮어쓴다.
+- `createApiMockHandlers(baseUrl: string, options?: { scenario?: 'default' | 'empty' }): HttpHandler[]`: 절대 HTTP(S) URL을 검증하고 끝 slash를
+  정규화한다. 그 API URL에만 일치하는 전체 handler를 구성한다. 30개 Faker 응답과 대표 다섯 응답,
+  나머지 204 응답을 명시적으로 연결한다. empty 시나리오는 세션·공지 목록과 주간 세션을 비운다.
 - `onUnhandledApiRequest(baseUrl: string)`: 같은 API origin·base 경로 아래 `/api/` 요청이 미등록이면
   MSW의 오류 처리를 호출해 network passthrough를 막는다. 다른 origin·정적 자원은 통과시킨다.
 - 빈 값·상대 URL·지원하지 않는 protocol은 초기화 오류로 처리한다. 환경 입력을 타입 단언하지 않는다.
@@ -31,10 +33,13 @@
 | GET    | /api/sessions/current-week                                      | 이번 주 세션            |
 | GET    | /api/admin/generations/{generationId}/posts/{postId}/recipients | 읽음·미열람 목록        |
 
-명세에서 생성한 응답 예제를 기본으로 사용하고 위 대표 사례의 부족한 응답을 수동 보완한다.
+공용 구성에서 연결한 Faker·대표 응답이 우선한다. 연결하지 않은 API는 생성 핸들러의 명세 예제를 사용한다.
+Faker는 고정 seed·기준 날짜를 사용하는 독립 인스턴스로 호출하고 Zod 검증에 실패하면 501을 반환한다.
 자동·수동 응답이 모두 없는 알려진 operation만 501이다. 미등록 경로는 오류로 차단한다. 기본 성공 응답은 인증 검증이나
 실제 서버의 필터·페이지네이션·권한 정책을 구현했다는 뜻이 아니다. 테스트가 필요한 조건을 override한다.
-본문 없는 응답은 `HttpResponse(null, { status: 204 })` resolver로 명시한다.
+본문 없는 204 응답은 `HttpResponse(null, { status: 204 })` resolver로 명시한다.
+현재 입력에서는 38개 API가 성공 응답을 반환한다. OAuth 리다이렉트 6개와 응답 스키마가 비어 있는
+출석 close·cancel·override·badge 4개는 501이다. 후자의 200 상태만으로 응답 본문을 추측하지 않는다.
 
 ## 환경 변수와 실행
 
