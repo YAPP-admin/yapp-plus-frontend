@@ -70,4 +70,4 @@ fixture의 고유한 합성 문자열과 초기화 모듈을 기준으로 client
 - `@yapp-plus/api/generated/faker`: Hey API가 생성한 Faker factory다. 직접 호출 시 자동 검증은 하지 않는다.
 - `@yapp-plus/api/mocks`: 검증·seed·대표 응답을 적용한 createApiMockHandlers와 onUnhandledApiRequest다.
 - `createApiMockHandlers(baseUrl, { scenario: 'empty' })`로 대표 목록이 비어 있는 경우를 선택할 수 있다.
-- 브라우저는 5단계에서 연결했다. Node server 연결은 6단계 승인 후 제공한다.
+- 브라우저는 5단계, Node server와 Vitest 수명주기는 6단계에서 연결했다.

@@ -186,7 +186,7 @@ Zod의 int64 출력은 bigint이고 생성 DTO는 number다. SDK 자동 검증·
 
 ## 5단계 — 개발 브라우저 연결
 
-**일자**: 2026-10-26 | **상태**: 완료, 사용자 리뷰 대기
+**일자**: 2026-10-26 | **상태**: 완료, 사용자 “커밋 하고 다음 단계 진행해”로 리뷰 승인
 
 ### 승인·변경
 
@@ -231,10 +231,9 @@ Zod의 int64 출력은 bigint이고 생성 DTO는 number다. SDK 자동 검증·
 브라우저 모킹은 클라이언트 요청에만 적용하며 SSR 요청은 범위 밖이다. 기존 화면을 생성 SDK로
 전환하는 작업도 포함하지 않는다. 전체 CRUD 상태·OAuth redirect·미정의 응답의 한계는 4단계와 같다.
 
-## 다음 단계
+## 5단계 종료 시점
 
-5단계 개발 브라우저 연결을 리뷰받는다. 현재 4·5단계 변경은 커밋하지 않았다.
-승인 후 6단계에서 기능 테스트용 Node server와 Vitest 공통 수명주기만 연결한다.
+당시 4·5단계 변경은 미커밋 상태로 리뷰를 요청했다. 이후 승인과 커밋은 아래 6단계 기록에 남긴다.
 
 ## 5단계 리뷰 수정 — 모킹 전용 테스트 제거
 
@@ -253,3 +252,93 @@ ui 6)가 통과했으며 app-bridge·ui는 캐시를 재사용했다. 로그는
 .context/openapi-msw-stage-5-review-check.log에 있다. git diff --check도 통과했다.
 이번 수정은 테스트 삭제와 문서 변경뿐이므로 빌드·브라우저 검증은 재실행하지 않았으며,
 런타임이 동일한 5단계의 기존 통과 기록을 유지한다.
+
+## 6단계 — 기능 테스트용 최소 MSW 설정
+
+**일자**: 2026-10-26 | **상태**: 완료, 사용자 “다음 단계 진행해”로 리뷰 승인
+
+### 승인·변경
+
+- 사용자 “커밋 하고 다음 단계 진행해”에 따라 4·5단계와 리뷰 수정을 cf73b98
+  (`feat(api): Faker 응답과 개발 브라우저 MSW 연결`)에 커밋했다. hook의 포맷·lint·commitlint가
+  통과했고 커밋 직후 작업 트리가 깨끗함을 확인했다. push는 하지 않았다.
+- 각 앱 src/mocks/server.ts에 테스트용 apiBaseUrl과 setupServer 인스턴스를 추가했다.
+  API 패키지의 공개 createApiMockHandlers를 사용하며 앱 간 코드를 import하지 않는다.
+- Vitest setup의 beforeAll에서 대상 요청 정책으로 listen하고, beforeEach에서 생성 client의
+  base URL을 https://api.yapp.test로 설정한다. afterEach는 기존 cleanup 후 resetHandlers,
+  afterAll은 close를 실행한다. 응답 override는 향후 기능 테스트에서 앱의 server를 사용한다.
+- 새 의존성·모킹 전용 테스트·SDK 회귀 테스트는 추가하지 않았다. 브라우저와 생성 코드는 유지했다.
+
+### 검증·제한
+
+- node --run check 통과: 포맷·lint·typecheck와 기존 테스트 267개(admin 215, web 29,
+  app-bridge 17, ui 6). 앱 테스트는 새 setup으로 실행했고 app-bridge·ui는 캐시를 재사용했다.
+- listen·테스트별 base URL 설정·cleanup·resetHandlers·close 연결을 코드에서 확인했다.
+  기존 테스트 통과는 설정 통합 확인이며, 아직 작성하지 않은 제품의 API 성공·오류 흐름을 검증했다는 뜻은 아니다.
+- 로그는 .context/openapi-msw-stage-6-check.log에 있다. git diff --check가 통과했다.
+- 테스트 초기화만 변경했으므로 빌드·브라우저·expo:doctor는 재실행하지 않았다.
+  전체 빌드와 프로덕션 모킹 비활성·번들 제외 확인은 7단계에 남아 있다.
+- 복구는 두 Vitest setup에서 이번에 추가한 MSW·client 설정을 제거하고 기존 afterEach(cleanup)을
+  복원한 뒤 앱별 server.ts를 제거하면 된다.
+
+### 리뷰 중단점
+
+6단계 변경은 미커밋 상태로 리뷰를 요청했고, 사용자 “다음 단계 진행해”로 7단계 착수를 승인받았다.
+
+## 7단계 — 전체 품질·프로덕션·브라우저 검증
+
+**일자**: 2026-10-26 | **상태**: 완료, 사용자 리뷰 대기
+
+### 품질 검사와 빌드
+
+- origin/main을 fetch해 25c1b7e임을 확인했다. 기존 브랜치와 6단계 미커밋 변경을 유지했다.
+- node --run check 통과: 포맷·lint·typecheck·기존 테스트 267개. 변경되지 않은 검사와 테스트는
+  Turbo 캐시를 재사용했다. 앱 테스트의 실제 실행 결과는 직전 6단계 기록에 있다.
+- VITE_API_MOCKING=true와 NEXT_PUBLIC_API_MOCKING=true를 설정하고 다음 명령으로
+  admin·web·Storybook을 모두 새로 빌드했다. 빌드 3개 모두 통과했으며 캐시 재사용은 0개다.
+
+```sh
+VITE_API_MOCKING=true NEXT_PUBLIC_API_MOCKING=true \
+  mise exec -- node --run build -- --env-mode=loose --force
+```
+
+이번 검증에서만 --env-mode=loose로 플래그가 빌드 프로세스까지 전달되게 했다.
+저장소의 Turbo 환경 정책은 변경하지 않았다. --force로 이전 빌드 캐시 사용을 방지했다.
+
+### 프로덕션 모킹 제외
+
+- admin .output의 JS·MJS·CJS 62개, web .next/server 91개와 .next/static 17개를 검사했다.
+- mock-staff-access-token, createApiMockHandlers, startMocking, setupWorker, @faker-js/faker,
+  대표 합성 회원 문자열, 모킹 준비 문구와 MSW 메시지를 검색했으며 일치하는 실행 파일은 없었다.
+- 개발 산출물·캐시·source map·정적 mockServiceWorker.js는 실행 번들 검사에서 제외했다.
+  범용 worker 파일은 두 앱 public에 남으며 어드민 .output/public에도 복사된다.
+- true 플래그로 빌드한 두 프로덕션 서버를 런타임 플래그도 true로 두고 Chromium에서 실행했다.
+  새 브라우저 컨텍스트에서 worker 등록 시도 0회, 등록된 worker 0개, worker 파일 요청 0건이었다.
+  어드민 대시보드·웹 홈은 정상 표시됐다.
+
+### 개발 브라우저 확인
+
+- 두 앱 모두 true일 때 worker 등록 1회와 다섯 대표 API의 200·204 응답을 확인했다.
+- 성공 응답을 정의하지 않은 출석 API는 501, 미등록 API는 MSW의 Cannot bypass 메시지가 포함된
+  500으로 차단됐다. 모든 확인 요청은 모의 응답으로 처리됐다.
+- worker 등록 실패를 주입하면 오류 안내가 나타나고 자식 화면이 표시되지 않았다.
+- true로 사용한 브라우저 컨텍스트를 유지한 채 페이지를 떠나 서버를 false로 재시작하고 재접속했다.
+  worker 등록 시도 없이 기존 화면이 정상 표시됐다. 새 컨텍스트의 false 모드에서도 등록 수는 0개였다.
+- 정상 활성·비활성·프로덕션 화면에서 페이지 오류가 없었으며, 키보드 초점과 라이트·다크 모드의
+  가로 넘침을 확인했다. 웹은 390×844, 어드민은 1280×900 뷰포트를 사용했다.
+- 확인에 사용한 로컬 서버와 브라우저 컨텍스트는 종료했다. 프로젝트 테스트나 의존성은 추가하지 않았다.
+
+### 근거·남은 범위
+
+- 품질 로그: .context/openapi-msw-stage-7-check.log
+- 빌드 로그: .context/openapi-msw-stage-7-build.log
+- 브라우저 결과·실행 스크립트: .context/openapi-msw-stage-7-browser.log,
+  .context/check-stage-7-browser.mjs
+- 실행 번들 검사 결과: .context/openapi-msw-stage-7-bundles.json
+- SSR 요청·네이티브·실기기 WebView는 기존 제외 범위다. 모바일 변경이 없어 expo:doctor는 실행하지 않았다.
+- 검증 결과 제품 코드 수정은 필요하지 않았다. 이번 단계는 문서와 로컬 검증 기록만 갱신했다.
+
+### 리뷰 중단점
+
+6·7단계 변경은 미커밋 상태다. 사용자 리뷰 후 마지막 8단계에서 재생성·실행·응답 추가 방법을
+API 패키지와 두 앱의 README에 정리한다. commit·push·PR은 자동 실행하지 않는다.
