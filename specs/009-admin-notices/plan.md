@@ -1,7 +1,7 @@
 # 구현 계획: 관리자 공지 관리
 
 **브랜치**: `DongjaJ/term-specification-review` | **작성일**: 2026-10-19
-**명세**: [spec.md](spec.md) | **상태**: 4b 기본 구현 수용 · 남은 검증 보류 · 5a 리뷰 완료 · 5b 구현 완료 · 사용자 리뷰 대기
+**명세**: [spec.md](spec.md) | **상태**: 10b까지 머지 완료 · 11a 제외 · 11b 검증 결과 리뷰 대기 · 실제 입력·보조 기술 일부 미검증
 
 ## 요약과 기술 맥락
 
@@ -30,7 +30,7 @@ JSON만 저장한다. 이미지 첨부는 별도 상태로 관리한다. 실제 
 - `apps/admin/src/pages/notices/`: URL 필터와 목록 조합.
 - `apps/admin/src/pages/notice-detail/`: 상세·전체 읽음 표와 준비 중 질문 탭.
 - `apps/admin/src/pages/notice-editor/`: 작성·수정 데이터 로딩과 성공 후 이동.
-- 테스트는 대상 파일 옆에 둔다. 앱 내부 UI의 Storybook은 admin 내부 설정을 사용해 앱 간 import를 피한다.
+- 테스트는 대상 파일 옆에 둔다. 2026-10-26 사용자 결정으로 admin Storybook 추가는 제외하고 기존 통합 테스트와 실제 화면으로 검증한다.
 - 공용 `packages/ui`는 실제 공용 변경이 필요할 때만 수정한다. `routeTree.gen.ts`는 직접 수정하지 않는다.
 
 설계 근거는 [research.md](research.md), 데이터는 [data-model.md](data-model.md),
@@ -60,8 +60,8 @@ UI·Query 경계는 [계약](contracts/notice-management.md), 실행 검증은 [
 | 9b   | 첨부 UI·미리보기·오류·취소                        | 9a              | 300~550               |
 | 10a  | CRUD 연결·캐시·삭제 확인·실패 복구                | 9b              | 350~600               |
 | 10b  | 이탈 확인·뒤로가기·포커스 복귀                    | 10a             | 300~550               |
-| 11a  | admin Storybook 설정·재사용 UI 사례               | 10b             | 350~600               |
-| 11b  | 최종 회귀·접근성·반응형·검증 기록                 | 11a             | 200~500               |
+| 11a  | 사용자 결정으로 제외: admin Storybook 추가        | —               | —                     |
+| 11b  | 최종 회귀·접근성·반응형·검증 기록                 | 10b             | 200~500               |
 
 의존성 변경만으로 800줄을 넘으면 설치 결과와 원인을 먼저 보고한다. lockfile을 계산에서 빼거나
 동작하지 않는 manifest/lockfile 쌍으로 나누지 않는다. 커밋도 각 행의 검토 가능한 목적을 따른다.
