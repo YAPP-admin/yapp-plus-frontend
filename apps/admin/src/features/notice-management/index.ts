@@ -8,8 +8,10 @@ export { NoticeError } from './model/notice-error';
 export {
   useNoticesQuery,
   useNoticeQuery,
-  useNoticeMembersQuery,
+  useNoticeDetailQuery,
   useNoticeMutations,
 } from './model/notice-queries';
 export { getNoticeAudience } from './model/notice-audience';
 export { getNoticeSummary, getNoticeDeadline, getNoticeReaders } from './model/notice-summary';
+
+export { NoticeQueryBoundary } from './ui/notice-query-boundary';

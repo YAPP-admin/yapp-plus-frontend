@@ -1,6 +1,11 @@
-/** hydration 이후의 개발용 조회와 저장 성공 이후 캐시 갱신을 연결한다. */
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useHydrated } from '@tanstack/react-router';
+/** Suspense 조회와 저장 성공 이후 캐시 갱신을 연결한다. */
+import {
+  queryOptions,
+  useMutation,
+  useSuspenseQuery,
+  useSuspenseQueries,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { NoticeContent } from './notice';
 import {
   createNotice,
@@ -12,11 +17,13 @@ import {
 } from './notices';
 
 const noticesKey = ['admin', 'notices'] as const;
+
 export const noticesQueryOptions = queryOptions({
   queryKey: noticesKey,
   queryFn: listNotices,
   retry: false,
 });
+
 export const noticeMembersQueryOptions = queryOptions({
   queryKey: ['admin', 'notice-members'],
   queryFn: listNoticeMembers,
@@ -27,40 +34,45 @@ export const noticeMembersQueryOptions = queryOptions({
 export const noticeQueryOptions = (id: string) =>
   queryOptions({ queryKey: [...noticesKey, id], queryFn: () => getNotice(id), retry: false });
 
-/** SSR·프로덕션·hydration 이전에는 조회를 시작하지 않는다. */
-function useNoticesEnabled() {
-  const hydrated = useHydrated();
-  return import.meta.env.DEV && !import.meta.env.SSR && typeof window !== 'undefined' && hydrated;
-}
-
-/** 전체 공지 조회 상태를 제공한다. */
+/** 목록과 읽음 집계용 회원을 동시에 조회한다. */
 export function useNoticesQuery() {
-  return useQuery({ ...noticesQueryOptions, enabled: useNoticesEnabled() });
+  const [notices, members] = useSuspenseQueries({
+    queries: [noticesQueryOptions, noticeMembersQueryOptions],
+  });
+
+  return { notices: notices.data, members: members.data };
 }
 
-/** 상세 공지 조회 상태를 제공한다. */
+/** 수정 화면에서 공지 한 건을 조회한다. 없는 ID는 null이다. */
 export function useNoticeQuery(id: string) {
-  return useQuery({ ...noticeQueryOptions(id), enabled: useNoticesEnabled() });
+  return useSuspenseQuery(noticeQueryOptions(id));
 }
 
-/** 읽음 대상 계산용 명단 조회 상태를 제공한다. */
-export function useNoticeMembersQuery() {
-  return useQuery({ ...noticeMembersQueryOptions, enabled: useNoticesEnabled() });
+/** 상세 공지와 읽음 대상 명단을 동시에 조회한다. */
+export function useNoticeDetailQuery(id: string) {
+  const [notice, members] = useSuspenseQueries({
+    queries: [noticeQueryOptions(id), noticeMembersQueryOptions],
+  });
+
+  return { notice: notice.data, members: members.data };
 }
 
 /** 성공 시에만 관련 조회를 무효화한다. 실패 시 캐시를 먼저 바꾸지 않는다. */
 export function useNoticeMutations() {
   const client = useQueryClient();
+
   const create = useMutation({
     mutationFn: createNotice,
     retry: false,
     onSuccess: () => client.invalidateQueries({ queryKey: noticesKey }),
   });
+
   const update = useMutation({
     mutationFn: ({ id, input }: { id: string; input: NoticeContent }) => updateNotice(id, input),
     retry: false,
     onSuccess: () => client.invalidateQueries({ queryKey: noticesKey }),
   });
+
   const remove = useMutation({
     mutationFn: deleteNotice,
     retry: false,
@@ -69,5 +81,6 @@ export function useNoticeMutations() {
       await client.invalidateQueries({ queryKey: noticesKey });
     },
   });
+
   return { create, update, remove };
 }
