@@ -8,7 +8,7 @@
 | Member        | id, name, cohort, job, membership                                                                                  | 합성 명단만 사용; 직군은 PM/Design/Mobile/Web/Server/AI Native |
 | Audience      | 일반: all/active/regular/completed, 제출: all 또는 jobs 배열                                                       | 제출은 활동회원만, all과 개별 직군 배타, 중복 제거·1개 이상    |
 | Submission    | deadlineAt, method 또는 null                                                                                       | 제출 종류에서만 존재; method는 name과 url 입력 모두 필요       |
-| Attachment    | id, name, mimeType, size, blob                                                                                     | JPG·PNG·WebP, 각 10MiB 이하, 합계 5개 이하                     |
+| Attachment    | id, name, blob (mimeType·size는 Blob에서 파생)                                                                     | JPG·PNG·WebP, 각 10MiB 이하, 합계 5개 이하                     |
 | ReaderRow     | member, readAt 또는 null                                                                                           | 현재 대상마다 정확히 한 행, 원본 공지에서 파생                 |
 | NoticeSummary | readCount, unreadCount, targetCount, readPercentage                                                                | 목록·상세가 동일 함수 사용; 대상 0이면 비율 0                  |
 
