@@ -1,5 +1,4 @@
-/** 마커 드래그와 초기 위치 복귀로 좌표를 조정합니다. 주소 변경 시 부모에서 key로 새로 엽니다. */
-import { useState } from 'react';
+/** 마커 드래그와 초기 위치 복귀로 좌표를 조정합니다. 최종 좌표는 부모 폼이 소유합니다. */
 import { ActionButton } from '@yapp-plus/ui';
 import { Map, MapMarker, useKakaoLoader } from 'react-kakao-maps-sdk';
 import type { CoordinatesViewModel } from '../model/location/location-view-model';
@@ -8,19 +7,23 @@ import * as styles from './session-location-map.css';
 
 type Props = {
   initialPosition: CoordinatesViewModel;
+  position: CoordinatesViewModel;
   onChange: (value: CoordinatesViewModel) => void;
   disabled?: boolean;
 };
 
-export function SessionLocationMap({ initialPosition, onChange, disabled = false }: Props) {
+export function SessionLocationMap({
+  initialPosition,
+  position,
+  onChange,
+  disabled = false,
+}: Props) {
   const appkey = getKakaoMapKey();
-  const [position, setPosition] = useState(initialPosition);
 
   function applyPosition(next: CoordinatesViewModel) {
     if (disabled) {
       return;
     }
-    setPosition(next);
     onChange(next);
   }
 
