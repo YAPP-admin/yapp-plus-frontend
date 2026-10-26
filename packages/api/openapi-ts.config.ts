@@ -28,5 +28,13 @@ export default defineConfig({
       validator: enableSdkValidation,
     },
     '@tanstack/react-query',
+    {
+      name: 'msw',
+      includeInEntry: false,
+      baseUrl: 0,
+      // 응답을 명시하지 않은 API는 명세 예제나 실서버 대신 501로 응답합니다.
+      source: [],
+      responseFallback: 'error',
+    },
   ],
 });

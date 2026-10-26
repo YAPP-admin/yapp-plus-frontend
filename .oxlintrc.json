@@ -13,6 +13,8 @@
     ".agents/**",
     "packages/api/src/generated/**",
     "**/routeTree.gen.ts",
+    "apps/admin/public/mockServiceWorker.js",
+    "apps/web/public/mockServiceWorker.js",
     "**/.expo/**",
     "**/.next/**",
     "**/.open-next/**",
