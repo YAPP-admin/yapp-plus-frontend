@@ -1,6 +1,6 @@
 # 작업 목록: 세션 장소 검색과 위치 설정
 
-**상태**: 4-2 생성 연결 구현·검증 완료, 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
+**상태**: 4-3 수정 서비스 구현·검증 완료, 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
 
 3-3까지 사용자 리뷰 후 3-4 코드·단위 검증을 완료했다. 실제 좌표 API 검증은 승인키 설정 후 진행한다. 준비 항목의 미확인 내용은 체크박스로 유지한다. **각 2-1·2-2… 세부 단계가 끝나면 반드시 멈추고 사용자 리뷰와 진행 지시를 받는다.**
 작업 개수가 적다는 이유로 다음 단계까지 묶어 실행하지 않는다.
@@ -30,7 +30,7 @@
 
 ## US2 — 수정
 
-- [ ] T015 [US2] **4-3** 수정 서비스·없는ID·ID/집계 보존·중첩 복사와 테스트: `apps/admin/src/pages/sessions/model/sessions.ts, apps/admin/src/pages/sessions/model/sessions.mock.ts, apps/admin/src/pages/sessions/model/sessions.mock.test.ts`
+- [x] T015 [US2] **4-3** 수정 서비스·없는ID·ID/집계 보존·중첩 복사와 테스트: `apps/admin/src/pages/sessions/model/sessions.ts, apps/admin/src/pages/sessions/model/sessions.mock.ts, apps/admin/src/pages/sessions/model/sessions.mock.test.ts`
 - [ ] T016 [US2] **4-4** 정보 메뉴·초기값·수정 Mutation·현재 필터·포커스 복귀 검증: `apps/admin/src/pages/sessions/ui/session-card.tsx, apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
 
 ## 통합 검증
