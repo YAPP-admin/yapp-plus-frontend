@@ -153,9 +153,8 @@ export const quickCard = style({
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
-  gap: '2px',
   padding: '14px 20px',
-  minHeight: '80px',
+  height: '70px',
   background: vars.$color.bg.layerDefault,
   borderRadius: vars.$radius.r3,
   textDecoration: 'none',
@@ -173,28 +172,46 @@ export const quickCard = style({
   },
 });
 
+export const quickCardContent = style({
+  position: 'relative',
+  zIndex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '2px',
+});
+
 export const quickCardTitle = style({
-  fontSize: vars.$fontSize.t5,
-  lineHeight: vars.$lineHeight.t5,
+  fontSize: '16px',
+  lineHeight: '22px',
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.neutral,
   margin: 0,
 });
 
 export const quickCardSubtitle = style({
-  fontSize: vars.$fontSize.t3,
-  lineHeight: vars.$lineHeight.t3,
+  fontSize: '13px',
+  lineHeight: '18px',
   fontWeight: vars.$fontWeight.medium,
-  color: vars.$color.fg.neutralMuted,
+  color: vars.$color.fg.neutralSubtle,
   margin: 0,
 });
 
-export const quickCardGraphic = style({
+export const quickCardGraphicSession = style({
   position: 'absolute',
-  right: '-16px',
-  bottom: '-12px',
-  width: '110px',
-  height: '78px',
+  left: '74px',
+  top: '-4px',
+  width: '150px',
+  height: '106px',
+  pointerEvents: 'none',
+  userSelect: 'none',
+});
+
+export const quickCardGraphicAttendance = style({
+  position: 'absolute',
+  left: '74px',
+  top: '-1px',
+  width: '150px',
+  height: '106px',
   pointerEvents: 'none',
   userSelect: 'none',
 });

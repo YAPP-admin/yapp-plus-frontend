@@ -30,7 +30,9 @@ import {
   noticesSectionTitle,
   noticeTitle,
   quickCard,
-  quickCardGraphic,
+  quickCardContent,
+  quickCardGraphicAttendance,
+  quickCardGraphicSession,
   quickCardsGrid,
   quickCardSubtitle,
   quickCardTitle,
@@ -110,26 +112,30 @@ export function HomePage() {
 
           <nav className={quickCardsGrid} aria-label="홈 바로가기">
             <Link href="/schedule" className={quickCard} aria-label="이번 달 세션 전체보기">
-              <p className={quickCardTitle}>전체 세션</p>
-              <p className={quickCardSubtitle}>확인하기</p>
+              <div className={quickCardContent}>
+                <p className={quickCardTitle}>전체 세션</p>
+                <p className={quickCardSubtitle}>확인하기</p>
+              </div>
               <Image
                 src="/images/home/graphic-spot-session.svg"
                 alt=""
-                width={110}
-                height={78}
-                className={quickCardGraphic}
+                width={150}
+                height={106}
+                className={quickCardGraphicSession}
               />
             </Link>
 
             <Link href="/my/attendance" className={quickCard} aria-label="최근 출석 전체보기">
-              <p className={quickCardTitle}>출결 보고</p>
-              <p className={quickCardSubtitle}>미리하기</p>
+              <div className={quickCardContent}>
+                <p className={quickCardTitle}>출결 보고</p>
+                <p className={quickCardSubtitle}>미리하기</p>
+              </div>
               <Image
                 src="/images/home/graphic-spot-attendance.svg"
                 alt=""
-                width={110}
-                height={78}
-                className={quickCardGraphic}
+                width={150}
+                height={106}
+                className={quickCardGraphicAttendance}
               />
             </Link>
           </nav>
