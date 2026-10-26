@@ -31,6 +31,7 @@
     "@yapp-plus/ui": "workspace:*",
     "ky": "catalog:",
     "lucide-react": "catalog:",
+    "proj4": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "zod": "catalog:"

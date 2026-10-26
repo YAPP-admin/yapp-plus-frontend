@@ -21,3 +21,9 @@ export type AddressSearchViewModel = {
   hasPreviousPage: boolean;
   hasNextPage: boolean;
 };
+
+/** 경위도 배열의 축 순서 혼동을 방지하는 최종 좌표 모델입니다. */
+export type CoordinatesViewModel = {
+  latitude: number;
+  longitude: number;
+};
