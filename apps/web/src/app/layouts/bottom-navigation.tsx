@@ -23,12 +23,12 @@ const destinations = [
   },
   {
     href: '/notices',
-    label: '공지',
+    label: '게시판',
     Icon: IconArticleFill,
   },
   {
     href: '/my',
-    label: '마이페이지',
+    label: 'MY',
     Icon: IconPersonFill,
   },
 ];

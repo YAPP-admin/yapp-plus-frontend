@@ -4,12 +4,12 @@ import { IconBellFill } from '@karrotmarket/react-monochrome-icon';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { bellButton, defaultTitle, homeHeader, logoLink } from './tabs-header.css';
+import { bellButton, defaultHeader, defaultTitle, homeHeader, logoLink } from './tabs-header.css';
 
 const TAB_TITLES: Record<string, string> = {
   '/schedule': '일정',
-  '/notices': '공지',
-  '/my': '마이페이지',
+  '/notices': '게시판',
+  '/my': 'MY',
 };
 
 export function TabsHeader() {
@@ -29,5 +29,9 @@ export function TabsHeader() {
   }
 
   const title = (pathname ? TAB_TITLES[pathname] : undefined) ?? 'YAPP+';
-  return <span className={defaultTitle}>{title}</span>;
+  return (
+    <div className={defaultHeader}>
+      <span className={defaultTitle}>{title}</span>
+    </div>
+  );
 }

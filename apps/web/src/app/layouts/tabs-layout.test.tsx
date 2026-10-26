@@ -10,8 +10,8 @@ describe('TabsLayout', () => {
   it.each([
     ['/', '홈'],
     ['/schedule', '일정'],
-    ['/notices', '공지'],
-    ['/my', '마이페이지'],
+    ['/notices', '게시판'],
+    ['/my', 'MY'],
   ])('%s에서 현재 메뉴 하나만 표시한다', (pathname, label) => {
     location.pathname = pathname;
     render(
@@ -42,7 +42,7 @@ describe('TabsLayout', () => {
       </TabsLayout>,
     );
     expect(screen.getByRole('navigation', { name: '주요 메뉴' })).toBe(navigation);
-    expect(within(navigation).getByRole('link', { current: 'page' })).toHaveTextContent('공지');
+    expect(within(navigation).getByRole('link', { current: 'page' })).toHaveTextContent('게시판');
   });
 
   it('홈 탭에서는 상단 헤더에 YAPP 로고와 알림 링크를 렌더링한다', () => {
