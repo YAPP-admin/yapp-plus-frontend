@@ -2,6 +2,7 @@
 import { useId } from 'react';
 import {
   NoticeEditor,
+  NoticeAttachmentInput,
   NoticeForm,
   getNoticeFormValues,
   type Notice,
@@ -24,6 +25,8 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
 
           <NoticeEditor labelId={id} initialValue={notice?.bodyDocument} />
         </section>
+
+        <NoticeAttachmentInput initialAttachments={notice?.attachments} />
       </NoticeForm>
     </>
   );

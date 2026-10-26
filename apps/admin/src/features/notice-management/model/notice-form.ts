@@ -6,10 +6,10 @@ const MILLISECONDS_PER_HOUR = 60 * 60 * 1_000;
 // 한국 표준시는 UTC보다 9시간 빠르다.
 const KOREA_UTC_OFFSET_MS = 9 * MILLISECONDS_PER_HOUR;
 
-// 기존 공지 입력 규칙에서 본문만 제외한다. 본문 연결은 작성·수정 페이지에서 담당한다.
+// 기존 공지 입력 규칙에서 본문·첨부를 제외한다. 두 입력의 연결은 작성·수정 페이지에서 담당한다.
 export const noticeFormSchema = z.discriminatedUnion('category', [
-  noticeInputSchema.options[0].omit({ bodyDocument: true }),
-  noticeInputSchema.options[1].omit({ bodyDocument: true }),
+  noticeInputSchema.options[0].omit({ bodyDocument: true, attachments: true }),
+  noticeInputSchema.options[1].omit({ bodyDocument: true, attachments: true }),
 ]);
 
 export type NoticeFormContent = z.output<typeof noticeFormSchema>;

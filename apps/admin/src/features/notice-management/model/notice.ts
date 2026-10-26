@@ -4,6 +4,7 @@
  */
 import { z } from 'zod';
 import { noticeDocumentSchema } from './notice-document';
+import { MAX_NOTICE_ATTACHMENTS } from './notice-attachments';
 
 /** 회원의 직군이며, 제출 공지에서 선택 가능한 직군과 같은 값을 사용한다. */
 export const noticeJobSchema = z.enum(['PM', 'Design', 'Mobile', 'Web', 'Server', 'AI Native']);
@@ -44,11 +45,25 @@ const methodSchema = z.object({
   url: z.string().trim().min(1),
 });
 
+/** 저장된 이미지. URL은 화면이 소유하며 원본 Blob과 파일명만 보관한다. */
+const noticeAttachmentSchema = z.object({
+  /** 수정과 미리보기 목록에서 항목을 구분한다. */
+  id: z.string().min(1),
+  /** 미리보기와 상세 화면에 표시할 원래 파일명이다. */
+  name: z.string().min(1),
+  /** 실제 이미지 데이터와 MIME 타입·크기를 가진 불변 객체다. */
+  blob: z.instanceof(Blob),
+});
+
+export type NoticeAttachment = z.infer<typeof noticeAttachmentSchema>;
+
 const common = {
   /** 목록·상세에 표시하는 제목. 앞뒤 공백 제거 후 1~60자다. */
   title: z.string().trim().min(1).max(60),
   /** 서식이 포함된 Tiptap JSON 본문. 편집기가 만든 JSON을 그대로 보존하고 빈 본문만 거절한다. */
   bodyDocument: noticeDocumentSchema,
+  /** 첨부가 없는 기존 공지는 생략할 수 있다. 파일 검증은 선택 단계에서 수행한다. */
+  attachments: noticeAttachmentSchema.array().max(MAX_NOTICE_ATTACHMENTS).optional(),
 };
 
 /** 정규화된 공지 내용의 저장 규칙이다. 일반 공지는 제출 전용 필드를 제거한다. */
@@ -127,7 +142,7 @@ export const noticeInputSchema = z.discriminatedUnion('category', [
 /** 회원 ID별 최초 확인 시각을 저장한다. null은 미열람을 뜻한다. */
 export const readRecordsSchema = z.record(z.string(), z.iso.datetime().nullable());
 
-/** 내용과 저장 메타데이터를 함께 검증한다. 첨부 스키마는 첨부 구현 단계에서 추가한다. */
+/** 내용과 저장 메타데이터를 함께 검증한다. 첨부 Blob은 객체 URL과 분리해 보존한다. */
 export const noticeSchema = noticeContentSchema.and(
   z.object({
     /** 공지 식별자. 상세·수정 경로 및 저장소 조회에 사용한다. */

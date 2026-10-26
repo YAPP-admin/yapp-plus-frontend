@@ -27,11 +27,25 @@ const bodyDocument = {
     { type: 'paragraph', content: [{ type: 'text', text: '화면 검증용 예시 공지입니다.' }] },
   ],
 };
+// 이미지 수정을 취소했을 때 원본을 확인할 수 있는 합성 PNG다.
+const exampleImage = new Blob(
+  [
+    Uint8Array.from(
+      atob(
+        'iVBORw0KGgoAAAANSUhEUgAAAIAAAABQCAIAAABeYuqzAAAAqElEQVR4nO3RMQ0AMAzAsFIa0n3DOxg9YikAInnOu1ps1g/iAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEA7AADaAQDQDgCAdgAAtAMAoB0AAO0AAGgHAEC7D615cxyRQDzqAAAAAElFTkSuQmCC',
+      ),
+      (character) => character.charCodeAt(0),
+    ),
+  ],
+  { type: 'image/png' },
+);
+
 const fixtures = noticeSchema.array().parse([
   {
     id: 'demo-session',
     category: 'session',
     title: '예시 세션 안내',
+    attachments: [{ id: 'demo-image', name: '세션 안내.PNG', blob: exampleImage }],
     bodyDocument,
     audience: 'all',
     createdAt: '2026-10-20T00:00:00.000Z',
@@ -66,9 +80,19 @@ function compareCreatedNotices(a: Notice, b: Notice) {
   return Date.parse(b.createdAt) - Date.parse(a.createdAt) || a.id.localeCompare(b.id, 'en');
 }
 
+/** Blob은 불변이므로 공유하고 나머지 데이터와 첨부 배열은 복제한다. */
+function cloneNotice(notice: Notice): Notice {
+  const { attachments, ...content } = notice;
+
+  return {
+    ...structuredClone(content),
+    ...(attachments && { attachments: attachments.map((attachment) => ({ ...attachment })) }),
+  };
+}
+
 /** 초기 데이터와 반환값을 복제해 외부 변경이 저장 원본에 영향을 주지 않게 한다. */
 export function createNoticeStore(initial: readonly Notice[] = fixtures) {
-  let notices = structuredClone(noticeSchema.array().parse(initial));
+  let notices = noticeSchema.array().parse(initial).map(cloneNotice);
 
   /** 현재 공지를 찾고 없으면 생성으로 대체하지 않고 오류를 반환한다. */
   function requireNotice(id: string) {
@@ -86,16 +110,17 @@ export function createNoticeStore(initial: readonly Notice[] = fixtures) {
     },
     /** 작성일 내림차순, 동률 ID순으로 전체 공지를 반환한다. */
     listNotices() {
-      return structuredClone(notices.toSorted(compareCreatedNotices));
+      return notices.toSorted(compareCreatedNotices).map(cloneNotice);
     },
     /** 없는 공지는 null이며 조회 오류와 구별된다. */
     getNotice(id: string) {
-      return structuredClone(notices.find((item) => item.id === id) ?? null);
+      const notice = notices.find((item) => item.id === id);
+      return notice ? cloneNotice(notice) : null;
     },
     /** 모든 계산과 복제가 성공한 뒤 한 번에 반영한다. 새 대상은 전원 미열람이다. */
     createNotice(input: NoticeContent) {
       const content = noticeContentSchema.parse(input);
-      const notice = structuredClone(
+      const notice = cloneNotice(
         noticeSchema.parse({
           ...content,
           id: crypto.randomUUID(),
@@ -104,7 +129,7 @@ export function createNoticeStore(initial: readonly Notice[] = fixtures) {
           unansweredCount: 0,
         }),
       );
-      const result = structuredClone(notice);
+      const result = cloneNotice(notice);
       notices = [...notices, notice];
       return result;
     },
@@ -112,7 +137,7 @@ export function createNoticeStore(initial: readonly Notice[] = fixtures) {
     updateNotice(id: string, input: NoticeContent) {
       const previous = requireNotice(id);
       const content = noticeContentSchema.parse(input);
-      const notice = structuredClone(
+      const notice = cloneNotice(
         noticeSchema.parse({
           ...content,
           id: previous.id,
@@ -125,7 +150,7 @@ export function createNoticeStore(initial: readonly Notice[] = fixtures) {
           ),
         }),
       );
-      const result = structuredClone(notice);
+      const result = cloneNotice(notice);
       notices = notices.map((item) => (item.id === id ? notice : item));
       return result;
     },
