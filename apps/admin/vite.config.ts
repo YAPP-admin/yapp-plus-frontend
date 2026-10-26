@@ -21,7 +21,8 @@ export default defineConfig({
         routeFileIgnorePattern: '\\.(css|test)\\.',
       },
     }),
-    react(),
+    // Oxc의 Rust 기반 React Compiler로 컴포넌트와 훅을 자동 메모이제이션합니다.
+    react({ compiler: true }),
     nitro(),
   ],
 });
