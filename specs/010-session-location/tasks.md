@@ -1,6 +1,6 @@
 # 작업 목록: 세션 장소 검색과 위치 설정
 
-**상태**: 4-1 목록 상태 구현·검증 완료, 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
+**상태**: 4-2 생성 연결 구현·검증 완료, 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
 
 3-3까지 사용자 리뷰 후 3-4 코드·단위 검증을 완료했다. 실제 좌표 API 검증은 승인키 설정 후 진행한다. 준비 항목의 미확인 내용은 체크박스로 유지한다. **각 2-1·2-2… 세부 단계가 끝나면 반드시 멈추고 사용자 리뷰와 진행 지시를 받는다.**
 작업 개수가 적다는 이유로 다음 단계까지 묶어 실행하지 않는다.
@@ -26,7 +26,7 @@
 - [x] T011 [US1] **3-6** React 지도 SDK catalog 등록·기본 로더 훅·마커 드래그·읽기 전용 좌표·초기 복귀와 실패 복구 검증: `pnpm-workspace.yaml, apps/admin/package.json, apps/admin/src/pages/sessions/ui/session-location-map.tsx, apps/admin/src/pages/sessions/ui/session-location-map.test.tsx`
 - [x] T012 [US1] **3-7** 공통 폼·유형 초안·단일 최종 좌표·검증·저장중 닫기 차단과 테스트: `apps/admin/src/pages/sessions/ui/session-form.tsx, apps/admin/src/pages/sessions/ui/session-form.test.tsx`
 - [x] T013 [US1] **4-1** 목록 로딩·실패·재시도·전체/필터 빈 상태·배포 예시 목록 검증: `apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
-- [ ] T014 [US1] **4-2** 생성 진입·Mutation·캐시·전체 필터·집계0·성공/취소 테스트: `apps/admin/src/pages/sessions/model/session-queries.ts, apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
+- [x] T014 [US1] **4-2** 생성 진입·Mutation·캐시·전체 필터·집계0·성공/취소 테스트: `apps/admin/src/pages/sessions/model/session-queries.ts, apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
 
 ## US2 — 수정
 
