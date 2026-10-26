@@ -111,23 +111,28 @@
 - [x] T029 [US5] `feature/model/notice-draft.ts`와 `feature/ui/notice-leave-dialog.tsx`에 정규화 dirty·Router blocker·beforeunload·저장 성공 해제를 구현한다.
 - [x] T030 [US5] `feature/model/notice-draft.test.ts`, `apps/admin/src/router.test.tsx`, `apps/admin/src/pages/notice-editor/ui/notice-save.test.tsx`에서 정규화·이탈 취소/확정·저장 실패/성공 이동·포커스 복귀를 검증한다.
 
-## 11a — US6 UI 사례
+## 11a — US6 UI 사례 (범위 제외)
 
-독립 검증: 앱 간 import 없이 편집기·폼·첨부·확인 창의 주요 상태를 재현한다.
+2026-10-26 사용자 결정으로 별도 admin Storybook을 추가하지 않는다. 기존 통합 테스트와 실제
+개발 화면으로 검증한다. 아래 작업은 구현 완료가 아니라 범위에서 제외한 작업이다.
 
-- [ ] T031 [US6] `apps/admin/.storybook/main.ts`, `preview.tsx`, `apps/admin/package.json`에 기존 catalog를 활용한 admin 내부 Storybook 실행 구성을 추가하고 빌드한다.
-- [ ] T032 [US6] `feature/ui/notice-management.stories.tsx`에 편집기·오류·제출·첨부 한도·저장 중·확인 창 사례를 추가한다.
+- T031 [US6] 제외: admin 내부 Storybook 실행 구성과 빌드.
+- T032 [US6] 제외: 공지 편집기·폼·첨부·확인 창의 Storybook 사례.
 
 ## 11b — US6 종합 검증
 
 독립 검증: quickstart 전체·프로덕션 비활성화·375px·보조 기술 확인 결과를 기록한다.
 
-- [ ] T033 [US6] `apps/admin/src/router.test.tsx`에 공지 경로 회귀를 보강하고 환경 가드·모의 새로고침 초기화를 재확인한다.
-- [ ] T034 [US6] `specs/009-admin-notices/quickstart.md`에 check/build·브라우저·키보드/스크린 리더/터치 검증 결과·화면 근거·남은 제한을 기록한다.
+- [x] T033 [US6] 기존 `apps/admin/src/router.test.tsx`와 서비스 테스트로 공지 경로·환경 가드를 재검증하고 실제 브라우저 새로고침 초기화를 확인한다. 기존 회귀가 요구 동작을 다루므로 중복 테스트는 추가하지 않는다.
+- [x] T034 [US6] `specs/009-admin-notices/quickstart.md`에 check/build·브라우저·키보드 검증 결과와 스크린 리더·터치 등 미실행 항목·화면 근거·남은 제한을 기록한다.
+
+11b의 실행·기록을 마쳤으며 모든 수동 검증을 통과했다는 뜻은 아니다. 실제 이미지 선택·디코딩,
+한글 IME 조합, 스크린 리더·실제 터치, 새로고침/탭 닫기 경고의 최종 재검증은 남아 있다.
+4b의 T005·T006도 전체 완료로 바꾸지 않는다. 구체적인 환경 제한과 재현 순서는 quickstart에 둔다.
 
 ## 의존성과 실행 전략
 
-3 → 4a → 4b → 5a → 5b → 6 → 7 → 8a → 8b → 9a → 9b → 10a → 10b → 11a → 11b.
+3 → 4a → 4b → 5a → 5b → 6 → 7 → 8a → 8b → 9a → 9b → 10a → 10b → 11b.
 US1은 6에서 먼저 목록을 검토하고, US4는 7, US2는 8b, US3은 9b, US5는 10b에서 통합 완료한다.
 US6의 환경 차단은 5b부터 적용하고 최종 검증은 11b다. 단계 간 병렬 구현은 하지 않는다.
 같은 리뷰 단위에서도 공유 파일 충돌을 피한다. US1 카드/검색 테스트, US4 표/집계 테스트,
@@ -216,5 +221,5 @@ US6 키보드/화면 크기 검증은 구현 확정 후 독립적으로 수행�
 - 새로고침·탭 닫기는 `enableBeforeUnload`로 브라우저 기본 경고에 연결한다. 저장 성공 상태에서는 차단을 해제하고, 성공 콜백의 상세 이동에는 `ignoreBlocker`를 지정해 상태 반영 순서와 무관하게 이동한다. 실패 시 초안·이탈 확인은 유지한다.
 - 정규화 모델 테스트 2개와 실제 라우터 흐름 2개를 추가하고 기존 생성·수정 저장 테스트에 실패 후 이탈 취소를 보강했다. `createMemoryHistory`는 POP 차단을 지원하지 않아 뒤로가기 테스트에는 `createBrowserHistory`를 사용한다.
 - `node --run check` 통과(관리자 326개 테스트), `node --run build` 통과. Chrome에서 실제 뒤로가기 확인 창·취소 후 입력과 URL 복구·새로고침 기본 경고를 확인했다. 화면 근거: `.context/notice-leave-dialog.png`. 탭 닫기, 스크린 리더·터치는 직접 검증하지 않았다.
-- 이번 단계는 `db90491`을 기준으로 선행 10a와 별도 PR로 제출한다. 자동 저장·초안 영속 보관·실제 API 연결은 포함하지 않는다. 다음 리뷰 단계는 11a의 관리자 Storybook 사례다.
+- 이번 단계는 `db90491`을 기준으로 선행 10a와 별도 PR로 제출한다. 자동 저장·초안 영속 보관·실제 API 연결은 포함하지 않는다. 이후 사용자 결정으로 11a를 제외하고 11b 종합 검증으로 진행했다.
 - 구현 참고: [TanStack Router Navigation Blocking](https://tanstack.com/router/latest/docs/framework/react/guide/navigation-blocking), [SEED Dialog](https://seed-design.io/react/components/dialog). 설치된 Router의 `useBlocker` 소스와 공개 옵션을 함께 확인했다.
