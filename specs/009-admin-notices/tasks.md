@@ -100,9 +100,9 @@
 
 독립 검증: 생성·수정 성공 이동, 삭제 필터 유지, 실패 복구·중복 방지와 캐시 일치를 확인한다.
 
-- [ ] T026 [US5] `apps/admin/src/pages/notice-editor/ui/notice-editor-page.tsx`에 저장 mutation·진행/실패 상태·성공 이동을 연결한다.
-- [ ] T027 [US5] `feature/ui/notice-delete-dialog.tsx`에 제목 포함 삭제 확인·재시도·포커스 복귀를 구현하고 목록 메뉴에 연결한다.
-- [ ] T028 [US5] `apps/admin/src/pages/notice-editor/ui/notice-editor-page.test.tsx`와 `feature/ui/notice-delete-dialog.test.tsx`에 CRUD 성공/실패·중복 요청·마지막 카드 삭제 회귀를 추가한다.
+- [x] T026 [US5] `apps/admin/src/pages/notice-editor/ui/notice-editor-form.tsx`에 저장 mutation·진행/실패 상태·성공 이동을 연결한다.
+- [x] T027 [US5] `feature/ui/notice-delete-dialog.tsx`에 제목 포함 삭제 확인·재시도·포커스 복귀를 구현하고 목록 메뉴에 연결한다.
+- [x] T028 [US5] `apps/admin/src/pages/notice-editor/ui/notice-save.test.tsx`와 `apps/admin/src/pages/notices/ui/notices-page.test.tsx`에 실제 화면을 연결해 CRUD 성공/실패·중복 요청·마지막 필터 항목 삭제 회귀를 추가한다.
 
 ## 10b — US5 이탈 확인
 
@@ -195,3 +195,15 @@ US6 키보드/화면 크기 검증은 구현 확정 후 독립적으로 수행�
 - 9b 리뷰 반영: 이미지 확인은 `useMutation`의 `mutationFn`·`onSuccess`·`isPending`으로 관리한다. 별도 `checking`·`checkingRef`를 제거하고, 로컬 작업은 `networkMode: 'always'`로 오프라인에서도 실행한다. 기존 첨부 테스트 3개에 오프라인 확인·제거 항목 복원 방지를 포함했다.
 - 공통 폼의 오류 포커스는 입력별 ref로 연결하고, 에디터 테스트는 역할 기반 조회를 사용한다. 관리자 소스에서 `querySelector`·`bodyRef`·`bodyElement`가 남아 있지 않음을 확인했다.
 - 리뷰 수정 후 `node --run check`(관리자 321개)·`node --run build` 통과. 브라우저 수동 재검증은 하지 않았다.
+
+### 10a — 저장·삭제 흐름 연결 (#108)
+
+- 메타데이터·본문·첨부를 기존 모의 mutation에 전달하고 생성·수정 성공 후 해당 상세의 읽음 탭으로 이동한다. 본문 필수 입력은 저장 시 검사하고 오류 후 편집 이벤트에서 갱신한다.
+- 첨부 목록은 상위 폼이 소유하며 `pending` 항목이 있으면 저장을 막는다. 저장 중 메타데이터와 첨부 변경을 비활성화하고 본문 영역은 `inert`로 편집·툴바 입력을 막는다.
+- 공지 코드와 Query 테스트는 `mutate`를 사용한다. UI 성공 처리는 호출부의 `onSuccess`, 캐시 갱신은 mutation 훅의 `onSuccess`에서 담당한다. 저장 진행·오류는 mutation 상태를 공통 폼에 전달한다.
+- 공통 폼의 입력별 ref·자동 오류 포커스를 제거했다. 삭제 후 수동 포커스 이동도 사용자 리뷰에 따라 제외했으며 `querySelector`·`requestAnimationFrame`·`flushSync`·별도 포커스 ref를 사용하지 않는다. SEED 파일 입력 연결용 ref는 유지한다.
+- 삭제는 설치된 SEED `Dialog`의 `alertdialog` 역할·Portal·모달 포커스 관리를 사용한다. 실패 시 공지와 확인 창을 유지하고, 성공 시 현재 필터·목록 개수를 갱신한다. 취소 포커스 복귀는 SEED 기본 동작에 맡긴다.
+- 생성·수정 각 1개와 목록 삭제 흐름 1개를 추가하고, 같은 실패·중복 제출 동작을 중복 검사하던 공통 폼 테스트 2개를 제거했다. 이미지 검사 중 저장 차단, 실패 시 입력·첨부 보존, 중복 요청, 성공 후 상세 반영, 삭제 취소·재시도·마지막 필터 항목의 빈 상태를 확인한다.
+- 최종 검증: `node --run check`(관리자 322개 테스트)·`node --run build` 통과. Chrome에서 생성·수정 저장, 상세 본문 반영, 삭제 Escape 취소·트리거 포커스 복귀, 삭제 성공·필터 유지를 확인했다. 화면 근거: `.context/notice-delete-dialog.png`. 최종 수동 포커스 제거 후 브라우저 재검증은 하지 않았다.
+- 신규 파일 선택·실제 디코딩과 스크린 리더·터치 검증은 미실행이다. 실제 API·업로드·영속 저장은 포함하지 않으며 미저장 이탈 확인은 10b에 남긴다.
+- 이 단계의 PR 기준은 직전 커밋 `5cac89f`이며 9b와 별도 PR로 제출한다. 복구는 해당 UI 연결 변경을 되돌리는 방식이며 데이터 마이그레이션은 없다.
