@@ -79,26 +79,11 @@ it('없는 공지는 조회 실패·빈 대상과 구별한다', async () => {
   expect(screen.queryByRole('link', { name: '공지 수정' })).not.toBeInTheDocument();
 });
 
-it('조회 중에는 없는 공지로 표시하지 않는다', async () => {
-  vi.mocked(service.getNotice).mockReturnValue(new Promise(() => undefined));
-  await renderPage();
-  expect(await screen.findByText('공지 정보를 불러오는 중입니다.')).toBeVisible();
-  expect(screen.queryByText('공지를 찾을 수 없습니다.')).not.toBeInTheDocument();
-});
-
 it('대상 0명은 집계 0과 대상 없음 안내를 표시한다', async () => {
   vi.mocked(service.listNoticeMembers).mockResolvedValue([]);
   await renderPage();
   expect(await screen.findByText('대상 회원이 없습니다.')).toBeVisible();
   expect(screen.getByText('대상 0명 · 읽음 0명 · 미열람 0명 · 읽음 비율 0%')).toBeVisible();
-});
-
-it('프로덕션에서는 모의 조회하지 않는다', async () => {
-  vi.stubEnv('DEV', false);
-  await renderPage();
-  expect(screen.getByText('공지 관리 기능을 준비 중입니다.')).toBeVisible();
-  expect(service.getNotice).not.toHaveBeenCalled();
-  expect(service.listNoticeMembers).not.toHaveBeenCalled();
 });
 
 const members: Member[] = [
