@@ -1,4 +1,5 @@
-import { Badge, SideNavigation, Text, useBreakpointValue } from '@seed-design/react';
+/** 반응형 표시는 SEED의 CSS로 처리하여 첫 화면부터 탐색 영역의 너비를 유지한다. */
+import { Badge, Box, SideNavigation, Text, useBreakpointValue } from '@seed-design/react';
 import { useMatches } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import { AdminSidebar } from './admin-sidebar';
@@ -19,10 +20,21 @@ export function AdminShell({ children }: { children: ReactNode }) {
   return (
     <div className={styles.shell} data-seed-color-mode="dark-only">
       <SideNavigation.Provider collapsed={false}>
-        {!isNarrow && <AdminSidebar menu={navigation.menu} />}
+        <Box
+          display={{ base: 'none', lg: 'block' }}
+          position="sticky"
+          top="0"
+          height="100dvh"
+          flexShrink={0}
+        >
+          <AdminSidebar menu={navigation.menu} />
+        </Box>
         <div className={styles.workspace}>
           <header className={styles.header}>
-            {isNarrow && <AdminMobileNavigation menu={navigation.menu} />}
+            <Box hideFrom="lg" flexShrink={0}>
+              {/* 화면 너비 훅은 데스크톱 전환 시 열린 모바일 패널을 해제하는 데만 사용한다. */}
+              {isNarrow && <AdminMobileNavigation menu={navigation.menu} />}
+            </Box>
             <nav aria-label="현재 위치">
               <ol className={styles.breadcrumbs}>
                 <li>

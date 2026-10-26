@@ -46,7 +46,8 @@ describe('좁은 화면 관리자 메뉴', () => {
       await renderShell();
       const trigger = await screen.findByRole('button', { name: '메뉴' });
 
-      expect(screen.queryByRole('navigation', { name: '주요 메뉴' })).not.toBeInTheDocument();
+      // 초기 breakpoint가 base여도 사이드바 DOM을 유지한다. CSS 표시 여부는 Chrome에서 검증한다.
+      expect(screen.getByRole('navigation', { name: '주요 메뉴' })).toBeInTheDocument();
 
       await user.click(trigger);
       const dialog = await screen.findByRole('dialog', { name: '관리자 메뉴' });
