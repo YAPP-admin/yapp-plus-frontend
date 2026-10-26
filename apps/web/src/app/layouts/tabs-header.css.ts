@@ -25,12 +25,25 @@ export const bellButton = style({
   width: vars.$dimension.x6,
   height: vars.$dimension.x6,
   borderRadius: vars.$radius.full,
-  color: vars.$color.fg.neutral,
+  color: vars.$color.fg.neutralSubtle,
+});
+
+export const defaultHeader = style({
+  display: 'flex',
+  alignItems: 'center',
+  padding: `0 ${vars.$dimension.x5}`,
+  height: '54px',
+  background: vars.$color.bg.layerDefault,
+  width: '100%',
+  maxWidth: '480px',
+  margin: '0 auto',
+  boxSizing: 'border-box',
 });
 
 export const defaultTitle = style({
-  fontSize: vars.$fontSize.t3,
-  lineHeight: vars.$lineHeight.t3,
+  fontSize: vars.$fontSize.t8,
+  lineHeight: vars.$lineHeight.t8,
   fontWeight: vars.$fontWeight.bold,
-  letterSpacing: 0,
+  color: vars.$color.fg.neutral,
+  letterSpacing: '-0.3px',
 });
