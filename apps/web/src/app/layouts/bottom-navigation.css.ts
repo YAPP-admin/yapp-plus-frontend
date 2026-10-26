@@ -6,31 +6,57 @@ export const navigation = style({
   bottom: 0,
   display: 'grid',
   gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-  paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
-  background: vars.$color.bg.layerBasement,
+  paddingTop: vars.$dimension.x2,
+  paddingBottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 6px)',
+  background: vars.$color.bg.layerDefault,
   borderTop: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  width: '100%',
+  maxWidth: '480px',
+  margin: '0 auto',
+  boxSizing: 'border-box',
+  zIndex: 100,
 });
 
 export const item = style({
   display: 'flex',
-  minHeight: '3.5rem',
+  flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: vars.$dimension.x2,
+  gap: '4px',
+  padding: `${vars.$dimension.x1} ${vars.$dimension.x2}`,
   color: vars.$color.fg.neutralMuted,
-  fontSize: vars.$fontSize.t3,
-  lineHeight: vars.$lineHeight.t3,
+  fontSize: vars.$fontSize.t2,
+  lineHeight: vars.$lineHeight.t2,
+  fontWeight: vars.$fontWeight.bold,
   textDecoration: 'none',
   touchAction: 'manipulation',
+  transition: 'color 150ms ease, transform 100ms ease',
   selectors: {
     '&[aria-current="page"]': {
       color: vars.$color.fg.neutral,
-      fontWeight: vars.$fontWeight.bold,
-      boxShadow: `inset 0 2px ${vars.$color.bg.brandSolid}`,
+    },
+    '&:active': {
+      transform: 'scale(0.96)',
     },
     '&:focus-visible': {
       outline: `2px solid ${vars.$color.fg.neutral}`,
-      outlineOffset: '-4px',
+      outlineOffset: '-2px',
+      borderRadius: vars.$radius.r2,
     },
   },
+});
+
+export const iconWrapper = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '24px',
+  height: '24px',
+});
+
+export const itemLabel = style({
+  fontSize: vars.$fontSize.t2,
+  lineHeight: vars.$lineHeight.t2,
+  fontWeight: vars.$fontWeight.bold,
+  letterSpacing: '-0.2px',
 });

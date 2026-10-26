@@ -20,19 +20,33 @@ export function PageShell({
   navigation,
   backButton,
   plain = false,
+  borderlessHeader = false,
+  header: customHeader,
 }: {
   children: ReactNode;
   navigation?: ReactNode;
   backButton?: ReactNode;
   /** 인증 화면용입니다. YAPP+ 문구와 구분선을 숨기고 흰색 배경을 사용합니다. */
   plain?: boolean;
+  /** 헤더 구분선을 숨깁니다. */
+  borderlessHeader?: boolean;
+  /** 커스텀 헤더입니다. null을 전달하면 헤더 영역을 숨깁니다. */
+  header?: ReactNode;
 }) {
+  const headerClassName = plain || borderlessHeader ? headerPlain : header;
+
   return (
     <div className={getShellClassName(plain, Boolean(navigation))}>
-      <header className={plain ? headerPlain : header}>
-        {backButton}
-        {plain ? null : <span className={wordmark}>YAPP+</span>}
-      </header>
+      {customHeader !== null && (
+        <header className={headerClassName}>
+          {customHeader ?? (
+            <>
+              {backButton}
+              {plain ? null : <span className={wordmark}>YAPP+</span>}
+            </>
+          )}
+        </header>
+      )}
       {children}
       {navigation}
     </div>
