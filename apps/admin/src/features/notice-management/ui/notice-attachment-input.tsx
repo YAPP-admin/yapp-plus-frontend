@@ -1,13 +1,15 @@
 /** SEED 파일 선택에 공지 전용 묶음 제한과 비동기 이미지 확인을 연결한다. */
-import { useId, useState } from 'react';
+import { useId, useState, type Dispatch, type SetStateAction } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { AttachmentInput, Field } from '@seed-design/react';
-import { useFileUploadContext, type FileRejection } from '@seed-design/react/primitive';
+import {
+  useFileUploadContext,
+  type FileEntry,
+  type FileRejection,
+} from '@seed-design/react/primitive';
 import { ImagePlus } from 'lucide-react';
-import type { NoticeAttachment } from '../model/notice';
 import {
   getNoticeAttachmentCountError,
-  getNoticeAttachmentEntries,
   noticeAttachmentOptions,
   validateNoticeAttachmentImages,
 } from '../model/notice-attachments';
@@ -20,14 +22,17 @@ const errorLabels: Record<string, string> = {
   IMAGE_DECODE_FAILED: '이미지를 읽을 수 없습니다.',
 };
 
-/** 편집 목록은 저장 원본과 분리하며 재조회 때 초기화하지 않는다. */
+/** 상위 폼이 소유한 첨부 목록에 선택·제거·이미지 확인 결과를 반영한다. */
 export function NoticeAttachmentInput({
-  initialAttachments = [],
+  entries,
+  onEntriesChange: setEntries,
+  disabled = false,
 }: {
-  initialAttachments?: NoticeAttachment[];
+  entries: FileEntry[];
+  onEntriesChange: Dispatch<SetStateAction<FileEntry[]>>;
+  disabled?: boolean;
 }) {
   const inputId = useId();
-  const [entries, setEntries] = useState(() => getNoticeAttachmentEntries(initialAttachments));
   const [errors, setErrors] = useState<string[]>([]);
   const imageValidation = useMutation({
     mutationFn: validateNoticeAttachmentImages,
@@ -62,7 +67,7 @@ export function NoticeAttachmentInput({
   function checkSelection(count: number) {
     const error = getNoticeAttachmentCountError(entries.length, count);
 
-    if (imageValidation.isPending || error || count === 0) {
+    if (disabled || imageValidation.isPending || error || count === 0) {
       if (error) {
         setErrors([error]);
       }
@@ -88,7 +93,8 @@ export function NoticeAttachmentInput({
         onAcceptedFileEntriesChange={setEntries}
         onFileReject={rejectFiles}
         onFileAccept={(candidates) => imageValidation.mutate(candidates)}
-        disabled={imageValidation.isPending}
+        disabled={disabled || imageValidation.isPending}
+        readOnly={disabled}
         invalid={errors.length > 0}
       >
         <NoticeAttachmentFileInput id={inputId} canSelect={checkSelection} />
@@ -101,7 +107,7 @@ export function NoticeAttachmentInput({
             <ImagePlus size={24} aria-hidden="true" />
             <AttachmentInput.TriggerItemCount />
           </AttachmentInput.Trigger>
-          <NoticeAttachmentItems entries={entries} />
+          <NoticeAttachmentItems entries={entries} disabled={disabled} />
         </AttachmentInput.Container>
       </AttachmentInput.Root>
 

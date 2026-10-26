@@ -19,3 +19,6 @@ export { NoticeQueryBoundary } from './ui/notice-query-boundary';
 
 export { NoticeAttachmentInput } from './ui/notice-attachment-input';
 export { NoticeAttachments } from './ui/notice-attachments';
+
+export { getNoticeAttachmentEntries } from './model/notice-attachments';
+export { noticeDocumentSchema } from './model/notice-document';
