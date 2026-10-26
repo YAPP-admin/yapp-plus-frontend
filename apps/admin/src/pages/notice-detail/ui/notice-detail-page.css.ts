@@ -1,8 +1,11 @@
+/** 상세 정보와 탭의 배치·포커스 스타일이다. */
 import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 
 export const page = style({
   display: 'grid',
+  minWidth: 0,
+  overflowWrap: 'anywhere',
   width: 'min(100%, 72rem)',
   gap: vars.$dimension.x4,
   marginInline: 'auto',
@@ -50,3 +53,5 @@ export const placeholder = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t4,
 });
+
+export const editLink = style({ width: 'fit-content' });

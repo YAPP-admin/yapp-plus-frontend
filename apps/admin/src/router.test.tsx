@@ -684,10 +684,10 @@ describe('공지 상세 탐색', () => {
     ['?tab=unknown', '읽음'],
     ['?tab=%5B%22questions%22%5D', '읽음'],
   ])('직접 접근 %s에서 탭과 공지 ID를 복원한다', async (query, activeTab) => {
-    await renderRoute(`/notices/notice-123${query}`);
+    await renderRoute(`/notices/demo-session${query}`);
 
     expect(await screen.findByRole('heading', { name: '공지 상세' })).toBeVisible();
-    expect(screen.getByText('공지 ID: notice-123')).toBeVisible();
+    expect(await screen.findByRole('heading', { name: '예시 세션 안내' })).toBeVisible();
     expect(screen.getByRole('link', { name: activeTab })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
     expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
@@ -696,18 +696,18 @@ describe('공지 상세 탐색', () => {
 
   it('탭 링크는 ID를 유지하고 history로 복원하며 읽음 기본값은 생략한다', async () => {
     const user = userEvent.setup();
-    const router = await renderRoute('/notices/notice-123');
+    const router = await renderRoute('/notices/demo-session');
 
     await user.click(await screen.findByRole('link', { name: '질문' }));
     await waitFor(() =>
-      expect(router.state.location.href).toBe('/notices/notice-123?tab=questions'),
+      expect(router.state.location.href).toBe('/notices/demo-session?tab=questions'),
     );
 
     expect(screen.getByText('질문 목록을 준비 중입니다.')).toBeVisible();
 
     act(() => router.history.back());
 
-    expect(await screen.findByText('읽음 현황을 준비 중입니다.')).toBeVisible();
+    expect(await screen.findByRole('table')).toBeVisible();
 
     act(() => router.history.forward());
 
@@ -715,7 +715,7 @@ describe('공지 상세 탐색', () => {
 
     await user.click(screen.getByRole('link', { name: '읽음' }));
 
-    await waitFor(() => expect(router.state.location.href).toBe('/notices/notice-123'));
+    await waitFor(() => expect(router.state.location.href).toBe('/notices/demo-session'));
   });
 
   it('typed 상세 진입 후 뒤로가기는 목록 필터를 복원하고 명시적 복귀는 초기화한다', async () => {
@@ -725,13 +725,13 @@ describe('공지 상세 탐색', () => {
     await act(async () =>
       router.navigate({
         to: '/notices/$noticeId',
-        params: { noticeId: 'notice-123' },
+        params: { noticeId: 'demo-session' },
         search: { tab: 'questions' },
       }),
     );
 
-    expect(await screen.findByText('공지 ID: notice-123')).toBeVisible();
-    expect(router.state.location.href).toBe('/notices/notice-123?tab=questions');
+    expect(await screen.findByRole('heading', { name: '예시 세션 안내' })).toBeVisible();
+    expect(router.state.location.href).toBe('/notices/demo-session?tab=questions');
 
     act(() => router.history.back());
 
@@ -746,7 +746,7 @@ describe('공지 상세 탐색', () => {
 
   it('키보드로 상세 탭을 전환하고 목록에 복귀한다', async () => {
     const user = userEvent.setup();
-    await renderRoute('/notices/notice-123');
+    await renderRoute('/notices/demo-session');
 
     screen.getByRole('link', { name: '알림 발송 내역' }).focus();
 
@@ -777,7 +777,7 @@ describe('공지 상세 탐색', () => {
 describe('공지 작성·수정 진입점', () => {
   it.each([
     ['/notices/new', '공지 작성'],
-    ['/notices/notice-123/edit', '공지 수정'],
+    ['/notices/demo-session/edit', '공지 수정'],
   ])('%s 직접 접근은 독립된 %s 화면을 표시한다', async (path, heading) => {
     const router = await renderRoute(path);
 
@@ -794,7 +794,7 @@ describe('공지 작성·수정 진입점', () => {
     ).toBe(false);
 
     expect(screen.queryByText(/공지 ID:/)?.textContent ?? null).toBe(
-      heading === '공지 작성' ? null : '공지 ID: notice-123',
+      heading === '공지 작성' ? null : '공지 ID: demo-session',
     );
   });
 
@@ -819,11 +819,11 @@ describe('공지 작성·수정 진입점', () => {
 
   it('수정 진입은 ID만 유지하고 뒤로가기는 질문 탭을 복원하며 명시적 복귀는 읽음 탭으로 이동한다', async () => {
     const user = userEvent.setup();
-    const router = await renderRoute('/notices/notice-123?tab=questions');
+    const router = await renderRoute('/notices/demo-session?tab=questions');
 
     await user.click(await screen.findByRole('link', { name: '공지 수정' }));
 
-    await waitFor(() => expect(router.state.location.href).toBe('/notices/notice-123/edit'));
+    await waitFor(() => expect(router.state.location.href).toBe('/notices/demo-session/edit'));
 
     act(() => router.history.back());
 
@@ -832,18 +832,18 @@ describe('공지 작성·수정 진입점', () => {
     act(() => router.history.forward());
     await user.click(await screen.findByRole('link', { name: '공지 상세로 돌아가기' }));
 
-    expect(await screen.findByText('읽음 현황을 준비 중입니다.')).toBeVisible();
-    expect(router.state.location.href).toBe('/notices/notice-123');
+    expect(await screen.findByRole('table')).toBeVisible();
+    expect(router.state.location.href).toBe('/notices/demo-session');
   });
 
   it.each([
     ['/notices', '공지 작성', '공지 목록으로 돌아가기', '공지 목록'],
-    ['/notices/notice-123', '공지 수정', '공지 상세로 돌아가기', '공지 상세'],
+    ['/notices/demo-session', '공지 수정', '공지 상세로 돌아가기', '공지 상세'],
   ])('%s에서 키보드로 진입하고 복귀한다', async (path, entryName, returnName, heading) => {
     const user = userEvent.setup();
     await renderRoute(path);
 
-    screen.getByRole('link', { name: entryName }).focus();
+    (await screen.findByRole('link', { name: entryName })).focus();
 
     await user.keyboard('{Enter}');
     const returnLink = await screen.findByRole('link', { name: returnName });
