@@ -287,7 +287,7 @@ ui 6)가 통과했으며 app-bridge·ui는 캐시를 재사용했다. 로그는
 
 ## 7단계 — 전체 품질·프로덕션·브라우저 검증
 
-**일자**: 2026-10-26 | **상태**: 완료, 사용자 리뷰 대기
+**일자**: 2026-10-26 | **상태**: 완료, 사용자 “커밋하고 다음 진행해”로 리뷰 승인
 
 ### 품질 검사와 빌드
 
@@ -340,5 +340,64 @@ VITE_API_MOCKING=true NEXT_PUBLIC_API_MOCKING=true \
 
 ### 리뷰 중단점
 
-6·7단계 변경은 미커밋 상태다. 사용자 리뷰 후 마지막 8단계에서 재생성·실행·응답 추가 방법을
-API 패키지와 두 앱의 README에 정리한다. commit·push·PR은 자동 실행하지 않는다.
+6·7단계는 미커밋 상태로 리뷰를 요청했다. 이후 사용자 승인으로 커밋하고 8단계를 진행했다.
+
+## 8단계 — 사용법과 인계
+
+**일자**: 2026-10-26 | **상태**: 완료, 사용자 “커밋하고 다음단계 진행해”로 최종 리뷰 승인
+
+### 승인·변경
+
+- 사용자 “커밋하고 다음 진행해”에 따라 6·7단계를 35d7fdc
+  (`test(api): 기능 테스트용 MSW 설정 연결`)에 커밋했다. hook의 포맷·lint·commitlint가
+  통과했고 커밋 직후 작업 트리가 깨끗함을 확인했다. push는 하지 않았다.
+- [API README](../../packages/api/README.md)에 실제 명세 재생성 명령, 공개 진입점,
+  Faker·고정 응답 연결, Zod 검증, 기능 테스트 override와 실패 정책을 정리했다.
+- 없던 [어드민 README](../../apps/admin/README.md)와 [회원 웹 README](../../apps/web/README.md)를
+  추가했다. 실행 플래그·worker 갱신·초기화 복구·테스트 서버·제외 범위를 안내한다.
+- 테스트용 base URL 생략 시 생성 핸들러가 명세 서버 URL을 사용한다는 점과,
+  직접 작성한 override는 공용 응답의 Zod 검증을 거치지 않는다는 점을 명시했다.
+- 실행·검증 안내를 README와 연결하고, 작업 목록과 리뷰 상태를 최종 단계로 갱신했다.
+
+### 문서 검증
+
+- README의 로컬 링크 19개와 실제 파일·디렉터리 연결을 확인했다.
+- 두 TypeScript 예제를 어드민·웹 각각의 TypeScript 설정과 실제 생성 코드로 타입 검사했다.
+  server·apiBaseUrl은 설명대로 앱의 server.ts에서 import한 문맥으로 검사했다.
+  가상 소스 파일을 사용했으며 프로젝트에 테스트 파일을 추가하거나 실제 API를 호출하지 않았다.
+- 명령의 package 이름·script·workerDirectory를 manifest와 대조했다.
+  생성·worker 갱신·개발 실행·테스트·빌드 명령은 앞선 단계의 실행 결과와 함께 확인했다.
+- 현재 명세를 다시 내려받아 재생성하지 않았다. 이번 단계는 문서화이며 검증한 생성 계약을 유지한다.
+- 검증 스크립트와 결과: .context/verify-stage-8-docs.mjs,
+  .context/openapi-msw-stage-8-docs.log.
+
+- 문서 수정 후 node --run check와 git diff --check가 통과했다. 기존 테스트 267개 중
+  admin 215·web 29는 실행했고 app-bridge 17·ui 6은 캐시를 재사용했다.
+  로그는 .context/openapi-msw-stage-8-check.log에 있다.
+- 문서만 변경했으므로 빌드·브라우저 검증은 재실행하지 않았다. 직전 7단계의 새 빌드와
+  프로덕션·브라우저 통과 기록을 유지한다. 모바일 변경이 없어 expo:doctor도 실행하지 않았다.
+
+### 최종 인계
+
+취소한 모킹 전용 테스트 작업을 제외한 1~8단계 작업을 완료했다. 기본 검증은 생성 타입·응답의
+실행 시 Zod 검증·브라우저 확인이며, 실제 제품의 성공·오류 동작은 해당 기능 테스트에서 다룬다.
+기존 화면의 SDK 전환, SSR·네이티브 모킹과 전체 CRUD 상태 재현은 여전히 제외 범위다.
+
+사용자 “이해했어. 커밋하고 다음단계 진행해”로 최종 리뷰와 문서 커밋을 승인받았다.
+계획한 구현·검증·문서화는 모두 완료했다. push·PR·merge·이슈 종료는 별도 승인 없이 실행하지 않는다.
+
+## PR 준비 — 최신 main 통합 검증
+
+- PR 작성 요청에 따라 origin/main의 9cc5c3b를 현재 브랜치에 병합했다.
+  packages/api/package.json, pnpm-workspace.yaml, pnpm-lock.yaml의 충돌을 해결했다.
+- main의 ky catalog 전환과 추가 의존성을 유지하면서 Faker·MSW 의존성·공개 진입점·worker 복사 정책을 보존했다.
+  main lockfile을 기준으로 고정 pnpm에서 재생성한 뒤 frozen-lockfile 설치를 확인했다.
+- 병합 상태의 node --run check가 통과했다. 기존 테스트는 main의 추가 사례를 포함해
+  admin 390, web 29, app-bridge 17, ui 6으로 총 442개다. app-bridge·ui는 캐시를 재사용했다.
+- 두 모킹 플래그를 true로 전달한 node --run build -- --env-mode=loose --force가 통과했다.
+  admin·web·Storybook 모두 캐시 없이 빌드했다.
+- 개발 브라우저의 대표 응답·501·미등록 요청 차단·초기화 실패·on/off 전환과 프로덕션 worker
+  미등록을 다시 확인했다. 검사한 실행 파일 200개에서 모의 데이터와 MSW 초기화 코드는 검출되지 않았다.
+- 근거는 .context/openapi-msw-pr-{install,frozen,check,build,browser}.log와
+  .context/openapi-msw-pr-bundles.json에 있다. 추가 모킹 테스트 파일이나 의존성 버전 변경은 없다.
+- 모바일 manifest·lockfile importer는 변경하지 않았으므로 expo:doctor는 실행하지 않았다.
