@@ -56,6 +56,22 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       return sessionSchema.parse(session);
     },
 
+    /** 입력 전체를 교체하되 기존 식별자와 출석 집계는 보존합니다. */
+    updateSession(id: string, input: CreateSessionInput): Session {
+      const previous = sessions.find((session) => session.id === id);
+      if (!previous) {
+        throw new Error('수정할 세션을 찾을 수 없습니다.');
+      }
+
+      const updated = sessionSchema.parse({
+        ...createSessionInputSchema.parse(input),
+        id: previous.id,
+        attendance: previous.attendance,
+      });
+      sessions = sessions.map((session) => (session.id === id ? updated : session));
+      return sessionSchema.parse(updated);
+    },
+
     deleteSession(id: string): void {
       if (!sessions.some((session) => session.id === id)) {
         throw new Error('삭제할 세션을 찾을 수 없습니다.');

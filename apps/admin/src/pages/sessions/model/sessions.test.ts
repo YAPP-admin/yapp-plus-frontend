@@ -37,6 +37,9 @@ describe('브라우저 예시 세션 서비스 경계', () => {
 
     await expect(service.listSessions()).rejects.toThrow('세션 관리 기능을 준비 중입니다.');
     await expect(service.createSession(input)).rejects.toThrow('세션 관리 기능을 준비 중입니다.');
+    await expect(service.updateSession('missing', input)).rejects.toThrow(
+      '세션 관리 기능을 준비 중입니다.',
+    );
     await expect(service.deleteSession('missing')).rejects.toThrow(
       '세션 관리 기능을 준비 중입니다.',
     );
@@ -66,6 +69,17 @@ describe('브라우저 예시 세션 서비스 경계', () => {
       const sameService = await import('./sessions');
 
       expect(await sameService.listSessions()).toContainEqual(created);
+
+      const updated = await sameService.updateSession(created.id, { ...input, name: '수정 세션' });
+      expect(updated).toEqual({ ...created, name: '수정 세션' });
+      expect(await service.listSessions()).toContainEqual(updated);
+      await expect(service.updateSession('missing', input)).rejects.toThrow(
+        '수정할 세션을 찾을 수 없습니다.',
+      );
+      await expect(service.updateSession(created.id, { ...input, name: '' })).rejects.toThrow(
+        '세션명을 입력하세요.',
+      );
+      expect(await service.listSessions()).toContainEqual(updated);
 
       await sameService.deleteSession(created.id);
 
