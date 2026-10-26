@@ -1,7 +1,7 @@
 # 구현 계획: OpenAPI 클라이언트와 MSW 개발 환경
 
 **브랜치**: `DongjaJ/api-docs-implementation-check` | **작성일**: 2026-10-26
-**상태**: 2단계 의존성·생성 설정 완료 — 사용자 리뷰 대기, 3단계 착수 승인 없음
+**상태**: 3단계 API·MSW 생성 완료 — 사용자 리뷰 대기
 **이슈**: [#107](https://github.com/YAPP-admin/yapp-plus-frontend/issues/107)
 **명세**: [spec.md](spec.md) | **작업 목록**: [tasks.md](tasks.md)
 
@@ -22,14 +22,16 @@
 - 헌법은 미작성 템플릿이므로 AGENTS.md를 적용하며 임의의 헌법을 새로 만들지 않는다.
 - 한국어 문서, 앱 간 직접 import 금지, 공용 계약의 패키지 공개 진입점 사용을 따른다.
 - 생성물을 직접 편집하지 않고 도구·명세·설정에서 해결한다. 타입 단언으로 계약 오류를 숨기지 않는다.
-- 의존성·코드·생성물·환경 설정 변경은 해당 단계 승인 후 시작한다. 현재 2단계까지만 승인되었다.
+- 의존성·코드·생성물·환경 설정 변경은 해당 단계 승인 후 시작한다. 현재 3단계까지만 승인되었다.
 - 모킹 플래그 해제와 변경 되돌리기로 복구할 수 있으며 인증·외부 데이터 마이그레이션은 없다.
 - 설계 후 재검토: 기존 UI 서비스와 프로덕션 인증 동작을 바꾸지 않는 범위다.
 
 ## 생성과 공개 계약
 
-- `packages/api/openapi-ts.config.ts`에 `msw`를 추가한다. `includeInEntry: false`, `source: []`,
-  `responseFallback: 'error'`, `baseUrl: 0`을 사용해 예제의 암묵적 응답과 전역 origin 매칭을 피한다.
+- `packages/api/openapi-ts.config.ts`에 `msw`를 추가한다. `includeInEntry: false`,
+  `responseFallback: 'error'`, `baseUrl: 0`을 사용한다. source는 기본값인 `@hey-api/examples`를 사용해
+  명세의 응답 예제를 활용하고, 자동 응답이 없을 때만 501을 반환한다. API origin은 명세 서버로 한정한다.
+- Ky·Zod·Query의 `includeInEntry: true`로 일반 진입점에서 클라이언트와 검증·Query 함수를 공개한다.
 - Ky·타입·SDK·Zod·Query·MSW를 한 번의 생성으로 갱신한다. SDK validator와 transformer 기본값은 유지한다.
 - `@yapp-plus/api/generated`는 기존 API 진입점, `@yapp-plus/api/generated/msw`는
   `src/generated/msw.gen.ts`, `@yapp-plus/api/mocks`는 `src/mocks/index.ts`를 공개한다.
@@ -40,7 +42,8 @@
   생성된 `createMswHandlers`와 혼동되지 않게 수동 함수명을 구분한다.
 - 런타임 입력인 base URL은 절대 HTTP(S) URL인지 검증한다. 브라우저는 생성 클라이언트의 설정을,
   테스트는 `https://api.yapp.test`를 사용한다. 끝의 slash를 정규화하고 origin·경로 범위를 한정한다.
-- 다섯 대표 응답을 생성 factory에 주입한다. 나머지는 501, 알 수 없는 대상 `/api/` 요청은 실패한다.
+- 명세 예제를 기본 응답으로 활용하고 다섯 대표 API의 부족한 응답·특정 사례를 생성 factory에 주입한다.
+  자동·수동 응답이 모두 없는 API는 501, 알 수 없는 대상 `/api/` 요청은 실패한다.
   정적 자원·HMR·외부 서비스는 통과시킨다. 전체 CRUD와 OAuth redirect 흐름은 재현하지 않는다.
 - 수동 계약과 반환값은 [contracts/api-mocking.md](contracts/api-mocking.md)를 따른다.
 

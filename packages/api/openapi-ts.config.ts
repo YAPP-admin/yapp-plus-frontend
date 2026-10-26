@@ -16,10 +16,14 @@ export default defineConfig({
     postProcess: ['oxfmt'],
   },
   plugins: [
-    '@hey-api/client-ky',
+    {
+      name: '@hey-api/client-ky',
+      includeInEntry: true,
+    },
     '@hey-api/typescript',
     {
       name: 'zod',
+      includeInEntry: true,
       compatibilityVersion: 4,
     },
     {
@@ -27,13 +31,15 @@ export default defineConfig({
       transformer: false,
       validator: enableSdkValidation,
     },
-    '@tanstack/react-query',
+    {
+      name: '@tanstack/react-query',
+      includeInEntry: true,
+    },
     {
       name: 'msw',
       includeInEntry: false,
       baseUrl: 0,
-      // 응답을 명시하지 않은 API는 명세 예제나 실서버 대신 501로 응답합니다.
-      source: [],
+      // 기본 source로 명세 예제를 사용하고, 응답을 만들 수 없으면 501로 처리합니다.
       responseFallback: 'error',
     },
   ],

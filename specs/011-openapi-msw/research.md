@@ -19,7 +19,9 @@
 - 결정: 전체 operation의 handler factory를 생성하되 수동 데이터는 다섯 대표 API에 한정한다.
 - 이유: 스키마만으로 실제 인증·상태 전이·읽음 정책을 재현할 수 없다. 사용자는 생성·실행 기반을 선택했다.
 - 대안: 모든 응답을 임의 데이터로 채우거나 기존 화면의 직접 mock 저장소를 교체하는 것은 범위 밖이다.
-- 결정: `source: []`로 자동 예제를 끄고 미구현 응답은 501로 반환한다. logout 204는 명시적 resolver로 만든다.
+- 수정 결정: 3단계 리뷰 요청에 따라 `source: []`를 제거하고 기본 `@hey-api/examples`를 사용한다.
+  명세의 응답 예제를 활용하고, 자동·수동 응답이 모두 없을 때만 501을 반환한다.
+  logout 204와 부족한 대표 응답·특정 사례는 다음 단계에서 보완한다.
 
 ## 개발 모드는 선택적으로 켠다
 
@@ -55,3 +57,25 @@
 - [pnpm allowBuilds 문서](https://pnpm.io/settings/build#allowbuilds)의 패키지·버전별 실행 정책을 따른다.
 - 기존 모바일 expo-modules-core의 react-native-worklets peer 범위 경고가 있다.
   모바일 manifest와 lockfile importer는 변경하지 않았으며 MSW 관련 peer 경고는 없다.
+
+## 3단계 생성 확인
+
+- 배포 명세 재조회에 성공했으며 이번 입력은 48 operation·63 schema다. 원문 해시와 검증은
+  [validation.md](validation.md)의 3단계 기록을 기준으로 한다.
+- 고정 생성 도구의 기본 index는 SDK·타입만 공개한다. 계획한 공개 계약을 충족하도록 Ky·Zod·Query의
+  includeInEntry를 true로 설정했다. MSW는 별도 진입점으로 유지한다.
+- Zod 생성기는 int64를 z.coerce.bigint()로 검증하지만 TypeScript DTO는 number로 생성한다.
+  기존 SDK validator와 transformer 기본값은 비활성으로 유지했다. 이후 fixture 검증에서는 safeParse의
+  성공 여부를 확인하고, 변환된 출력으로 JSON 응답을 만들지 않는다. SDK 자동 검증을 켜려면 먼저
+  이 숫자 변환 정책과 타입 일치를 별도로 검토해야 한다.
+
+## 3단계 리뷰 수정 — 명세 예제 활용
+
+- 사용자 “그렇게 진행해” 승인으로 예제 생성을 차단하던 source 설정을 제거했다.
+- 설치된 Hey API 0.99.0의 MSW 기본 source는 `@hey-api/examples`다. 이 구현은 성공 응답의
+  스키마 example을 사용하며, 하위 필드 example들을 모아 완성된 응답 객체를 만들지는 않는다.
+- 3단계 원문에는 예제 위치 46개(스키마 속성 45개·요청 파라미터 1개)가 있으나 응답 전체 예제가 없다.
+  따라서 설정 변경 후 실제 생성물은 동일하다. 예제 활용 설정이 꺼져 있어서 생긴 결과와 구분한다.
+- 별도의 임시 검증 명세로 같은 설정을 실행해 전체 응답 예제는 200과 예제 본문을 반환하고,
+  예제가 없는 응답은 501을 반환하는 것을 확인했다. 검증 명세는 `.context/`에만 두었고
+  실제 API 원문·생성물을 보정하는 데 사용하지 않았다.

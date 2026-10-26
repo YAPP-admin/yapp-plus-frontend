@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
-    "./generated": "./src/generated/index.ts"
+    "./generated": "./src/generated/index.ts",
+    "./generated/msw": "./src/generated/msw.gen.ts"
   },
   "scripts": {
     "generate": "openapi-ts",

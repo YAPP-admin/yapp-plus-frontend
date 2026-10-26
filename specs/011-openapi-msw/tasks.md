@@ -2,7 +2,7 @@
 
 **입력**: [spec.md](spec.md), [plan.md](plan.md), [research.md](research.md),
 [data-model.md](data-model.md), [공개 계약](contracts/api-mocking.md)
-**현재 상태**: 2단계 완료, 사용자 리뷰 대기. 이슈 #107 연결. 3단계 착수 승인 없음.
+**현재 상태**: 3단계 완료, 사용자 리뷰 대기. 이슈 #107 연결. 4단계 착수 승인 없음.
 
 ## 진행 규칙
 
@@ -34,10 +34,10 @@
 
 ## 3단계 — 전체 API·MSW 생성 (US1, P1)
 
-- [ ] T009 [US1] 명세를 재조회하고 .context/openapi-msw-input.json에 검증용 원본을 보관해 operation·스키마를 확인한다.
-- [ ] T010 [US1] 동일 입력으로 packages/api/src/generated/의 SDK·타입·Zod·Query·MSW를 생성한다.
-- [ ] T011 [US1] packages/api/package.json에 generated/msw 공개 진입점을 추가하고 일반 index의 MSW 제외를 확인한다.
-- [ ] T012 [US1] 동일 입력 재생성·API 패키지 typecheck·operation 대조·수정 계약 확인 결과를 specs/011-openapi-msw/validation.md에 기록한다.
+- [x] T009 [US1] 명세를 재조회하고 .context/openapi-msw-input.json에 검증용 원본을 보관해 operation·스키마를 확인한다.
+- [x] T010 [US1] 동일 입력으로 packages/api/src/generated/의 SDK·타입·Zod·Query·MSW를 생성한다.
+- [x] T011 [US1] packages/api/package.json에 generated/msw 공개 진입점을 추가하고 일반 index의 MSW 제외를 확인한다.
+- [x] T012 [US1] 동일 입력 재생성·API 패키지 typecheck·operation 대조·수정 계약 확인 결과를 specs/011-openapi-msw/validation.md에 기록한다.
 
 **독립 검증**: 입력 operation 전부에 SDK와 handler가 대응하고 같은 입력의 재생성 diff가 없다.
 **중단점**: 생성 결과와 계약을 리뷰받는다. 문제는 설정·원본에서 해결하고 생성 파일을 직접 수정하지 않는다.
@@ -45,8 +45,8 @@
 ## 4단계 — 대표 응답과 핸들러 (US2, P2)
 
 - [ ] T013 [US2] apps/admin/src/mocks/api-contract.test.ts에 fixture 계약·대상 범위·미구현 실패 검증을 작성한다.
-- [ ] T014 [US2] packages/api/src/mocks/fixtures.ts에 다섯 대표 API의 합성 고정 응답과 빈 결과를 작성한다.
-- [ ] T015 [US2] packages/api/src/mocks/handlers.ts에 base URL 검증·전체 핸들러 구성·대표 응답·501 처리를 구현한다.
+- [ ] T014 [US2] packages/api/src/mocks/fixtures.ts에 명세에서 자동 생성된 응답을 확인하고 다섯 대표 API의 부족한 합성 고정 응답과 빈 결과를 보완한다.
+- [ ] T015 [US2] packages/api/src/mocks/handlers.ts에 base URL 검증·자동 예제를 유지하는 전체 핸들러 구성·대표 응답 보완·응답 부재 시 501 처리를 구현한다.
 - [ ] T016 [US2] packages/api/src/mocks/index.ts와 packages/api/package.json에서 수동 구성 함수와 미등록 요청 처리만 공개한다.
 - [ ] T017 [US2] apps/admin/src/mocks/api-contract.test.ts에서 생성 Zod·SDK·명시적 Node MSW 수명주기로 검증하고 validation.md에 기록한다.
 
@@ -104,13 +104,16 @@ US1 완료가 최소 생성 기반이며 US2·US3은 그 결과를 소비한다.
 
 ## 리뷰 기록
 
-| 단계 | 작업 상태        | 사용자 리뷰            |
-| ---- | ---------------- | ---------------------- |
-| 1    | 문서 작성 완료   | 사용자 “진행해”로 승인 |
-| 2    | 의존성·설정 완료 | 승인 대기              |
-| 3    | 미착수           | 승인 없음              |
-| 4    | 미착수           | 승인 없음              |
-| 5    | 미착수           | 승인 없음              |
-| 6    | 미착수           | 승인 없음              |
-| 7    | 미착수           | 승인 없음              |
-| 8    | 미착수           | 승인 없음              |
+| 단계 | 작업 상태         | 사용자 리뷰                          |
+| ---- | ----------------- | ------------------------------------ |
+| 1    | 문서 작성 완료    | 사용자 “진행해”로 승인               |
+| 2    | 의존성·설정 완료  | 사용자 “커밋하고 다음 진행해”로 승인 |
+| 3    | API·MSW 생성 완료 | 승인 대기                            |
+| 4    | 미착수            | 승인 없음                            |
+| 5    | 미착수            | 승인 없음                            |
+| 6    | 미착수            | 승인 없음                            |
+| 7    | 미착수            | 승인 없음                            |
+| 8    | 미착수            | 승인 없음                            |
+
+3단계 리뷰 수정: 사용자 “그렇게 진행해”로 명세 예제 활용을 승인했다. source 설정 제거와 재생성만
+수행하며, 4단계 대표 응답 보완의 착수 승인은 별도로 기다린다.
