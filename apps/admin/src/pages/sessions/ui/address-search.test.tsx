@@ -133,6 +133,7 @@ it('이전 검색이 늦게 완료되어도 현재 검색 결과를 덮지 않�
   search.mockReturnValueOnce(old.promise);
   setup();
   submit('서울');
+  await waitFor(() => expect(search).toHaveBeenCalledOnce());
   search.mockResolvedValueOnce(result(1, [{ ...address, roadAddress: '부산 중앙대로' }]));
   submit('부산');
   await screen.findByRole('button', { name: /부산 중앙대로/ });
@@ -154,19 +155,21 @@ it('같은 주소를 다시 선택해도 부모를 초기화하지 않고 입력
   expect(screen.getByText(address.roadAddress)).toBeInTheDocument();
   expect(search).toHaveBeenCalledTimes(1);
 });
-it('실패한 페이지를 재조회하고 조회 중 이전 결과와 오류를 숨긴다', async () => {
+it('실패한 페이지의 결과를 숨기고 재시도 중 오류 안내를 지운다', async () => {
   setup();
   submit();
   await screen.findByRole('button', { name: '다음' });
   search.mockRejectedValueOnce(new Error('secret-url?confmKey=secret'));
   fireEvent.click(screen.getByRole('button', { name: '다음' }));
   await screen.findByRole('alert');
+  expect(screen.queryByRole('list')).not.toBeInTheDocument();
   expect(screen.queryByText(/secret/)).not.toBeInTheDocument();
   const pending = deferred();
   search.mockReturnValueOnce(pending.promise);
   fireEvent.click(screen.getByRole('button', { name: '다시 검색' }));
   await screen.findByText('주소를 검색하고 있습니다.');
-  expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  expect(screen.getByRole('list')).toHaveAttribute('aria-busy', 'true');
+  expect(screen.getByRole('button', { name: /세종대로 110/ })).toBeDisabled();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(search.mock.calls[2]?.[0]).toMatchObject({ keyword: '세종대로', page: 2 });
   await act(async () => {
@@ -195,4 +198,62 @@ it('키가 없으면 입력을 막고 부모 저장에는 영향을 주지 않�
   expect(screen.getByRole('alert')).toHaveTextContent('설정이 준비되지');
   expect(screen.getByRole('button', { name: '세션 저장' })).toBeEnabled();
   expect(search).not.toHaveBeenCalled();
+});
+
+it.each(['검색어', '페이지'])(
+  '%s 변경 중 이전 목록을 유지하고 완료 후 새 결과로 교체한다',
+  async (change) => {
+    const { user, onSelect } = setup();
+    submit();
+    await screen.findByRole('button', { name: /세종대로 110/ });
+    const pending = deferred();
+    search.mockReturnValueOnce(pending.promise);
+    if (change === '검색어') {
+      submit('부산');
+    } else {
+      await user.click(screen.getByRole('button', { name: '다음' }));
+    }
+    await screen.findByText('주소를 검색하고 있습니다.');
+    const previous = screen.getByRole('button', { name: /세종대로 110/ });
+    expect(previous).toBeDisabled();
+    expect(screen.getByRole('list')).toHaveAttribute('aria-busy', 'true');
+    expect(screen.getByRole('button', { name: '다음' })).toBeDisabled();
+    await user.click(previous);
+    expect(onSelect).not.toHaveBeenCalled();
+    expect(screen.queryByText(/검색 결과 11개/)).not.toBeInTheDocument();
+    await act(async () => {
+      pending.resolve(
+        result(change === '페이지' ? 2 : 1, [{ ...address, roadAddress: '부산 중앙대로' }]),
+      );
+      await pending.promise;
+    });
+    expect(await screen.findByRole('button', { name: /부산 중앙대로/ })).toBeEnabled();
+    expect(screen.queryByRole('button', { name: /세종대로 110/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('list')).toHaveAttribute('aria-busy', 'false');
+  },
+);
+
+it('연속 입력은 마지막 입력에서 300ms 후 한 번 조회하고 비우면 조회하지 않는다', async () => {
+  vi.useFakeTimers();
+  try {
+    setup();
+    submit('세');
+    await act(() => vi.advanceTimersByTimeAsync(200));
+    submit('세종대로');
+    await act(() => vi.advanceTimersByTimeAsync(299));
+    expect(search).not.toHaveBeenCalled();
+    await act(() => vi.advanceTimersByTimeAsync(1));
+    expect(search).toHaveBeenCalledExactlyOnceWith({
+      keyword: '세종대로',
+      page: 1,
+      approvalKey: 'test-key=',
+    });
+    submit('세종대로 110');
+    submit('');
+    expect(screen.queryByRole('list')).not.toBeInTheDocument();
+    await act(() => vi.advanceTimersByTimeAsync(300));
+    expect(search).toHaveBeenCalledOnce();
+  } finally {
+    vi.useRealTimers();
+  }
 });
