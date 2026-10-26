@@ -1,6 +1,6 @@
 # 작업 목록: 세션 장소 검색과 위치 설정
 
-**상태**: 3-7 공통 폼 구현·검증 완료, 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
+**상태**: 4-1 목록 상태 구현·검증 완료, 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
 
 3-3까지 사용자 리뷰 후 3-4 코드·단위 검증을 완료했다. 실제 좌표 API 검증은 승인키 설정 후 진행한다. 준비 항목의 미확인 내용은 체크박스로 유지한다. **각 2-1·2-2… 세부 단계가 끝나면 반드시 멈추고 사용자 리뷰와 진행 지시를 받는다.**
 작업 개수가 적다는 이유로 다음 단계까지 묶어 실행하지 않는다.
@@ -25,7 +25,7 @@
 - [x] T010 [US1] **3-5** 검색 UI·페이지 이동·Enter 분리·주소 재선택·자동 검색·응답 분리 테스트: `apps/admin/src/pages/sessions/ui/address-search.tsx, apps/admin/src/pages/sessions/ui/address-search.test.tsx`
 - [x] T011 [US1] **3-6** React 지도 SDK catalog 등록·기본 로더 훅·마커 드래그·읽기 전용 좌표·초기 복귀와 실패 복구 검증: `pnpm-workspace.yaml, apps/admin/package.json, apps/admin/src/pages/sessions/ui/session-location-map.tsx, apps/admin/src/pages/sessions/ui/session-location-map.test.tsx`
 - [x] T012 [US1] **3-7** 공통 폼·유형 초안·단일 최종 좌표·검증·저장중 닫기 차단과 테스트: `apps/admin/src/pages/sessions/ui/session-form.tsx, apps/admin/src/pages/sessions/ui/session-form.test.tsx`
-- [ ] T013 [US1] **4-1** 목록 로딩·실패·재시도·전체/필터 빈 상태·프로덕션 안내 검증: `apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
+- [x] T013 [US1] **4-1** 목록 로딩·실패·재시도·전체/필터 빈 상태·배포 예시 목록 검증: `apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
 - [ ] T014 [US1] **4-2** 생성 진입·Mutation·캐시·전체 필터·집계0·성공/취소 테스트: `apps/admin/src/pages/sessions/model/session-queries.ts, apps/admin/src/pages/sessions/ui/sessions-page.tsx, apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`
 
 ## US2 — 수정
@@ -38,7 +38,7 @@
 - [ ] T017 **5-1** LP/ST 전체 경계·경합 테스트 누락 보완과 결과 기록: `apps/admin/src/pages/sessions/model/location/, apps/admin/src/pages/sessions/ui/session-form.test.tsx, specs/010-session-location/quickstart.md`
 - [ ] T018 **5-2** 실제키 검색·페이지·변환·지도·재시도와 수정 복원 검증: `specs/010-session-location/quickstart.md`
 - [ ] T019 **5-3** 키보드·스크린리더·터치·좁은 화면 검증과 스크린샷, 재사용 UI 변경시 Storybook 사례 반영: `specs/010-session-location/quickstart.md, .context/`
-- [ ] T020 **5-4** check/build·SSR/프로덕션 차단·문서 및 복구 절차 최종 확인: `specs/010-session-location/quickstart.md, specs/010-session-location/tasks.md`
+- [ ] T020 **5-4** check/build·SSR 차단·배포 예시 목록·문서 및 복구 절차 최종 확인: `specs/010-session-location/quickstart.md, specs/010-session-location/tasks.md`
 
 ## 의존성과 독립 검증
 
