@@ -4,7 +4,7 @@
 
 | 진입점                       | 공개 내용                                     | 소비자             |
 | ---------------------------- | --------------------------------------------- | ------------------ |
-| @yapp-plus/api/generated     | Ky SDK·타입·Zod·Query 옵션                    | 앱의 실제 API 호출 |
+| @yapp-plus/api/generated     | Ky 클라이언트·SDK·타입·Zod·Query 옵션         | 앱의 실제 API 호출 |
 | @yapp-plus/api/generated/msw | Hey API가 생성한 MSW 함수·타입                | 개발 모킹·테스트   |
 | @yapp-plus/api/mocks         | createApiMockHandlers와 onUnhandledApiRequest | 두 앱의 초기화     |
 
@@ -31,7 +31,8 @@
 | GET    | /api/sessions/current-week                                      | 이번 주 세션            |
 | GET    | /api/admin/generations/{generationId}/posts/{postId}/recipients | 읽음·미열람 목록        |
 
-나머지 알려진 operation은 501이다. 미등록 경로는 오류로 차단한다. 기본 성공 응답은 인증 검증이나
+명세에서 생성한 응답 예제를 기본으로 사용하고 위 대표 사례의 부족한 응답을 수동 보완한다.
+자동·수동 응답이 모두 없는 알려진 operation만 501이다. 미등록 경로는 오류로 차단한다. 기본 성공 응답은 인증 검증이나
 실제 서버의 필터·페이지네이션·권한 정책을 구현했다는 뜻이 아니다. 테스트가 필요한 조건을 override한다.
 본문 없는 응답은 `HttpResponse(null, { status: 204 })` resolver로 명시한다.
 

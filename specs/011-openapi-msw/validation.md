@@ -28,7 +28,7 @@
 
 ## 2단계 — 의존성과 생성 설정
 
-**일자**: 2026-10-26 | **상태**: 완료, 사용자 리뷰 대기
+**일자**: 2026-10-26 | **상태**: 완료, 사용자 “커밋하고 다음 진행해”로 리뷰 승인
 
 ### 변경
 
@@ -60,8 +60,75 @@ pnpm peers check는 기존 모바일 react-native-worklets 0.13.0의 peer 범위
 모바일 설정·의존성은 변경하지 않아 expo:doctor를 실행하지 않았다.
 실제 API codegen과 생성물 계약·런타임 MSW 검증은 아직 수행하지 않았고 3단계 이후 대상이다.
 
+## 3단계 — 전체 API·MSW 생성
+
+**일자**: 2026-10-26 | **상태**: 생성·계약 검증 완료, 사용자 리뷰 대기
+
+### 커밋과 입력
+
+- 사용자 승인으로 1·2단계를 c2c723c (`feat(api): OpenAPI와 MSW 생성 기반 구성`)에 커밋했다.
+  pre-commit 포맷·lint와 commitlint를 통과했다. push·PR은 수행하지 않았다.
+- 입력: https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com/v3/api-docs
+- 조회 시각: 2026-10-26 20:19:34 KST. OpenAPI 3.1.0, 48 operation, 63 schema.
+- 원문 SHA-256: `5ce4c87ef0fdf27836f42c5ea90d146d1291aa114f473cd738b716e061d940ce`
+- 원문은 gitignored `.context/openapi-msw-input.json`, 조사 결과는
+  `.context/openapi-msw-contract-audit.json`에 보관했다. 명세 내용을 수정하지 않았다.
+
+### 변경
+
+- 동일한 입력으로 SDK·TypeScript 타입·Zod·Query 옵션·MSW 및 클라이언트 내부 파일 19개를 생성했다.
+- 일반 생성 index에서 Ky 클라이언트·SDK·타입·Zod·Query 옵션을 공개하도록 생성 설정을 보완했다.
+- `@yapp-plus/api/generated/msw` 진입점을 추가했다. 일반 index에는 MSW export가 없다.
+- 모든 생성 파일은 도구로 생성했다. 수동 fixture, worker와 앱 초기화는 아직 추가하지 않았다.
+
+### 계약·재현성 검증
+
+| 항목                  | 결과                                                           |
+| --------------------- | -------------------------------------------------------------- |
+| 명세 참조·operationId | 로컬 참조 전부 유효, operationId 중복 없음                     |
+| 경로 변수             | 모든 URL 변수가 required path parameter로 선언됨               |
+| 오류 응답             | 명세의 4xx/5xx 응답 130개가 ErrorResponse 참조                 |
+| 운영진 인증           | 로그인·로그아웃 경로와 staffBearerAuth·userBearerAuth 확인     |
+| 공지 수신자           | read 필수 Boolean, readAt 필수 nullable datetime, isRead 없음  |
+| 세션 목록             | sessions 요소가 AdminSessionResponse 참조, 인증 토큰 필드 없음 |
+| SDK 대응              | TypeScript AST에서 추출한 메서드·경로 48개가 원문과 일치       |
+| MSW 대응              | 생성 factory의 핸들러 48개가 원문 메서드·경로와 일치           |
+| 미구현 응답           | 임시 Node MSW 서버에서 48개 요청 모두 501 확인                 |
+| 재생성                | 같은 입력으로 다시 생성한 19개 파일의 SHA-256 전부 일치        |
+| node --run check      | 포맷·lint·typecheck·기존 테스트 267개 통과(23개는 캐시 재사용) |
+
+추가 품질 확인: `node --run build`에서 admin·web 빌드와 Storybook 캐시 검증이 통과했다.
+빌드 로그는 `.context/openapi-msw-stage-3-build.log`에 있다. `git diff --check`도 통과했다.
+
+검증 스크립트는 `.context/verify-openapi-stage-3.mjs`, 파일별 해시는
+`.context/openapi-msw-generated-hashes.json`, 전체 검사 로그는
+`.context/openapi-msw-stage-3-check.log`에 있다. MSW 확인에는 `https://api.yapp.test`만 사용했고
+실제 서버에 인증·데이터 API 요청을 보내지 않았다.
+
+Zod의 int64 출력은 bigint이고 생성 DTO는 number다. SDK 자동 검증·변환 기본값은 변경하지 않았으며,
+후속 fixture 검증에서는 파싱 성공 여부만 사용한다. 이 단계에서 대표 성공 응답·브라우저 worker·
+테스트 전역 setup은 구현하지 않았다. 모바일 변경이 없어 expo:doctor는 실행하지 않았다.
+
+### 3단계 리뷰 수정 — 자동 응답 예제 활성화
+
+- 사용자 요청으로 `source: []`를 제거했다. 기본 source인 `@hey-api/examples`를 사용하며
+  `responseFallback: 'error'`는 유지한다. 자동 응답이 없으면 501로 처리한다.
+- 위 원문 snapshot으로 다시 생성했다. 예제 위치 46개는 스키마 속성 45개·요청 파라미터 1개이며,
+  응답 전체 예제는 없다. 고정 도구는 필드 예제를 조합하지 않으므로 생성 파일 19개의 해시는
+  수정 전과 동일하고 48개 기본 응답도 여전히 501이다.
+- 임시 `.context/openapi-msw-example-probe.json`에 전체 응답 예제 유무가 다른 두 API를 만들고
+  동일한 프로젝트 설정으로 `.context/openapi-msw-example-probe/`에 생성했다.
+  Node MSW에서 예제 API는 200·예제 본문 일치, 예제가 없는 API는 501임을 확인했다.
+  이 검증 입력은 실제 API 명세나 저장소의 생성물에 반영하지 않았다.
+- 실제 생성물의 operation 대응·수신자 계약·일반 index의 MSW 제외·재현성 검증을 다시 통과했다.
+- 계획·명세·공개 계약·실행 안내·후속 작업을 “자동 예제 활용 후 부족한 사례 보완”으로 맞췄다.
+- `node --run check`가 통과했다. 포맷·lint·typecheck·기존 테스트 267개를 확인했으며 로그는
+  `.context/openapi-msw-stage-3-examples-check.log`에 있다. `git diff --check`도 통과했다.
+- 빌드는 다시 실행하지 않았다. 생성 코드가 이전 빌드 입력과 동일하고 앱·의존성·빌드 설정 변경은 없다.
+  브라우저 실행과 대표 응답 구성은 여전히 후속 단계다.
+
 ## 다음 단계
 
-2단계 의존성·생성 설정 diff와 검증 결과를 사용자에게 리뷰받는다.
-사용자의 명시적 다음 단계 승인 전에는 3단계 API 생성에 착수하지 않는다.
-리뷰에서 수정 요청이 오면 2단계 범위에서 수정한다.
+3단계 생성물·공개 진입점·검증 결과를 사용자에게 리뷰받는다.
+명시적 승인 후에만 4단계 대표 응답·공용 핸들러 구성에 착수한다.
+리뷰 수정은 3단계 범위에서 반영하며 현재 생성물은 아직 커밋하지 않았다.
