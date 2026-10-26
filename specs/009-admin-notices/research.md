@@ -23,6 +23,8 @@
 
 - 결정: 저장소는 Blob/File을 보관하고 화면이 객체 URL을 생성·해제한다. 저장 모델에 객체 URL을 영구 식별자로 넣지 않는다.
 - 이유: 화면 unmount 시 URL을 해제해도 저장된 Blob으로 다음 화면에서 다시 만들 수 있다.
+- 구현: SEED `AttachmentInput.Item`이 파일 교체·제거·unmount 때 객체 URL을 해제하므로 별도 미리보기 훅은 만들지 않는다. 형식·크기는 SEED 설정으로 처리하고, 공지의 초과 묶음 판정과 비동기 이미지 읽기 확인만 앱에서 추가한다.
+- 근거: [SEED Attachment Field](https://seed-design.io/react/components/attachment-field)와 설치된 `@seed-design/react-file-upload@1.0.1`의 `useFileUploadItem`을 확인했다.
 - 대안: 전역 URL 참조 카운터는 불필요하다. base64 영속화와 서버 업로드는 범위 밖이다.
 - 저장소는 성공 시에만 첨부 배열을 교체한다. 입력 초안과 저장 배열은 분리해 취소·실패가 원본을 바꾸지 않는다.
 

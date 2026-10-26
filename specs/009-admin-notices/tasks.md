@@ -86,8 +86,8 @@
 
 독립 검증: 5/6개·기존 4+2·10MiB·각 형식·디코딩 실패와 객체 URL 해제를 확인한다.
 
-- [ ] T022 [US3] `feature/model/notice-attachments.ts`와 `.test.ts`에 JPG·PNG·WebP 검증·초과 묶음 거절·파일별 오류를 구현한다.
-- [ ] T023 [US3] `feature/ui/use-attachment-previews.ts`와 `.test.ts`에 Blob 미리보기 생성·교체·제거·unmount 해제를 구현한다.
+- [x] T022 [US3] `feature/model/notice-attachments.ts`와 `.test.ts`에 SEED의 JPG·PNG·WebP·크기 검증 설정, 초과 묶음 판정, 이미지 읽기 실패의 파일별 결과를 구현한다.
+- [x] T023 [US3] 별도 미리보기 훅 대신 SEED `AttachmentInput.Item`의 URL 관리를 사용한다. 설치된 SEED의 URL 생성·교체·제거·unmount 해제를 확인했으며 라이브러리 자체 동작을 앱 테스트에서 중복 검증하지 않는다.
 
 ## 9b — US3 첨부 UI
 
@@ -169,3 +169,14 @@ US6 키보드/화면 크기 검증은 구현 확정 후 독립적으로 수행�
   공통 경계는 공지 목록에서, 수정 고유 동작은 기본값·입력 보존/ID 전환·재시도/없는 공지로 검증한다.
 - `node --run check`(관리자 315개 테스트)·`node --run build` 통과.
   Chrome 화면 근거: `.context/notice-editor-simplified.png`.
+
+### 9a — SEED 기반 첨부 검증과 미리보기 수명
+
+- 연결 이슈: #105. 화면 연결은 9b에서 진행한다.
+- SEED `AttachmentInput.Root`에 전달할 형식·5개·10MiB 설정을 정의하고, SEED의 검증을 통과한 파일만 이미지 디코딩 검사에 전달한다.
+- 9b 연결 순서: 선택 이벤트에서 묶음 개수를 먼저 확인 → 초과 시 SEED에 전달하지 않음 → SEED 형식·크기 검사 → 정상 후보의 이미지 읽기 확인 → 최종 목록 반영. 선택 취소는 기존 목록을 유지한다.
+- SEED의 기본 `maxFiles`는 가능한 파일만 부분 수락하므로 묶음 검사 없이 사용하지 않는다. 비동기 읽기 중 선택·제거와 화면 전환은 9b 연결 테스트에서 확인한다.
+- 미리보기는 SEED `AttachmentInput.Item`·`ItemImage`가 소유한다. 별도 URL 상태·`useEffect`·관리 훅을 추가하지 않는다. 이미지 읽기는 `createImageBitmap`을 사용하고 생성한 비트맵은 즉시 `close()`한다.
+- 테스트 리뷰: SEED의 형식·크기 검사와 URL 수명 테스트를 제거하고, 공지 전용 5/6개 경계·기존 4개+신규 2개·이미지 읽기 실패 처리의 3개 테스트만 유지한다. 이미지 디코딩은 모의 API로 검증하며 실제 파일 선택과 브라우저 디코딩은 9b에서 확인한다.
+- PR 분리 기준: 이번 9a는 8b 마지막 커밋 `24d1493` 이후 변경만 별도 PR로 제출한다. 브랜치 생성·전환·push·PR 생성은 아직 수행하지 않았다.
+- 테스트 정리 후 `node --run check` 통과(관리자 318개). 제품 코드는 변경하지 않아 빌드는 앞선 9a 통과 결과를 유지한다.
