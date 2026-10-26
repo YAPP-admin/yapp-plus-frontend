@@ -36,6 +36,7 @@ const submissionFields = [
 type Props = {
   initialValues?: NoticeFormValues;
   children?: ReactNode;
+  renderFooter?: (values: NoticeFormValues) => ReactNode;
   submitLabel?: string;
   submitDisabled?: boolean;
   isPending?: boolean;
@@ -48,6 +49,7 @@ export function NoticeForm({
   initialValues = emptyNoticeForm,
   onSubmit,
   children,
+  renderFooter,
   submitLabel = '입력 확인',
   submitDisabled = false,
   isPending = false,
@@ -239,6 +241,12 @@ export function NoticeForm({
         <Text as="p" role="alert" color="fg.critical">
           {error}
         </Text>
+      )}
+
+      {renderFooter && (
+        <form.Subscribe selector={(state) => state.values}>
+          {(values) => renderFooter(values)}
+        </form.Subscribe>
       )}
     </form>
   );

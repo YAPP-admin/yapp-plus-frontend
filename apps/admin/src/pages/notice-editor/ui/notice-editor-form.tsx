@@ -7,6 +7,10 @@ import {
   NoticeEditor,
   NoticeAttachmentInput,
   NoticeForm,
+  NoticeLeaveDialog,
+  emptyNoticeForm,
+  emptyNoticeDocument,
+  getNoticeDraftSnapshot,
   getNoticeFormValues,
   getNoticeAttachmentEntries,
   noticeDocumentSchema,
@@ -21,15 +25,20 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
   const bodyId = useId();
   const navigate = useNavigate();
   const { create, update } = useNoticeMutations();
-  const [body, setBody] = useState<JSONContent>(
-    notice?.bodyDocument ?? { type: 'doc', content: [] },
-  );
+  const initialValues = notice ? getNoticeFormValues(notice) : emptyNoticeForm;
+  const initialBody = notice?.bodyDocument ?? emptyNoticeDocument;
+  const [body, setBody] = useState<JSONContent>(initialBody);
   const [bodyError, setBodyError] = useState(false);
   const [entries, setEntries] = useState(() =>
     getNoticeAttachmentEntries(notice?.attachments ?? []),
   );
   const pending = create.isPending || update.isPending;
   const checkingImages = entries.some(({ status }) => status === 'pending');
+  const initialSnapshot = getNoticeDraftSnapshot(
+    initialValues,
+    initialBody,
+    notice?.attachments?.map(({ id }) => id) ?? [],
+  );
 
   /** 본문 필수 입력을 확인하고 mutation의 성공 콜백에서 상세로 이동한다. */
   function save(content: NoticeFormContent) {
@@ -55,12 +64,18 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
 
   /** 저장된 ID를 사용하며 실패 시에는 현재 입력 화면을 유지한다. */
   function openSavedNotice(saved: Notice) {
-    void navigate({ to: '/notices/$noticeId', params: { noticeId: saved.id }, search: {} });
+    void navigate({
+      to: '/notices/$noticeId',
+      params: { noticeId: saved.id },
+      search: {},
+      // 저장 성공으로 시작한 이동만 차단을 건너뛴다.
+      ignoreBlocker: true,
+    });
   }
 
   return (
     <NoticeForm
-      initialValues={notice ? getNoticeFormValues(notice) : undefined}
+      initialValues={initialValues}
       onSubmit={save}
       isPending={pending}
       error={
@@ -70,6 +85,19 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
       }
       submitLabel={notice ? '수정 저장' : '공지 등록'}
       submitDisabled={checkingImages || pending}
+      renderFooter={(values) => (
+        <NoticeLeaveDialog
+          dirty={
+            !create.isSuccess &&
+            !update.isSuccess &&
+            getNoticeDraftSnapshot(
+              values,
+              body,
+              entries.map(({ id }) => id),
+            ) !== initialSnapshot
+          }
+        />
+      )}
     >
       <section aria-labelledby={bodyId} inert={pending}>
         <h2 id={bodyId} className={styles.description}>
