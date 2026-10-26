@@ -13,6 +13,6 @@ export function useSessionsQuery() {
 
   return useQuery({
     ...sessionsQueryOptions,
-    enabled: import.meta.env.DEV && hydrated,
+    enabled: hydrated,
   });
 }
