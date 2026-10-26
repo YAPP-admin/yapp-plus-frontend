@@ -1,5 +1,5 @@
 /** 작성·수정에서 공유하는 공지 메타데이터 입력과 조건부 제출 항목이다. */
-import { useId, useRef, useState, type ReactNode, type Ref } from 'react';
+import { useId, type ReactNode } from 'react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { Checkbox, Field, RadioGroup, RadioGroupField, TextField, Text } from '@seed-design/react';
 import { Check } from 'lucide-react';
@@ -33,40 +33,32 @@ const submissionFields = [
   { name: 'submission.method.url', label: '제출 주소 (선택)', type: 'text' },
 ] as const;
 
-type FocusField = 'title' | 'audience' | (typeof submissionFields)[number]['name'];
-
 type Props = {
   initialValues?: NoticeFormValues;
   children?: ReactNode;
-  onSubmit?: (content: NoticeFormContent) => void | Promise<void>;
+  submitLabel?: string;
+  submitDisabled?: boolean;
+  isPending?: boolean;
+  error?: string;
+  onSubmit?: (content: NoticeFormContent) => void;
 };
 
 /** 제출 동작이 연결되면 검증하고, 이후 입력 변경 시 오류를 갱신한다. */
-export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit, children }: Props) {
+export function NoticeForm({
+  initialValues = emptyNoticeForm,
+  onSubmit,
+  children,
+  submitLabel = '입력 확인',
+  submitDisabled = false,
+  isPending = false,
+  error,
+}: Props) {
   const id = useId();
-  const inputs = useRef<Partial<Record<FocusField, HTMLInputElement | null>>>({});
-  const [submitError, setSubmitError] = useState('');
   const form = useForm({
     defaultValues: initialValues,
     validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
     validators: { onDynamic: ({ value }) => validateNoticeForm(value) },
-    onSubmitInvalid: ({ formApi }) => {
-      const fields = ['title', 'audience', ...submissionFields.map(({ name }) => name)] as const;
-      const first = fields.find((name) => formApi.getFieldMeta(name)?.errors.length);
-      // 제출 중 비활성화가 해제된 다음 프레임에 오류 입력으로 이동한다.
-      requestAnimationFrame(() => {
-        if (first) {
-          inputs.current[first]?.focus();
-        }
-      });
-    },
-    onSubmit: async ({ value }) => {
-      try {
-        await onSubmit?.(noticeFormSchema.parse(value));
-      } catch {
-        setSubmitError('처리하지 못했습니다. 입력을 유지했으니 다시 시도하세요.');
-      }
-    },
+    onSubmit: ({ value }) => onSubmit?.(noticeFormSchema.parse(value)),
   });
 
   /** 제출 종류 경계를 넘으면 대상·마감·방법을 함께 초기화한다. */
@@ -86,14 +78,13 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit, children
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (!onSubmit || form.state.isSubmitting) {
+        if (!onSubmit || submitDisabled || isPending || form.state.isSubmitting) {
           return;
         }
-        setSubmitError('');
         void form.handleSubmit();
       }}
     >
-      <form.Subscribe selector={(state) => state.isSubmitting}>
+      <form.Subscribe selector={(state) => state.isSubmitting || isPending}>
         {(pending) => (
           <fieldset disabled={pending} className={styles.group}>
             <div className={styles.form}>
@@ -101,9 +92,6 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit, children
                 {(field) => (
                   <NoticeTextInput
                     disabled={pending}
-                    inputRef={(input) => {
-                      inputs.current.title = input;
-                    }}
                     name="title"
                     label="제목"
                     value={field.state.value}
@@ -146,9 +134,6 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit, children
                               aria-labelledby={`${id}-audience-label`}
                             >
                               <NoticeCheckbox
-                                inputRef={(input) => {
-                                  inputs.current.audience = input;
-                                }}
                                 label="활동회원 전체"
                                 checked={field.state.value === 'all'}
                                 disabled={pending}
@@ -216,9 +201,6 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit, children
                               {(field) => (
                                 <NoticeTextInput
                                   disabled={pending}
-                                  inputRef={(input) => {
-                                    inputs.current[name] = input;
-                                  }}
                                   name={name}
                                   label={label}
                                   type={type}
@@ -244,18 +226,18 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit, children
       {children}
 
       {onSubmit && (
-        <form.Subscribe selector={(state) => state.isSubmitting}>
+        <form.Subscribe selector={(state) => state.isSubmitting || isPending}>
           {(pending) => (
-            <ActionButton type="submit" disabled={pending} loading={pending}>
-              입력 확인
+            <ActionButton type="submit" disabled={pending || submitDisabled} loading={pending}>
+              {submitLabel}
             </ActionButton>
           )}
         </form.Subscribe>
       )}
 
-      {submitError && (
+      {error && (
         <Text as="p" role="alert" color="fg.critical">
-          {submitError}
+          {error}
         </Text>
       )}
     </form>
@@ -264,7 +246,6 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit, children
 
 /** 입력과 레이블·오류 설명을 한 묶음으로 연결한다. */
 function NoticeTextInput({
-  inputRef,
   name,
   label,
   type = 'text',
@@ -274,7 +255,6 @@ function NoticeTextInput({
   onBlur,
   disabled,
 }: {
-  inputRef: Ref<HTMLInputElement>;
   name: string;
   label: string;
   type?: string;
@@ -288,7 +268,7 @@ function NoticeTextInput({
     <Field.Root invalid={errors.length > 0} disabled={disabled}>
       <Field.Label>{label}</Field.Label>
       <TextField.Root value={value} onValueChange={onChange}>
-        <TextField.Input ref={inputRef} name={name} type={type} onBlur={onBlur} />
+        <TextField.Input name={name} type={type} onBlur={onBlur} />
       </TextField.Root>
       <FieldErrors errors={errors} />
     </Field.Root>
@@ -352,7 +332,6 @@ function NoticeRadioField<T extends string>({
 
 /** 전체·직군 선택에 같은 SEED 체크박스 구조를 사용한다. */
 function NoticeCheckbox({
-  inputRef,
   label,
   checked,
   disabled,
@@ -363,7 +342,6 @@ function NoticeCheckbox({
 }: {
   label: string;
   checked: boolean;
-  inputRef?: Ref<HTMLInputElement>;
   disabled: boolean;
   invalid?: boolean;
   errorId?: string;
@@ -377,7 +355,7 @@ function NoticeCheckbox({
       invalid={invalid}
       onCheckedChange={onChange}
     >
-      <Checkbox.HiddenInput ref={inputRef} aria-describedby={errorId} onBlur={onBlur} />
+      <Checkbox.HiddenInput aria-describedby={errorId} onBlur={onBlur} />
       <Checkbox.Control>
         <Checkbox.Indicator checked={<Check />} />
       </Checkbox.Control>

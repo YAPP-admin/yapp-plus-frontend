@@ -1,5 +1,5 @@
 /** 저장 성공 시 캐시 무효화와 실패 시 기존 데이터 보존을 검증한다. */
-import { act, renderHook } from '@testing-library/react';
+import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -76,17 +76,16 @@ describe('공지 변경 후 캐시 처리', () => {
 
     const { result } = renderHook(useNoticeMutations, { wrapper });
 
-    for (const operation of [
-      () => result.current.create.mutateAsync(input),
-      () => result.current.update.mutateAsync({ id: saved.id, input }),
-    ]) {
+    for (const [kind, operation] of [
+      ['create', () => result.current.create.mutate(input)],
+      ['update', () => result.current.update.mutate({ id: saved.id, input })],
+    ] as const) {
       client.setQueryData(noticesQueryOptions.queryKey, [saved]);
       client.setQueryData(noticeQueryOptions(saved.id).queryKey, saved);
       client.setQueryData(noticeMembersQueryOptions.queryKey, []);
 
-      await act(async () => {
-        await operation();
-      });
+      act(operation);
+      await waitFor(() => expect(result.current[kind].isSuccess).toBe(true));
 
       expect(client.getQueryState(noticesQueryOptions.queryKey)?.isInvalidated).toBe(true);
       expect(client.getQueryState(noticeQueryOptions(saved.id).queryKey)?.isInvalidated).toBe(true);
@@ -95,9 +94,8 @@ describe('공지 변경 후 캐시 처리', () => {
 
     const other = noticeSchema.parse({ ...saved, id: 'other' });
     client.setQueryData(noticeQueryOptions('other').queryKey, other);
-    await act(async () => {
-      await result.current.remove.mutateAsync(saved.id);
-    });
+    act(() => result.current.remove.mutate(saved.id));
+    await waitFor(() => expect(result.current.remove.isSuccess).toBe(true));
     expect(client.getQueryState(noticeQueryOptions(saved.id).queryKey)).toBeUndefined();
     expect(client.getQueryData(noticeQueryOptions('other').queryKey)).toBeDefined();
   });
@@ -113,14 +111,13 @@ describe('공지 변경 후 캐시 처리', () => {
 
     const { result } = renderHook(useNoticeMutations, { wrapper });
 
-    for (const operation of [
-      () => result.current.create.mutateAsync(input),
-      () => result.current.update.mutateAsync({ id: saved.id, input }),
-      () => result.current.remove.mutateAsync(saved.id),
-    ]) {
-      await act(async () => {
-        await expect(operation()).rejects.toThrow('저장 실패');
-      });
+    for (const [kind, operation] of [
+      ['create', () => result.current.create.mutate(input)],
+      ['update', () => result.current.update.mutate({ id: saved.id, input })],
+      ['remove', () => result.current.remove.mutate(saved.id)],
+    ] as const) {
+      act(operation);
+      await waitFor(() => expect(result.current[kind].isError).toBe(true));
       expect(client.getQueryData(noticesQueryOptions.queryKey)).toEqual([saved]);
       expect(client.getQueryData(noticeQueryOptions(saved.id).queryKey)).toEqual(saved);
       expect(client.getQueryState(noticesQueryOptions.queryKey)?.isInvalidated).toBe(false);
