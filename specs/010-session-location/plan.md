@@ -15,7 +15,7 @@
 - 저장은 DEV 브라우저 메모리뿐이다. 실제 세션 API·공용 패키지·브리지는 변경하지 않는다.
 - Vitest·Testing Library로 경계와 상태를 검증하고 실제 키와 브라우저로 외부 연동을 검증한다.
 - 성능 범위: 명시적 검색, 페이지당 10개, 중복 요청 차단, 자동 무한 재시도 없음. 검증되지 않은 응답 시간 목표를 제시하지 않는다.
-- JSONP 조회는 요청당 10초 후 실패로 처리한다. 이 값은 서비스 보장이 아닌 클라이언트 초기 설정이다.
+- JSON 조회는 요청당 10초 후 실패로 처리한다. 이 값은 서비스 보장이 아닌 클라이언트 초기 설정이다.
 
 ## 원칙 점검
 
@@ -37,7 +37,7 @@
 앱 파일은 `apps/admin/src/pages/sessions/` 아래에 둔다.
 
 - `model/session.ts`, `sessions.mock.ts`, `sessions.ts`, `session-queries.ts`: 스키마·저장·조회/Mutation.
-- `model/location/`: 환경 변수, JSONP, Juso DTO 검증·ViewModel 매핑, 좌표 변환과 요청 수명. 단일 소비자이므로 공용 패키지로 옮기지 않는다.
+- `model/location/`: 환경 변수, JSON 전송, Juso DTO 검증·ViewModel 매핑, 좌표 변환과 요청 수명. 단일 소비자이므로 공용 패키지로 옮기지 않는다.
 - `ui/session-form.tsx`: 생성·수정 공통 폼, 유형별 임시 입력·최종 좌표의 소유자.
 - `ui/address-search.tsx`, `ui/session-location-map.tsx`: 검색과 지도 입력. 좌표는 props로 받아 변경을 상위 폼에 전달한다.
 - 기존 `sessions-page.tsx`, `session-card.tsx`, `session-list.tsx`: 진입점·목록 상태·표시.
@@ -54,7 +54,7 @@
 
 ## 복구와 미검증 사항
 
-실제 키와 네트워크 동작, JSONP 콜백 형태, SDK 재시도는 아직 실제 환경에서 검증하지 않았다.
+주소 검색의 실제 키·JSON 응답·CORS 허용 헤더는 확인했다. 좌표 조회와 SDK 재시도는 후속 검증 대상이다.
 2-5와 3단계에서 실패하면 해당 단계에서 멈추고 근거를 기록한다. 다른 공급자나 서버 프록시로 임의 전환하지 않는다.
 저장 오류를 성공처럼 반영하지 않고 모의 저장소 변경은 검증 후 원자적으로 적용한다.
 
@@ -63,3 +63,5 @@
 사용자 추가 지시에 따라 API 축약 필드명은 연동 모듈 내부에 한정한다.
 [데이터 모델](data-model.md)의 ViewModel을 화면·폼·Query에서 사용하고 [매핑 계약](contracts/location.md)을 따른다.
 3-3에서 검색 ViewModel과 mapper 테스트를 만들고 3-4에서 좌표 ViewModel을 연결한다.
+
+3-2의 HTTP 전송은 admin의 독립적인 행안부 ky 인스턴스를 사용한다. 백엔드 OpenAPI 클라이언트와 설정을 공유하지 않으며 ky 버전만 catalog로 통일한다.
