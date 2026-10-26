@@ -4,6 +4,7 @@ import { Ellipsis } from 'lucide-react';
 import { Badge } from '@seed-design/react';
 import { Link } from '@tanstack/react-router';
 import {
+  NoticeDeleteDialog,
   getNoticeAudience,
   getNoticeDeadline,
   getNoticeSummary,
@@ -129,9 +130,7 @@ function NoticeActions({ notice }: { notice: Notice }) {
             수정
           </Link>
         </ActionButton>
-        <ActionButton variant="ghost" size="small" disabled title="삭제 기능은 준비 중입니다.">
-          삭제
-        </ActionButton>
+        <NoticeDeleteDialog notice={notice} />
       </div>
     </details>
   );
