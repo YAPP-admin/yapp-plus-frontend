@@ -1,7 +1,7 @@
 /** 마커 드래그·초기 복귀와 읽기 전용 좌표 표시를 검증합니다. */
 import { fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useKakaoLoader } from 'react-kakao-maps-sdk';
 import { SessionLocationMap } from './session-location-map';
 
@@ -51,13 +51,21 @@ const load = vi.mocked(useKakaoLoader);
 const initialPosition = { latitude: 37.5665, longitude: 126.978 };
 function setup(disabled = false) {
   const onChange = vi.fn<(value: { latitude: number; longitude: number }) => void>();
-  render(
-    <SessionLocationMap
-      initialPosition={initialPosition}
-      onChange={onChange}
-      disabled={disabled}
-    />,
-  );
+  function Harness() {
+    const [position, setPosition] = useState(initialPosition);
+    return (
+      <SessionLocationMap
+        initialPosition={initialPosition}
+        position={position}
+        onChange={(value) => {
+          setPosition(value);
+          onChange(value);
+        }}
+        disabled={disabled}
+      />
+    );
+  }
+  render(<Harness />);
   return onChange;
 }
 beforeEach(() => {
