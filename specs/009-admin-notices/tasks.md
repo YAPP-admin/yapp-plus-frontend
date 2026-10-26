@@ -108,8 +108,8 @@
 
 독립 검증: 변경 없음은 즉시 이동, 변경 있음은 취소/앱 이동/뒤로가기 확인·입력 유지가 동작한다.
 
-- [ ] T029 [US5] `feature/ui/use-notice-leave-guard.ts`에 정규화 dirty·Router blocker·beforeunload·저장 성공 해제를 구현한다.
-- [ ] T030 [US5] `feature/ui/use-notice-leave-guard.test.tsx`와 `apps/admin/src/router.test.tsx`에서 이탈 취소/확정·성공 이동·포커스 복귀를 검증한다.
+- [x] T029 [US5] `feature/model/notice-draft.ts`와 `feature/ui/notice-leave-dialog.tsx`에 정규화 dirty·Router blocker·beforeunload·저장 성공 해제를 구현한다.
+- [x] T030 [US5] `feature/model/notice-draft.test.ts`, `apps/admin/src/router.test.tsx`, `apps/admin/src/pages/notice-editor/ui/notice-save.test.tsx`에서 정규화·이탈 취소/확정·저장 실패/성공 이동·포커스 복귀를 검증한다.
 
 ## 11a — US6 UI 사례
 
@@ -207,3 +207,14 @@ US6 키보드/화면 크기 검증은 구현 확정 후 독립적으로 수행�
 - 최종 검증: `node --run check`(관리자 322개 테스트)·`node --run build` 통과. Chrome에서 생성·수정 저장, 상세 본문 반영, 삭제 Escape 취소·트리거 포커스 복귀, 삭제 성공·필터 유지를 확인했다. 화면 근거: `.context/notice-delete-dialog.png`. 최종 수동 포커스 제거 후 브라우저 재검증은 하지 않았다.
 - 신규 파일 선택·실제 디코딩과 스크린 리더·터치 검증은 미실행이다. 실제 API·업로드·영속 저장은 포함하지 않으며 미저장 이탈 확인은 10b에 남긴다.
 - 이 단계의 PR 기준은 직전 커밋 `5cac89f`이며 9b와 별도 PR로 제출한다. 복구는 해당 UI 연결 변경을 되돌리는 방식이며 데이터 마이그레이션은 없다.
+
+### 10b — 미저장 변경 이탈 확인 (#109)
+
+- `NoticeForm`의 `form.Subscribe`에서 현재 메타데이터를 읽어 본문·첨부와 비교한다. 별도 입력 복제 상태나 `useEffect`·DOM 검색·포커스 ref를 추가하지 않았다.
+- 제목·제출 방법의 앞뒤 공백, 직군 선택 순서, 일반 공지의 숨겨진 제출 입력은 비교에서 정규화한다. 본문은 서식을 포함한 JSON, 첨부는 항목 ID와 순서를 비교한다. 신규 본문의 초기값은 Tiptap의 빈 문단과 일치시켜 입력 후 원상 복구도 변경 없음으로 처리한다.
+- `NoticeLeaveDialog`가 Router의 `useBlocker`를 직접 사용하므로 별도 전달 전용 훅은 만들지 않았다. 복귀 링크·앱 이동·뒤로가기에서 SEED 확인 창을 표시하고, 계속 작성·Escape는 초안과 현재 경로를 유지하며 나가기는 원래 요청한 목적지로 이동한다.
+- 새로고침·탭 닫기는 `enableBeforeUnload`로 브라우저 기본 경고에 연결한다. 저장 성공 상태에서는 차단을 해제하고, 성공 콜백의 상세 이동에는 `ignoreBlocker`를 지정해 상태 반영 순서와 무관하게 이동한다. 실패 시 초안·이탈 확인은 유지한다.
+- 정규화 모델 테스트 2개와 실제 라우터 흐름 2개를 추가하고 기존 생성·수정 저장 테스트에 실패 후 이탈 취소를 보강했다. `createMemoryHistory`는 POP 차단을 지원하지 않아 뒤로가기 테스트에는 `createBrowserHistory`를 사용한다.
+- `node --run check` 통과(관리자 326개 테스트), `node --run build` 통과. Chrome에서 실제 뒤로가기 확인 창·취소 후 입력과 URL 복구·새로고침 기본 경고를 확인했다. 화면 근거: `.context/notice-leave-dialog.png`. 탭 닫기, 스크린 리더·터치는 직접 검증하지 않았다.
+- 이번 단계는 `db90491`을 기준으로 선행 10a와 별도 PR로 제출한다. 자동 저장·초안 영속 보관·실제 API 연결은 포함하지 않는다. 다음 리뷰 단계는 11a의 관리자 Storybook 사례다.
+- 구현 참고: [TanStack Router Navigation Blocking](https://tanstack.com/router/latest/docs/framework/react/guide/navigation-blocking), [SEED Dialog](https://seed-design.io/react/components/dialog). 설치된 Router의 `useBlocker` 소스와 공개 옵션을 함께 확인했다.
