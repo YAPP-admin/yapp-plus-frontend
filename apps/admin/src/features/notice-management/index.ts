@@ -14,4 +14,5 @@ export {
 export { getNoticeAudience } from './model/notice-audience';
 export { getNoticeSummary, getNoticeDeadline, getNoticeReaders } from './model/notice-summary';
 
+export { getNoticeFormValues } from './model/notice-form';
 export { NoticeQueryBoundary } from './ui/notice-query-boundary';
