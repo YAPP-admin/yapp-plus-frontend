@@ -22,3 +22,4 @@ export { NoticeAttachments } from './ui/notice-attachments';
 
 export { getNoticeAttachmentEntries } from './model/notice-attachments';
 export { noticeDocumentSchema } from './model/notice-document';
+export { NoticeDeleteDialog } from './ui/notice-delete-dialog';
