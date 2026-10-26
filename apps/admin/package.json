@@ -29,6 +29,7 @@
     "@vanilla-extract/css": "catalog:",
     "@yapp-plus/api": "workspace:*",
     "@yapp-plus/ui": "workspace:*",
+    "ky": "catalog:",
     "lucide-react": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

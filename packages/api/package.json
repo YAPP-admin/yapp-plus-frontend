@@ -14,7 +14,7 @@
   },
   "dependencies": {
     "@tanstack/react-query": "catalog:",
-    "ky": "2.1.0",
+    "ky": "catalog:",
     "zod": "catalog:"
   },
   "devDependencies": {
