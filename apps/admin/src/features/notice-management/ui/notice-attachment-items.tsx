@@ -8,9 +8,11 @@ import * as styles from './notice-attachment-input.css';
 export function NoticeAttachmentItems({
   entries,
   readOnly = false,
+  disabled = false,
 }: {
   entries: FileEntry[];
   readOnly?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <AttachmentInput.ItemGroup aria-label="첨부 이미지 목록">
@@ -21,7 +23,10 @@ export function NoticeAttachmentItems({
               <div>
                 <AttachmentInput.ItemImage />
                 {!readOnly && (
-                  <AttachmentInput.ItemRemoveButton aria-label={`${entry.file.name} 제거`}>
+                  <AttachmentInput.ItemRemoveButton
+                    disabled={disabled}
+                    aria-label={`${entry.file.name} 제거`}
+                  >
                     <X size={16} aria-hidden="true" />
                   </AttachmentInput.ItemRemoveButton>
                 )}

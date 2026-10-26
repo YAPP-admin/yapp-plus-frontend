@@ -15,6 +15,9 @@ import { createNoticeStore } from '~/features/notice-management/model/notices.mo
 import { NoticeCreatePage, NoticeEditPage } from './notice-editor-page';
 
 vi.mock('~/features/notice-management/model/notices', () => ({
+  createNotice: vi.fn<typeof service.createNotice>(),
+  updateNotice: vi.fn<typeof service.updateNotice>(),
+  deleteNotice: vi.fn<typeof service.deleteNotice>(),
   getNotice: vi.fn<typeof service.getNotice>(),
   listNotices: vi.fn<typeof service.listNotices>(),
   listNoticeMembers: vi.fn<typeof service.listNoticeMembers>(),

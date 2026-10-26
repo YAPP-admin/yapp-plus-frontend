@@ -1,4 +1,6 @@
 /** 라이브러리 내부 대신 공지 첨부의 묶음 거절·오류·비동기 제거·원본 보존을 검증한다. */
+import { useState } from 'react';
+import { getNoticeAttachmentEntries } from '../model/notice-attachments';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -28,9 +30,14 @@ function saved(name: string): NoticeAttachment {
 function renderAttachments(initialAttachments: NoticeAttachment[] = []) {
   const client = new QueryClient();
 
+  function Form() {
+    const [entries, setEntries] = useState(() => getNoticeAttachmentEntries(initialAttachments));
+    return <NoticeAttachmentInput entries={entries} onEntriesChange={setEntries} />;
+  }
+
   return render(
     <QueryClientProvider client={client}>
-      <NoticeAttachmentInput initialAttachments={initialAttachments} />
+      <Form />
     </QueryClientProvider>,
   );
 }
