@@ -1,5 +1,5 @@
 /** 작성·수정에서 공유하는 공지 메타데이터 입력과 조건부 제출 항목이다. */
-import { useId, useRef, useState } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { Checkbox, Field, RadioGroup, RadioGroupField, TextField, Text } from '@seed-design/react';
 import { Check } from 'lucide-react';
@@ -35,11 +35,12 @@ const submissionFields = [
 
 type Props = {
   initialValues?: NoticeFormValues;
-  onSubmit: (content: NoticeFormContent) => void | Promise<void>;
+  children?: ReactNode;
+  onSubmit?: (content: NoticeFormContent) => void | Promise<void>;
 };
 
-/** 제출 전 검증하고, 이후 입력 변경 시 오류를 갱신한다. */
-export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit }: Props) {
+/** 제출 동작이 연결되면 검증하고, 이후 입력 변경 시 오류를 갱신한다. */
+export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit, children }: Props) {
   const id = useId();
   const element = useRef<HTMLFormElement>(null);
   const [submitError, setSubmitError] = useState('');
@@ -57,7 +58,7 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit }: Props)
     },
     onSubmit: async ({ value }) => {
       try {
-        await onSubmit(noticeFormSchema.parse(value));
+        await onSubmit?.(noticeFormSchema.parse(value));
       } catch {
         setSubmitError('처리하지 못했습니다. 입력을 유지했으니 다시 시도하세요.');
       }
@@ -82,7 +83,7 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit }: Props)
       noValidate
       onSubmit={(event) => {
         event.preventDefault();
-        if (form.state.isSubmitting) {
+        if (!onSubmit || form.state.isSubmitting) {
           return;
         }
         setSubmitError('');
@@ -228,13 +229,18 @@ export function NoticeForm({ initialValues = emptyNoticeForm, onSubmit }: Props)
         )}
       </form.Subscribe>
 
-      <form.Subscribe selector={(state) => state.isSubmitting}>
-        {(pending) => (
-          <ActionButton type="submit" disabled={pending} loading={pending}>
-            입력 확인
-          </ActionButton>
-        )}
-      </form.Subscribe>
+      {children}
+
+      {onSubmit && (
+        <form.Subscribe selector={(state) => state.isSubmitting}>
+          {(pending) => (
+            <ActionButton type="submit" disabled={pending} loading={pending}>
+              입력 확인
+            </ActionButton>
+          )}
+        </form.Subscribe>
+      )}
+
       {submitError && (
         <Text as="p" role="alert" color="fg.critical">
           {submitError}

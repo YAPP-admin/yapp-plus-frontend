@@ -783,7 +783,7 @@ describe('공지 작성·수정 진입점', () => {
 
     expect(await screen.findByRole('heading', { name: heading })).toBeVisible();
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.queryByRole('radiogroup', { name: '공지 종류' })).not.toBeInTheDocument();
+    expect(await screen.findByRole('radiogroup', { name: '공지 종류' })).toBeVisible();
     expect(screen.queryByRole('navigation', { name: '공지 상세 구분' })).not.toBeInTheDocument();
     expect(
       router.state.matches.some(
@@ -792,10 +792,6 @@ describe('공지 작성·수정 진입점', () => {
           match.routeId === '/_dashboard/notices/$noticeId/',
       ),
     ).toBe(false);
-
-    expect(screen.queryByText(/공지 ID:/)?.textContent ?? null).toBe(
-      heading === '공지 작성' ? null : '공지 ID: demo-session',
-    );
   });
 
   it('작성 진입은 필터를 제거하고 뒤로가기는 복원하며 명시적 복귀는 기본 목록으로 이동한다', async () => {
@@ -808,7 +804,7 @@ describe('공지 작성·수정 진입점', () => {
 
     act(() => router.history.back());
 
-    expect(await screen.findByRole('radio', { name: '제출' })).toBeChecked();
+    await waitFor(() => expect(screen.getByRole('radio', { name: '제출' })).toBeChecked());
 
     act(() => router.history.forward());
     await user.click(await screen.findByRole('link', { name: '공지 목록으로 돌아가기' }));
@@ -849,7 +845,7 @@ describe('공지 작성·수정 진입점', () => {
     const returnLink = await screen.findByRole('link', { name: returnName });
     screen.getByRole('link', { name: '알림 발송 내역' }).focus();
 
-    for (let step = 0; step < 12 && document.activeElement !== returnLink; step += 1) {
+    for (let step = 0; step < 40 && document.activeElement !== returnLink; step += 1) {
       await user.tab();
     }
 

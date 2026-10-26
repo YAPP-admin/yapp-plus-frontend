@@ -1,6 +1,10 @@
 /** 공통 폼의 입력 상태와 본문을 제외한 메타데이터 검증을 정의한다. */
 import { z } from 'zod';
-import { noticeInputSchema } from './notice';
+import { noticeInputSchema, type Notice } from './notice';
+
+const MILLISECONDS_PER_HOUR = 60 * 60 * 1_000;
+// 한국 표준시는 UTC보다 9시간 빠르다.
+const KOREA_UTC_OFFSET_MS = 9 * MILLISECONDS_PER_HOUR;
 
 // 기존 공지 입력 규칙에서 본문만 제외한다. 본문 연결은 작성·수정 페이지에서 담당한다.
 export const noticeFormSchema = z.discriminatedUnion('category', [
@@ -44,14 +48,34 @@ const errorMessages: Record<string, string> = {
 /** 스키마 오류를 폼의 필드별 한국어 메시지로 연결한다. */
 export function validateNoticeForm(value: NoticeFormValues) {
   const result = noticeFormSchema.safeParse(value);
+
   if (result.success) {
     return undefined;
   }
 
   const fields: Record<string, string> = {};
+
   for (const issue of result.error.issues) {
     const path = issue.path.join('.');
+
     fields[path] = errorMessages[path] ?? '입력값을 확인하세요.';
   }
+
   return { fields };
+}
+
+/** 저장된 UTC 마감을 한국 시간 입력값으로 되돌린다. */
+export function getNoticeFormValues(notice: Notice): NoticeFormValues {
+  const submission = emptySubmission();
+
+  if (notice.category === 'submission') {
+    const koreanTime = new Date(
+      new Date(notice.submission.deadlineAt).getTime() + KOREA_UTC_OFFSET_MS,
+    ).toISOString();
+
+    submission.deadline = { date: koreanTime.slice(0, 10), time: koreanTime.slice(11, 16) };
+    submission.method = notice.submission.method ?? { name: '', url: '' };
+  }
+
+  return { title: notice.title, category: notice.category, audience: notice.audience, submission };
 }
