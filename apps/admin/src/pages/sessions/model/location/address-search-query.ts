@@ -11,6 +11,8 @@ export function isAddressSearchAvailable(): boolean {
 
 export function addressSearchQueryOptions(conditions: AddressSearchConditions) {
   return queryOptions({
+    staleTime: 0,
+    gcTime: 0,
     queryKey: ['admin', 'address-search', conditions.keyword, conditions.page],
     enabled: conditions.keyword.length > 0 && isAddressSearchAvailable(),
     queryFn: () => {
