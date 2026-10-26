@@ -79,8 +79,8 @@
 
 독립 검증: 새 입력 기본값·수정 마지막 저장값·백그라운드 조회 중 입력 보존을 확인한다.
 
-- [ ] T020 [US2] `apps/admin/src/pages/notice-editor/ui/notice-editor-page.tsx`에 작성 초기값·편집기·공통 폼을 연결한다.
-- [ ] T021 [US5] `apps/admin/src/pages/notice-editor/ui/notice-editor-page.test.tsx`에 수정 초기값·없는 id·재조회 시 입력 보존을 검증하고 페이지에 반영한다.
+- [x] T020 [US2] `apps/admin/src/pages/notice-editor/ui/notice-editor-page.tsx`에 작성 초기값·편집기·공통 폼을 연결한다.
+- [x] T021 [US5] `apps/admin/src/pages/notice-editor/ui/notice-editor-page.test.tsx`에 수정 초기값·없는 id·재조회 시 입력 보존을 검증하고 페이지에 반영한다.
 
 ## 9a — US3 이미지 검증과 수명
 
@@ -134,3 +134,38 @@ US6의 환경 차단은 5b부터 적용하고 최종 검증은 11b다. 단계 �
 US2 툴바 수동 검증/변환 테스트, US3 디코딩 수동 검증/용량 테스트, US5 삭제/이탈 테스트,
 US6 키보드/화면 크기 검증은 구현 확정 후 독립적으로 수행할 수 있다.
 현재 범위에 별도 병렬 구현 작업은 없으므로 [P] 표시는 사용하지 않는다.
+
+### 8b 단계 구현 — #100
+
+- 작성·수정 화면에 공통 폼과 본문 편집기를 연결했다. 저장·첨부·이탈 방지는 후속 단계다.
+- 최초 조회값을 편집 시작값으로 고정하고, 재조회 성공·오류·삭제 결과에도 입력을 유지한다.
+  다른 공지 ID로 이동하면 편집 세션을 초기화한다.
+- UTC 마감은 한국 시간 날짜·시각으로 복원한다. 조회 중·실패/재시도·없는 공지를 구분한다.
+- Chrome에서 제출 공지 초기값과 입력 확인을 검증했다. 화면 근거:
+  `.context/notice-editor-integration.png`.
+- #98 이후 변경은 별도 PR 대상으로 유지하며, 사용자 리뷰 후 다음 단계를 진행한다.
+
+- 8b 리뷰 반영: 관리자 탐색 영역은 SEED `Box`의 반응형 표시로 서버 HTML부터 유지한다.
+  너비 훅은 데스크톱 전환 시 모바일 패널을 해제하는 동작에만 남겼다.
+- 공지 목록·수정 조회와 편집기 초기화에는 SEED `Skeleton`으로 공간을 확보했다.
+  실제 데이터 길이에 따른 세로 높이 변화까지 고정하지는 않는다.
+- `node --run check`(관리자 324개 테스트)와 `node --run build` 통과.
+  Chrome 375px·1440px에서 표시 전환, 메뉴 키보드 조작·닫기 후 포커스 복귀를 확인했다.
+  화면 근거: `.context/notice-layout-desktop.png`, `.context/notice-layout-mobile.png`.
+- 8b 리뷰 반영: 조회 훅·화면의 `useHydrated`와 `enabled` 분기를 제거하고,
+  `NoticeQueryBoundary`에서 개발 환경·`ClientOnly`·Suspense·오류 재시도를 처리한다.
+  수정 조회는 `useSuspenseQuery`, 목록·상세의 공지/명단 병렬 조회는 `useSuspenseQueries`를 사용한다.
+- 제목·작성 링크·필터는 데이터 경계 밖에서 유지하여 로딩 완료 때 포커스가 사라지지 않는다.
+  전체 게시 개수는 필터 결과 개수와 함께 조회 결과 영역에 표시한다.
+- 서버 렌더링 중 조회 방지, 오류 재시도, 수정 입력 보존, 키보드 탐색을 포함해
+  `node --run check`(관리자 322개 테스트)·`node --run build` 통과.
+  Chrome에서 필터와 수정 입력을 확인했다. 화면 근거: `.context/notice-suspense-edit.png`.
+- #98 이후 변경은 650줄을 넘어 분리를 검토했다. 현재 8b와 그 리뷰 수정은 800줄 미만이며,
+  추가 구현은 이 단계의 리뷰·커밋·PR 분리 후 진행한다.
+
+- 8b 리뷰 정리: 저장과 연결되지 않은 입력 확인 버튼·본문 검증 상태·성공 문구를 제거했다.
+  `NoticeEditorForm`은 초기값 전달과 화면 조합만 담당한다. 본문 필수 검증은 저장 연결 시 적용한다.
+- 수정·상세 페이지의 공통 경계 중복 검증 4개와 대시보드 정적 문구 테스트 1개를 제거했다.
+  공통 경계는 공지 목록에서, 수정 고유 동작은 기본값·입력 보존/ID 전환·재시도/없는 공지로 검증한다.
+- `node --run check`(관리자 315개 테스트)·`node --run build` 통과.
+  Chrome 화면 근거: `.context/notice-editor-simplified.png`.
