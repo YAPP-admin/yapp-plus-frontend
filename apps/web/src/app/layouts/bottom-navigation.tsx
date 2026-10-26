@@ -2,13 +2,9 @@
 
 import {
   IconArticleFill,
-  IconArticleLine,
   IconCalendarFill,
-  IconCalendarLine,
   IconHouseFill,
-  IconHouseLine,
   IconPersonFill,
-  IconPersonLine,
 } from '@karrotmarket/react-monochrome-icon';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -18,26 +14,22 @@ const destinations = [
   {
     href: '/',
     label: '홈',
-    ActiveIcon: IconHouseFill,
-    InactiveIcon: IconHouseLine,
+    Icon: IconHouseFill,
   },
   {
     href: '/schedule',
     label: '일정',
-    ActiveIcon: IconCalendarFill,
-    InactiveIcon: IconCalendarLine,
+    Icon: IconCalendarFill,
   },
   {
     href: '/notices',
     label: '공지',
-    ActiveIcon: IconArticleFill,
-    InactiveIcon: IconArticleLine,
+    Icon: IconArticleFill,
   },
   {
     href: '/my',
     label: '마이페이지',
-    ActiveIcon: IconPersonFill,
-    InactiveIcon: IconPersonLine,
+    Icon: IconPersonFill,
   },
 ];
 
@@ -46,9 +38,8 @@ export function BottomNavigation() {
 
   return (
     <nav className={navigation} aria-label="주요 메뉴">
-      {destinations.map(({ href, label, ActiveIcon, InactiveIcon }) => {
+      {destinations.map(({ href, label, Icon }) => {
         const isCurrent = pathname === href;
-        const IconComponent = isCurrent ? ActiveIcon : InactiveIcon;
 
         return (
           <Link
@@ -58,7 +49,7 @@ export function BottomNavigation() {
             aria-current={isCurrent ? 'page' : undefined}
           >
             <span className={iconWrapper} aria-hidden="true">
-              <IconComponent width={24} height={24} />
+              <Icon width={24} height={24} />
             </span>
             <span className={itemLabel}>{label}</span>
           </Link>
