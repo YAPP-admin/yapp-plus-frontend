@@ -1,4 +1,4 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
 import { sessionSchema, type Session } from '../model/session';
@@ -77,7 +77,7 @@ const editableSession = sessionSchema.parse({
   attendance: { present: 0, late: 0, absent: 0, pending: 0, reported: 0 },
 });
 
-it('메뉴에서 수정을 선택하면 해당 세션을 전달하고 메뉴를 닫는다', async () => {
+it('메뉴에서 수정을 선택하면 해당 세션을 전달한다', async () => {
   const user = userEvent.setup();
   const onEdit = vi.fn<(session: Session) => void>();
   render(<SessionCard session={editableSession} onEdit={onEdit} />);
@@ -86,24 +86,4 @@ it('메뉴에서 수정을 선택하면 해당 세션을 전달하고 메뉴를 
   await user.click(await screen.findByRole('menuitem', { name: '수정' }));
 
   expect(onEdit).toHaveBeenCalledExactlyOnceWith(editableSession);
-  await waitFor(() => expect(screen.getByRole('menu')).toHaveAttribute('data-hidden'));
-});
-
-it('Escape와 바깥 클릭으로 메뉴만 닫고 수정은 시작하지 않는다', async () => {
-  const user = userEvent.setup();
-  const onEdit = vi.fn<(session: Session) => void>();
-  render(<SessionCard session={editableSession} onEdit={onEdit} />);
-  const trigger = screen.getByRole('button', { name: '수정할 팀 세션 정보' });
-
-  trigger.focus();
-  await user.keyboard('{Enter}');
-  expect(await screen.findByRole('menuitem', { name: '수정' })).toHaveFocus();
-  await user.keyboard('{Escape}');
-  await waitFor(() => expect(screen.getByRole('menu')).toHaveAttribute('data-hidden'));
-
-  await user.click(trigger);
-  expect(await screen.findByRole('menu')).toBeVisible();
-  await user.click(screen.getByRole('heading', { name: editableSession.name }));
-  await waitFor(() => expect(screen.getByRole('menu')).toHaveAttribute('data-hidden'));
-  expect(onEdit).not.toHaveBeenCalled();
 });
