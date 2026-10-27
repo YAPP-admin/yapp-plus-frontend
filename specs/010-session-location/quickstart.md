@@ -550,3 +550,16 @@ Snackbar Provider를 Overlay Provider 바깥으로 옮겨 모달에서도 접근
 Chrome에서 생성 모달 열기·취소, 수정 모달 열기·저장·하단 스낵바를 확인했다.
 화면 근거: `.context/session-overlay-o2.png`. 실제 스크린 리더·모바일 터치는 미검증이다.
 O3 날짜·시간 선택창 전환은 리뷰 후 진행한다.
+
+## O3 검증 결과: 일정 선택창 전환
+
+2026-10-28, SessionScheduleField는 `overlay.open`으로 날짜·시간 선택창을 연다.
+선택 초안은 SchedulePickerDialog 내부에서만 관리하며 확인 콜백으로 폼에 전달한다.
+취소·Escape는 초안을 폐기하고 선택창만 제거한다. 부모 세션 폼은 유지한다.
+별도 열림 상태·포커스 관리·`openAsync`는 추가하지 않았다.
+
+Picker 테스트 8개를 OverlayProvider 기반으로 전환했다.
+실제 `overlay.open`으로 연 부모 세션 폼 위에서 날짜 Escape·재진입·확정과
+시간 확정·최종 저장을 검증했다. 전체 check·build와 admin 테스트 470개가 통과했다.
+Chrome에서 날짜 확정과 시간 Escape 시 부모 값 보존을 확인했다.
+화면: `.context/session-overlay-o3.png`. 실제 스크린 리더·모바일 터치는 미검증이다.

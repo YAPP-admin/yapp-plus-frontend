@@ -1,5 +1,6 @@
 /** 실제 SEED Picker로 선택·확정·취소와 공통 폼의 저장 연결을 검증합니다. */
 import { useState } from 'react';
+import { OverlayProvider, overlay } from 'overlay-kit';
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider } from '@tanstack/react-query';
@@ -27,7 +28,11 @@ function setup(type: 'date' | 'time', initial: string, disabled = false) {
       />
     );
   }
-  render(<Harness />);
+  render(
+    <OverlayProvider>
+      <Harness />
+    </OverlayProvider>,
+  );
   return { user: userEvent.setup(), change };
 }
 
@@ -99,21 +104,43 @@ it('수정 폼에서 날짜·시간을 바꿔도 부모 폼을 유지하고 새 
   const close = vi.fn<() => void>();
   render(
     <QueryClientProvider client={createAdminQueryClient()}>
-      <SessionForm
-        initialValues={{
-          name: '수정 세션',
-          type: 'team',
-          date: '2020-01-01',
-          startTime: '14:07',
-          endTime: '17:00',
-          location: { guide: '' },
-        }}
-        onSubmit={save}
-        onClose={close}
-      />
+      <OverlayProvider>
+        <button
+          type="button"
+          onClick={() => {
+            overlay.open(({ unmount }) => (
+              <SessionForm
+                initialValues={{
+                  name: '수정 세션',
+                  type: 'team',
+                  date: '2020-01-01',
+                  startTime: '14:07',
+                  endTime: '17:00',
+                  location: { guide: '' },
+                }}
+                onSubmit={save}
+                onClose={() => {
+                  close();
+                  unmount();
+                }}
+              />
+            ));
+          }}
+        >
+          수정 열기
+        </button>
+      </OverlayProvider>
     </QueryClientProvider>,
   );
   const user = userEvent.setup();
+  await user.click(screen.getByRole('button', { name: '수정 열기' }));
+  await user.click(screen.getByRole('button', { name: '날짜 (한국 시간), 2020-01-01' }));
+  await user.click(screen.getByRole('button', { name: '2020년 1월 2일 목요일' }));
+  await user.keyboard('{Escape}');
+  expect(await screen.findByRole('dialog', { name: '세션 수정' })).toBeVisible();
+  expect(close).not.toHaveBeenCalled();
+  expect(screen.getByLabelText('세션명')).toHaveValue('수정 세션');
+
   await user.click(screen.getByRole('button', { name: '날짜 (한국 시간), 2020-01-01' }));
   await user.click(screen.getByRole('button', { name: '2020년 1월 2일 목요일' }));
   await user.click(screen.getByRole('button', { name: '확인' }));
