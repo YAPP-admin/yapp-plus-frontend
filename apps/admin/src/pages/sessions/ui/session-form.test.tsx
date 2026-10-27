@@ -145,7 +145,7 @@ function setup(
       <Harness />
     </QueryClientProvider>,
   );
-  return { user: userEvent.setup(), save, close };
+  return { user: userEvent.setup(), save, close, client };
 }
 function fill(label: string, value: string) {
   fireEvent.change(screen.getByLabelText(label), { target: { value } });
@@ -334,5 +334,43 @@ it.each(['취소', '닫기', 'Escape'])(
     expect(screen.getByLabelText('세션명')).toHaveValue('기존 세션');
     await user.keyboard('{Escape}');
     await waitFor(() => expect(screen.getByRole('button', { name: '폼 열기' })).toHaveFocus());
+  },
+);
+
+it.each(['성공', '실패'])(
+  '닫은 폼의 늦은 좌표 %s는 다른 세션의 저장값에 영향을 주지 않는다',
+  async (result) => {
+    const pending = Promise.withResolvers<Awaited<ReturnType<typeof lookupCoordinates>>>();
+    lookup.mockReturnValueOnce(pending.promise);
+    const { user, client, save: previousSave } = setup(initial);
+    await user.click(screen.getByRole('button', { name: '주소 A' }));
+    await user.click(screen.getByRole('button', { name: '취소' }));
+    const next: CreateSessionInput = {
+      ...initial,
+      name: '다른 세션',
+      location: { roadAddress: '다른 주소', detailAddress: '', latitude: 35, longitude: 126 },
+    };
+    const save = vi.fn<(value: CreateSessionInput) => Promise<void>>().mockResolvedValue(undefined);
+    render(
+      <QueryClientProvider client={client}>
+        <SessionForm initialValues={next} onSubmit={save} onClose={() => undefined} />
+      </QueryClientProvider>,
+    );
+    await act(async () => {
+      if (result === '성공') {
+        pending.resolve({ status: 'success', data: { latitude: 0, longitude: 0 } });
+        await pending.promise;
+      } else {
+        pending.reject(new Error('이전 요청 오류'));
+        await pending.promise.catch(() => undefined);
+      }
+    });
+    expect(screen.getByText('35, 126')).toBeVisible();
+    expect(screen.queryByText('0, 0')).not.toBeInTheDocument();
+    expect(screen.queryByText('좌표를 조회하지 못했습니다.')).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '저장' }));
+    expect(save).toHaveBeenCalledExactlyOnceWith(next);
+    expect(previousSave).not.toHaveBeenCalled();
+    expect(lookup).toHaveBeenCalledOnce();
   },
 );
