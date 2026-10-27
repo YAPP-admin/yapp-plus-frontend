@@ -65,7 +65,7 @@ export const metaIcon = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: vars.$color.fg.neutralSubtle,
+  color: vars.$color.fg.placeholder,
   width: '12px',
   height: '12px',
   flexShrink: 0,
