@@ -458,3 +458,79 @@ Chrome에서 수정 미리보기의 저장 일정 복원·변경·Esc·포커스
 화면: `.context/session-seed-date-picker.png`, `.context/session-seed-time-picker.png`.
 실제 모바일 터치·음성 스크린 리더·원격 배포는 미검증이다. 앱 전용 조합이므로 공용 Storybook에는 추가하지 않았다.
 문제가 생기면 일정 필드를 이전 네이티브 입력으로 되돌릴 수 있으며 저장 계약과 데이터 이관에는 영향이 없다.
+
+## 4-4 검증 결과: 정보 메뉴와 수정 폼 연결
+
+2026-10-27, 세션 카드 정보 메뉴 → 수정 → 공통 SessionForm을 연결했다.
+카드 메뉴는 SEED Menu와 ActionButton을 사용하며 새 의존성은 없다.
+기존 날짜·시간 Picker, 저장 유형·주소·상세주소·최종 좌표·팀 안내를 복원한다.
+저장된 좌표를 표시할 때 공공 좌표 API를 다시 호출하지 않는다.
+
+수정 Mutation 성공 후 목록을 무효화해 현재 필터·정렬·개수를 갱신한다.
+식별자와 출석 집계는 기존 수정 서비스가 보존한다. 실패하면 폼 초안을 유지하고 재시도할 수 있다.
+취소·Esc는 저장하지 않으며 다시 열면 마지막 저장값으로 시작한다.
+사용자 리뷰에 따라 직접 구현한 포커스 이동·복귀 처리를 제거했다. 관련 effect와 trigger·heading ref도 제거했다.
+SEED 모달·메뉴의 기본 동작을 사용하며, 메뉴를 직접 닫던 ref와 위치·그림자 스타일도 제거했다.
+
+전체 `node --run check`·`node --run build`가 통과했고 admin 테스트는 464개다.
+목록 통합 테스트에 수정 사례 6개를 추가했다. 키보드 메뉴 진입, 오프라인 저장값 복원과 좌표 무조회,
+취소·Esc·재진입, 유형 변경·필터 빈 상태, 일정 변경 후 정렬, 실패·중복 저장 차단·재시도를 확인한다.
+Chrome의 실제 `/sessions`에서 오프라인 주소·좌표 복원, 이름·상세주소 수정 저장과 재진입,
+출석 집계 유지, 오프라인→팀 전환 후 필터 유지·완료 안내를 확인했다.
+직접 구현한 포커스 복귀 검증은 리뷰 반영으로 테스트에서 제외했다.
+화면 근거는 `.context/session-edit-restored.png`, `.context/session-edit-saved.png`,
+`.context/session-edit-filter.png`에 보관했다.
+
+실제 모바일 터치·음성 스크린 리더·원격 배포는 미검증이며, 앱 전용 카드 조합이라 공용 Storybook은 변경하지 않았다.
+저장은 계속 브라우저 예시 메모리만 사용한다. 복구하려면 카드 수정 진입점·Mutation 연결을 되돌리면 된다.
+4-4 사용자 리뷰 전에는 5-1 통합 검증 보완을 시작하지 않는다.
+
+### 4-4 리뷰 반영: 수정 완료 토스트
+
+목록 본문에 남아 있던 savedMessage 상태·output을 제거하고 SEED Snackbar로 수정 완료를 알린다.
+세션 페이지 안에 Provider·Portal 표시 영역을 두며 추가 패키지나 앱 전역 설정은 필요하지 않다.
+수정 성공 시에만 토스트를 만들고 기본 4초 후 닫는다. 유형 변경으로 현재 필터에서 사라진 경우의 안내도 유지한다.
+성공 토스트 표시·자동 사라짐·목록 본문에 안내가 삽입되지 않는 동작을 목록 테스트에 반영했다.
+공식 사용법: [SEED Snackbar](https://seed-design.io/react/components/snackbar).
+전체 check·build와 admin 테스트 464개가 통과했다. Chrome에서 실제 수정 저장 후 토스트를 확인했다.
+화면 근거: `.context/session-edit-toast-top.png`. 실제 음성 스크린 리더·모바일 터치는 미검증이다.
+
+사용자 리뷰에 따라 토스트는 SEED 기본 하단 중앙 배치를 사용한다.
+기본 Region은 하단·좌우 Safe Area와 `x2`(8px) 내부 여백을 반영한다.
+2026-10-28, 하단 배치 복원 후 전체 check·build와 admin 테스트 470개가 통과했다.
+Chrome에서 하단 8px 여백을 확인했다. 화면: `.context/session-snackbar-bottom.png`.
+실제 모바일 기기의 Safe Area는 미검증이다.
+수정 대상은 `sessionToEdit`, 생성 모달 열림 여부는 `isCreateDialogOpen`으로 구분한다.
+저장 진행 상태는 기존 Mutation·폼이 관리하며 별도 boolean 상태를 추가하지 않는다.
+
+## O1 검증 결과: Overlay Kit 기반
+
+2026-10-28, `overlay-kit` 1.9.0을 catalog에 고정하고 admin에만 설치했다.
+공식 사용 계약은 [Overlay Kit README](https://github.com/toss/overlay-kit#example)를 참고했다.
+`AdminOverlayProvider`를 대시보드 콘텐츠에 연결하여 Query·Router 컨텍스트를 공유한다.
+pathname을 Provider의 key로 사용하므로 다른 경로로 이동하면 모달과 초안을 함께 제거한다.
+같은 페이지의 검색 조건 변경에는 Provider를 유지한다. 별도의 effect·포커스·타이머 처리는 없다.
+
+실제 SEED ContentDialog를 이용한 테스트 4개로 다음을 확인했다.
+
+- `overlay.open`으로 열고 확인값을 콜백으로 전달한 후 `unmount`로 제거한다.
+- 취소·Esc 시 콜백을 실행하지 않고, 다시 열면 이전 초안이 없다.
+- 모달에서 Router 위치와 Query 캐시에 접근한다.
+- 검색 조건 변경은 초안을 유지하며 pathname 변경은 모달을 제거한다.
+
+`node --run check`·`node --run build` 통과, admin 테스트 468개 통과.
+설치는 성공했다. `pnpm peers check`는 기존 `@vitejs/plugin-react`↔`oxc-transform-react`,
+`expo-modules-core`↔`react-native-worklets` 불일치 2건으로 실패했으며 해당 버전은 변경하지 않았다.
+Overlay Kit의 React peer 범위는 현재 React 19를 포함한다.
+이번 단계는 기반 연결과 테스트만 추가하므로 사용자 화면 변경은 없고 별도 스크린샷은 없다.
+실제 생성·수정 및 일정 선택창의 전환·브라우저 검증은 O2·O3에서 진행한다.
+
+## 카드 메뉴의 SEED Menu 교체 검증
+
+2026-10-28, 네이티브 details 메뉴를 SEED Menu로 교체했다. 직접 닫기 위한 ref와
+메뉴 위치·그림자 스타일을 제거하고, 포털에도 어드민 다크 테마를 적용했다.
+메뉴 선택·Escape·바깥 클릭과 키보드 수정 진입을 포함한 관련 테스트 22개가 통과했다.
+전체 `node --run check`(admin 470개)와 `node --run build`가 통과했다.
+Chrome에서 메뉴 배치·다크 테마·Escape 닫기·키보드 수정 진입을 확인했다.
+실제 스크린 리더와 터치 기기 검증은 수행하지 않았다.
+화면 근거: `.context/session-seed-menu.png`.
