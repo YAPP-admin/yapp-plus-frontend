@@ -77,3 +77,8 @@ export const count = style({
   fontSize: vars.$fontSize.t6,
   fontWeight: vars.$fontWeight.bold,
 });
+
+export const menuButton = style({
+  minWidth: 44,
+  minHeight: 44,
+});

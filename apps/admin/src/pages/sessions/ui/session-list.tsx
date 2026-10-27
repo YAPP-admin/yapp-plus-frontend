@@ -8,10 +8,12 @@ export function SessionList({
   sessions,
   type,
   totalCount,
+  onEdit,
 }: {
   sessions: Session[];
   type: SessionFilter;
   totalCount: number;
+  onEdit?: (session: Session) => void;
 }) {
   return (
     <>
@@ -26,7 +28,7 @@ export function SessionList({
         <ul className={list} aria-label="세션 목록">
           {sessions.map((session) => (
             <li key={session.id}>
-              <SessionCard session={session} />
+              <SessionCard session={session} onEdit={onEdit} />
             </li>
           ))}
         </ul>
