@@ -24,7 +24,7 @@ export const item = style({
   justifyContent: 'center',
   gap: '4px',
   padding: `${vars.$dimension.x1} ${vars.$dimension.x2}`,
-  color: vars.$color.palette.gray600,
+  color: vars.$color.fg.placeholder,
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
   fontWeight: vars.$fontWeight.medium,
@@ -33,14 +33,14 @@ export const item = style({
   transition: 'color 150ms ease, transform 100ms ease',
   selectors: {
     '&[aria-current="page"]': {
-      color: vars.$color.fg.neutral,
+      color: vars.$color.fg.neutralMuted,
       fontWeight: vars.$fontWeight.bold,
     },
     '&:active': {
       transform: 'scale(0.96)',
     },
     '&:focus-visible': {
-      outline: `2px solid ${vars.$color.fg.neutral}`,
+      outline: `2px solid ${vars.$color.fg.neutralMuted}`,
       outlineOffset: '-2px',
       borderRadius: vars.$radius.r2,
     },

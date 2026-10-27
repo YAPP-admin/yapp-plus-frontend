@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import {
+  customHeaderContainer,
   header,
   headerPlain,
   shell,
@@ -13,6 +14,20 @@ function getShellClassName(plain: boolean, hasNavigation: boolean) {
     return shellPlain;
   }
   return hasNavigation ? shellWithNavigation : shell;
+}
+
+function getHeaderClassName(
+  customHeader: ReactNode | undefined,
+  plain: boolean,
+  borderlessHeader: boolean,
+) {
+  if (customHeader) {
+    return customHeaderContainer;
+  }
+  if (plain || borderlessHeader) {
+    return headerPlain;
+  }
+  return header;
 }
 
 export function PageShell({
@@ -33,7 +48,7 @@ export function PageShell({
   /** 커스텀 헤더입니다. null을 전달하면 헤더 영역을 숨깁니다. */
   header?: ReactNode;
 }) {
-  const headerClassName = plain || borderlessHeader ? headerPlain : header;
+  const headerClassName = getHeaderClassName(customHeader, plain, borderlessHeader);
 
   return (
     <div className={getShellClassName(plain, Boolean(navigation))}>

@@ -49,3 +49,10 @@ export const headerPlain = style([
     borderBottom: 'none',
   },
 ]);
+
+export const customHeaderContainer = style({
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  borderBottom: 'none',
+});
