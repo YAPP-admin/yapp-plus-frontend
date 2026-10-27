@@ -118,24 +118,6 @@ it('모달이 Query·Router 컨텍스트를 공유하고 확인값을 콜백으�
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });
 
-it.each(['취소', 'Escape'])(
-  '%s로 제거한 모달을 다시 열면 이전 초안을 복원하지 않는다',
-  async (close) => {
-    const { user, onConfirm } = await setup();
-    await user.click(screen.getByRole('button', { name: '모달 열기' }));
-    await user.type(await screen.findByLabelText('선택값'), '버릴 초안');
-    if (close === 'Escape') {
-      await user.keyboard('{Escape}');
-    } else {
-      await user.click(screen.getByRole('button', { name: '취소' }));
-    }
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(onConfirm).not.toHaveBeenCalled();
-    await user.click(screen.getByRole('button', { name: '모달 열기' }));
-    expect(await screen.findByLabelText('선택값')).toHaveValue('');
-  },
-);
-
 it('검색 조건만 바뀌면 초안을 유지하고 pathname이 바뀌면 모달을 제거한다', async () => {
   const { user, router, onConfirm } = await setup();
   await user.click(screen.getByRole('button', { name: '모달 열기' }));

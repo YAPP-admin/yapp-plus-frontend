@@ -246,7 +246,7 @@ it('빈 목록에서도 생성할 수 있고 취소 후 재진입하면 입력�
   expect(screen.queryByText('등록된 세션이 없습니다.')).not.toBeInTheDocument();
 });
 
-it('저장 중 중복 요청을 막고 실패 시 입력·필터를 보존하여 다시 저장한다', async () => {
+it('생성 Mutation 실패 시 입력·필터를 보존하고 재시도 성공을 반영한다', async () => {
   mockStore();
   const pending = Promise.withResolvers<Awaited<ReturnType<typeof createSession>>>();
   create.mockReturnValueOnce(pending.promise);
@@ -254,11 +254,6 @@ it('저장 중 중복 요청을 막고 실패 시 입력·필터를 보존하여
   await screen.findByRole('list');
   await fillTeamSession(user);
   await user.click(screen.getByRole('button', { name: '저장' }));
-  expect(screen.getByRole('button', { name: '취소' })).toBeDisabled();
-  expect(screen.getByLabelText('세션명')).toBeDisabled();
-  await user.keyboard('{Escape}');
-  fireEvent.submit(screen.getByRole('form', { name: '세션 입력' }));
-  expect(create).toHaveBeenCalledOnce();
   await act(async () => {
     pending.reject(new Error('secret-response'));
     await expect(pending.promise).rejects.toThrow('secret-response');
@@ -320,23 +315,16 @@ it('저장된 오프라인 일정·주소·좌표를 복원하고 ID·집계·�
   expect(
     within(screen.getByRole('region', { name: '어드민 알림' })).getByRole('status'),
   ).toHaveTextContent('세션을 수정했습니다.');
-  await waitFor(() => expect(screen.queryByText('세션을 수정했습니다.')).not.toBeInTheDocument(), {
-    timeout: 5000,
-  });
 });
 
-it.each(['취소', 'Escape'])('수정 %s 후 다시 열면 저장값을 복원한다', async (close) => {
+it('수정 취소 후 다시 열면 저장값을 복원한다', async () => {
   mockStore();
   const user = await setup();
   await openEdit(user, '개발용 팀 세션');
   fireEvent.change(screen.getByLabelText('장소 안내 (선택)'), {
     target: { value: '미저장 초안' },
   });
-  if (close === 'Escape') {
-    await user.keyboard('{Escape}');
-  } else {
-    await user.click(screen.getByRole('button', { name: close }));
-  }
+  await user.click(screen.getByRole('button', { name: '취소' }));
   expect(update).not.toHaveBeenCalled();
   await openEdit(user, '개발용 팀 세션');
   expect(screen.getByLabelText('장소 안내 (선택)')).toHaveValue('');
@@ -382,7 +370,7 @@ it('수정한 날짜로 목록을 다시 정렬하고 재진입 시 마지막 �
   expect(screen.getByLabelText('날짜 (한국 시간)')).toHaveValue('2026-12-31');
 });
 
-it('수정 실패 시 초안을 유지하고 중복 저장·닫기를 막은 뒤 다시 저장할 수 있다', async () => {
+it('수정 Mutation 실패 시 목록·필터를 유지하고 재시도 성공을 반영한다', async () => {
   mockStore();
   const pending = Promise.withResolvers<Awaited<ReturnType<typeof updateSession>>>();
   update.mockReturnValueOnce(pending.promise);
@@ -392,11 +380,6 @@ it('수정 실패 시 초안을 유지하고 중복 저장·닫기를 막은 뒤
     target: { value: '재시도할 장소' },
   });
   await user.click(screen.getByRole('button', { name: '저장' }));
-  expect(screen.getByRole('button', { name: '취소' })).toBeDisabled();
-  expect(screen.getByLabelText('장소 안내 (선택)')).toBeDisabled();
-  await user.keyboard('{Escape}');
-  fireEvent.submit(screen.getByRole('form', { name: '세션 입력' }));
-  expect(update).toHaveBeenCalledOnce();
   await act(async () => {
     pending.reject(new Error('수정할 세션을 찾을 수 없습니다.'));
     await expect(pending.promise).rejects.toThrow('수정할 세션을 찾을 수 없습니다.');

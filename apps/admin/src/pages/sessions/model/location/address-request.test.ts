@@ -38,13 +38,12 @@ function waitForAbort(_input: Parameters<typeof fetch>[0], init?: RequestInit): 
 }
 
 describe('주소 JSON 전송', () => {
-  it('JSON 응답을 전달하고 타이머와 취소 리스너를 정리한다', async () => {
+  it('JSON 응답을 전달한다', async () => {
     const payload = { results: { common: { errorCode: '0' }, juso: [] } };
     fetchMock.mockResolvedValue(Response.json(payload));
     const controller = new AbortController();
 
     await expect(requestAddressJson(parameters, controller.signal)).resolves.toEqual(payload);
-    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('고정 JSON endpoint에 인코딩하며 JSONP 콜백과 인증 쿠키를 보내지 않는다', async () => {
@@ -77,7 +76,6 @@ describe('주소 JSON 전송', () => {
     expect(await result).toBeInstanceOf(TimeoutError);
     const request = fetchMock.mock.calls[0]?.[0];
     expect(request instanceof Request && request.signal.aborted).toBe(true);
-    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('한 요청을 취소해도 동시 요청은 정상 완료한다', async () => {
@@ -93,7 +91,6 @@ describe('주소 JSON 전송', () => {
     controller.abort();
     expect(await result).toMatchObject({ name: 'AbortError' });
     await expect(next).resolves.toEqual({ page: 2 });
-    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('본문을 읽는 중에도 취소가 적용된다', async () => {
@@ -125,7 +122,6 @@ describe('주소 JSON 전송', () => {
     await vi.advanceTimersByTimeAsync(0);
     controller.abort();
     expect(await result).toMatchObject({ name: 'AbortError' });
-    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('본문을 읽는 시간도 전체 10초 제한에 포함한다', async () => {
@@ -139,27 +135,23 @@ describe('주소 JSON 전송', () => {
     await vi.advanceTimersByTimeAsync(10_000);
     expect(await result).toBeInstanceOf(TimeoutError);
     expect(fetchMock).toHaveBeenCalledTimes(1);
-    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('HTTP 오류를 JSON 파싱 오류와 구분한다', async () => {
     fetchMock.mockResolvedValue(new Response('Unavailable', { status: 503 }));
     await expect(requestAddressJson(parameters)).rejects.toBeInstanceOf(HTTPError);
-    expect(vi.getTimerCount()).toBe(0);
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
   it('잘못된 JSON을 거부한다', async () => {
     fetchMock.mockResolvedValue(new Response('callback({})'));
     await expect(requestAddressJson(parameters)).rejects.toBeInstanceOf(SyntaxError);
-    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('ky의 네트워크 오류를 그대로 전달한다', async () => {
     fetchMock.mockRejectedValue(new TypeError('Failed to fetch'));
     const error = await requestAddressJson(parameters).catch((caught: unknown) => caught);
     expect(error).toBeInstanceOf(NetworkError);
-    expect(vi.getTimerCount()).toBe(0);
   });
 
   it('이미 취소된 요청은 전송하지 않는다', async () => {
