@@ -16,6 +16,7 @@ import { sessionsQueryOptions } from '../model/session-queries';
 import { createSession, listSessions, updateSession } from '../model/sessions';
 import { lookupCoordinates } from '../model/location/coordinates';
 import { createSessionStore } from '../model/sessions.mock';
+import { AdminOverlayProvider } from '../../../app/ui/admin-overlay-provider';
 import { SessionsPage } from './sessions-page';
 
 // 폼·목록 테스트는 저장 계약에 집중하고 실제 Picker 조작은 별도 테스트에서 검증합니다.
@@ -88,7 +89,9 @@ async function setup(type: SessionFilter = 'all', cached = false) {
     const [filter, setFilter] = useState(type);
     return (
       <QueryClientProvider client={client}>
-        <SessionsPage type={filter} onTypeChange={setFilter} />
+        <AdminOverlayProvider>
+          <SessionsPage type={filter} onTypeChange={setFilter} />
+        </AdminOverlayProvider>
       </QueryClientProvider>
     );
   }
@@ -315,7 +318,7 @@ it('저장된 오프라인 일정·주소·좌표를 복원하고 ID·집계·�
   expect(update).toHaveBeenCalledOnce();
   expect(create).not.toHaveBeenCalled();
   expect(
-    within(screen.getByRole('region', { name: '세션 알림' })).getByRole('status'),
+    within(screen.getByRole('region', { name: '어드민 알림' })).getByRole('status'),
   ).toHaveTextContent('세션을 수정했습니다.');
   await waitFor(() => expect(screen.queryByText('세션을 수정했습니다.')).not.toBeInTheDocument(), {
     timeout: 5000,
@@ -352,7 +355,7 @@ it('유형 변경으로 필터에서 사라지면 현재 필터와 빈 상태·�
   expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked();
   expect(screen.getByText('오프라인 0개')).toBeVisible();
   expect(screen.getByText('선택한 유형의 세션이 없습니다.')).toBeVisible();
-  const notification = within(screen.getByRole('region', { name: '세션 알림' }));
+  const notification = within(screen.getByRole('region', { name: '어드민 알림' }));
   expect(notification.getByRole('status')).toHaveTextContent('변경한 유형은 전체 목록');
   expect(
     within(screen.getByRole('main')).queryByText(/변경한 유형은 전체 목록/),
