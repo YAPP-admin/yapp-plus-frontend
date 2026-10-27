@@ -1,6 +1,6 @@
 # 작업 목록: 세션 장소 검색과 위치 설정
 
-**상태**: 5-1 경계 테스트 보완·검증 완료, 리뷰 대기 | **입력**: [계획](plan.md), [명세](spec.md)
+**상태**: 5-4 로컬 최종 검증 완료, 5-2 장애 재시도·5-3 실기기 검증 잔여 | **입력**: [계획](plan.md), [명세](spec.md)
 
 3-3까지 사용자 리뷰 후 3-4 코드·단위 검증을 완료했다. 실제 좌표 API 검증은 승인키 설정 후 진행한다. 준비 항목의 미확인 내용은 체크박스로 유지한다. **각 2-1·2-2… 세부 단계가 끝나면 반드시 멈추고 사용자 리뷰와 진행 지시를 받는다.**
 작업 개수가 적다는 이유로 다음 단계까지 묶어 실행하지 않는다.
@@ -46,7 +46,12 @@
 - [x] T017 **5-1** LP/ST 전체 경계·경합 테스트 누락 보완과 결과 기록: `apps/admin/src/pages/sessions/model/location/, apps/admin/src/pages/sessions/ui/session-form.test.tsx, specs/010-session-location/quickstart.md`
 - [ ] T018 **5-2** 실제키 검색·페이지·변환·지도·재시도와 수정 복원 검증: `specs/010-session-location/quickstart.md`
 - [ ] T019 **5-3** 키보드·스크린리더·터치·좁은 화면 검증과 스크린샷, 재사용 UI 변경시 Storybook 사례 반영: `specs/010-session-location/quickstart.md, .context/`
-- [ ] T020 **5-4** check/build·SSR 차단·배포 예시 목록·문서 및 복구 절차 최종 확인: `specs/010-session-location/quickstart.md, specs/010-session-location/tasks.md`
+- [x] T020 **5-4** check/build·SSR 차단·배포 예시 목록·문서 및 복구 절차 최종 확인: `specs/010-session-location/quickstart.md, specs/010-session-location/tasks.md`
+
+최신 결과는 [최종 검증 기록](final-validation.md)을 따른다.
+T018은 실제 검색·페이지·좌표·지도·수정 복원을 확인했으나 실제 장애 후 재시도가 남았다.
+T019는 키보드·좁은 화면을 확인했으나 음성 스크린 리더·터치 실기기 검증이 남았다.
+미검증 항목을 완료 처리하지 않는다.
 
 ## 의존성과 독립 검증
 
