@@ -3,6 +3,7 @@ import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 
 export const dialog = style({
+  color: vars.$color.fg.neutral,
   width: 'min(720px, calc(100vw - 32px))',
   maxWidth: 'none',
   height: 'min(880px, calc(100dvh - 32px))',
