@@ -64,3 +64,12 @@ T019는 실기기·음성 검증이 남아 있어 부분 완료로 유지한다.
 복구는 브라우저 새로고침으로 예시 데이터를 초기화한다. 코드 복구는 기능 변경을 되돌리는 방식이며
 영구 데이터 이관·백엔드 계약 변경은 없다. 키 문제는 해당 서비스 설정을 수정한 뒤 재검증한다.
 키 만료일·전체 허용 도메인 같은 외부 콘솔 메타데이터는 기존 준비 단계의 미확인 항목으로 남긴다.
+
+## PR 분리 전 최신 main 통합 검증
+
+- `origin/main`의 `13235fe`를 기준으로 rebase했다. 기존 #101·#102에 병합된 4개 커밋은 제외했다.
+- Provider의 MSW 경계와 세션 QueryClient를 함께 유지하고, MSW·Kakao·Overlay Kit 의존성 충돌을 해결했다.
+- `mise exec -- pnpm install --frozen-lockfile`: 통과.
+- `mise exec -- node --run check`: 통과. 최신 main의 테스트를 포함해 admin 478개 통과.
+- `mise exec -- node --run build`: 통과.
+- 위 검증은 PR 스택의 최종 통합 상태에서 실행했다. 중간 PR별 체크아웃 검증과 rebase 후 브라우저 검증은 수행하지 않았다.
