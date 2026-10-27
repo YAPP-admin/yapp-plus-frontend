@@ -1,4 +1,4 @@
-/** 실제 Query·폼과 메모리 저장소로 목록 상태와 생성 흐름을 검증합니다. */
+/** 실제 Query·폼과 메모리 저장소로 목록 상태와 생성·수정 흐름을 검증합니다. */
 import { useState } from 'react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -13,7 +13,8 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createAdminQueryClient } from '../../../query-client';
 import type { SessionFilter } from '../model/session-search';
 import { sessionsQueryOptions } from '../model/session-queries';
-import { createSession, listSessions } from '../model/sessions';
+import { createSession, listSessions, updateSession } from '../model/sessions';
+import { lookupCoordinates } from '../model/location/coordinates';
 import { createSessionStore } from '../model/sessions.mock';
 import { SessionsPage } from './sessions-page';
 
@@ -48,7 +49,20 @@ vi.mock('./session-schedule-field', () => ({
 vi.mock('../model/sessions', () => ({
   listSessions: vi.fn<typeof listSessions>(),
   createSession: vi.fn<typeof createSession>(),
+  updateSession: vi.fn<typeof updateSession>(),
 }));
+vi.mock('../model/location/coordinates', () => ({
+  lookupCoordinates: vi.fn<typeof lookupCoordinates>(),
+}));
+// 지도 대신 저장 좌표의 복원과 외부 좌표 재조회 여부를 검증합니다.
+vi.mock('./session-location-map', () => ({
+  SessionLocationMap: ({ position }: { position: { latitude: number; longitude: number } }) => (
+    <p>
+      저장 좌표: {position.latitude}, {position.longitude}
+    </p>
+  ),
+}));
+const update = vi.mocked(updateSession);
 const list = vi.mocked(listSessions);
 const create = vi.mocked(createSession);
 const fixtures = createSessionStore().listSessions();
@@ -61,6 +75,8 @@ afterEach(() => {
   vi.unstubAllEnvs();
   list.mockReset();
   create.mockReset();
+  update.mockReset();
+  vi.mocked(lookupCoordinates).mockReset();
 });
 
 async function setup(type: SessionFilter = 'all', cached = false) {
@@ -164,6 +180,7 @@ function mockStore(empty = false) {
   const store = createSessionStore(empty ? [] : fixtures);
   list.mockImplementation(() => Promise.resolve(store.listSessions()));
   create.mockImplementation((input) => Promise.resolve(store.createSession(input)));
+  update.mockImplementation((id, input) => Promise.resolve(store.updateSession(id, input)));
   return store;
 }
 
@@ -257,4 +274,136 @@ it('저장 중 중복 요청을 막고 실패 시 입력·필터를 보존하여
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(screen.getByRole('status')).toHaveTextContent('전체 3개');
   expect(create).toHaveBeenCalledTimes(2);
+});
+
+/** 정보 메뉴부터 실제 수정 폼까지 키보드로 진입합니다. */
+async function openEdit(user: ReturnType<typeof userEvent.setup>, name: string) {
+  const trigger = await screen.findByLabelText(`${name} 정보`);
+  trigger.focus();
+  await user.keyboard('{Enter}');
+  const menu = await screen.findByRole('menu', { name: `${name} 정보` });
+  expect(within(menu).getByRole('menuitem', { name: '수정' })).toHaveFocus();
+  await user.keyboard('{Enter}');
+  expect(await screen.findByRole('dialog', { name: '세션 수정' })).toBeVisible();
+}
+
+it('저장된 오프라인 일정·주소·좌표를 복원하고 ID·집계·필터를 보존해 수정한다', async () => {
+  const store = mockStore();
+  const previous = fixtures.find((session) => session.type === 'offline');
+  if (!previous) {
+    throw new Error('오프라인 예시 세션이 필요합니다.');
+  }
+  const user = await setup('offline');
+  await openEdit(user, previous.name);
+  expect(screen.getByLabelText('날짜 (한국 시간)')).toHaveValue(previous.date);
+  expect(screen.getByLabelText('시작 시간')).toHaveValue(previous.startTime);
+  expect(screen.getByLabelText('종료 시간')).toHaveValue(previous.endTime);
+  expect(screen.getByText(`선택한 주소: ${previous.location.roadAddress}`)).toBeVisible();
+  expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue(previous.location.detailAddress);
+  expect(screen.getByText('저장 좌표: 37.5665, 126.978')).toBeVisible();
+  expect(lookupCoordinates).not.toHaveBeenCalled();
+  fireEvent.change(screen.getByLabelText('세션명'), { target: { value: '수정한 오프라인' } });
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked();
+  expect(screen.getByText('오프라인 1개')).toBeVisible();
+  expect(screen.getByRole('heading', { name: '수정한 오프라인' })).toBeVisible();
+  expect(store.listSessions().find((session) => session.id === previous.id)).toEqual({
+    ...previous,
+    name: '수정한 오프라인',
+  });
+  expect(update).toHaveBeenCalledOnce();
+  expect(create).not.toHaveBeenCalled();
+  expect(
+    within(screen.getByRole('region', { name: '세션 알림' })).getByRole('status'),
+  ).toHaveTextContent('세션을 수정했습니다.');
+  await waitFor(() => expect(screen.queryByText('세션을 수정했습니다.')).not.toBeInTheDocument(), {
+    timeout: 5000,
+  });
+});
+
+it.each(['취소', 'Escape'])('수정 %s 후 다시 열면 저장값을 복원한다', async (close) => {
+  mockStore();
+  const user = await setup();
+  await openEdit(user, '개발용 팀 세션');
+  fireEvent.change(screen.getByLabelText('장소 안내 (선택)'), {
+    target: { value: '미저장 초안' },
+  });
+  if (close === 'Escape') {
+    await user.keyboard('{Escape}');
+  } else {
+    await user.click(screen.getByRole('button', { name: close }));
+  }
+  expect(update).not.toHaveBeenCalled();
+  await openEdit(user, '개발용 팀 세션');
+  expect(screen.getByLabelText('장소 안내 (선택)')).toHaveValue('');
+});
+
+it('유형 변경으로 필터에서 사라지면 현재 필터와 빈 상태·완료 안내를 유지한다', async () => {
+  const store = mockStore();
+  const user = await setup('offline');
+  await openEdit(user, '개발용 오프라인 세션');
+  await user.click(screen.getByRole('radio', { name: '팀 세션' }));
+  fireEvent.change(screen.getByLabelText('장소 안내 (선택)'), {
+    target: { value: '변경한 팀 장소' },
+  });
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked();
+  expect(screen.getByText('오프라인 0개')).toBeVisible();
+  expect(screen.getByText('선택한 유형의 세션이 없습니다.')).toBeVisible();
+  const notification = within(screen.getByRole('region', { name: '세션 알림' }));
+  expect(notification.getByRole('status')).toHaveTextContent('변경한 유형은 전체 목록');
+  expect(
+    within(screen.getByRole('main')).queryByText(/변경한 유형은 전체 목록/),
+  ).not.toBeInTheDocument();
+  await user.click(screen.getByRole('radio', { name: '전체' }));
+  expect(screen.getByText('전체 2개')).toBeVisible();
+  expect(
+    store.listSessions().find((session) => session.id === 'demo-offline-session')?.location,
+  ).toEqual({ guide: '변경한 팀 장소' });
+  await openEdit(user, '개발용 오프라인 세션');
+  expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
+  expect(screen.getByLabelText('장소 안내 (선택)')).toHaveValue('변경한 팀 장소');
+});
+
+it('수정한 날짜로 목록을 다시 정렬하고 재진입 시 마지막 저장값을 표시한다', async () => {
+  mockStore();
+  const user = await setup();
+  await openEdit(user, '개발용 오프라인 세션');
+  fireEvent.change(screen.getByLabelText('날짜 (한국 시간)'), { target: { value: '2026-12-31' } });
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(screen.getAllByRole('article')[0]).toHaveTextContent('개발용 오프라인 세션');
+  await openEdit(user, '개발용 오프라인 세션');
+  expect(screen.getByLabelText('날짜 (한국 시간)')).toHaveValue('2026-12-31');
+});
+
+it('수정 실패 시 초안을 유지하고 중복 저장·닫기를 막은 뒤 다시 저장할 수 있다', async () => {
+  mockStore();
+  const pending = Promise.withResolvers<Awaited<ReturnType<typeof updateSession>>>();
+  update.mockReturnValueOnce(pending.promise);
+  const user = await setup('team');
+  await openEdit(user, '개발용 팀 세션');
+  fireEvent.change(screen.getByLabelText('장소 안내 (선택)'), {
+    target: { value: '재시도할 장소' },
+  });
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  expect(screen.getByRole('button', { name: '취소' })).toBeDisabled();
+  expect(screen.getByLabelText('장소 안내 (선택)')).toBeDisabled();
+  await user.keyboard('{Escape}');
+  fireEvent.submit(screen.getByRole('form', { name: '세션 입력' }));
+  expect(update).toHaveBeenCalledOnce();
+  await act(async () => {
+    pending.reject(new Error('수정할 세션을 찾을 수 없습니다.'));
+    await expect(pending.promise).rejects.toThrow('수정할 세션을 찾을 수 없습니다.');
+  });
+  expect(await screen.findByText(/저장하지 못했습니다/)).toBeVisible();
+  expect(screen.getByLabelText('장소 안내 (선택)')).toHaveValue('재시도할 장소');
+  expect(list).toHaveBeenCalledOnce();
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(screen.getByText('재시도할 장소')).toBeVisible();
+  expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
+  expect(update).toHaveBeenCalledTimes(2);
 });

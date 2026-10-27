@@ -1,26 +1,46 @@
 /** 목록 조회 상태를 구분하며 필터는 라우터가 소유합니다. */
 import { useHydrated } from '@tanstack/react-router';
 import { useState } from 'react';
+import { Portal, Snackbar, useSnackbarAdapter } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
 import type { SessionFilter } from '../model/session-search';
-import { useCreateSessionMutation, useSessionsQuery } from '../model/session-queries';
-import { sortSessions } from '../model/session';
+import {
+  useCreateSessionMutation,
+  useUpdateSessionMutation,
+  useSessionsQuery,
+} from '../model/session-queries';
+import { sortSessions, type Session } from '../model/session';
 import { SessionTypeFilter } from './session-type-filter';
 import { SessionList } from './session-list';
 import { SessionForm } from './session-form';
 import { page, title, description, placeholder, createButton } from './sessions-page.css';
 
-export function SessionsPage({
-  type,
-  onTypeChange,
-}: {
+type Props = {
   type: SessionFilter;
   onTypeChange: (type: SessionFilter) => void;
-}) {
+};
+
+export function SessionsPage(props: Props) {
+  return (
+    <Snackbar.RootProvider>
+      <SessionsContent {...props} />
+      <Portal>
+        <Snackbar.Region aria-label="세션 알림" data-seed-color-mode="dark-only">
+          <Snackbar.Renderer />
+        </Snackbar.Region>
+      </Portal>
+    </Snackbar.RootProvider>
+  );
+}
+
+function SessionsContent({ type, onTypeChange }: Props) {
   const hydrated = useHydrated();
   const sessionsQuery = useSessionsQuery();
   const createSession = useCreateSessionMutation();
-  const [creating, setCreating] = useState(false);
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
+  const updateSession = useUpdateSessionMutation();
+  const [sessionToEdit, setSessionToEdit] = useState<Session | null>(null);
+  const snackbar = useSnackbarAdapter();
 
   function renderList() {
     if (!hydrated) {
@@ -47,7 +67,14 @@ export function SessionsPage({
     const sessions = sortSessions(sessionsQuery.data).filter(
       (session) => type === 'all' || session.type === type,
     );
-    return <SessionList sessions={sessions} type={type} totalCount={sessionsQuery.data.length} />;
+    return (
+      <SessionList
+        sessions={sessions}
+        type={type}
+        totalCount={sessionsQuery.data.length}
+        onEdit={setSessionToEdit}
+      />
+    );
   }
 
   return (
@@ -59,20 +86,45 @@ export function SessionsPage({
         className={createButton}
         type="button"
         disabled={!hydrated}
-        onClick={() => setCreating(true)}
+        onClick={() => setIsCreateDialogOpen(true)}
       >
         세션 추가
       </ActionButton>
       <SessionTypeFilter value={type} onValueChange={onTypeChange} />
       {renderList()}
-      {creating && (
+      {sessionToEdit && (
+        <SessionForm
+          key={sessionToEdit.id}
+          initialValues={sessionToEdit}
+          onSubmit={async (input) => {
+            await updateSession.mutateAsync({ id: sessionToEdit.id, input });
+            setSessionToEdit(null);
+            snackbar.create({
+              render: () => (
+                <Snackbar.Root>
+                  <Snackbar.Content>
+                    <Snackbar.Message>
+                      {type !== 'all' && input.type !== type
+                        ? '세션을 수정했습니다. 변경한 유형은 전체 목록에서 확인할 수 있습니다.'
+                        : '세션을 수정했습니다.'}
+                    </Snackbar.Message>
+                  </Snackbar.Content>
+                  <Snackbar.HiddenCloseButton aria-label="알림 닫기" />
+                </Snackbar.Root>
+              ),
+            });
+          }}
+          onClose={() => setSessionToEdit(null)}
+        />
+      )}
+      {isCreateDialogOpen && (
         <SessionForm
           onSubmit={async (input) => {
             await createSession.mutateAsync(input);
-            setCreating(false);
+            setIsCreateDialogOpen(false);
             onTypeChange('all');
           }}
-          onClose={() => setCreating(false)}
+          onClose={() => setIsCreateDialogOpen(false)}
         />
       )}
     </main>
