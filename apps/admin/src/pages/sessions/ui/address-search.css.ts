@@ -12,6 +12,7 @@ export const selection = style({
   padding: 16,
   borderRadius: 12,
   background: vars.$color.bg.neutralWeak,
+  color: vars.$color.fg.neutral,
   overflowWrap: 'anywhere',
 });
 // 안내 두 줄과 재시도 버튼을 한 행에 배치해 과도한 여백 없이 높이를 유지합니다.
