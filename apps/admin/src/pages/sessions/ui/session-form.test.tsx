@@ -13,6 +13,34 @@ import type {
 } from '../model/location/location-view-model';
 import { SessionForm } from './session-form';
 
+// 폼·목록 테스트는 저장 계약에 집중하고 실제 Picker 조작은 별도 테스트에서 검증합니다.
+vi.mock('./session-schedule-field', () => ({
+  SessionScheduleField: ({
+    label,
+    value,
+    disabled,
+    error,
+    onChange,
+  }: {
+    label: string;
+    value: string;
+    disabled: boolean;
+    error?: string;
+    onChange: (value: string) => void;
+  }) => (
+    <label>
+      {label}
+      <input
+        aria-label={label}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {error && <span role="alert">{error}</span>}
+    </label>
+  ),
+}));
+
 vi.mock('../model/location/coordinates', () => ({
   lookupCoordinates: vi.fn<typeof lookupCoordinates>(),
 }));

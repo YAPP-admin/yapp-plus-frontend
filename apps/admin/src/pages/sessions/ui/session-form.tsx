@@ -21,6 +21,7 @@ import type {
 } from '../model/location/location-view-model';
 import { AddressSearch } from './address-search';
 import { SessionLocationMap } from './session-location-map';
+import { SessionScheduleField } from './session-schedule-field';
 import * as styles from './session-form.css';
 
 const fields = [
@@ -123,32 +124,44 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                       <div className={styles.schedule}>
                         {fields.map(({ name, label, type: inputType }) => (
                           <form.Field key={name} name={name}>
-                            {(field) => (
-                              <Field.Root
-                                className={name === 'name' ? styles.name : undefined}
-                                disabled={pending}
-                                invalid={field.state.meta.errors.length > 0}
-                              >
-                                <Field.Label>{label}</Field.Label>
-                                <TextField.Root
-                                  value={field.state.value}
-                                  onValueChange={field.handleChange}
+                            {(field) =>
+                              inputType === 'text' ? (
+                                <Field.Root
+                                  className={styles.name}
+                                  disabled={pending}
+                                  invalid={field.state.meta.errors.length > 0}
                                 >
-                                  <TextField.Input
-                                    name={name}
-                                    type={inputType}
-                                    onBlur={field.handleBlur}
-                                  />
-                                </TextField.Root>
-                                <div className={styles.feedback}>
-                                  {field.state.meta.errors.length > 0 && (
-                                    <Field.ErrorMessage role="alert">
-                                      {field.state.meta.errors.join(' ')}
-                                    </Field.ErrorMessage>
-                                  )}
-                                </div>
-                              </Field.Root>
-                            )}
+                                  <Field.Label>{label}</Field.Label>
+                                  <TextField.Root
+                                    value={field.state.value}
+                                    onValueChange={field.handleChange}
+                                  >
+                                    <TextField.Input
+                                      name={name}
+                                      type={inputType}
+                                      onBlur={field.handleBlur}
+                                    />
+                                  </TextField.Root>
+                                  <div className={styles.feedback}>
+                                    {field.state.meta.errors.length > 0 && (
+                                      <Field.ErrorMessage role="alert">
+                                        {field.state.meta.errors.join(' ')}
+                                      </Field.ErrorMessage>
+                                    )}
+                                  </div>
+                                </Field.Root>
+                              ) : (
+                                <SessionScheduleField
+                                  type={inputType}
+                                  label={label}
+                                  value={field.state.value}
+                                  disabled={pending}
+                                  error={field.state.meta.errors.join(' ')}
+                                  onChange={field.handleChange}
+                                  onBlur={field.handleBlur}
+                                />
+                              )
+                            }
                           </form.Field>
                         ))}
                       </div>
