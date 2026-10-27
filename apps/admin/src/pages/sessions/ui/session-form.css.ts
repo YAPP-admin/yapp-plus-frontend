@@ -1,5 +1,6 @@
 /** 작은 화면에서도 본문만 스크롤하고 저장·취소 버튼은 유지합니다. */
 import { style } from '@vanilla-extract/css';
+import { vars } from '@seed-design/css/vars';
 
 export const dialog = style({
   width: 'min(720px, calc(100vw - 32px))',
@@ -29,3 +30,10 @@ export const name = style({ gridColumn: '1 / -1' });
 export const actions = style({ flexDirection: 'row', gap: 8 });
 
 export const feedback = style({ minHeight: 40 });
+
+export const pickerDialog = style({
+  width: 'min(400px, calc(100vw - 32px))',
+  maxWidth: 'none',
+  maxHeight: 'calc(100dvh - 32px)',
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+});
