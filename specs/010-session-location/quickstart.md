@@ -534,3 +534,19 @@ Overlay Kit의 React peer 범위는 현재 React 19를 포함한다.
 Chrome에서 메뉴 배치·다크 테마·Escape 닫기·키보드 수정 진입을 확인했다.
 실제 스크린 리더와 터치 기기 검증은 수행하지 않았다.
 화면 근거: `.context/session-seed-menu.png`.
+
+## O2 검증 결과: 세션 모달 전환
+
+2026-10-28, 세션 생성·수정 진입점을 `overlay.open`으로 전환했다.
+페이지의 `isCreateDialogOpen`·`sessionToEdit` 상태와 조건부 모달 JSX를 제거했다.
+`session-dialogs.tsx`의 생성·수정 컴포넌트가 각각 Mutation을 소유한다.
+성공하면 `unmount`하고, 실패하면 기존 SessionForm이 초안과 오류를 유지한다.
+생성 성공 시 전체 필터로 이동하고 수정 성공 시 현재 필터를 유지하는 동작은 동일하다.
+Snackbar Provider를 Overlay Provider 바깥으로 옮겨 모달에서도 접근하도록 연결했다.
+기본 하단 배치를 유지하고 pathname 변경 시 모달·알림을 함께 초기화한다.
+
+실제 Provider를 사용하는 세션 통합 테스트와 Provider 테스트 21개가 통과했다.
+전체 `node --run check`(admin 470개)와 `node --run build`가 통과했다.
+Chrome에서 생성 모달 열기·취소, 수정 모달 열기·저장·하단 스낵바를 확인했다.
+화면 근거: `.context/session-overlay-o2.png`. 실제 스크린 리더·모바일 터치는 미검증이다.
+O3 날짜·시간 선택창 전환은 리뷰 후 진행한다.
