@@ -1,4 +1,6 @@
-import { Badge } from '@seed-design/react';
+import { Ellipsis } from 'lucide-react';
+import { ActionButton } from '@yapp-plus/ui';
+import { Badge, Menu } from '@seed-design/react';
 import type { Session, SessionAttendanceSummary } from '../model/session';
 import { sessionFilterLabels } from '../model/session-search';
 import * as styles from './session-card.css';
@@ -11,13 +13,47 @@ const attendanceFields = [
   { key: 'reported', label: '출결 보고' },
 ] satisfies { key: keyof SessionAttendanceSummary; label: string }[];
 
-export function SessionCard({ session }: { session: Session }) {
+export function SessionCard({
+  session,
+  onEdit,
+}: {
+  session: Session;
+  onEdit?: (session: Session) => void;
+}) {
   return (
     <article className={styles.card}>
       <div className={styles.heading}>
         <Badge variant="weak" tone={session.type === 'offline' ? 'informative' : 'neutral'}>
           {sessionFilterLabels[session.type]}
         </Badge>
+        {onEdit && (
+          <Menu.Root placement="bottom-end" gutter={4}>
+            <Menu.Trigger asChild>
+              <ActionButton
+                type="button"
+                variant="neutralWeak"
+                size="small"
+                className={styles.menuButton}
+                aria-label={`${session.name} 정보`}
+              >
+                <Ellipsis size={18} aria-hidden="true" />
+              </ActionButton>
+            </Menu.Trigger>
+            <Menu.Positioner data-seed-color-mode="dark-only">
+              <Menu.Content>
+                <Menu.ScrollArea>
+                  <Menu.Group>
+                    <Menu.Item onClick={() => onEdit(session)}>
+                      <Menu.ItemBody>
+                        <Menu.ItemLabel>수정</Menu.ItemLabel>
+                      </Menu.ItemBody>
+                    </Menu.Item>
+                  </Menu.Group>
+                </Menu.ScrollArea>
+              </Menu.Content>
+            </Menu.Positioner>
+          </Menu.Root>
+        )}
       </div>
       <h2 className={styles.name}>{session.name}</h2>
       <SessionDetails session={session} />
