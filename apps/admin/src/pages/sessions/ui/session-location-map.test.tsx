@@ -128,3 +128,29 @@ it('키 누락 시 SDK를 요청하지 않고 현재 좌표를 표시한다', ()
   expect(screen.getByRole('alert')).toHaveTextContent('지도 설정');
   expect(screen.getByText('37.5665000')).toBeInTheDocument();
 });
+
+it('지도 로딩 완료가 저장된 조정 좌표를 초기 위치로 되돌리지 않는다', () => {
+  load.mockReturnValue([true, undefined]);
+  const onChange = vi.fn<(value: { latitude: number; longitude: number }) => void>();
+  const position = { latitude: 36, longitude: 128 };
+  const view = render(
+    <SessionLocationMap
+      initialPosition={initialPosition}
+      position={position}
+      onChange={onChange}
+    />,
+  );
+  expect(screen.getByText('36.0000000')).toBeVisible();
+  load.mockReturnValue([false, undefined]);
+  view.rerender(
+    <SessionLocationMap
+      initialPosition={initialPosition}
+      position={{ ...position }}
+      onChange={onChange}
+    />,
+  );
+  expect(screen.getByRole('button', { name: '마커 드래그' })).toBeEnabled();
+  expect(screen.getByText('36.0000000')).toBeVisible();
+  expect(screen.getByText('128.0000000')).toBeVisible();
+  expect(onChange).not.toHaveBeenCalled();
+});

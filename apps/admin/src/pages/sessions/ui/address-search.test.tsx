@@ -156,13 +156,15 @@ it('같은 주소를 다시 선택해도 부모를 초기화하지 않고 입력
   expect(search).toHaveBeenCalledTimes(1);
 });
 it('실패한 페이지의 결과를 숨기고 재시도 중 오류 안내를 지운다', async () => {
-  setup();
+  const { user } = setup();
   submit();
+  await user.click(await screen.findByRole('button', { name: /세종대로 110/ }));
   await screen.findByRole('button', { name: '다음' });
   search.mockRejectedValueOnce(new Error('secret-url?confmKey=secret'));
   fireEvent.click(screen.getByRole('button', { name: '다음' }));
   await screen.findByRole('alert');
   expect(screen.queryByRole('list')).not.toBeInTheDocument();
+  expect(screen.getByText(address.roadAddress)).toBeVisible();
   expect(screen.queryByText(/secret/)).not.toBeInTheDocument();
   const pending = deferred();
   search.mockReturnValueOnce(pending.promise);
