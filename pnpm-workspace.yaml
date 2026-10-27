@@ -39,6 +39,7 @@ catalog:
   msw: 2.15.0
   ky: 2.1.0
   proj4: 2.22.0
+  overlay-kit: 1.9.0
   oxc-transform-react: 0.155.0
   react: 19.2.8
   react-dom: 19.2.8

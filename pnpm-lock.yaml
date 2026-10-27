@@ -93,6 +93,9 @@ catalogs:
     msw:
       specifier: 2.15.0
       version: 2.15.0
+    overlay-kit:
+      specifier: 1.9.0
+      version: 1.9.0
     oxc-transform-react:
       specifier: 0.155.0
       version: 0.155.0
@@ -222,6 +225,9 @@ importers:
       lucide-react:
         specifier: 'catalog:'
         version: 1.59.0(@types/react@19.2.18)(react@19.2.8)
+      overlay-kit:
+        specifier: 'catalog:'
+        version: 1.9.0(react@19.2.8)
       proj4:
         specifier: 'catalog:'
         version: 2.22.0
@@ -5790,6 +5796,10 @@ packages:
 
   outvariant@1.4.3:
     resolution: {integrity: sha512-+Sl2UErvtsoajRDKCE5/dBz4DIvHXQQnAxtQTF04OJxY0+DyZXSo5P5Bb7XYWOh81syohlYL24hbDwxedPUJCA==}
+  overlay-kit@1.9.0:
+    resolution: {integrity: sha512-kwzAOhWEDsrmgJzQKuI0v3xCwyWTSaNe3qI0t+7OTTj05ciRpg3j+NWz8FRPVt7rHBFL/jAjKyQf4xGOHcRXfg==}
+    peerDependencies:
+      react: ^16.8 || ^17 || ^18 || ^19
 
   oxc-parser@0.127.0:
     resolution: {integrity: sha512-bkgD4qHlN7WxLdX8bLXdaU54TtQtAIg/ZBAfm0aje/mo3MRDo3P0hZSgr4U7O3xfX+fQmR5AP04JS/TGcZLcFA==}
@@ -12531,6 +12541,9 @@ snapshots:
   orderedmap@2.1.1: {}
 
   outvariant@1.4.3: {}
+  overlay-kit@1.9.0(react@19.2.8):
+    dependencies:
+      react: 19.2.8
 
   oxc-parser@0.127.0:
     dependencies:
