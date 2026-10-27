@@ -437,3 +437,24 @@ admin 테스트는 450개다. 신규 테스트 4개로 양방향 유형 전환·
 화면 변경은 없다. 수정 버튼·Mutation·초기값 복원 연결과 실제 브라우저 수정 검증은 4-4에서 진행한다.
 데이터는 계속 브라우저 메모리에만 존재하며 서버 저장·공유나 외부 API 변경은 없다.
 복구 시 새 수정 메서드를 제거하면 기존 생성·조회·삭제 흐름을 유지할 수 있다.
+
+## 리뷰 반영: SEED 날짜·시간 선택
+
+2026-10-26에 확인한 `origin/main`(`a7eccf5`)의 공지 폼은 여전히 TextField의 네이티브 date/time 입력을 사용한다.
+사용자 요청에 따라 세션 생성·수정 공통 폼만 설치된 `@seed-design/react`의 DatePicker·TimePicker로 교체했다.
+새 의존성이나 공용 패키지는 추가하지 않았다.
+
+`session-schedule-field.tsx`의 FieldButton을 누르면 ContentDialog에서 달력 또는 시간 휠을 연다.
+선택창은 초안 하나만 관리하고 확인 시 TanStack Form에 반영한다. 취소·Esc는 초안을 버리고 기존 값을 유지한다.
+초기 날짜는 한국 시간의 오늘, 초기 시간은 00:00이며 확인하기 전에는 빈 필드에 값을 넣지 않는다.
+저장 형식은 YYYY-MM-DD·HH:mm이며, TimePicker는 minuteStep=1로 기존 분 값을 반올림하지 않는다.
+시간 값 변경은 SEED의 휠 정착 시점에 반영된다. 별도 useEffect·requestAnimationFrame·DOM 포커스 로직은 없다.
+
+공식 계약: [Date Picker](https://seed-design.io/react/components/date-picker), [Time Picker](https://seed-design.io/react/components/time-picker).
+전체 check·build와 admin 테스트 458개가 통과했다. 실제 Picker 테스트 8개로 선택·확인·취소·Esc,
+분 단위 복원·키보드 조정·빈 값·비활성 상태·수정 폼 제출 연결을 검증했다.
+기존 폼·목록 테스트는 일정 필드 경계를 대체하여 저장·조회 계약 검증에 집중한다.
+Chrome에서 수정 미리보기의 저장 일정 복원·변경·Esc·포커스 복귀와 실제 `/sessions`의 팀 세션 생성을 확인했다.
+화면: `.context/session-seed-date-picker.png`, `.context/session-seed-time-picker.png`.
+실제 모바일 터치·음성 스크린 리더·원격 배포는 미검증이다. 앱 전용 조합이므로 공용 Storybook에는 추가하지 않았다.
+문제가 생기면 일정 필드를 이전 네이티브 입력으로 되돌릴 수 있으며 저장 계약과 데이터 이관에는 영향이 없다.
