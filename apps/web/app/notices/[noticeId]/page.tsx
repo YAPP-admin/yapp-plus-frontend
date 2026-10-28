@@ -1,12 +1,13 @@
-import { DetailLayout } from '@/app/layouts/detail-layout';
+import { PageShell } from '@/app/layouts/page-shell';
 import { NoticeDetailPage } from '@/pages/notice-detail';
 
-export const metadata = { title: '공지 상세 | YAPP+' };
+export const metadata = { title: '게시판 상세 | YAPP+' };
 
-export default function Page() {
+export default async function Page({ params }: { params: Promise<{ noticeId: string }> }) {
+  const { noticeId } = await params;
   return (
-    <DetailLayout fallback="/notices">
-      <NoticeDetailPage />
-    </DetailLayout>
+    <PageShell header={null}>
+      <NoticeDetailPage noticeId={noticeId} />
+    </PageShell>
   );
 }

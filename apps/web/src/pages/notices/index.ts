@@ -12,3 +12,4 @@ export {
 } from './ui/notice-tabs';
 export { NoticeItem, type NoticeItemProps } from './ui/notice-item';
 export { NoticeEmpty } from './ui/notice-empty';
+export { NoticeErrorPage, type NoticeErrorPageProps } from './ui/notice-error-page';

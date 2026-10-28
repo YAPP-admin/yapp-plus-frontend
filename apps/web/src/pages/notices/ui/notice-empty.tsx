@@ -5,7 +5,7 @@ export function NoticeEmpty() {
   return (
     <output className={emptyContainer} aria-label="공지사항 없음">
       <Image
-        src="/images/schedule/graphic-empty.svg"
+        src="/images/notices/graphic-none.svg"
         alt=""
         width={90}
         height={74}
