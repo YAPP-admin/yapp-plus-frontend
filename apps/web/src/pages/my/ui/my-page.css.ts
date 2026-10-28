@@ -182,7 +182,7 @@ export const statLabel = style({
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
   fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.neutralSubtle,
+  color: vars.$color.palette.gray600,
   textAlign: 'center',
 });
 

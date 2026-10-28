@@ -1,23 +1,45 @@
 'use client';
 
+import {
+  DialogAction,
+  DialogBackdrop,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogPositioner,
+  DialogRoot,
+  DialogTitle,
+} from '@seed-design/react';
 import { ActionButton, PrefixIcon, Text } from '@yapp-plus/ui';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
 import {
   buttonGroup,
   container,
   content,
+  dialogBackdrop,
+  dialogCancelButton,
+  dialogConfirmButton,
+  dialogContent,
+  dialogDescription,
+  dialogFooter,
+  dialogHeader,
+  dialogPositioner,
+  dialogTitle,
   illustrationSection,
   socialButton,
 } from './login-page.css';
 import { LoginIllustration } from './login-illustration';
 import { appleIcon, googleIcon } from './social-login-icons';
 
-function handleGoogleLogin() {
-  // 향후 Google OAuth SDK / API 연동
-}
-
 export function LoginPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const [isErrorOpen, setIsErrorOpen] = useState(searchParams?.get('error') === 'true');
+
+  function handleGoogleLogin() {
+    setIsErrorOpen(true);
+  }
 
   function handleAppleLogin() {
     router.push('/signup');
@@ -60,6 +82,43 @@ export function LoginPage() {
           </ActionButton>
         </section>
       </div>
+
+      {/* 에러 팝업 (Figma #375:11225) */}
+      <DialogRoot open={isErrorOpen} onOpenChange={setIsErrorOpen}>
+        <DialogBackdrop className={dialogBackdrop} />
+        <DialogPositioner className={dialogPositioner}>
+          <DialogContent className={dialogContent}>
+            <DialogHeader className={dialogHeader}>
+              <DialogTitle className={dialogTitle}>앗, 예기치 못한 오류가 발생했어요!</DialogTitle>
+              <DialogDescription className={dialogDescription}>
+                계속해서 같은 문제가 발생한다면{'\n'}운영팀에 제보해주세요
+              </DialogDescription>
+            </DialogHeader>
+            <div className={dialogFooter}>
+              <DialogAction asChild>
+                <button
+                  type="button"
+                  className={dialogCancelButton}
+                  onClick={() => setIsErrorOpen(false)}
+                >
+                  닫기
+                </button>
+              </DialogAction>
+              <DialogAction asChild>
+                <a
+                  href="https://pf.kakao.com/_xkxmxjxd"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={dialogConfirmButton}
+                  onClick={() => setIsErrorOpen(false)}
+                >
+                  제보하기
+                </a>
+              </DialogAction>
+            </div>
+          </DialogContent>
+        </DialogPositioner>
+      </DialogRoot>
     </main>
   );
 }
