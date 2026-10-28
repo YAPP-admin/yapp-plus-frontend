@@ -1,6 +1,6 @@
 ---
 name: github-workflow
-description: 저장소 변경을 시작하거나 GitHub 이슈, commit, push, Draft PR, CI 재실행, merge를 준비하거나 수행할 때 사용합니다. 각 외부 변경 전에 사용자 승인을 확인하고 저장소 템플릿과 Git 규칙을 따릅니다.
+description: 저장소 변경을 시작하거나 GitHub 이슈, commit, rebase와 충돌 해결, push, Draft PR, CI 재실행, merge를 준비하거나 수행할 때 사용합니다. 각 외부 변경 전에 사용자 승인을 확인하고 저장소 템플릿과 Git 규칙을 따릅니다.
 ---
 
 # GitHub 작업 흐름
@@ -68,6 +68,7 @@ description: 저장소 변경을 시작하거나 GitHub 이슈, commit, push, Dr
 
 - issue를 검색·작성·수정·종료할 때는 [issue 지침](references/issue.md)을 읽습니다.
 - commit을 준비하거나 수행할 때는 [commit 지침](references/commit.md)을 읽습니다.
+- rebase를 진단하거나 충돌을 해결할 때는 [rebase 지침](references/rebase.md)을 읽습니다.
 - push 또는 PR을 준비하거나 수행할 때는 [PR 지침](references/pull-request.md)을 읽습니다.
 - PR을 ready 상태로 전환하거나 merge할 때는 [merge 지침](references/merge.md)을 읽습니다.
 
@@ -80,5 +81,6 @@ description: 저장소 변경을 시작하거나 GitHub 이슈, commit, push, Dr
 - 대상 issue, 브랜치 또는 PR이 불명확합니다.
 - 요청한 작업에 필요한 별도 승인이 없습니다.
 - 작업 트리에 사용자 변경과 충돌할 가능성이 있습니다.
-- CI 실패, merge conflict 또는 미해결 리뷰가 있습니다.
+- CI 실패, 미해결 충돌 또는 미해결 리뷰가 있으면 push·PR merge를 중단합니다.
+  사용자가 요청한 충돌 진단·해결은 [rebase 지침](references/rebase.md)에 따라 진행합니다.
 - PR 템플릿의 필수 항목을 근거 없이 작성하거나 체크해야 합니다.

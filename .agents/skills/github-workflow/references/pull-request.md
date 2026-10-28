@@ -12,11 +12,15 @@
 ## Push
 
 - `git fetch origin` 후 작업 트리와 upstream의 ahead/behind 상태를 확인합니다.
+- 로컬 브랜치명과 upstream의 원격 브랜치명은 다를 수 있습니다. `git branch -vv`와
+  `branch.<현재 브랜치>.remote`, `branch.<현재 브랜치>.merge` 설정으로 실제 대상을 확인합니다.
+  이름이 다르면 로컬 이름으로 새 원격 브랜치를 만들지 말고 확인한 upstream을 명시합니다.
 - upstream이 없으면 원격에 같은 브랜치가 없는지 확인한 뒤 최초 push에서 `-u`를 사용할 수
   있습니다.
 - 로컬 브랜치가 upstream보다 뒤처졌고 fast-forward만 필요하면 대상 commit을 보여주고 별도 승인을
   받은 뒤 `git pull --ff-only`를 실행합니다. bare `git pull`은 사용하지 않습니다.
-- 로컬과 upstream이 갈라졌거나 충돌 가능성이 있으면 pull이나 push를 실행하지 않고 보고합니다.
+- 로컬과 upstream이 갈라졌다면 원인을 먼저 확인합니다. 승인된 rebase로 이력을 바꾼 경우는
+  아래 절차를 따르고, 원격의 새 작업이나 원인을 설명할 수 없는 차이가 있으면 중단해 보고합니다.
 - `origin/main`이 변경되어 현재 브랜치에 반영해야 하면 자동으로 merge하거나 rebase하지 않습니다.
   차이를 보고하고 이력 변경을 별도로 승인받습니다.
 - 저장소 지침에 따라 `node --run check`를 실행하고, 배포 가능한 앱이나 빌드 설정 변경에는
@@ -27,6 +31,23 @@
   수행합니다.
 - commit 승인은 push 승인을 포함하지 않고, PR 생성 승인도 선행 push 승인을 포함하지 않습니다.
 - push 후 upstream, 원격 commit SHA와 현재 브랜치 상태를 다시 확인합니다.
+
+### 승인된 rebase 후 push
+
+- rebase 승인은 push 승인이 아닙니다. 대상 원격 브랜치와 이력 변경 이유를 설명하고
+  force push 승인을 확인합니다. 대화에서 같은 대상과 이유로 이미 받은 승인은 다시 묻지 않습니다.
+- rebase 전에 기록한 원격 SHA와 `git ls-remote <remote> refs/heads/<원격 브랜치>` 결과를
+  비교합니다. 다르면 다른 작업이 추가됐을 수 있으므로 새 SHA로 기대값을 바꿔 재시도하지 않습니다.
+  사전 SHA가 없으면 원격 이력을 먼저 조사하고 덮어쓸 범위를 확인받습니다.
+- 원격이 그대로이고 충돌 해결·검증이 끝났다면 다음 형식으로 기대 SHA를 명시합니다.
+  각 자리표시자는 확인한 실제 값으로 바꿉니다. `--force`는 사용하지 않습니다.
+
+```sh
+git push --force-with-lease=refs/heads/<원격 브랜치>:<기대 SHA> <remote> HEAD:refs/heads/<원격 브랜치>
+```
+
+- lease가 거절되면 원격을 다시 조회하고 변경 내용을 보고합니다. push 후 원격 SHA가 로컬 HEAD와
+  같은지 확인합니다. 검증과 보존 확인 절차는 [rebase 지침](rebase.md)을 따릅니다.
 
 ## PR 초안
 
