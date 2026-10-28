@@ -1,12 +1,12 @@
-import { DetailLayout } from '@/app/layouts/detail-layout';
+import { PageShell } from '@/app/layouts/page-shell';
 import { SettingsPage } from '@/pages/settings';
 
 export const metadata = { title: '설정 | YAPP+' };
 
 export default function Page() {
   return (
-    <DetailLayout fallback="/my">
+    <PageShell header={null} plain>
       <SettingsPage />
-    </DetailLayout>
+    </PageShell>
   );
 }

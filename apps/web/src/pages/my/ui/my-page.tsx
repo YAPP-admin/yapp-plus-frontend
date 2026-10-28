@@ -1,3 +1,4 @@
+import { IconQuestionmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import Image from 'next/image';
 import Link from 'next/link';
 import { AttendanceRulesDialog } from './attendance-rules-dialog';
@@ -82,7 +83,7 @@ export function MyPage() {
                   aria-label="출석 규칙 안내"
                   title="출석 규칙 안내"
                 >
-                  <Image src="/images/my/question.svg" alt="" width={20} height={20} />
+                  <IconQuestionmarkCircleFill width={20} height={20} />
                 </button>
               </AttendanceRulesDialog>
             </div>

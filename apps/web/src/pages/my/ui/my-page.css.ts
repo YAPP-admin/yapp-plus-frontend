@@ -129,6 +129,7 @@ export const questionButton = style({
   background: 'none',
   cursor: 'pointer',
   lineHeight: 1,
+  color: vars.$color.fg.neutralMuted,
 });
 
 export const scoreGroup = style({
@@ -154,8 +155,9 @@ export const scoreValue = style({
 export const cardStats = style({
   display: 'flex',
   alignItems: 'center',
-  padding: vars.$dimension.x1,
-  gap: vars.$dimension.x1,
+  padding: '4px',
+  gap: '4px',
+  background: vars.$color.bg.layerDefault,
   borderRadius: `0 0 ${vars.$radius.r2} ${vars.$radius.r2}`,
 });
 
@@ -165,8 +167,8 @@ export const statItem = style({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: `${vars.$dimension.x3} 0`,
-  gap: vars.$dimension.x1,
+  padding: '12px 0',
+  gap: '4px',
   borderRadius: vars.$radius.r2,
 });
 
@@ -175,6 +177,7 @@ export const statLabel = style({
   lineHeight: vars.$lineHeight.t2,
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.neutralMuted,
+  textAlign: 'center',
 });
 
 export const statValue = style({
@@ -182,6 +185,7 @@ export const statValue = style({
   lineHeight: vars.$lineHeight.t4,
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.neutral,
+  textAlign: 'center',
 });
 
 export const sectionDivider = style({
