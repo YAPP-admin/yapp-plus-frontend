@@ -1,6 +1,21 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
+import {
+  DialogAction,
+  DialogBackdrop,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogPositioner,
+  DialogRoot,
+  DialogTitle,
+  DialogTrigger,
+  SwitchControl,
+  SwitchHiddenInput,
+  SwitchRoot,
+  SwitchThumb,
+} from '@seed-design/react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -8,6 +23,15 @@ import {
   body,
   bottomSection,
   container,
+  dialogBackdrop,
+  dialogCancelButton,
+  dialogConfirmButton,
+  dialogContent,
+  dialogDescription,
+  dialogFooter,
+  dialogHeader,
+  dialogPositioner,
+  dialogTitle,
   header,
   headerSpacer,
   headerTitle,
@@ -16,8 +40,9 @@ import {
   menuItem,
   menuLabel,
   menuList,
-  toggleThumb,
-  toggleTrack,
+  switchControl,
+  switchRoot,
+  switchThumb,
 } from './settings-page.css';
 
 const SETTINGS_LINKS = [
@@ -31,19 +56,14 @@ const SETTINGS_LINKS = [
     label: '이용 약관',
     href: 'https://yapp.co.kr/terms',
   },
-  {
-    id: 'withdraw',
-    label: '회원 탈퇴',
-    href: 'https://pf.kakao.com/_xkxmxjxd',
-  },
 ];
 
 export function SettingsPage() {
   const router = useRouter();
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
 
-  const handleToggleNotification = () => {
-    setIsNotificationEnabled((prev) => !prev);
+  const handleWithdraw = () => {
+    router.push('/login');
   };
 
   const handleLogout = () => {
@@ -62,17 +82,16 @@ export function SettingsPage() {
         <section className={menuList} aria-label="설정 메뉴">
           <div className={menuItem}>
             <span className={menuLabel}>알림</span>
-            <button
-              type="button"
-              role="switch"
-              aria-checked={isNotificationEnabled}
-              aria-label="알림 설정"
-              className={toggleTrack}
-              data-checked={isNotificationEnabled}
-              onClick={handleToggleNotification}
+            <SwitchRoot
+              className={switchRoot}
+              checked={isNotificationEnabled}
+              onCheckedChange={setIsNotificationEnabled}
             >
-              <span className={toggleThumb} aria-hidden="true" />
-            </button>
+              <SwitchHiddenInput />
+              <SwitchControl className={switchControl}>
+                <SwitchThumb className={switchThumb} />
+              </SwitchControl>
+            </SwitchRoot>
           </div>
 
           {SETTINGS_LINKS.map((link) => (
@@ -93,12 +112,76 @@ export function SettingsPage() {
               />
             </a>
           ))}
+
+          {/* 회원 탈퇴 다이얼로그 (Figma #222:48187) */}
+          <DialogRoot>
+            <DialogTrigger asChild>
+              <button type="button" className={menuItem}>
+                <span className={menuLabel}>회원 탈퇴</span>
+                <Image
+                  src="/images/my/chevron-right.svg"
+                  alt=""
+                  width={24}
+                  height={24}
+                  className={menuChevron}
+                />
+              </button>
+            </DialogTrigger>
+            <DialogBackdrop className={dialogBackdrop} />
+            <DialogPositioner className={dialogPositioner}>
+              <DialogContent className={dialogContent}>
+                <DialogHeader className={dialogHeader}>
+                  <DialogTitle className={dialogTitle}>정말 탈퇴하시겠어요?</DialogTitle>
+                  <DialogDescription className={dialogDescription}>
+                    탈퇴하시면 모든 정보가 삭제돼요.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className={dialogFooter}>
+                  <DialogAction asChild>
+                    <button type="button" className={dialogCancelButton}>
+                      취소
+                    </button>
+                  </DialogAction>
+                  <DialogAction asChild>
+                    <button type="button" className={dialogConfirmButton} onClick={handleWithdraw}>
+                      탈퇴하기
+                    </button>
+                  </DialogAction>
+                </div>
+              </DialogContent>
+            </DialogPositioner>
+          </DialogRoot>
         </section>
 
+        {/* 로그아웃 다이얼로그 (Figma #222:48244) */}
         <section className={bottomSection} aria-label="계정 관리">
-          <button type="button" className={logoutButton} onClick={handleLogout}>
-            로그아웃
-          </button>
+          <DialogRoot>
+            <DialogTrigger asChild>
+              <button type="button" className={logoutButton}>
+                로그아웃
+              </button>
+            </DialogTrigger>
+            <DialogBackdrop className={dialogBackdrop} />
+            <DialogPositioner className={dialogPositioner}>
+              <DialogContent className={dialogContent}>
+                <DialogHeader className={dialogHeader}>
+                  <DialogTitle className={dialogTitle}>로그아웃 할까요?</DialogTitle>
+                </DialogHeader>
+                <div className={dialogFooter}>
+                  <DialogAction asChild>
+                    <button type="button" className={dialogCancelButton}>
+                      취소
+                    </button>
+                  </DialogAction>
+                  <DialogAction asChild>
+                    <button type="button" className={dialogConfirmButton} onClick={handleLogout}>
+                      로그아웃
+                    </button>
+                  </DialogAction>
+                </div>
+              </DialogContent>
+            </DialogPositioner>
+          </DialogRoot>
         </section>
       </main>
     </div>

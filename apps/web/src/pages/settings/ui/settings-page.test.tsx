@@ -32,24 +32,36 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument();
   });
 
-  it('알림 스위치 토글 동작이 상태에 반영된다', () => {
+  it('회원 탈퇴 클릭 시 SEED 다이얼로그가 열리고 탈퇴하기 클릭 시 로그인으로 이동한다', () => {
     render(<SettingsPage />);
 
-    const switchBtn = screen.getByRole('switch', { name: '알림 설정' });
-    expect(switchBtn).toHaveAttribute('aria-checked', 'true');
+    const withdrawBtn = screen.getByRole('button', { name: /회원 탈퇴/i });
+    fireEvent.click(withdrawBtn);
 
-    fireEvent.click(switchBtn);
-    expect(switchBtn).toHaveAttribute('aria-checked', 'false');
+    expect(screen.getByRole('heading', { name: '정말 탈퇴하시겠어요?' })).toBeInTheDocument();
+    expect(screen.getByText('탈퇴하시면 모든 정보가 삭제돼요.')).toBeInTheDocument();
 
-    fireEvent.click(switchBtn);
-    expect(switchBtn).toHaveAttribute('aria-checked', 'true');
+    const confirmWithdrawBtn = screen.getByRole('button', { name: '탈퇴하기' });
+    fireEvent.click(confirmWithdrawBtn);
+
+    expect(navigation.push).toHaveBeenCalledWith('/login');
   });
 
-  it('로그아웃 버튼 클릭 시 로그인 페이지로 이동한다', () => {
+  it('로그아웃 클릭 시 SEED 다이얼로그가 열리고 로그아웃 확인 클릭 시 로그인으로 이동한다', () => {
     render(<SettingsPage />);
 
-    const logoutBtn = screen.getByRole('button', { name: '로그아웃' });
-    fireEvent.click(logoutBtn);
+    const logoutTrigger = screen.getByRole('button', { name: '로그아웃' });
+    fireEvent.click(logoutTrigger);
+
+    expect(screen.getByRole('heading', { name: '로그아웃 할까요?' })).toBeInTheDocument();
+
+    // 다이얼로그 내부의 로그아웃 확인 버튼
+    const dialogConfirmBtns = screen.getAllByRole('button', { name: '로그아웃' });
+    const confirmBtn = dialogConfirmBtns[dialogConfirmBtns.length - 1];
+    expect(confirmBtn).toBeDefined();
+    if (confirmBtn) {
+      fireEvent.click(confirmBtn);
+    }
 
     expect(navigation.push).toHaveBeenCalledWith('/login');
   });
