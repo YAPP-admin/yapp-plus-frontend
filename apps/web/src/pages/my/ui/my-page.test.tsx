@@ -1,4 +1,4 @@
-import { render, screen, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it } from 'vitest';
 import { MyPage } from './my-page';
 
@@ -35,5 +35,30 @@ describe('MyPage', () => {
 
     const contactLink = menuNav.getByRole('link', { name: /이용문의/ });
     expect(contactLink).toHaveAttribute('href', expect.stringContaining('http'));
+  });
+
+  it('출석 현황 카드의 ? 버튼을 누르면 SEED 출석 규칙 다이얼로그가 열리고 확인 버튼으로 닫힌다', async () => {
+    render(<MyPage />);
+    const questionBtn = screen.getByRole('button', { name: '출석 규칙 안내' });
+    expect(screen.queryByRole('heading', { name: '출석 규칙' })).not.toBeInTheDocument();
+
+    questionBtn.click();
+
+    const heading = await screen.findByRole('heading', { name: '출석 규칙' });
+    expect(heading).toBeInTheDocument();
+
+    const dialog = screen.getByRole('dialog');
+    expect(within(dialog).getByText('1시간 지각/조퇴')).toBeInTheDocument();
+    expect(within(dialog).getByText('-4점')).toBeInTheDocument();
+    expect(within(dialog).getByText('결석')).toBeInTheDocument();
+    expect(within(dialog).getByText('-12점')).toBeInTheDocument();
+    expect(within(dialog).getByText(/총 40점 미만의 회원은/)).toBeInTheDocument();
+
+    const confirmBtn = within(dialog).getByRole('button', { name: '확인' });
+    confirmBtn.click();
+
+    await waitFor(() => {
+      expect(screen.queryByRole('heading', { name: '출석 규칙' })).not.toBeInTheDocument();
+    });
   });
 });
