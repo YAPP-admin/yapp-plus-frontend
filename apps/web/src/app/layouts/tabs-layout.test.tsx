@@ -56,6 +56,17 @@ describe('TabsLayout', () => {
     expect(screen.getByRole('link', { name: '알림' })).toHaveAttribute('href', '/notices');
   });
 
+  it('마이페이지 탭에서는 상단 헤더에 마이페이지 타이틀과 설정 링크를 렌더링한다', () => {
+    location.pathname = '/my';
+    render(
+      <TabsLayout>
+        <main>마이</main>
+      </TabsLayout>,
+    );
+    expect(screen.getByText('마이페이지')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '설정' })).toHaveAttribute('href', '/settings');
+  });
+
   it('상세·인증 화면에서 사용하는 기본 셸에는 주요 메뉴가 없다', () => {
     render(
       <PageShell>

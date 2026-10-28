@@ -31,6 +31,7 @@ export const bellButton = style({
 export const defaultHeader = style({
   display: 'flex',
   alignItems: 'center',
+  justifyContent: 'space-between',
   padding: `0 ${vars.$dimension.x5}`,
   height: '54px',
   background: vars.$color.bg.layerDefault,
@@ -46,4 +47,16 @@ export const defaultTitle = style({
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.neutral,
   letterSpacing: '-0.3px',
+});
+
+export const headerActionButton = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: vars.$dimension.x6,
+  height: vars.$dimension.x6,
+  borderRadius: vars.$radius.full,
+  color: vars.$color.fg.neutralMuted,
+  textDecoration: 'none',
+  padding: 0,
 });
