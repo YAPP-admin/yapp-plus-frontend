@@ -1,17 +1,16 @@
 'use client';
 
-import Image from 'next/image';
 import { BackButton } from '@/app/navigation/back-button';
 import {
   container,
   content,
   description,
-  graphic,
   graphicContainer,
   header,
   title,
   titleGroup,
 } from './notice-error-page.css';
+import { NoticeErrorIllustration } from './notice-error-illustration';
 
 export type NoticeErrorPageProps = {
   titleText?: string;
@@ -37,14 +36,7 @@ export function NoticeErrorPage({
         </div>
 
         <div className={graphicContainer}>
-          <Image
-            src="/images/notices/graphic-error.svg"
-            alt=""
-            width={350}
-            height={170}
-            className={graphic}
-            priority
-          />
+          <NoticeErrorIllustration />
         </div>
       </div>
     </main>

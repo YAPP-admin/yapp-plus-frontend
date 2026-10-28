@@ -59,12 +59,3 @@ export const graphicContainer = style({
   justifyContent: 'center',
   width: '100%',
 });
-
-export const graphic = style({
-  width: '100%',
-  maxWidth: '350px',
-  height: 'auto',
-  aspectRatio: '350 / 170',
-  pointerEvents: 'none',
-  userSelect: 'none',
-});
