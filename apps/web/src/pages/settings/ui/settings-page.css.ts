@@ -83,7 +83,14 @@ export const menuChevron = style({
   flexShrink: 0,
 });
 
-export const toggleTrack = style({
+// SEED Design Switch Styles
+export const switchRoot = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  cursor: 'pointer',
+});
+
+export const switchControl = style({
   position: 'relative',
   display: 'inline-flex',
   alignItems: 'center',
@@ -91,8 +98,6 @@ export const toggleTrack = style({
   height: '28px',
   padding: '2px',
   borderRadius: vars.$radius.full,
-  border: 'none',
-  cursor: 'pointer',
   boxSizing: 'border-box',
   transition: 'background-color 0.2s ease',
   selectors: {
@@ -105,7 +110,7 @@ export const toggleTrack = style({
   },
 });
 
-export const toggleThumb = style({
+export const switchThumb = style({
   display: 'block',
   width: '24px',
   height: '24px',
@@ -114,10 +119,10 @@ export const toggleThumb = style({
   boxShadow: '0 1px 3px rgba(0, 0, 0, 0.15)',
   transition: 'transform 0.2s ease',
   selectors: {
-    [`${toggleTrack}[data-checked="true"] &`]: {
+    [`${switchControl}[data-checked="true"] &`]: {
       transform: 'translateX(24px)',
     },
-    [`${toggleTrack}[data-checked="false"] &`]: {
+    [`${switchControl}[data-checked="false"] &`]: {
       transform: 'translateX(0)',
     },
   },
@@ -149,5 +154,119 @@ export const logoutButton = style({
   ':active': {
     transform: 'scale(0.99)',
     background: vars.$color.bg.layerFill,
+  },
+});
+
+// SEED Design Dialog Styles
+export const dialogBackdrop = style({
+  position: 'fixed',
+  inset: 0,
+  background: 'rgba(0, 0, 0, 0.46)',
+  zIndex: 100,
+});
+
+export const dialogPositioner = style({
+  position: 'fixed',
+  inset: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  padding: `0 ${vars.$dimension.x5}`,
+  zIndex: 101,
+});
+
+export const dialogContent = style({
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  maxWidth: '290px',
+  background: vars.$color.bg.layerDefault,
+  borderRadius: '16px',
+  padding: '16px 20px',
+  boxSizing: 'border-box',
+  gap: '16px',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+});
+
+export const dialogHeader = style({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  textAlign: 'left',
+  gap: '4px',
+  width: '100%',
+});
+
+export const dialogTitle = style({
+  margin: 0,
+  fontSize: vars.$fontSize.t6,
+  lineHeight: vars.$lineHeight.t6,
+  fontWeight: vars.$fontWeight.bold,
+  color: vars.$color.fg.neutral,
+  textAlign: 'left',
+  width: '100%',
+});
+
+export const dialogDescription = style({
+  margin: 0,
+  fontSize: vars.$fontSize.t4,
+  lineHeight: vars.$lineHeight.t4,
+  fontWeight: vars.$fontWeight.medium,
+  color: vars.$color.fg.neutralSubtle,
+  textAlign: 'left',
+  width: '100%',
+});
+
+export const dialogFooter = style({
+  display: 'flex',
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: '8px',
+  width: '100%',
+});
+
+export const dialogCancelButton = style({
+  flex: '1 1 0',
+  width: '100%',
+  height: '44px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: '#F3F4F5',
+  borderRadius: '8px',
+  border: 'none',
+  fontSize: vars.$fontSize.t4,
+  lineHeight: vars.$lineHeight.t4,
+  fontWeight: vars.$fontWeight.bold,
+  color: vars.$color.fg.neutralMuted,
+  cursor: 'pointer',
+  padding: '0 20px',
+  boxSizing: 'border-box',
+  transition: 'background-color 0.15s ease',
+  ':active': {
+    background: '#E5E7EB',
+  },
+});
+
+export const dialogConfirmButton = style({
+  flex: '1 1 0',
+  width: '100%',
+  height: '44px',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  background: vars.$color.bg.brandSolid,
+  borderRadius: '8px',
+  border: 'none',
+  fontSize: vars.$fontSize.t4,
+  lineHeight: vars.$lineHeight.t4,
+  fontWeight: vars.$fontWeight.bold,
+  color: '#FFFFFF',
+  cursor: 'pointer',
+  padding: '0 20px',
+  boxSizing: 'border-box',
+  transition: 'opacity 0.15s ease',
+  ':active': {
+    opacity: 0.9,
   },
 });
