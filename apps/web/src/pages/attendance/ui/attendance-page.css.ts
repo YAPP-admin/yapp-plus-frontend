@@ -122,7 +122,7 @@ export const statLabel = style({
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
   fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.neutralMuted,
+  color: vars.$color.fg.neutralSubtle,
 });
 
 export const statValue = style({
@@ -153,6 +153,7 @@ export const listSection = style({
   display: 'flex',
   flexDirection: 'column',
   gap: vars.$dimension.x3,
+  flex: 1,
 });
 
 export const sectionTitle = style({
@@ -168,7 +169,8 @@ export const emptyContainer = style({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '50px 0 32px',
+  flex: 1,
+  padding: '0 0 32px',
   gap: '20px',
 });
 
@@ -176,7 +178,7 @@ export const emptyText = style({
   fontSize: vars.$fontSize.t5,
   lineHeight: vars.$lineHeight.t5,
   fontWeight: vars.$fontWeight.regular,
-  color: vars.$color.fg.neutralMuted,
+  color: vars.$color.fg.neutralSubtle,
   margin: 0,
 });
 

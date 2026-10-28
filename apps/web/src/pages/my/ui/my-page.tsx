@@ -117,21 +117,6 @@ export function MyPage() {
             className={menuChevron}
           />
         </Link>
-        <a
-          href="https://pf.kakao.com/_xkxmxjxd"
-          target="_blank"
-          rel="noopener noreferrer"
-          className={menuItem}
-        >
-          <span className={menuLabel}>이용문의</span>
-          <Image
-            src="/images/my/chevron-right.svg"
-            alt=""
-            width={24}
-            height={24}
-            className={menuChevron}
-          />
-        </a>
       </nav>
     </div>
   );

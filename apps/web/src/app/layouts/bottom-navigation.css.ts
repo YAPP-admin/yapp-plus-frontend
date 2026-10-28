@@ -1,20 +1,28 @@
 import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
-export const navigation = style({
+export const bottomBar = style({
   position: 'sticky',
   bottom: 0,
-  display: 'grid',
-  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
-  paddingTop: vars.$dimension.x2,
-  paddingBottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 6px)',
-  background: vars.$color.bg.layerDefault,
-  borderTop: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  display: 'flex',
+  flexDirection: 'column',
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
+  background: vars.$color.bg.layerDefault,
+  borderTop: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderTopLeftRadius: vars.$radius.r1,
+  borderTopRightRadius: vars.$radius.r1,
   boxSizing: 'border-box',
   zIndex: 100,
+});
+
+export const navigation = style({
+  display: 'grid',
+  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
+  padding: '8px 20px 4px',
+  width: '100%',
+  boxSizing: 'border-box',
 });
 
 export const item = style({
@@ -23,11 +31,11 @@ export const item = style({
   alignItems: 'center',
   justifyContent: 'center',
   gap: '4px',
-  padding: `${vars.$dimension.x1} ${vars.$dimension.x2}`,
-  color: vars.$color.fg.placeholder,
+  padding: '4px 0',
+  color: vars.$color.palette.gray600,
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
-  fontWeight: vars.$fontWeight.medium,
+  fontWeight: vars.$fontWeight.bold,
   textDecoration: 'none',
   touchAction: 'manipulation',
   transition: 'color 150ms ease, transform 100ms ease',
@@ -60,4 +68,20 @@ export const itemLabel = style({
   lineHeight: vars.$lineHeight.t2,
   fontWeight: 'inherit',
   letterSpacing: '-0.2px',
+});
+
+export const homeIndicatorArea = style({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  height: '34px',
+  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+  boxSizing: 'content-box',
+});
+
+export const homeIndicatorBar = style({
+  width: '134px',
+  height: '5px',
+  borderRadius: vars.$radius.full,
+  background: vars.$color.palette.gray1000,
 });

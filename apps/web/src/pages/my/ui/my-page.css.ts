@@ -129,7 +129,13 @@ export const questionButton = style({
   background: 'none',
   cursor: 'pointer',
   lineHeight: 1,
-  color: vars.$color.fg.neutralMuted,
+  color: vars.$color.palette.gray500,
+  transition: 'opacity 150ms ease',
+  selectors: {
+    '&:hover': {
+      opacity: 0.8,
+    },
+  },
 });
 
 export const scoreGroup = style({
@@ -176,7 +182,7 @@ export const statLabel = style({
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
   fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.neutralMuted,
+  color: vars.$color.fg.neutralSubtle,
   textAlign: 'center',
 });
 

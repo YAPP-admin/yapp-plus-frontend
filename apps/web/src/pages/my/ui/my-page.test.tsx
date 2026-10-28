@@ -27,14 +27,11 @@ describe('MyPage', () => {
     expect(within(card).getByText('지각 면제권')).toBeInTheDocument();
   });
 
-  it('출석 내역과 이용문의 메뉴 링크를 렌더링한다', () => {
+  it('출석 내역 메뉴 링크를 렌더링한다', () => {
     render(<MyPage />);
     const menuNav = within(screen.getByRole('navigation', { name: '마이페이지 메뉴' }));
     const attendanceLink = menuNav.getByRole('link', { name: /출석 내역/ });
     expect(attendanceLink).toHaveAttribute('href', '/my/attendance');
-
-    const contactLink = menuNav.getByRole('link', { name: /이용문의/ });
-    expect(contactLink).toHaveAttribute('href', expect.stringContaining('http'));
   });
 
   it('출석 현황 카드의 ? 버튼을 누르면 SEED 출석 규칙 다이얼로그가 열리고 확인 버튼으로 닫힌다', async () => {
