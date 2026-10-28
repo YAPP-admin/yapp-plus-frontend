@@ -4,7 +4,10 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPage } from './login-page';
 
 const router = vi.hoisted(() => ({ push: vi.fn<(url: string) => void>() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock('next/navigation', () => ({
+  useRouter: () => router,
+  useSearchParams: () => new URLSearchParams(),
+}));
 beforeEach(() => vi.clearAllMocks());
 
 describe('LoginPage', () => {
@@ -50,5 +53,21 @@ describe('LoginPage', () => {
     render(<LoginPage />);
     fireEvent.click(screen.getByRole('button', { name: '애플로 계속하기' }));
     expect(router.push).toHaveBeenCalledWith('/signup');
+  });
+
+  it('구글로 계속하기를 누르면 피그마 375:11225 에러 팝업이 노출된다', () => {
+    render(<LoginPage />);
+    expect(
+      screen.queryByRole('heading', { name: '앗, 예기치 못한 오류가 발생했어요!' }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: '구글로 계속하기' }));
+
+    expect(
+      screen.getByRole('heading', { name: '앗, 예기치 못한 오류가 발생했어요!' }),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/계속해서 같은 문제가 발생한다면/)).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '닫기' })).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: '제보하기' })).toBeInTheDocument();
   });
 });
