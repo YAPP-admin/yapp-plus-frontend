@@ -1,5 +1,6 @@
 import Image from 'next/image';
 import Link from 'next/link';
+import { AttendanceRulesDialog } from './attendance-rules-dialog';
 import {
   activeChip,
   attendanceCard,
@@ -74,14 +75,16 @@ export function MyPage() {
           <div className={cardHeader}>
             <div className={cardTitleGroup}>
               <span className={cardTitle}>내 출석 현황</span>
-              <button
-                type="button"
-                className={questionButton}
-                aria-label="출석 기준 안내"
-                title="출석 기준 안내"
-              >
-                <Image src="/images/my/question.svg" alt="" width={20} height={20} />
-              </button>
+              <AttendanceRulesDialog>
+                <button
+                  type="button"
+                  className={questionButton}
+                  aria-label="출석 규칙 안내"
+                  title="출석 규칙 안내"
+                >
+                  <Image src="/images/my/question.svg" alt="" width={20} height={20} />
+                </button>
+              </AttendanceRulesDialog>
             </div>
             <div className={scoreGroup}>
               <span className={scoreLabel}>총 점수</span>
