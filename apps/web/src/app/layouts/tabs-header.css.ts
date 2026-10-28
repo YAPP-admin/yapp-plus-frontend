@@ -56,7 +56,7 @@ export const headerActionButton = style({
   width: vars.$dimension.x6,
   height: vars.$dimension.x6,
   borderRadius: vars.$radius.full,
-  color: vars.$color.fg.neutralMuted,
+  color: vars.$color.fg.neutralSubtle,
   textDecoration: 'none',
   padding: 0,
 });

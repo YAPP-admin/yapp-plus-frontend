@@ -5,11 +5,9 @@ export const container = style({
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
-  maxWidth: '480px',
-  margin: '0 auto',
+  minHeight: '100dvh',
   boxSizing: 'border-box',
   background: vars.$color.bg.layerDefault,
-  minHeight: '100%',
 });
 
 export const header = style({
@@ -19,6 +17,10 @@ export const header = style({
   height: '54px',
   padding: `0 ${vars.$dimension.x4}`,
   background: vars.$color.bg.layerDefault,
+  width: '100%',
+  maxWidth: '480px',
+  margin: '0 auto',
+  boxSizing: 'border-box',
 });
 
 export const headerTitle = style({
@@ -39,6 +41,11 @@ export const body = style({
   flexDirection: 'column',
   padding: `10px ${vars.$dimension.x5} 40px`,
   gap: '40px',
+  width: '100%',
+  maxWidth: '480px',
+  margin: '0 auto',
+  boxSizing: 'border-box',
+  flex: 1,
 });
 
 export const topCardSection = style({

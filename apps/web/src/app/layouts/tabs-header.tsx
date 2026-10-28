@@ -1,6 +1,6 @@
 'use client';
 
-import { IconBellFill } from '@karrotmarket/react-monochrome-icon';
+import { IconBellFill, IconGearFill } from '@karrotmarket/react-monochrome-icon';
 import Image from 'next/image';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -41,7 +41,7 @@ export function TabsHeader() {
       <span className={defaultTitle}>{title}</span>
       {pathname === '/my' ? (
         <Link href="/settings" className={headerActionButton} aria-label="설정">
-          <Image src="/images/my/settings.svg" alt="" width={24} height={24} />
+          <IconGearFill width={24} height={24} />
         </Link>
       ) : null}
     </div>

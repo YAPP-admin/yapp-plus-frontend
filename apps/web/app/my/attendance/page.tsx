@@ -7,7 +7,7 @@ export const metadata = { title: '출석 내역 | YAPP+' };
 
 export default function Page() {
   return (
-    <PageShell header={null}>
+    <PageShell header={null} plain>
       <Suspense fallback={null}>
         <AttendancePage />
       </Suspense>
