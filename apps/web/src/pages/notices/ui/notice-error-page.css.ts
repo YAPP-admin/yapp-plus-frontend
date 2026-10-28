@@ -16,27 +16,25 @@ export const header = style({
   display: 'flex',
   alignItems: 'center',
   height: '54px',
-  padding: `0 ${vars.$dimension.x4}`,
+  padding: '0 16px',
 });
 
 export const content = style({
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  flex: 1,
   padding: '14px 20px 52px',
   boxSizing: 'border-box',
+  gap: '160px',
+  flex: 1,
 });
 
 export const titleGroup = style({
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center',
-  textAlign: 'center',
+  alignItems: 'flex-start',
+  textAlign: 'left',
   gap: '10px',
   width: '100%',
-  marginTop: '20px',
 });
 
 export const title = style({
@@ -60,8 +58,6 @@ export const graphicContainer = style({
   alignItems: 'center',
   justifyContent: 'center',
   width: '100%',
-  maxWidth: '350px',
-  marginBottom: '40px',
 });
 
 export const graphic = style({

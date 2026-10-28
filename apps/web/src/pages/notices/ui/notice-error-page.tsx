@@ -27,7 +27,7 @@ export function NoticeErrorPage({
   return (
     <main className={container}>
       <header className={header}>
-        <BackButton fallback={fallbackUrl} />
+        <BackButton fallback={fallbackUrl} iconOnly />
       </header>
 
       <div className={content}>
