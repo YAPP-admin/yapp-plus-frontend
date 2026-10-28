@@ -10,13 +10,13 @@ export const container = style({
   boxSizing: 'border-box',
   background: vars.$color.bg.layerDefault,
   minHeight: '100%',
-  paddingBottom: '32px',
+  paddingBottom: vars.$dimension.x8,
 });
 
 export const profileSection = style({
   display: 'flex',
   flexDirection: 'column',
-  padding: '0 20px',
+  padding: `0 ${vars.$dimension.x5}`,
   gap: '2px',
 });
 
@@ -24,13 +24,14 @@ export const profileRow = style({
   display: 'flex',
   alignItems: 'center',
   padding: '18px 0',
-  gap: '16px',
+  gap: vars.$dimension.x4,
 });
 
 export const avatar = style({
   width: '66px',
   height: '66px',
-  borderRadius: '9999px',
+  borderRadius: vars.$radius.full,
+  background: 'rgba(0, 0, 0, 0.06)',
   overflow: 'hidden',
   flexShrink: 0,
 });
@@ -38,13 +39,13 @@ export const avatar = style({
 export const profileInfo = style({
   display: 'flex',
   flexDirection: 'column',
-  gap: '4px',
+  gap: vars.$dimension.x1,
 });
 
 export const nameRow = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '8px',
+  gap: vars.$dimension.x2,
 });
 
 export const name = style({
@@ -59,7 +60,7 @@ export const activeChip = style({
   alignItems: 'center',
   justifyContent: 'center',
   padding: '2px 10px',
-  borderRadius: '8px',
+  borderRadius: vars.$radius.r2,
   background: vars.$color.bg.brandSolid,
   color: '#FFFFFF',
   fontSize: vars.$fontSize.t3,
@@ -70,7 +71,7 @@ export const activeChip = style({
 export const subRow = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '10px',
+  gap: vars.$dimension.x2_5,
 });
 
 export const subText = style({
@@ -90,7 +91,7 @@ export const attendanceCard = style({
   display: 'flex',
   flexDirection: 'column',
   border: '1px solid rgba(0, 0, 0, 0.05)',
-  borderRadius: '8px',
+  borderRadius: vars.$radius.r2,
   overflow: 'hidden',
   background: vars.$color.bg.layerDefault,
 });
@@ -99,14 +100,15 @@ export const cardHeader = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '8px 16px',
+  padding: `${vars.$dimension.x2} ${vars.$dimension.x4}`,
   background: vars.$color.bg.layerFill,
+  borderRadius: `${vars.$radius.r2} ${vars.$radius.r2} 0 0`,
 });
 
 export const cardTitleGroup = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '4px',
+  gap: vars.$dimension.x1,
 });
 
 export const cardTitle = style({
@@ -120,6 +122,8 @@ export const questionButton = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
+  width: '20px',
+  height: '20px',
   padding: 0,
   border: 'none',
   background: 'none',
@@ -150,7 +154,9 @@ export const scoreValue = style({
 export const cardStats = style({
   display: 'flex',
   alignItems: 'center',
-  padding: '4px 0',
+  padding: vars.$dimension.x1,
+  gap: vars.$dimension.x1,
+  borderRadius: `0 0 ${vars.$radius.r2} ${vars.$radius.r2}`,
 });
 
 export const statItem = style({
@@ -159,8 +165,9 @@ export const statItem = style({
   flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  padding: '12px 0',
-  gap: '4px',
+  padding: `${vars.$dimension.x3} 0`,
+  gap: vars.$dimension.x1,
+  borderRadius: vars.$radius.r2,
 });
 
 export const statLabel = style({
@@ -178,26 +185,26 @@ export const statValue = style({
 });
 
 export const sectionDivider = style({
-  height: '8px',
+  height: vars.$dimension.x2,
   background: vars.$color.bg.layerFill,
   border: 'none',
   margin: 0,
-  marginTop: '28px',
+  marginTop: vars.$dimension.x7,
   width: '100%',
 });
 
 export const menuList = style({
   display: 'flex',
   flexDirection: 'column',
-  padding: '0 20px',
-  marginTop: '10px',
+  padding: `0 ${vars.$dimension.x5}`,
+  marginTop: vars.$dimension.x2_5,
 });
 
 export const menuItem = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '16px 0',
+  padding: `${vars.$dimension.x4} 0`,
   textDecoration: 'none',
   color: vars.$color.fg.neutral,
 });
@@ -210,6 +217,7 @@ export const menuLabel = style({
 });
 
 export const menuChevron = style({
-  color: vars.$color.fg.neutralMuted,
+  width: vars.$dimension.x6,
+  height: vars.$dimension.x6,
   flexShrink: 0,
 });
