@@ -8,7 +8,15 @@ import {
 } from '@karrotmarket/react-monochrome-icon';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { iconWrapper, item, itemLabel, navigation } from './bottom-navigation.css';
+import {
+  bottomBar,
+  homeIndicatorArea,
+  homeIndicatorBar,
+  iconWrapper,
+  item,
+  itemLabel,
+  navigation,
+} from './bottom-navigation.css';
 
 const destinations = [
   {
@@ -37,24 +45,29 @@ export function BottomNavigation() {
   const pathname = usePathname();
 
   return (
-    <nav className={navigation} aria-label="주요 메뉴">
-      {destinations.map(({ href, label, Icon }) => {
-        const isCurrent = pathname === href;
+    <div className={bottomBar}>
+      <nav className={navigation} aria-label="주요 메뉴">
+        {destinations.map(({ href, label, Icon }) => {
+          const isCurrent = pathname === href;
 
-        return (
-          <Link
-            key={href}
-            href={href}
-            className={item}
-            aria-current={isCurrent ? 'page' : undefined}
-          >
-            <span className={iconWrapper} aria-hidden="true">
-              <Icon width={24} height={24} />
-            </span>
-            <span className={itemLabel}>{label}</span>
-          </Link>
-        );
-      })}
-    </nav>
+          return (
+            <Link
+              key={href}
+              href={href}
+              className={item}
+              aria-current={isCurrent ? 'page' : undefined}
+            >
+              <span className={iconWrapper} aria-hidden="true">
+                <Icon width={24} height={24} />
+              </span>
+              <span className={itemLabel}>{label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+      <div className={homeIndicatorArea} aria-hidden="true">
+        <div className={homeIndicatorBar} />
+      </div>
+    </div>
   );
 }

@@ -176,16 +176,19 @@ export const dialogPositioner = style({
 });
 
 export const dialogContent = style({
+  position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  width: '100%',
+  width: '290px',
+  minWidth: '290px',
   maxWidth: '290px',
   background: vars.$color.bg.layerDefault,
   borderRadius: '16px',
   padding: '16px 20px',
+  margin: '0 auto',
   boxSizing: 'border-box',
   gap: '16px',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.16)',
 });
 
 export const dialogHeader = style({
@@ -195,12 +198,13 @@ export const dialogHeader = style({
   textAlign: 'left',
   gap: '4px',
   width: '100%',
+  padding: '0 !important',
 });
 
 export const dialogTitle = style({
   margin: 0,
-  fontSize: vars.$fontSize.t6,
-  lineHeight: vars.$lineHeight.t6,
+  fontSize: '18px',
+  lineHeight: '24px',
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.neutral,
   textAlign: 'left',
@@ -209,10 +213,10 @@ export const dialogTitle = style({
 
 export const dialogDescription = style({
   margin: 0,
-  fontSize: vars.$fontSize.t4,
-  lineHeight: vars.$lineHeight.t4,
+  fontSize: '14px',
+  lineHeight: '19px',
   fontWeight: vars.$fontWeight.medium,
-  color: vars.$color.fg.neutralSubtle,
+  color: vars.$color.fg.neutralMuted,
   textAlign: 'left',
   width: '100%',
 });
@@ -223,6 +227,8 @@ export const dialogFooter = style({
   alignItems: 'center',
   gap: '8px',
   width: '100%',
+  padding: '0 !important',
+  boxSizing: 'border-box',
 });
 
 export const dialogCancelButton = style({
@@ -235,12 +241,13 @@ export const dialogCancelButton = style({
   background: '#F3F4F5',
   borderRadius: '8px',
   border: 'none',
-  fontSize: vars.$fontSize.t4,
-  lineHeight: vars.$lineHeight.t4,
+  fontSize: '14px',
+  lineHeight: '19px',
   fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.neutralMuted,
+  color: '#868B94',
   cursor: 'pointer',
-  padding: '0 20px',
+  padding: 0,
+  whiteSpace: 'nowrap',
   boxSizing: 'border-box',
   transition: 'background-color 0.15s ease',
   ':active': {
@@ -258,12 +265,13 @@ export const dialogConfirmButton = style({
   background: vars.$color.bg.brandSolid,
   borderRadius: '8px',
   border: 'none',
-  fontSize: vars.$fontSize.t4,
-  lineHeight: vars.$lineHeight.t4,
+  fontSize: '14px',
+  lineHeight: '19px',
   fontWeight: vars.$fontWeight.bold,
   color: '#FFFFFF',
   cursor: 'pointer',
-  padding: '0 20px',
+  padding: 0,
+  whiteSpace: 'nowrap',
   boxSizing: 'border-box',
   transition: 'opacity 0.15s ease',
   ':active': {
