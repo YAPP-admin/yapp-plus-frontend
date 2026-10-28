@@ -15,7 +15,16 @@ YAPP Plus의 웹, 모바일 셸, 관리자 앱을 관리하는 Turborepo 기반 
 
 ```sh
 mise install
-pnpm install
+mise exec -- pnpm install
+```
+
+새 worktree 등에서 `config files ... are not trusted` 오류가 나면 저장소 루트의 `mise.toml`을
+검토한 뒤 해당 파일만 신뢰하도록 설정하고 다시 실행합니다. 전체 디렉터리를 일괄 신뢰하지 않습니다.
+
+```sh
+mise trust mise.toml
+mise install
+mise exec -- pnpm install
 ```
 
 ## 워크스페이스
@@ -37,19 +46,22 @@ pnpm install
 
 ## 명령어
 
-| 명령어             | 설명                                           |
-| ------------------ | ---------------------------------------------- |
-| `pnpm dev`         | 웹, 관리자, 모바일 개발 서버 시작              |
-| `pnpm dev:web`     | 웹 앱 개발 서버만 시작                         |
-| `pnpm build`       | 워크스페이스 패키지와 배포 가능한 앱 빌드      |
-| `pnpm commitlint`  | 커밋 메시지 규칙 검사                          |
-| `pnpm format`      | Oxfmt가 지원하는 파일 포맷팅                   |
-| `pnpm lint`        | Oxlint로 앱과 패키지 검사                      |
-| `pnpm typecheck`   | 워크스페이스 TypeScript 타입 검사              |
-| `pnpm test`        | 워크스페이스 테스트 실행                       |
-| `pnpm expo:doctor` | Expo 앱 설정 검증                              |
-| `pnpm storybook`   | 공용 UI Storybook 개발 서버 시작               |
-| `pnpm check`       | 포맷, 린트, 타입 검사, 테스트 품질 게이트 실행 |
+루트 script는 `node --run <script>`로 실행합니다. mise가 셸에서 활성화되지 않았다면 앞에
+`mise exec --`를 붙입니다. 의존성 설치·변경과 `pnpm --filter`, `pnpm exec`에는 pnpm을 사용합니다.
+
+| 명령어                   | 설명                                           |
+| ------------------------ | ---------------------------------------------- |
+| `node --run dev`         | 웹, 관리자, 모바일 개발 서버 시작              |
+| `node --run dev:web`     | 웹 앱 개발 서버만 시작                         |
+| `node --run build`       | 워크스페이스 패키지와 배포 가능한 앱 빌드      |
+| `node --run commitlint`  | 커밋 메시지 규칙 검사                          |
+| `node --run format`      | Oxfmt가 지원하는 파일 포맷팅                   |
+| `node --run lint`        | Oxlint로 앱과 패키지 검사                      |
+| `node --run typecheck`   | 워크스페이스 TypeScript 타입 검사              |
+| `node --run test`        | 워크스페이스 테스트 실행                       |
+| `node --run expo:doctor` | Expo 앱 설정 검증                              |
+| `node --run storybook`   | 공용 UI Storybook 개발 서버 시작               |
+| `node --run check`       | 포맷, 린트, 타입 검사, 테스트 품질 게이트 실행 |
 
 Lefthook은 커밋 전에 스테이징된 소스 파일을 포맷팅하고 린트합니다. 커밋 메시지는
 `<type>(<scope>): <subject>` 형식으로 검사하며 scope는 생략할 수 있습니다. 예를 들어
@@ -64,7 +76,7 @@ Next.js 규칙은 웹 앱에만 적용하고, 프레임워크가 default export�
 예외로 관리합니다.
 
 Storybook은 `packages/ui`의 웹 컴포넌트만 다룹니다. 제품 앱 개발 서버와 항상 함께 실행하지
-않도록 `pnpm dev`와 분리했으며, 정적 Storybook 빌드는 `pnpm build`에 포함합니다.
+않도록 `node --run dev`와 분리했으며, 정적 Storybook 빌드는 `node --run build`에 포함합니다.
 
 Storybook 정적 문서는 [GitHub Pages](https://yapp-admin.github.io/yapp-plus-frontend/)에서 확인할 수
 있습니다. `main`에 Storybook, `packages/ui` 또는 관련 빌드 설정 변경이 반영되면
