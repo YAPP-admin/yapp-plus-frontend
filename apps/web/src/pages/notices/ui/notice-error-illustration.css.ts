@@ -62,7 +62,7 @@ const breathe = keyframes({
     transform: 'translateY(0)',
   },
   '50%': {
-    transform: 'translateY(1.5px)',
+    transform: 'translateY(0.8px)',
   },
 });
 
@@ -84,8 +84,8 @@ export const svgRoot = style({
   overflow: 'visible',
 });
 
-export const owlBody = style({
-  transformOrigin: '175px 110px',
+export const owlHead = style({
+  transformOrigin: '190px 125px',
   animation: `${breathe} 3s ease-in-out infinite`,
   '@media': {
     '(prefers-reduced-motion: reduce)': {
