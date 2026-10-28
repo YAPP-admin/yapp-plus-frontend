@@ -1,4 +1,3 @@
-import { IconChevronRightLine } from '@karrotmarket/react-monochrome-icon';
 import Image from 'next/image';
 import Link from 'next/link';
 import {
@@ -106,7 +105,13 @@ export function MyPage() {
       <nav className={menuList} aria-label="마이페이지 메뉴">
         <Link href="/my/attendance" className={menuItem}>
           <span className={menuLabel}>출석 내역</span>
-          <IconChevronRightLine width={24} height={24} className={menuChevron} />
+          <Image
+            src="/images/my/chevron-right.svg"
+            alt=""
+            width={24}
+            height={24}
+            className={menuChevron}
+          />
         </Link>
         <a
           href="https://pf.kakao.com/_xkxmxjxd"
@@ -115,7 +120,13 @@ export function MyPage() {
           className={menuItem}
         >
           <span className={menuLabel}>이용문의</span>
-          <IconChevronRightLine width={24} height={24} className={menuChevron} />
+          <Image
+            src="/images/my/chevron-right.svg"
+            alt=""
+            width={24}
+            height={24}
+            className={menuChevron}
+          />
         </a>
       </nav>
     </div>
