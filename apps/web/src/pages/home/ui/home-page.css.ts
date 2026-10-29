@@ -733,8 +733,9 @@ export const teamRulesList = style({
   display: 'flex',
   flexDirection: 'column',
   gap: '8px',
-  margin: '12px 0',
+  margin: 0,
   padding: 0,
+  width: '100%',
   listStyle: 'none',
 });
 
@@ -743,19 +744,27 @@ export const teamRuleItem = style({
   alignItems: 'center',
   gap: '8px',
   fontSize: '13px',
+  lineHeight: '18px',
   fontWeight: 500,
   color: '#555D6D',
 });
 
+export const teamCheckIcon = style({
+  width: '16px',
+  height: '16px',
+  flexShrink: 0,
+});
+
 export const teamGraphicWrap = style({
   width: '100%',
-  height: '140px',
+  maxWidth: '337px',
+  height: '158px',
   borderRadius: '12px',
-  backgroundColor: '#F7F8F9',
+  overflow: 'hidden',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  margin: '8px 0',
+  margin: '0 auto',
 });
 
 export const teamButtonsWrap = style({
@@ -763,11 +772,15 @@ export const teamButtonsWrap = style({
   flexDirection: 'column',
   gap: '8px',
   width: '100%',
-  marginTop: '8px',
+  marginTop: 0,
 });
 
 export const sheetSecondaryButton = style({
   width: '100%',
   height: '52px',
   borderRadius: '8px',
+  backgroundColor: '#F3F4F5 !important',
+  color: '#868B94 !important',
+  fontSize: '16px !important',
+  fontWeight: '700 !important',
 });
