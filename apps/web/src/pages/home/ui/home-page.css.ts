@@ -440,13 +440,28 @@ export const sheetHandleBar = style({
   backgroundColor: '#F3F4F5',
 });
 
+export const sheetContainer = style({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: '0 18px 18px',
+  boxSizing: 'border-box',
+  gap: '48px',
+  width: '100%',
+});
+
+export const sheetTopSection = style({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'stretch',
+  gap: '24px',
+  width: '100%',
+});
+
 export const sheetHeader = style({
   display: 'flex',
   flexDirection: 'column',
   gap: '6px',
-  padding: '0 18px',
-  boxSizing: 'border-box',
-  marginBottom: '24px',
+  width: '100%',
 });
 
 export const sheetTitle = style({
@@ -467,12 +482,13 @@ export const sheetDescription = style({
   textAlign: 'left',
 });
 
-export const sheetBody = style({
+export const codeInputsWrapper = style({
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
-  padding: '0 18px',
-  boxSizing: 'border-box',
+  justifyContent: 'center',
+  gap: '10px',
+  width: '100%',
 });
 
 export const codeInputsContainer = style({
@@ -480,8 +496,6 @@ export const codeInputsContainer = style({
   justifyContent: 'center',
   alignItems: 'center',
   gap: '6px',
-  width: '234px',
-  margin: '0 auto',
 });
 
 export const codeInput = style({
@@ -499,6 +513,12 @@ export const codeInput = style({
   boxSizing: 'border-box',
   padding: 0,
   transition: 'border-color 0.15s ease',
+  '::placeholder': {
+    color: '#B0B3BA',
+    fontSize: '18px',
+    fontWeight: 700,
+    opacity: 1,
+  },
   selectors: {
     '&:focus': {
       borderColor: '#555D6D',
@@ -523,14 +543,12 @@ export const codeErrorMessage = style({
   lineHeight: '18px',
   fontWeight: 500,
   color: '#FA342C',
-  marginTop: '10px',
+  margin: 0,
 });
 
 export const sheetFooter = style({
   display: 'flex',
   flexDirection: 'column',
-  padding: '20px 18px 0',
-  boxSizing: 'border-box',
   width: '100%',
 });
 

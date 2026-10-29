@@ -79,7 +79,7 @@ import {
   sessionCard,
   sessionHeader,
   sessionTitle,
-  sheetBody,
+  sheetContainer,
   sheetContent,
   sheetDescription,
   sheetFooter,
@@ -89,6 +89,8 @@ import {
   sheetPrimaryButton,
   sheetSecondaryButton,
   sheetTitle,
+  sheetTopSection,
+  codeInputsWrapper,
   snackbar,
   srOnly,
   teamButtonsWrap,
@@ -408,48 +410,53 @@ export function HomePage() {
             <div className={sheetHandleBar} />
           </div>
 
-          <div className={sheetHeader}>
-            <h2 className={sheetTitle}>출석 코드를 입력해 주세요</h2>
-            <p className={sheetDescription}>코드를 입력하면 출석이 완료돼요</p>
-          </div>
+          <div className={sheetContainer}>
+            <div className={sheetTopSection}>
+              <div className={sheetHeader}>
+                <h2 className={sheetTitle}>출석 코드를 입력해 주세요</h2>
+                <p className={sheetDescription}>코드를 입력하면 출석이 완료돼요</p>
+              </div>
 
-          <div className={sheetBody}>
-            <div className={codeInputsContainer}>
-              {[0, 1, 2, 3].map((index) => (
-                <input
-                  key={index}
-                  ref={(el) => {
-                    inputRefs.current[index] = el;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={code[index]}
-                  onChange={(e) => handleCodeChange(index, e.target.value)}
-                  onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                  className={codeError ? codeInputError : codeInput}
-                  aria-label={`출석 코드 ${index + 1}번째 자리`}
-                />
-              ))}
+              <div className={codeInputsWrapper}>
+                <div className={codeInputsContainer}>
+                  {[0, 1, 2, 3].map((index) => (
+                    <input
+                      key={index}
+                      ref={(el) => {
+                        inputRefs.current[index] = el;
+                      }}
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={1}
+                      placeholder="0"
+                      value={code[index]}
+                      onChange={(e) => handleCodeChange(index, e.target.value)}
+                      onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                      className={codeError ? codeInputError : codeInput}
+                      aria-label={`출석 코드 ${index + 1}번째 자리`}
+                    />
+                  ))}
+                </div>
+
+                {codeError && (
+                  <div className={codeErrorMessage} role="alert">
+                    <IconExclamationmarkCircleFill width={16} height={16} />
+                    <span>출석 코드가 올바르지 않아요.</span>
+                  </div>
+                )}
+              </div>
             </div>
 
-            {codeError && (
-              <div className={codeErrorMessage} role="alert">
-                <IconExclamationmarkCircleFill width={16} height={16} />
-                <span>출석 코드가 올바르지 않아요.</span>
-              </div>
-            )}
-          </div>
-
-          <div className={sheetFooter}>
-            <ActionButton
-              variant="brandSolid"
-              size="large"
-              className={sheetPrimaryButton}
-              onClick={handleConfirmCode}
-            >
-              확인
-            </ActionButton>
+            <div className={sheetFooter}>
+              <ActionButton
+                variant="brandSolid"
+                size="large"
+                className={sheetPrimaryButton}
+                onClick={handleConfirmCode}
+              >
+                확인
+              </ActionButton>
+            </div>
           </div>
         </BottomSheetContent>
       </BottomSheetRoot>
