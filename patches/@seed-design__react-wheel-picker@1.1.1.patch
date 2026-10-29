@@ -1,0 +1,374 @@
+diff --git a/lib/WheelPicker-12s-BlaxPTW6.cjs b/lib/WheelPicker-12s-BlaxPTW6.cjs
+index 79b0d7879f284401a14522036e61a804f3203e7a..74f86a282fc5af8c594040923fcd75de314280c7 100644
+--- a/lib/WheelPicker-12s-BlaxPTW6.cjs
++++ b/lib/WheelPicker-12s-BlaxPTW6.cjs
+@@ -63,13 +63,13 @@ const WheelPickerRoot = /*#__PURE__*/ React__namespace.forwardRef(({ itemSize, v
+     });
+ });
+ WheelPickerRoot.displayName = "WheelPickerRoot";
+-const WheelPickerColumn = /*#__PURE__*/ React__namespace.forwardRef(({ options, value, defaultValue, onValueChange, onIndexChange, loop, valueChangeBehavior, getAriaValueText, renderOption, ...props }, ref)=>{
++const WheelPickerColumn = /*#__PURE__*/ React__namespace.forwardRef(({ options, value, defaultValue, onValueChange, onIndexChange, onSettlingChange, loop, valueChangeBehavior, getAriaValueText, renderOption, ...props }, ref)=>{
+     const api = useWheelPickerColumn12s.useWheelPickerColumn({
+         options,
+         value,
+         defaultValue,
+         onValueChange,
+-        onIndexChange,
++        onIndexChange, onSettlingChange,
+         loop,
+         valueChangeBehavior,
+         getAriaValueText
+diff --git a/lib/WheelPicker-12s-T96xENi6.js b/lib/WheelPicker-12s-T96xENi6.js
+index bc17e642f32209c3261e9250b30f0353ec8a66e4..a7a44510253b2505b21e8304d1f428fccecba47e 100644
+--- a/lib/WheelPicker-12s-T96xENi6.js
++++ b/lib/WheelPicker-12s-T96xENi6.js
+@@ -43,13 +43,13 @@ const WheelPickerRoot = /*#__PURE__*/ React.forwardRef(({ itemSize, visibleItemC
+     });
+ });
+ WheelPickerRoot.displayName = "WheelPickerRoot";
+-const WheelPickerColumn = /*#__PURE__*/ React.forwardRef(({ options, value, defaultValue, onValueChange, onIndexChange, loop, valueChangeBehavior, getAriaValueText, renderOption, ...props }, ref)=>{
++const WheelPickerColumn = /*#__PURE__*/ React.forwardRef(({ options, value, defaultValue, onValueChange, onIndexChange, onSettlingChange, loop, valueChangeBehavior, getAriaValueText, renderOption, ...props }, ref)=>{
+     const api = useWheelPickerColumn({
+         options,
+         value,
+         defaultValue,
+         onValueChange,
+-        onIndexChange,
++        onIndexChange, onSettlingChange,
+         loop,
+         valueChangeBehavior,
+         getAriaValueText
+diff --git a/lib/index.d.ts b/lib/index.d.ts
+index 6edca65d7175408371ef29dd8e40a269fc2745c6..239f26b1af6b3ac9aaf023a591453cc102e710ee 100644
+--- a/lib/index.d.ts
++++ b/lib/index.d.ts
+@@ -23,6 +23,7 @@ interface UseWheelPickerColumnProps {
+      * 사용자 조작으로 중앙에 표시되는 항목이 바뀔 때마다 호출됩니다.
+      * 값이 정착하기 전에도 통과한 각 항목의 논리 인덱스와 값을 순서대로 전달합니다.
+      */
++    onSettlingChange?: (settling: boolean) => void;
+     onIndexChange?: (index: number, value: string) => void;
+     /**
+      * @default false
+diff --git a/lib/useWheelPickerColumn-12s-ByuXODTr.js b/lib/useWheelPickerColumn-12s-ByuXODTr.js
+index 78c09d44db5b3e098f0b7fafc1b284e8c1d5c74f..322dd3153ceb6f7f2a7ad552cd253906ccb646f5 100644
+--- a/lib/useWheelPickerColumn-12s-ByuXODTr.js
++++ b/lib/useWheelPickerColumn-12s-ByuXODTr.js
+@@ -43,8 +43,16 @@ function getWheelDeltaInPixels(event, itemSize, viewportSize) {
+     if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) return event.deltaY * viewportSize;
+     return event.deltaY;
+ }
+-function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValueChange, onIndexChange, loop = false, valueChangeBehavior = "auto", getAriaValueText }) {
++function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValueChange, onIndexChange, onSettlingChange, loop = false, valueChangeBehavior = "auto", getAriaValueText }) {
+     const { itemSize, visibleItemCount, disabled, readOnly } = useWheelPickerContext();
++  const settlingCallbackRef = React.useRef(onSettlingChange);
++  settlingCallbackRef.current = onSettlingChange;
++  const settlingRef = React.useRef(false);
++  const notifySettling = React.useCallback((next) => {
++    if (settlingRef.current === next) return;
++    settlingRef.current = next;
++    settlingCallbackRef.current?.(next);
++  }, []);
+     const fallbackValue = options[0]?.value;
+     const optionValues = React.useMemo(()=>new Set(options.map((option)=>option.value)), [
+         options
+@@ -178,6 +186,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         if (isTouchingRef.current || pointerDragRef.current) return;
+         if (options.length === 0) {
+             shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+             return;
+         }
+         const nearestPhysicalIndex = getNearestPhysicalIndex();
+@@ -191,6 +200,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+             }
+             keyboardTargetPhysicalIndexRef.current = centralPhysicalIndex;
+             shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+             return;
+         }
+         if (nextValue !== undefined && nextValue !== resolvedValue) {
+@@ -214,8 +224,10 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+             keyboardTargetPhysicalIndexRef.current = nearestPhysicalIndex;
+         }
+         shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+     }, [
+-        disabled,
++        notifySettling,
++    disabled,
+         centralPhysicalIndex,
+         getNearestPhysicalIndex,
+         options,
+@@ -276,6 +288,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         updateVisualSelection
+     ]);
+     const scheduleSettle = React.useCallback(()=>{
++    notifySettling(true);
+         if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
+         if (isTouchingRef.current || pointerDragRef.current) {
+             settleTimerRef.current = null;
+@@ -297,7 +310,8 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+             settle();
+         }, SCROLL_SETTLE_DELAY);
+     }, [
+-        alignWheelToPhysicalIndex,
++        notifySettling,
++    alignWheelToPhysicalIndex,
+         finishWheelSettle,
+         getNearestPhysicalIndex,
+         itemSize,
+@@ -360,6 +374,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         visibleItemCount
+     ]);
+     const handleTouchStart = React.useCallback((event)=>{
++    notifySettling(true);
+         if (event.currentTarget.tabIndex >= 0) {
+             event.currentTarget.setAttribute("data-wheel-picker-pointer-focus", "");
+         }
+@@ -377,7 +392,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+             clearTimeout(settleTimerRef.current);
+             settleTimerRef.current = null;
+         }
+-    }, []);
++    }, [notifySettling]);
+     const handleTouchEnd = React.useCallback((event)=>{
+         if (event.touches.length > 0) return;
+         isTouchingRef.current = false;
+@@ -395,7 +410,8 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         if (event.pointerType !== "mouse" || event.button !== 0 || disabled || readOnly) return;
+         const column = columnRef.current;
+         if (!column) return;
+-        event.preventDefault();
++        notifySettling(true);
++      event.preventDefault();
+         column.setAttribute("data-wheel-picker-pointer-focus", "");
+         column.focus({
+             preventScroll: true
+diff --git a/lib/useWheelPickerColumn-12s-DrxSOEPm.cjs b/lib/useWheelPickerColumn-12s-DrxSOEPm.cjs
+index a82752b5995f924240d57e46c6cc0db5ce355769..7fa0782cdc5708c594c1120678ff00a67cf3ec9c 100644
+--- a/lib/useWheelPickerColumn-12s-DrxSOEPm.cjs
++++ b/lib/useWheelPickerColumn-12s-DrxSOEPm.cjs
+@@ -63,8 +63,16 @@ function getWheelDeltaInPixels(event, itemSize, viewportSize) {
+     if (event.deltaMode === WheelEvent.DOM_DELTA_PAGE) return event.deltaY * viewportSize;
+     return event.deltaY;
+ }
+-function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValueChange, onIndexChange, loop = false, valueChangeBehavior = "auto", getAriaValueText }) {
++function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValueChange, onIndexChange, onSettlingChange, loop = false, valueChangeBehavior = "auto", getAriaValueText }) {
+     const { itemSize, visibleItemCount, disabled, readOnly } = WheelPickerContext12s.useWheelPickerContext();
++  const settlingCallbackRef = React__namespace.useRef(onSettlingChange);
++  settlingCallbackRef.current = onSettlingChange;
++  const settlingRef = React__namespace.useRef(false);
++  const notifySettling = React__namespace.useCallback((next) => {
++    if (settlingRef.current === next) return;
++    settlingRef.current = next;
++    settlingCallbackRef.current?.(next);
++  }, []);
+     const fallbackValue = options[0]?.value;
+     const optionValues = React__namespace.useMemo(()=>new Set(options.map((option)=>option.value)), [
+         options
+@@ -198,6 +206,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         if (isTouchingRef.current || pointerDragRef.current) return;
+         if (options.length === 0) {
+             shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+             return;
+         }
+         const nearestPhysicalIndex = getNearestPhysicalIndex();
+@@ -211,6 +220,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+             }
+             keyboardTargetPhysicalIndexRef.current = centralPhysicalIndex;
+             shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+             return;
+         }
+         if (nextValue !== undefined && nextValue !== resolvedValue) {
+@@ -234,8 +244,10 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+             keyboardTargetPhysicalIndexRef.current = nearestPhysicalIndex;
+         }
+         shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+     }, [
+-        disabled,
++        notifySettling,
++    disabled,
+         centralPhysicalIndex,
+         getNearestPhysicalIndex,
+         options,
+@@ -296,6 +308,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         updateVisualSelection
+     ]);
+     const scheduleSettle = React__namespace.useCallback(()=>{
++    notifySettling(true);
+         if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
+         if (isTouchingRef.current || pointerDragRef.current) {
+             settleTimerRef.current = null;
+@@ -317,7 +330,8 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+             settle();
+         }, SCROLL_SETTLE_DELAY);
+     }, [
+-        alignWheelToPhysicalIndex,
++        notifySettling,
++    alignWheelToPhysicalIndex,
+         finishWheelSettle,
+         getNearestPhysicalIndex,
+         itemSize,
+@@ -380,6 +394,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         visibleItemCount
+     ]);
+     const handleTouchStart = React__namespace.useCallback((event)=>{
++    notifySettling(true);
+         if (event.currentTarget.tabIndex >= 0) {
+             event.currentTarget.setAttribute("data-wheel-picker-pointer-focus", "");
+         }
+@@ -397,7 +412,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+             clearTimeout(settleTimerRef.current);
+             settleTimerRef.current = null;
+         }
+-    }, []);
++    }, [notifySettling]);
+     const handleTouchEnd = React__namespace.useCallback((event)=>{
+         if (event.touches.length > 0) return;
+         isTouchingRef.current = false;
+@@ -415,7 +430,8 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         if (event.pointerType !== "mouse" || event.button !== 0 || disabled || readOnly) return;
+         const column = columnRef.current;
+         if (!column) return;
+-        event.preventDefault();
++        notifySettling(true);
++      event.preventDefault();
+         column.setAttribute("data-wheel-picker-pointer-focus", "");
+         column.focus({
+             preventScroll: true
+diff --git a/src/WheelPicker.tsx b/src/WheelPicker.tsx
+index ce4db7678d5d049dc92647d470cc59366f48aced..f75618e7f46301c025794db35dbe3e74bbfff846 100644
+--- a/src/WheelPicker.tsx
++++ b/src/WheelPicker.tsx
+@@ -76,7 +76,7 @@ export const WheelPickerColumn = React.forwardRef<HTMLDivElement, WheelPickerCol
+       value,
+       defaultValue,
+       onValueChange,
+-      onIndexChange,
++      onIndexChange, onSettlingChange,
+       loop,
+       valueChangeBehavior,
+       getAriaValueText,
+@@ -90,7 +90,7 @@ export const WheelPickerColumn = React.forwardRef<HTMLDivElement, WheelPickerCol
+       value,
+       defaultValue,
+       onValueChange,
+-      onIndexChange,
++      onIndexChange, onSettlingChange,
+       loop,
+       valueChangeBehavior,
+       getAriaValueText,
+diff --git a/src/useWheelPickerColumn.tsx b/src/useWheelPickerColumn.tsx
+index 74be51c774bbabc237349ebb5462eb551cd3931a..4be819b561b3a279fbc76d89b8e842063894c8d5 100644
+--- a/src/useWheelPickerColumn.tsx
++++ b/src/useWheelPickerColumn.tsx
+@@ -46,6 +46,7 @@ export interface UseWheelPickerColumnProps {
+    * 사용자 조작으로 중앙에 표시되는 항목이 바뀔 때마다 호출됩니다.
+    * 값이 정착하기 전에도 통과한 각 항목의 논리 인덱스와 값을 순서대로 전달합니다.
+    */
++  onSettlingChange?: (settling: boolean) => void;
+   onIndexChange?: (index: number, value: string) => void;
+   /**
+    * @default false
+@@ -89,11 +90,20 @@ export function useWheelPickerColumn({
+   defaultValue,
+   onValueChange,
+   onIndexChange,
++  onSettlingChange,
+   loop = false,
+   valueChangeBehavior = "auto",
+   getAriaValueText,
+ }: UseWheelPickerColumnProps) {
+   const { itemSize, visibleItemCount, disabled, readOnly } = useWheelPickerContext();
++  const settlingCallbackRef = React.useRef(onSettlingChange);
++  settlingCallbackRef.current = onSettlingChange;
++  const settlingRef = React.useRef(false);
++  const notifySettling = React.useCallback((next: boolean) => {
++    if (settlingRef.current === next) return;
++    settlingRef.current = next;
++    settlingCallbackRef.current?.(next);
++  }, []);
+   const fallbackValue = options[0]?.value;
+   const optionValues = React.useMemo(
+     () => new Set(options.map((option) => option.value)),
+@@ -273,6 +283,7 @@ export function useWheelPickerColumn({
+     if (isTouchingRef.current || pointerDragRef.current) return;
+     if (options.length === 0) {
+       shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+       return;
+     }
+ 
+@@ -289,6 +300,7 @@ export function useWheelPickerColumn({
+       }
+       keyboardTargetPhysicalIndexRef.current = centralPhysicalIndex;
+       shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+       return;
+     }
+ 
+@@ -326,7 +338,9 @@ export function useWheelPickerColumn({
+       keyboardTargetPhysicalIndexRef.current = nearestPhysicalIndex;
+     }
+     shouldNotifyIndexChangeRef.current = false;
++      notifySettling(false);
+   }, [
++    notifySettling,
+     disabled,
+     centralPhysicalIndex,
+     getNearestPhysicalIndex,
+@@ -398,6 +412,7 @@ export function useWheelPickerColumn({
+   );
+ 
+   const scheduleSettle = React.useCallback(() => {
++    notifySettling(true);
+     if (settleTimerRef.current) clearTimeout(settleTimerRef.current);
+     if (isTouchingRef.current || pointerDragRef.current) {
+       settleTimerRef.current = null;
+@@ -423,7 +438,7 @@ export function useWheelPickerColumn({
+ 
+       settle();
+     }, SCROLL_SETTLE_DELAY);
+-  }, [alignWheelToPhysicalIndex, finishWheelSettle, getNearestPhysicalIndex, itemSize, settle]);
++  }, [alignWheelToPhysicalIndex, finishWheelSettle, getNearestPhysicalIndex, itemSize, settle, notifySettling]);
+ 
+   const handleScroll = React.useCallback(() => {
+     if (animationFrameRef.current === null) {
+@@ -495,6 +510,7 @@ export function useWheelPickerColumn({
+   );
+ 
+   const handleTouchStart = React.useCallback((event: React.TouchEvent<HTMLDivElement>) => {
++    notifySettling(true);
+     if (event.currentTarget.tabIndex >= 0) {
+       event.currentTarget.setAttribute("data-wheel-picker-pointer-focus", "");
+     }
+@@ -512,7 +528,7 @@ export function useWheelPickerColumn({
+       clearTimeout(settleTimerRef.current);
+       settleTimerRef.current = null;
+     }
+-  }, []);
++  }, [notifySettling]);
+ 
+   const handleTouchEnd = React.useCallback(
+     (event: React.TouchEvent<HTMLDivElement>) => {
+@@ -536,6 +552,7 @@ export function useWheelPickerColumn({
+       const column = columnRef.current;
+       if (!column) return;
+ 
++      notifySettling(true);
+       event.preventDefault();
+       column.setAttribute("data-wheel-picker-pointer-focus", "");
+       column.focus({ preventScroll: true });
+@@ -563,7 +580,7 @@ export function useWheelPickerColumn({
+         hasDragged: false,
+       };
+     },
+-    [disabled, readOnly],
++    [disabled, readOnly, notifySettling],
+   );
+ 
+   const handlePointerMove = React.useCallback(

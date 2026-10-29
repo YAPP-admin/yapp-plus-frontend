@@ -1,0 +1,120 @@
+diff --git a/lib/components/TimePicker/TimePicker.cjs b/lib/components/TimePicker/TimePicker.cjs
+index de71eea68e87b9a6e1ea15b566706d4fb1f74784..9385a2cdbc9b2885d0bab96492be0b0defb748f6 100644
+--- a/lib/components/TimePicker/TimePicker.cjs
++++ b/lib/components/TimePicker/TimePicker.cjs
+@@ -50,7 +50,7 @@ var columnClassNames = {
+ *
+ * 값은 오전·오후를 별도 필드로 나누지 않고 24시간 형식의 `TimePickerValue`로 주고받습니다.
+ */
+-var TimePicker = react.forwardRef(({ value, defaultValue, onValueChange, minuteStep, locale, disabled, periodAriaLabel, hourAriaLabel, minuteAriaLabel, className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledby, ...props }, ref) => {
++var TimePicker = react.forwardRef(({ value, defaultValue, onValueChange, onSettlingChange, minuteStep, locale, disabled, periodAriaLabel, hourAriaLabel, minuteAriaLabel, className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledby, ...props }, ref) => {
+ 	const api = (0, _seed_design_react_time_picker.useTimePicker)({
+ 		value,
+ 		defaultValue,
+@@ -59,6 +59,7 @@ var TimePicker = react.forwardRef(({ value, defaultValue, onValueChange, minuteS
+ 		locale,
+ 		disabled
+ 	});
++	const settlingColumns = react.useRef(new Set());
+ 	const defaultAriaLabels = getDefaultAriaLabels(locale);
+ 	const ariaLabels = {
+ 		period: periodAriaLabel ?? defaultAriaLabels.period,
+@@ -86,6 +87,11 @@ var TimePicker = react.forwardRef(({ value, defaultValue, onValueChange, minuteS
+ 				options: column.options,
+ 				value: column.value,
+ 				onValueChange: column.onValueChange,
++                onSettlingChange: (settling) => {
++                  if (settling) settlingColumns.current.add(type);
++                  else settlingColumns.current.delete(type);
++                  onSettlingChange?.(settlingColumns.current.size > 0);
++                },
+ 				loop: column.loop,
+ 				valueChangeBehavior: type === "period" ? "smooth" : "auto"
+ 			}, type);
+diff --git a/lib/components/TimePicker/TimePicker.d.ts b/lib/components/TimePicker/TimePicker.d.ts
+index 3d2a8b9aa80f382773c5ca37687f940728cd4b08..9009457f9883e90163f83470cd752d2f6f3bc722 100644
+--- a/lib/components/TimePicker/TimePicker.d.ts
++++ b/lib/components/TimePicker/TimePicker.d.ts
+@@ -6,7 +6,8 @@ export interface TimePickerProps extends UseTimePickerProps, Omit<InternalWheelP
+      * 오전·오후 컬럼의 접근성 이름입니다.
+      * 지정하지 않으면 `locale`에 맞는 기본값을 사용합니다.
+      */
+-    periodAriaLabel?: string;
++    onSettlingChange?: (settling: boolean) => void;
++  periodAriaLabel?: string;
+     /**
+      * 시 컬럼의 접근성 이름입니다.
+      * 지정하지 않으면 `locale`에 맞는 기본값을 사용합니다.
+diff --git a/lib/components/TimePicker/TimePicker.js b/lib/components/TimePicker/TimePicker.js
+index ee75d429e27ddcc758e574f361378f89501ac1f0..2cfc55867d1f7392a49db84d76b5e9c3f1c0f60f 100644
+--- a/lib/components/TimePicker/TimePicker.js
++++ b/lib/components/TimePicker/TimePicker.js
+@@ -47,7 +47,7 @@ var columnClassNames = {
+ *
+ * 값은 오전·오후를 별도 필드로 나누지 않고 24시간 형식의 `TimePickerValue`로 주고받습니다.
+ */
+-var TimePicker = React$1.forwardRef(({ value, defaultValue, onValueChange, minuteStep, locale, disabled, periodAriaLabel, hourAriaLabel, minuteAriaLabel, className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledby, ...props }, ref) => {
++var TimePicker = React$1.forwardRef(({ value, defaultValue, onValueChange, onSettlingChange, minuteStep, locale, disabled, periodAriaLabel, hourAriaLabel, minuteAriaLabel, className, "aria-label": ariaLabel, "aria-labelledby": ariaLabelledby, ...props }, ref) => {
+ 	const api = useTimePicker({
+ 		value,
+ 		defaultValue,
+@@ -56,6 +56,7 @@ var TimePicker = React$1.forwardRef(({ value, defaultValue, onValueChange, minut
+ 		locale,
+ 		disabled
+ 	});
++	const settlingColumns = React$1.useRef(new Set());
+ 	const defaultAriaLabels = getDefaultAriaLabels(locale);
+ 	const ariaLabels = {
+ 		period: periodAriaLabel ?? defaultAriaLabels.period,
+@@ -83,6 +84,11 @@ var TimePicker = React$1.forwardRef(({ value, defaultValue, onValueChange, minut
+ 				options: column.options,
+ 				value: column.value,
+ 				onValueChange: column.onValueChange,
++                onSettlingChange: (settling) => {
++                  if (settling) settlingColumns.current.add(type);
++                  else settlingColumns.current.delete(type);
++                  onSettlingChange?.(settlingColumns.current.size > 0);
++                },
+ 				loop: column.loop,
+ 				valueChangeBehavior: type === "period" ? "smooth" : "auto"
+ 			}, type);
+diff --git a/src/components/TimePicker/TimePicker.tsx b/src/components/TimePicker/TimePicker.tsx
+index 2c33c62cbafd3f02e15f9b5c2c4f7e50250cc04a..cbcf388df911ad228023f4dcac1ef36c1b476e89 100644
+--- a/src/components/TimePicker/TimePicker.tsx
++++ b/src/components/TimePicker/TimePicker.tsx
+@@ -69,6 +69,7 @@ export interface TimePickerProps
+    * 오전·오후 컬럼의 접근성 이름입니다.
+    * 지정하지 않으면 `locale`에 맞는 기본값을 사용합니다.
+    */
++  onSettlingChange?: (settling: boolean) => void;
+   periodAriaLabel?: string;
+ 
+   /**
+@@ -95,6 +96,7 @@ export const TimePicker = React.forwardRef<HTMLDivElement, TimePickerProps>(
+       value,
+       defaultValue,
+       onValueChange,
++      onSettlingChange,
+       minuteStep,
+       locale,
+       disabled,
+@@ -116,6 +118,7 @@ export const TimePicker = React.forwardRef<HTMLDivElement, TimePickerProps>(
+       locale,
+       disabled,
+     });
++    const settlingColumns = React.useRef(new Set<string>());
+     const defaultAriaLabels = getDefaultAriaLabels(locale);
+     const ariaLabels = {
+       period: periodAriaLabel ?? defaultAriaLabels.period,
+@@ -149,6 +152,11 @@ export const TimePicker = React.forwardRef<HTMLDivElement, TimePickerProps>(
+               options={column.options}
+               value={column.value}
+               onValueChange={column.onValueChange}
++              onSettlingChange={(settling) => {
++                if (settling) settlingColumns.current.add(type);
++                else settlingColumns.current.delete(type);
++                onSettlingChange?.(settlingColumns.current.size > 0);
++              }}
+               loop={column.loop}
+               valueChangeBehavior={type === "period" ? "smooth" : "auto"}
+             />
