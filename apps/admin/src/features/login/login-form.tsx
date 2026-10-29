@@ -28,11 +28,6 @@ export function LoginForm({ login, onSuccess, available }: LoginFormProps) {
   const formElement = useRef<HTMLFormElement>(null);
   const loginMutation = useMutation({
     mutationFn: (input: LoginInput) => login(input),
-    onSuccess: async (result) => {
-      if (result.status === 'success') {
-        await onSuccess();
-      }
-    },
   });
   const submissionError = getSubmissionError(loginMutation.data, loginMutation.isError);
   const form = useForm({
@@ -51,7 +46,17 @@ export function LoginForm({ login, onSuccess, available }: LoginFormProps) {
         return;
       }
 
-      loginMutation.mutate({ username: value.username.trim(), password: value.password });
+      loginMutation.mutate(
+        { username: value.username.trim(), password: value.password },
+        {
+          // 화면이 구독 중일 때만 성공 후 탐색을 실행합니다.
+          onSuccess: async (result) => {
+            if (result.status === 'success') {
+              await onSuccess();
+            }
+          },
+        },
+      );
     },
   });
 

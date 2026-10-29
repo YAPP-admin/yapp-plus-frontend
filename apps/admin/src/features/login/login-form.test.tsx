@@ -12,7 +12,7 @@ function setup(login = vi.fn<Login>().mockResolvedValue(invalid), available = tr
   const user = userEvent.setup();
   const queryClient = new QueryClient();
 
-  render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <LoginForm login={login} onSuccess={onSuccess} available={available} />
     </QueryClientProvider>,
@@ -22,7 +22,7 @@ function setup(login = vi.fn<Login>().mockResolvedValue(invalid), available = tr
   const password = screen.getByLabelText('비밀번호');
   const submit = screen.getByRole('button', { name: '로그인' });
 
-  return { user, login, onSuccess, username, password, submit };
+  return { user, login, onSuccess, username, password, submit, unmount: view.unmount };
 }
 
 describe('로그인 폼', () => {
@@ -161,4 +161,21 @@ describe('로그인 폼', () => {
 
     expect(login).not.toHaveBeenCalled();
   });
+});
+
+it('화면을 떠난 뒤 도착한 로그인 성공은 탐색하지 않는다', async () => {
+  const request = Promise.withResolvers<LoginResult>();
+  const { user, username, password, submit, onSuccess, unmount, login } = setup(
+    vi.fn<Login>().mockReturnValue(request.promise),
+  );
+  await user.type(username, 'admin-demo');
+  await user.type(password, 'password');
+  await user.click(submit);
+  await waitFor(() => expect(login).toHaveBeenCalledOnce());
+  unmount();
+  await act(async () => {
+    request.resolve({ status: 'success' });
+    await request.promise;
+  });
+  expect(onSuccess).not.toHaveBeenCalled();
 });
