@@ -195,6 +195,33 @@ export type RegistrationFieldError = {
   message: string;
 };
 
+export type SubmitTeamPhotoRequest = {
+  imageKey: string;
+  selectedMembershipIds: Array<number>;
+};
+
+export type TeamPhotoSubmitted = {
+  photoId: number;
+  submittedAt: string;
+  status: string;
+};
+
+export type PresignTeamPhotoRequest = {
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  checksumSha256: string;
+};
+
+export type TeamPhotoUploadUrl = {
+  imageKey: string;
+  uploadUrl: string;
+  signedHeaders: {
+    [key: string]: string;
+  };
+  expiresAt: string;
+};
+
 export type RenewSessionRequest = {
   /**
    * Native 클라이언트의 refresh token. Web은 HttpOnly refresh cookie를 사용할 수 있다.
@@ -923,6 +950,100 @@ export type RegisterResponses = {
 };
 
 export type RegisterResponse = RegisterResponses[keyof RegisterResponses];
+
+export type SubmitData = {
+  body: SubmitTeamPhotoRequest;
+  path: {
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/sessions/{sessionId}/team-attendance-photos';
+};
+
+export type SubmitErrors = {
+  /**
+   * TEAM_PHOTO_INVALID
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_ELIGIBLE
+   */
+  403: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_UNAVAILABLE
+   */
+  409: ErrorResponse;
+  /**
+   * TEAM_PHOTO_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type SubmitError = SubmitErrors[keyof SubmitErrors];
+
+export type SubmitResponses = {
+  /**
+   * Created
+   */
+  201: TeamPhotoSubmitted;
+};
+
+export type SubmitResponse = SubmitResponses[keyof SubmitResponses];
+
+export type PresignData = {
+  body: PresignTeamPhotoRequest;
+  path: {
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/sessions/{sessionId}/team-attendance-photos/presign';
+};
+
+export type PresignErrors = {
+  /**
+   * TEAM_PHOTO_INVALID
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_ELIGIBLE
+   */
+  403: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_UNAVAILABLE
+   */
+  409: ErrorResponse;
+  /**
+   * TEAM_PHOTO_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type PresignError = PresignErrors[keyof PresignErrors];
+
+export type PresignResponses = {
+  /**
+   * OK
+   */
+  200: TeamPhotoUploadUrl;
+};
+
+export type PresignResponse = PresignResponses[keyof PresignResponses];
 
 export type RenewData = {
   /**

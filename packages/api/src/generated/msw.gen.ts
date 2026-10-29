@@ -57,6 +57,8 @@ import type {
   OverrideResponses,
   Presign1Data,
   Presign1Responses,
+  PresignData,
+  PresignResponses,
   RecipientsResponses,
   RegisterData,
   RegisterResponses,
@@ -72,6 +74,8 @@ import type {
   StartResponses,
   Submit1Data,
   Submit1Responses,
+  SubmitData,
+  SubmitResponses,
   Update1Data,
   Update1Responses,
   UpdateData,
@@ -337,6 +341,98 @@ export function handleRegister(
 ): HttpHandler {
   return http.post<never, RegisterData['body']>(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleSubmitResponse = {
+  body: SubmitResponses[201];
+  status?: 201;
+};
+
+/**
+ * Handler for the `POST /api/sessions/{sessionId}/team-attendance-photos` operation.
+ */
+export function handleSubmit(
+  response?:
+    | HandleSubmitResponse
+    | HttpResponseResolver<
+        {
+          sessionId: string;
+        },
+        SubmitData['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.post<
+    {
+      sessionId: string;
+    },
+    SubmitData['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/sessions/:sessionId/team-attendance-photos`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 201 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandlePresignResponse = {
+  body: PresignResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `POST /api/sessions/{sessionId}/team-attendance-photos/presign` operation.
+ */
+export function handlePresign(
+  response?:
+    | HandlePresignResponse
+    | HttpResponseResolver<
+        {
+          sessionId: string;
+        },
+        PresignData['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.post<
+    {
+      sessionId: string;
+    },
+    PresignData['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/sessions/:sessionId/team-attendance-photos/presign`,
     (info) => {
       if (typeof response === 'function') {
         return response(info);
@@ -2249,6 +2345,14 @@ export type MswHandlerFactories = {
    */
   register: typeof handleRegister;
   /**
+   * Handler for the `POST /api/sessions/{sessionId}/team-attendance-photos` operation.
+   */
+  submit: typeof handleSubmit;
+  /**
+   * Handler for the `POST /api/sessions/{sessionId}/team-attendance-photos/presign` operation.
+   */
+  presign: typeof handlePresign;
+  /**
    * Handler for the `POST /api/auth/session-renewals` operation.
    */
   renew: typeof handleRenew;
@@ -2453,6 +2557,8 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     update: wrap(handleUpdate),
     replaceMembers: wrap(handleReplaceMembers),
     register: wrap(handleRegister),
+    submit: wrap(handleSubmit),
+    presign: wrap(handlePresign),
     renew: wrap(handleRenew),
     consumeHandoff: wrap(handleConsumeHandoff),
     authenticateKakao: wrap(handleAuthenticateKakao),
@@ -2543,12 +2649,14 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.create2, overrides.create2),
       invoke(pick.findCandidates, overrides.findCandidates),
       invoke(pick.candidates, overrides.candidates),
+      invoke(pick.presign, overrides.presign),
       invoke(pick.consumeHandoff, overrides.consumeHandoff),
       invoke(pick.login, overrides.login),
       invoke(pick.find3, overrides.find3),
       invoke(pick.revoke, overrides.revoke),
       invoke(pick.findDetail, overrides.findDetail),
       invoke(pick.acknowledge, overrides.acknowledge),
+      invoke(pick.submit, overrides.submit),
       invoke(pick.renew, overrides.renew),
       invoke(pick.find2, overrides.find2),
       invoke(pick.findPending, overrides.findPending),

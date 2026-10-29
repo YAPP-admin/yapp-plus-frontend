@@ -115,6 +115,9 @@ import type {
   Presign1Data,
   Presign1Errors,
   Presign1Responses,
+  PresignData,
+  PresignErrors,
+  PresignResponses,
   RecipientsData,
   RecipientsErrors,
   RecipientsResponses,
@@ -148,6 +151,9 @@ import type {
   Submit1Data,
   Submit1Errors,
   Submit1Responses,
+  SubmitData,
+  SubmitErrors,
+  SubmitResponses,
   Update1Data,
   Update1Errors,
   Update1Responses,
@@ -291,6 +297,50 @@ export const register = <ThrowOnError extends boolean = false>(
 ): RequestResult<RegisterResponses, RegisterErrors, ThrowOnError> =>
   (options.client ?? client).post<RegisterResponses, RegisterErrors, ThrowOnError>({
     url: '/api/users',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * 팀 출석 사진 최종 제출
+ */
+export const submit = <ThrowOnError extends boolean = false>(
+  options: Options<SubmitData, ThrowOnError>,
+): RequestResult<SubmitResponses, SubmitErrors, ThrowOnError> =>
+  (options.client ?? client).post<SubmitResponses, SubmitErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/sessions/{sessionId}/team-attendance-photos',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * 팀 출석 사진 업로드 URL 발급
+ */
+export const presign = <ThrowOnError extends boolean = false>(
+  options: Options<PresignData, ThrowOnError>,
+): RequestResult<PresignResponses, PresignErrors, ThrowOnError> =>
+  (options.client ?? client).post<PresignResponses, PresignErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/sessions/{sessionId}/team-attendance-photos/presign',
     ...options,
     headers: {
       'Content-Type': 'application/json',
