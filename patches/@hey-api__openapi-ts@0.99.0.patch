@@ -1,8 +1,51 @@
 diff --git a/dist/clients/ky/client.ts b/dist/clients/ky/client.ts
-index bdd3b5e1ac3873b549f5ac6d59232f9e62630555..2d182eefe3a30af24bf7bb1968059ff1c662cc08 100644
+index bdd3b5e1ac3873b549f5ac6d59232f9e62630555..f9f9e63d5984f17529393db01375ba7f332f960e 100644
 --- a/dist/clients/ky/client.ts
 +++ b/dist/clients/ky/client.ts
-@@ -149,10 +149,23 @@ export const createClient = (config: Config = {}): Client => {
+@@ -77,22 +77,25 @@ export const createClient = (config: Config = {}): Client => {
+     request: Request,
+     opts: ResolvedRequestOptions,
+     interceptorsMiddleware: Middleware<Request, Response, unknown, ResolvedRequestOptions>,
++    parsed?: { data: unknown },
+   ) => {
+     const result = {
+       request,
+       response,
+     };
+ 
+-    const textError = await response.text();
+-    let jsonError: unknown;
+-
+-    try {
+-      jsonError = JSON.parse(textError);
+-    } catch {
+-      jsonError = undefined;
++    let error: unknown;
++    if (parsed) {
++      error = parsed.data === undefined ? {} : parsed.data;
++    } else {
++      const textError = await response.text();
++      try {
++        error = textError === '' ? {} : JSON.parse(textError);
++      } catch {
++        error = textError;
++      }
+     }
+ 
+-    const error = jsonError ?? textError;
+     let finalError = error;
+ 
+     for (const fn of interceptorsMiddleware.error.fns) {
+@@ -101,8 +104,6 @@ export const createClient = (config: Config = {}): Client => {
+       }
+     }
+ 
+-    finalError = finalError || ({} as string);
+-
+     if (opts.throwOnError) {
+       throw finalError;
+     }
+@@ -149,10 +150,23 @@ export const createClient = (config: Config = {}): Client => {
          retry: opts.retry ?? opts.kyOptions?.retry ?? 2,
        };
  
@@ -29,7 +72,7 @@ index bdd3b5e1ac3873b549f5ac6d59232f9e62630555..2d182eefe3a30af24bf7bb1968059ff1
        });
  
        for (const fn of interceptors.request.fns) {
-@@ -162,7 +175,7 @@ export const createClient = (config: Config = {}): Client => {
+@@ -162,7 +176,7 @@ export const createClient = (config: Config = {}): Client => {
        }
  
        try {
@@ -38,6 +81,21 @@ index bdd3b5e1ac3873b549f5ac6d59232f9e62630555..2d182eefe3a30af24bf7bb1968059ff1
        } catch (error) {
          if (isHTTPError(error)) {
            response = error.response;
+@@ -177,7 +191,13 @@ export const createClient = (config: Config = {}): Client => {
+           // throwOnError is true, which bubbles already intercepted error to
+           // outer catch. With this flag, we can avoid outer catch running interceptors again
+           errorInterceptorsInvoked = true;
+-          return parseErrorResponse(response, request, opts, interceptors);
++          return parseErrorResponse(
++            response,
++            request,
++            opts,
++            interceptors,
++            response === error.response ? { data: error.data } : undefined,
++          );
+         }
+ 
+         throw error;
 diff --git a/dist/clients/ky/index.ts b/dist/clients/ky/index.ts
 index 32c49a91371102d9310e5fae75640582fd302fc2..7d37fb8808cf76831b760700f69808ef563189de 100644
 --- a/dist/clients/ky/index.ts

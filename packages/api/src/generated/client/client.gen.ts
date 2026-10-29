@@ -79,22 +79,25 @@ export const createClient = (config: Config = {}): Client => {
     request: Request,
     opts: ResolvedRequestOptions,
     interceptorsMiddleware: Middleware<Request, Response, unknown, ResolvedRequestOptions>,
+    parsed?: { data: unknown },
   ) => {
     const result = {
       request,
       response,
     };
 
-    const textError = await response.text();
-    let jsonError: unknown;
-
-    try {
-      jsonError = JSON.parse(textError);
-    } catch {
-      jsonError = undefined;
+    let error: unknown;
+    if (parsed) {
+      error = parsed.data === undefined ? {} : parsed.data;
+    } else {
+      const textError = await response.text();
+      try {
+        error = textError === '' ? {} : JSON.parse(textError);
+      } catch {
+        error = textError;
+      }
     }
 
-    const error = jsonError ?? textError;
     let finalError = error;
 
     for (const fn of interceptorsMiddleware.error.fns) {
@@ -102,8 +105,6 @@ export const createClient = (config: Config = {}): Client => {
         finalError = (await fn(finalError, response, request, opts)) as string;
       }
     }
-
-    finalError = finalError || ({} as string);
 
     if (opts.throwOnError) {
       throw finalError;
@@ -203,7 +204,13 @@ export const createClient = (config: Config = {}): Client => {
           // throwOnError is true, which bubbles already intercepted error to
           // outer catch. With this flag, we can avoid outer catch running interceptors again
           errorInterceptorsInvoked = true;
-          return parseErrorResponse(response, request, opts, interceptors);
+          return parseErrorResponse(
+            response,
+            request,
+            opts,
+            interceptors,
+            response === error.response ? { data: error.data } : undefined,
+          );
         }
 
         throw error;
