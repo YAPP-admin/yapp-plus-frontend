@@ -9,6 +9,7 @@ import {
 
 import { client } from '../client.gen';
 import {
+  acknowledge,
   approve,
   authenticateApple,
   authenticateGoogle,
@@ -24,13 +25,17 @@ import {
   create,
   create1,
   create2,
+  decide,
   delete_,
   delete1,
   detail,
+  detail1,
   find,
   find1,
   find2,
   find3,
+  find4,
+  find5,
   findAll,
   findCandidates,
   findDetail,
@@ -38,11 +43,15 @@ import {
   get,
   list,
   list1,
+  list2,
+  list3,
   login,
   logout,
+  mine,
   type Options,
   override,
   presign,
+  presign1,
   recipients,
   register,
   reissue,
@@ -55,11 +64,16 @@ import {
   startGoogleAuthorization,
   startKakaoAuthorization,
   submit,
+  submit1,
   update,
   update1,
   verify,
+  withdraw,
 } from '../sdk.gen';
 import type {
+  AcknowledgeData,
+  AcknowledgeError,
+  AcknowledgeResponse,
   ApproveData,
   ApproveError,
   ApproveResponse,
@@ -99,12 +113,18 @@ import type {
   CreateData,
   CreateError,
   CreateResponse,
+  DecideData,
+  DecideError,
+  DecideResponse,
   Delete1Data,
   Delete1Error,
   Delete1Response,
   DeleteData,
   DeleteError,
   DeleteResponse,
+  Detail1Data,
+  Detail1Error,
+  Detail1Response,
   DetailData,
   DetailError,
   DetailResponse,
@@ -117,6 +137,12 @@ import type {
   Find3Data,
   Find3Error,
   Find3Response,
+  Find4Data,
+  Find4Error,
+  Find4Response,
+  Find5Data,
+  Find5Error,
+  Find5Response,
   FindAllData,
   FindAllError,
   FindAllResponse,
@@ -138,6 +164,12 @@ import type {
   List1Data,
   List1Error,
   List1Response,
+  List2Data,
+  List2Error,
+  List2Response,
+  List3Data,
+  List3Error,
+  List3Response,
   ListData,
   ListError,
   ListResponse,
@@ -147,8 +179,14 @@ import type {
   LogoutData,
   LogoutError,
   LogoutResponse,
+  MineData,
+  MineError,
+  MineResponse,
   OverrideData,
   OverrideError,
+  Presign1Data,
+  Presign1Error,
+  Presign1Response,
   PresignData,
   PresignError,
   PresignResponse,
@@ -182,6 +220,9 @@ import type {
   StartKakaoAuthorizationData,
   StartKakaoAuthorizationError,
   StartResponse,
+  Submit1Data,
+  Submit1Error,
+  Submit1Response,
   SubmitData,
   SubmitError,
   SubmitResponse,
@@ -194,7 +235,35 @@ import type {
   VerifyData,
   VerifyError,
   VerifyResponse,
+  WithdrawData,
+  WithdrawError,
+  WithdrawResponse,
 } from '../types.gen';
+
+/**
+ * 사용자 공지 읽음 처리
+ *
+ * 현재 열람 권한이 있는 공지를 명시적으로 읽음 처리한다. 반복 요청도 성공하며 최초 읽은 시각은 변경하지 않는다.
+ */
+export const acknowledgeMutation = (
+  options?: Partial<Options<AcknowledgeData>>,
+): UseMutationOptions<AcknowledgeResponse, AcknowledgeError, Options<AcknowledgeData>> => {
+  const mutationOptions: UseMutationOptions<
+    AcknowledgeResponse,
+    AcknowledgeError,
+    Options<AcknowledgeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await acknowledge({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
 
 /**
  * Team 삭제
@@ -322,7 +391,7 @@ export const replaceMembersMutation = (
 /**
  * User 가입 완료
  *
- * 이름·전화번호가 유효하고 User 저장에 성공하면 일회용 가입 토큰을 소비해 세션을 발급한다. 입력 오류나 저장 충돌 후에는 만료 전 토큰으로 재시도할 수 있다.
+ * 가입 토큰 소비, User/Member 생성, 세션 저장을 한 트랜잭션으로 완료한다. 입력 오류·저장 충돌·세션 저장 실패로 롤백되면 만료 전 토큰으로 재시도할 수 있다. 커밋 후 응답이 유실되면 새 OIDC 로그인으로 기존 User 세션을 발급받는다.
  */
 export const registerMutation = (
   options?: Partial<Options<RegisterData>>,
@@ -334,6 +403,44 @@ export const registerMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await register({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * 팀 출석 사진 최종 제출
+ */
+export const submitMutation = (
+  options?: Partial<Options<SubmitData>>,
+): UseMutationOptions<SubmitResponse, SubmitError, Options<SubmitData>> => {
+  const mutationOptions: UseMutationOptions<SubmitResponse, SubmitError, Options<SubmitData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await submit({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * 팀 출석 사진 업로드 URL 발급
+ */
+export const presignMutation = (
+  options?: Partial<Options<PresignData>>,
+): UseMutationOptions<PresignResponse, PresignError, Options<PresignData>> => {
+  const mutationOptions: UseMutationOptions<PresignResponse, PresignError, Options<PresignData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await presign({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -528,12 +635,12 @@ export const verifyMutation = (
 /**
  * 이번 주 세션 사전 출결 보고
  */
-export const submitMutation = (
-  options?: Partial<Options<SubmitData>>,
-): UseMutationOptions<SubmitResponse, SubmitError, Options<SubmitData>> => {
-  const mutationOptions: UseMutationOptions<SubmitResponse, SubmitError, Options<SubmitData>> = {
+export const submit1Mutation = (
+  options?: Partial<Options<Submit1Data>>,
+): UseMutationOptions<Submit1Response, Submit1Error, Options<Submit1Data>> => {
+  const mutationOptions: UseMutationOptions<Submit1Response, Submit1Error, Options<Submit1Data>> = {
     mutationFn: async (fnOptions) => {
-      const { data } = await submit({
+      const { data } = await submit1({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -667,6 +774,25 @@ export const create1Mutation = (
   return mutationOptions;
 };
 
+/**
+ * 팀 출석 사진 승인 또는 거절
+ */
+export const decideMutation = (
+  options?: Partial<Options<DecideData>>,
+): UseMutationOptions<DecideResponse, DecideError, Options<DecideData>> => {
+  const mutationOptions: UseMutationOptions<DecideResponse, DecideError, Options<DecideData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await decide({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const closeMutation = (
   options?: Partial<Options<CloseData>>,
 ): UseMutationOptions<unknown, CloseError, Options<CloseData>> => {
@@ -761,7 +887,7 @@ export const listQueryKey = (options: Options<ListData>) => createQueryKey('list
 /**
  * 공지 목록 조회
  *
- * 20개 고정 크기로 최신 공지를 cursor 조회한다.
+ * 20개 고정 크기로 최신 공지를 cursor 조회한다. 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
 export const listOptions = (options: Options<ListData>) =>
   queryOptions<ListResponse, ListError, ListResponse, ReturnType<typeof listQueryKey>>({
@@ -817,7 +943,7 @@ export const listInfiniteQueryKey = (options: Options<ListData>): QueryKey<Optio
 /**
  * 공지 목록 조회
  *
- * 20개 고정 크기로 최신 공지를 cursor 조회한다.
+ * 20개 고정 크기로 최신 공지를 cursor 조회한다. 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
 export const listInfiniteOptions = (options: Options<ListData>) => {
   const opts = infiniteQueryOptions<
@@ -857,7 +983,7 @@ export const listInfiniteOptions = (options: Options<ListData>) => {
 /**
  * 공지 작성
  *
- * Idempotency-Key를 사용해 즉시 게시한다.
+ * Idempotency-Key를 사용해 즉시 게시한다. ALL_USERS는 현재 승인·비탈퇴 회원을 대상으로 하고 발행 수신자 snapshot을 보존한다.
  */
 export const create2Mutation = (
   options?: Partial<Options<Create2Data>>,
@@ -878,14 +1004,18 @@ export const create2Mutation = (
 /**
  * 공지 이미지 업로드 URL 발급
  *
- * 15분 동안 유효한 AWS S3 presigned PUT URL을 발급한다.
+ * 5분 동안 유효한 AWS S3 presigned PUT URL을 발급한다.
  */
-export const presignMutation = (
-  options?: Partial<Options<PresignData>>,
-): UseMutationOptions<PresignResponse, PresignError, Options<PresignData>> => {
-  const mutationOptions: UseMutationOptions<PresignResponse, PresignError, Options<PresignData>> = {
+export const presign1Mutation = (
+  options?: Partial<Options<Presign1Data>>,
+): UseMutationOptions<Presign1Response, Presign1Error, Options<Presign1Data>> => {
+  const mutationOptions: UseMutationOptions<
+    Presign1Response,
+    Presign1Error,
+    Options<Presign1Data>
+  > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await presign({
+      const { data } = await presign1({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -953,6 +1083,8 @@ export const detailQueryKey = (options: Options<DetailData>) => createQueryKey('
 
 /**
  * 공지 일반 상세 조회
+ *
+ * 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
 export const detailOptions = (options: Options<DetailData>) =>
   queryOptions<DetailResponse, DetailError, DetailResponse, ReturnType<typeof detailQueryKey>>({
@@ -1006,6 +1138,92 @@ export const find2Options = (options?: Options<Find2Data>) =>
       return data;
     },
     queryKey: find2QueryKey(options),
+  });
+
+export const list1QueryKey = (options?: Options<List1Data>) => createQueryKey('list1', options);
+
+/**
+ * 열람 가능한 공지 목록 조회
+ *
+ * 전체 기수에서 현재 열람 가능한 글을 게시 시각과 ID 역순으로 20개씩 조회한다. 권한이 변하면 첫 페이지부터 다시 조회한다.
+ */
+export const list1Options = (options?: Options<List1Data>) =>
+  queryOptions<List1Response, List1Error, List1Response, ReturnType<typeof list1QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list1({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list1QueryKey(options),
+  });
+
+export const list1InfiniteQueryKey = (options?: Options<List1Data>): QueryKey<Options<List1Data>> =>
+  createQueryKey('list1', options, true);
+
+/**
+ * 열람 가능한 공지 목록 조회
+ *
+ * 전체 기수에서 현재 열람 가능한 글을 게시 시각과 ID 역순으로 20개씩 조회한다. 권한이 변하면 첫 페이지부터 다시 조회한다.
+ */
+export const list1InfiniteOptions = (options?: Options<List1Data>) => {
+  const opts = infiniteQueryOptions<
+    List1Response,
+    List1Error,
+    InfiniteData<List1Response>,
+    QueryKey<Options<List1Data>>,
+    string | Pick<QueryKey<Options<List1Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<List1Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await list1({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: list1InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const detail1QueryKey = (options: Options<Detail1Data>) =>
+  createQueryKey('detail1', options);
+
+/**
+ * 사용자 공지 상세 조회
+ *
+ * 현재 열람 권한을 확인해 본문·과제 제출 정보·첨부 이미지를 반환한다. 조회는 읽음 상태를 변경하지 않는다. 이미 발급된 이미지 URL은 탈퇴 후에도 남은 유효 시간 동안 사용할 수 있다.
+ */
+export const detail1Options = (options: Options<Detail1Data>) =>
+  queryOptions<Detail1Response, Detail1Error, Detail1Response, ReturnType<typeof detail1QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await detail1({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: detail1QueryKey(options),
   });
 
 export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
@@ -1170,6 +1388,153 @@ export const startAppleAuthorizationOptions = (options: Options<StartAppleAuthor
     queryKey: startAppleAuthorizationQueryKey(options),
   });
 
+export const mineQueryKey = (options?: Options<MineData>) => createQueryKey('mine', options);
+
+/**
+ * 현재 기수 본인의 누적 출결 점수와 횟수 조회
+ */
+export const mineOptions = (options?: Options<MineData>) =>
+  queryOptions<MineResponse, MineError, MineResponse, ReturnType<typeof mineQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await mine({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: mineQueryKey(options),
+  });
+
+export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('find4', options);
+
+/**
+ * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
+ *
+ * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
+ */
+export const find4Options = (options?: Options<Find4Data>) =>
+  queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find4({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find4QueryKey(options),
+  });
+
+export const find4InfiniteQueryKey = (options?: Options<Find4Data>): QueryKey<Options<Find4Data>> =>
+  createQueryKey('find4', options, true);
+
+/**
+ * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
+ *
+ * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
+ */
+export const find4InfiniteOptions = (options?: Options<Find4Data>) => {
+  const opts = infiniteQueryOptions<
+    Find4Response,
+    Find4Error,
+    InfiniteData<Find4Response>,
+    QueryKey<Options<Find4Data>>,
+    string | Pick<QueryKey<Options<Find4Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Find4Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await find4({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: find4InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const find5QueryKey = (options: Options<Find5Data>) => createQueryKey('find5', options);
+
+/**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find5Options = (options: Options<Find5Data>) =>
+  queryOptions<Find5Response, Find5Error, Find5Response, ReturnType<typeof find5QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find5({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find5QueryKey(options),
+  });
+
+export const find5InfiniteQueryKey = (options: Options<Find5Data>): QueryKey<Options<Find5Data>> =>
+  createQueryKey('find5', options, true);
+
+/**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find5InfiniteOptions = (options: Options<Find5Data>) => {
+  const opts = infiniteQueryOptions<
+    Find5Response,
+    Find5Error,
+    InfiniteData<Find5Response>,
+    QueryKey<Options<Find5Data>>,
+    string | Pick<QueryKey<Options<Find5Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Find5Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await find5({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: find5InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
 export const findPendingQueryKey = (options?: Options<FindPendingData>) =>
   createQueryKey('findPending', options);
 
@@ -1323,15 +1688,15 @@ export const candidatesOptions = (options: Options<CandidatesData>) =>
     queryKey: candidatesQueryKey(options),
   });
 
-export const list1QueryKey = (options: Options<List1Data>) => createQueryKey('list1', options);
+export const list2QueryKey = (options: Options<List2Data>) => createQueryKey('list2', options);
 
 /**
- * 세션 출석 현황 조회
+ * 팀 출석 사진 및 전체 팀원 보고 조회
  */
-export const list1Options = (options: Options<List1Data>) =>
-  queryOptions<List1Response, List1Error, List1Response, ReturnType<typeof list1QueryKey>>({
+export const list2Options = (options: Options<List2Data>) =>
+  queryOptions<List2Response, List2Error, List2Response, ReturnType<typeof list2QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await list1({
+      const { data } = await list2({
         ...options,
         ...queryKey[0],
         signal,
@@ -1339,28 +1704,47 @@ export const list1Options = (options: Options<List1Data>) =>
       });
       return data;
     },
-    queryKey: list1QueryKey(options),
+    queryKey: list2QueryKey(options),
   });
 
-export const list1InfiniteQueryKey = (options: Options<List1Data>): QueryKey<Options<List1Data>> =>
-  createQueryKey('list1', options, true);
+export const list3QueryKey = (options: Options<List3Data>) => createQueryKey('list3', options);
 
 /**
  * 세션 출석 현황 조회
  */
-export const list1InfiniteOptions = (options: Options<List1Data>) => {
+export const list3Options = (options: Options<List3Data>) =>
+  queryOptions<List3Response, List3Error, List3Response, ReturnType<typeof list3QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list3({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list3QueryKey(options),
+  });
+
+export const list3InfiniteQueryKey = (options: Options<List3Data>): QueryKey<Options<List3Data>> =>
+  createQueryKey('list3', options, true);
+
+/**
+ * 세션 출석 현황 조회
+ */
+export const list3InfiniteOptions = (options: Options<List3Data>) => {
   const opts = infiniteQueryOptions<
-    List1Response,
-    List1Error,
-    InfiniteData<List1Response>,
-    QueryKey<Options<List1Data>>,
-    number | Pick<QueryKey<Options<List1Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+    List3Response,
+    List3Error,
+    InfiniteData<List3Response>,
+    QueryKey<Options<List3Data>>,
+    number | Pick<QueryKey<Options<List3Data>>[0], 'body' | 'headers' | 'path' | 'query'>
   >(
     // @ts-ignore
     {
       queryFn: async ({ pageParam, queryKey, signal }) => {
         // @ts-ignore
-        const page: Pick<QueryKey<Options<List1Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+        const page: Pick<QueryKey<Options<List3Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
           typeof pageParam === 'object'
             ? pageParam
             : {
@@ -1369,7 +1753,7 @@ export const list1InfiniteOptions = (options: Options<List1Data>) => {
                 },
               };
         const params = createInfiniteParams(queryKey, page);
-        const { data } = await list1({
+        const { data } = await list3({
           ...options,
           ...params,
           signal,
@@ -1377,7 +1761,7 @@ export const list1InfiniteOptions = (options: Options<List1Data>) => {
         });
         return data;
       },
-      queryKey: list1InfiniteQueryKey(options),
+      queryKey: list3InfiniteQueryKey(options),
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;
@@ -1389,7 +1773,7 @@ export const recipientsQueryKey = (options: Options<RecipientsData>) =>
 /**
  * 공지 수신자·읽음 현황 조회
  *
- * 첫 페이지의 asOf를 cursor에 고정하고 읽은 시각 오름차순, userId 오름차순으로 조회한다.
+ * 첫 페이지의 asOf는 읽음 시각만 고정한다. 현재 열람 가능한 회원을 읽은 시각 오름차순, userId 오름차순으로 조회한다. 자격이 변하면 첫 페이지부터 다시 조회한다. ALL_USERS의 이름·최신 기수·직군은 현재 값이며 무 Membership이면 기수·직군이 null이다.
  */
 export const recipientsOptions = (options: Options<RecipientsData>) =>
   queryOptions<
@@ -1417,7 +1801,7 @@ export const recipientsInfiniteQueryKey = (
 /**
  * 공지 수신자·읽음 현황 조회
  *
- * 첫 페이지의 asOf를 cursor에 고정하고 읽은 시각 오름차순, userId 오름차순으로 조회한다.
+ * 첫 페이지의 asOf는 읽음 시각만 고정한다. 현재 열람 가능한 회원을 읽은 시각 오름차순, userId 오름차순으로 조회한다. 자격이 변하면 첫 페이지부터 다시 조회한다. ALL_USERS의 이름·최신 기수·직군은 현재 값이며 무 Membership이면 기수·직군이 null이다.
  */
 export const recipientsInfiniteOptions = (options: Options<RecipientsData>) => {
   const opts = infiniteQueryOptions<
@@ -1455,6 +1839,31 @@ export const recipientsInfiniteOptions = (options: Options<RecipientsData>) => {
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;
+};
+
+/**
+ * 계정·동아리 통합 탈퇴
+ *
+ * 모든 기수 소속과 세션을 폐기하고 구조화된 개인정보를 비식별화한다. Native는 보관한 token을 제거한다.
+ */
+export const withdrawMutation = (
+  options?: Partial<Options<WithdrawData>>,
+): UseMutationOptions<WithdrawResponse, WithdrawError, Options<WithdrawData>> => {
+  const mutationOptions: UseMutationOptions<
+    WithdrawResponse,
+    WithdrawError,
+    Options<WithdrawData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await withdraw({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
 };
 
 /**

@@ -116,9 +116,13 @@ export type ErrorResponse = {
     | 'ATTENDANCE_CODE_NOT_ISSUED'
     | 'ATTENDANCE_CODE_UPDATE_FAILED'
     | 'ATTENDANCE_REPORT_NOT_ELIGIBLE'
+    | 'ATTENDANCE_REPORT_SESSION_CONFLICT'
     | 'ATTENDANCE_REPORT_UNAVAILABLE'
+    | 'ATTENDANCE_SCORE_NOT_ELIGIBLE'
+    | 'ATTENDANCE_SCORE_INCONSISTENT'
     | 'ATTENDANCE_SESSION_NOT_FOUND'
     | 'ATTENDANCE_UNAVAILABLE'
+    | 'TEAM_ATTENDANCE_PENDING'
     | 'AUTHENTICATION_FAILED'
     | 'AUTHENTICATION_STATE_INVALID'
     | 'CURRENT_GENERATION_NOT_FOUND'
@@ -126,6 +130,10 @@ export type ErrorResponse = {
     | 'EMPTY_POST_AUDIENCE'
     | 'GENERATION_NOT_FOUND'
     | 'INVALID_ATTENDANCE_CODE'
+    | 'INVALID_ATTENDANCE_HISTORY_CURSOR'
+    | 'INVALID_ATTENDANCE_REPORT'
+    | 'INVALID_ATTENDANCE_REQUEST'
+    | 'INVALID_HISTORY_REQUEST'
     | 'INVALID_MEMBER_REQUEST'
     | 'INVALID_POST_CURSOR'
     | 'INVALID_POST_IMAGE'
@@ -140,6 +148,7 @@ export type ErrorResponse = {
     | 'POST_IMAGE_CONFLICT'
     | 'POST_IMAGE_STORAGE_FAILED'
     | 'POST_NOT_FOUND'
+    | 'RETAINED_HISTORY_UNAVAILABLE'
     | 'SESSION_DATE_CONFLICT'
     | 'SESSION_DELETE_CONFLICT'
     | 'SESSION_MANAGEMENT_DISABLED'
@@ -151,9 +160,16 @@ export type ErrorResponse = {
     | 'TEAM_MEMBER_NOT_FOUND'
     | 'TEAM_NAME_CONFLICT'
     | 'TEAM_NOT_FOUND'
+    | 'TEAM_PHOTO_INVALID'
+    | 'TEAM_PHOTO_NOT_ELIGIBLE'
+    | 'TEAM_PHOTO_NOT_FOUND'
+    | 'TEAM_PHOTO_STORAGE_FAILED'
+    | 'TEAM_PHOTO_UNAVAILABLE'
     | 'TEAM_VERSION_CONFLICT'
     | 'USER_ALREADY_EXISTS'
-    | 'USER_REGISTRATION_FAILED';
+    | 'USER_NOT_FOUND'
+    | 'USER_REGISTRATION_FAILED'
+    | 'USER_WITHDRAWAL_FAILED';
   /**
    * 오류 설명. 클라이언트 분기는 code를 사용한다.
    */
@@ -177,6 +193,33 @@ export type RegistrationFieldError = {
    * 사용자에게 표시할 수 있는 오류 설명
    */
   message: string;
+};
+
+export type SubmitTeamPhotoRequest = {
+  imageKey: string;
+  selectedMembershipIds: Array<number>;
+};
+
+export type TeamPhotoSubmitted = {
+  photoId: number;
+  submittedAt: string;
+  status: string;
+};
+
+export type PresignTeamPhotoRequest = {
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  checksumSha256: string;
+};
+
+export type TeamPhotoUploadUrl = {
+  imageKey: string;
+  uploadUrl: string;
+  signedHeaders: {
+    [key: string]: string;
+  };
+  expiresAt: string;
 };
 
 export type RenewSessionRequest = {
@@ -256,7 +299,7 @@ export type VerifyAttendanceCodeResponse = {
 };
 
 export type SubmitAttendanceReportRequest = {
-  type: 'ONE_HOUR_LATE' | 'THREE_HOUR_LATE' | 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
+  type: 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
   reason?: string | null;
 };
 
@@ -272,8 +315,9 @@ export type RejectMemberRequest = {
 export type MemberDetailResponse = {
   memberId: number;
   userId: number;
-  name: string;
-  phoneNumber: string;
+  name: string | null;
+  phoneNumber: string | null;
+  accountDeleted: boolean;
   signedUpAt: string;
   reviewStatus: string;
   role: 'PLAYER' | 'OB' | null;
@@ -317,6 +361,17 @@ export type CreateSessionRequest = {
 
 export type CreateSessionResponse = {
   sessionId: number;
+};
+
+export type DecideTeamPhotoRequest = {
+  decision: 'APPROVED' | 'REJECTED';
+  reason?: string | null;
+};
+
+export type TeamPhotoDecided = {
+  photoId: number;
+  status: string;
+  decidedAt: string;
 };
 
 export type AttendanceCodeResponse = {
@@ -398,6 +453,7 @@ export type OverrideAttendanceRequest = {
     | 'ABSENT'
     | 'EXCUSED_ABSENCE';
   reason?: string | null;
+  checkedInAt?: string | null;
   earlyLeaveAt?: string | null;
 };
 
@@ -490,6 +546,58 @@ export type CurrentWeekSessionResponse = {
   session: CurrentWeekSessionDetailResponse | null;
 };
 
+export type UserPostListItemResponse = {
+  postId: number;
+  type: 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
+  title: string;
+  createdDate: string;
+  /**
+   * 과제 마감일까지 남은 서울 날짜 기준 일수. 지난 과제는 음수이며 다른 유형은 null
+   */
+  daysUntilDeadline: number | null;
+};
+
+export type UserPostListResponse = {
+  totalPostCount: number;
+  items: Array<UserPostListItemResponse>;
+  nextCursor: string | null;
+};
+
+export type UserPostAssignmentResponse = {
+  deadlineDate: string;
+  positions: Array<string>;
+  submissionUrl: string;
+  submissionLinkText: string;
+};
+
+export type UserPostDetailResponse = {
+  postId: number;
+  type: 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
+  title: string;
+  contentMarkdown: string;
+  createdDate: string;
+  /**
+   * 과제 공지에서만 제공하는 제출 정보
+   */
+  assignment: UserPostAssignmentResponse | null;
+  images: Array<UserPostImageResponse>;
+  readCount: number;
+  read: boolean;
+};
+
+export type UserPostImageResponse = {
+  imageKey: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  displayOrder: number;
+  readUrl: string;
+  /**
+   * 이미지 읽기 URL의 만료 시각. 발급 후 최대 5분
+   */
+  readUrlExpiresAt: string;
+};
+
 export type CurrentGenerationSessionItemResponse = {
   sessionId: number;
   name: string;
@@ -508,6 +616,79 @@ export type CurrentGenerationSessionsResponse = {
   generationId: number;
   generationNumber: number;
   sessions: Array<CurrentGenerationSessionItemResponse>;
+};
+
+export type MyAttendanceScoreResponse = {
+  /**
+   * 현재 활동 기수 ID
+   */
+  generationId: number;
+  /**
+   * 0점 하한이 적용된 누적 점수
+   */
+  totalScore: number;
+  /**
+   * 마감 세션의 출석 횟수
+   */
+  attendanceCount: number;
+  /**
+   * 마감 세션의 지각 횟수
+   */
+  lateCount: number;
+  /**
+   * 마감 세션의 결석 횟수
+   */
+  absentCount: number;
+  /**
+   * 마감 세션의 조퇴 횟수
+   */
+  earlyLeaveCount: number;
+};
+
+export type AttendanceHistoryItemResponse = {
+  sessionId: number;
+  sessionName: string;
+  attendanceStatus:
+    | 'UNDECIDED'
+    | 'PRESENT'
+    | 'LATE'
+    | 'EARLY_LEAVE'
+    | 'LATE_AND_EARLY_LEAVE'
+    | 'ABSENT'
+    | 'EXCUSED_ABSENCE';
+  staffDecisionStatus:
+    | 'NOT_SUBMITTED'
+    | 'NOT_SELECTED'
+    | 'PENDING'
+    | 'APPROVED'
+    | 'REJECTED'
+    | null;
+};
+
+export type AttendanceHistoryResponse = {
+  summary: AttendanceHistorySummaryResponse;
+  items: Array<AttendanceHistoryItemResponse>;
+  /**
+   * 다음 페이지 cursor. 마지막 페이지이면 null
+   */
+  nextCursor: string | null;
+};
+
+export type AttendanceHistorySummaryResponse = {
+  totalSessionCount: number;
+  startedSessionCount: number;
+};
+
+export type RetainedHistoryEntry = {
+  sourceType: string;
+  sourceId: number;
+  occurredAt: string;
+  reason: string;
+};
+
+export type RetainedHistoryPage = {
+  items: Array<RetainedHistoryEntry>;
+  nextCursor: string | null;
 };
 
 export type PendingMemberListResponse = {
@@ -571,6 +752,36 @@ export type SessionListResponse = {
   sessions: Array<AdminSessionResponse>;
 };
 
+export type TeamPhotoListResponse = {
+  items: Array<TeamPhotoWithUrl>;
+};
+
+export type TeamPhotoMemberView = {
+  membershipId: number;
+  userName: string | null;
+  selected: boolean;
+  provisionalStatus: string;
+  priorReports: Array<TeamPhotoReportView>;
+};
+
+export type TeamPhotoReportView = {
+  type: string;
+  reported: boolean;
+  reason: string | null;
+};
+
+export type TeamPhotoWithUrl = {
+  photoId: number;
+  teamId: number;
+  teamName: string;
+  uploaderId: number;
+  uploaderName: string | null;
+  submittedAt: string;
+  status: string;
+  readUrl: string | null;
+  members: Array<TeamPhotoMemberView>;
+};
+
 export type AdminAttendanceListResponse = {
   items: Array<AdminAttendanceRow>;
   nextCursor: number | null;
@@ -583,6 +794,7 @@ export type AdminAttendanceRow = {
   latestReportType: string | null;
   latestReportReason: string | null;
   checkedInAt: string | null;
+  earlyLeaveAt: string | null;
   status:
     | 'UNDECIDED'
     | 'PRESENT'
@@ -630,6 +842,44 @@ export type AdminPostRecipientResponse = {
   read: boolean;
   readAt: string | null;
 };
+
+export type AcknowledgeData = {
+  body?: never;
+  path: {
+    /**
+     * 읽음 처리할 공지 ID
+     */
+    postId: number;
+  };
+  query?: never;
+  url: '/api/posts/{postId}/read';
+};
+
+export type AcknowledgeErrors = {
+  /**
+   * INVALID_POST_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * POST_NOT_FOUND
+   */
+  404: ErrorResponse;
+};
+
+export type AcknowledgeError = AcknowledgeErrors[keyof AcknowledgeErrors];
+
+export type AcknowledgeResponses = {
+  /**
+   * 읽음 처리 완료. 응답 본문 없음
+   */
+  204: void;
+};
+
+export type AcknowledgeResponse = AcknowledgeResponses[keyof AcknowledgeResponses];
 
 export type DeleteData = {
   body?: never;
@@ -799,7 +1049,7 @@ export type RegisterErrors = {
    */
   409: ErrorResponse;
   /**
-   * USER_REGISTRATION_FAILED. 분류할 수 없는 가입 영속성 오류
+   * USER_REGISTRATION_FAILED. 가입 또는 세션 저장·커밋 오류
    */
   500: ErrorResponse;
 };
@@ -814,6 +1064,100 @@ export type RegisterResponses = {
 };
 
 export type RegisterResponse = RegisterResponses[keyof RegisterResponses];
+
+export type SubmitData = {
+  body: SubmitTeamPhotoRequest;
+  path: {
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/sessions/{sessionId}/team-attendance-photos';
+};
+
+export type SubmitErrors = {
+  /**
+   * TEAM_PHOTO_INVALID
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_ELIGIBLE
+   */
+  403: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_UNAVAILABLE
+   */
+  409: ErrorResponse;
+  /**
+   * TEAM_PHOTO_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type SubmitError = SubmitErrors[keyof SubmitErrors];
+
+export type SubmitResponses = {
+  /**
+   * Created
+   */
+  201: TeamPhotoSubmitted;
+};
+
+export type SubmitResponse = SubmitResponses[keyof SubmitResponses];
+
+export type PresignData = {
+  body: PresignTeamPhotoRequest;
+  path: {
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/sessions/{sessionId}/team-attendance-photos/presign';
+};
+
+export type PresignErrors = {
+  /**
+   * TEAM_PHOTO_INVALID
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_ELIGIBLE
+   */
+  403: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_UNAVAILABLE
+   */
+  409: ErrorResponse;
+  /**
+   * TEAM_PHOTO_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type PresignError = PresignErrors[keyof PresignErrors];
+
+export type PresignResponses = {
+  /**
+   * OK
+   */
+  200: TeamPhotoUploadUrl;
+};
+
+export type PresignResponse = PresignResponses[keyof PresignResponses];
 
 export type RenewData = {
   /**
@@ -1039,14 +1383,18 @@ export type VerifyResponses = {
 
 export type VerifyResponse = VerifyResponses[keyof VerifyResponses];
 
-export type SubmitData = {
+export type Submit1Data = {
   body: SubmitAttendanceReportRequest;
   path?: never;
   query?: never;
   url: '/api/attendance-reports';
 };
 
-export type SubmitErrors = {
+export type Submit1Errors = {
+  /**
+   * INVALID_ATTENDANCE_REPORT
+   */
+  400: ErrorResponse;
   /**
    * AUTHENTICATION_FAILED
    */
@@ -1060,21 +1408,21 @@ export type SubmitErrors = {
    */
   404: ErrorResponse;
   /**
-   * ATTENDANCE_REPORT_UNAVAILABLE
+   * ATTENDANCE_REPORT_UNAVAILABLE|ATTENDANCE_REPORT_SESSION_CONFLICT
    */
   409: ErrorResponse;
 };
 
-export type SubmitError = SubmitErrors[keyof SubmitErrors];
+export type Submit1Error = Submit1Errors[keyof Submit1Errors];
 
-export type SubmitResponses = {
+export type Submit1Responses = {
   /**
    * OK
    */
   200: AttendanceReportResponse;
 };
 
-export type SubmitResponse = SubmitResponses[keyof SubmitResponses];
+export type Submit1Response = Submit1Responses[keyof Submit1Responses];
 
 export type RejectData = {
   body: RejectMemberRequest;
@@ -1307,6 +1655,47 @@ export type Create1Responses = {
 
 export type Create1Response = Create1Responses[keyof Create1Responses];
 
+export type DecideData = {
+  body: DecideTeamPhotoRequest;
+  path: {
+    generationId: number;
+    sessionId: number;
+    photoId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision';
+};
+
+export type DecideErrors = {
+  /**
+   * TEAM_PHOTO_INVALID
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_UNAVAILABLE
+   */
+  409: ErrorResponse;
+};
+
+export type DecideError = DecideErrors[keyof DecideErrors];
+
+export type DecideResponses = {
+  /**
+   * OK
+   */
+  200: TeamPhotoDecided;
+};
+
+export type DecideResponse = DecideResponses[keyof DecideResponses];
+
 export type CloseData = {
   body?: never;
   path: {
@@ -1326,6 +1715,10 @@ export type CloseErrors = {
    * ATTENDANCE_SESSION_NOT_FOUND
    */
   404: ErrorResponse;
+  /**
+   * TEAM_ATTENDANCE_PENDING
+   */
+  409: ErrorResponse;
 };
 
 export type CloseError = CloseErrors[keyof CloseErrors];
@@ -1555,7 +1948,7 @@ export type Create2Responses = {
 
 export type Create2Response = Create2Responses[keyof Create2Responses];
 
-export type PresignData = {
+export type Presign1Data = {
   body: PresignPostImageRequest;
   path: {
     generationId: number;
@@ -1564,7 +1957,7 @@ export type PresignData = {
   url: '/api/admin/generations/{generationId}/post-images/presign';
 };
 
-export type PresignErrors = {
+export type Presign1Errors = {
   /**
    * INVALID_POST_REQUEST|INVALID_POST_IMAGE
    */
@@ -1583,16 +1976,16 @@ export type PresignErrors = {
   503: ErrorResponse;
 };
 
-export type PresignError = PresignErrors[keyof PresignErrors];
+export type Presign1Error = Presign1Errors[keyof Presign1Errors];
 
-export type PresignResponses = {
+export type Presign1Responses = {
   /**
    * OK
    */
   200: PresignPostImageResponse;
 };
 
-export type PresignResponse = PresignResponses[keyof PresignResponses];
+export type Presign1Response = Presign1Responses[keyof Presign1Responses];
 
 export type LoginData = {
   body: StaffLoginRequest;
@@ -1635,6 +2028,10 @@ export type OverrideData = {
 };
 
 export type OverrideErrors = {
+  /**
+   * INVALID_ATTENDANCE_REQUEST
+   */
+  400: ErrorResponse;
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -1793,6 +2190,83 @@ export type Find2Responses = {
 };
 
 export type Find2Response = Find2Responses[keyof Find2Responses];
+
+export type List1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * 공지 유형 필터
+     */
+    type?: 'ALL' | 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
+    cursor?: string;
+  };
+  url: '/api/posts';
+};
+
+export type List1Errors = {
+  /**
+   * INVALID_POST_REQUEST|INVALID_POST_CURSOR
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+};
+
+export type List1Error = List1Errors[keyof List1Errors];
+
+export type List1Responses = {
+  /**
+   * OK
+   */
+  200: UserPostListResponse;
+};
+
+export type List1Response = List1Responses[keyof List1Responses];
+
+export type Detail1Data = {
+  body?: never;
+  path: {
+    /**
+     * 조회할 공지 ID
+     */
+    postId: number;
+  };
+  query?: never;
+  url: '/api/posts/{postId}';
+};
+
+export type Detail1Errors = {
+  /**
+   * INVALID_POST_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * POST_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * POST_IMAGE_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type Detail1Error = Detail1Errors[keyof Detail1Errors];
+
+export type Detail1Responses = {
+  /**
+   * OK
+   */
+  200: UserPostDetailResponse;
+};
+
+export type Detail1Response = Detail1Responses[keyof Detail1Responses];
 
 export type Find3Data = {
   body?: never;
@@ -1955,6 +2429,124 @@ export type StartAppleAuthorizationErrors = {
 export type StartAppleAuthorizationError =
   StartAppleAuthorizationErrors[keyof StartAppleAuthorizationErrors];
 
+export type MineData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/attendance-scores/me';
+};
+
+export type MineErrors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_NOT_ELIGIBLE
+   */
+  403: ErrorResponse;
+  /**
+   * CURRENT_GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ACTIVE_GENERATION_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_INCONSISTENT
+   */
+  500: ErrorResponse;
+};
+
+export type MineError = MineErrors[keyof MineErrors];
+
+export type MineResponses = {
+  /**
+   * OK
+   */
+  200: MyAttendanceScoreResponse;
+};
+
+export type MineResponse = MineResponses[keyof MineResponses];
+
+export type Find4Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    cursor?: string;
+  };
+  url: '/api/attendance-history';
+};
+
+export type Find4Errors = {
+  /**
+   * INVALID_ATTENDANCE_HISTORY_CURSOR
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * ACTIVE_GENERATION_CONFLICT
+   */
+  409: ErrorResponse;
+};
+
+export type Find4Error = Find4Errors[keyof Find4Errors];
+
+export type Find4Responses = {
+  /**
+   * 조회 성공
+   */
+  200: AttendanceHistoryResponse;
+};
+
+export type Find4Response = Find4Responses[keyof Find4Responses];
+
+export type Find5Data = {
+  body?: never;
+  path: {
+    userId: number;
+  };
+  query?: {
+    cursor?: string;
+    size?: number;
+  };
+  url: '/api/admin/users/{userId}/retained-history';
+};
+
+export type Find5Errors = {
+  /**
+   * INVALID_HISTORY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * USER_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * RETAINED_HISTORY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Find5Error = Find5Errors[keyof Find5Errors];
+
+export type Find5Responses = {
+  /**
+   * 조회 성공; 이력이 없으면 빈 목록
+   */
+  200: RetainedHistoryPage;
+};
+
+export type Find5Response = Find5Responses[keyof Find5Responses];
+
 export type FindPendingData = {
   body?: never;
   path?: never;
@@ -2097,7 +2689,43 @@ export type CandidatesResponses = {
 
 export type CandidatesResponse = CandidatesResponses[keyof CandidatesResponses];
 
-export type List1Data = {
+export type List2Data = {
+  body?: never;
+  path: {
+    generationId: number;
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos';
+};
+
+export type List2Errors = {
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type List2Error = List2Errors[keyof List2Errors];
+
+export type List2Responses = {
+  /**
+   * OK
+   */
+  200: TeamPhotoListResponse;
+};
+
+export type List2Response = List2Responses[keyof List2Responses];
+
+export type List3Data = {
   body?: never;
   path: {
     generationId: number;
@@ -2110,7 +2738,7 @@ export type List1Data = {
   url: '/api/admin/generations/{generationId}/sessions/{sessionId}/attendance';
 };
 
-export type List1Errors = {
+export type List3Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -2121,16 +2749,16 @@ export type List1Errors = {
   404: ErrorResponse;
 };
 
-export type List1Error = List1Errors[keyof List1Errors];
+export type List3Error = List3Errors[keyof List3Errors];
 
-export type List1Responses = {
+export type List3Responses = {
   /**
    * OK
    */
   200: AdminAttendanceListResponse;
 };
 
-export type List1Response = List1Responses[keyof List1Responses];
+export type List3Response = List3Responses[keyof List3Responses];
 
 export type RecipientsData = {
   body?: never;
@@ -2169,6 +2797,35 @@ export type RecipientsResponses = {
 };
 
 export type RecipientsResponse = RecipientsResponses[keyof RecipientsResponses];
+
+export type WithdrawData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/users/me';
+};
+
+export type WithdrawErrors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * USER_WITHDRAWAL_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type WithdrawError = WithdrawErrors[keyof WithdrawErrors];
+
+export type WithdrawResponses = {
+  /**
+   * 탈퇴 완료
+   */
+  204: void;
+};
+
+export type WithdrawResponse = WithdrawResponses[keyof WithdrawResponses];
 
 export type RevokeData = {
   /**
