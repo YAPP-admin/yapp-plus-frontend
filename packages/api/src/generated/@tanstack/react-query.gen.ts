@@ -28,6 +28,7 @@ import {
   delete_,
   delete1,
   detail,
+  detail1,
   find,
   find1,
   find2,
@@ -110,6 +111,9 @@ import type {
   DeleteData,
   DeleteError,
   DeleteResponse,
+  Detail1Data,
+  Detail1Error,
+  Detail1Response,
   DetailData,
   DetailError,
   DetailResponse,
@@ -1110,6 +1114,28 @@ export const list1InfiniteOptions = (options?: Options<List1Data>) => {
   );
   return opts as Omit<typeof opts, 'initialData'>;
 };
+
+export const detail1QueryKey = (options: Options<Detail1Data>) =>
+  createQueryKey('detail1', options);
+
+/**
+ * 사용자 공지 상세 조회
+ *
+ * 현재 열람 권한을 확인해 본문·과제 제출 정보·첨부 이미지를 반환한다. 조회는 읽음 상태를 변경하지 않는다. 이미 발급된 이미지 URL은 탈퇴 후에도 남은 유효 시간 동안 사용할 수 있다.
+ */
+export const detail1Options = (options: Options<Detail1Data>) =>
+  queryOptions<Detail1Response, Detail1Error, Detail1Response, ReturnType<typeof detail1QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await detail1({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: detail1QueryKey(options),
+  });
 
 export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
 

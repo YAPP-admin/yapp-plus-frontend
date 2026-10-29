@@ -525,6 +525,41 @@ export type UserPostListResponse = {
   nextCursor: string | null;
 };
 
+export type UserPostAssignmentResponse = {
+  deadlineDate: string;
+  positions: Array<string>;
+  submissionUrl: string;
+  submissionLinkText: string;
+};
+
+export type UserPostDetailResponse = {
+  postId: number;
+  type: 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
+  title: string;
+  contentMarkdown: string;
+  createdDate: string;
+  /**
+   * 과제 공지에서만 제공하는 제출 정보
+   */
+  assignment: UserPostAssignmentResponse | null;
+  images: Array<UserPostImageResponse>;
+  readCount: number;
+  read: boolean;
+};
+
+export type UserPostImageResponse = {
+  imageKey: string;
+  filename: string;
+  contentType: string;
+  sizeBytes: number;
+  displayOrder: number;
+  readUrl: string;
+  /**
+   * 이미지 읽기 URL의 만료 시각. 발급 후 최대 5분
+   */
+  readUrlExpiresAt: string;
+};
+
 export type CurrentGenerationSessionItemResponse = {
   sessionId: number;
   name: string;
@@ -1914,6 +1949,48 @@ export type List1Responses = {
 };
 
 export type List1Response = List1Responses[keyof List1Responses];
+
+export type Detail1Data = {
+  body?: never;
+  path: {
+    /**
+     * 조회할 공지 ID
+     */
+    postId: number;
+  };
+  query?: never;
+  url: '/api/posts/{postId}';
+};
+
+export type Detail1Errors = {
+  /**
+   * INVALID_POST_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * POST_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * POST_IMAGE_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type Detail1Error = Detail1Errors[keyof Detail1Errors];
+
+export type Detail1Responses = {
+  /**
+   * OK
+   */
+  200: UserPostDetailResponse;
+};
+
+export type Detail1Response = Detail1Responses[keyof Detail1Responses];
 
 export type Find3Data = {
   body?: never;

@@ -63,6 +63,8 @@ import type {
   CurrentWeekSessionResponse,
   Delete1Errors,
   DeleteErrors,
+  Detail1Errors,
+  Detail1Responses,
   DetailErrors,
   DetailResponses,
   ErrorResponse,
@@ -151,6 +153,9 @@ import type {
   UpdateErrors,
   UpdateResponses,
   UpdateTeamRequest,
+  UserPostAssignmentResponse,
+  UserPostDetailResponse,
+  UserPostImageResponse,
   UserPostListItemResponse,
   UserPostListResponse,
   UserResponse,
@@ -831,6 +836,44 @@ export const fakeUserPostListResponse = (options?: Options): UserPostListRespons
   };
 };
 
+export const fakeUserPostAssignmentResponse = (options?: Options): UserPostAssignmentResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    deadlineDate: f.date.recent().toISOString().slice(0, 10),
+    positions: f.helpers.multiple(() => f.string.sample()),
+    submissionUrl: f.internet.url(),
+    submissionLinkText: f.string.sample(),
+  };
+};
+
+export const fakeUserPostImageResponse = (options?: Options): UserPostImageResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    imageKey: f.string.sample(),
+    filename: f.system.fileName(),
+    contentType: f.system.mimeType(),
+    sizeBytes: f.number.int(),
+    displayOrder: f.number.int({ min: 0, max: 10 }),
+    readUrl: f.internet.url(),
+    readUrlExpiresAt: f.date.recent().toISOString(),
+  };
+};
+
+export const fakeUserPostDetailResponse = (options?: Options): UserPostDetailResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    postId: f.number.int(),
+    type: f.helpers.arrayElement(['SESSION', 'ASSIGNMENT', 'OPERATION']),
+    title: f.lorem.words(),
+    contentMarkdown: f.string.sample(),
+    createdDate: f.date.recent().toISOString().slice(0, 10),
+    assignment: f.datatype.boolean() ? fakeUserPostAssignmentResponse(options) : null,
+    images: f.helpers.multiple(() => fakeUserPostImageResponse(options)),
+    readCount: f.number.int(),
+    read: f.datatype.boolean(),
+  };
+};
+
 export const fakeCurrentGenerationSessionItemResponse = (
   options?: Options,
 ): CurrentGenerationSessionItemResponse => {
@@ -1478,6 +1521,21 @@ export const fakeList1Response400 = (options?: Options): List1Errors[400] =>
   fakeErrorResponse(options);
 
 export const fakeList1Response401 = (options?: Options): List1Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail1Response200 = (options?: Options): Detail1Responses[200] =>
+  fakeUserPostDetailResponse(options);
+
+export const fakeDetail1Response400 = (options?: Options): Detail1Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail1Response401 = (options?: Options): Detail1Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail1Response404 = (options?: Options): Detail1Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail1Response503 = (options?: Options): Detail1Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeFind3Response200 = (options?: Options): Find3Responses[200] =>

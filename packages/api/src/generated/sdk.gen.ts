@@ -61,6 +61,9 @@ import type {
   DeleteData,
   DeleteErrors,
   DeleteResponses,
+  Detail1Data,
+  Detail1Errors,
+  Detail1Responses,
   DetailData,
   DetailErrors,
   DetailResponses,
@@ -872,6 +875,26 @@ export const list1 = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/posts',
+    ...options,
+  });
+
+/**
+ * 사용자 공지 상세 조회
+ *
+ * 현재 열람 권한을 확인해 본문·과제 제출 정보·첨부 이미지를 반환한다. 조회는 읽음 상태를 변경하지 않는다. 이미 발급된 이미지 URL은 탈퇴 후에도 남은 유효 시간 동안 사용할 수 있다.
+ */
+export const detail1 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail1Data, ThrowOnError>,
+): RequestResult<Detail1Responses, Detail1Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail1Responses, Detail1Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/posts/{postId}',
     ...options,
   });
 
