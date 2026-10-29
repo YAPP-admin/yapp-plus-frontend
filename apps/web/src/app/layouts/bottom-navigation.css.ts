@@ -1,5 +1,5 @@
 import { vars } from '@seed-design/css/vars';
-import { style } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 
 export const bottomBar = style({
   position: 'sticky',
@@ -74,4 +74,16 @@ export const homeIndicatorArea = style({
   height: '34px',
   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
   boxSizing: 'content-box',
+});
+
+globalStyle('.seed-snackbar-region', {
+  position: 'fixed',
+  left: 0,
+  right: 0,
+  bottom: 'calc(env(safe-area-inset-bottom, 0px) + 108px)',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  pointerEvents: 'none',
+  zIndex: 1000,
 });
