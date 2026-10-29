@@ -16,8 +16,9 @@ export function isCurrentPreview(value: unknown, sha: string, repo: string) {
     !/^[a-f0-9]{40}$/.test(value.head.sha) ||
     !record(value.head.repo) ||
     typeof value.head.repo.full_name !== 'string'
-  )
+  ) {
     throw new Error('PR 최신성을 확인할 수 없습니다.');
+  }
   return value.state === 'open' && value.head.sha === sha && value.head.repo.full_name === repo;
 }
 

@@ -54,9 +54,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Test Preview publication guard
-        run: node --test .github/scripts/preview-current.test.mts
-
       - name: Check formatting
         run: pnpm format:check
 

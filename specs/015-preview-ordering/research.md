@@ -12,8 +12,10 @@
 [Vercel staged deployment](https://vercel.com/docs/cli/deploying-from-cli).
 기존 배포 조사 에이전트 결과와 공식 문서를 대조했다. 외부 배포 실행은 하지 않았다.
 
-고정 actionlint 1.7.12는 공식 지원 `concurrency.queue`를 아직 인식하지 못합니다. 해당
+고정 actionlint 1.7.12는 공식 지원 `concurrency.queue`를 아직 인식하지 못합니다. Production·수동·Preview 세
 workflow의 정확한 오류 메시지만 `.github/actionlint.yaml`에서 제외합니다. 다른 구문·표현식
 검사는 유지하며 queue 지원 릴리스로 갱신할 때 예외를 제거합니다. 최신성 조회와 댓글 작성은
 원자적이지 않으므로 그 사이 새 commit의 도착 자체를 막지는 못합니다. 동일 잠금은 최신
 배포 댓글이 이미 게시된 뒤 이전 실행이 다시 덮는 순서 역전을 막습니다.
+
+배포 스크립트 lint·typecheck·test는 #131과 동일한 루트 품질 게이트에서 한 번 실행합니다.
