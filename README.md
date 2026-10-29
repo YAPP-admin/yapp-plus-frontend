@@ -190,12 +190,22 @@ Summary에만 생략 사유를 기록합니다. 생략 시 기존 sticky 댓글�
 Production은 프로젝트별 최근 배포 시도를 GitHub Deployments의 `production-<project-id>` 환경과
 `deploy:yapp-plus` task에 기록합니다. 자동·수동 Production job에만 `deployments: write`를 부여합니다.
 최근 시도가 성공한 경우 그 SHA부터 누적 비교하므로 이전 CI 취소·배포 실패의 변경도 포함됩니다.
-첫 실행, 미완료·실패 기록, 유실되거나 조상이 아닌 SHA는 강제 배포하고 조회 오류는 job을 실패시킵니다.
-시도 기록은 Vercel 실행 전에 생성합니다. 실제 배포 후 성공 기록이 실패해도 다음 배포를 잘못
-생략하지 않습니다. Preview는 이 이력을 사용하지 않습니다. 외부 Vercel 콘솔 배포·롤백 후에는
-GitHub 수동 Production으로 검증된 main을 다시 배포해 이력을 복구합니다.
-검증과 복구 절차는 [배포 기준 가이드](specs/012-production-baseline/quickstart.md)를 따릅니다.
-동시 배포의 완료 순서 보호는 별도 이슈 #132에서 다룹니다.
+첫 실행, 유실되거나 조상이 아닌 SHA는 전체 변경을 대상으로 합니다. 미완료·실패 기록도 비교
+기준으로 재사용하지 않지만, 새 승격은 운영자가 이전 원격 작업 종료를 확인할 때까지 막습니다.
+조회 오류는 job을 실패시킵니다. 자동·수동 및 all·개별 앱은 프로젝트별 같은 job 잠금을 사용하며
+진행 중 작업을 자동 취소하지 않습니다.
+
+Production은 `--skip-domain`으로 준비 배포한 뒤 현재 main과 이전 승격 상태를 확인합니다.
+승격 직전에 시도를 기록하고 `vercel promote` 완료 후 success를 남깁니다. 조회와 승격은 원자적
+연산이 아니므로 조회 직후 main이 바뀌는 것을 막지는 못합니다. 공통 잠금은 최신 승격 완료 뒤
+오래된 실행이 되덮는 것을 방지합니다. 외부 콘솔 배포는 이 잠금 밖이므로 동시에 실행하지 않습니다.
+
+timeout·취소·성공 기록 실패 시에는 Vercel의 원격 승격 종료와 현재 도메인을 먼저 확인합니다.
+정상 완료가 확인되면 해당 GitHub deployment에 success와 실제 URL을 남기고, 다른 상태로
+확정됐다면 운영자가 inactive로 표시한 뒤 최신 검증 main을 수동 배포합니다. 미확정 기록을
+자동으로 삭제하거나 무조건 재시도하지 않습니다. 명시적인 롤백은 일반 배포와 별도 승인합니다.
+검증과 복구는 [승격 순서 가이드](specs/014-production-ordering/quickstart.md)를 따릅니다.
+Preview는 이 Production 이력을 사용하지 않습니다.
 
 workflow를 사용하려면 저장소의 GitHub Actions 설정에 다음 값을 등록합니다.
 

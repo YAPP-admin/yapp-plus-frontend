@@ -116,6 +116,56 @@ export function resolveComparison({
   return { base_sha: latest.sha, force_all: 'false' };
 }
 
+/** CI 재실행·대기 중 main 변경으로 과거 commit이 승격되지 않게 합니다. */
+export function assertLatestMain({ repo, api = github, git = gitCommand }: Context) {
+  const result = api(`repos/${repo}/git/ref/heads/main`, {});
+  const sha = git('rev-parse', 'HEAD');
+  if (
+    !isRecord(result) ||
+    !isRecord(result.object) ||
+    typeof result.object.sha !== 'string' ||
+    !shaPattern.test(result.object.sha) ||
+    !shaPattern.test(sha) ||
+    result.object.sha !== sha
+  ) {
+    throw new Error('현재 main의 검증 commit만 Production으로 승격할 수 있습니다.');
+  }
+}
+
+/** 취소·timeout 이후 원격 승격이 끝났는지 확인하기 전에는 새 승격을 막습니다. */
+export function assertPromotionResolved({ repo, projectId, api = github }: Context) {
+  const deployments = api(`repos/${repo}/deployments`, {
+    query: { environment: environment(projectId), task, per_page: '100' },
+    paginate: true,
+  });
+  if (!Array.isArray(deployments)) {
+    throw new Error('배포 이력을 확인할 수 없습니다.');
+  }
+  let latestId: number | undefined;
+  for (const item of deployments) {
+    if (
+      !isRecord(item) ||
+      typeof item.id !== 'number' ||
+      !Number.isSafeInteger(item.id) ||
+      item.id <= 0
+    ) {
+      throw new Error('배포 이력이 올바르지 않습니다.');
+    }
+    latestId = Math.max(latestId ?? 0, item.id);
+  }
+  if (latestId === undefined) {
+    return;
+  }
+  const statuses = api(`repos/${repo}/deployments/${latestId}/statuses`, {
+    query: { per_page: '1' },
+  });
+  const status: unknown = Array.isArray(statuses) ? statuses[0] : undefined;
+  // inactive는 운영자가 원격 작업 종료·현재 도메인을 확인한 뒤 명시적으로 남기는 해제 상태입니다.
+  if (!isRecord(status) || !['success', 'inactive'].includes(String(status.state))) {
+    throw new Error('이전 Production 승격 결과가 미확정입니다. 원격 작업과 도메인을 확인하세요.');
+  }
+}
+
 export function beginDeployment({ repo, projectId, api = github, git = gitCommand }: Context) {
   const sha = git('rev-parse', 'HEAD');
   if (!shaPattern.test(sha)) {
@@ -192,6 +242,11 @@ if (import.meta.main) {
         `### Production 비교 기준 (${projectId})\n\nBase: ${result.base_sha ?? '없음'}\n\n강제 배포: ${result.force_all}\n`,
       );
     }
+  } else if (mode === 'latest') {
+    assertLatestMain({ repo, projectId });
+  } else if (mode === 'guard') {
+    assertPromotionResolved({ repo, projectId });
+    assertLatestMain({ repo, projectId });
   } else if (mode === 'begin') {
     const id = beginDeployment({ repo, projectId });
     process.stdout.write(String(id));
@@ -203,6 +258,6 @@ if (import.meta.main) {
       logUrl: `${process.env.GITHUB_SERVER_URL}/${repo}/actions/runs/${process.env.GITHUB_RUN_ID}`,
     });
   } else {
-    throw new Error('resolve, begin, success 중 하나를 지정하세요.');
+    throw new Error('resolve, latest, guard, begin, success 중 하나를 지정하세요.');
   }
 }
