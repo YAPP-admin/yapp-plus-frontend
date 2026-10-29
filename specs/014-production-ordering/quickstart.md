@@ -14,5 +14,5 @@ Production timeout·취소 뒤에는 원격 작업 종료와 현재 도메인을
 실제 상태를 모를 때 inactive를 사용해 차단을 우회하지 않습니다. 일반 배포는 과거 SHA를
 허용하지 않으며 명시적 롤백에는 별도 승인·외부 배포 기록 정리가 필요합니다.
 
-고정 actionlint 1.7.12의 concurrency.queue 미지원 오류만 CD·수동 배포 파일에서 제외합니다.
+고정 actionlint 1.7.12의 concurrency.queue 미지원 오류만 CD·수동·Preview 배포 파일에서 제외합니다.
 다른 검사는 유지하며 queue 지원 버전으로 갱신할 때 예외를 제거합니다.

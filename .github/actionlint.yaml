@@ -1,5 +1,5 @@
 # actionlint 1.7.12의 concurrency.queue 미지원에 한정합니다. 지원 버전으로 갱신하면 제거합니다.
 paths:
-  .github/workflows/{cd,deploy-manual}.yml:
+  .github/workflows/{cd,deploy-manual,deploy-preview}.yml:
     ignore:
       - '^unexpected key "queue" for "concurrency" section\. expected one of "cancel-in-progress", "group"$'
