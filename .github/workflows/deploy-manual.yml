@@ -21,10 +21,6 @@ on:
           - preview
           - production
 
-concurrency:
-  group: deploy-manual-${{ github.event.inputs.environment }}-${{ github.event.inputs.app }}
-  cancel-in-progress: false
-
 permissions:
   actions: read
   contents: read
@@ -115,6 +111,10 @@ jobs:
       actions: read
       contents: read
       deployments: write
+    concurrency:
+      group: production-${{ matrix.app_id == 'web' && vars.VERCEL_WEB_PROJECT_ID || vars.VERCEL_ADMIN_PROJECT_ID }}
+      cancel-in-progress: false
+      queue: max
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -159,6 +159,11 @@ jobs:
         with:
           version: 2026.8.16
           install_args: --locked
+
+      - name: Verify latest main after acquiring lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/production-baseline.mts latest
 
       - name: Deploy Production
         id: deploy

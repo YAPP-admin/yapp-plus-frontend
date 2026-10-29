@@ -61,12 +61,14 @@ runs:
             deployment_url="$(vercel deploy --prebuilt --token="$VERCEL_TOKEN")"
             ;;
           production)
-            # 성공 기록이 실패하거나 취소되어도 다음 비교에서 불확실성을 감지하도록 먼저 기록합니다.
-            deployment_id="$(node .github/scripts/production-baseline.mts begin)"
             vercel pull --yes --environment=production --token="$VERCEL_TOKEN"
             # Production도 동일하게 Vercel preset으로 빌드한 뒤 prebuilt 산출물을 업로드합니다.
             NITRO_PRESET=vercel VERCEL_ENV="$DEPLOYMENT_ENVIRONMENT" vercel build --prod --token="$VERCEL_TOKEN"
-            deployment_url="$(vercel deploy --prebuilt --prod --token="$VERCEL_TOKEN")"
+            deployment_url="$(vercel deploy --prebuilt --prod --skip-domain --token="$VERCEL_TOKEN")"
+            # 준비 배포는 도메인을 바꾸지 않습니다. 최신성·이전 결과 확인 후 승격을 시작합니다.
+            node .github/scripts/production-baseline.mts guard
+            deployment_id="$(node .github/scripts/production-baseline.mts begin)"
+            vercel promote "$deployment_url" --yes --timeout=5m --token="$VERCEL_TOKEN"
             DEPLOYMENT_ID="$deployment_id" DEPLOYMENT_URL="$deployment_url" \
               node .github/scripts/production-baseline.mts success
             ;;

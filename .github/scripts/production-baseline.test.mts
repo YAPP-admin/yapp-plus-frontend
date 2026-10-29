@@ -179,25 +179,36 @@ void test('성공 기록은 같은 시도와 배포 URL에 연결하고 이전 �
   });
 });
 
-void test('공용 action은 시도 기록 실패 시 배포하지 않고 Preview 이력은 건드리지 않는다', () => {
+void test('공용 action은 시도 기록 실패 시 승격하지 않고 Preview 이력은 건드리지 않는다', () => {
   const action = readFileSync(
     new URL('../actions/vercel-deploy/action.yml', import.meta.url),
     'utf8',
   );
   const body = action.split('      run: |\n')[1].replace(/^ {8}/gm, '');
+  const prepared = ['pull', 'build', 'deploy'];
   const cases = [
-    { mode: 'production', fail: '', calls: ['begin', 'pull', 'build', 'deploy', 'success'] },
-    { mode: 'production', fail: 'begin', calls: ['begin'] },
-    { mode: 'production', fail: 'deploy', calls: ['begin', 'pull', 'build', 'deploy'] },
-    { mode: 'production', fail: 'success', calls: ['begin', 'pull', 'build', 'deploy', 'success'] },
-    { mode: 'preview', fail: '', calls: ['pull', 'build', 'deploy'] },
+    { mode: 'production', fail: '', calls: [...prepared, 'guard', 'begin', 'promote', 'success'] },
+    { mode: 'production', fail: 'guard', calls: [...prepared, 'guard'] },
+    { mode: 'production', fail: 'begin', calls: [...prepared, 'guard', 'begin'] },
+    { mode: 'production', fail: 'deploy', calls: prepared },
+    { mode: 'production', fail: 'promote', calls: [...prepared, 'guard', 'begin', 'promote'] },
+    {
+      mode: 'production',
+      fail: 'success',
+      calls: [...prepared, 'guard', 'begin', 'promote', 'success'],
+    },
+    { mode: 'preview', fail: '', calls: prepared },
   ];
   for (const [index, scenario] of cases.entries()) {
     const calls = join(directory, `calls-${index}`);
     const output = join(directory, `output-${index}`);
     const shell = `
 node() { echo "$2" >> "$ACTION_CALLS"; [ "$FAIL_AT" != "$2" ] || return 7; echo 42; }
-pnpm() { echo "$4" >> "$ACTION_CALLS"; [ "$FAIL_AT" != "$4" ] || return 8; echo https://example.vercel.app; }
+pnpm() {
+  if [ "$DEPLOYMENT_ENVIRONMENT" = production ] && [ "$4" = deploy ]; then
+    [[ " $* " == *" --skip-domain "* ]] || return 9
+  fi
+  echo "$4" >> "$ACTION_CALLS"; [ "$FAIL_AT" != "$4" ] || return 8; echo https://example.vercel.app; }
 ${body}`;
     const run = () =>
       execFileSync('bash', ['-e', '-o', 'pipefail', '-c', shell], {

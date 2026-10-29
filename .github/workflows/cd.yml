@@ -9,10 +9,6 @@ on:
     types:
       - completed
 
-concurrency:
-  group: cd-production
-  cancel-in-progress: true
-
 permissions:
   contents: read
 
@@ -25,6 +21,10 @@ jobs:
     permissions:
       contents: read
       deployments: write
+    concurrency:
+      group: production-${{ matrix.project_id }}
+      cancel-in-progress: false
+      queue: max
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -52,6 +52,11 @@ jobs:
         with:
           version: 2026.8.16
           install_args: --locked
+
+      - name: Verify latest main after acquiring lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node .github/scripts/production-baseline.mts latest
 
       - name: Resolve last Production baseline
         id: comparison

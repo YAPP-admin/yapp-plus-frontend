@@ -1,5 +1,9 @@
 # 검증과 운영 확인
 
+> #132 후속 변경: 아래 배포 시작은 도메인을 바꾸는 승격 시작을 뜻합니다. 준비 빌드·업로드는
+> 이력 생성 전이며, 미확정 승격은 운영 확인 후에만 재개합니다. 현재 절차는
+> [승격 순서 계획](../014-production-ordering/plan.md)을 따릅니다.
+
 ```sh
 mise exec -- node --test .github/scripts/production-baseline.test.mts
 mise exec -- node --run check
