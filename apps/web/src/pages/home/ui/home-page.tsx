@@ -1,7 +1,6 @@
 'use client';
 
 import {
-  IconCheckmarkCircleFill,
   IconChevronRightFill,
   IconExclamationmarkCircleFill,
   IconLocationpinFill,
@@ -16,7 +15,6 @@ import {
   HelpBubbleRoot,
   HelpBubbleTitle,
 } from '@seed-design/react';
-import { CompleteIllustration } from '@/pages/signup-complete/ui/complete-illustration';
 import {
   ActionButton,
   BottomSheetContent,
@@ -103,6 +101,7 @@ import {
   codeInputsWrapper,
   srOnly,
   teamButtonsWrap,
+  teamCheckIcon,
   teamGraphicWrap,
   teamRuleItem,
   teamRulesList,
@@ -142,6 +141,28 @@ const weeklyNotices = [
     href: '/notices/5',
   },
 ];
+
+function OrangeCheckIcon() {
+  return (
+    <svg
+      width={16}
+      height={16}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+      className={teamCheckIcon}
+    >
+      <path
+        d="M20 6L9 17L4 12"
+        stroke="#FF6600"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
 
 type AttendanceState = 'before_session' | 'available' | 'attended';
 type ReportType = '지각' | '조퇴' | '결석';
@@ -669,21 +690,27 @@ export function HomePage() {
               <p className={sheetDescription}>팀원 중 한 명만 올리면 팀 전체에 반영돼요</p>
             </div>
 
-            <div className={teamGraphicWrap} aria-hidden="true">
-              <CompleteIllustration />
+            <div className={teamGraphicWrap}>
+              <Image
+                src="/images/home/graphic-team-session.svg"
+                alt=""
+                width={337}
+                height={158}
+                priority
+              />
             </div>
 
             <ul className={teamRulesList} aria-label="인증 사진 규칙">
               <li className={teamRuleItem}>
-                <IconCheckmarkCircleFill width={16} height={16} />
+                <OrangeCheckIcon />
                 <span>참석한 팀원이 모두 보이게 찍어주세요</span>
               </li>
               <li className={teamRuleItem}>
-                <IconCheckmarkCircleFill width={16} height={16} />
+                <OrangeCheckIcon />
                 <span>세션 시간(14:00 - 18:00) 안에 올려주세요</span>
               </li>
               <li className={teamRuleItem}>
-                <IconCheckmarkCircleFill width={16} height={16} />
+                <OrangeCheckIcon />
                 <span>운영진 확인 후 출석이 확정돼요</span>
               </li>
             </ul>
