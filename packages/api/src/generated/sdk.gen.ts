@@ -88,9 +88,9 @@ import type {
   GetData,
   GetErrors,
   GetResponses,
-  List1Data,
-  List1Errors,
-  List1Responses,
+  List3Data,
+  List3Errors,
+  List3Responses,
   ListData,
   ListErrors,
   ListResponses,
@@ -103,9 +103,9 @@ import type {
   OverrideData,
   OverrideErrors,
   OverrideResponses,
-  PresignData,
-  PresignErrors,
-  PresignResponses,
+  Presign1Data,
+  Presign1Errors,
+  Presign1Responses,
   RecipientsData,
   RecipientsErrors,
   RecipientsResponses,
@@ -136,9 +136,9 @@ import type {
   StartKakaoAuthorizationData,
   StartKakaoAuthorizationErrors,
   StartResponses,
-  SubmitData,
-  SubmitErrors,
-  SubmitResponses,
+  Submit1Data,
+  Submit1Errors,
+  Submit1Responses,
   Update1Data,
   Update1Errors,
   Update1Responses,
@@ -255,7 +255,7 @@ export const replaceMembers = <ThrowOnError extends boolean = false>(
 /**
  * User 가입 완료
  *
- * 이름·전화번호가 유효하고 User 저장에 성공하면 일회용 가입 토큰을 소비해 세션을 발급한다. 입력 오류나 저장 충돌 후에는 만료 전 토큰으로 재시도할 수 있다.
+ * 가입 토큰 소비, User/Member 생성, 세션 저장을 한 트랜잭션으로 완료한다. 입력 오류·저장 충돌·세션 저장 실패로 롤백되면 만료 전 토큰으로 재시도할 수 있다. 커밋 후 응답이 유실되면 새 OIDC 로그인으로 기존 User 세션을 발급받는다.
  */
 export const register = <ThrowOnError extends boolean = false>(
   options: Options<RegisterData, ThrowOnError>,
@@ -409,10 +409,10 @@ export const verify = <ThrowOnError extends boolean = false>(
 /**
  * 이번 주 세션 사전 출결 보고
  */
-export const submit = <ThrowOnError extends boolean = false>(
-  options: Options<SubmitData, ThrowOnError>,
-): RequestResult<SubmitResponses, SubmitErrors, ThrowOnError> =>
-  (options.client ?? client).post<SubmitResponses, SubmitErrors, ThrowOnError>({
+export const submit1 = <ThrowOnError extends boolean = false>(
+  options: Options<Submit1Data, ThrowOnError>,
+): RequestResult<Submit1Responses, Submit1Errors, ThrowOnError> =>
+  (options.client ?? client).post<Submit1Responses, Submit1Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -647,7 +647,7 @@ export const reissue = <ThrowOnError extends boolean = false>(
 /**
  * 공지 목록 조회
  *
- * 20개 고정 크기로 최신 공지를 cursor 조회한다.
+ * 20개 고정 크기로 최신 공지를 cursor 조회한다. 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
 export const list = <ThrowOnError extends boolean = false>(
   options: Options<ListData, ThrowOnError>,
@@ -667,7 +667,7 @@ export const list = <ThrowOnError extends boolean = false>(
 /**
  * 공지 작성
  *
- * Idempotency-Key를 사용해 즉시 게시한다.
+ * Idempotency-Key를 사용해 즉시 게시한다. ALL_USERS는 현재 승인·비탈퇴 회원을 대상으로 하고 발행 수신자 snapshot을 보존한다.
  */
 export const create2 = <ThrowOnError extends boolean = false>(
   options: Options<Create2Data, ThrowOnError>,
@@ -691,12 +691,12 @@ export const create2 = <ThrowOnError extends boolean = false>(
 /**
  * 공지 이미지 업로드 URL 발급
  *
- * 15분 동안 유효한 AWS S3 presigned PUT URL을 발급한다.
+ * 5분 동안 유효한 AWS S3 presigned PUT URL을 발급한다.
  */
-export const presign = <ThrowOnError extends boolean = false>(
-  options: Options<PresignData, ThrowOnError>,
-): RequestResult<PresignResponses, PresignErrors, ThrowOnError> =>
-  (options.client ?? client).post<PresignResponses, PresignErrors, ThrowOnError>({
+export const presign1 = <ThrowOnError extends boolean = false>(
+  options: Options<Presign1Data, ThrowOnError>,
+): RequestResult<Presign1Responses, Presign1Errors, ThrowOnError> =>
+  (options.client ?? client).post<Presign1Responses, Presign1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -769,6 +769,8 @@ export const badge = <ThrowOnError extends boolean = false>(
 
 /**
  * 공지 일반 상세 조회
+ *
+ * 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
 export const detail = <ThrowOnError extends boolean = false>(
   options: Options<DetailData, ThrowOnError>,
@@ -993,10 +995,10 @@ export const candidates = <ThrowOnError extends boolean = false>(
 /**
  * 세션 출석 현황 조회
  */
-export const list1 = <ThrowOnError extends boolean = false>(
-  options: Options<List1Data, ThrowOnError>,
-): RequestResult<List1Responses, List1Errors, ThrowOnError> =>
-  (options.client ?? client).get<List1Responses, List1Errors, ThrowOnError>({
+export const list3 = <ThrowOnError extends boolean = false>(
+  options: Options<List3Data, ThrowOnError>,
+): RequestResult<List3Responses, List3Errors, ThrowOnError> =>
+  (options.client ?? client).get<List3Responses, List3Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1011,7 +1013,7 @@ export const list1 = <ThrowOnError extends boolean = false>(
 /**
  * 공지 수신자·읽음 현황 조회
  *
- * 첫 페이지의 asOf를 cursor에 고정하고 읽은 시각 오름차순, userId 오름차순으로 조회한다.
+ * 첫 페이지의 asOf는 읽음 시각만 고정한다. 현재 열람 가능한 회원을 읽은 시각 오름차순, userId 오름차순으로 조회한다. 자격이 변하면 첫 페이지부터 다시 조회한다. ALL_USERS의 이름·최신 기수·직군은 현재 값이며 무 Membership이면 기수·직군이 null이다.
  */
 export const recipients = <ThrowOnError extends boolean = false>(
   options: Options<RecipientsData, ThrowOnError>,

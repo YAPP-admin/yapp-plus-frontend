@@ -15,6 +15,26 @@ if (!input) {
 
 export default defineConfig({
   input,
+  // #198: 후속 PR에서 기능군별로 해제하며 최종 단계에서는 필터를 제거합니다.
+  parser: {
+    filters: {
+      operations: {
+        exclude: [
+          'PUT /api/posts/{postId}/read',
+          'POST /api/sessions/{sessionId}/team-attendance-photos',
+          'POST /api/sessions/{sessionId}/team-attendance-photos/presign',
+          'POST /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision',
+          'GET /api/posts',
+          'GET /api/posts/{postId}',
+          'GET /api/attendance-scores/me',
+          'GET /api/attendance-history',
+          'GET /api/admin/users/{userId}/retained-history',
+          'GET /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos',
+          'DELETE /api/users/me',
+        ],
+      },
+    },
+  },
   output: {
     path: 'src/generated',
     postProcess: ['oxfmt'],
