@@ -523,6 +523,10 @@ export const codeInput = style({
     '&:focus': {
       borderColor: '#555D6D',
     },
+    '&:focus::placeholder': {
+      color: 'transparent !important',
+      opacity: '0 !important',
+    },
   },
 });
 
@@ -531,6 +535,15 @@ export const codeInputError = style([
   {
     borderColor: '#FA342C !important',
     color: '#FA342C',
+    selectors: {
+      '&:focus': {
+        borderColor: '#FA342C !important',
+      },
+      '&:focus::placeholder': {
+        color: 'transparent !important',
+        opacity: '0 !important',
+      },
+    },
   },
 ]);
 
