@@ -11,6 +11,7 @@
       "persistent": true
     },
     "lint": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxlintrc.json"],
       "dependsOn": ["^lint"],
       "outputs": []
     },
