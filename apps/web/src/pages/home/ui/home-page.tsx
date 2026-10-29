@@ -79,8 +79,16 @@ import {
   sessionCard,
   sessionHeader,
   sessionTitle,
+  sheetBody,
+  sheetContent,
+  sheetDescription,
+  sheetFooter,
+  sheetHandleArea,
+  sheetHandleBar,
+  sheetHeader,
   sheetPrimaryButton,
   sheetSecondaryButton,
+  sheetTitle,
   snackbar,
   srOnly,
   teamButtonsWrap,
@@ -391,12 +399,21 @@ export function HomePage() {
       {/* 1. 출석 코드 입력 바텀시트 */}
       <BottomSheetRoot open={isCodeSheetOpen} onOpenChange={setIsCodeSheetOpen}>
         <BottomSheetContent
-          title="출석 코드를 입력해 주세요"
-          description="코드를 입력하면 출석이 완료돼요"
-          showHandle
+          aria-label="출석 코드를 입력해 주세요"
+          showHandle={false}
           showCloseButton={false}
+          className={sheetContent}
         >
-          <BottomSheetBody>
+          <div className={sheetHandleArea} aria-hidden="true">
+            <div className={sheetHandleBar} />
+          </div>
+
+          <div className={sheetHeader}>
+            <h2 className={sheetTitle}>출석 코드를 입력해 주세요</h2>
+            <p className={sheetDescription}>코드를 입력하면 출석이 완료돼요</p>
+          </div>
+
+          <div className={sheetBody}>
             <div className={codeInputsContainer}>
               {[0, 1, 2, 3].map((index) => (
                 <input
@@ -422,9 +439,9 @@ export function HomePage() {
                 <span>출석 코드가 올바르지 않아요.</span>
               </div>
             )}
-          </BottomSheetBody>
+          </div>
 
-          <BottomSheetFooter>
+          <div className={sheetFooter}>
             <ActionButton
               variant="brandSolid"
               size="large"
@@ -433,7 +450,7 @@ export function HomePage() {
             >
               확인
             </ActionButton>
-          </BottomSheetFooter>
+          </div>
         </BottomSheetContent>
       </BottomSheetRoot>
 
