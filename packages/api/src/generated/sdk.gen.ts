@@ -55,6 +55,9 @@ import type {
   CreateData,
   CreateErrors,
   CreateResponses,
+  DecideData,
+  DecideErrors,
+  DecideResponses,
   Delete1Data,
   Delete1Errors,
   Delete1Responses,
@@ -97,6 +100,9 @@ import type {
   List1Data,
   List1Errors,
   List1Responses,
+  List2Data,
+  List2Errors,
+  List2Responses,
   List3Data,
   List3Errors,
   List3Responses,
@@ -639,6 +645,28 @@ export const create1 = <ThrowOnError extends boolean = false>(
     },
   });
 
+/**
+ * 팀 출석 사진 승인 또는 거절
+ */
+export const decide = <ThrowOnError extends boolean = false>(
+  options: Options<DecideData, ThrowOnError>,
+): RequestResult<DecideResponses, DecideErrors, ThrowOnError> =>
+  (options.client ?? client).post<DecideResponses, DecideErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
 export const close = <ThrowOnError extends boolean = false>(
   options: Options<CloseData, ThrowOnError>,
 ): RequestResult<CloseResponses, CloseErrors, ThrowOnError> =>
@@ -1108,6 +1136,24 @@ export const candidates = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/admin/generations/{generationId}/team-member-candidates',
+    ...options,
+  });
+
+/**
+ * 팀 출석 사진 및 전체 팀원 보고 조회
+ */
+export const list2 = <ThrowOnError extends boolean = false>(
+  options: Options<List2Data, ThrowOnError>,
+): RequestResult<List2Responses, List2Errors, ThrowOnError> =>
+  (options.client ?? client).get<List2Responses, List2Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos',
     ...options,
   });
 

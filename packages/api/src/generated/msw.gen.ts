@@ -34,6 +34,8 @@ import type {
   Create2Responses,
   CreateData,
   CreateResponses,
+  DecideData,
+  DecideResponses,
   Delete1Responses,
   DeleteResponses,
   Detail1Responses,
@@ -48,6 +50,7 @@ import type {
   FindResponses,
   GetResponses,
   List1Responses,
+  List2Responses,
   List3Responses,
   ListResponses,
   LoginData,
@@ -996,6 +999,56 @@ export function handleCreate1(
       const body = response?.body;
       if (body !== undefined) {
         return HttpResponse.json(body, { status: response?.status ?? 201 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleDecideResponse = {
+  body: DecideResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `POST /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision` operation.
+ */
+export function handleDecide(
+  response?:
+    | HandleDecideResponse
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          sessionId: string;
+          photoId: string;
+        },
+        DecideData['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.post<
+    {
+      generationId: string;
+      sessionId: string;
+      photoId: string;
+    },
+    DecideData['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/sessions/:sessionId/team-attendance-photos/:photoId/decision`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
       }
       if (options?.responseFallback === 'passthrough') {
         return;
@@ -2107,6 +2160,54 @@ export function handleCandidates(
   );
 }
 
+export type HandleList2Response = {
+  body: List2Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos` operation.
+ */
+export function handleList2(
+  response?:
+    | HandleList2Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          sessionId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+      sessionId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/sessions/:sessionId/team-attendance-photos`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleList3Response = {
   body: List3Responses[200];
   status?: 200;
@@ -2409,6 +2510,10 @@ export type MswHandlerFactories = {
    */
   create1: typeof handleCreate1;
   /**
+   * Handler for the `POST /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision` operation.
+   */
+  decide: typeof handleDecide;
+  /**
    * Handler for the `POST /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/close` operation.
    */
   close: typeof handleClose;
@@ -2513,6 +2618,10 @@ export type MswHandlerFactories = {
    */
   candidates: typeof handleCandidates;
   /**
+   * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos` operation.
+   */
+  list2: typeof handleList2;
+  /**
    * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance` operation.
    */
   list3: typeof handleList3;
@@ -2573,6 +2682,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     create: wrap(handleCreate),
     find1: wrap(handleFind1),
     create1: wrap(handleCreate1),
+    decide: wrap(handleDecide),
     close: wrap(handleClose),
     cancel: wrap(handleCancel),
     get: wrap(handleGet),
@@ -2599,6 +2709,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     findDetail: wrap(handleFindDetail),
     findCandidates: wrap(handleFindCandidates),
     candidates: wrap(handleCandidates),
+    list2: wrap(handleList2),
     list3: wrap(handleList3),
     recipients: wrap(handleRecipients),
     revoke: wrap(handleRevoke),
@@ -2613,6 +2724,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     const overrides = options.pick ?? {};
     return [
       invoke(pick.cancel, overrides.cancel),
+      invoke(pick.decide, overrides.decide),
       invoke(pick.badge, overrides.badge),
       invoke(pick.close, overrides.close),
       invoke(pick.reissue, overrides.reissue),
@@ -2620,6 +2732,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.replaceMembers, overrides.replaceMembers),
       invoke(pick.get, overrides.get),
       invoke(pick.start, overrides.start),
+      invoke(pick.list2, overrides.list2),
       invoke(pick.list3, overrides.list3),
       invoke(pick.recipients, overrides.recipients),
       invoke(pick.presign1, overrides.presign1),

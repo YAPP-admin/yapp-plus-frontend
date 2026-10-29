@@ -61,6 +61,9 @@ import type {
   CurrentTeamResponse,
   CurrentWeekSessionDetailResponse,
   CurrentWeekSessionResponse,
+  DecideErrors,
+  DecideResponses,
+  DecideTeamPhotoRequest,
   Delete1Errors,
   DeleteErrors,
   Detail1Errors,
@@ -90,6 +93,8 @@ import type {
   KakaoNativeAuthenticationRequest,
   List1Errors,
   List1Responses,
+  List2Errors,
+  List2Responses,
   List3Errors,
   List3Responses,
   ListErrors,
@@ -152,8 +157,13 @@ import type {
   TeamMemberCandidateResponse,
   TeamMemberRequest,
   TeamMemberResponse,
+  TeamPhotoDecided,
+  TeamPhotoListResponse,
+  TeamPhotoMemberView,
+  TeamPhotoReportView,
   TeamPhotoSubmitted,
   TeamPhotoUploadUrl,
+  TeamPhotoWithUrl,
   TeamResponse,
   Update1Errors,
   Update1Responses,
@@ -615,6 +625,25 @@ export const fakeCreateSessionResponse = (options?: Options): CreateSessionRespo
   };
 };
 
+export const fakeDecideTeamPhotoRequest = (options?: Options): DecideTeamPhotoRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    decision: f.helpers.arrayElement(['APPROVED', 'REJECTED']),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { reason: f.datatype.boolean() ? f.string.sample() : null }),
+  };
+};
+
+export const fakeTeamPhotoDecided = (options?: Options): TeamPhotoDecided => {
+  const f = options?.faker ?? faker;
+  return {
+    photoId: f.number.int(),
+    status: f.string.sample(),
+    decidedAt: f.date.recent().toISOString(),
+  };
+};
+
 export const fakeAttendanceCodeResponse = (options?: Options): AttendanceCodeResponse => {
   const f = options?.faker ?? faker;
   return {
@@ -1063,6 +1092,48 @@ export const fakeSessionListResponse = (options?: Options): SessionListResponse 
   };
 };
 
+export const fakeTeamPhotoReportView = (options?: Options): TeamPhotoReportView => {
+  const f = options?.faker ?? faker;
+  return {
+    type: f.string.sample(),
+    reported: f.datatype.boolean(),
+    reason: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
+export const fakeTeamPhotoMemberView = (options?: Options): TeamPhotoMemberView => {
+  const f = options?.faker ?? faker;
+  return {
+    membershipId: f.number.int(),
+    userName: f.datatype.boolean() ? f.internet.username() : null,
+    selected: f.datatype.boolean(),
+    provisionalStatus: f.string.sample(),
+    priorReports: f.helpers.multiple(() => fakeTeamPhotoReportView(options)),
+  };
+};
+
+export const fakeTeamPhotoWithUrl = (options?: Options): TeamPhotoWithUrl => {
+  const f = options?.faker ?? faker;
+  return {
+    photoId: f.number.int(),
+    teamId: f.number.int(),
+    teamName: f.string.sample(),
+    uploaderId: f.number.int(),
+    uploaderName: f.datatype.boolean() ? f.string.sample() : null,
+    submittedAt: f.date.recent().toISOString(),
+    status: f.string.sample(),
+    readUrl: f.datatype.boolean() ? f.internet.url() : null,
+    members: f.helpers.multiple(() => fakeTeamPhotoMemberView(options)),
+  };
+};
+
+export const fakeTeamPhotoListResponse = (options?: Options): TeamPhotoListResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    items: f.helpers.multiple(() => fakeTeamPhotoWithUrl(options)),
+  };
+};
+
 export const fakeAdminAttendanceRow = (options?: Options): AdminAttendanceRow => {
   const f = options?.faker ?? faker;
   return {
@@ -1443,6 +1514,21 @@ export const fakeCreate1Response409 = (options?: Options): Create1Errors[409] =>
 export const fakeCreate1Response503 = (options?: Options): Create1Errors[503] =>
   fakeErrorResponse(options);
 
+export const fakeDecideResponse200 = (options?: Options): DecideResponses[200] =>
+  fakeTeamPhotoDecided(options);
+
+export const fakeDecideResponse400 = (options?: Options): DecideErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeDecideResponse401 = (options?: Options): DecideErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDecideResponse404 = (options?: Options): DecideErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeDecideResponse409 = (options?: Options): DecideErrors[409] =>
+  fakeErrorResponse(options);
+
 export const fakeCloseResponse200 = (): CloseResponses[200] => undefined;
 
 export const fakeCloseResponse401 = (options?: Options): CloseErrors[401] =>
@@ -1722,6 +1808,18 @@ export const fakeCandidatesResponse401 = (options?: Options): CandidatesErrors[4
   fakeErrorResponse(options);
 
 export const fakeCandidatesResponse404 = (options?: Options): CandidatesErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList2Response200 = (options?: Options): List2Responses[200] =>
+  fakeTeamPhotoListResponse(options);
+
+export const fakeList2Response401 = (options?: Options): List2Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList2Response404 = (options?: Options): List2Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList2Response503 = (options?: Options): List2Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeList3Response200 = (options?: Options): List3Responses[200] =>

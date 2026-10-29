@@ -363,6 +363,17 @@ export type CreateSessionResponse = {
   sessionId: number;
 };
 
+export type DecideTeamPhotoRequest = {
+  decision: 'APPROVED' | 'REJECTED';
+  reason?: string | null;
+};
+
+export type TeamPhotoDecided = {
+  photoId: number;
+  status: string;
+  decidedAt: string;
+};
+
 export type AttendanceCodeResponse = {
   status: 'NOT_ISSUED' | 'ISSUED';
   code: number | null;
@@ -666,6 +677,36 @@ export type SessionListResponse = {
   regularCount: number;
   teamCount: number;
   sessions: Array<AdminSessionResponse>;
+};
+
+export type TeamPhotoListResponse = {
+  items: Array<TeamPhotoWithUrl>;
+};
+
+export type TeamPhotoMemberView = {
+  membershipId: number;
+  userName: string | null;
+  selected: boolean;
+  provisionalStatus: string;
+  priorReports: Array<TeamPhotoReportView>;
+};
+
+export type TeamPhotoReportView = {
+  type: string;
+  reported: boolean;
+  reason: string | null;
+};
+
+export type TeamPhotoWithUrl = {
+  photoId: number;
+  teamId: number;
+  teamName: string;
+  uploaderId: number;
+  uploaderName: string | null;
+  submittedAt: string;
+  status: string;
+  readUrl: string | null;
+  members: Array<TeamPhotoMemberView>;
 };
 
 export type AdminAttendanceListResponse = {
@@ -1541,6 +1582,47 @@ export type Create1Responses = {
 
 export type Create1Response = Create1Responses[keyof Create1Responses];
 
+export type DecideData = {
+  body: DecideTeamPhotoRequest;
+  path: {
+    generationId: number;
+    sessionId: number;
+    photoId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision';
+};
+
+export type DecideErrors = {
+  /**
+   * TEAM_PHOTO_INVALID
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_UNAVAILABLE
+   */
+  409: ErrorResponse;
+};
+
+export type DecideError = DecideErrors[keyof DecideErrors];
+
+export type DecideResponses = {
+  /**
+   * OK
+   */
+  200: TeamPhotoDecided;
+};
+
+export type DecideResponse = DecideResponses[keyof DecideResponses];
+
 export type CloseData = {
   body?: never;
   path: {
@@ -2415,6 +2497,42 @@ export type CandidatesResponses = {
 };
 
 export type CandidatesResponse = CandidatesResponses[keyof CandidatesResponses];
+
+export type List2Data = {
+  body?: never;
+  path: {
+    generationId: number;
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos';
+};
+
+export type List2Errors = {
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type List2Error = List2Errors[keyof List2Errors];
+
+export type List2Responses = {
+  /**
+   * OK
+   */
+  200: TeamPhotoListResponse;
+};
+
+export type List2Response = List2Responses[keyof List2Responses];
 
 export type List3Data = {
   body?: never;

@@ -450,6 +450,24 @@ export const zCreateSessionResponse = z.object({
     }),
 });
 
+export const zDecideTeamPhotoRequest = z.object({
+  decision: z.enum(['APPROVED', 'REJECTED']),
+  reason: z.string().nullish(),
+});
+
+export const zTeamPhotoDecided = z.object({
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  status: z.string(),
+  decidedAt: z.iso.datetime(),
+});
+
 export const zAttendanceCodeResponse = z.object({
   status: z.enum(['NOT_ISSUED', 'ISSUED']),
   code: z
@@ -972,6 +990,64 @@ export const zSessionListResponse = z.object({
   sessions: z.array(zAdminSessionResponse),
 });
 
+export const zTeamPhotoReportView = z.object({
+  type: z.string(),
+  reported: z.boolean(),
+  reason: z.string().nullable(),
+});
+
+export const zTeamPhotoMemberView = z.object({
+  membershipId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  userName: z.string().nullable(),
+  selected: z.boolean(),
+  provisionalStatus: z.string(),
+  priorReports: z.array(zTeamPhotoReportView),
+});
+
+export const zTeamPhotoWithUrl = z.object({
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  teamId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  teamName: z.string(),
+  uploaderId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  uploaderName: z.string().nullable(),
+  submittedAt: z.iso.datetime(),
+  status: z.string(),
+  readUrl: z.string().nullable(),
+  members: z.array(zTeamPhotoMemberView),
+});
+
+export const zTeamPhotoListResponse = z.object({
+  items: z.array(zTeamPhotoWithUrl),
+});
+
 export const zAdminAttendanceRow = z.object({
   membershipId: z.coerce
     .bigint()
@@ -1464,6 +1540,40 @@ export const zCreate1Path = z.object({
  */
 export const zCreate1Response = zCreateSessionResponse;
 
+export const zDecideBody = zDecideTeamPhotoRequest;
+
+export const zDecidePath = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * OK
+ */
+export const zDecideResponse = zTeamPhotoDecided;
+
 export const zClosePath = z.object({
   generationId: z.coerce
     .bigint()
@@ -1877,6 +1987,30 @@ export const zCandidatesQuery = z.object({
  * OK
  */
 export const zCandidatesResponse = z.array(zTeamMemberCandidateResponse);
+
+export const zList2Path = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * OK
+ */
+export const zList2Response = zTeamPhotoListResponse;
 
 export const zList3Path = z.object({
   generationId: z.coerce
