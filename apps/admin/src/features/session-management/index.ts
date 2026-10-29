@@ -9,7 +9,13 @@ export {
   type SessionAttendanceSummary,
   type SessionType,
 } from './model/session';
-export { createSession, deleteSession, listSessions, updateSession } from './service';
+export {
+  createSession,
+  deleteSession,
+  getSessionAttendance,
+  listSessions,
+  updateSession,
+} from './service';
 export {
   sessionsQueryOptions,
   useCreateSessionMutation,

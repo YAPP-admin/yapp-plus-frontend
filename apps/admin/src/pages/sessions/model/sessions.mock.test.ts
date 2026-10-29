@@ -26,14 +26,14 @@ const offlineInput = {
 } satisfies CreateSessionInput;
 
 describe('세션 메모리 저장소', () => {
-  it('서로 다른 id로 생성하고 집계는 0에서 시작하며 대상만 삭제한다', () => {
+  it('서로 다른 id로 생성하고 미정 출석을 준비하며 대상만 삭제한다', () => {
     const store = createSessionStore([]);
 
     const first = store.createSession(input);
     const second = store.createSession(input);
 
     expect(first.id).not.toBe(second.id);
-    expect(first.attendance).toEqual({ present: 0, late: 0, absent: 0, pending: 0, reported: 0 });
+    expect(first.attendance.pending).toBe(store.getSessionAttendance(first.id).members.length);
     expect(store.listSessions()).toEqual([first, second]);
 
     store.deleteSession(first.id);

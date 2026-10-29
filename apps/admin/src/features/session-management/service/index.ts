@@ -29,3 +29,8 @@ export async function deleteSession(id: string) {
   const store = await getStore();
   store.deleteSession(id);
 }
+
+export async function getSessionAttendance(id: string) {
+  const store = await getStore();
+  return store.getSessionAttendance(id);
+}
