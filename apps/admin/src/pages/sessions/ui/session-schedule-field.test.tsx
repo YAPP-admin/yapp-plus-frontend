@@ -205,3 +205,22 @@ it('정착 중 취소하면 이후에도 시간 초안을 저장하지 않는다
   await user.click(screen.getByRole('button', { name: '일정, 23:58' }));
   expect(screen.getByRole('button', { name: '확인' })).toBeEnabled();
 });
+
+it.each([false, true])(
+  '마우스로 누른 뒤 움직이지 않고 떼도 정착을 완료한다(키보드 이동: %s)',
+  async (move) => {
+    const { user, change } = setup('time', '23:58');
+    await user.click(screen.getByRole('button', { name: '일정, 23:58' }));
+    const minute = screen.getByRole('spinbutton', { name: '분' });
+    if (move) {
+      fireEvent.keyDown(minute, { key: 'ArrowDown' });
+    }
+    fireEvent.pointerDown(minute, { pointerId: 1, pointerType: 'mouse', button: 0, clientY: 10 });
+    const confirm = screen.getByRole('button', { name: '확인' });
+    expect(confirm).toBeDisabled();
+    fireEvent.pointerUp(minute, { pointerId: 1, pointerType: 'mouse', button: 0, clientY: 10 });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    await user.click(confirm);
+    expect(change).toHaveBeenCalledWith(move ? '23:59' : '23:58');
+  },
+);

@@ -158,9 +158,13 @@ export const zErrorResponse = z.object({
     'ATTENDANCE_CODE_NOT_ISSUED',
     'ATTENDANCE_CODE_UPDATE_FAILED',
     'ATTENDANCE_REPORT_NOT_ELIGIBLE',
+    'ATTENDANCE_REPORT_SESSION_CONFLICT',
     'ATTENDANCE_REPORT_UNAVAILABLE',
+    'ATTENDANCE_SCORE_NOT_ELIGIBLE',
+    'ATTENDANCE_SCORE_INCONSISTENT',
     'ATTENDANCE_SESSION_NOT_FOUND',
     'ATTENDANCE_UNAVAILABLE',
+    'TEAM_ATTENDANCE_PENDING',
     'AUTHENTICATION_FAILED',
     'AUTHENTICATION_STATE_INVALID',
     'CURRENT_GENERATION_NOT_FOUND',
@@ -168,6 +172,10 @@ export const zErrorResponse = z.object({
     'EMPTY_POST_AUDIENCE',
     'GENERATION_NOT_FOUND',
     'INVALID_ATTENDANCE_CODE',
+    'INVALID_ATTENDANCE_HISTORY_CURSOR',
+    'INVALID_ATTENDANCE_REPORT',
+    'INVALID_ATTENDANCE_REQUEST',
+    'INVALID_HISTORY_REQUEST',
     'INVALID_MEMBER_REQUEST',
     'INVALID_POST_CURSOR',
     'INVALID_POST_IMAGE',
@@ -182,6 +190,7 @@ export const zErrorResponse = z.object({
     'POST_IMAGE_CONFLICT',
     'POST_IMAGE_STORAGE_FAILED',
     'POST_NOT_FOUND',
+    'RETAINED_HISTORY_UNAVAILABLE',
     'SESSION_DATE_CONFLICT',
     'SESSION_DELETE_CONFLICT',
     'SESSION_MANAGEMENT_DISABLED',
@@ -193,12 +202,67 @@ export const zErrorResponse = z.object({
     'TEAM_MEMBER_NOT_FOUND',
     'TEAM_NAME_CONFLICT',
     'TEAM_NOT_FOUND',
+    'TEAM_PHOTO_INVALID',
+    'TEAM_PHOTO_NOT_ELIGIBLE',
+    'TEAM_PHOTO_NOT_FOUND',
+    'TEAM_PHOTO_STORAGE_FAILED',
+    'TEAM_PHOTO_UNAVAILABLE',
     'TEAM_VERSION_CONFLICT',
     'USER_ALREADY_EXISTS',
+    'USER_NOT_FOUND',
     'USER_REGISTRATION_FAILED',
+    'USER_WITHDRAWAL_FAILED',
   ]),
   message: z.string().nullable(),
   fieldErrors: z.array(zRegistrationFieldError).optional(),
+});
+
+export const zSubmitTeamPhotoRequest = z.object({
+  imageKey: z.string(),
+  selectedMembershipIds: z.array(
+    z.coerce
+      .bigint()
+      .min(BigInt('-9223372036854775808'), {
+        error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+      })
+      .max(BigInt('9223372036854775807'), {
+        error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+      }),
+  ),
+});
+
+export const zTeamPhotoSubmitted = z.object({
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  submittedAt: z.iso.datetime(),
+  status: z.string(),
+});
+
+export const zPresignTeamPhotoRequest = z.object({
+  filename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  checksumSha256: z.string(),
+});
+
+export const zTeamPhotoUploadUrl = z.object({
+  imageKey: z.string(),
+  uploadUrl: z.string(),
+  signedHeaders: z.record(z.string(), z.string()),
+  expiresAt: z.iso.datetime(),
 });
 
 export const zRenewSessionRequest = z.object({
@@ -252,7 +316,7 @@ export const zVerifyAttendanceCodeResponse = z.object({
 });
 
 export const zSubmitAttendanceReportRequest = z.object({
-  type: z.enum(['ONE_HOUR_LATE', 'THREE_HOUR_LATE', 'LATE', 'EARLY_LEAVE', 'ABSENT']),
+  type: z.enum(['LATE', 'EARLY_LEAVE', 'ABSENT']),
   reason: z.string().nullish(),
 });
 
@@ -314,8 +378,9 @@ export const zMemberDetailResponse = z.object({
     .max(BigInt('9223372036854775807'), {
       error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
     }),
-  name: z.string(),
-  phoneNumber: z.string(),
+  name: z.string().nullable(),
+  phoneNumber: z.string().nullable(),
+  accountDeleted: z.boolean(),
   signedUpAt: z.iso.datetime(),
   reviewStatus: z.string(),
   role: z.union([z.literal('PLAYER'), z.literal('OB')]).nullable(),
@@ -383,6 +448,24 @@ export const zCreateSessionResponse = z.object({
     .max(BigInt('9223372036854775807'), {
       error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
     }),
+});
+
+export const zDecideTeamPhotoRequest = z.object({
+  decision: z.enum(['APPROVED', 'REJECTED']),
+  reason: z.string().nullish(),
+});
+
+export const zTeamPhotoDecided = z.object({
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  status: z.string(),
+  decidedAt: z.iso.datetime(),
 });
 
 export const zAttendanceCodeResponse = z.object({
@@ -508,6 +591,7 @@ export const zOverrideAttendanceRequest = z.object({
     'EXCUSED_ABSENCE',
   ]),
   reason: z.string().nullish(),
+  checkedInAt: z.iso.datetime().nullish(),
   earlyLeaveAt: z.iso.datetime().nullish(),
 });
 
@@ -627,6 +711,95 @@ export const zCurrentWeekSessionResponse = z.object({
   session: zCurrentWeekSessionDetailResponse.nullable(),
 });
 
+export const zUserPostListItemResponse = z.object({
+  postId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  type: z.enum(['SESSION', 'ASSIGNMENT', 'OPERATION']),
+  title: z.string(),
+  createdDate: z.iso.date(),
+  daysUntilDeadline: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .nullable(),
+});
+
+export const zUserPostListResponse = z.object({
+  totalPostCount: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  items: z.array(zUserPostListItemResponse),
+  nextCursor: z.string().nullable(),
+});
+
+export const zUserPostAssignmentResponse = z.object({
+  deadlineDate: z.iso.date(),
+  positions: z.array(z.string()),
+  submissionUrl: z.string(),
+  submissionLinkText: z.string(),
+});
+
+export const zUserPostImageResponse = z.object({
+  imageKey: z.string(),
+  filename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  displayOrder: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  readUrl: z.string(),
+  readUrlExpiresAt: z.iso.datetime(),
+});
+
+export const zUserPostDetailResponse = z.object({
+  postId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  type: z.enum(['SESSION', 'ASSIGNMENT', 'OPERATION']),
+  title: z.string(),
+  contentMarkdown: z.string(),
+  createdDate: z.iso.date(),
+  assignment: zUserPostAssignmentResponse.nullable(),
+  images: z.array(zUserPostImageResponse),
+  readCount: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  read: z.boolean(),
+});
+
 export const zCurrentGenerationSessionItemResponse = z.object({
   sessionId: z.coerce
     .bigint()
@@ -659,6 +832,103 @@ export const zCurrentGenerationSessionsResponse = z.object({
     .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
     .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
   sessions: z.array(zCurrentGenerationSessionItemResponse),
+});
+
+export const zMyAttendanceScoreResponse = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  totalScore: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  attendanceCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  lateCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  absentCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  earlyLeaveCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+});
+
+export const zAttendanceHistoryItemResponse = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  sessionName: z.string(),
+  attendanceStatus: z.enum([
+    'UNDECIDED',
+    'PRESENT',
+    'LATE',
+    'EARLY_LEAVE',
+    'LATE_AND_EARLY_LEAVE',
+    'ABSENT',
+    'EXCUSED_ABSENCE',
+  ]),
+  staffDecisionStatus: z
+    .union([
+      z.literal('NOT_SUBMITTED'),
+      z.literal('NOT_SELECTED'),
+      z.literal('PENDING'),
+      z.literal('APPROVED'),
+      z.literal('REJECTED'),
+    ])
+    .nullable(),
+});
+
+export const zAttendanceHistorySummaryResponse = z.object({
+  totalSessionCount: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  startedSessionCount: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+});
+
+export const zAttendanceHistoryResponse = z.object({
+  summary: zAttendanceHistorySummaryResponse,
+  items: z.array(zAttendanceHistoryItemResponse),
+  nextCursor: z.string().nullable(),
+});
+
+export const zRetainedHistoryEntry = z.object({
+  sourceType: z.string(),
+  sourceId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  occurredAt: z.iso.datetime(),
+  reason: z.string(),
+});
+
+export const zRetainedHistoryPage = z.object({
+  items: z.array(zRetainedHistoryEntry),
+  nextCursor: z.string().nullable(),
 });
 
 export const zPendingMemberView = z.object({
@@ -817,6 +1087,64 @@ export const zSessionListResponse = z.object({
   sessions: z.array(zAdminSessionResponse),
 });
 
+export const zTeamPhotoReportView = z.object({
+  type: z.string(),
+  reported: z.boolean(),
+  reason: z.string().nullable(),
+});
+
+export const zTeamPhotoMemberView = z.object({
+  membershipId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  userName: z.string().nullable(),
+  selected: z.boolean(),
+  provisionalStatus: z.string(),
+  priorReports: z.array(zTeamPhotoReportView),
+});
+
+export const zTeamPhotoWithUrl = z.object({
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  teamId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  teamName: z.string(),
+  uploaderId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  uploaderName: z.string().nullable(),
+  submittedAt: z.iso.datetime(),
+  status: z.string(),
+  readUrl: z.string().nullable(),
+  members: z.array(zTeamPhotoMemberView),
+});
+
+export const zTeamPhotoListResponse = z.object({
+  items: z.array(zTeamPhotoWithUrl),
+});
+
 export const zAdminAttendanceRow = z.object({
   membershipId: z.coerce
     .bigint()
@@ -831,6 +1159,7 @@ export const zAdminAttendanceRow = z.object({
   latestReportType: z.string().nullable(),
   latestReportReason: z.string().nullable(),
   checkedInAt: z.iso.datetime().nullable(),
+  earlyLeaveAt: z.iso.datetime().nullable(),
   status: z.enum([
     'UNDECIDED',
     'PRESENT',
@@ -969,6 +1298,22 @@ export const zAdminPostRecipientListResponse = z.object({
   nextCursor: z.string().nullable(),
 });
 
+export const zAcknowledgePath = z.object({
+  postId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * 읽음 처리 완료. 응답 본문 없음
+ */
+export const zAcknowledgeResponse = z.void();
+
 export const zDeletePath = z.object({
   generationId: z.coerce
     .bigint()
@@ -1079,6 +1424,42 @@ export const zRegisterBody = zRegisterUserRequest;
  */
 export const zRegisterResponse = zAuthenticationResponse;
 
+export const zSubmitBody = zSubmitTeamPhotoRequest;
+
+export const zSubmitPath = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * Created
+ */
+export const zSubmitResponse = zTeamPhotoSubmitted;
+
+export const zPresignBody = zPresignTeamPhotoRequest;
+
+export const zPresignPath = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * OK
+ */
+export const zPresignResponse = zTeamPhotoUploadUrl;
+
 /**
  * Native refresh token. Web cookie 흐름에서는 body를 생략할 수 있다.
  */
@@ -1141,12 +1522,12 @@ export const zVerifyBody = zVerifyAttendanceCodeRequest;
  */
 export const zVerifyResponse = zVerifyAttendanceCodeResponse;
 
-export const zSubmitBody = zSubmitAttendanceReportRequest;
+export const zSubmit1Body = zSubmitAttendanceReportRequest;
 
 /**
  * OK
  */
-export const zSubmitResponse = zAttendanceReportResponse;
+export const zSubmit1Response = zAttendanceReportResponse;
 
 export const zRejectBody = zRejectMemberRequest;
 
@@ -1255,6 +1636,40 @@ export const zCreate1Path = z.object({
  * 등록 성공
  */
 export const zCreate1Response = zCreateSessionResponse;
+
+export const zDecideBody = zDecideTeamPhotoRequest;
+
+export const zDecidePath = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * OK
+ */
+export const zDecideResponse = zTeamPhotoDecided;
 
 export const zClosePath = z.object({
   generationId: z.coerce
@@ -1409,9 +1824,9 @@ export const zCreate2Path = z.object({
  */
 export const zCreate2Response = zCreatedPostResponse;
 
-export const zPresignBody = zPresignPostImageRequest;
+export const zPresign1Body = zPresignPostImageRequest;
 
-export const zPresignPath = z.object({
+export const zPresign1Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -1425,7 +1840,7 @@ export const zPresignPath = z.object({
 /**
  * OK
  */
-export const zPresignResponse = zPresignPostImageResponse;
+export const zPresign1Response = zPresignPostImageResponse;
 
 export const zLoginBody = zStaffLoginRequest;
 
@@ -1547,6 +1962,32 @@ export const zUpdate1Response = zAdminPostDetailResponse;
  */
 export const zFind2Response = zCurrentWeekSessionResponse;
 
+export const zList1Query = z.object({
+  type: z.enum(['ALL', 'SESSION', 'ASSIGNMENT', 'OPERATION']).optional(),
+  cursor: z.string().optional(),
+});
+
+/**
+ * OK
+ */
+export const zList1Response = zUserPostListResponse;
+
+export const zDetail1Path = z.object({
+  postId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * OK
+ */
+export const zDetail1Response = zUserPostDetailResponse;
+
 /**
  * 조회 성공
  */
@@ -1565,6 +2006,46 @@ export const zCompleteGoogleAuthorizationQuery = z.object({
 export const zStartAppleAuthorizationQuery = z.object({
   client: z.enum(['WEB', 'ANDROID']),
 });
+
+/**
+ * OK
+ */
+export const zMineResponse = zMyAttendanceScoreResponse;
+
+export const zFind4Query = z.object({
+  cursor: z.string().optional(),
+});
+
+/**
+ * 조회 성공
+ */
+export const zFind4Response = zAttendanceHistoryResponse;
+
+export const zFind5Path = z.object({
+  userId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+export const zFind5Query = z.object({
+  cursor: z.string().optional(),
+  size: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })
+    .optional()
+    .default(20),
+});
+
+/**
+ * 조회 성공; 이력이 없으면 빈 목록
+ */
+export const zFind5Response = zRetainedHistoryPage;
 
 export const zFindPendingQuery = z.object({
   size: z
@@ -1644,7 +2125,7 @@ export const zCandidatesQuery = z.object({
  */
 export const zCandidatesResponse = z.array(zTeamMemberCandidateResponse);
 
-export const zList1Path = z.object({
+export const zList2Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -1663,7 +2144,31 @@ export const zList1Path = z.object({
     }),
 });
 
-export const zList1Query = z.object({
+/**
+ * OK
+ */
+export const zList2Response = zTeamPhotoListResponse;
+
+export const zList3Path = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+export const zList3Query = z.object({
   cursor: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -1684,7 +2189,7 @@ export const zList1Query = z.object({
 /**
  * OK
  */
-export const zList1Response = zAdminAttendanceListResponse;
+export const zList3Response = zAdminAttendanceListResponse;
 
 export const zRecipientsPath = z.object({
   generationId: z.coerce
@@ -1713,6 +2218,11 @@ export const zRecipientsQuery = z.object({
  * OK
  */
 export const zRecipientsResponse = zAdminPostRecipientListResponse;
+
+/**
+ * 탈퇴 완료
+ */
+export const zWithdrawResponse = z.void();
 
 /**
  * Native refresh token. Web cookie 흐름에서는 body를 생략할 수 있다.

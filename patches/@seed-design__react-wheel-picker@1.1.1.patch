@@ -51,7 +51,7 @@ index 6edca65d7175408371ef29dd8e40a269fc2745c6..239f26b1af6b3ac9aaf023a591453cc1
      /**
       * @default false
 diff --git a/lib/useWheelPickerColumn-12s-ByuXODTr.js b/lib/useWheelPickerColumn-12s-ByuXODTr.js
-index 78c09d44db5b3e098f0b7fafc1b284e8c1d5c74f..322dd3153ceb6f7f2a7ad552cd253906ccb646f5 100644
+index 78c09d44db5b3e098f0b7fafc1b284e8c1d5c74f..0d330f21031a0f218be32a37faa3fc13082d6b64 100644
 --- a/lib/useWheelPickerColumn-12s-ByuXODTr.js
 +++ b/lib/useWheelPickerColumn-12s-ByuXODTr.js
 @@ -43,8 +43,16 @@ function getWheelDeltaInPixels(event, itemSize, viewportSize) {
@@ -145,8 +145,26 @@ index 78c09d44db5b3e098f0b7fafc1b284e8c1d5c74f..322dd3153ceb6f7f2a7ad552cd253906
          column.setAttribute("data-wheel-picker-pointer-focus", "");
          column.focus({
              preventScroll: true
+@@ -460,6 +476,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         if (!pointerDrag.hasDragged) {
+             column.removeAttribute("data-wheel-picker-dragging");
+             shouldNotifyIndexChangeRef.current = false;
++        scheduleSettle();
+             return;
+         }
+         if (column.hasPointerCapture(event.pointerId)) {
+@@ -491,7 +508,8 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         updateVisualSelection(nearestPhysicalIndex, shouldNotifyIndexChangeRef.current);
+         settle();
+     }, [
+-        alignWheelToPhysicalIndex,
++        scheduleSettle,
++      alignWheelToPhysicalIndex,
+         itemSize,
+         physicalOptionCount,
+         scrollToPhysicalIndex,
 diff --git a/lib/useWheelPickerColumn-12s-DrxSOEPm.cjs b/lib/useWheelPickerColumn-12s-DrxSOEPm.cjs
-index a82752b5995f924240d57e46c6cc0db5ce355769..7fa0782cdc5708c594c1120678ff00a67cf3ec9c 100644
+index a82752b5995f924240d57e46c6cc0db5ce355769..8cf66651a601834113774eeb24023d9b44630444 100644
 --- a/lib/useWheelPickerColumn-12s-DrxSOEPm.cjs
 +++ b/lib/useWheelPickerColumn-12s-DrxSOEPm.cjs
 @@ -63,8 +63,16 @@ function getWheelDeltaInPixels(event, itemSize, viewportSize) {
@@ -240,6 +258,24 @@ index a82752b5995f924240d57e46c6cc0db5ce355769..7fa0782cdc5708c594c1120678ff00a6
          column.setAttribute("data-wheel-picker-pointer-focus", "");
          column.focus({
              preventScroll: true
+@@ -480,6 +496,7 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         if (!pointerDrag.hasDragged) {
+             column.removeAttribute("data-wheel-picker-dragging");
+             shouldNotifyIndexChangeRef.current = false;
++        scheduleSettle();
+             return;
+         }
+         if (column.hasPointerCapture(event.pointerId)) {
+@@ -511,7 +528,8 @@ function useWheelPickerColumn({ options, value: valueProp, defaultValue, onValue
+         updateVisualSelection(nearestPhysicalIndex, shouldNotifyIndexChangeRef.current);
+         settle();
+     }, [
+-        alignWheelToPhysicalIndex,
++        scheduleSettle,
++      alignWheelToPhysicalIndex,
+         itemSize,
+         physicalOptionCount,
+         scrollToPhysicalIndex,
 diff --git a/src/WheelPicker.tsx b/src/WheelPicker.tsx
 index ce4db7678d5d049dc92647d470cc59366f48aced..f75618e7f46301c025794db35dbe3e74bbfff846 100644
 --- a/src/WheelPicker.tsx
@@ -263,7 +299,7 @@ index ce4db7678d5d049dc92647d470cc59366f48aced..f75618e7f46301c025794db35dbe3e74
        valueChangeBehavior,
        getAriaValueText,
 diff --git a/src/useWheelPickerColumn.tsx b/src/useWheelPickerColumn.tsx
-index 74be51c774bbabc237349ebb5462eb551cd3931a..4be819b561b3a279fbc76d89b8e842063894c8d5 100644
+index 74be51c774bbabc237349ebb5462eb551cd3931a..5fbf7538eddb5628ec8d2b6b5b0d0ad1531b3aec 100644
 --- a/src/useWheelPickerColumn.tsx
 +++ b/src/useWheelPickerColumn.tsx
 @@ -46,6 +46,7 @@ export interface UseWheelPickerColumnProps {
@@ -372,3 +408,19 @@ index 74be51c774bbabc237349ebb5462eb551cd3931a..4be819b561b3a279fbc76d89b8e84206
    );
  
    const handlePointerMove = React.useCallback(
+@@ -606,6 +623,7 @@ export function useWheelPickerColumn({
+       if (!pointerDrag.hasDragged) {
+         column.removeAttribute("data-wheel-picker-dragging");
+         shouldNotifyIndexChangeRef.current = false;
++        scheduleSettle();
+         return;
+       }
+ 
+@@ -658,6 +676,7 @@ export function useWheelPickerColumn({
+       settle();
+     },
+     [
++      scheduleSettle,
+       alignWheelToPhysicalIndex,
+       itemSize,
+       physicalOptionCount,
