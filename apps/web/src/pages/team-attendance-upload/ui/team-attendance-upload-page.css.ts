@@ -14,7 +14,7 @@ export const header = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  height: '56px',
+  height: '54px',
   padding: '0 16px',
   width: '100%',
   maxWidth: '480px',
@@ -26,13 +26,13 @@ export const headerTitle = style({
   fontSize: '18px',
   fontWeight: 700,
   lineHeight: '24px',
-  color: vars.$color.palette.gray900,
+  color: '#1A1C20',
   margin: 0,
 });
 
 export const headerSpacer = style({
-  width: '40px',
-  height: '40px',
+  width: '24px',
+  height: '24px',
 });
 
 export const body = style({
@@ -42,16 +42,16 @@ export const body = style({
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
-  padding: '16px 20px 24px',
+  padding: '0 16px 24px',
   boxSizing: 'border-box',
-  gap: '24px',
+  gap: '20px',
 });
 
 export const uploadArea = style({
   width: '100%',
-  height: '180px',
+  height: '206px',
   borderRadius: '12px',
-  backgroundColor: vars.$color.palette.gray100,
+  backgroundColor: '#F3F4F5',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -60,16 +60,10 @@ export const uploadArea = style({
   cursor: 'pointer',
   position: 'relative',
   overflow: 'hidden',
-  border: '1px dashed #DCDEE3',
+  border: 'none',
   padding: 0,
   fontFamily: 'inherit',
   color: 'inherit',
-  transition: 'border-color 0.2s ease',
-  selectors: {
-    '&:hover': {
-      borderColor: vars.$color.palette.gray400,
-    },
-  },
 });
 
 export const srOnly = style({
@@ -114,18 +108,7 @@ export const imagePreview = style({
   width: '100%',
   height: '100%',
   objectFit: 'cover',
-});
-
-export const changeImageBadge = style({
-  position: 'absolute',
-  bottom: '12px',
-  right: '12px',
-  padding: '6px 12px',
-  backgroundColor: 'rgba(0, 0, 0, 0.65)',
-  color: '#FFFFFF',
-  borderRadius: '6px',
-  fontSize: '12px',
-  fontWeight: 600,
+  display: 'block',
 });
 
 export const fileInputHidden = style({
@@ -135,22 +118,28 @@ export const fileInputHidden = style({
 export const memberSection = style({
   display: 'flex',
   flexDirection: 'column',
-  gap: '8px',
+  gap: '20px',
+});
+
+export const memberHeader = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
 });
 
 export const memberTitle = style({
   fontSize: '18px',
   fontWeight: 700,
-  lineHeight: '25px',
-  color: vars.$color.palette.gray900,
+  lineHeight: '24px',
+  color: '#1A1C20',
   margin: 0,
 });
 
 export const memberDescription = style({
   fontSize: '14px',
-  fontWeight: 400,
-  lineHeight: '20px',
-  color: vars.$color.palette.gray700,
+  fontWeight: 500,
+  lineHeight: '19px',
+  color: '#555D6D',
   margin: 0,
 });
 
@@ -158,53 +147,52 @@ export const memberList = style({
   display: 'flex',
   flexDirection: 'column',
   gap: '10px',
-  marginTop: '8px',
+  margin: 0,
+  padding: 0,
 });
 
 export const memberCard = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  padding: '14px 16px',
+  padding: '12px 16px',
   borderRadius: '10px',
-  border: '1px solid rgba(0, 0, 0, 0.08)',
+  border: '1px solid rgba(0, 0, 0, 0.06)',
   backgroundColor: '#FFFFFF',
   cursor: 'pointer',
   userSelect: 'none',
   transition: 'border-color 0.15s ease, background-color 0.15s ease',
-  selectors: {
-    '&:hover': {
-      backgroundColor: vars.$color.palette.gray100,
-    },
-  },
+  boxSizing: 'border-box',
 });
 
 export const memberCardChecked = style({
-  border: `1px solid ${vars.$color.palette.gray900}`,
+  border: '1px solid #1A1C20',
   backgroundColor: '#FFFFFF',
 });
 
 export const memberInfoLeft = style({
   display: 'flex',
   alignItems: 'center',
-  gap: '12px',
+  gap: '10px',
 });
 
 export const checkboxSquare = style({
   width: '20px',
   height: '20px',
   borderRadius: '4px',
-  border: '1.5px solid #BDC1C9',
+  border: '1.14px solid rgba(0, 0, 0, 0.06)',
+  backgroundColor: '#FFFFFF',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
   boxSizing: 'border-box',
+  flexShrink: 0,
   transition: 'all 0.15s ease',
 });
 
 export const checkboxSquareChecked = style({
-  backgroundColor: vars.$color.palette.gray900,
-  borderColor: vars.$color.palette.gray900,
+  backgroundColor: '#1A1C20',
+  borderColor: '#1A1C20',
   color: '#FFFFFF',
 });
 
@@ -215,26 +203,27 @@ export const memberTextWrap = style({
 });
 
 export const memberName = style({
-  fontSize: '15px',
-  fontWeight: 600,
-  color: vars.$color.palette.gray900,
+  fontSize: '14px',
+  fontWeight: 500,
+  lineHeight: '19px',
+  color: '#1A1C20',
   margin: 0,
 });
 
 export const memberRole = style({
   fontSize: '13px',
-  fontWeight: 400,
-  color: vars.$color.palette.gray600,
+  fontWeight: 500,
+  lineHeight: '18px',
+  color: '#868B94',
   margin: 0,
 });
 
 export const meBadge = style({
-  fontSize: '11px',
-  fontWeight: 600,
+  fontSize: '13px',
+  fontWeight: 500,
+  lineHeight: '18px',
   color: '#FF6600',
-  backgroundColor: '#FFF0E6',
-  padding: '2px 6px',
-  borderRadius: '4px',
+  margin: 0,
 });
 
 export const bottomSection = style({
@@ -243,17 +232,22 @@ export const bottomSection = style({
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
-  padding: '12px 20px 20px',
+  padding: '12px 16px 20px',
   boxSizing: 'border-box',
-  gap: '8px',
+  gap: '10px',
 });
 
 export const confirmButton = style({
   width: '100%',
   height: '52px',
-  borderRadius: '12px',
+  borderRadius: '12px !important',
+  backgroundColor: '#FF6600 !important',
+  color: '#FFFFFF !important',
+  fontSize: '16px !important',
+  fontWeight: '700 !important',
+  lineHeight: '22px !important',
 });
 
 export const homeIndicatorArea = style({
-  height: '24px',
+  height: '34px',
 });

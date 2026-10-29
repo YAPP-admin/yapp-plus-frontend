@@ -9,7 +9,6 @@ import { useRef, useState } from 'react';
 import {
   body,
   bottomSection,
-  changeImageBadge,
   checkboxSquare,
   checkboxSquareChecked,
   confirmButton,
@@ -24,6 +23,7 @@ import {
   memberCard,
   memberCardChecked,
   memberDescription,
+  memberHeader,
   memberInfoLeft,
   memberList,
   memberName,
@@ -47,11 +47,11 @@ type TeamMember = {
 };
 
 const DEFAULT_MEMBERS: TeamMember[] = [
-  { id: '1', name: '강야뿌', role: 'PM', checked: true },
+  { id: '1', name: '강야뿌', role: 'PM', checked: false },
   { id: '2', name: '김야뿌', role: 'Design', isMe: true, checked: true },
   { id: '3', name: '이야뿌', role: 'Android', checked: true },
-  { id: '4', name: '최야뿌', role: 'Server', checked: true },
-  { id: '5', name: '박야뿌', role: 'iOS', checked: false },
+  { id: '4', name: '박야뿌', role: 'iOS', checked: true },
+  { id: '5', name: '최야뿌', role: 'Server', checked: true },
 ];
 
 export function TeamAttendanceUploadPage() {
@@ -60,7 +60,9 @@ export function TeamAttendanceUploadPage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // 기본적으로 피그마처럼 샘플 사진이 들어가 있거나, 사용자가 직접 올릴 수 있게 지원
-  const [photoUrl, setPhotoUrl] = useState<string | null>('/images/my/attendance-empty.svg');
+  const [photoUrl, setPhotoUrl] = useState<string | null>(
+    '/images/home/team-session-sample-photo.png',
+  );
   const [members, setMembers] = useState<TeamMember[]>(DEFAULT_MEMBERS);
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
@@ -108,17 +110,14 @@ export function TeamAttendanceUploadPage() {
           aria-label="인증 사진 선택"
         >
           {photoUrl ? (
-            <>
-              <Image
-                src={photoUrl}
-                alt="업로드된 팀 인증 사진"
-                width={350}
-                height={180}
-                className={imagePreview}
-                unoptimized
-              />
-              <span className={changeImageBadge}>사진 변경</span>
-            </>
+            <Image
+              src={photoUrl}
+              alt="업로드된 팀 인증 사진"
+              width={361}
+              height={206}
+              className={imagePreview}
+              unoptimized
+            />
           ) : (
             <>
               <div className={uploadIconWrap}>
@@ -132,12 +131,14 @@ export function TeamAttendanceUploadPage() {
 
         {/* 팀원 선택 섹션 */}
         <section className={memberSection} aria-label="참석 팀원 선택">
-          <Text as="h2" className={memberTitle}>
-            사진에 나온 팀원을 선택해 주세요
-          </Text>
-          <Text as="p" className={memberDescription}>
-            체크하지 않은 팀원은 운영진이 확인 후 처리해요
-          </Text>
+          <div className={memberHeader}>
+            <Text as="h2" className={memberTitle}>
+              사진에 나온 팀원을 선택해 주세요
+            </Text>
+            <Text as="p" className={memberDescription}>
+              체크하지 않은 팀원은 운영진이 확인 후 처리해요
+            </Text>
+          </div>
 
           <div className={memberList} aria-label="팀원 목록">
             {members.map((member) => (

@@ -757,14 +757,20 @@ export const teamCheckIcon = style({
 
 export const teamGraphicWrap = style({
   width: '100%',
-  maxWidth: '337px',
-  height: '158px',
+  aspectRatio: '337 / 158',
   borderRadius: '12px',
   overflow: 'hidden',
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  margin: '0 auto',
+  position: 'relative',
+});
+
+export const teamGraphicImage = style({
+  width: '100%',
+  height: '100%',
+  objectFit: 'contain',
+  display: 'block',
 });
 
 export const teamButtonsWrap = style({

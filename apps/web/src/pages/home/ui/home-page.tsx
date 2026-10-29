@@ -102,6 +102,7 @@ import {
   srOnly,
   teamButtonsWrap,
   teamCheckIcon,
+  teamGraphicImage,
   teamGraphicWrap,
   teamRuleItem,
   teamRulesList,
@@ -200,6 +201,9 @@ export function HomePage() {
   const [reportReason, setReportReason] = useState('');
   const snackbar = useSnackbarAdapter();
 
+  // 출결 보고 완료 여부 상태 (완료 후에는 툴팁 영구 미노출)
+  const [isReportSubmitted, setIsReportSubmitted] = useState(false);
+
   // 툴팁 상태 관리 (가이드: 액션이 발생하거나 일정 시간 뒤 자동 dismiss)
   const [isReportTooltipOpen, setIsReportTooltipOpen] = useState(true);
   const [isTeamTooltipOpen, setIsTeamTooltipOpen] = useState(true);
@@ -276,6 +280,8 @@ export function HomePage() {
 
   function handleSubmitReport() {
     setIsReportSheetOpen(false);
+    setIsReportSubmitted(true);
+    setIsReportTooltipOpen(false);
     snackbar.create({
       render: () => (
         <Snackbar
@@ -437,7 +443,7 @@ export function HomePage() {
 
             <div className={quickCardCol}>
               <HelpBubbleRoot
-                open={isReportTooltipOpen && attendanceState !== 'attended'}
+                open={isReportTooltipOpen && attendanceState !== 'attended' && !isReportSubmitted}
                 placement="bottom"
                 gutter={6}
               >
@@ -693,9 +699,10 @@ export function HomePage() {
             <div className={teamGraphicWrap}>
               <Image
                 src="/images/home/graphic-team-session.svg"
-                alt=""
+                alt="팀 세션 인증 안내 일러스트"
                 width={337}
                 height={158}
+                className={teamGraphicImage}
                 priority
               />
             </div>
