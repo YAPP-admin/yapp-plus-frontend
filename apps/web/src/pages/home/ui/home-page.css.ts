@@ -54,6 +54,32 @@ export const sessionHeader = style({
   gap: vars.$dimension.x1,
 });
 
+export const sessionHeaderTop = style({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  width: '100%',
+});
+
+export const sessionToggleChip = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  padding: '4px 8px',
+  borderRadius: '6px',
+  backgroundColor: '#F3F4F5',
+  color: '#555D6D',
+  fontSize: '11px',
+  fontWeight: vars.$fontWeight.bold,
+  border: 'none',
+  cursor: 'pointer',
+  transition: 'background-color 0.15s ease',
+  selectors: {
+    '&:hover': {
+      backgroundColor: '#E5E7EB',
+    },
+  },
+});
+
 export const locationRow = style({
   display: 'flex',
   alignItems: 'center',
@@ -344,14 +370,6 @@ export const noticeChevron = style({
   flexShrink: 0,
 });
 
-export const devRoutesLink = style({
-  fontSize: vars.$fontSize.t3,
-  color: vars.$color.fg.neutralMuted,
-  textAlign: 'center',
-  padding: vars.$dimension.x2,
-  textDecoration: 'underline',
-});
-
 export const attendedBadge = style({
   display: 'inline-flex',
   alignItems: 'center',
@@ -451,11 +469,6 @@ export const sheetContainer = style({
   padding: '0 18px 18px',
   boxSizing: 'border-box',
   gap: '20px',
-  width: '100%',
-});
-
-export const sheetHomeIndicatorArea = style({
-  height: 'env(safe-area-inset-bottom, 0px)',
   width: '100%',
 });
 

@@ -21,19 +21,38 @@ afterEach(() => {
 });
 
 describe('HomePage', () => {
-  it.each(['production', 'test'])('%s에서는 개발용 링크를 노출하지 않는다', (environment) => {
-    vi.stubEnv('NODE_ENV', environment);
+  it('홈에 개발용 화면 목록 링크를 노출하지 않는다', () => {
     render(<HomePage />);
     expect(screen.queryByRole('link', { name: '개발용 화면 목록' })).not.toBeInTheDocument();
   });
 
-  it('개발 환경에서만 화면 목록으로 이동할 수 있다', () => {
-    vi.stubEnv('NODE_ENV', 'development');
+  it('이번 주 공지 3개가 각각의 공지 상세 페이지로 연결된다', () => {
     render(<HomePage />);
-    expect(screen.getByRole('link', { name: '개발용 화면 목록' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: '5주차 개발-디자인 세션 공지' })).toHaveAttribute(
       'href',
-      '/dev/routes',
+      '/notices/3',
     );
+    expect(screen.getByRole('link', { name: '뒷풀이 참석 여부 수요 조사' })).toHaveAttribute(
+      'href',
+      '/notices/4',
+    );
+    expect(screen.getByRole('link', { name: '운영진 공지 사항' })).toHaveAttribute(
+      'href',
+      '/notices/5',
+    );
+  });
+
+  it('정기 세션과 팀 세션 모드를 토글할 수 있다', () => {
+    render(<HomePage />);
+    const toggleButton = screen.getByRole('button', { name: '팀 세션 화면으로 전환' });
+    expect(toggleButton).toBeInTheDocument();
+
+    // 팀 세션 전환
+    fireEvent.click(toggleButton);
+    expect(
+      screen.getByRole('heading', { level: 2, name: '이번 주는 팀 세션이에요' }),
+    ).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '인증 사진 올리기' })).toBeInTheDocument();
   });
 
   it('세션 정보, 주간 캘린더, 출석하기 버튼을 렌더링한다', () => {
