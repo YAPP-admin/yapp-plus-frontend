@@ -18,7 +18,8 @@ type SafeAreaStore = {
   subscribe: (listener: (state: Pick<AppBridgeState, 'safeAreaInsets'>) => void) => () => void;
 };
 
-const BRIDGE_READY_TIMEOUT_MS = 2_000;
+const BRIDGE_FAST_POLL_DURATION_MS = 2_000;
+const BRIDGE_STORE_POLL_MS = 250;
 const BRIDGE_READY_POLL_MS = 16;
 
 export const applySafeAreaCssVariables = (
@@ -65,25 +66,6 @@ const getLinkedBridge = (): LinkedAppBridge => {
   return linkedBridge;
 };
 
-const waitForNativeBridge = async (
-  bridge: LinkedAppBridge,
-  isDisposed: () => boolean,
-): Promise<boolean> => {
-  const deadline = Date.now() + BRIDGE_READY_TIMEOUT_MS;
-
-  while (
-    !isDisposed() &&
-    !bridge.isNativeMethodAvailable('getSafeAreaInsets') &&
-    Date.now() < deadline
-  ) {
-    await new Promise<void>((resolve) => {
-      setTimeout(resolve, BRIDGE_READY_POLL_MS);
-    });
-  }
-
-  return !isDisposed() && bridge.isNativeMethodAvailable('getSafeAreaInsets');
-};
-
 /**
  * 네이티브 브리지를 연결하고 루트의 안전 영역 CSS 변수를 최신 상태로 유지합니다.
  * 클라이언트 effect에서 한 번 호출하고 반환된 정리 함수를 사용합니다.
@@ -101,36 +83,34 @@ export const installSafeAreaBridge = (target?: CssVariableTarget): (() => void) 
   const cssTarget = target ?? document.documentElement.style;
   const bridge = getLinkedBridge();
   let disposed = false;
-  let unsubscribe = bindSafeAreaCssVariables(bridge.store, cssTarget);
+  let store = bridge.store;
+  let unsubscribe = bindSafeAreaCssVariables(store, cssTarget);
+  const startedAt = Date.now();
+  let timer: ReturnType<typeof setTimeout>;
 
-  void (async () => {
-    const isReady = await waitForNativeBridge(bridge, () => disposed);
-    if (!isReady) {
-      return;
-    }
-
-    let handshakeInsets: SafeAreaInsets | undefined;
-    try {
-      handshakeInsets = await bridge.getSafeAreaInsets();
-    } catch {
-      // 핸드셰이크가 시간 초과되어도 공유 상태를 기준값으로 유지합니다.
-    }
-
+  // hydration은 store 객체를 교체하지만 공개 구독은 기존 store에 남습니다.
+  // 화면이 살아 있는 동안 교체를 확인하고, 늦은 준비에도 다시 연결합니다.
+  const observeStore = () => {
     if (disposed) {
       return;
     }
-
-    // 늦게 완료된 브리지 hydration이 저장소를 교체하므로 다시 연결합니다.
-    unsubscribe();
-    unsubscribe = bindSafeAreaCssVariables(bridge.store, cssTarget);
-
-    if (handshakeInsets) {
-      applySafeAreaCssVariables(cssTarget, handshakeInsets);
+    if (store !== bridge.store) {
+      unsubscribe();
+      store = bridge.store;
+      unsubscribe = bindSafeAreaCssVariables(store, cssTarget);
     }
-  })();
+
+    // 공유 store가 최신 기준입니다. 별도 RPC 응답으로 최신 inset을 덮지 않습니다.
+    const fastPoll =
+      !bridge.isNativeMethodAvailable('getSafeAreaInsets') &&
+      Date.now() - startedAt < BRIDGE_FAST_POLL_DURATION_MS;
+    timer = setTimeout(observeStore, fastPoll ? BRIDGE_READY_POLL_MS : BRIDGE_STORE_POLL_MS);
+  };
+  observeStore();
 
   return () => {
     disposed = true;
+    clearTimeout(timer);
     unsubscribe();
   };
 };
