@@ -49,7 +49,6 @@ import {
   codeInputsContainer,
   container,
   content,
-  devRoutesLink,
   disabledSessionButton,
   helpBubbleArrowTip,
   helpBubbleContent,
@@ -87,6 +86,8 @@ import {
   teamSessionButton,
   sessionCard,
   sessionHeader,
+  sessionHeaderTop,
+  sessionToggleChip,
   sessionTitle,
   sheetContainer,
   sheetContent,
@@ -95,7 +96,6 @@ import {
   sheetHandleArea,
   sheetHandleBar,
   sheetHeader,
-  sheetHomeIndicatorArea,
   sheetPrimaryButton,
   sheetSecondaryButton,
   sheetTitle,
@@ -125,21 +125,21 @@ const weeklyNotices = [
     tag: '세션',
     isSession: true,
     title: '5주차 개발-디자인 세션 공지',
-    href: '/notices',
+    href: '/notices/3',
   },
   {
     id: 2,
     tag: '기타',
     isSession: false,
     title: '뒷풀이 참석 여부 수요 조사',
-    href: '/notices',
+    href: '/notices/4',
   },
   {
     id: 3,
     tag: '기타',
     isSession: false,
     title: '운영진 공지 사항',
-    href: '/notices',
+    href: '/notices/5',
   },
 ];
 
@@ -149,7 +149,10 @@ type ReportType = '지각' | '조퇴' | '결석';
 export function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const isTeamSession = searchParams?.get('session') === 'team';
+  const sessionParam = searchParams?.get('session');
+  const [internalSessionMode, setInternalSessionMode] = useState<'team' | 'offline' | null>(null);
+  const isTeamSession =
+    (internalSessionMode ?? (sessionParam === 'team' ? 'team' : 'offline')) === 'team';
   const attendanceParam = searchParams?.get('attendance');
 
   // 출석 상태 관리: 파라미터가 'attended'이면 출석 완료, 내부 상태가 있으면 내부 상태 우선
@@ -351,13 +354,23 @@ export function HomePage() {
         <section className={cardsSection} aria-label="세션 및 바로가기">
           <div className={sessionCard}>
             <div className={sessionHeader}>
-              <div className={locationRow}>
-                <span className={locationPin} aria-hidden="true">
-                  <IconLocationpinFill width={14} height={14} />
-                </span>
-                <span className={locationText}>
-                  {isTeamSession ? '팀별 자율 장소' : 'DMC 첨단산업센터'}
-                </span>
+              <div className={sessionHeaderTop}>
+                <div className={locationRow}>
+                  <span className={locationPin} aria-hidden="true">
+                    <IconLocationpinFill width={14} height={14} />
+                  </span>
+                  <span className={locationText}>
+                    {isTeamSession ? '팀별 자율 장소' : 'DMC 첨단산업센터'}
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className={sessionToggleChip}
+                  onClick={() => setInternalSessionMode(isTeamSession ? 'offline' : 'team')}
+                  aria-label={isTeamSession ? '정기 세션 화면으로 전환' : '팀 세션 화면으로 전환'}
+                >
+                  {isTeamSession ? '정기 세션 보기' : '팀 세션 보기'}
+                </button>
               </div>
               <h2 className={sessionTitle}>
                 {isTeamSession
@@ -472,12 +485,6 @@ export function HomePage() {
             ))}
           </div>
         </section>
-
-        {process.env.NODE_ENV === 'development' && (
-          <Link href="/dev/routes" className={devRoutesLink}>
-            개발용 화면 목록
-          </Link>
-        )}
       </div>
 
       {/* 1. 출석 코드 입력 바텀시트 */}
@@ -706,7 +713,6 @@ export function HomePage() {
                   직접 사진 찍기
                 </ActionButton>
               </div>
-              <div className={sheetHomeIndicatorArea} aria-hidden="true" />
             </div>
           </div>
         </BottomSheetContent>

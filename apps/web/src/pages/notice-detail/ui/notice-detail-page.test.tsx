@@ -51,11 +51,11 @@ describe('NoticeDetailPage', () => {
 
     expect(screen.getAllByText('세션').length).toBeGreaterThan(0);
     expect(
-      screen.getByRole('heading', { level: 1, name: '3주차 팀빌딩 세션 공지' }),
+      screen.getByRole('heading', { level: 1, name: '5주차 개발-디자인 세션 공지' }),
     ).toBeInTheDocument();
     expect(screen.queryByLabelText('제출 안내')).not.toBeInTheDocument();
     expect(
-      screen.getByText(/팀빌딩 과정의 첫 번째 단계인 '팀빌딩 자기소개서' 제출 안내드립니다/),
+      screen.getByText(/이번 주 토요일 진행되는 5주차 개발-디자인 세션 안내드립니다/),
     ).toBeInTheDocument();
     expect(screen.getByText('지금까지 25명이 확인했어요!')).toBeInTheDocument();
   });
