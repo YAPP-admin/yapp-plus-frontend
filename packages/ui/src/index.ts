@@ -1,5 +1,17 @@
 export { ActionButton, type ActionButtonProps } from './seed-design/ui/action-button';
 export {
+  BottomSheetBody,
+  BottomSheetContent,
+  BottomSheetFooter,
+  BottomSheetRoot,
+  BottomSheetTrigger,
+  type BottomSheetBodyProps,
+  type BottomSheetContentProps,
+  type BottomSheetFooterProps,
+  type BottomSheetRootProps,
+  type BottomSheetTriggerProps,
+} from './seed-design/ui/bottom-sheet';
+export {
   TextField,
   TextFieldInput,
   type TextFieldInputProps,
