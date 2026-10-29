@@ -35,7 +35,8 @@ runs:
             -e .github/workflows/deploy-manual.yml \
             -e .github/actions/deployment-config-changed/action.yml \
             -e .github/actions/turbo-affected/action.yml \
-            -e .github/actions/vercel-deploy/action.yml; then
+            -e .github/actions/vercel-deploy/action.yml \
+            -e .github/scripts/production-baseline.mts; then
           changed=true
         fi
 

@@ -111,6 +111,10 @@ jobs:
     name: Deploy ${{ matrix.app }} Production
     if: inputs.environment == 'production'
     needs: select-targets
+    permissions:
+      actions: read
+      contents: read
+      deployments: write
     runs-on: ubuntu-latest
     timeout-minutes: 20
     environment: production
@@ -161,6 +165,7 @@ jobs:
         uses: ./.github/actions/vercel-deploy
         env:
           TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
         with:
           environment: production
           org-id: ${{ vars.VERCEL_ORG_ID }}
