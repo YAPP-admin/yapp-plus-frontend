@@ -62,3 +62,6 @@ allowBuilds:
   lefthook: true
   # worker는 msw init으로 명시적으로 생성합니다. MSW 업그레이드 시 자동 복사 정책을 재검토합니다.
   msw@2.15.0: false
+
+patchedDependencies:
+  '@hey-api/openapi-ts@0.99.0': patches/@hey-api__openapi-ts@0.99.0.patch
