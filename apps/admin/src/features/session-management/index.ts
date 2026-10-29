@@ -24,4 +24,28 @@ export {
   type BadgeViewModel,
   type PriorReportViewModel,
 } from './model/attendance';
-export { calculateAttendanceDelta } from './model/attendance-score';
+export {
+  attendanceDraftSchema,
+  attendanceEditInputSchema,
+  badgeEditInputSchema,
+  closeAttendanceInputSchema,
+  teamDecisionInputSchema,
+  type AttendanceDraft,
+  type AttendanceEditInput,
+  type BadgeEditInput,
+  type CloseAttendanceInput,
+  type TeamDecisionInput,
+} from './model/attendance-input';
+export type {
+  AttendanceCodeViewModel,
+  AttendanceHistoryEntry,
+  AttendanceMemberViewModel,
+  AttendanceScoreEntry,
+  AttendanceScoreViewModel,
+  AttendanceSessionViewModel,
+  AttendanceSummary,
+  MemberScoreViewModel,
+  ScoreAdjustment,
+  TeamPhotoViewModel,
+  TeamReviewViewModel,
+} from './model/attendance-view-model';
