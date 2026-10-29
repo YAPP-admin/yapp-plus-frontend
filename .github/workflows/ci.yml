@@ -14,6 +14,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   verify:
@@ -32,15 +33,17 @@ jobs:
           persist-credentials: false
 
       - name: Detect mobile changes
-        id: mobile-changes
-        env:
-          BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
-        run: |
-          if .github/scripts/has-mobile-changes.sh "$BASE_SHA" "$GITHUB_SHA"; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
+        id: changes
+        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
+        with:
+          base: ${{ github.ref }}
+          filters: |
+            mobile:
+              - 'apps/mobile/**'
+              - 'packages/app-bridge/**'
+              - 'package.json'
+              - 'pnpm-workspace.yaml'
+              - 'pnpm-lock.yaml'
 
       - name: Set up toolchain
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
@@ -75,5 +78,5 @@ jobs:
         run: pnpm build
 
       - name: Run Expo Doctor
-        if: steps.mobile-changes.outputs.changed == 'true'
+        if: steps.changes.outputs.mobile == 'true'
         run: pnpm expo:doctor

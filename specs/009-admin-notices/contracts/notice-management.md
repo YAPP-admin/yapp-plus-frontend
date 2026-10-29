@@ -9,7 +9,8 @@
 - listNotices(): 전체 공지 반환. 종류 필터와 전체/필터 개수는 같은 조회 결과에서 계산한다.
 - getNotice(id): 공지 또는 null 반환. null은 찾을 수 없음, 예외는 조회 오류다.
 - createNotice(input), updateNotice(id, input): noticeInputSchema로 정규화한 NoticeContent를 받고 검증된 저장 결과 반환. deleteNotice(id): 삭제 성공 반환.
-- 모든 호출은 비동기이며 개발 브라우저 외에는 실행을 차단한다. Query enabled도 DEV와 hydration을 함께 검사한다.
+- 모든 호출은 비동기이며 개발 브라우저 외에는 실행을 차단한다. `NoticeQueryBoundary`의 DEV 분기와 `ClientOnly`가 조회 컴포넌트 마운트를 제한한다. 조회는 Suspense 훅을 사용하며 `enabled`·별도 hydration 상태로 제어하지 않는다.
+- 최초 조회 대기는 `Suspense`, 실패·재시도는 `CatchBoundary`와 `QueryErrorResetBoundary`가 처리한다. SSR에서는 `ClientOnly` fallback을, 프로덕션에서는 준비 중 안내를 표시한다.
 - 키는 ['admin', 'notices'], 상세는 그 뒤 id로 구분한다. 읽음은 상세에서 파생한다.
 - 변경 성공 후 목록·해당 상세를 갱신한다. 삭제 시 상세 캐시도 제거한다. 실패 시 낙관적 변경은 하지 않는다.
 - 오류는 validation/not-found/unavailable/unknown으로 구분한다. 테스트에서 저장소 실패를 주입하며 운영용 실패 토글은 만들지 않는다.
@@ -38,7 +39,7 @@
 - 목록에서 삭제 후 현재 필터를 유지한다. 질문 탭은 준비 중이며 질문·알림 실행 버튼을 추가하지 않는다.
 - 미저장 앱 이동·뒤로가기는 Router blocker로 확인하고 새로고침·닫기는 beforeunload를 사용한다.
 - 확인 창은 제목·설명·취소·확정을 제공하고 포커스를 가둔다. 취소 시 SEED의 기본 포커스 복귀를 사용하고, 삭제 성공 후 별도 포커스 이동은 구현하지 않는다.
-- 모의 조회가 비활성화된 SSR·프로덕션은 준비 중 안내를 렌더링한다. 로딩·오류·빈 결과와 구분한다.
+- SSR은 `ClientOnly` fallback, 프로덕션은 준비 중 안내를 렌더링하며 모의 조회 컴포넌트를 마운트하지 않는다. 개발 브라우저의 조회 오류·빈 결과와 구분한다.
 
 ## 읽음 현황 테이블 정렬
 
