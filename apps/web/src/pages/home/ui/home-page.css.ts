@@ -445,7 +445,12 @@ export const sheetContainer = style({
   flexDirection: 'column',
   padding: '0 18px 18px',
   boxSizing: 'border-box',
-  gap: '48px',
+  gap: '20px',
+  width: '100%',
+});
+
+export const sheetHomeIndicatorArea = style({
+  height: '34px',
   width: '100%',
 });
 
