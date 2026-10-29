@@ -9,13 +9,6 @@ export const page = style({
   padding: `${vars.$dimension.x12} ${vars.$dimension.x6}`,
 });
 
-export const title = style({
-  margin: 0,
-  fontSize: vars.$fontSize.t8,
-  fontWeight: vars.$fontWeight.bold,
-  lineHeight: vars.$lineHeight.t8,
-});
-
 export const filters = style({
   display: 'grid',
   gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 12rem), 1fr))',
@@ -62,8 +55,6 @@ export const placeholder = style({
   fontSize: vars.$fontSize.t4,
 });
 
-export const tabs = style({ display: 'flex', flexWrap: 'wrap', gap: vars.$dimension.x4 });
-
 export const tab = style({
   display: 'inline-flex',
   alignItems: 'center',
@@ -78,11 +69,3 @@ export const tab = style({
 });
 
 export const searchButton = style({ minHeight: '2.75rem' });
-
-export const heading = style({
-  display: 'flex',
-  flexWrap: 'wrap',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  gap: vars.$dimension.x4,
-});

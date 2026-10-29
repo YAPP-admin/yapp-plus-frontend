@@ -220,3 +220,9 @@ export const closeButton = style({
     },
   },
 });
+
+export const memberSubmenu = style({
+  marginLeft: vars.$dimension.x6,
+  paddingLeft: vars.$dimension.x2,
+  borderLeft: `1px solid ${vars.$color.stroke.neutralMuted}`,
+});

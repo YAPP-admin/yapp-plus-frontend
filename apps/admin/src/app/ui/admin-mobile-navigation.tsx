@@ -1,11 +1,18 @@
 import { ActionButton, Portal, SidePanel } from '@seed-design/react';
 import { useRouter } from '@tanstack/react-router';
 import { useEffect, useState } from 'react';
+import type { MemberSearch } from '~/pages/members';
 import type { navigationItems } from './admin-navigation';
 import { AdminSidebar } from './admin-sidebar';
 import * as styles from './admin-shell.css';
 
-export function AdminMobileNavigation({ menu }: { menu: keyof typeof navigationItems }) {
+export function AdminMobileNavigation({
+  menu,
+  memberSearch,
+}: {
+  menu: keyof typeof navigationItems;
+  memberSearch?: MemberSearch;
+}) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -51,7 +58,11 @@ export function AdminMobileNavigation({ menu }: { menu: keyof typeof navigationI
             <SidePanel.Description className={styles.srOnly}>
               이동할 관리자 화면을 선택하세요.
             </SidePanel.Description>
-            <AdminSidebar menu={menu} onNavigate={() => setOpen(false)} />
+            <AdminSidebar
+              menu={menu}
+              memberSearch={memberSearch}
+              onNavigate={() => setOpen(false)}
+            />
           </SidePanel.Content>
         </SidePanel.Positioner>
       </Portal>

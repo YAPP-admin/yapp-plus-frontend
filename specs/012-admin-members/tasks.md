@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 회원 관리 화면
 
 **입력**: [명세](spec.md), [계획](plan.md), [데이터](data-model.md), [화면 계약](contracts/member-ui.md)
-**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 구현·검증 완료, 사용자 리뷰 대기.
+**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 구현·검증 완료, 사용자 리뷰 대기.
 
 ## 진행 규칙
 
@@ -39,10 +39,10 @@
 
 ## 3단계 — 회원 탐색과 가입 대기 (US1, P1)
 
-- [ ] T012 [US1] apps/admin/src/pages/members/model/member-search.ts와 member-search.test.ts에 team·과거 role/status 무시·기본값을 반영한다.
-- [ ] T013 [US1] apps/admin/src/app/ui/admin-navigation.ts, admin-sidebar.tsx, admin-shell.tsx, admin-mobile-navigation.tsx에 회원 하위 메뉴·현재 상태를 연결한다.
-- [ ] T014 [US1] apps/admin/src/routes/_dashboard/members/index.tsx와 apps/admin/src/pages/members/ui/pending-members.tsx에 URL 어댑터·가입 대기 빈 화면을 연결하고 상단 탭을 제거한다.
-- [ ] T015 [US1] apps/admin/src/router.test.tsx와 app/ui/admin-shell.test.tsx에 탭·직접 접근·모바일 메뉴·업로드 복귀·다른 메뉴 회귀를 반영한다.
+- [x] T012 [US1] apps/admin/src/pages/members/model/member-search.ts와 member-search.test.ts에 team·과거 role/status 무시·기본값을 반영한다.
+- [x] T013 [US1] apps/admin/src/app/ui/admin-navigation.ts, admin-sidebar.tsx, admin-shell.tsx, admin-mobile-navigation.tsx에 회원 하위 메뉴·현재 상태를 연결한다.
+- [x] T014 [US1] apps/admin/src/routes/_dashboard/members/index.tsx와 apps/admin/src/pages/members/ui/pending-members.tsx에 URL 어댑터·가입 대기 빈 화면을 연결하고 상단 탭을 제거한다.
+- [x] T015 [US1] apps/admin/src/router.test.tsx와 app/ui/admin-shell.test.tsx에 탭·직접 접근·모바일 메뉴·업로드 복귀·다른 메뉴 회귀를 반영한다.
 
 **독립 검증/중단점**: 가입 대기 0건과 세 경로 탐색을 실제 route tree로 확인하고 리뷰받는다. 생성 라우트 수정이 필요하면 도구로 재생성한다.
 
@@ -158,10 +158,11 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 | ---- | ------------------- | --------------------- |
 | 1    | 문서 작성·검증 완료 | 사용자 진행 확인 완료 |
 | 2a   | 구현·검증 완료      | 사용자 진행 확인 완료 |
-| 2b   | 구현·검증 완료      | 대기                  |
-| 3~8  | 미착수              | 미요청                |
+| 2b   | 구현·검증 완료      | 사용자 진행 확인 완료 |
+| 3    | 구현·검증 완료      | 대기                  |
+| 4~8  | 미착수              | 미요청                |
 
 사용자 “작업 진행해”로 1단계 리뷰·2a 진행을 확인했고 “이슈 생성해”로 [#182](https://github.com/YAPP-admin/yapp-plus-frontend/issues/182)를 생성했다.
 사용자 “커밋하고 다음 진행해”로 2a 리뷰를 확인하고 문서 bf3055d·모델 9ca4901을 커밋했다.
 후속 승인으로 brussels-v2/member-management-fixtures를 생성·전환해 2b를 진행했다.
-2b는 아직 커밋하지 않았으며 push·PR은 수행하지 않았다. 3단계는 2b 사용자 리뷰 후 진행한다.
+사용자 승인으로 2b를 7af086c에 커밋하고 3단계를 진행했다. 3단계는 미커밋 상태이며 push·PR은 수행하지 않았다. 4a는 3단계 리뷰 후 진행한다.
