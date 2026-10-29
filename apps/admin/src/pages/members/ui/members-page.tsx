@@ -1,15 +1,9 @@
+import { PageHeader } from '~/shared/ui/page-header';
 import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
-import {
-  memberPartSchema,
-  memberRoleSchema,
-  memberStatusSchema,
-  partLabels,
-  roleLabels,
-  statusLabels,
-  type MemberSearch,
-} from '../model/member-search';
+import { memberPartSchema, partLabels, type MemberSearch } from '../model/member-search';
 import { ActionButton } from '@yapp-plus/ui';
+import { PendingMembers } from './pending-members';
 import * as styles from './members-page.css';
 
 export function MembersPage({
@@ -21,36 +15,20 @@ export function MembersPage({
   onSearch: (query: string) => void;
   onFilterChange: (change: Partial<Omit<MemberSearch, 'q' | 'tab'>>) => void;
 }) {
+  if (search.tab === 'pending') {
+    return <PendingMembers />;
+  }
   return (
     <main className={styles.page}>
-      <div className={styles.heading}>
-        <h1 className={styles.title}>회원 관리</h1>
+      <PageHeader
+        eyebrow="MEMBER MANAGEMENT"
+        title="회원 관리"
+        description="YAPP 회원 정보와 가입 신청을 관리해요."
+      >
         <Link className={styles.tab} to="/members/import" search={{}}>
           명단 업로드
         </Link>
-      </div>
-      <nav className={styles.tabs} aria-label="회원 목록 구분">
-        <Link
-          className={styles.tab}
-          from="/members/"
-          to="/members"
-          search={(previous) => ({ ...previous, tab: 'all' })}
-          resetScroll={false}
-          activeOptions={{ exact: true, includeSearch: true }}
-        >
-          전체 회원
-        </Link>
-        <Link
-          className={styles.tab}
-          from="/members/"
-          to="/members"
-          search={(previous) => ({ ...previous, tab: 'pending' })}
-          resetScroll={false}
-          activeOptions={{ exact: true, includeSearch: true }}
-        >
-          가입 대기
-        </Link>
-      </nav>
+      </PageHeader>
       <div className={styles.filters}>
         <form
           key={JSON.stringify(search)}
@@ -85,26 +63,8 @@ export function MembersPage({
           labels={partLabels}
           onChange={(part) => onFilterChange({ part })}
         />
-        <FilterSelect
-          label="권한"
-          value={search.role}
-          options={memberRoleSchema.options}
-          labels={roleLabels}
-          onChange={(role) => onFilterChange({ role })}
-        />
-        <FilterSelect
-          label="상태"
-          value={search.status}
-          options={memberStatusSchema.options}
-          labels={statusLabels}
-          onChange={(status) => onFilterChange({ status })}
-        />
       </div>
-      <p className={styles.placeholder}>
-        {search.tab === 'pending'
-          ? '가입 대기 목록을 준비 중입니다.'
-          : '회원 목록을 준비 중입니다.'}
-      </p>
+      <p className={styles.placeholder}>회원 목록을 준비 중입니다.</p>
     </main>
   );
 }

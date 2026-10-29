@@ -1,15 +1,18 @@
 import { SideNavigation, Text } from '@seed-design/react';
 import { Link } from '@tanstack/react-router';
 import { Badge } from '@yapp-plus/ui';
-import { navigationItems } from './admin-navigation';
+import { Fragment } from 'react';
+import type { MemberSearch } from '~/pages/members';
+import { navigationItems, memberNavigationItems } from './admin-navigation';
 import * as styles from './admin-shell.css';
 
 type AdminSidebarProps = {
   menu: keyof typeof navigationItems;
+  memberSearch?: MemberSearch;
   onNavigate?: () => void;
 };
 
-export function AdminSidebar({ menu, onNavigate }: AdminSidebarProps) {
+export function AdminSidebar({ menu, memberSearch, onNavigate }: AdminSidebarProps) {
   return (
     <SideNavigation.Root className={styles.sidebar} asChild>
       <aside aria-label="관리자">
@@ -49,29 +52,76 @@ export function AdminSidebar({ menu, onNavigate }: AdminSidebarProps) {
                 {Object.values(navigationItems)
                   .filter((item) => item.section === section)
                   .map((item) => (
-                    <SideNavigation.Item
-                      key={item.to}
-                      current={navigationItems[menu].to === item.to}
-                      asChild
-                    >
-                      <Link
-                        to={item.to}
-                        onClick={onNavigate}
-                        search={{}}
-                        className={styles.navigationLink}
-                        activeOptions={{
-                          exact: item.exact,
-                          includeSearch: false,
-                        }}
-                        inactiveProps={
-                          navigationItems[menu].to === item.to ? { 'aria-current': 'location' } : {}
+                    <Fragment key={item.to}>
+                      <SideNavigation.Item
+                        current={
+                          navigationItems[menu].to === item.to &&
+                          !(item.to === '/members' && memberSearch)
                         }
+                        asChild
                       >
-                        <SideNavigation.ItemLabel className={styles.navigationLabel}>
-                          {item.label}
-                        </SideNavigation.ItemLabel>
-                      </Link>
-                    </SideNavigation.Item>
+                        {item.to === '/members' ? (
+                          <span
+                            className={styles.navigationLink}
+                            aria-current={
+                              menu === 'members' && !memberSearch ? 'location' : undefined
+                            }
+                          >
+                            <SideNavigation.ItemLabel className={styles.navigationLabel}>
+                              회원 관리
+                            </SideNavigation.ItemLabel>
+                          </span>
+                        ) : (
+                          <Link
+                            to={item.to}
+                            onClick={onNavigate}
+                            search={{}}
+                            className={styles.navigationLink}
+                            activeOptions={{
+                              exact: item.exact,
+                              includeSearch: false,
+                            }}
+                            inactiveProps={
+                              navigationItems[menu].to === item.to
+                                ? { 'aria-current': 'location' }
+                                : {}
+                            }
+                          >
+                            <SideNavigation.ItemLabel className={styles.navigationLabel}>
+                              {item.label}
+                            </SideNavigation.ItemLabel>
+                          </Link>
+                        )}
+                      </SideNavigation.Item>
+                      {item.to === '/members' && (
+                        <div className={styles.memberSubmenu}>
+                          {memberNavigationItems.map(({ tab, label }) => (
+                            <SideNavigation.Item
+                              key={tab}
+                              current={memberSearch?.tab === tab}
+                              asChild
+                            >
+                              <Link
+                                to="/members"
+                                search={{ ...memberSearch, tab }}
+                                resetScroll={false}
+                                onClick={onNavigate}
+                                className={styles.navigationLink}
+                                aria-current={memberSearch?.tab === tab ? 'page' : undefined}
+                                activeOptions={{ exact: true, includeSearch: true }}
+                              >
+                                <SideNavigation.ItemLabel>{label}</SideNavigation.ItemLabel>
+                                {tab === 'pending' && (
+                                  <Badge variant="weak" tone="neutral" aria-label="가입 대기 0건">
+                                    0
+                                  </Badge>
+                                )}
+                              </Link>
+                            </SideNavigation.Item>
+                          ))}
+                        </div>
+                      )}
+                    </Fragment>
                   ))}
               </SideNavigation.Group>
             ))}

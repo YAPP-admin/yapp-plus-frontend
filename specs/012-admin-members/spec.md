@@ -1,7 +1,7 @@
 # 기능 명세: 관리자 회원 관리 화면
 
 **브랜치**: `brussels-v2/member-management-fixtures` | **작성일**: 2026-10-29
-**상태**: 1·2a단계 리뷰 완료 · 2b단계 완료·리뷰 대기 · [이슈 #182](https://github.com/YAPP-admin/yapp-plus-frontend/issues/182)
+**상태**: 1·2a·2b단계 리뷰 완료 · 3단계 완료·리뷰 대기 · [이슈 #182](https://github.com/YAPP-admin/yapp-plus-frontend/issues/182)
 **요청**: 지정된 Figma 기준 회원 관리 구현. 팀 매핑은 제외하고 단계마다 사용자 리뷰를 받는다.
 **제품 맥락**: [제품 목적과 범위](../../docs/mission.md)
 

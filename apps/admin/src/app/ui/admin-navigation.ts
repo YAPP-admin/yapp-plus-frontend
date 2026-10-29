@@ -1,3 +1,8 @@
+export const memberNavigationItems = [
+  { tab: 'all', label: '회원 목록' },
+  { tab: 'pending', label: '가입 신청' },
+] as const;
+
 export const navigationItems = {
   dashboard: { to: '/', label: '대시보드', section: '워크스페이스', exact: true },
   sessions: { to: '/sessions', label: '세션 관리', section: '활동 관리', exact: false },

@@ -77,3 +77,40 @@
 - check 통과: 포맷·admin lint/typecheck/test 새 실행, admin 42개 파일·493개 테스트 통과. 다른 lint 6개·typecheck 6개·test 3개는 캐시 재사용.
 - build 통과: admin 새 실행, web·Storybook 캐시 재사용. 기존 청크 크기 경고는 남아 있다.
 - 화면 연결·브라우저·접근성 검증은 아직 미실행이다. 이번 변경은 미커밋 상태이며 3단계는 시작하지 않았다.
+
+## 3단계 — 회원 탐색·가입 대기
+
+- 사용자 승인으로 2b를 7af086c에 커밋했다. format·lint·commitlint 훅 통과 후 3단계에 착수했다.
+- 회원 관리 하위에 회원 목록·가입 신청(0건)을 추가하고 상단 탭·권한/상태 필터를 제거했다. 부모 메뉴는 그룹 제목이며 업로드에서 현재 위치로 표시한다.
+- team URL을 검증하고 구형 role/status는 무시·제거한다. 하위 메뉴 이동은 검색·직군·팀을 보존하고 업로드 진입/명시적 복귀는 초기화한다.
+- Figma 223:26805의 빈 화면을 SEED·vanilla-extract로 구현했다. 상단 탭은 확정 정책에 따라 사이드바로 옮겼고 회원 총원은 목록 단계의 실제 화면 입력 연결 전까지 표시하지 않는다.
+- 원본 SVG를 로컬에 저장했다. 원본·렌더링 모두 23×23이며 Chrome에서 이미지 로딩을 확인했다. 공통 셸·브랜드 색상은 기존 프로젝트 테마를 유지했다.
+- 기존 라우팅 테스트를 갱신하고 모바일 하위 메뉴 선택·조건 보존 검증을 추가했다. 첫 실행의 메뉴 접근성/키보드 순서 실패를 수정했다.
+- 최종 check 통과: 포맷·admin lint/typecheck/test 새 실행, admin 42개 파일·493개 테스트 통과. 다른 lint 6개·typecheck 6개·test 3개는 캐시 재사용.
+- build 통과: admin 새 실행, web·Storybook 캐시 재사용. 기존 청크 크기 경고가 남아 있다.
+- Chrome 데스크톱·375px 화면, 모바일 메뉴 닫힘·트리거 포커스 복귀, 업로드 진입·목록 복귀를 확인했다. 화면 캡처는 .context/member-3-desktop.jpg와 member-3-mobile.jpg에 저장했다.
+- 실제 스크린 리더·터치 기기 검증은 미실행이다. 공용 packages/ui 변경은 없으며 Storybook 갱신 대상도 없다. 라우트 경로는 유지되어 생성 파일 변경이 없다.
+- 3단계 완료·사용자 리뷰 대기. 현재 변경은 미커밋이며 4a는 시작하지 않았다.
+
+## 3단계 리뷰 수정 — SEED 조합과 Lucide
+
+- 사용자 요청으로 Figma SVG 파일과 장식 CSS를 제거하고 lucide-react의 UserRound로 교체했다.
+- PageHeader를 회원 목록·가입 대기에서 재사용하고 EmptyState를 앱 내부 shared/ui로 분리했다. main/header/section과 h1/h2/h3 계층·이름이 있는 영역을 유지한다.
+- SEED VStack·HStack·Box·Text로 간격·정렬·테두리·반응형 여백을 구성한다. Result Section은 별도 미설치 스니펫이므로 새 의존성 없이 설치된 기본 컴포넌트를 조합했다.
+- 참고 문서: https://seed-design.io/llms/react/components/layout/v-stack.txt, https://seed-design.io/llms/react/components/result-section.txt
+- URL middleware는 스키마 재검증 대신 tab/q/part/team만 남기고 기본값을 생략한다. 입력 검증은 validateSearch가 담당한다. 기존 URL 회귀 테스트로 구형 조건 제거·기본값 생략·탐색 조건 보존을 확인했다.
+- check 통과: admin lint/typecheck/test 새 실행, 43개 파일·494개 테스트 통과. 다른 lint 6개·typecheck 6개·test 3개는 캐시 재사용. build도 admin 새 실행, web·Storybook 캐시 재사용으로 통과했다.
+- 제목 계층·빈 상태·버튼 부재를 검증하는 화면 테스트를 추가했다. 공용 패키지 변경이나 상호작용·상태 변경은 없으며 Storybook 사례는 추가하지 않았다.
+- Chrome 데스크톱·375px 확인 완료. 최신 캡처는 .context/member-3-review-desktop.jpg와 member-3-review-mobile.jpg다. 실제 스크린 리더·터치 기기 검증은 미실행이다.
+- 3단계 리뷰 수정이며 아직 커밋하지 않았다. 4a는 시작하지 않았다.
+
+## 3단계 리뷰 수정 — 공식 Result Section 적용
+
+- 사용자 요청에 따라 공식 React registry의 result-section 스니펫을 packages/ui/src/seed-design/ui/result-section.tsx에 추가하고 공개 진입점에서 내보냈다. 직접 만든 EmptyState는 삭제했다.
+- 원본의 기능·기본 스타일을 유지하며 저장소 lint 규칙(type 선언·nullish 연산자)에 맞췄다. 의미 있는 제목 요소를 전달하는 titleAs 옵션을 추가해 페이지의 h3를 유지한다.
+- 가입 대기는 size=medium과 Lucide UserRound asset을 전달한다. 패키지·lockfile 변경은 없다. Storybook에 빈 상태·재시도 사례를 추가했다.
+- 공식 출처: https://seed-design.io/__registry__/react/ui/result-section.json 및 https://seed-design.io/components/result-section
+- SEED CLI 1.7.3 compat ui:result-section 통과. 최초 실행은 cwd를 shorthand 옵션으로 잘못 전달해 실패했고 packages/ui에서 다시 실행해 확인했다.
+- 최종 check 통과: UI·admin·web·Storybook lint/typecheck 새 실행, 나머지 3개씩 캐시 재사용. 테스트는 admin 494·UI 6·web 29개 새 실행, app-bridge 17개 캐시 재사용.
+- 최종 build 통과: admin·web·Storybook 모두 새 실행. 기존 청크 경고가 남아 있다. Chrome 데스크톱·375px 확인 및 .context/member-result-section.jpg·member-result-section-mobile.jpg 저장. 실기기·스크린 리더는 미검증이다.
+- 공식 스니펫·Storybook 추가로 계획 브랜치 대비 누적 변경량이 800줄을 넘었다. 2b는 기존 브랜치의 7af086c로 유지하고, 3단계는 이 커밋을 base로 하는 종속 PR로 분리해야 한다. 브랜치 생성·커밋·push·PR은 수행하지 않았다.

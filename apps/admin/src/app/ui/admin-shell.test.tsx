@@ -109,6 +109,25 @@ describe('좁은 화면 관리자 메뉴', () => {
     expect(await screen.findByRole('link', { name: '출석 총점', current: 'page' })).toBeVisible();
   });
 
+  it('모바일 가입 신청 선택 후 패널을 닫고 검색 조건을 보존한다', async () => {
+    const user = userEvent.setup();
+    const { router } = await renderShell();
+    await act(async () =>
+      router.navigate({ to: '/members', search: { q: '김', part: 'web', team: 'team-1' } }),
+    );
+    await user.click(await screen.findByRole('button', { name: '메뉴' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('link', { name: /가입 신청/ }));
+    expect(await screen.findByText('가입 대기 중인 회원이 없어요')).toBeVisible();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(router.state.location.search).toEqual({
+      tab: 'pending',
+      q: '김',
+      part: 'web',
+      team: 'team-1',
+    });
+  });
+
   it('브라우저 뒤로 가기로 경로가 바뀌어도 열린 메뉴를 닫는다', async () => {
     const user = userEvent.setup();
     const { router } = await renderShell();
