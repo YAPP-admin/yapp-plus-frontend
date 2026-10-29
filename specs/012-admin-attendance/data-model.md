@@ -2,7 +2,7 @@
 
 [명세](spec.md) · [계약 초안](contracts/attendance-api.md)
 
-이 문서의 이름과 값은 프런트엔드가 직접 소유하는 설계다. API DTO의 별칭이 아니며 아직 코드로 구현하지 않았다.
+이 문서의 이름과 값은 프런트엔드가 직접 소유하는 설계다. API DTO의 별칭이 아니다. 2-1단계에서 AttendanceResult·PriorReportViewModel·BadgeViewModel과 감점 계산을 구현했다. 나머지는 후속 구현 설계다.
 API 타입의 import·상속·Pick/Omit·indexed access를 금지한다. 문자열 값이 같아도 각 경계에서 명시적으로 변환한다.
 
 ## 공통 표현
