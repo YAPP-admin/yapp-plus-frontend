@@ -17,6 +17,7 @@ const TAB_TITLES: Record<string, string> = {
   '/schedule': '일정',
   '/notices': '게시판',
   '/my': '마이페이지',
+  '/alerts': '알림',
 };
 
 export function TabsHeader() {
@@ -28,11 +29,15 @@ export function TabsHeader() {
         <Link href="/" className={logoLink} aria-label="YAPP 홈">
           <Image src="/images/home/yapp-logo.svg" alt="YAPP" width={80} height={30} priority />
         </Link>
-        <Link href="/notices" className={bellButton} aria-label="알림">
+        <Link href="/alerts" className={bellButton} aria-label="알림">
           <IconBellFill width={24} height={24} />
         </Link>
       </div>
     );
+  }
+
+  if (pathname === '/alerts') {
+    return null;
   }
 
   const title = (pathname ? TAB_TITLES[pathname] : undefined) ?? 'YAPP+';

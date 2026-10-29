@@ -12,7 +12,6 @@ import {
   header,
   headerSpacer,
   homeIndicatorArea,
-  homeIndicatorBar,
   title,
   titleSection,
 } from './login-error-page.css';
@@ -47,9 +46,7 @@ export function LoginErrorPage() {
         >
           운영진에게 문의하기
         </a>
-        <div className={homeIndicatorArea} aria-hidden="true">
-          <div className={homeIndicatorBar} />
-        </div>
+        <div className={homeIndicatorArea} aria-hidden="true" />
       </footer>
     </div>
   );

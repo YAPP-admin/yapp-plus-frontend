@@ -1,7 +1,18 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { HomePage } from '../../pages/home';
 import { PageShell } from './page-shell';
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    back: vi.fn<() => void>(),
+    push: vi.fn<(url: string) => void>(),
+    replace: vi.fn<(url: string) => void>(),
+  }),
+  useSearchParams: () => ({
+    get: vi.fn<(name: string) => string | null>().mockReturnValue(null),
+  }),
+}));
 
 describe('PageShell', () => {
   it('홈을 감쌀 때 헤더와 본문 영역을 중복 렌더링하지 않는다', () => {
