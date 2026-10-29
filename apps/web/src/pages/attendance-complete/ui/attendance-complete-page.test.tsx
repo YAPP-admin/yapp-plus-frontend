@@ -18,6 +18,9 @@ describe('AttendanceCompletePage', () => {
       screen.getByRole('heading', { level: 1, name: '출석을 완료했어요!' }),
     ).toBeInTheDocument();
     expect(screen.getByText('출석 내역은 마이페이지에서 확인할 수 있어요')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '확인' })).toHaveAttribute('href', '/');
+    expect(screen.getByRole('link', { name: '확인' })).toHaveAttribute(
+      'href',
+      '/?attendance=attended',
+    );
   });
 });

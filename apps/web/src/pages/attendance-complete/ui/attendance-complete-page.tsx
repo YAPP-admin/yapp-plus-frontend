@@ -22,7 +22,7 @@ export function AttendanceCompletePage() {
   return (
     <div className={container}>
       <header className={header}>
-        <BackButton fallback="/" iconOnly />
+        <BackButton fallback="/?attendance=attended" iconOnly />
         <div className={headerSpacer} aria-hidden="true" />
       </header>
 
@@ -43,7 +43,7 @@ export function AttendanceCompletePage() {
 
       <footer className={bottomSection}>
         <ActionButton asChild variant="brandSolid" size="large" className={confirmButton}>
-          <Link href="/">확인</Link>
+          <Link href="/?attendance=attended">확인</Link>
         </ActionButton>
         <div className={homeIndicatorArea} aria-hidden="true" />
       </footer>

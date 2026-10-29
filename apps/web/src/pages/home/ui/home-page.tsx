@@ -142,9 +142,14 @@ export function HomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const isTeamSession = searchParams?.get('session') === 'team';
+  const attendanceParam = searchParams?.get('attendance');
 
-  // 출석 상태 관리: 'available'(출석 가능) | 'attended'(출석 완료) | 'before_session'
-  const [attendanceState, setAttendanceState] = useState<AttendanceState>('available');
+  // 출석 상태 관리: 파라미터가 'attended'이면 출석 완료, 내부 상태가 있으면 내부 상태 우선
+  const [internalAttendanceState, setInternalAttendanceState] = useState<AttendanceState | null>(
+    null,
+  );
+  const attendanceState: AttendanceState =
+    internalAttendanceState ?? (attendanceParam === 'attended' ? 'attended' : 'available');
 
   // 1. 출석 코드 바텀시트
   const [isCodeSheetOpen, setIsCodeSheetOpen] = useState(false);
@@ -198,7 +203,7 @@ export function HomePage() {
     }
 
     setIsCodeSheetOpen(false);
-    setAttendanceState('attended');
+    setInternalAttendanceState('attended');
     router.push('/attendance/complete');
   }
 
@@ -327,7 +332,7 @@ export function HomePage() {
             </div>
 
             <div className={quickCardCol}>
-              <HelpBubbleRoot open placement="bottom" gutter={6}>
+              <HelpBubbleRoot open={attendanceState !== 'attended'} placement="bottom" gutter={6}>
                 <HelpBubbleAnchor asChild>
                   <button
                     type="button"
