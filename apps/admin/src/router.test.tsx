@@ -38,6 +38,29 @@ async function renderRoute(
 }
 
 describe('관리자 라우팅', () => {
+  it('개발 환경의 회원 목록에 고정 예시 입력을 전달한다', async () => {
+    vi.stubEnv('DEV', true);
+    try {
+      await renderRoute('/members');
+      expect(await screen.findByRole('table', { name: '33기 회원 목록' })).toBeVisible();
+      expect(screen.getByText('예시 회원 1')).toBeVisible();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
+  it('운영 환경의 회원 목록에는 예시 입력 대신 준비 안내를 표시한다', async () => {
+    vi.stubEnv('DEV', false);
+    try {
+      await renderRoute('/members');
+      expect(await screen.findByText('회원 목록을 준비 중입니다.')).toBeVisible();
+      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(screen.queryByText(/예시 회원/)).not.toBeInTheDocument();
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
+
   it.each([
     ['/', '대시보드', '대시보드'],
     ['/sessions', '세션 관리', '세션 목록'],

@@ -114,3 +114,16 @@
 - 최종 check 통과: UI·admin·web·Storybook lint/typecheck 새 실행, 나머지 3개씩 캐시 재사용. 테스트는 admin 494·UI 6·web 29개 새 실행, app-bridge 17개 캐시 재사용.
 - 최종 build 통과: admin·web·Storybook 모두 새 실행. 기존 청크 경고가 남아 있다. Chrome 데스크톱·375px 확인 및 .context/member-result-section.jpg·member-result-section-mobile.jpg 저장. 실기기·스크린 리더는 미검증이다.
 - 공식 스니펫·Storybook 추가로 계획 브랜치 대비 누적 변경량이 800줄을 넘었다. 2b는 기존 브랜치의 7af086c로 유지하고, 3단계는 이 커밋을 base로 하는 종속 PR로 분리해야 한다. 브랜치 생성·커밋·push·PR은 수행하지 않았다.
+
+## 4a단계 — 회원 행 목록
+
+- 사용자 승인에 따라 3단계를 873029a에 커밋하고 종속 브랜치를 분리했다. 현재 브랜치는 `brussels-v2/member-list`, 실제 PR base는 `brussels-v2/member-management-fixtures`(873029a)다.
+- 현재 기수 회원의 이름·직군·과거 기수 이력·권한·출석 점수·가입일을 시맨틱 표로 표시한다. 긴 이름은 줄바꿈하고, 0점과 미제공·비활동을 구분한다.
+- SEED Badge·Text·ActionButton·ResultSection과 Lucide를 사용한다. 더보기는 5b 연결 전까지 준비 중인 비활성 버튼이다.
+- 개발 진입점에서만 고정 입력을 전달하고 운영 환경은 준비 안내를 유지한다. 합성 입력 생성과 참조에 순수 호출 표시를 적용해 운영 클라이언트·SSR 산출물에서 예시 식별자·전화번호 생성 코드가 제거됨을 확인했다.
+- 빈 명단은 ResultSection으로 표시한다. 검색 빈 결과는 실제 필터를 구현하는 4b에서 연결한다. 고정 입력에는 로딩·오류·재시도를 만들지 않는다.
+- `node --run check` 통과: admin lint·typecheck·테스트 499개를 새로 실행했다. 다른 패키지 lint·typecheck와 web 29개·ui 6개·app-bridge 17개 테스트는 Turbo 캐시를 재사용했다.
+- `node --run build` 통과: 최종 admin 빌드는 새로 실행했고 web·Storybook은 캐시를 재사용했다. 두 앱의 초기 빌드와 Storybook 빌드는 이번 단계 앞선 실행에서 새로 통과했다.
+- Chrome 데스크톱 및 375px 화면을 확인했다. 모바일 문서 너비 375px, 표 스크롤 영역 327px로 페이지 넘침이 없고 키보드 오른쪽 방향키로 표 내부 scrollLeft가 40px 이동했다. 접근성 트리에서 표·행·버튼 이름을 확인했다.
+- 화면 근거: `.context/member-4a-desktop.jpg`, `.context/member-4a-mobile.jpg`. 실제 스크린 리더 낭독과 터치 실기기 검증은 미실행이다.
+- 4a 리뷰 대기. 이번 단계 변경은 미커밋이며 push·PR은 수행하지 않았다. 검색·직군 필터·정렬은 4b, 팀 표시는 4c에서 진행한다.

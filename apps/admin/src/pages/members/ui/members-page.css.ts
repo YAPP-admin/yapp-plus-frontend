@@ -3,6 +3,7 @@ import { vars } from '@seed-design/css/vars';
 
 export const page = style({
   display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr)',
   width: 'min(100%, 72rem)',
   gap: vars.$dimension.x4,
   marginInline: 'auto',
