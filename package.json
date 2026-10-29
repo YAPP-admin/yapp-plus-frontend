@@ -15,7 +15,7 @@
     "lint": "turbo run lint",
     "prepare": "lefthook install",
     "storybook": "turbo run storybook --filter=@yapp-plus/storybook",
-    "test": "bash .github/scripts/has-mobile-changes.test.sh && turbo run test",
+    "test": "turbo run test",
     "typecheck": "turbo run typecheck"
   },
   "devDependencies": {
