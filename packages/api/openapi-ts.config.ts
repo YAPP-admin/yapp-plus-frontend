@@ -20,11 +20,9 @@ export default defineConfig({
     filters: {
       operations: {
         exclude: [
-          'POST /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision',
           'GET /api/attendance-scores/me',
           'GET /api/attendance-history',
           'GET /api/admin/users/{userId}/retained-history',
-          'GET /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos',
           'DELETE /api/users/me',
         ],
       },

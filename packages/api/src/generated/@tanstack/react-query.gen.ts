@@ -25,6 +25,7 @@ import {
   create,
   create1,
   create2,
+  decide,
   delete_,
   delete1,
   detail,
@@ -40,6 +41,7 @@ import {
   get,
   list,
   list1,
+  list2,
   list3,
   login,
   logout,
@@ -107,6 +109,9 @@ import type {
   CreateData,
   CreateError,
   CreateResponse,
+  DecideData,
+  DecideError,
+  DecideResponse,
   Delete1Data,
   Delete1Error,
   Delete1Response,
@@ -149,6 +154,9 @@ import type {
   List1Data,
   List1Error,
   List1Response,
+  List2Data,
+  List2Error,
+  List2Response,
   List3Data,
   List3Error,
   List3Response,
@@ -740,6 +748,25 @@ export const create1Mutation = (
   const mutationOptions: UseMutationOptions<Create1Response, Create1Error, Options<Create1Data>> = {
     mutationFn: async (fnOptions) => {
       const { data } = await create1({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * 팀 출석 사진 승인 또는 거절
+ */
+export const decideMutation = (
+  options?: Partial<Options<DecideData>>,
+): UseMutationOptions<DecideResponse, DecideError, Options<DecideData>> => {
+  const mutationOptions: UseMutationOptions<DecideResponse, DecideError, Options<DecideData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await decide({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -1496,6 +1523,25 @@ export const candidatesOptions = (options: Options<CandidatesData>) =>
       return data;
     },
     queryKey: candidatesQueryKey(options),
+  });
+
+export const list2QueryKey = (options: Options<List2Data>) => createQueryKey('list2', options);
+
+/**
+ * 팀 출석 사진 및 전체 팀원 보고 조회
+ */
+export const list2Options = (options: Options<List2Data>) =>
+  queryOptions<List2Response, List2Error, List2Response, ReturnType<typeof list2QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list2({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list2QueryKey(options),
   });
 
 export const list3QueryKey = (options: Options<List3Data>) => createQueryKey('list3', options);
