@@ -1,11 +1,14 @@
 import { base, en, Faker } from '@faker-js/faker';
-import { HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
+import { http, HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
 import type { ZodType } from 'zod';
 
 import * as generatedFaker from '../generated/@faker-js/faker.gen';
 import { createMswHandlers } from '../generated/msw.gen';
 import * as schemas from '../generated/zod.gen';
 import * as fixtures from './fixtures';
+
+const uploadOrigin = 'https://upload.yapp.test';
+const imageUploadUrl = `${uploadOrigin}/post-images/example`;
 
 function normalizeBaseUrl(value: string): string {
   if (!/^https?:\/\//.test(value)) {
@@ -57,6 +60,7 @@ export function createApiMockHandlers(
   });
   // 명시한 Faker·대표 응답이 우선하며, 미연결 API는 생성 핸들러의 명세 예제 또는 501을 사용합니다.
   return [
+    http.put(imageUploadUrl, () => new HttpResponse(null, { status: 200 })),
     ...factory.all({
       pick: {
         find: fakerResponse(generatedFaker.fakeFindResponse200, schemas.zFindResponse),
@@ -108,7 +112,15 @@ export function createApiMockHandlers(
           schemas.zCreate2Response,
           201,
         ),
-        presign1: fakerResponse(generatedFaker.fakePresign1Response200, schemas.zPresign1Response),
+        presign1: fixedResponse(
+          {
+            imageKey: 'mock/post-images/example',
+            uploadUrl: imageUploadUrl,
+            signedHeaders: { 'Content-Type': 'image/png' },
+            expiresAt: '2099-01-01T00:00:00Z',
+          },
+          schemas.zPresign1Response,
+        ),
         login: fixedResponse(fixtures.staffLogin, schemas.zStaffLoginResponse),
         detail: fakerResponse(generatedFaker.fakeDetailResponse200, schemas.zDetailResponse),
         update1: fakerResponse(generatedFaker.fakeUpdate1Response200, schemas.zUpdate1Response),
@@ -152,8 +164,9 @@ export function onUnhandledApiRequest(baseUrl: string) {
   return async (request: Request) => {
     const url = new URL(request.url);
     if (
-      url.origin === baseUrlObject.origin &&
-      (url.pathname === apiPath || url.pathname.startsWith(`${apiPath}/`))
+      url.origin === uploadOrigin ||
+      (url.origin === baseUrlObject.origin &&
+        (url.pathname === apiPath || url.pathname.startsWith(`${apiPath}/`)))
     ) {
       // MSW 2.15의 콜백 print.error는 출력만 하므로 실제 차단하는 공개 함수를 기다립니다.
       await onUnhandledRequest(request, 'error');
