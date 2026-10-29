@@ -122,7 +122,8 @@ export async function setAuthParams(
   },
 ): Promise<void> {
   for (const auth of options.security ?? []) {
-    if (checkForExistence(options, auth.name)) {
+    const name = auth.name ?? 'Authorization';
+    if (checkForExistence(options, name)) {
       continue;
     }
 
@@ -131,8 +132,6 @@ export async function setAuthParams(
     if (!token) {
       continue;
     }
-
-    const name = auth.name ?? 'Authorization';
 
     switch (auth.in) {
       case 'query':
