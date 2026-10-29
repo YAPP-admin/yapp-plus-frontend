@@ -19,10 +19,10 @@ import {
 import { CompleteIllustration } from '@/pages/signup-complete/ui/complete-illustration';
 import {
   ActionButton,
-  BottomSheetBody,
   BottomSheetContent,
-  BottomSheetFooter,
   BottomSheetRoot,
+  RadioGroup,
+  RadioGroupItem,
 } from '@yapp-plus/ui';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -72,9 +72,7 @@ import {
   quickCardsGrid,
   quickCardSubtitle,
   quickCardTitle,
-  radioGroup,
-  radioOption,
-  radioOptionSelected,
+  reportRadioGroup,
   reportTextarea,
   sessionCard,
   sessionHeader,
@@ -137,6 +135,25 @@ const weeklyNotices = [
 
 type AttendanceState = 'before_session' | 'available' | 'attended';
 type ReportType = '지각' | '조퇴' | '결석';
+
+function isReportType(value: unknown): value is ReportType {
+  return value === '지각' || value === '조퇴' || value === '결석';
+}
+
+function extractRadioValue(details: unknown): string | undefined {
+  if (typeof details === 'string') {
+    return details;
+  }
+  if (
+    details !== null &&
+    typeof details === 'object' &&
+    'value' in details &&
+    typeof details.value === 'string'
+  ) {
+    return details.value;
+  }
+  return undefined;
+}
 
 export function HomePage() {
   const router = useRouter();
@@ -474,132 +491,165 @@ export function HomePage() {
       {/* 2. 출결 보고 바텀시트 */}
       <BottomSheetRoot open={isReportSheetOpen} onOpenChange={setIsReportSheetOpen}>
         <BottomSheetContent
-          title={
+          aria-label={
             reportStep === 1 ? '출결을 보고해 주세요' : `${selectedReportType} 사유를 입력해 주세요`
           }
-          description={reportStep === 1 ? '미리 알려주시면 점수 차감이 줄어들어요' : undefined}
-          showHandle
+          showHandle={false}
           showCloseButton={false}
+          className={sheetContent}
         >
-          {reportStep === 1 ? (
-            <>
-              <BottomSheetBody>
-                <div className={radioGroup} aria-label="출결 유형">
-                  {(['지각', '조퇴', '결석'] as const).map((type) => {
-                    const isSelected = selectedReportType === type;
-                    return (
-                      <button
+          <div className={sheetHandleArea} aria-hidden="true">
+            <div className={sheetHandleBar} />
+          </div>
+
+          <div className={sheetContainer}>
+            {reportStep === 1 ? (
+              <>
+                <div className={sheetTopSection}>
+                  <div className={sheetHeader}>
+                    <h2 className={sheetTitle}>출결을 보고해 주세요</h2>
+                    <p className={sheetDescription}>미리 알려주시면 점수 차감이 줄어들어요</p>
+                  </div>
+
+                  <RadioGroup
+                    value={selectedReportType}
+                    onValueChange={(details) => {
+                      const next = extractRadioValue(details);
+                      if (isReportType(next)) {
+                        setSelectedReportType(next);
+                      }
+                    }}
+                    aria-label="출결 유형"
+                    className={reportRadioGroup}
+                  >
+                    {(['지각', '조퇴', '결석'] as const).map((type) => (
+                      <RadioGroupItem
                         key={type}
-                        type="button"
-                        aria-pressed={isSelected}
-                        className={isSelected ? radioOptionSelected : radioOption}
-                        onClick={() => setSelectedReportType(type)}
-                      >
-                        <span>{type}</span>
-                        {isSelected && <IconCheckmarkCircleFill width={20} height={20} />}
-                      </button>
-                    );
-                  })}
+                        value={type}
+                        label={type}
+                        size="large"
+                        tone="brand"
+                      />
+                    ))}
+                  </RadioGroup>
                 </div>
-              </BottomSheetBody>
 
-              <BottomSheetFooter>
-                <ActionButton
-                  variant="brandSolid"
-                  size="large"
-                  className={sheetPrimaryButton}
-                  onClick={handleReportNext}
-                >
-                  확인
-                </ActionButton>
-              </BottomSheetFooter>
-            </>
-          ) : (
-            <>
-              <BottomSheetBody>
-                <div className={textareaContainer}>
-                  <textarea
-                    className={reportTextarea}
-                    placeholder="사유를 입력해 주세요"
-                    maxLength={30}
-                    value={reportReason}
-                    onChange={(e) => setReportReason(e.target.value)}
-                    aria-label={`${selectedReportType} 사유`}
-                  />
-                  <div className={charCount}>{reportReason.length}/30</div>
+                <div className={sheetFooter}>
+                  <ActionButton
+                    variant="brandSolid"
+                    size="large"
+                    className={sheetPrimaryButton}
+                    onClick={handleReportNext}
+                  >
+                    확인
+                  </ActionButton>
+                  <div className={sheetHomeIndicatorArea} aria-hidden="true" />
                 </div>
-              </BottomSheetBody>
+              </>
+            ) : (
+              <>
+                <div className={sheetTopSection}>
+                  <div className={sheetHeader}>
+                    <h2 className={sheetTitle}>{selectedReportType} 사유를 입력해 주세요</h2>
+                  </div>
 
-              <BottomSheetFooter>
-                <ActionButton
-                  variant="brandSolid"
-                  size="large"
-                  className={sheetPrimaryButton}
-                  onClick={handleSubmitReport}
-                >
-                  확인
-                </ActionButton>
-              </BottomSheetFooter>
-            </>
-          )}
+                  <div className={textareaContainer}>
+                    <textarea
+                      className={reportTextarea}
+                      placeholder="사유를 입력해 주세요"
+                      maxLength={30}
+                      value={reportReason}
+                      onChange={(e) => setReportReason(e.target.value)}
+                      aria-label={`${selectedReportType} 사유`}
+                    />
+                    <div className={charCount}>{reportReason.length}/30</div>
+                  </div>
+                </div>
+
+                <div className={sheetFooter}>
+                  <ActionButton
+                    variant="brandSolid"
+                    size="large"
+                    className={sheetPrimaryButton}
+                    onClick={handleSubmitReport}
+                  >
+                    확인
+                  </ActionButton>
+                  <div className={sheetHomeIndicatorArea} aria-hidden="true" />
+                </div>
+              </>
+            )}
+          </div>
         </BottomSheetContent>
       </BottomSheetRoot>
 
       {/* 3. 팀 세션 인증 안내 바텀시트 */}
       <BottomSheetRoot open={isTeamGuideSheetOpen} onOpenChange={setIsTeamGuideSheetOpen}>
         <BottomSheetContent
-          title="팀 세션 인증 사진을 업로드해 주세요"
-          description="팀원 중 한 명만 올리면 팀 전체에 반영돼요"
-          showHandle
+          aria-label="팀 세션 인증 사진을 업로드해 주세요"
+          showHandle={false}
           showCloseButton={false}
+          className={sheetContent}
         >
-          <BottomSheetBody>
-            <div className={teamGraphicWrap} aria-hidden="true">
-              <CompleteIllustration />
+          <div className={sheetHandleArea} aria-hidden="true">
+            <div className={sheetHandleBar} />
+          </div>
+
+          <div className={sheetContainer}>
+            <div className={sheetTopSection}>
+              <div className={sheetHeader}>
+                <h2 className={sheetTitle}>팀 세션 인증 사진을 업로드해 주세요</h2>
+                <p className={sheetDescription}>팀원 중 한 명만 올리면 팀 전체에 반영돼요</p>
+              </div>
+
+              <div className={teamGraphicWrap} aria-hidden="true">
+                <CompleteIllustration />
+              </div>
+
+              <ul className={teamRulesList} aria-label="인증 사진 규칙">
+                <li className={teamRuleItem}>
+                  <IconCheckmarkCircleFill width={16} height={16} />
+                  <span>참석한 팀원이 모두 보이게 찍어주세요</span>
+                </li>
+                <li className={teamRuleItem}>
+                  <IconCheckmarkCircleFill width={16} height={16} />
+                  <span>세션 시간(14:00 - 18:00) 안에 올려주세요</span>
+                </li>
+                <li className={teamRuleItem}>
+                  <IconCheckmarkCircleFill width={16} height={16} />
+                  <span>운영진 확인 후 출석이 확정돼요</span>
+                </li>
+              </ul>
             </div>
 
-            <ul className={teamRulesList} aria-label="인증 사진 규칙">
-              <li className={teamRuleItem}>
-                <IconCheckmarkCircleFill width={16} height={16} />
-                <span>참석한 팀원이 모두 보이게 찍어주세요</span>
-              </li>
-              <li className={teamRuleItem}>
-                <IconCheckmarkCircleFill width={16} height={16} />
-                <span>세션 시간(14:00 - 18:00) 안에 올려주세요</span>
-              </li>
-              <li className={teamRuleItem}>
-                <IconCheckmarkCircleFill width={16} height={16} />
-                <span>운영진 확인 후 출석이 확정돼요</span>
-              </li>
-            </ul>
-          </BottomSheetBody>
-
-          <BottomSheetFooter>
-            <div className={teamButtonsWrap}>
-              <ActionButton
-                variant="neutralWeak"
-                size="large"
-                className={sheetSecondaryButton}
-                onClick={() => {
-                  setIsTeamGuideSheetOpen(false);
-                  router.push('/team-attendance/upload');
-                }}
-              >
-                앨범에서 선택하기
-              </ActionButton>
-              <ActionButton
-                variant="brandSolid"
-                size="large"
-                className={sheetPrimaryButton}
-                onClick={() => {
-                  setIsTeamGuideSheetOpen(false);
-                  router.push('/team-attendance/upload');
-                }}
-              >
-                직접 사진 찍기
-              </ActionButton>
+            <div className={sheetFooter}>
+              <div className={teamButtonsWrap}>
+                <ActionButton
+                  variant="neutralWeak"
+                  size="large"
+                  className={sheetSecondaryButton}
+                  onClick={() => {
+                    setIsTeamGuideSheetOpen(false);
+                    router.push('/team-attendance/upload');
+                  }}
+                >
+                  앨범에서 선택하기
+                </ActionButton>
+                <ActionButton
+                  variant="brandSolid"
+                  size="large"
+                  className={sheetPrimaryButton}
+                  onClick={() => {
+                    setIsTeamGuideSheetOpen(false);
+                    router.push('/team-attendance/upload');
+                  }}
+                >
+                  직접 사진 찍기
+                </ActionButton>
+              </div>
+              <div className={sheetHomeIndicatorArea} aria-hidden="true" />
             </div>
-          </BottomSheetFooter>
+          </div>
         </BottomSheetContent>
       </BottomSheetRoot>
 
