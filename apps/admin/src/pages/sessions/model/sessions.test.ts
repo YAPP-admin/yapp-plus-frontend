@@ -20,7 +20,7 @@ describe('브라우저 예시 세션 서비스 경계', () => {
       vi.stubGlobal('window', undefined);
     }
 
-    const service = await import('./sessions');
+    const service = await import('~/features/session-management/service');
     const input = createSessionInputSchema.parse({
       name: '세션',
       location: {
@@ -49,7 +49,7 @@ describe('브라우저 예시 세션 서비스 경계', () => {
     'DEV=%s에서 예시 데이터를 제공하고 모듈 재시작 시 초기화한다',
     async (dev) => {
       vi.stubEnv('DEV', dev);
-      const service = await import('./sessions');
+      const service = await import('~/features/session-management/service');
       const before = await service.listSessions();
       const input = createSessionInputSchema.parse({
         name: '세션',
@@ -66,7 +66,8 @@ describe('브라우저 예시 세션 서비스 경계', () => {
       });
 
       const created = await service.createSession(input);
-      const sameService = await import('./sessions');
+      // 화면과 서비스 진입점이 같은 브라우저 저장소를 공유하는지 확인합니다.
+      const sameService = await import('~/features/session-management');
 
       expect(await sameService.listSessions()).toContainEqual(created);
 
@@ -87,7 +88,7 @@ describe('브라우저 예시 세션 서비스 경계', () => {
 
       await service.createSession(input);
       vi.resetModules();
-      const reloadedService = await import('./sessions');
+      const reloadedService = await import('~/features/session-management/service');
 
       expect(await reloadedService.listSessions()).toEqual(before);
     },

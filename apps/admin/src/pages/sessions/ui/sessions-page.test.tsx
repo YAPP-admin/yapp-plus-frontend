@@ -12,10 +12,10 @@ import {
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createAdminQueryClient } from '../../../query-client';
 import type { SessionFilter } from '../model/session-search';
-import { sessionsQueryOptions } from '../model/session-queries';
-import { createSession, listSessions, updateSession } from '../model/sessions';
+import { sessionsQueryOptions } from '~/features/session-management';
+import { createSession, listSessions, updateSession } from '~/features/session-management/service';
 import { lookupCoordinates } from '../model/location/coordinates';
-import { createSessionStore } from '../model/sessions.mock';
+import { createSessionStore } from '~/features/session-management/testing';
 import { AdminOverlayProvider } from '../../../app/ui/admin-overlay-provider';
 import { SessionsPage } from './sessions-page';
 
@@ -47,7 +47,7 @@ vi.mock('./session-schedule-field', () => ({
   ),
 }));
 
-vi.mock('../model/sessions', () => ({
+vi.mock('~/features/session-management/service', () => ({
   listSessions: vi.fn<typeof listSessions>(),
   createSession: vi.fn<typeof createSession>(),
   updateSession: vi.fn<typeof updateSession>(),

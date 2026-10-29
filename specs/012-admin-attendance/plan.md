@@ -33,7 +33,9 @@ apps/admin/src/
 ├── pages/sessions/                 # 기존 세션 관리 화면
 └── features/session-management/    # 두 페이지가 실제 공유하는 세션·출석 데이터와 동작
     ├── index.ts                   # 공개 진입점
-    └── model/                     # 독립 모델, 서비스, Query, 모의 데이터
+    ├── model/                     # 독립 모델, Query, 모의 데이터
+    ├── service/index.ts           # 서비스 공개 진입점
+    └── testing/index.ts           # 테스트용 모의 저장소 공개 진입점
 ```
 
 1단계에서 두 페이지가 공유할 최소 세션 모델·조회·모의 저장소만 옮긴다.
