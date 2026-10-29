@@ -14,7 +14,10 @@ import { ActionButton } from '@yapp-plus/ui';
 import { X } from 'lucide-react';
 import type { CreateSessionInput } from '../model/session';
 import { parseSessionForm, sessionFormDefaults, sessionFormErrors } from '../model/session-form';
-import { coordinatesQueryOptions } from '../model/location/coordinates-query';
+import {
+  CoordinatesConfigurationError,
+  coordinatesQueryOptions,
+} from '../model/location/coordinates-query';
 import type {
   AddressSearchItemViewModel,
   CoordinatesViewModel,
@@ -42,6 +45,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
   const [adjusted, setAdjusted] = useState<CoordinatesViewModel>();
   const [submitError, setSubmitError] = useState('');
   const query = useQuery(coordinatesQueryOptions(address?.lookupReference ?? null));
+  const coordinatesUnavailable = query.error instanceof CoordinatesConfigurationError;
   const stored = initialValues?.type === 'offline' ? initialValues.location : undefined;
   const roadAddress = address?.roadAddress ?? stored?.roadAddress ?? '';
   const initialPosition = address ? query.data : stored;
@@ -227,17 +231,23 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                           )}
                           {query.isError && (
                             <div>
-                              <p role="alert">좌표를 조회하지 못했습니다.</p>
-                              <ActionButton
-                                type="button"
-                                variant="neutralWeak"
-                                disabled={pending}
-                                onClick={() => {
-                                  void query.refetch();
-                                }}
-                              >
-                                좌표 다시 조회
-                              </ActionButton>
+                              <p role="alert">
+                                {coordinatesUnavailable
+                                  ? '좌표 조회 설정이 준비되지 않았습니다. 관리자에게 문의해 주세요.'
+                                  : '좌표를 조회하지 못했습니다.'}
+                              </p>
+                              {!coordinatesUnavailable && (
+                                <ActionButton
+                                  type="button"
+                                  variant="neutralWeak"
+                                  disabled={pending}
+                                  onClick={() => {
+                                    void query.refetch();
+                                  }}
+                                >
+                                  좌표 다시 조회
+                                </ActionButton>
+                              )}
                             </div>
                           )}
                           {attempted && (!roadAddress || !position) && (
