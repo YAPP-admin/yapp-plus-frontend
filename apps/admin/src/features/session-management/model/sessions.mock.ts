@@ -1,4 +1,9 @@
 import {
+  createMockAttendanceSession,
+  createMockSessionMembers,
+  mockSessionMemberCount,
+} from './mocks/session-attendance';
+import {
   createSessionInputSchema,
   sessionSchema,
   sortSessions,
@@ -38,10 +43,22 @@ const fixtures: Session[] = [
 
 export function createSessionStore(initialSessions: readonly Session[] = fixtures) {
   let sessions = sessionSchema.array().parse(initialSessions);
+  const attendanceBySession = new Map(
+    sessions.map((session) => [session.id, createMockSessionMembers(session)]),
+  );
 
   return {
     listSessions(): Session[] {
       return sessionSchema.array().parse(sortSessions(sessions));
+    },
+
+    getSessionAttendance(id: string) {
+      const session = sessions.find((entry) => entry.id === id);
+      const members = attendanceBySession.get(id);
+      if (!session || !members) {
+        throw new Error('출석을 조회할 세션을 찾을 수 없습니다.');
+      }
+      return structuredClone({ session: createMockAttendanceSession(session, members), members });
     },
 
     createSession(input: CreateSessionInput): Session {
@@ -49,9 +66,16 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       const session = sessionSchema.parse({
         ...fields,
         id: crypto.randomUUID(),
-        attendance: { present: 0, late: 0, absent: 0, pending: 0, reported: 0 },
+        attendance: {
+          present: 0,
+          late: 0,
+          absent: 0,
+          pending: mockSessionMemberCount,
+          reported: 0,
+        },
       });
 
+      attendanceBySession.set(session.id, createMockSessionMembers(session));
       sessions = [...sessions, session];
       return sessionSchema.parse(session);
     },
@@ -78,6 +102,7 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       }
 
       sessions = sessions.filter((session) => session.id !== id);
+      attendanceBySession.delete(id);
     },
   };
 }

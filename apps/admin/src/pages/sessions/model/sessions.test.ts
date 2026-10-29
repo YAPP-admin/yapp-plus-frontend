@@ -35,6 +35,9 @@ describe('브라우저 예시 세션 서비스 경계', () => {
       type: 'offline',
     });
 
+    await expect(service.getSessionAttendance('missing')).rejects.toThrow(
+      '세션 관리 기능을 준비 중입니다.',
+    );
     await expect(service.listSessions()).rejects.toThrow('세션 관리 기능을 준비 중입니다.');
     await expect(service.createSession(input)).rejects.toThrow('세션 관리 기능을 준비 중입니다.');
     await expect(service.updateSession('missing', input)).rejects.toThrow(
@@ -70,10 +73,20 @@ describe('브라우저 예시 세션 서비스 경계', () => {
       const sameService = await import('~/features/session-management');
 
       expect(await sameService.listSessions()).toContainEqual(created);
+      const attendance = await sameService.getSessionAttendance(created.id);
+      expect(attendance.members.length).toBeGreaterThan(0);
+      expect(attendance.session.summary.undecided).toBe(attendance.members.length);
+      expect(attendance.members.every((member) => member.attendance.status === 'undecided')).toBe(
+        true,
+      );
 
       const updated = await sameService.updateSession(created.id, { ...input, name: '수정 세션' });
       expect(updated).toEqual({ ...created, name: '수정 세션' });
       expect(await service.listSessions()).toContainEqual(updated);
+      expect(await service.getSessionAttendance(created.id)).toEqual({
+        ...attendance,
+        session: { ...attendance.session, title: '수정 세션' },
+      });
       await expect(service.updateSession('missing', input)).rejects.toThrow(
         '수정할 세션을 찾을 수 없습니다.',
       );
@@ -83,6 +96,9 @@ describe('브라우저 예시 세션 서비스 경계', () => {
       expect(await service.listSessions()).toContainEqual(updated);
 
       await sameService.deleteSession(created.id);
+      await expect(service.getSessionAttendance(created.id)).rejects.toThrow(
+        '출석을 조회할 세션을 찾을 수 없습니다.',
+      );
 
       expect(await service.listSessions()).toEqual(before);
 

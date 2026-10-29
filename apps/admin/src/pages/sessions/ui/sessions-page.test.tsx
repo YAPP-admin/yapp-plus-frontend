@@ -220,9 +220,10 @@ it.each([true, false])(
       present: 0,
       late: 0,
       absent: 0,
-      pending: 0,
+      pending: 40,
       reported: 0,
     });
+    expect(screen.getAllByRole('article')[0]).toHaveTextContent(/미처리\s*40\s*명/);
     expect(create).toHaveBeenCalledOnce();
     expect(list).toHaveBeenCalledTimes(2);
   },
