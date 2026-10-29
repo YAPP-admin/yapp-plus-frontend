@@ -325,7 +325,7 @@ export function HomePage() {
             </div>
 
             <div className={quickCardCol}>
-              <HelpBubbleRoot open placement="top" gutter={6}>
+              <HelpBubbleRoot open placement="bottom" gutter={6}>
                 <HelpBubbleAnchor asChild>
                   <button
                     type="button"
