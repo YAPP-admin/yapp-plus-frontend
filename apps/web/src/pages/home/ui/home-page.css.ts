@@ -428,8 +428,8 @@ export const sheetPositioner = style({
   inset: 0,
   zIndex: 101,
   display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'flex-end',
+  justifyContent: 'center',
+  alignItems: 'flex-end',
   pointerEvents: 'none',
 });
 
@@ -439,22 +439,26 @@ export const sheetContent = style({
   flexDirection: 'column',
   width: '100%',
   maxWidth: '480px',
+  height: 'auto !important',
+  maxHeight: '85vh',
+  flex: '0 0 auto !important',
   margin: '0 auto',
-  backgroundColor: '#FFFFFF',
-  borderTopLeftRadius: '20px',
-  borderTopRightRadius: '20px',
-  padding: '12px 20px 34px',
+  backgroundColor: '#FFFFFF !important',
+  borderTopLeftRadius: '16px !important',
+  borderTopRightRadius: '16px !important',
+  padding: '12px 20px calc(24px + env(safe-area-inset-bottom, 0px)) !important',
   boxSizing: 'border-box',
   gap: '16px',
 });
 
 export const sheetHandleBar = style({
   alignSelf: 'center',
-  width: '36px',
+  width: '52px',
   height: '4px',
-  borderRadius: '2px',
+  borderRadius: '9999px',
   backgroundColor: '#DCDEE3',
-  marginBottom: '8px',
+  marginBottom: '4px',
+  flexShrink: 0,
 });
 
 export const sheetHeader = style({
@@ -601,7 +605,7 @@ export const charCount = style({
 export const sheetPrimaryButton = style({
   width: '100%',
   height: '52px',
-  borderRadius: '8px',
+  borderRadius: '12px !important',
   backgroundColor: '#FF6600 !important',
   color: '#FFFFFF !important',
   fontSize: '16px !important',
