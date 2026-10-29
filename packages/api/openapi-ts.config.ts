@@ -15,14 +15,6 @@ if (!input) {
 
 export default defineConfig({
   input,
-  // #198: 후속 PR에서 기능군별로 해제하며 최종 단계에서는 필터를 제거합니다.
-  parser: {
-    filters: {
-      operations: {
-        exclude: ['GET /api/admin/users/{userId}/retained-history', 'DELETE /api/users/me'],
-      },
-    },
-  },
   output: {
     path: 'src/generated',
     postProcess: ['oxfmt'],

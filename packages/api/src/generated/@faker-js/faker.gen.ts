@@ -82,6 +82,8 @@ import type {
   Find3Responses,
   Find4Errors,
   Find4Responses,
+  Find5Errors,
+  Find5Responses,
   FindAllErrors,
   FindAllResponses,
   FindCandidatesErrors,
@@ -145,6 +147,8 @@ import type {
   ReplaceMembersErrors,
   ReplaceMembersResponses,
   ReplaceTeamMembersRequest,
+  RetainedHistoryEntry,
+  RetainedHistoryPage,
   RevokeErrors,
   RosterCandidateView,
   SessionListResponse,
@@ -189,6 +193,7 @@ import type {
   VerifyAttendanceCodeResponse,
   VerifyErrors,
   VerifyResponses,
+  WithdrawErrors,
 } from '../types.gen';
 
 export type Options = {
@@ -1053,6 +1058,24 @@ export const fakeAttendanceHistoryResponse = (options?: Options): AttendanceHist
   };
 };
 
+export const fakeRetainedHistoryEntry = (options?: Options): RetainedHistoryEntry => {
+  const f = options?.faker ?? faker;
+  return {
+    sourceType: f.string.sample(),
+    sourceId: f.number.int(),
+    occurredAt: f.date.recent().toISOString(),
+    reason: f.string.sample(),
+  };
+};
+
+export const fakeRetainedHistoryPage = (options?: Options): RetainedHistoryPage => {
+  const f = options?.faker ?? faker;
+  return {
+    items: f.helpers.multiple(() => fakeRetainedHistoryEntry(options)),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
 export const fakePendingMemberView = (options?: Options): PendingMemberView => {
   const f = options?.faker ?? faker;
   return {
@@ -1863,6 +1886,21 @@ export const fakeFind4Response401 = (options?: Options): Find4Errors[401] =>
 export const fakeFind4Response409 = (options?: Options): Find4Errors[409] =>
   fakeErrorResponse(options);
 
+export const fakeFind5Response200 = (options?: Options): Find5Responses[200] =>
+  fakeRetainedHistoryPage(options);
+
+export const fakeFind5Response400 = (options?: Options): Find5Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeFind5Response401 = (options?: Options): Find5Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeFind5Response404 = (options?: Options): Find5Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeFind5Response503 = (options?: Options): Find5Errors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeFindPendingResponse200 = (options?: Options): FindPendingResponses[200] =>
   fakePendingMemberListResponse(options);
 
@@ -1937,6 +1975,12 @@ export const fakeRecipientsResponse401 = (options?: Options): RecipientsErrors[4
   fakeErrorResponse(options);
 
 export const fakeRecipientsResponse404 = (options?: Options): RecipientsErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeWithdrawResponse401 = (options?: Options): WithdrawErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeWithdrawResponse503 = (options?: Options): WithdrawErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeRevokeResponse400 = (options?: Options): RevokeErrors[400] =>

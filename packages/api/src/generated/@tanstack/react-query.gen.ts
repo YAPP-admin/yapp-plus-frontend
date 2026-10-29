@@ -35,6 +35,7 @@ import {
   find2,
   find3,
   find4,
+  find5,
   findAll,
   findCandidates,
   findDetail,
@@ -67,6 +68,7 @@ import {
   update,
   update1,
   verify,
+  withdraw,
 } from '../sdk.gen';
 import type {
   AcknowledgeData,
@@ -138,6 +140,9 @@ import type {
   Find4Data,
   Find4Error,
   Find4Response,
+  Find5Data,
+  Find5Error,
+  Find5Response,
   FindAllData,
   FindAllError,
   FindAllResponse,
@@ -230,6 +235,9 @@ import type {
   VerifyData,
   VerifyError,
   VerifyResponse,
+  WithdrawData,
+  WithdrawError,
+  WithdrawResponse,
 } from '../types.gen';
 
 /**
@@ -1463,6 +1471,70 @@ export const find4InfiniteOptions = (options?: Options<Find4Data>) => {
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
+export const find5QueryKey = (options: Options<Find5Data>) => createQueryKey('find5', options);
+
+/**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find5Options = (options: Options<Find5Data>) =>
+  queryOptions<Find5Response, Find5Error, Find5Response, ReturnType<typeof find5QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find5({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find5QueryKey(options),
+  });
+
+export const find5InfiniteQueryKey = (options: Options<Find5Data>): QueryKey<Options<Find5Data>> =>
+  createQueryKey('find5', options, true);
+
+/**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find5InfiniteOptions = (options: Options<Find5Data>) => {
+  const opts = infiniteQueryOptions<
+    Find5Response,
+    Find5Error,
+    InfiniteData<Find5Response>,
+    QueryKey<Options<Find5Data>>,
+    string | Pick<QueryKey<Options<Find5Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Find5Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await find5({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: find5InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
 export const findPendingQueryKey = (options?: Options<FindPendingData>) =>
   createQueryKey('findPending', options);
 
@@ -1767,6 +1839,31 @@ export const recipientsInfiniteOptions = (options: Options<RecipientsData>) => {
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;
+};
+
+/**
+ * 계정·동아리 통합 탈퇴
+ *
+ * 모든 기수 소속과 세션을 폐기하고 구조화된 개인정보를 비식별화한다. Native는 보관한 token을 제거한다.
+ */
+export const withdrawMutation = (
+  options?: Partial<Options<WithdrawData>>,
+): UseMutationOptions<WithdrawResponse, WithdrawError, Options<WithdrawData>> => {
+  const mutationOptions: UseMutationOptions<
+    WithdrawResponse,
+    WithdrawError,
+    Options<WithdrawData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await withdraw({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
 };
 
 /**

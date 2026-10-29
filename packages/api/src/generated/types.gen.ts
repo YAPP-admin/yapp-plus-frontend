@@ -679,6 +679,18 @@ export type AttendanceHistorySummaryResponse = {
   startedSessionCount: number;
 };
 
+export type RetainedHistoryEntry = {
+  sourceType: string;
+  sourceId: number;
+  occurredAt: string;
+  reason: string;
+};
+
+export type RetainedHistoryPage = {
+  items: Array<RetainedHistoryEntry>;
+  nextCursor: string | null;
+};
+
 export type PendingMemberListResponse = {
   items: Array<PendingMemberView>;
   nextCursor: string | null;
@@ -2493,6 +2505,48 @@ export type Find4Responses = {
 
 export type Find4Response = Find4Responses[keyof Find4Responses];
 
+export type Find5Data = {
+  body?: never;
+  path: {
+    userId: number;
+  };
+  query?: {
+    cursor?: string;
+    size?: number;
+  };
+  url: '/api/admin/users/{userId}/retained-history';
+};
+
+export type Find5Errors = {
+  /**
+   * INVALID_HISTORY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * USER_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * RETAINED_HISTORY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Find5Error = Find5Errors[keyof Find5Errors];
+
+export type Find5Responses = {
+  /**
+   * 조회 성공; 이력이 없으면 빈 목록
+   */
+  200: RetainedHistoryPage;
+};
+
+export type Find5Response = Find5Responses[keyof Find5Responses];
+
 export type FindPendingData = {
   body?: never;
   path?: never;
@@ -2743,6 +2797,35 @@ export type RecipientsResponses = {
 };
 
 export type RecipientsResponse = RecipientsResponses[keyof RecipientsResponses];
+
+export type WithdrawData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/users/me';
+};
+
+export type WithdrawErrors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * USER_WITHDRAWAL_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type WithdrawError = WithdrawErrors[keyof WithdrawErrors];
+
+export type WithdrawResponses = {
+  /**
+   * 탈퇴 완료
+   */
+  204: void;
+};
+
+export type WithdrawResponse = WithdrawResponses[keyof WithdrawResponses];
 
 export type RevokeData = {
   /**
