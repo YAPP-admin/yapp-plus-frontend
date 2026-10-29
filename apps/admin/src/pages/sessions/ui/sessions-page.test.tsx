@@ -83,7 +83,7 @@ afterEach(() => {
 async function setup(type: SessionFilter = 'all', cached = false) {
   const client = createAdminQueryClient();
   if (cached) {
-    client.setQueryData(sessionsQueryOptions.queryKey, fixtures);
+    client.setQueryData(sessionsQueryOptions.queryKey, { sessions: fixtures, complete: true });
   }
   function Harness() {
     const [filter, setFilter] = useState(type);
@@ -392,4 +392,41 @@ it('수정 Mutation 실패 시 목록·필터를 유지하고 재시도 성공�
   expect(screen.getByText('재시도할 장소')).toBeVisible();
   expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
   expect(update).toHaveBeenCalledTimes(2);
+});
+
+it('첫 목록의 오래된 응답이 저장 성공 뒤 도착해도 새 세션을 보존한다', async () => {
+  const store = mockStore();
+  const oldList = Promise.withResolvers<Awaited<ReturnType<typeof listSessions>>>();
+  list.mockReturnValueOnce(oldList.promise).mockRejectedValueOnce(new Error('list-failure'));
+  const user = await setup();
+  await fillTeamSession(user);
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(await screen.findByRole('heading', { name: '새 팀 세션' })).toBeVisible();
+  expect(screen.getByText(/저장한 세션만 표시/)).toBeVisible();
+  await act(async () => {
+    oldList.resolve(fixtures);
+    await oldList.promise;
+  });
+  expect(screen.getByRole('heading', { name: '새 팀 세션' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(await screen.findByText('전체 3개')).toBeVisible();
+  expect(store.listSessions()).toHaveLength(3);
+  expect(create).toHaveBeenCalledOnce();
+});
+
+it('저장 성공 뒤 재조회가 실패해도 기존 카드와 저장 결과를 숨기지 않는다', async () => {
+  mockStore();
+  const user = await setup();
+  await screen.findByRole('list');
+  list.mockRejectedValueOnce(new Error('list-failure'));
+  await fillTeamSession(user);
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(await screen.findByRole('alert')).toHaveTextContent('다시 불러오지 못했습니다');
+  expect(screen.getAllByRole('article')).toHaveLength(3);
+  expect(screen.getByRole('heading', { name: '새 팀 세션' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  expect(create).toHaveBeenCalledOnce();
 });
