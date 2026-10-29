@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHydrated } from '@tanstack/react-router';
-import type { CreateSessionInput } from '~/features/session-management';
-import { createSession, listSessions, updateSession } from './sessions';
+import type { CreateSessionInput } from './session';
+import { createSession, listSessions, updateSession } from '../service';
 
 export const sessionsQueryOptions = queryOptions({
   queryKey: ['admin', 'sessions'],

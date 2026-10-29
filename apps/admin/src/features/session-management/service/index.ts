@@ -1,15 +1,11 @@
-import {
-  createSessionInputSchema,
-  sessionSchema,
-  type CreateSessionInput,
-} from '~/features/session-management';
+import { createSessionInputSchema, sessionSchema, type CreateSessionInput } from '../model/session';
 
 async function getStore() {
   if (import.meta.env.SSR || typeof window === 'undefined') {
     throw new Error('세션 관리 기능을 준비 중입니다.');
   }
 
-  const { getBrowserSessionStore } = await import('./sessions.mock');
+  const { getBrowserSessionStore } = await import('../model/sessions.mock');
   return getBrowserSessionStore();
 }
 

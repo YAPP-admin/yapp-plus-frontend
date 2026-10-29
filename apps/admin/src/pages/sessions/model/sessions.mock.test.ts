@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { createSessionInputSchema, type CreateSessionInput } from '~/features/session-management';
-import { createSessionStore } from './sessions.mock';
+import { createSessionStore } from '~/features/session-management/testing';
 
 const input = createSessionInputSchema.parse({
   name: '새 세션',

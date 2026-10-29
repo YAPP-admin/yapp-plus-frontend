@@ -38,3 +38,17 @@ UI 변경이 없어 스크린샷·브라우저 동작·접근성 검증은 이�
 어드민 lint·typecheck·테스트는 재실행했으며 기존 39개 파일의 478개 테스트가 통과했다.
 첫 검사에서 공개 export 누락을 발견해 수정한 뒤 다시 통과했다. 이동 모델은 원본과 byte 단위로 동일하다.
 브라우저 수동 검증은 실행하지 않았고 기존 폼·목록·CRUD 자동 테스트로 회귀를 확인했다.
+
+## 1-2단계: 세션 서비스·Query·모의 저장소 추출
+
+문서 기준 브랜치 `attendance-design`을 `412f542`에 생성했다. 현재 브랜치 `tallinn/xoaj3`는 유지한다.
+문서 PR의 base는 main, 1단계 코드 PR의 base는 attendance-design으로 분리한다. 실제 push·PR 생성은 하지 않았다.
+서비스는 `features/session-management/service/index.ts`, Query와 저장소는 같은 feature의 model로 옮겼다.
+페이지는 공개 진입점을 사용하고 feature 내부는 상대 경로로 참조한다. 폼·장소 검색·필터는 기존 페이지에 남겼다.
+테스트용 `testing/index.ts`로 fixture 저장소를 노출하고 서비스의 저장소 동적 import를 유지했다.
+기존 서비스 테스트를 보강해 서비스·화면 공개 진입점 사이의 생성·수정·삭제 결과 공유를 검증했다.
+
+`mise exec -- node --run check` 통과: 어드민 lint·typecheck·39개 테스트 파일(478개 테스트)을 재실행했다.
+`mise exec -- node --run build` 통과. 첫 lint의 중복 import를 합친 후 전체 check를 다시 통과했다.
+화면·정책 변경이 없어 새 스크린샷·Storybook 사례는 없으며 브라우저 수동 검증은 실행하지 않았다.
+1단계 추출을 완료했으며 2단계 모델·점수 규칙 구현은 리뷰와 진행 확인 전까지 시작하지 않는다.
