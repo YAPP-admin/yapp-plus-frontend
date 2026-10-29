@@ -416,27 +416,88 @@ export const helpBubbleArrowTip = style({
   fill: '#2A3038 !important',
 });
 
+export const sheetContent = style({
+  borderTopLeftRadius: '16px !important',
+  borderTopRightRadius: '16px !important',
+  backgroundColor: '#FFFFFF !important',
+  paddingBottom: 'calc(18px + env(safe-area-inset-bottom, 0px)) !important',
+  boxSizing: 'border-box',
+});
+
+export const sheetHandleArea = style({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  padding: '14px 10px',
+  width: '100%',
+  boxSizing: 'border-box',
+});
+
+export const sheetHandleBar = style({
+  width: '52px',
+  height: '4px',
+  borderRadius: '9999px',
+  backgroundColor: '#F3F4F5',
+});
+
+export const sheetHeader = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+  padding: '0 18px',
+  boxSizing: 'border-box',
+  marginBottom: '24px',
+});
+
+export const sheetTitle = style({
+  fontSize: '20px',
+  lineHeight: '27px',
+  fontWeight: 700,
+  color: '#1A1C20',
+  margin: 0,
+  textAlign: 'left',
+});
+
+export const sheetDescription = style({
+  fontSize: '14px',
+  lineHeight: '19px',
+  fontWeight: 500,
+  color: '#555D6D',
+  margin: 0,
+  textAlign: 'left',
+});
+
+export const sheetBody = style({
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'center',
+  padding: '0 18px',
+  boxSizing: 'border-box',
+});
+
 export const codeInputsContainer = style({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
   gap: '6px',
-  margin: '16px 0',
+  width: '234px',
+  margin: '0 auto',
 });
 
 export const codeInput = style({
   width: '54px',
   height: '54px',
   borderRadius: '12px',
-  border: '1px solid #EFEFF0',
+  border: '1px solid #DCDEE3',
+  backgroundColor: '#FFFFFF',
   textAlign: 'center',
   fontSize: '18px',
   fontWeight: 700,
   lineHeight: '24px',
   color: '#1A1C20',
-  backgroundColor: '#FFFFFF',
   outline: 'none',
   boxSizing: 'border-box',
+  padding: 0,
   transition: 'border-color 0.15s ease',
   selectors: {
     '&:focus': {
@@ -459,10 +520,18 @@ export const codeErrorMessage = style({
   justifyContent: 'center',
   gap: '4px',
   fontSize: '13px',
-  fontWeight: 500,
   lineHeight: '18px',
+  fontWeight: 500,
   color: '#FA342C',
-  margin: '8px 0',
+  marginTop: '10px',
+});
+
+export const sheetFooter = style({
+  display: 'flex',
+  flexDirection: 'column',
+  padding: '20px 18px 0',
+  boxSizing: 'border-box',
+  width: '100%',
 });
 
 export const radioGroup = style({
