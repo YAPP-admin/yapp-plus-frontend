@@ -29,10 +29,8 @@ jobs:
         uses: pascalgn/size-label-action@56b489b027932ec0cf60438a1a5f1a19c8fc71ff # v0.5.7
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          IGNORED: |
-            pnpm-lock.yaml
-            apps/admin/src/routeTree.gen.ts
-            packages/api/src/generated/**
+          # 저장소의 PR 제한과 동일하게 lockfile·생성 파일도 모두 계산합니다.
+          IGNORED: ''
         with:
           sizes: |
             {
@@ -49,3 +47,17 @@ jobs:
           repo-token: ${{ github.token }}
           configuration-path: .github/labeler.yml
           sync-labels: true
+
+      - name: Enforce repository size policy
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          total="$(gh api "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER" --jq '.additions + .deletions')"
+          echo "PR 변경량: $total줄 (추가 + 삭제, 파일 제외 없음)" >> "$GITHUB_STEP_SUMMARY"
+          if [ "$total" -ge 800 ]; then
+            echo '::error::PR 변경량은 생성 파일과 lockfile을 포함해 800줄 미만이어야 합니다.'
+            exit 1
+          elif [ "$total" -ge 650 ]; then
+            echo '::warning::650줄 이상입니다. 독립적으로 검토 가능한 PR 분리를 검토해 주세요.'
+          fi
