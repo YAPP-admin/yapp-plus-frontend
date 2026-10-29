@@ -34,6 +34,7 @@ import {
   find1,
   find2,
   find3,
+  find4,
   findAll,
   findCandidates,
   findDetail,
@@ -45,6 +46,7 @@ import {
   list3,
   login,
   logout,
+  mine,
   type Options,
   override,
   presign,
@@ -133,6 +135,9 @@ import type {
   Find3Data,
   Find3Error,
   Find3Response,
+  Find4Data,
+  Find4Error,
+  Find4Response,
   FindAllData,
   FindAllError,
   FindAllResponse,
@@ -169,6 +174,9 @@ import type {
   LogoutData,
   LogoutError,
   LogoutResponse,
+  MineData,
+  MineError,
+  MineResponse,
   OverrideData,
   OverrideError,
   Presign1Data,
@@ -1371,6 +1379,89 @@ export const startAppleAuthorizationOptions = (options: Options<StartAppleAuthor
     },
     queryKey: startAppleAuthorizationQueryKey(options),
   });
+
+export const mineQueryKey = (options?: Options<MineData>) => createQueryKey('mine', options);
+
+/**
+ * 현재 기수 본인의 누적 출결 점수와 횟수 조회
+ */
+export const mineOptions = (options?: Options<MineData>) =>
+  queryOptions<MineResponse, MineError, MineResponse, ReturnType<typeof mineQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await mine({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: mineQueryKey(options),
+  });
+
+export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('find4', options);
+
+/**
+ * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
+ *
+ * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
+ */
+export const find4Options = (options?: Options<Find4Data>) =>
+  queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find4({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find4QueryKey(options),
+  });
+
+export const find4InfiniteQueryKey = (options?: Options<Find4Data>): QueryKey<Options<Find4Data>> =>
+  createQueryKey('find4', options, true);
+
+/**
+ * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
+ *
+ * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
+ */
+export const find4InfiniteOptions = (options?: Options<Find4Data>) => {
+  const opts = infiniteQueryOptions<
+    Find4Response,
+    Find4Error,
+    InfiniteData<Find4Response>,
+    QueryKey<Options<Find4Data>>,
+    string | Pick<QueryKey<Options<Find4Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Find4Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await find4({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: find4InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const findPendingQueryKey = (options?: Options<FindPendingData>) =>
   createQueryKey('findPending', options);

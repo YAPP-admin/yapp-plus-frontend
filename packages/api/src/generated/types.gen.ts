@@ -618,6 +618,67 @@ export type CurrentGenerationSessionsResponse = {
   sessions: Array<CurrentGenerationSessionItemResponse>;
 };
 
+export type MyAttendanceScoreResponse = {
+  /**
+   * 현재 활동 기수 ID
+   */
+  generationId: number;
+  /**
+   * 0점 하한이 적용된 누적 점수
+   */
+  totalScore: number;
+  /**
+   * 마감 세션의 출석 횟수
+   */
+  attendanceCount: number;
+  /**
+   * 마감 세션의 지각 횟수
+   */
+  lateCount: number;
+  /**
+   * 마감 세션의 결석 횟수
+   */
+  absentCount: number;
+  /**
+   * 마감 세션의 조퇴 횟수
+   */
+  earlyLeaveCount: number;
+};
+
+export type AttendanceHistoryItemResponse = {
+  sessionId: number;
+  sessionName: string;
+  attendanceStatus:
+    | 'UNDECIDED'
+    | 'PRESENT'
+    | 'LATE'
+    | 'EARLY_LEAVE'
+    | 'LATE_AND_EARLY_LEAVE'
+    | 'ABSENT'
+    | 'EXCUSED_ABSENCE';
+  staffDecisionStatus:
+    | 'NOT_SUBMITTED'
+    | 'NOT_SELECTED'
+    | 'PENDING'
+    | 'APPROVED'
+    | 'REJECTED'
+    | null;
+};
+
+export type AttendanceHistoryResponse = {
+  summary: AttendanceHistorySummaryResponse;
+  items: Array<AttendanceHistoryItemResponse>;
+  /**
+   * 다음 페이지 cursor. 마지막 페이지이면 null
+   */
+  nextCursor: string | null;
+};
+
+export type AttendanceHistorySummaryResponse = {
+  totalSessionCount: number;
+  startedSessionCount: number;
+};
+
 export type PendingMemberListResponse = {
   items: Array<PendingMemberView>;
   nextCursor: string | null;
@@ -2355,6 +2416,82 @@ export type StartAppleAuthorizationErrors = {
 
 export type StartAppleAuthorizationError =
   StartAppleAuthorizationErrors[keyof StartAppleAuthorizationErrors];
+
+export type MineData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/attendance-scores/me';
+};
+
+export type MineErrors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_NOT_ELIGIBLE
+   */
+  403: ErrorResponse;
+  /**
+   * CURRENT_GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ACTIVE_GENERATION_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_INCONSISTENT
+   */
+  500: ErrorResponse;
+};
+
+export type MineError = MineErrors[keyof MineErrors];
+
+export type MineResponses = {
+  /**
+   * OK
+   */
+  200: MyAttendanceScoreResponse;
+};
+
+export type MineResponse = MineResponses[keyof MineResponses];
+
+export type Find4Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    cursor?: string;
+  };
+  url: '/api/attendance-history';
+};
+
+export type Find4Errors = {
+  /**
+   * INVALID_ATTENDANCE_HISTORY_CURSOR
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * ACTIVE_GENERATION_CONFLICT
+   */
+  409: ErrorResponse;
+};
+
+export type Find4Error = Find4Errors[keyof Find4Errors];
+
+export type Find4Responses = {
+  /**
+   * 조회 성공
+   */
+  200: AttendanceHistoryResponse;
+};
+
+export type Find4Response = Find4Responses[keyof Find4Responses];
 
 export type FindPendingData = {
   body?: never;

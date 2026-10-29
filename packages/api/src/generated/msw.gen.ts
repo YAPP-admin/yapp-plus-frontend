@@ -43,6 +43,7 @@ import type {
   Find1Responses,
   Find2Responses,
   Find3Responses,
+  Find4Responses,
   FindAllResponses,
   FindCandidatesResponses,
   FindDetailResponses,
@@ -56,6 +57,7 @@ import type {
   LoginData,
   LoginResponses,
   LogoutResponses,
+  MineResponses,
   OverrideData,
   OverrideResponses,
   Presign1Data,
@@ -1988,6 +1990,74 @@ export function handleStartAppleAuthorization(
   );
 }
 
+export type HandleMineResponse = {
+  body: MineResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/attendance-scores/me` operation.
+ */
+export function handleMine(
+  response?: HandleMineResponse | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/attendance-scores/me`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleFind4Response = {
+  body: Find4Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/attendance-history` operation.
+ */
+export function handleFind4(
+  response?: HandleFind4Response | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/attendance-history`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleFindPendingResponse = {
   body: FindPendingResponses[200];
   status?: 200;
@@ -2602,6 +2672,14 @@ export type MswHandlerFactories = {
    */
   startAppleAuthorization: typeof handleStartAppleAuthorization;
   /**
+   * Handler for the `GET /api/attendance-scores/me` operation.
+   */
+  mine: typeof handleMine;
+  /**
+   * Handler for the `GET /api/attendance-history` operation.
+   */
+  find4: typeof handleFind4;
+  /**
    * Handler for the `GET /api/admin/membership-approvals` operation.
    */
   findPending: typeof handleFindPending;
@@ -2705,6 +2783,8 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     completeGoogleAuthorization: wrap(handleCompleteGoogleAuthorization),
     startGoogleAuthorization: wrap(handleStartGoogleAuthorization),
     startAppleAuthorization: wrap(handleStartAppleAuthorization),
+    mine: wrap(handleMine),
+    find4: wrap(handleFind4),
     findPending: wrap(handleFindPending),
     findDetail: wrap(handleFindDetail),
     findCandidates: wrap(handleFindCandidates),
@@ -2772,12 +2852,14 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.submit, overrides.submit),
       invoke(pick.renew, overrides.renew),
       invoke(pick.find2, overrides.find2),
+      invoke(pick.mine, overrides.mine),
       invoke(pick.findPending, overrides.findPending),
       invoke(pick.detail1, overrides.detail1),
       invoke(pick.register, overrides.register),
       invoke(pick.verify, overrides.verify),
       invoke(pick.submit1, overrides.submit1),
       invoke(pick.list1, overrides.list1),
+      invoke(pick.find4, overrides.find4),
     ];
   };
   return { all, pick };

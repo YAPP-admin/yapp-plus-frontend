@@ -19,12 +19,7 @@ export default defineConfig({
   parser: {
     filters: {
       operations: {
-        exclude: [
-          'GET /api/attendance-scores/me',
-          'GET /api/attendance-history',
-          'GET /api/admin/users/{userId}/retained-history',
-          'DELETE /api/users/me',
-        ],
+        exclude: ['GET /api/admin/users/{userId}/retained-history', 'DELETE /api/users/me'],
       },
     },
   },

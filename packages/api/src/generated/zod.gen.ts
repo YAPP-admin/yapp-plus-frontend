@@ -834,6 +834,84 @@ export const zCurrentGenerationSessionsResponse = z.object({
   sessions: z.array(zCurrentGenerationSessionItemResponse),
 });
 
+export const zMyAttendanceScoreResponse = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  totalScore: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  attendanceCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  lateCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  absentCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  earlyLeaveCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+});
+
+export const zAttendanceHistoryItemResponse = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  sessionName: z.string(),
+  attendanceStatus: z.enum([
+    'UNDECIDED',
+    'PRESENT',
+    'LATE',
+    'EARLY_LEAVE',
+    'LATE_AND_EARLY_LEAVE',
+    'ABSENT',
+    'EXCUSED_ABSENCE',
+  ]),
+  staffDecisionStatus: z
+    .union([
+      z.literal('NOT_SUBMITTED'),
+      z.literal('NOT_SELECTED'),
+      z.literal('PENDING'),
+      z.literal('APPROVED'),
+      z.literal('REJECTED'),
+    ])
+    .nullable(),
+});
+
+export const zAttendanceHistorySummaryResponse = z.object({
+  totalSessionCount: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  startedSessionCount: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+});
+
+export const zAttendanceHistoryResponse = z.object({
+  summary: zAttendanceHistorySummaryResponse,
+  items: z.array(zAttendanceHistoryItemResponse),
+  nextCursor: z.string().nullable(),
+});
+
 export const zPendingMemberView = z.object({
   memberId: z.coerce
     .bigint()
@@ -1909,6 +1987,20 @@ export const zCompleteGoogleAuthorizationQuery = z.object({
 export const zStartAppleAuthorizationQuery = z.object({
   client: z.enum(['WEB', 'ANDROID']),
 });
+
+/**
+ * OK
+ */
+export const zMineResponse = zMyAttendanceScoreResponse;
+
+export const zFind4Query = z.object({
+  cursor: z.string().optional(),
+});
+
+/**
+ * 조회 성공
+ */
+export const zFind4Response = zAttendanceHistoryResponse;
 
 export const zFindPendingQuery = z.object({
   size: z
