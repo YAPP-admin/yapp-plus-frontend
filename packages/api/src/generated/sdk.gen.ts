@@ -79,6 +79,9 @@ import type {
   Find3Data,
   Find3Errors,
   Find3Responses,
+  Find4Data,
+  Find4Errors,
+  Find4Responses,
   FindAllData,
   FindAllErrors,
   FindAllResponses,
@@ -115,6 +118,9 @@ import type {
   LogoutData,
   LogoutErrors,
   LogoutResponses,
+  MineData,
+  MineErrors,
+  MineResponses,
   OverrideData,
   OverrideErrors,
   OverrideResponses,
@@ -1058,6 +1064,44 @@ export const startAppleAuthorization = <ThrowOnError extends boolean = false>(
 ): RequestResult<unknown, StartAppleAuthorizationErrors, ThrowOnError> =>
   (options.client ?? client).get<unknown, StartAppleAuthorizationErrors, ThrowOnError>({
     url: '/api/auth/oidc/apple/authorization-requests',
+    ...options,
+  });
+
+/**
+ * 현재 기수 본인의 누적 출결 점수와 횟수 조회
+ */
+export const mine = <ThrowOnError extends boolean = false>(
+  options?: Options<MineData, ThrowOnError>,
+): RequestResult<MineResponses, MineErrors, ThrowOnError> =>
+  (options?.client ?? client).get<MineResponses, MineErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/attendance-scores/me',
+    ...options,
+  });
+
+/**
+ * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
+ *
+ * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
+ */
+export const find4 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find4Data, ThrowOnError>,
+): RequestResult<Find4Responses, Find4Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find4Responses, Find4Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/attendance-history',
     ...options,
   });
 

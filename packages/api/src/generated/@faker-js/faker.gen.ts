@@ -21,6 +21,9 @@ import type {
   AssignmentPostRequest,
   AssignmentPostResponse,
   AttendanceCodeResponse,
+  AttendanceHistoryItemResponse,
+  AttendanceHistoryResponse,
+  AttendanceHistorySummaryResponse,
   AttendanceReportResponse,
   AttendanceSummaryResponse,
   AuthenticateAppleErrors,
@@ -77,6 +80,8 @@ import type {
   Find2Responses,
   Find3Errors,
   Find3Responses,
+  Find4Errors,
+  Find4Responses,
   FindAllErrors,
   FindAllResponses,
   FindCandidatesErrors,
@@ -104,7 +109,10 @@ import type {
   LogoutErrors,
   MemberDetailResponse,
   MemberMembershipResponse,
+  MineErrors,
+  MineResponses,
   MobileHandoffRequest,
+  MyAttendanceScoreResponse,
   OverrideAttendanceRequest,
   OverrideErrors,
   OverrideResponses,
@@ -987,6 +995,64 @@ export const fakeCurrentGenerationSessionsResponse = (
   };
 };
 
+export const fakeMyAttendanceScoreResponse = (options?: Options): MyAttendanceScoreResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    generationId: f.number.int(),
+    totalScore: f.number.int({ min: 0 }),
+    attendanceCount: f.number.int({ min: 0 }),
+    lateCount: f.number.int({ min: 0 }),
+    absentCount: f.number.int({ min: 0, max: 100 }),
+    earlyLeaveCount: f.number.int({ min: 0 }),
+  };
+};
+
+export const fakeAttendanceHistoryItemResponse = (
+  options?: Options,
+): AttendanceHistoryItemResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    sessionId: f.number.int(),
+    sessionName: f.string.sample(),
+    attendanceStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE',
+      'EARLY_LEAVE',
+      'LATE_AND_EARLY_LEAVE',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+    ]),
+    staffDecisionStatus: f.helpers.arrayElement([
+      'NOT_SUBMITTED',
+      'NOT_SELECTED',
+      'PENDING',
+      'APPROVED',
+      'REJECTED',
+      null,
+    ]) as any,
+  };
+};
+
+export const fakeAttendanceHistorySummaryResponse = (
+  options?: Options,
+): AttendanceHistorySummaryResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    totalSessionCount: f.number.int(),
+    startedSessionCount: f.number.int(),
+  };
+};
+
+export const fakeAttendanceHistoryResponse = (options?: Options): AttendanceHistoryResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    summary: fakeAttendanceHistorySummaryResponse(options),
+    items: f.helpers.multiple(() => fakeAttendanceHistoryItemResponse(options)),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
 export const fakePendingMemberView = (options?: Options): PendingMemberView => {
   const f = options?.faker ?? faker;
   return {
@@ -1766,6 +1832,36 @@ export const fakeStartAppleAuthorizationResponse400 = (
 export const fakeStartAppleAuthorizationResponse401 = (
   options?: Options,
 ): StartAppleAuthorizationErrors[401] => fakeErrorResponse(options);
+
+export const fakeMineResponse200 = (options?: Options): MineResponses[200] =>
+  fakeMyAttendanceScoreResponse(options);
+
+export const fakeMineResponse401 = (options?: Options): MineErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeMineResponse403 = (options?: Options): MineErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeMineResponse404 = (options?: Options): MineErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeMineResponse409 = (options?: Options): MineErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeMineResponse500 = (options?: Options): MineErrors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeFind4Response200 = (options?: Options): Find4Responses[200] =>
+  fakeAttendanceHistoryResponse(options);
+
+export const fakeFind4Response400 = (options?: Options): Find4Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeFind4Response401 = (options?: Options): Find4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeFind4Response409 = (options?: Options): Find4Errors[409] =>
+  fakeErrorResponse(options);
 
 export const fakeFindPendingResponse200 = (options?: Options): FindPendingResponses[200] =>
   fakePendingMemberListResponse(options);
