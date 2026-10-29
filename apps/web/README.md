@@ -9,8 +9,9 @@ mise exec -- pnpm install --frozen-lockfile
 mise exec -- node --run dev:web
 ```
 
-기본 주소는 `http://localhost:3000`입니다. 기존 화면의 직접 mock 서비스는 유지하며,
-생성 API를 사용하는 브라우저 요청에 MSW를 적용할 수 있습니다.
+기본 주소는 `http://localhost:3000`입니다. 회원 기능 화면은 현재 준비 중 안내를 표시하며,
+직접 mock 서비스로 회원 기능을 제공하지 않습니다. 생성 API를 사용하는 브라우저 요청에는
+아래 설정으로 MSW를 적용할 수 있습니다. 모킹 활성화가 미구현 화면을 구현하지는 않습니다.
 
 ## API 모킹 켜기와 끄기
 
