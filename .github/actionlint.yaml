@@ -1,0 +1,6 @@
+# actionlint 1.7.12는 GitHub가 지원하는 concurrency.queue를 아직 인식하지 못합니다.
+# 해당 키만 한 파일에서 허용하며 queue 지원 버전으로 갱신하면 제거합니다.
+paths:
+  .github/workflows/deploy-preview.yml:
+    ignore:
+      - '^unexpected key "queue" for "concurrency" section\. expected one of "cancel-in-progress", "group"$'
