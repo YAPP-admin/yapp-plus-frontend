@@ -1,7 +1,7 @@
 # 구현 계획: 관리자 회원 관리 화면
 
-**브랜치**: `brussels-v2/member-management-plan` | **작성일**: 2026-10-29
-**명세**: [spec.md](spec.md) | **상태**: 1단계 리뷰 완료 · 2a단계 완료·리뷰 대기
+**브랜치**: `brussels-v2/member-management-fixtures` | **작성일**: 2026-10-29
+**명세**: [spec.md](spec.md) | **상태**: 1·2a단계 리뷰 완료 · 2b단계 완료·리뷰 대기
 
 ## 요약과 기술 맥락
 
@@ -20,9 +20,9 @@
 ## 지침 점검
 
 헌법은 미작성 템플릿이므로 AGENTS.md와 사용자 확정 사항을 적용한다. 생성 파일은 직접 수정하지 않는다.
-최신 origin/main은 93b74f4이며 착수 시 작업 트리는 깨끗했다. 현재 브랜치를 유지한다.
+최신 origin/main은 93b74f4이며 착수 시 작업 트리는 깨끗했다. 2b는 사용자 승인으로 분리한 브랜치에서 진행하며 base는 brussels-v2/member-management-plan(9ca4901)이다.
 사용자 승인으로 [이슈 #182](https://github.com/YAPP-admin/yapp-plus-frontend/issues/182)를 생성했고 담당자는 DongjaJ다.
-사용자의 1단계 진행 확인과 이슈 생성 승인 후 2a단계에 착수했다. commit·push·PR은 승인받거나 실행하지 않았다.
+사용자의 1단계 진행 확인과 이슈 생성 승인 후 2a단계에 착수했다. 사용자 승인 후 문서·2a를 커밋했다. 2b 커밋·push·PR은 아직 수행하지 않았다.
 .specify/extensions.yml이 없어 specify·plan·tasks 전후 extension hook은 없다.
 설계 전후 앱 경계·최소 변경·생성 계약·catalog·단계별 리뷰·민감 정보 제한을 점검했다.
 

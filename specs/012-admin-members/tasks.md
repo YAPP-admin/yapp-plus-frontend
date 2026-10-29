@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 회원 관리 화면
 
 **입력**: [명세](spec.md), [계획](plan.md), [데이터](data-model.md), [화면 계약](contracts/member-ui.md)
-**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 구현·검증 완료, 사용자 리뷰 대기.
+**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 구현·검증 완료, 사용자 리뷰 대기.
 
 ## 진행 규칙
 
@@ -31,11 +31,11 @@
 
 ## 2b단계 — fixture와 개발 페이지 입력 (공통 기반)
 
-- [ ] T009 apps/admin/src/features/member-management/model/member-fixtures.ts에 정상·빈 명단·매핑 전후·과거 기수·비활동·점수 없음 합성 입력을 작성한다.
-- [ ] T010 apps/admin/src/features/member-management/model/use-member-preview.ts와 index.ts에 개발 클라이언트에서만 fixture를 읽는 입력 공급부를 연결한다. Query·타이머·저장소는 추가하지 않는다.
-- [ ] T011 apps/admin/src/features/member-management/model/use-member-preview.test.tsx에서 SSR·프로덕션 준비 상태와 개발 입력 공급을 검증한다.
+- [x] T009 apps/admin/src/features/member-management/model/member-fixtures.ts에 정상·빈 명단·매핑 전후·과거 기수·비활동·점수 없음 합성 입력을 작성한다.
+- [x] T010 apps/admin/src/features/member-management/fixtures.ts에 개발용 고정 입력의 별도 진입점을 제공한다. 공급 훅·공통 페이지 입력 타입·대기 상태·Query·타이머·저장소는 추가하지 않는다.
+- [x] T011 apps/admin/src/features/member-management/model/member-fixtures.test.ts에서 빈 명단·매핑 전후·과거 기수·비활동·출석 사례를 검증한다.
 
-**완료 기준/중단점**: 두 페이지가 같은 readonly 입력을 받을 수 있고 비개발 노출이 없다. 코드 리뷰 후 진행한다.
+**완료 기준/중단점**: 페이지별 필요한 값을 props로 전달할 고정 readonly 입력이 준비된다. 프로덕션 노출 제한은 페이지 연결 단계에서 구현·검증한다. 코드 리뷰 후 진행한다.
 
 ## 3단계 — 회원 탐색과 가입 대기 (US1, P1)
 
@@ -49,8 +49,8 @@
 ## 4a단계 — 회원 행 목록과 상태 (US1, P1)
 
 - [ ] T016 [US1] apps/admin/src/pages/members/ui/member-list.tsx와 member-list.css.ts에 행·기수 이력·권한·점수·가입일·더보기를 구현한다.
-- [ ] T017 [US1] apps/admin/src/pages/members/ui/members-page.tsx와 members-page.css.ts에 fixture 입력·loading/error/ready·빈 명단/검색 빈 결과·재시도 표현을 연결한다.
-- [ ] T018 [US1] apps/admin/src/pages/members/ui/members-page.test.tsx에 긴 이름·이력·미제공 점수·비활동·조회 상태·표 의미 구조 검증을 추가한다.
+- [ ] T017 [US1] apps/admin/src/pages/members/ui/members-page.tsx와 members-page.css.ts에 개발 환경 진입점의 고정 fixture props·프로덕션 준비 안내·빈 명단/검색 빈 결과·재시도 표현을 연결한다.
+- [ ] T018 [US1] apps/admin/src/pages/members/ui/members-page.test.tsx에 긴 이름·이력·미제공 점수·비활동·프로덕션 fixture 비노출·표 의미 구조 검증을 추가한다.
 
 **독립 검증/중단점**: Figma 행 목록과 상태를 props 기반으로 확인하고 리뷰받는다. 가짜 요청은 만들지 않는다.
 
@@ -103,7 +103,7 @@
 
 ## 7a단계 — 업로드 화면 (US3, P2)
 
-- [ ] T036 [US3] apps/admin/src/pages/member-import/ui/member-import-page.tsx와 member-import-page.css.ts에 파일 선택·드롭·양식 안내·다운로드·읽기 상태를 구현한다.
+- [ ] T036 [US3] apps/admin/src/pages/member-import/ui/member-import-page.tsx와 member-import-page.css.ts에 개발 환경 진입점에서 명단 props를 전달하고 프로덕션 준비 안내·파일 선택·드롭·양식 안내·다운로드·읽기 상태를 구현한다.
 - [ ] T037 [US3] apps/admin/src/pages/member-import/model/use-import-file.ts에 파일 교체/다시 올리기/이탈 후 오래된 결과 무시와 화면 수명 정리를 구현한다.
 - [ ] T038 [US3] apps/admin/src/pages/member-import/ui/member-import-page.test.tsx에 파일 선택/드롭 공통 처리·실패·교체·다시 올리기·이탈을 검증한다.
 
@@ -157,8 +157,11 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 | 단계 | 작업 상태           | 사용자 리뷰           |
 | ---- | ------------------- | --------------------- |
 | 1    | 문서 작성·검증 완료 | 사용자 진행 확인 완료 |
-| 2a   | 구현·검증 완료      | 대기                  |
-| 2b~8 | 미착수              | 미요청                |
+| 2a   | 구현·검증 완료      | 사용자 진행 확인 완료 |
+| 2b   | 구현·검증 완료      | 대기                  |
+| 3~8  | 미착수              | 미요청                |
 
 사용자 “작업 진행해”로 1단계 리뷰·2a 진행을 확인했고 “이슈 생성해”로 [#182](https://github.com/YAPP-admin/yapp-plus-frontend/issues/182)를 생성했다.
-commit·push·PR은 수행하지 않았다. 2b는 2a 사용자 리뷰 후 진행한다.
+사용자 “커밋하고 다음 진행해”로 2a 리뷰를 확인하고 문서 bf3055d·모델 9ca4901을 커밋했다.
+후속 승인으로 brussels-v2/member-management-fixtures를 생성·전환해 2b를 진행했다.
+2b는 아직 커밋하지 않았으며 push·PR은 수행하지 않았다. 3단계는 2b 사용자 리뷰 후 진행한다.
