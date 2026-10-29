@@ -1,0 +1,2 @@
+# unified diff의 빈 문맥 줄에는 문법상 공백 하나가 필요합니다.
+patches/*.patch whitespace=-blank-at-eol

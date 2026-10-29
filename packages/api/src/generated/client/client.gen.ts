@@ -151,10 +151,34 @@ export const createClient = (config: Config = {}): Client => {
         retry: opts.retry ?? opts.kyOptions?.retry ?? 2,
       };
 
+      const {
+        body,
+        cache,
+        credentials,
+        headers,
+        integrity,
+        keepalive,
+        method,
+        mode,
+        redirect,
+        referrer,
+        referrerPolicy,
+        signal,
+        ...transportOptions
+      } = kyOptions;
       request = new Request(url, {
-        body: kyOptions.body,
-        headers: kyOptions.headers as HeadersInit,
-        method: kyOptions.method,
+        body,
+        cache,
+        credentials,
+        headers: headers as HeadersInit,
+        integrity,
+        keepalive,
+        method,
+        mode,
+        redirect,
+        referrer,
+        referrerPolicy,
+        signal,
       });
 
       for (const fn of interceptors.request.fns) {
@@ -164,7 +188,7 @@ export const createClient = (config: Config = {}): Client => {
       }
 
       try {
-        response = await kyInstance(request, kyOptions);
+        response = await kyInstance(request, transportOptions);
       } catch (error) {
         if (isHTTPError(error)) {
           response = error.response;

@@ -1,3 +1,43 @@
+diff --git a/dist/clients/ky/client.ts b/dist/clients/ky/client.ts
+index bdd3b5e1ac3873b549f5ac6d59232f9e62630555..2d182eefe3a30af24bf7bb1968059ff1c662cc08 100644
+--- a/dist/clients/ky/client.ts
++++ b/dist/clients/ky/client.ts
+@@ -149,10 +149,23 @@ export const createClient = (config: Config = {}): Client => {
+         retry: opts.retry ?? opts.kyOptions?.retry ?? 2,
+       };
+ 
++      const {
++        body, cache, credentials, headers, integrity, keepalive, method, mode,
++        redirect, referrer, referrerPolicy, signal, ...transportOptions
++      } = kyOptions;
+       request = new Request(url, {
+-        body: kyOptions.body,
+-        headers: kyOptions.headers as HeadersInit,
+-        method: kyOptions.method,
++        body,
++        cache,
++        credentials,
++        headers: headers as HeadersInit,
++        integrity,
++        keepalive,
++        method,
++        mode,
++        redirect,
++        referrer,
++        referrerPolicy,
++        signal,
+       });
+ 
+       for (const fn of interceptors.request.fns) {
+@@ -162,7 +175,7 @@ export const createClient = (config: Config = {}): Client => {
+       }
+ 
+       try {
+-        response = await kyInstance(request, kyOptions);
++        response = await kyInstance(request, transportOptions);
+       } catch (error) {
+         if (isHTTPError(error)) {
+           response = error.response;
 diff --git a/dist/clients/ky/index.ts b/dist/clients/ky/index.ts
 index 32c49a91371102d9310e5fae75640582fd302fc2..7d37fb8808cf76831b760700f69808ef563189de 100644
 --- a/dist/clients/ky/index.ts
