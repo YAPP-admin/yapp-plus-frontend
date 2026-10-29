@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { createSessionInputSchema } from './session';
+import { createSessionInputSchema } from '~/features/session-management';
 
 beforeEach(() => {
   vi.resetModules();

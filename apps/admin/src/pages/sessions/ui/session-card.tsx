@@ -1,7 +1,7 @@
 import { Ellipsis } from 'lucide-react';
 import { ActionButton } from '@yapp-plus/ui';
 import { Badge, Menu } from '@seed-design/react';
-import type { Session, SessionAttendanceSummary } from '../model/session';
+import type { Session, SessionAttendanceSummary } from '~/features/session-management';
 import { sessionFilterLabels } from '../model/session-search';
 import * as styles from './session-card.css';
 

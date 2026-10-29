@@ -8,7 +8,7 @@ import { expect, it, vi } from 'vitest';
 import { createAdminQueryClient } from '../../../query-client';
 import { SessionScheduleField } from './session-schedule-field';
 import { SessionForm } from './session-form';
-import type { CreateSessionInput } from '../model/session';
+import type { CreateSessionInput } from '~/features/session-management';
 
 function setup(type: 'date' | 'time', initial: string, disabled = false) {
   const change = vi.fn<(value: string) => void>();

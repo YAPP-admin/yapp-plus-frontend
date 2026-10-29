@@ -6,7 +6,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import type * as KakaoMapsSdk from 'react-kakao-maps-sdk';
 import { useKakaoLoader } from 'react-kakao-maps-sdk';
 import { createAdminQueryClient } from '../../../query-client';
-import type { CreateSessionInput } from '../model/session';
+import type { CreateSessionInput } from '~/features/session-management';
 import { SessionForm } from './session-form';
 
 vi.mock('react-kakao-maps-sdk', async (importOriginal) => ({

@@ -4,7 +4,7 @@ import { overlay } from 'overlay-kit';
 import { ActionButton } from '@yapp-plus/ui';
 import type { SessionFilter } from '../model/session-search';
 import { useSessionsQuery } from '../model/session-queries';
-import { sortSessions } from '../model/session';
+import { sortSessions } from '~/features/session-management';
 import { SessionTypeFilter } from './session-type-filter';
 import { SessionList } from './session-list';
 import { CreateSessionDialog, EditSessionDialog } from './session-dialogs';

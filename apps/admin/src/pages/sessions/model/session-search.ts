@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { sessionTypeSchema } from './session';
+import { sessionTypeSchema } from '~/features/session-management';
 
 export const sessionFilterSchema = z.enum(['all', ...sessionTypeSchema.options]);
 export type SessionFilter = z.infer<typeof sessionFilterSchema>;

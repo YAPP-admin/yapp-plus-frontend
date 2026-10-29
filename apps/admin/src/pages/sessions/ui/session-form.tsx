@@ -12,7 +12,7 @@ import {
 } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
 import { X } from 'lucide-react';
-import type { CreateSessionInput } from '../model/session';
+import type { CreateSessionInput } from '~/features/session-management';
 import { parseSessionForm, sessionFormDefaults, sessionFormErrors } from '../model/session-form';
 import { coordinatesQueryOptions } from '../model/location/coordinates-query';
 import type {
