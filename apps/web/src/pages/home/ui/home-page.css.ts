@@ -665,18 +665,14 @@ export const textareaContainer = style({
 });
 
 export const reportSnackbar = style({
-  position: 'fixed',
-  bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
-  left: '50%',
-  transform: 'translateX(-50%)',
-  width: 'calc(100% - 32px)',
-  maxWidth: '468px',
-  zIndex: 100,
+  width: 'calc(100% - 32px) !important',
+  maxWidth: '361px !important',
   backgroundColor: '#2A3038 !important',
   borderRadius: '8px !important',
   padding: '14px 18px !important',
   boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
   boxSizing: 'border-box',
+  pointerEvents: 'auto',
 });
 
 export const reportTextFieldRoot = style({

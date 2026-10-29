@@ -15,14 +15,34 @@ import * as React from 'react';
 import IconCheckmarkCircleFill from '@karrotmarket/react-monochrome-icon/IconCheckmarkCircleFill';
 import IconExclamationmarkCircleFill from '@karrotmarket/react-monochrome-icon/IconExclamationmarkCircleFill';
 
-export type SnackbarProviderProps = SeedSnackbar.RootProviderProps;
+export type SnackbarProviderProps = SeedSnackbar.RootProviderProps & {
+  regionClassName?: string;
+  regionStyle?: React.CSSProperties;
+};
 
 export const SnackbarProvider = (props: SnackbarProviderProps) => {
-  const { children, ...otherProps } = props;
+  const { children, regionClassName, regionStyle, ...otherProps } = props;
   return (
     <SeedSnackbar.RootProvider {...otherProps}>
       {children}
-      <SeedSnackbar.Region>
+      <SeedSnackbar.Region
+        className={regionClassName}
+        style={
+          {
+            position: 'fixed',
+            left: 0,
+            right: 0,
+            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 108px)',
+            '--snackbar-region-offset': '108px',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            pointerEvents: 'none',
+            zIndex: 1000,
+            ...regionStyle,
+          } as React.CSSProperties
+        }
+      >
         <SeedSnackbar.Renderer />
       </SeedSnackbar.Region>
     </SeedSnackbar.RootProvider>
