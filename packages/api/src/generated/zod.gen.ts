@@ -645,6 +645,42 @@ export const zCurrentWeekSessionResponse = z.object({
   session: zCurrentWeekSessionDetailResponse.nullable(),
 });
 
+export const zUserPostListItemResponse = z.object({
+  postId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  type: z.enum(['SESSION', 'ASSIGNMENT', 'OPERATION']),
+  title: z.string(),
+  createdDate: z.iso.date(),
+  daysUntilDeadline: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .nullable(),
+});
+
+export const zUserPostListResponse = z.object({
+  totalPostCount: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  items: z.array(zUserPostListItemResponse),
+  nextCursor: z.string().nullable(),
+});
+
 export const zCurrentGenerationSessionItemResponse = z.object({
   sessionId: z.coerce
     .bigint()
@@ -987,6 +1023,22 @@ export const zAdminPostRecipientListResponse = z.object({
   items: z.array(zAdminPostRecipientResponse),
   nextCursor: z.string().nullable(),
 });
+
+export const zAcknowledgePath = z.object({
+  postId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * 읽음 처리 완료. 응답 본문 없음
+ */
+export const zAcknowledgeResponse = z.void();
 
 export const zDeletePath = z.object({
   generationId: z.coerce
@@ -1565,6 +1617,16 @@ export const zUpdate1Response = zAdminPostDetailResponse;
  * 조회 성공. 토요일 세션이 없으면 session은 null
  */
 export const zFind2Response = zCurrentWeekSessionResponse;
+
+export const zList1Query = z.object({
+  type: z.enum(['ALL', 'SESSION', 'ASSIGNMENT', 'OPERATION']).optional(),
+  cursor: z.string().optional(),
+});
+
+/**
+ * OK
+ */
+export const zList1Response = zUserPostListResponse;
 
 /**
  * 조회 성공

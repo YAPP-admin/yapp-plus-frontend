@@ -4,6 +4,7 @@ import type { Faker } from '@faker-js/faker';
 import { faker } from '@faker-js/faker/locale/en';
 
 import type {
+  AcknowledgeErrors,
   AdminAttendanceListResponse,
   AdminAttendanceRow,
   AdminPostDetailResponse,
@@ -85,6 +86,8 @@ import type {
   GetResponses,
   GoogleNativeAuthenticationRequest,
   KakaoNativeAuthenticationRequest,
+  List1Errors,
+  List1Responses,
   List3Errors,
   List3Responses,
   ListErrors,
@@ -148,6 +151,8 @@ import type {
   UpdateErrors,
   UpdateResponses,
   UpdateTeamRequest,
+  UserPostListItemResponse,
+  UserPostListResponse,
   UserResponse,
   VerifyAttendanceCodeRequest,
   VerifyAttendanceCodeResponse,
@@ -806,6 +811,26 @@ export const fakeCurrentWeekSessionResponse = (options?: Options): CurrentWeekSe
   };
 };
 
+export const fakeUserPostListItemResponse = (options?: Options): UserPostListItemResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    postId: f.number.int(),
+    type: f.helpers.arrayElement(['SESSION', 'ASSIGNMENT', 'OPERATION']),
+    title: f.lorem.words(),
+    createdDate: f.date.recent().toISOString().slice(0, 10),
+    daysUntilDeadline: f.datatype.boolean() ? f.number.int() : null,
+  };
+};
+
+export const fakeUserPostListResponse = (options?: Options): UserPostListResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    totalPostCount: f.number.int(),
+    items: f.helpers.multiple(() => fakeUserPostListItemResponse(options)),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
 export const fakeCurrentGenerationSessionItemResponse = (
   options?: Options,
 ): CurrentGenerationSessionItemResponse => {
@@ -1037,6 +1062,15 @@ export const fakeAdminPostRecipientListResponse = (
     nextCursor: f.datatype.boolean() ? f.string.sample() : null,
   };
 };
+
+export const fakeAcknowledgeResponse400 = (options?: Options): AcknowledgeErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeAcknowledgeResponse401 = (options?: Options): AcknowledgeErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeAcknowledgeResponse404 = (options?: Options): AcknowledgeErrors[404] =>
+  fakeErrorResponse(options);
 
 export const fakeDeleteResponse401 = (options?: Options): DeleteErrors[401] =>
   fakeErrorResponse(options);
@@ -1435,6 +1469,15 @@ export const fakeFind2Response404 = (options?: Options): Find2Errors[404] =>
   fakeErrorResponse(options);
 
 export const fakeFind2Response409 = (options?: Options): Find2Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeList1Response200 = (options?: Options): List1Responses[200] =>
+  fakeUserPostListResponse(options);
+
+export const fakeList1Response400 = (options?: Options): List1Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeList1Response401 = (options?: Options): List1Errors[401] =>
   fakeErrorResponse(options);
 
 export const fakeFind3Response200 = (options?: Options): Find3Responses[200] =>

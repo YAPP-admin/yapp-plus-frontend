@@ -10,6 +10,9 @@ import {
 } from './client';
 import { client } from './client.gen';
 import type {
+  AcknowledgeData,
+  AcknowledgeErrors,
+  AcknowledgeResponses,
   ApproveData,
   ApproveErrors,
   ApproveResponses,
@@ -88,6 +91,9 @@ import type {
   GetData,
   GetErrors,
   GetResponses,
+  List1Data,
+  List1Errors,
+  List1Responses,
   List3Data,
   List3Errors,
   List3Responses,
@@ -167,6 +173,26 @@ export type Options<
    */
   meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
+
+/**
+ * 사용자 공지 읽음 처리
+ *
+ * 현재 열람 권한이 있는 공지를 명시적으로 읽음 처리한다. 반복 요청도 성공하며 최초 읽은 시각은 변경하지 않는다.
+ */
+export const acknowledge = <ThrowOnError extends boolean = false>(
+  options: Options<AcknowledgeData, ThrowOnError>,
+): RequestResult<AcknowledgeResponses, AcknowledgeErrors, ThrowOnError> =>
+  (options.client ?? client).put<AcknowledgeResponses, AcknowledgeErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/posts/{postId}/read',
+    ...options,
+  });
 
 /**
  * Team 삭제
@@ -826,6 +852,26 @@ export const find2 = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/sessions/current-week',
+    ...options,
+  });
+
+/**
+ * 열람 가능한 공지 목록 조회
+ *
+ * 전체 기수에서 현재 열람 가능한 글을 게시 시각과 ID 역순으로 20개씩 조회한다. 권한이 변하면 첫 페이지부터 다시 조회한다.
+ */
+export const list1 = <ThrowOnError extends boolean = false>(
+  options?: Options<List1Data, ThrowOnError>,
+): RequestResult<List1Responses, List1Errors, ThrowOnError> =>
+  (options?.client ?? client).get<List1Responses, List1Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/posts',
     ...options,
   });
 

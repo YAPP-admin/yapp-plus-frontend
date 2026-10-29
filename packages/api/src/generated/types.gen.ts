@@ -508,6 +508,23 @@ export type CurrentWeekSessionResponse = {
   session: CurrentWeekSessionDetailResponse | null;
 };
 
+export type UserPostListItemResponse = {
+  postId: number;
+  type: 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
+  title: string;
+  createdDate: string;
+  /**
+   * 과제 마감일까지 남은 서울 날짜 기준 일수. 지난 과제는 음수이며 다른 유형은 null
+   */
+  daysUntilDeadline: number | null;
+};
+
+export type UserPostListResponse = {
+  totalPostCount: number;
+  items: Array<UserPostListItemResponse>;
+  nextCursor: string | null;
+};
+
 export type CurrentGenerationSessionItemResponse = {
   sessionId: number;
   name: string;
@@ -649,6 +666,44 @@ export type AdminPostRecipientResponse = {
   read: boolean;
   readAt: string | null;
 };
+
+export type AcknowledgeData = {
+  body?: never;
+  path: {
+    /**
+     * 읽음 처리할 공지 ID
+     */
+    postId: number;
+  };
+  query?: never;
+  url: '/api/posts/{postId}/read';
+};
+
+export type AcknowledgeErrors = {
+  /**
+   * INVALID_POST_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * POST_NOT_FOUND
+   */
+  404: ErrorResponse;
+};
+
+export type AcknowledgeError = AcknowledgeErrors[keyof AcknowledgeErrors];
+
+export type AcknowledgeResponses = {
+  /**
+   * 읽음 처리 완료. 응답 본문 없음
+   */
+  204: void;
+};
+
+export type AcknowledgeResponse = AcknowledgeResponses[keyof AcknowledgeResponses];
 
 export type DeleteData = {
   body?: never;
@@ -1824,6 +1879,41 @@ export type Find2Responses = {
 };
 
 export type Find2Response = Find2Responses[keyof Find2Responses];
+
+export type List1Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * 공지 유형 필터
+     */
+    type?: 'ALL' | 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
+    cursor?: string;
+  };
+  url: '/api/posts';
+};
+
+export type List1Errors = {
+  /**
+   * INVALID_POST_REQUEST|INVALID_POST_CURSOR
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+};
+
+export type List1Error = List1Errors[keyof List1Errors];
+
+export type List1Responses = {
+  /**
+   * OK
+   */
+  200: UserPostListResponse;
+};
+
+export type List1Response = List1Responses[keyof List1Responses];
 
 export type Find3Data = {
   body?: never;

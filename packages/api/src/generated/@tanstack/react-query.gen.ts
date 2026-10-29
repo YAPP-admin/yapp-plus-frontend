@@ -9,6 +9,7 @@ import {
 
 import { client } from '../client.gen';
 import {
+  acknowledge,
   approve,
   authenticateApple,
   authenticateGoogle,
@@ -37,6 +38,7 @@ import {
   findPending,
   get,
   list,
+  list1,
   list3,
   login,
   logout,
@@ -60,6 +62,9 @@ import {
   verify,
 } from '../sdk.gen';
 import type {
+  AcknowledgeData,
+  AcknowledgeError,
+  AcknowledgeResponse,
   ApproveData,
   ApproveError,
   ApproveResponse,
@@ -135,6 +140,9 @@ import type {
   GetData,
   GetError,
   GetResponse,
+  List1Data,
+  List1Error,
+  List1Response,
   List3Data,
   List3Error,
   List3Response,
@@ -195,6 +203,31 @@ import type {
   VerifyError,
   VerifyResponse,
 } from '../types.gen';
+
+/**
+ * 사용자 공지 읽음 처리
+ *
+ * 현재 열람 권한이 있는 공지를 명시적으로 읽음 처리한다. 반복 요청도 성공하며 최초 읽은 시각은 변경하지 않는다.
+ */
+export const acknowledgeMutation = (
+  options?: Partial<Options<AcknowledgeData>>,
+): UseMutationOptions<AcknowledgeResponse, AcknowledgeError, Options<AcknowledgeData>> => {
+  const mutationOptions: UseMutationOptions<
+    AcknowledgeResponse,
+    AcknowledgeError,
+    Options<AcknowledgeData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await acknowledge({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
 
 /**
  * Team 삭제
@@ -1013,6 +1046,70 @@ export const find2Options = (options?: Options<Find2Data>) =>
     },
     queryKey: find2QueryKey(options),
   });
+
+export const list1QueryKey = (options?: Options<List1Data>) => createQueryKey('list1', options);
+
+/**
+ * 열람 가능한 공지 목록 조회
+ *
+ * 전체 기수에서 현재 열람 가능한 글을 게시 시각과 ID 역순으로 20개씩 조회한다. 권한이 변하면 첫 페이지부터 다시 조회한다.
+ */
+export const list1Options = (options?: Options<List1Data>) =>
+  queryOptions<List1Response, List1Error, List1Response, ReturnType<typeof list1QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list1({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list1QueryKey(options),
+  });
+
+export const list1InfiniteQueryKey = (options?: Options<List1Data>): QueryKey<Options<List1Data>> =>
+  createQueryKey('list1', options, true);
+
+/**
+ * 열람 가능한 공지 목록 조회
+ *
+ * 전체 기수에서 현재 열람 가능한 글을 게시 시각과 ID 역순으로 20개씩 조회한다. 권한이 변하면 첫 페이지부터 다시 조회한다.
+ */
+export const list1InfiniteOptions = (options?: Options<List1Data>) => {
+  const opts = infiniteQueryOptions<
+    List1Response,
+    List1Error,
+    InfiniteData<List1Response>,
+    QueryKey<Options<List1Data>>,
+    string | Pick<QueryKey<Options<List1Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<List1Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await list1({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: list1InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
 
 export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
 
