@@ -82,6 +82,9 @@ import type {
   Find4Data,
   Find4Errors,
   Find4Responses,
+  Find5Data,
+  Find5Errors,
+  Find5Responses,
   FindAllData,
   FindAllErrors,
   FindAllResponses,
@@ -175,6 +178,9 @@ import type {
   VerifyData,
   VerifyErrors,
   VerifyResponses,
+  WithdrawData,
+  WithdrawErrors,
+  WithdrawResponses,
 } from './types.gen';
 
 export type Options<
@@ -1106,6 +1112,26 @@ export const find4 = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find5 = <ThrowOnError extends boolean = false>(
+  options: Options<Find5Data, ThrowOnError>,
+): RequestResult<Find5Responses, Find5Errors, ThrowOnError> =>
+  (options.client ?? client).get<Find5Responses, Find5Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/users/{userId}/retained-history',
+    ...options,
+  });
+
+/**
  * 가입 대기 회원 목록 조회
  *
  * 검색 없이 PENDING 회원을 가입 시각 오름차순으로 조회한다.
@@ -1236,6 +1262,26 @@ export const recipients = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/admin/generations/{generationId}/posts/{postId}/recipients',
+    ...options,
+  });
+
+/**
+ * 계정·동아리 통합 탈퇴
+ *
+ * 모든 기수 소속과 세션을 폐기하고 구조화된 개인정보를 비식별화한다. Native는 보관한 token을 제거한다.
+ */
+export const withdraw = <ThrowOnError extends boolean = false>(
+  options?: Options<WithdrawData, ThrowOnError>,
+): RequestResult<WithdrawResponses, WithdrawErrors, ThrowOnError> =>
+  (options?.client ?? client).delete<WithdrawResponses, WithdrawErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/users/me',
     ...options,
   });
 

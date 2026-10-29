@@ -44,6 +44,7 @@ import type {
   Find2Responses,
   Find3Responses,
   Find4Responses,
+  Find5Responses,
   FindAllResponses,
   FindCandidatesResponses,
   FindDetailResponses,
@@ -87,6 +88,7 @@ import type {
   UpdateResponses,
   VerifyData,
   VerifyResponses,
+  WithdrawResponses,
 } from './types.gen';
 
 export type RequestHandlerOptions = RequestHandlerOptions2 & {
@@ -2058,6 +2060,52 @@ export function handleFind4(
   );
 }
 
+export type HandleFind5Response = {
+  body: Find5Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/users/{userId}/retained-history` operation.
+ */
+export function handleFind5(
+  response?:
+    | HandleFind5Response
+    | HttpResponseResolver<
+        {
+          userId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      userId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/users/:userId/retained-history`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleFindPendingResponse = {
   body: FindPendingResponses[200];
   status?: 200;
@@ -2361,6 +2409,40 @@ export function handleRecipients(
       const body = response?.body;
       if (body !== undefined) {
         return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleWithdrawResponse = {
+  body: WithdrawResponses[204];
+  status?: 204;
+};
+
+/**
+ * Handler for the `DELETE /api/users/me` operation.
+ */
+export function handleWithdraw(
+  response?: HandleWithdrawResponse | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.delete<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 204 });
       }
       if (options?.responseFallback === 'passthrough') {
         return;
@@ -2680,6 +2762,10 @@ export type MswHandlerFactories = {
    */
   find4: typeof handleFind4;
   /**
+   * Handler for the `GET /api/admin/users/{userId}/retained-history` operation.
+   */
+  find5: typeof handleFind5;
+  /**
    * Handler for the `GET /api/admin/membership-approvals` operation.
    */
   findPending: typeof handleFindPending;
@@ -2707,6 +2793,10 @@ export type MswHandlerFactories = {
    * Handler for the `GET /api/admin/generations/{generationId}/posts/{postId}/recipients` operation.
    */
   recipients: typeof handleRecipients;
+  /**
+   * Handler for the `DELETE /api/users/me` operation.
+   */
+  withdraw: typeof handleWithdraw;
   /**
    * Handler for the `DELETE /api/auth/sessions/current` operation.
    */
@@ -2785,6 +2875,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     startAppleAuthorization: wrap(handleStartAppleAuthorization),
     mine: wrap(handleMine),
     find4: wrap(handleFind4),
+    find5: wrap(handleFind5),
     findPending: wrap(handleFindPending),
     findDetail: wrap(handleFindDetail),
     findCandidates: wrap(handleFindCandidates),
@@ -2792,6 +2883,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     list2: wrap(handleList2),
     list3: wrap(handleList3),
     recipients: wrap(handleRecipients),
+    withdraw: wrap(handleWithdraw),
     revoke: wrap(handleRevoke),
     delete1: wrap(handleDelete1),
     logout: wrap(handleLogout),
@@ -2840,6 +2932,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.create1, overrides.create1),
       invoke(pick.list, overrides.list),
       invoke(pick.create2, overrides.create2),
+      invoke(pick.find5, overrides.find5),
       invoke(pick.findCandidates, overrides.findCandidates),
       invoke(pick.candidates, overrides.candidates),
       invoke(pick.presign, overrides.presign),
@@ -2854,6 +2947,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.find2, overrides.find2),
       invoke(pick.mine, overrides.mine),
       invoke(pick.findPending, overrides.findPending),
+      invoke(pick.withdraw, overrides.withdraw),
       invoke(pick.detail1, overrides.detail1),
       invoke(pick.register, overrides.register),
       invoke(pick.verify, overrides.verify),

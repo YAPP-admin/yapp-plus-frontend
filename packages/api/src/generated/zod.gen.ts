@@ -912,6 +912,25 @@ export const zAttendanceHistoryResponse = z.object({
   nextCursor: z.string().nullable(),
 });
 
+export const zRetainedHistoryEntry = z.object({
+  sourceType: z.string(),
+  sourceId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  occurredAt: z.iso.datetime(),
+  reason: z.string(),
+});
+
+export const zRetainedHistoryPage = z.object({
+  items: z.array(zRetainedHistoryEntry),
+  nextCursor: z.string().nullable(),
+});
+
 export const zPendingMemberView = z.object({
   memberId: z.coerce
     .bigint()
@@ -2002,6 +2021,32 @@ export const zFind4Query = z.object({
  */
 export const zFind4Response = zAttendanceHistoryResponse;
 
+export const zFind5Path = z.object({
+  userId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+export const zFind5Query = z.object({
+  cursor: z.string().optional(),
+  size: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })
+    .optional()
+    .default(20),
+});
+
+/**
+ * 조회 성공; 이력이 없으면 빈 목록
+ */
+export const zFind5Response = zRetainedHistoryPage;
+
 export const zFindPendingQuery = z.object({
   size: z
     .int()
@@ -2173,6 +2218,11 @@ export const zRecipientsQuery = z.object({
  * OK
  */
 export const zRecipientsResponse = zAdminPostRecipientListResponse;
+
+/**
+ * 탈퇴 완료
+ */
+export const zWithdrawResponse = z.void();
 
 /**
  * Native refresh token. Web cookie 흐름에서는 body를 생략할 수 있다.
