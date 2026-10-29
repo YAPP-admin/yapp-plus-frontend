@@ -12,6 +12,8 @@ after(() => rmSync(directory, { recursive: true, force: true }));
 const git = (...args: string[]) =>
   execFileSync('git', args, {
     cwd: directory,
+    // Git hook의 저장소 경로가 임시 fixture 저장소에 섞이지 않도록 격리합니다.
+    env: Object.fromEntries(Object.entries(process.env).filter(([key]) => !key.startsWith('GIT_'))),
     encoding: 'utf8',
     stdio: ['pipe', 'pipe', 'pipe'],
   }).trim();
