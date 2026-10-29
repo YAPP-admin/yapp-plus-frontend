@@ -16,3 +16,12 @@ export {
   useSessionsQuery,
   useUpdateSessionMutation,
 } from './model/session-queries';
+export {
+  attendanceResultSchema,
+  badgeSchema,
+  priorReportSchema,
+  type AttendanceResult,
+  type BadgeViewModel,
+  type PriorReportViewModel,
+} from './model/attendance';
+export { calculateAttendanceDelta } from './model/attendance-score';
