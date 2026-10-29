@@ -107,10 +107,29 @@ index 32c49a91371102d9310e5fae75640582fd302fc2..7d37fb8808cf76831b760700f69808ef
 -export { createConfig, mergeHeaders } from './utils';
 +export { createConfig, headersToObject, mergeHeaders } from './utils';
 diff --git a/dist/clients/ky/utils.ts b/dist/clients/ky/utils.ts
-index a5d1a8ea9d465bceabb2fab39aa1b8a8ff9cf5c1..c881ec77083abb2cd9352b425fe1ef46c3017220 100644
+index a5d1a8ea9d465bceabb2fab39aa1b8a8ff9cf5c1..6cee04801a1fae4c5f41078945348059d58804c5 100644
 --- a/dist/clients/ky/utils.ts
 +++ b/dist/clients/ky/utils.ts
-@@ -179,6 +179,13 @@ const headersEntries = (headers: Headers): Array<[string, string]> => {
+@@ -120,7 +120,8 @@ export async function setAuthParams(
+   },
+ ): Promise<void> {
+   for (const auth of options.security ?? []) {
+-    if (checkForExistence(options, auth.name)) {
++    const name = auth.name ?? 'Authorization';
++    if (checkForExistence(options, name)) {
+       continue;
+     }
+ 
+@@ -130,8 +131,6 @@ export async function setAuthParams(
+       continue;
+     }
+ 
+-    const name = auth.name ?? 'Authorization';
+-
+     switch (auth.in) {
+       case 'query':
+         if (!options.query) {
+@@ -179,6 +178,13 @@ const headersEntries = (headers: Headers): Array<[string, string]> => {
    return entries;
  };
  
@@ -124,7 +143,7 @@ index a5d1a8ea9d465bceabb2fab39aa1b8a8ff9cf5c1..c881ec77083abb2cd9352b425fe1ef46
  export const mergeHeaders = (
    ...headers: Array<Required<Config>['headers'] | undefined>
  ): Headers => {
-@@ -188,7 +195,7 @@ export const mergeHeaders = (
+@@ -188,7 +194,7 @@ export const mergeHeaders = (
        continue;
      }
  

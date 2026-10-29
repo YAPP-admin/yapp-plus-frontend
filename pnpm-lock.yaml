@@ -138,7 +138,7 @@ catalogs:
       version: 19.3.0
 
 patchedDependencies:
-  '@hey-api/openapi-ts@0.99.0': 7055a924d42abae53effa6427748fc7de56777e3c2cc8d4a52c52609ce9bdce7
+  '@hey-api/openapi-ts@0.99.0': 1e856e73fe32c122de7df2a693a40611c4337836131827eadbd9751cd2a05d55
 
 importers:
 
@@ -525,7 +525,7 @@ importers:
     devDependencies:
       '@hey-api/openapi-ts':
         specifier: 0.99.0
-        version: 0.99.0(patch_hash=7055a924d42abae53effa6427748fc7de56777e3c2cc8d4a52c52609ce9bdce7)(typescript@6.0.3)
+        version: 0.99.0(patch_hash=1e856e73fe32c122de7df2a693a40611c4337836131827eadbd9751cd2a05d55)(typescript@6.0.3)
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -8160,7 +8160,7 @@ snapshots:
       '@types/json-schema': 7.0.15
       js-yaml: 4.2.0
 
-  '@hey-api/openapi-ts@0.99.0(patch_hash=7055a924d42abae53effa6427748fc7de56777e3c2cc8d4a52c52609ce9bdce7)(typescript@6.0.3)':
+  '@hey-api/openapi-ts@0.99.0(patch_hash=1e856e73fe32c122de7df2a693a40611c4337836131827eadbd9751cd2a05d55)(typescript@6.0.3)':
     dependencies:
       '@hey-api/codegen-core': 0.9.1
       '@hey-api/json-schema-ref-parser': 1.4.4
