@@ -1,7 +1,7 @@
-import type { AttendanceResult } from './attendance';
+import type { AttendanceResult } from '../attendance';
 
-/** 근거가 부족하거나 아직 확정하지 않은 출결은 0점 대신 null을 반환합니다. */
-export function calculateAttendanceDelta(result: AttendanceResult): number | null {
+/** 모의 서비스 전용 감점 계산입니다. 실제 화면은 서버의 scoreDelta를 표시합니다. */
+export function calculateMockAttendanceDelta(result: AttendanceResult): number | null {
   switch (result.status) {
     case 'present':
       return 0;

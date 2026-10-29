@@ -2,7 +2,7 @@
 
 [명세](spec.md) · [계약 초안](contracts/attendance-api.md)
 
-이 문서의 이름과 값은 프런트엔드가 직접 소유하는 설계다. API DTO의 별칭이 아니다. 2-1단계에서 AttendanceResult·PriorReportViewModel·BadgeViewModel과 감점 계산을 구현했다. 나머지는 후속 구현 설계다.
+이 문서의 이름과 값은 프런트엔드가 직접 소유하는 설계다. API DTO의 별칭이 아니다. 2-1단계에서 AttendanceResult·PriorReportViewModel·BadgeViewModel과 감점 계산을 구현했다. 2-2단계에서 나머지 조회 타입, 입력·초안 검증과 누적 점수 계산을 구현했다. 화면과 서비스 연결은 후속 단계다.
 API 타입의 import·상속·Pick/Omit·indexed access를 금지한다. 문자열 값이 같아도 각 경계에서 명시적으로 변환한다.
 
 ## 공통 표현
@@ -28,7 +28,7 @@ API 타입의 import·상속·Pick/Omit·indexed access를 금지한다. 문자�
 | AttendanceResult           | status, penaltyCategory, durationBand?, checkedInAt?, earlyLeaveAt?, reason?, explicitlyOverridden              |
 | PriorReportViewModel       | id, membershipId, type, reason, submittedAt?, eligibility(eligible/ineligible/unknown)                          |
 | BadgeViewModel             | verified, verifiedAt?; 출결·감점에 대한 부수 효과 없음                                                          |
-| AttendanceScoreViewModel   | delta: number 또는 null, source(calculated/server/unknown), 설명; null을 0점으로 표시하지 않음                  |
+| AttendanceScoreViewModel   | delta: number 또는 null, source(mock/server/unknown), 설명; null을 0점으로 표시하지 않음                        |
 | AttendanceHistoryEntry     | id, membershipId, changedAt?, actorName?, before, after, reason?; 보고 이력과 구분                              |
 | TeamReviewViewModel        | teamId, teamName, members, reviewState, photo?, decisionDraft?                                                  |
 | TeamPhotoViewModel         | photoId, uploaderName?, submittedAt, readUrl?, access; selectedMembershipIds                                    |
@@ -39,7 +39,8 @@ API 타입의 import·상속·Pick/Omit·indexed access를 금지한다. 문자�
 출결 집계는 회원당 하나의 상태만 센다. 미지원 상태가 있는 실제 응답은 합계를 왜곡하지 않게
 변환 경계에서 명시적으로 처리하고 마감을 막는다. 이번 모의 데이터에는 공결·복합 상태를 편집 가능한 상태로 넣지 않는다.
 보고의 최신 유형만 있는 응답으로 전체 이력을 만들지 않는다. 사진 미제출 팀은 전체 팀 명단과 제출 목록의 차이로 구한다.
-누적 점수의 경고는 totalScore < 40이다. 음수 합계의 하한 등 미확정 정책은 실제 연동 전에 계약으로 확정한다.
+실제 감점·누적 점수는 서버 응답을 그대로 표시한다. 경고는 제공된 totalScore < 40으로 표시한다.
+모의 합계에서는 미확정 기여가 있으면 totalScore와 warning을 null로 유지한다. 실제 응답의 총점 유무를 개별 내역으로 추론하지 않는다. 음수 합계의 하한 등 미확정 정책은 실제 연동 전에 계약으로 확정한다.
 
 ## 입력과 초안
 
@@ -78,3 +79,15 @@ Query 결과를 직접 수정해 초안으로 사용하지 않는다. 필터 변
 DTO가 없는 기능을 가짜 API 응답 필드로 채우지 않는다. 모의 서비스는 독립 모델을 직접 반환한다.
 조회 결과에 필요한 보고 시각·마감 상태·일반/무단 근거·이력은 모의 확장임을 fixture에서 명시한다.
 실제 adapter가 도입될 때 null·미지원 enum·잘못된 ID·부분 페이지·시간 누락을 변환 테스트로 검증한다.
+
+## 2-2단계 구현 경계
+
+조회 타입은 `attendance-view-model.ts`, 입력·초안 스키마는 `attendance-input.ts`에 둔다.
+조회 모델은 내부 화면 계약이며 외부 API 응답 검증을 대신하지 않는다. 실제 연결 시 adapter에서 별도로 검증한다.
+입력은 조회 모델과 달리 unknown 감점 구분·미지원 출결·지각/조퇴의 누락된 시간 구간을 허용하지 않는다.
+선택적 사유는 생략하면 null로 정리한다. 출석·미정으로 변경할 때 감점 필드를 비우는 동작은 후속 편집 UI가 수행한다.
+초안의 키와 회원·사진 ID, 마감 요청과 초안의 세션 ID가 다르면 거부한다. 필터는 마감 입력에 포함하지 않는다.
+사진 미제출은 photo가 null인 상태, 제출된 검수 상태는 사진 메타데이터가 존재하는 상태로 타입을 구분한다.
+`model/mocks`의 `calculateMockAttendanceDelta`·`createMockMemberScore`만 모의 감점과 누적 점수를 계산한다.
+일반 공개 진입점에서는 계산 함수를 export하지 않는다. 실제 adapter는 서버의 scoreDelta와 누적 점수를 매핑하며 재계산하지 않는다.
+관리자 누적 점수 응답 계약이 없으면 계약을 추가 협의한다. 클라이언트 합산으로 대체하지 않는다.
