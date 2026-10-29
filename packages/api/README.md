@@ -126,7 +126,12 @@ Zod 검증을 거치지 않으므로 생성 타입을 사용하고, 필요할 �
 `mise exec -- pnpm --filter @yapp-plus/api test`는 실제 생성 함수와 Ky를 사용하고
 응답만 메모리 fetch로 제공합니다. 실제 백엔드·인증·브라우저 통합을 대신하지 않습니다.
 
-Hey API 0.99.0의 Ky 헤더 생성·요청 interceptor 덮어쓰기 결함은 `patches/@hey-api__openapi-ts@0.99.0.patch`로
+Hey API 0.99.0의 Ky 헤더 생성·요청 interceptor 덮어쓰기·HTTP 오류 본문 중복 읽기 결함은 `patches/@hey-api__openapi-ts@0.99.0.patch`로
 생성기 원본 템플릿에 적용합니다. `pnpm install --frozen-lockfile` 후 재생성에도 유지됩니다.
 버전 업그레이드 시 upstream 수정 여부와 회귀 테스트를 확인하고 해결되면 패치를 제거합니다.
 생성 파일을 직접 고치지 않으며 롤백은 패치·lockfile·생성 결과를 함께 되돌립니다.
+
+HTTP 오류는 Ky 2.1.0의 `HTTPError.data`를 재사용합니다. 응답 interceptor가 새 Response를
+반환한 경우에만 새 본문을 읽습니다. 읽을 수 없는 오류 데이터의 크기·파싱 제한은 Ky 정책을
+따르며 빈 오류는 기존처럼 `{}`로 표현합니다. `false`·`0`·`null` JSON 값은 보존합니다.
+HTTP 재시도를 끄는 방식으로 우회하지 않습니다.
