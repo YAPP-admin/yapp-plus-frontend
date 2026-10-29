@@ -7,6 +7,7 @@ export const sessionsQueryOptions = queryOptions({
   queryKey: ['admin', 'sessions'],
   queryFn: listSessions,
   retry: false,
+  networkMode: 'always',
 });
 
 export function useSessionsQuery() {
@@ -23,6 +24,7 @@ export function useCreateSessionMutation() {
   const client = useQueryClient();
 
   return useMutation({
+    networkMode: 'always',
     mutationFn: createSession,
     onSuccess: () => client.invalidateQueries({ queryKey: sessionsQueryOptions.queryKey }),
   });
@@ -33,6 +35,7 @@ export function useUpdateSessionMutation() {
   const client = useQueryClient();
 
   return useMutation({
+    networkMode: 'always',
     mutationFn: ({ id, input }: { id: string; input: CreateSessionInput }) =>
       updateSession(id, input),
     onSuccess: () => client.invalidateQueries({ queryKey: sessionsQueryOptions.queryKey }),
