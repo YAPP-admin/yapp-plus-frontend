@@ -1,7 +1,7 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { expect, it, vi } from 'vitest';
-import { sessionSchema, type Session } from '../model/session';
+import { sessionSchema, type Session } from '~/features/session-management';
 import { SessionCard } from './session-card';
 
 it('세션 정보와 서로 다른 다섯 출석 집계를 생략 없이 표시한다', () => {

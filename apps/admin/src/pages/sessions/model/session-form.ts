@@ -1,5 +1,9 @@
 /** 편집 중인 유형별 초안을 저장 계약으로 변환하고 공통 검증 규칙을 적용합니다. */
-import { createSessionInputSchema, type CreateSessionInput, type SessionType } from './session';
+import {
+  createSessionInputSchema,
+  type CreateSessionInput,
+  type SessionType,
+} from '~/features/session-management';
 import type { CoordinatesViewModel } from './location/location-view-model';
 
 export type SessionFormValues = {

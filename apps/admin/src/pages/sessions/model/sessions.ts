@@ -1,4 +1,8 @@
-import { createSessionInputSchema, sessionSchema, type CreateSessionInput } from './session';
+import {
+  createSessionInputSchema,
+  sessionSchema,
+  type CreateSessionInput,
+} from '~/features/session-management';
 
 async function getStore() {
   if (import.meta.env.SSR || typeof window === 'undefined') {

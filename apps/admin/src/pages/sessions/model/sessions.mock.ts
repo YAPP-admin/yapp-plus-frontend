@@ -4,7 +4,7 @@ import {
   sortSessions,
   type CreateSessionInput,
   type Session,
-} from './session';
+} from '~/features/session-management';
 
 // 실제 운영 일정이나 회원 정보가 아닌 화면 검증용 예시입니다.
 // 오프라인 위치는 서울시청 테스트 좌표이며 실제 세션 장소가 아닙니다.

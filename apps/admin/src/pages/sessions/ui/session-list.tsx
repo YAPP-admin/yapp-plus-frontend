@@ -1,5 +1,5 @@
 /** 결과 개수와 카드 또는 전체·필터 빈 상태를 표시합니다. */
-import type { Session } from '../model/session';
+import type { Session } from '~/features/session-management';
 import { sessionFilterLabels, type SessionFilter } from '../model/session-search';
 import { SessionCard } from './session-card';
 import { list, count, placeholder } from './sessions-page.css';

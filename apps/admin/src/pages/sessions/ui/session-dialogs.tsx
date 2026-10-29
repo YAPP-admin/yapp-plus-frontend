@@ -1,6 +1,6 @@
 /** 각 모달이 저장 요청을 소유하며 성공한 경우에만 닫습니다. */
 import { Snackbar, useSnackbarAdapter } from '@seed-design/react';
-import type { Session } from '../model/session';
+import type { Session } from '~/features/session-management';
 import type { SessionFilter } from '../model/session-search';
 import { useCreateSessionMutation, useUpdateSessionMutation } from '../model/session-queries';
 import { SessionForm } from './session-form';

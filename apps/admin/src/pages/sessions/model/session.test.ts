@@ -4,7 +4,7 @@ import {
   sessionAttendanceSummarySchema,
   sessionSchema,
   sortSessions,
-} from './session';
+} from '~/features/session-management';
 
 const input = {
   name: '세션',
