@@ -103,17 +103,7 @@ export const contactButton = style({
 });
 
 export const homeIndicatorArea = style({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
   height: '34px',
   paddingBottom: 'env(safe-area-inset-bottom, 0px)',
   boxSizing: 'content-box',
-});
-
-export const homeIndicatorBar = style({
-  width: '134px',
-  height: '5px',
-  borderRadius: vars.$radius.full,
-  background: vars.$color.palette.gray1000,
 });

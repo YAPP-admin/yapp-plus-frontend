@@ -11,7 +11,6 @@ import { usePathname } from 'next/navigation';
 import {
   bottomBar,
   homeIndicatorArea,
-  homeIndicatorBar,
   iconWrapper,
   item,
   itemLabel,
@@ -65,9 +64,7 @@ export function BottomNavigation() {
           );
         })}
       </nav>
-      <div className={homeIndicatorArea} aria-hidden="true">
-        <div className={homeIndicatorBar} />
-      </div>
+      <div className={homeIndicatorArea} aria-hidden="true" />
     </div>
   );
 }

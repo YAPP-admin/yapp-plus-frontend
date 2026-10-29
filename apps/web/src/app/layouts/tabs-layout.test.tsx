@@ -53,7 +53,7 @@ describe('TabsLayout', () => {
       </TabsLayout>,
     );
     expect(screen.getByRole('link', { name: 'YAPP 홈' })).toHaveAttribute('href', '/');
-    expect(screen.getByRole('link', { name: '알림' })).toHaveAttribute('href', '/notices');
+    expect(screen.getByRole('link', { name: '알림' })).toHaveAttribute('href', '/alerts');
   });
 
   it('마이페이지 탭에서는 상단 헤더에 마이페이지 타이틀과 설정 링크를 렌더링한다', () => {

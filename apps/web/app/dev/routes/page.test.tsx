@@ -15,14 +15,14 @@ describe('개발용 화면 목록 접근 제한', () => {
     expect(() => Page()).toThrow('NOT_FOUND');
   });
 
-  it('개발 환경에서는 13개 제품 페이지의 링크만 제공한다', () => {
+  it('개발 환경에서는 등록된 제품 페이지의 링크를 제공한다', () => {
     vi.stubEnv('NODE_ENV', 'development');
     render(<Page />);
     const links = within(screen.getByRole('navigation', { name: '개발용 화면 목록' })).getAllByRole(
       'link',
     );
-    expect(links).toHaveLength(13);
-    expect(new Set(links.map((link) => link.getAttribute('href'))).size).toBe(13);
+    expect(links).toHaveLength(20);
+    expect(new Set(links.map((link) => link.getAttribute('href'))).size).toBe(20);
     expect(screen.getByRole('link', { name: '공지 상세 (예시 ID: 123)' })).toHaveAttribute(
       'href',
       '/notices/123',

@@ -146,19 +146,35 @@ export const quickCardsGrid = style({
   width: '100%',
 });
 
+export const quickCardCol = style({
+  flex: '1 1 0px',
+  minWidth: 0,
+  display: 'flex',
+  flexDirection: 'column',
+  position: 'relative',
+});
+
 export const quickCard = style({
-  flex: 1,
+  width: '100%',
+  height: '70px',
   position: 'relative',
   overflow: 'hidden',
   display: 'flex',
   flexDirection: 'column',
   justifyContent: 'center',
+  alignItems: 'flex-start',
+  textAlign: 'left',
   padding: '14px 20px',
-  height: '70px',
   background: vars.$color.bg.layerDefault,
   borderRadius: vars.$radius.r3,
   textDecoration: 'none',
   boxSizing: 'border-box',
+  border: 'none',
+  outline: 'none',
+  cursor: 'pointer',
+  fontFamily: 'inherit',
+  color: 'inherit',
+  margin: 0,
   transition: 'background-color 150ms ease, transform 100ms ease',
   selectors: {
     '&:active': {
@@ -177,6 +193,8 @@ export const quickCardContent = style({
   zIndex: 1,
   display: 'flex',
   flexDirection: 'column',
+  alignItems: 'flex-start',
+  textAlign: 'left',
   gap: '2px',
 });
 
@@ -185,6 +203,7 @@ export const quickCardTitle = style({
   lineHeight: '22px',
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.neutral,
+  textAlign: 'left',
   margin: 0,
 });
 
@@ -193,6 +212,7 @@ export const quickCardSubtitle = style({
   lineHeight: '18px',
   fontWeight: vars.$fontWeight.medium,
   color: vars.$color.fg.neutralSubtle,
+  textAlign: 'left',
   margin: 0,
 });
 
@@ -330,4 +350,320 @@ export const devRoutesLink = style({
   textAlign: 'center',
   padding: vars.$dimension.x2,
   textDecoration: 'underline',
+});
+
+export const attendedBadge = style({
+  display: 'inline-flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginTop: '4px',
+  padding: '2px 4px',
+  borderRadius: '4px',
+  backgroundColor: '#FFF0E6',
+  color: '#FF6600',
+  fontSize: '11px',
+  fontWeight: 700,
+  lineHeight: '13px',
+});
+
+export const disabledSessionButton = style({
+  width: '100%',
+  height: '44px',
+  borderRadius: '8px',
+  backgroundColor: '#F3F4F5 !important',
+  color: '#868B94 !important',
+  fontSize: '14px !important',
+  fontWeight: '700 !important',
+  cursor: 'default',
+});
+
+export const attendedSessionButton = style({
+  width: '100%',
+  height: '44px',
+  borderRadius: '8px',
+  backgroundColor: '#F3F4F5 !important',
+  color: '#868B94 !important',
+  fontSize: '14px !important',
+  fontWeight: '700 !important',
+  cursor: 'default',
+});
+
+export const quickCardWrapper = style({
+  position: 'relative',
+  flex: 1,
+  display: 'flex',
+  flexDirection: 'column',
+});
+
+export const helpBubbleContent = style({
+  backgroundColor: '#2A3038 !important',
+  padding: '8px 10px !important',
+  borderRadius: '8px !important',
+  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+});
+
+export const helpBubbleTitle = style({
+  fontSize: '12px !important',
+  lineHeight: '16px !important',
+  fontWeight: '500 !important',
+  color: '#FFFFFF !important',
+  textAlign: 'center',
+  whiteSpace: 'pre-line',
+  margin: 0,
+});
+
+export const helpBubbleArrowTip = style({
+  fill: '#2A3038 !important',
+});
+
+export const sheetBackdrop = style({
+  position: 'fixed',
+  inset: 0,
+  zIndex: 100,
+  backgroundColor: 'rgba(0, 0, 0, 0.5)',
+});
+
+export const sheetPositioner = style({
+  position: 'fixed',
+  inset: 0,
+  zIndex: 101,
+  display: 'flex',
+  flexDirection: 'column',
+  justifyContent: 'flex-end',
+  pointerEvents: 'none',
+});
+
+export const sheetContent = style({
+  pointerEvents: 'auto',
+  display: 'flex',
+  flexDirection: 'column',
+  width: '100%',
+  maxWidth: '480px',
+  margin: '0 auto',
+  backgroundColor: '#FFFFFF',
+  borderTopLeftRadius: '20px',
+  borderTopRightRadius: '20px',
+  padding: '12px 20px 34px',
+  boxSizing: 'border-box',
+  gap: '16px',
+});
+
+export const sheetHandleBar = style({
+  alignSelf: 'center',
+  width: '36px',
+  height: '4px',
+  borderRadius: '2px',
+  backgroundColor: '#DCDEE3',
+  marginBottom: '8px',
+});
+
+export const sheetHeader = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '4px',
+});
+
+export const sheetTitle = style({
+  fontSize: '20px',
+  fontWeight: 700,
+  lineHeight: '27px',
+  color: '#1A1C20',
+  margin: 0,
+});
+
+export const sheetDescription = style({
+  fontSize: '14px',
+  fontWeight: 500,
+  lineHeight: '19px',
+  color: '#868B94',
+  margin: 0,
+});
+
+export const codeInputsContainer = style({
+  display: 'flex',
+  justifyContent: 'center',
+  alignItems: 'center',
+  gap: '12px',
+  margin: '16px 0',
+});
+
+export const codeInput = style({
+  width: '52px',
+  height: '56px',
+  borderRadius: '12px',
+  border: '1px solid #DCDEE3',
+  textAlign: 'center',
+  fontSize: '20px',
+  fontWeight: 700,
+  color: '#1A1C20',
+  backgroundColor: '#FFFFFF',
+  outline: 'none',
+  transition: 'border-color 0.15s ease',
+  selectors: {
+    '&:focus': {
+      borderColor: '#555D6D',
+    },
+  },
+});
+
+export const codeInputError = style([
+  codeInput,
+  {
+    borderColor: '#CA1D13 !important',
+    color: '#CA1D13',
+  },
+]);
+
+export const codeErrorMessage = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: '4px',
+  fontSize: '13px',
+  fontWeight: 500,
+  color: '#CA1D13',
+  margin: '-8px 0 8px',
+});
+
+export const radioGroup = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '10px',
+  margin: '12px 0',
+});
+
+export const radioOption = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  padding: '14px 18px',
+  borderRadius: '10px',
+  border: '1px solid #F3F4F5',
+  backgroundColor: '#FFFFFF',
+  cursor: 'pointer',
+  transition: 'all 0.15s ease',
+  fontSize: '16px',
+  fontWeight: 500,
+  color: '#1A1C20',
+  selectors: {
+    '&:hover': {
+      backgroundColor: '#F8F9FA',
+    },
+  },
+});
+
+export const radioOptionSelected = style([
+  radioOption,
+  {
+    borderColor: '#FF6600',
+    backgroundColor: '#FFF8F4',
+    fontWeight: 700,
+    color: '#FF6600',
+  },
+]);
+
+export const textareaContainer = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '6px',
+  margin: '12px 0',
+});
+
+export const reportTextarea = style({
+  width: '100%',
+  height: '100px',
+  borderRadius: '10px',
+  border: '1px solid #DCDEE3',
+  padding: '12px 14px',
+  fontSize: '15px',
+  fontWeight: 500,
+  color: '#1A1C20',
+  backgroundColor: '#FFFFFF',
+  resize: 'none',
+  boxSizing: 'border-box',
+  outline: 'none',
+  '::placeholder': {
+    color: '#B0B3BA',
+  },
+  selectors: {
+    '&:focus': {
+      borderColor: '#555D6D',
+    },
+  },
+});
+
+export const charCount = style({
+  fontSize: '12px',
+  color: '#868B94',
+  textAlign: 'right',
+});
+
+export const sheetPrimaryButton = style({
+  width: '100%',
+  height: '52px',
+  borderRadius: '8px',
+  backgroundColor: '#FF6600 !important',
+  color: '#FFFFFF !important',
+  fontSize: '16px !important',
+  fontWeight: '700 !important',
+});
+
+export const snackbar = style({
+  position: 'fixed',
+  bottom: '90px',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  zIndex: 90,
+  backgroundColor: '#1A1C20',
+  color: '#FFFFFF',
+  padding: '12px 24px',
+  borderRadius: '8px',
+  fontSize: '14px',
+  fontWeight: 600,
+  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+  pointerEvents: 'none',
+  animation: 'fadeIn 0.2s ease',
+});
+
+export const teamRulesList = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  margin: '12px 0',
+  padding: 0,
+  listStyle: 'none',
+});
+
+export const teamRuleItem = style({
+  display: 'flex',
+  alignItems: 'center',
+  gap: '8px',
+  fontSize: '13px',
+  fontWeight: 500,
+  color: '#555D6D',
+});
+
+export const teamGraphicWrap = style({
+  width: '100%',
+  height: '140px',
+  borderRadius: '12px',
+  backgroundColor: '#F7F8F9',
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  margin: '8px 0',
+});
+
+export const teamButtonsWrap = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  width: '100%',
+  marginTop: '8px',
+});
+
+export const sheetSecondaryButton = style({
+  width: '100%',
+  height: '52px',
+  borderRadius: '8px',
 });

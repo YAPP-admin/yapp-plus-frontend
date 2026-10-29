@@ -1,9 +1,24 @@
-import { render, screen, within } from '@testing-library/react';
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HomePage } from './home-page';
 
-afterEach(() => vi.unstubAllEnvs());
+const mockPush = vi.fn<(url: string) => void>();
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    back: vi.fn<() => void>(),
+    push: mockPush,
+    replace: vi.fn<(url: string) => void>(),
+  }),
+  useSearchParams: () => ({
+    get: vi.fn<(name: string) => string | null>().mockReturnValue(null),
+  }),
+}));
+
+afterEach(() => {
+  vi.unstubAllEnvs();
+  mockPush.mockClear();
+});
 
 describe('HomePage', () => {
   it.each(['production', 'test'])('%s에서는 개발용 링크를 노출하지 않는다', (environment) => {
@@ -28,23 +43,36 @@ describe('HomePage', () => {
       screen.getByRole('heading', { level: 2, name: '이번 주는 유저 플로우 리뷰 세션이에요' }),
     ).toBeInTheDocument();
     expect(screen.getByLabelText('주간 일정')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '출석하기' })).toHaveAttribute(
-      'href',
-      '/my/attendance',
-    );
+    expect(screen.getByRole('button', { name: '출석하기' })).toBeInTheDocument();
   });
 
-  it('일정 및 출결 보고 바로가기 카드를 제공한다', () => {
+  it('일정 및 출결 보고 바로가기 카드와 툴팁을 제공한다', () => {
     render(<HomePage />);
+    expect(screen.getByText('세션 시작 전에 미리 보고해 주세요')).toBeInTheDocument();
     const navigation = within(screen.getByRole('navigation', { name: '홈 바로가기' }));
-    expect(navigation.getByRole('link', { name: '이번 달 세션 전체보기' })).toHaveAttribute(
+    expect(navigation.getByRole('link', { name: '이번 달 전체 세션 확인하기' })).toHaveAttribute(
       'href',
       '/schedule',
     );
-    expect(navigation.getByRole('link', { name: '최근 출석 전체보기' })).toHaveAttribute(
-      'href',
-      '/my/attendance',
-    );
+    expect(navigation.getByRole('button', { name: '출결 보고 미리하기' })).toBeInTheDocument();
+  });
+
+  it('출석하기 버튼 클릭 시 출석 코드 바텀시트가 열린다', () => {
+    render(<HomePage />);
+    const attendanceBtn = screen.getByRole('button', { name: '출석하기' });
+    fireEvent.click(attendanceBtn);
+
+    expect(screen.getByText('출석 코드를 입력해 주세요')).toBeInTheDocument();
+    expect(screen.getByText('코드를 입력하면 출석이 완료돼요')).toBeInTheDocument();
+  });
+
+  it('출결 보고 버튼 클릭 시 출결 보고 바텀시트가 열린다', () => {
+    render(<HomePage />);
+    const reportBtn = screen.getByRole('button', { name: '출결 보고 미리하기' });
+    fireEvent.click(reportBtn);
+
+    expect(screen.getByText('출결을 보고해 주세요')).toBeInTheDocument();
+    expect(screen.getByText('미리 알려주시면 점수 차감이 줄어들어요')).toBeInTheDocument();
   });
 
   it('이번 주 공지 목록을 제공한다', () => {

@@ -1,4 +1,6 @@
 import '@seed-design/css/base.css';
+import '@seed-design/css/recipes/help-bubble.css';
+import '@seed-design/css/recipes/bottom-sheet.css';
 import '@yapp-plus/ui/fonts.css';
 import { seedThemeScript } from '@yapp-plus/ui/seed-theme';
 import type { Metadata, Viewport } from 'next';
