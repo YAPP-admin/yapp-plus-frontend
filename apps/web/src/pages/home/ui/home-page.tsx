@@ -17,11 +17,19 @@ import {
   HelpBubbleTitle,
 } from '@seed-design/react';
 import { CompleteIllustration } from '@/pages/signup-complete/ui/complete-illustration';
-import { ActionButton, BottomSheetContent, BottomSheetRoot } from '@yapp-plus/ui';
+import {
+  ActionButton,
+  BottomSheetContent,
+  BottomSheetRoot,
+  Snackbar,
+  TextField,
+  TextFieldTextarea,
+  useSnackbarAdapter,
+} from '@yapp-plus/ui';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   attendanceButton,
   attendedBadge,
@@ -32,7 +40,6 @@ import {
   calendarDayLabel,
   calendarWeek,
   cardsSection,
-  charCount,
   chipBlue,
   chipGray,
   chipRow,
@@ -73,7 +80,11 @@ import {
   quickCardSubtitle,
   quickCardTitle,
   reportRadioGroup,
-  reportTextarea,
+  reportSnackbar,
+  reportTextFieldRoot,
+  reportTextFieldTextarea,
+  sessionButtonWrapper,
+  teamSessionButton,
   sessionCard,
   sessionHeader,
   sessionTitle,
@@ -90,7 +101,6 @@ import {
   sheetTitle,
   sheetTopSection,
   codeInputsWrapper,
-  snackbar,
   srOnly,
   teamButtonsWrap,
   teamGraphicWrap,
@@ -164,7 +174,30 @@ export function HomePage() {
   const [reportStep, setReportStep] = useState<1 | 2>(1);
   const [selectedReportType, setSelectedReportType] = useState<ReportType>('지각');
   const [reportReason, setReportReason] = useState('');
-  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const snackbar = useSnackbarAdapter();
+
+  // 툴팁 상태 관리 (가이드: 액션이 발생하거나 일정 시간 뒤 자동 dismiss)
+  const [isReportTooltipOpen, setIsReportTooltipOpen] = useState(true);
+  const [isTeamTooltipOpen, setIsTeamTooltipOpen] = useState(true);
+
+  // 1) 4초 뒤 자동 dismiss
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsReportTooltipOpen(false);
+      setIsTeamTooltipOpen(false);
+    }, 4000);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // 2) 화면 상호작용 발생 시 dismiss
+  useEffect(() => {
+    function handlePointerDown() {
+      setIsReportTooltipOpen(false);
+      setIsTeamTooltipOpen(false);
+    }
+    window.addEventListener('pointerdown', handlePointerDown);
+    return () => window.removeEventListener('pointerdown', handlePointerDown);
+  }, []);
 
   // 코드 입력 핸들러
   function handleCodeChange(index: number, value: string) {
@@ -207,6 +240,7 @@ export function HomePage() {
 
   // 출결 보고 핸들러
   function handleOpenReport() {
+    setIsReportTooltipOpen(false);
     setReportStep(1);
     setReportReason('');
     setIsReportSheetOpen(true);
@@ -218,10 +252,16 @@ export function HomePage() {
 
   function handleSubmitReport() {
     setIsReportSheetOpen(false);
-    setSnackbarMessage('출결 보고를 완료했어요');
-    setTimeout(() => {
-      setSnackbarMessage(null);
-    }, 3000);
+    snackbar.create({
+      render: () => (
+        <Snackbar
+          message="출결 보고를 완료했어요"
+          actionLabel="확인"
+          onAction={() => snackbar.dismiss()}
+          className={reportSnackbar}
+        />
+      ),
+    });
   }
 
   function renderSessionActionButton() {
@@ -251,19 +291,51 @@ export function HomePage() {
       );
     }
 
+    // 팀 세션일 때: 피그마 #810:11509 규격 ("인증 사진 올리기" + 하단 툴팁)
+    if (isTeamSession) {
+      return (
+        <div className={sessionButtonWrapper}>
+          <HelpBubbleRoot open={isTeamTooltipOpen} placement="bottom" gutter={6}>
+            <HelpBubbleAnchor asChild>
+              <ActionButton
+                variant="neutralSolid"
+                size="medium"
+                className={teamSessionButton}
+                onClick={() => {
+                  setIsTeamTooltipOpen(false);
+                  setIsTeamGuideSheetOpen(true);
+                }}
+              >
+                인증 사진 올리기
+              </ActionButton>
+            </HelpBubbleAnchor>
+
+            <HelpBubblePositioner>
+              <HelpBubbleContent className={helpBubbleContent}>
+                <HelpBubbleArrow>
+                  <HelpBubbleArrowTip className={helpBubbleArrowTip} />
+                </HelpBubbleArrow>
+                <HelpBubbleBody>
+                  <HelpBubbleTitle className={helpBubbleTitle}>
+                    팀원 중 한 명만{'\n'}인증하면 돼요
+                  </HelpBubbleTitle>
+                </HelpBubbleBody>
+              </HelpBubbleContent>
+            </HelpBubblePositioner>
+          </HelpBubbleRoot>
+        </div>
+      );
+    }
+
     return (
       <ActionButton
         variant="neutralSolid"
         size="medium"
         className={attendanceButton}
         onClick={() => {
-          if (isTeamSession) {
-            setIsTeamGuideSheetOpen(true);
-          } else {
-            setCode(['', '', '', '']);
-            setCodeError(false);
-            setIsCodeSheetOpen(true);
-          }
+          setCode(['', '', '', '']);
+          setCodeError(false);
+          setIsCodeSheetOpen(true);
         }}
       >
         출석하기
@@ -284,7 +356,7 @@ export function HomePage() {
                   <IconLocationpinFill width={14} height={14} />
                 </span>
                 <span className={locationText}>
-                  {isTeamSession ? '강남역 모임공간' : 'DMC 첨단산업센터'}
+                  {isTeamSession ? '팀별 자율 장소' : 'DMC 첨단산업센터'}
                 </span>
               </div>
               <h2 className={sessionTitle}>
@@ -330,13 +402,18 @@ export function HomePage() {
             </div>
 
             <div className={quickCardCol}>
-              <HelpBubbleRoot open={attendanceState !== 'attended'} placement="bottom" gutter={6}>
+              <HelpBubbleRoot
+                open={isReportTooltipOpen && attendanceState !== 'attended'}
+                placement="bottom"
+                gutter={6}
+              >
                 <HelpBubbleAnchor asChild>
                   <button
                     type="button"
                     className={quickCard}
                     onClick={handleOpenReport}
                     aria-label="출결 보고 미리하기"
+                    data-testid="report-attendance-button"
                   >
                     <div className={quickCardContent}>
                       <p className={quickCardTitle}>출결 보고</p>
@@ -463,7 +540,6 @@ export function HomePage() {
               >
                 확인
               </ActionButton>
-              <div className={sheetHomeIndicatorArea} aria-hidden="true" />
             </div>
           </div>
         </BottomSheetContent>
@@ -486,85 +562,82 @@ export function HomePage() {
           <div className={sheetContainer}>
             {reportStep === 1 ? (
               <>
-                <div className={sheetTopSection}>
-                  <div className={sheetHeader}>
-                    <h2 className={sheetTitle}>출결을 보고해 주세요</h2>
-                    <p className={sheetDescription}>미리 알려주시면 점수 차감이 줄어들어요</p>
-                  </div>
-
-                  <fieldset className={reportRadioGroup}>
-                    <legend className={visuallyHidden}>출결 유형</legend>
-                    {(['지각', '조퇴', '결석'] as const).map((type) => {
-                      const isSelected = selectedReportType === type;
-                      return (
-                        <label
-                          key={type}
-                          className={`${listRadioItem} ${isSelected ? listRadioItemSelected : ''}`}
-                        >
-                          <input
-                            type="radio"
-                            name="attendanceReportType"
-                            value={type}
-                            checked={isSelected}
-                            onChange={() => {
-                              setSelectedReportType(type);
-                            }}
-                            className={visuallyHidden}
-                          />
-                          <span className={listRadioLabel}>{type}</span>
-                          <span
-                            className={`${listRadioCircle} ${isSelected ? listRadioCircleSelected : ''}`}
-                            aria-hidden="true"
-                          />
-                        </label>
-                      );
-                    })}
-                  </fieldset>
+                <div className={sheetHeader}>
+                  <h2 className={sheetTitle}>출결을 보고해 주세요</h2>
+                  <p className={sheetDescription}>미리 알려주시면 점수 차감이 줄어들어요</p>
                 </div>
 
-                <div className={sheetFooter}>
-                  <ActionButton
-                    variant="brandSolid"
-                    size="large"
-                    className={sheetPrimaryButton}
-                    onClick={handleReportNext}
-                  >
-                    확인
-                  </ActionButton>
-                  <div className={sheetHomeIndicatorArea} aria-hidden="true" />
-                </div>
+                <fieldset className={reportRadioGroup}>
+                  <legend className={visuallyHidden}>출결 유형</legend>
+                  {(['지각', '조퇴', '결석'] as const).map((type) => {
+                    const isSelected = selectedReportType === type;
+                    return (
+                      <label
+                        key={type}
+                        className={`${listRadioItem} ${isSelected ? listRadioItemSelected : ''}`}
+                      >
+                        <input
+                          type="radio"
+                          name="attendanceReportType"
+                          value={type}
+                          checked={isSelected}
+                          onChange={() => {
+                            setSelectedReportType(type);
+                          }}
+                          className={visuallyHidden}
+                        />
+                        <span className={listRadioLabel}>{type}</span>
+                        <span
+                          className={`${listRadioCircle} ${isSelected ? listRadioCircleSelected : ''}`}
+                          aria-hidden="true"
+                        />
+                      </label>
+                    );
+                  })}
+                </fieldset>
+
+                <ActionButton
+                  variant="brandSolid"
+                  size="large"
+                  className={sheetPrimaryButton}
+                  onClick={handleReportNext}
+                  data-testid="report-step1-submit"
+                >
+                  확인
+                </ActionButton>
               </>
             ) : (
               <>
-                <div className={sheetTopSection}>
-                  <div className={sheetHeader}>
-                    <h2 className={sheetTitle}>{selectedReportType} 사유를 입력해 주세요</h2>
-                  </div>
+                <div className={sheetHeader}>
+                  <h2 className={sheetTitle}>{selectedReportType} 사유를 입력해 주세요</h2>
+                </div>
 
-                  <div className={textareaContainer}>
-                    <textarea
-                      className={reportTextarea}
+                <div className={textareaContainer}>
+                  <TextField
+                    className={reportTextFieldRoot}
+                    maxGraphemeCount={30}
+                    value={reportReason}
+                    onValueChange={(details) => setReportReason(details.value)}
+                  >
+                    <TextFieldTextarea
+                      className={reportTextFieldTextarea}
                       placeholder="사유를 입력해 주세요"
                       maxLength={30}
-                      value={reportReason}
-                      onChange={(e) => setReportReason(e.target.value)}
                       aria-label={`${selectedReportType} 사유`}
+                      data-testid="report-reason-input"
                     />
-                    <div className={charCount}>{reportReason.length}/30</div>
-                  </div>
+                  </TextField>
                 </div>
 
-                <div className={sheetFooter}>
-                  <ActionButton
-                    variant="brandSolid"
-                    size="large"
-                    className={sheetPrimaryButton}
-                    onClick={handleSubmitReport}
-                  >
-                    확인
-                  </ActionButton>
-                  <div className={sheetHomeIndicatorArea} aria-hidden="true" />
-                </div>
+                <ActionButton
+                  variant="brandSolid"
+                  size="large"
+                  className={sheetPrimaryButton}
+                  onClick={handleSubmitReport}
+                  data-testid="report-step2-submit"
+                >
+                  확인
+                </ActionButton>
               </>
             )}
           </div>
@@ -584,31 +657,29 @@ export function HomePage() {
           </div>
 
           <div className={sheetContainer}>
-            <div className={sheetTopSection}>
-              <div className={sheetHeader}>
-                <h2 className={sheetTitle}>팀 세션 인증 사진을 업로드해 주세요</h2>
-                <p className={sheetDescription}>팀원 중 한 명만 올리면 팀 전체에 반영돼요</p>
-              </div>
-
-              <div className={teamGraphicWrap} aria-hidden="true">
-                <CompleteIllustration />
-              </div>
-
-              <ul className={teamRulesList} aria-label="인증 사진 규칙">
-                <li className={teamRuleItem}>
-                  <IconCheckmarkCircleFill width={16} height={16} />
-                  <span>참석한 팀원이 모두 보이게 찍어주세요</span>
-                </li>
-                <li className={teamRuleItem}>
-                  <IconCheckmarkCircleFill width={16} height={16} />
-                  <span>세션 시간(14:00 - 18:00) 안에 올려주세요</span>
-                </li>
-                <li className={teamRuleItem}>
-                  <IconCheckmarkCircleFill width={16} height={16} />
-                  <span>운영진 확인 후 출석이 확정돼요</span>
-                </li>
-              </ul>
+            <div className={sheetHeader}>
+              <h2 className={sheetTitle}>팀 세션 인증 사진을 업로드해 주세요</h2>
+              <p className={sheetDescription}>팀원 중 한 명만 올리면 팀 전체에 반영돼요</p>
             </div>
+
+            <div className={teamGraphicWrap} aria-hidden="true">
+              <CompleteIllustration />
+            </div>
+
+            <ul className={teamRulesList} aria-label="인증 사진 규칙">
+              <li className={teamRuleItem}>
+                <IconCheckmarkCircleFill width={16} height={16} />
+                <span>참석한 팀원이 모두 보이게 찍어주세요</span>
+              </li>
+              <li className={teamRuleItem}>
+                <IconCheckmarkCircleFill width={16} height={16} />
+                <span>세션 시간(14:00 - 18:00) 안에 올려주세요</span>
+              </li>
+              <li className={teamRuleItem}>
+                <IconCheckmarkCircleFill width={16} height={16} />
+                <span>운영진 확인 후 출석이 확정돼요</span>
+              </li>
+            </ul>
 
             <div className={sheetFooter}>
               <div className={teamButtonsWrap}>
@@ -641,8 +712,7 @@ export function HomePage() {
         </BottomSheetContent>
       </BottomSheetRoot>
 
-      {/* 완료 스낵바 */}
-      {snackbarMessage && <output className={snackbar}>{snackbarMessage}</output>}
+      {/* 완료 스낵바는 SEED SnackbarProvider 및 useSnackbarAdapter를 통해 Region에 자동 렌더링됩니다 */}
     </main>
   );
 }

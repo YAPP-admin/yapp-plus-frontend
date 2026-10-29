@@ -422,15 +422,18 @@ export const sheetContent = style({
   borderTopLeftRadius: '16px !important',
   borderTopRightRadius: '16px !important',
   backgroundColor: '#FFFFFF !important',
-  paddingBottom: 'calc(18px + env(safe-area-inset-bottom, 0px)) !important',
+  padding: '0 !important',
   boxSizing: 'border-box',
+  height: 'auto !important',
+  maxHeight: '85vh !important',
+  overflowY: 'auto',
 });
 
 export const sheetHandleArea = style({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  padding: '14px 10px',
+  padding: '14px 10px 10px',
   width: '100%',
   boxSizing: 'border-box',
 });
@@ -452,7 +455,7 @@ export const sheetContainer = style({
 });
 
 export const sheetHomeIndicatorArea = style({
-  height: '34px',
+  height: 'env(safe-area-inset-bottom, 0px)',
   width: '100%',
 });
 
@@ -577,7 +580,7 @@ export const reportRadioGroup = style({
   flexDirection: 'column',
   gap: '10px',
   width: '100%',
-  margin: '8px 0',
+  margin: 0,
   border: 0,
   padding: 0,
 });
@@ -645,36 +648,66 @@ export const textareaContainer = style({
   display: 'flex',
   flexDirection: 'column',
   gap: '6px',
-  margin: '12px 0',
+  margin: 0,
 });
 
-export const reportTextarea = style({
+export const reportSnackbar = style({
+  position: 'fixed',
+  bottom: 'calc(76px + env(safe-area-inset-bottom, 0px))',
+  left: '50%',
+  transform: 'translateX(-50%)',
+  width: 'calc(100% - 32px)',
+  maxWidth: '468px',
+  zIndex: 100,
+  backgroundColor: '#2A3038 !important',
+  borderRadius: '8px !important',
+  padding: '14px 18px !important',
+  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
+  boxSizing: 'border-box',
+});
+
+export const reportTextFieldRoot = style({
   width: '100%',
-  height: '100px',
-  borderRadius: '10px',
-  border: '1px solid #DCDEE3',
-  padding: '12px 14px',
-  fontSize: '15px',
-  fontWeight: 500,
-  color: '#1A1C20',
-  backgroundColor: '#FFFFFF',
+  margin: 0,
+});
+
+export const reportTextFieldTextarea = style({
+  width: '100%',
+  minHeight: '100px',
+  borderRadius: '10px !important',
+  border: '1px solid #DCDEE3 !important',
+  padding: '12px 14px !important',
+  fontSize: '15px !important',
+  fontWeight: '500 !important',
+  color: '#1A1C20 !important',
+  backgroundColor: '#FFFFFF !important',
   resize: 'none',
   boxSizing: 'border-box',
   outline: 'none',
   '::placeholder': {
-    color: '#B0B3BA',
+    color: '#B0B3BA !important',
   },
   selectors: {
     '&:focus': {
-      borderColor: '#555D6D',
+      borderColor: '#555D6D !important',
     },
   },
 });
 
-export const charCount = style({
-  fontSize: '12px',
-  color: '#868B94',
-  textAlign: 'right',
+export const sessionButtonWrapper = style({
+  position: 'relative',
+  width: '100%',
+});
+
+export const teamSessionButton = style({
+  width: '100%',
+  height: '44px',
+  borderRadius: '8px',
+  backgroundColor: '#2A3038 !important',
+  color: '#FFFFFF !important',
+  fontSize: '14px !important',
+  fontWeight: '700 !important',
+  cursor: 'pointer',
 });
 
 export const sheetPrimaryButton = style({
@@ -685,23 +718,6 @@ export const sheetPrimaryButton = style({
   color: '#FFFFFF !important',
   fontSize: '16px !important',
   fontWeight: '700 !important',
-});
-
-export const snackbar = style({
-  position: 'fixed',
-  bottom: '90px',
-  left: '50%',
-  transform: 'translateX(-50%)',
-  zIndex: 90,
-  backgroundColor: '#1A1C20',
-  color: '#FFFFFF',
-  padding: '12px 24px',
-  borderRadius: '8px',
-  fontSize: '14px',
-  fontWeight: 600,
-  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.2)',
-  pointerEvents: 'none',
-  animation: 'fadeIn 0.2s ease',
 });
 
 export const teamRulesList = style({
