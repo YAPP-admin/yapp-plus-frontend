@@ -1,4 +1,3 @@
-import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
@@ -15,59 +14,68 @@ export const header = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'space-between',
-  height: '56px',
+  height: '54px',
   padding: '0 16px',
   backgroundColor: '#FFFFFF',
-  borderBottom: `1px solid ${vars.$color.palette.gray100}`,
+  width: '100%',
+  maxWidth: '480px',
+  margin: '0 auto',
+  boxSizing: 'border-box',
 });
 
 export const headerTitle = style({
   fontSize: '18px',
+  lineHeight: '24px',
   fontWeight: 700,
-  color: vars.$color.palette.gray900,
+  color: '#1A1C20',
   margin: 0,
 });
 
 export const headerSpacer = style({
-  width: '40px',
-  height: '40px',
+  width: '24px',
+  height: '24px',
+});
+
+export const body = style({
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  padding: '0 16px',
+  width: '100%',
+  maxWidth: '480px',
+  margin: '0 auto',
+  boxSizing: 'border-box',
 });
 
 export const list = style({
   display: 'flex',
   flexDirection: 'column',
-  flex: 1,
+  width: '100%',
 });
 
 export const listItem = style({
   display: 'flex',
   flexDirection: 'column',
-  gap: '6px',
-  padding: '16px 20px',
-  borderBottom: `1px solid ${vars.$color.palette.gray100}`,
-  textDecoration: 'none',
-  transition: 'background-color 0.15s ease',
-  selectors: {
-    '&:hover': {
-      backgroundColor: vars.$color.palette.gray100,
-    },
-  },
+  gap: '8px',
+  padding: '20px 0',
+  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+  boxSizing: 'border-box',
 });
 
 export const itemMessage = style({
   fontSize: '16px',
-  fontWeight: 500,
   lineHeight: '22px',
-  color: vars.$color.palette.gray900,
+  fontWeight: 500,
+  color: '#1A1C20',
   whiteSpace: 'pre-line',
   margin: 0,
 });
 
 export const itemDate = style({
   fontSize: '13px',
-  fontWeight: 400,
   lineHeight: '18px',
-  color: vars.$color.palette.gray600,
+  fontWeight: 400,
+  color: '#868B94',
   margin: 0,
 });
 
@@ -77,14 +85,21 @@ export const emptyContainer = style({
   alignItems: 'center',
   justifyContent: 'center',
   flex: 1,
-  padding: '64px 20px',
-  gap: '16px',
+  padding: '0 0 32px',
+  gap: '20px',
+});
+
+export const emptyGraphic = style({
+  width: '90px',
+  height: '74px',
+  userSelect: 'none',
 });
 
 export const emptyText = style({
   fontSize: '16px',
-  fontWeight: 400,
   lineHeight: '22px',
-  color: vars.$color.palette.gray600,
+  fontWeight: 400,
+  color: '#868B94',
+  textAlign: 'center',
   margin: 0,
 });
