@@ -1,4 +1,5 @@
 import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
+import { memberPreviewBeforeMapping } from '~/features/member-management/fixtures';
 import { MembersPage, memberSearchSchema, memberSearchDefaults } from '~/pages/members';
 
 export const Route = createFileRoute('/_dashboard/members/')({
@@ -25,6 +26,10 @@ function MembersRoute() {
   return (
     <MembersPage
       search={search}
+      members={import.meta.env.DEV ? memberPreviewBeforeMapping.members : undefined}
+      currentGeneration={
+        import.meta.env.DEV ? memberPreviewBeforeMapping.currentGeneration : undefined
+      }
       onSearch={(query) => {
         void navigate({
           search: (previous) => ({ ...previous, q: query }),

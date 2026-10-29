@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 회원 관리 화면
 
 **입력**: [명세](spec.md), [계획](plan.md), [데이터](data-model.md), [화면 계약](contracts/member-ui.md)
-**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 구현·검증 완료, 사용자 리뷰 대기.
+**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 구현·검증 완료, 사용자 리뷰 대기.
 
 ## 진행 규칙
 
@@ -48,9 +48,9 @@
 
 ## 4a단계 — 회원 행 목록과 상태 (US1, P1)
 
-- [ ] T016 [US1] apps/admin/src/pages/members/ui/member-list.tsx와 member-list.css.ts에 행·기수 이력·권한·점수·가입일·더보기를 구현한다.
-- [ ] T017 [US1] apps/admin/src/pages/members/ui/members-page.tsx와 members-page.css.ts에 개발 환경 진입점의 고정 fixture props·프로덕션 준비 안내·빈 명단/검색 빈 결과·재시도 표현을 연결한다.
-- [ ] T018 [US1] apps/admin/src/pages/members/ui/members-page.test.tsx에 긴 이름·이력·미제공 점수·비활동·프로덕션 fixture 비노출·표 의미 구조 검증을 추가한다.
+- [x] T016 [US1] apps/admin/src/pages/members/ui/member-list.tsx와 member-list.css.ts에 행·기수 이력·권한·점수·가입일·더보기를 구현한다.
+- [x] T017 [US1] apps/admin/src/pages/members/ui/members-page.tsx와 members-page.css.ts에 개발 환경 진입점의 고정 fixture props·프로덕션 준비 안내·빈 명단을 연결한다. 검색 빈 결과는 실제 필터 연결 단계인 T020에서 구현하고, 고정 입력에는 가짜 로딩·오류·재시도를 추가하지 않는다.
+- [x] T018 [US1] apps/admin/src/pages/members/ui/members-page.test.tsx에 긴 이름·이력·미제공 점수·비활동·프로덕션 fixture 비노출·표 의미 구조 검증을 추가한다.
 
 **독립 검증/중단점**: Figma 행 목록과 상태를 props 기반으로 확인하고 리뷰받는다. 가짜 요청은 만들지 않는다.
 
@@ -166,3 +166,11 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 사용자 “커밋하고 다음 진행해”로 2a 리뷰를 확인하고 문서 bf3055d·모델 9ca4901을 커밋했다.
 후속 승인으로 brussels-v2/member-management-fixtures를 생성·전환해 2b를 진행했다.
 사용자 승인으로 2b를 7af086c에 커밋하고 3단계를 진행했다. 3단계는 미커밋 상태이며 push·PR은 수행하지 않았다. 4a는 3단계 리뷰 후 진행한다.
+
+## 4a 진행 기록
+
+- 사용자 승인으로 3단계를 873029a에 커밋했다.
+- 승인된 분리에 따라 2b의 base 브랜치 `brussels-v2/member-management-data`와 4a 작업 브랜치 `brussels-v2/member-list`를 생성했다.
+- 4a의 실제 PR base는 `brussels-v2/member-management-fixtures`(873029a)다.
+- T016~T018을 완료했다. 검색 결과 없음은 T020의 실제 검색과 함께 구현한다.
+- 사용자 리뷰 전 4b에 착수하지 않는다. 이번 단계는 미커밋이며 push·PR은 수행하지 않았다.

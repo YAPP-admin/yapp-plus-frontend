@@ -1,3 +1,5 @@
+import type { Member } from '~/features/member-management';
+import { MemberList } from './member-list';
 import { PageHeader } from '~/shared/ui/page-header';
 import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
@@ -8,10 +10,14 @@ import * as styles from './members-page.css';
 
 export function MembersPage({
   search,
+  members,
+  currentGeneration,
   onFilterChange,
   onSearch,
 }: {
   search: MemberSearch;
+  members?: readonly Member[];
+  currentGeneration?: number;
   onSearch: (query: string) => void;
   onFilterChange: (change: Partial<Omit<MemberSearch, 'q' | 'tab'>>) => void;
 }) {
@@ -64,7 +70,11 @@ export function MembersPage({
           onChange={(part) => onFilterChange({ part })}
         />
       </div>
-      <p className={styles.placeholder}>회원 목록을 준비 중입니다.</p>
+      {members !== undefined && currentGeneration !== undefined ? (
+        <MemberList members={members} currentGeneration={currentGeneration} />
+      ) : (
+        <p className={styles.placeholder}>회원 목록을 준비 중입니다.</p>
+      )}
     </main>
   );
 }
