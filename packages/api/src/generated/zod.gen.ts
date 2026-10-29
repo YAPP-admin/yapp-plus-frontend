@@ -158,9 +158,13 @@ export const zErrorResponse = z.object({
     'ATTENDANCE_CODE_NOT_ISSUED',
     'ATTENDANCE_CODE_UPDATE_FAILED',
     'ATTENDANCE_REPORT_NOT_ELIGIBLE',
+    'ATTENDANCE_REPORT_SESSION_CONFLICT',
     'ATTENDANCE_REPORT_UNAVAILABLE',
+    'ATTENDANCE_SCORE_NOT_ELIGIBLE',
+    'ATTENDANCE_SCORE_INCONSISTENT',
     'ATTENDANCE_SESSION_NOT_FOUND',
     'ATTENDANCE_UNAVAILABLE',
+    'TEAM_ATTENDANCE_PENDING',
     'AUTHENTICATION_FAILED',
     'AUTHENTICATION_STATE_INVALID',
     'CURRENT_GENERATION_NOT_FOUND',
@@ -168,6 +172,10 @@ export const zErrorResponse = z.object({
     'EMPTY_POST_AUDIENCE',
     'GENERATION_NOT_FOUND',
     'INVALID_ATTENDANCE_CODE',
+    'INVALID_ATTENDANCE_HISTORY_CURSOR',
+    'INVALID_ATTENDANCE_REPORT',
+    'INVALID_ATTENDANCE_REQUEST',
+    'INVALID_HISTORY_REQUEST',
     'INVALID_MEMBER_REQUEST',
     'INVALID_POST_CURSOR',
     'INVALID_POST_IMAGE',
@@ -182,6 +190,7 @@ export const zErrorResponse = z.object({
     'POST_IMAGE_CONFLICT',
     'POST_IMAGE_STORAGE_FAILED',
     'POST_NOT_FOUND',
+    'RETAINED_HISTORY_UNAVAILABLE',
     'SESSION_DATE_CONFLICT',
     'SESSION_DELETE_CONFLICT',
     'SESSION_MANAGEMENT_DISABLED',
@@ -193,9 +202,16 @@ export const zErrorResponse = z.object({
     'TEAM_MEMBER_NOT_FOUND',
     'TEAM_NAME_CONFLICT',
     'TEAM_NOT_FOUND',
+    'TEAM_PHOTO_INVALID',
+    'TEAM_PHOTO_NOT_ELIGIBLE',
+    'TEAM_PHOTO_NOT_FOUND',
+    'TEAM_PHOTO_STORAGE_FAILED',
+    'TEAM_PHOTO_UNAVAILABLE',
     'TEAM_VERSION_CONFLICT',
     'USER_ALREADY_EXISTS',
+    'USER_NOT_FOUND',
     'USER_REGISTRATION_FAILED',
+    'USER_WITHDRAWAL_FAILED',
   ]),
   message: z.string().nullable(),
   fieldErrors: z.array(zRegistrationFieldError).optional(),
@@ -252,7 +268,7 @@ export const zVerifyAttendanceCodeResponse = z.object({
 });
 
 export const zSubmitAttendanceReportRequest = z.object({
-  type: z.enum(['ONE_HOUR_LATE', 'THREE_HOUR_LATE', 'LATE', 'EARLY_LEAVE', 'ABSENT']),
+  type: z.enum(['LATE', 'EARLY_LEAVE', 'ABSENT']),
   reason: z.string().nullish(),
 });
 
@@ -314,8 +330,9 @@ export const zMemberDetailResponse = z.object({
     .max(BigInt('9223372036854775807'), {
       error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
     }),
-  name: z.string(),
-  phoneNumber: z.string(),
+  name: z.string().nullable(),
+  phoneNumber: z.string().nullable(),
+  accountDeleted: z.boolean(),
   signedUpAt: z.iso.datetime(),
   reviewStatus: z.string(),
   role: z.union([z.literal('PLAYER'), z.literal('OB')]).nullable(),
@@ -508,6 +525,7 @@ export const zOverrideAttendanceRequest = z.object({
     'EXCUSED_ABSENCE',
   ]),
   reason: z.string().nullish(),
+  checkedInAt: z.iso.datetime().nullish(),
   earlyLeaveAt: z.iso.datetime().nullish(),
 });
 
@@ -831,6 +849,7 @@ export const zAdminAttendanceRow = z.object({
   latestReportType: z.string().nullable(),
   latestReportReason: z.string().nullable(),
   checkedInAt: z.iso.datetime().nullable(),
+  earlyLeaveAt: z.iso.datetime().nullable(),
   status: z.enum([
     'UNDECIDED',
     'PRESENT',
@@ -1141,12 +1160,12 @@ export const zVerifyBody = zVerifyAttendanceCodeRequest;
  */
 export const zVerifyResponse = zVerifyAttendanceCodeResponse;
 
-export const zSubmitBody = zSubmitAttendanceReportRequest;
+export const zSubmit1Body = zSubmitAttendanceReportRequest;
 
 /**
  * OK
  */
-export const zSubmitResponse = zAttendanceReportResponse;
+export const zSubmit1Response = zAttendanceReportResponse;
 
 export const zRejectBody = zRejectMemberRequest;
 
@@ -1409,9 +1428,9 @@ export const zCreate2Path = z.object({
  */
 export const zCreate2Response = zCreatedPostResponse;
 
-export const zPresignBody = zPresignPostImageRequest;
+export const zPresign1Body = zPresignPostImageRequest;
 
-export const zPresignPath = z.object({
+export const zPresign1Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -1425,7 +1444,7 @@ export const zPresignPath = z.object({
 /**
  * OK
  */
-export const zPresignResponse = zPresignPostImageResponse;
+export const zPresign1Response = zPresignPostImageResponse;
 
 export const zLoginBody = zStaffLoginRequest;
 
@@ -1644,7 +1663,7 @@ export const zCandidatesQuery = z.object({
  */
 export const zCandidatesResponse = z.array(zTeamMemberCandidateResponse);
 
-export const zList1Path = z.object({
+export const zList3Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -1663,7 +1682,7 @@ export const zList1Path = z.object({
     }),
 });
 
-export const zList1Query = z.object({
+export const zList3Query = z.object({
   cursor: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -1684,7 +1703,7 @@ export const zList1Query = z.object({
 /**
  * OK
  */
-export const zList1Response = zAdminAttendanceListResponse;
+export const zList3Response = zAdminAttendanceListResponse;
 
 export const zRecipientsPath = z.object({
   generationId: z.coerce

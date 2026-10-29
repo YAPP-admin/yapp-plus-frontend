@@ -116,9 +116,13 @@ export type ErrorResponse = {
     | 'ATTENDANCE_CODE_NOT_ISSUED'
     | 'ATTENDANCE_CODE_UPDATE_FAILED'
     | 'ATTENDANCE_REPORT_NOT_ELIGIBLE'
+    | 'ATTENDANCE_REPORT_SESSION_CONFLICT'
     | 'ATTENDANCE_REPORT_UNAVAILABLE'
+    | 'ATTENDANCE_SCORE_NOT_ELIGIBLE'
+    | 'ATTENDANCE_SCORE_INCONSISTENT'
     | 'ATTENDANCE_SESSION_NOT_FOUND'
     | 'ATTENDANCE_UNAVAILABLE'
+    | 'TEAM_ATTENDANCE_PENDING'
     | 'AUTHENTICATION_FAILED'
     | 'AUTHENTICATION_STATE_INVALID'
     | 'CURRENT_GENERATION_NOT_FOUND'
@@ -126,6 +130,10 @@ export type ErrorResponse = {
     | 'EMPTY_POST_AUDIENCE'
     | 'GENERATION_NOT_FOUND'
     | 'INVALID_ATTENDANCE_CODE'
+    | 'INVALID_ATTENDANCE_HISTORY_CURSOR'
+    | 'INVALID_ATTENDANCE_REPORT'
+    | 'INVALID_ATTENDANCE_REQUEST'
+    | 'INVALID_HISTORY_REQUEST'
     | 'INVALID_MEMBER_REQUEST'
     | 'INVALID_POST_CURSOR'
     | 'INVALID_POST_IMAGE'
@@ -140,6 +148,7 @@ export type ErrorResponse = {
     | 'POST_IMAGE_CONFLICT'
     | 'POST_IMAGE_STORAGE_FAILED'
     | 'POST_NOT_FOUND'
+    | 'RETAINED_HISTORY_UNAVAILABLE'
     | 'SESSION_DATE_CONFLICT'
     | 'SESSION_DELETE_CONFLICT'
     | 'SESSION_MANAGEMENT_DISABLED'
@@ -151,9 +160,16 @@ export type ErrorResponse = {
     | 'TEAM_MEMBER_NOT_FOUND'
     | 'TEAM_NAME_CONFLICT'
     | 'TEAM_NOT_FOUND'
+    | 'TEAM_PHOTO_INVALID'
+    | 'TEAM_PHOTO_NOT_ELIGIBLE'
+    | 'TEAM_PHOTO_NOT_FOUND'
+    | 'TEAM_PHOTO_STORAGE_FAILED'
+    | 'TEAM_PHOTO_UNAVAILABLE'
     | 'TEAM_VERSION_CONFLICT'
     | 'USER_ALREADY_EXISTS'
-    | 'USER_REGISTRATION_FAILED';
+    | 'USER_NOT_FOUND'
+    | 'USER_REGISTRATION_FAILED'
+    | 'USER_WITHDRAWAL_FAILED';
   /**
    * 오류 설명. 클라이언트 분기는 code를 사용한다.
    */
@@ -256,7 +272,7 @@ export type VerifyAttendanceCodeResponse = {
 };
 
 export type SubmitAttendanceReportRequest = {
-  type: 'ONE_HOUR_LATE' | 'THREE_HOUR_LATE' | 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
+  type: 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
   reason?: string | null;
 };
 
@@ -272,8 +288,9 @@ export type RejectMemberRequest = {
 export type MemberDetailResponse = {
   memberId: number;
   userId: number;
-  name: string;
-  phoneNumber: string;
+  name: string | null;
+  phoneNumber: string | null;
+  accountDeleted: boolean;
   signedUpAt: string;
   reviewStatus: string;
   role: 'PLAYER' | 'OB' | null;
@@ -398,6 +415,7 @@ export type OverrideAttendanceRequest = {
     | 'ABSENT'
     | 'EXCUSED_ABSENCE';
   reason?: string | null;
+  checkedInAt?: string | null;
   earlyLeaveAt?: string | null;
 };
 
@@ -583,6 +601,7 @@ export type AdminAttendanceRow = {
   latestReportType: string | null;
   latestReportReason: string | null;
   checkedInAt: string | null;
+  earlyLeaveAt: string | null;
   status:
     | 'UNDECIDED'
     | 'PRESENT'
@@ -799,7 +818,7 @@ export type RegisterErrors = {
    */
   409: ErrorResponse;
   /**
-   * USER_REGISTRATION_FAILED. 분류할 수 없는 가입 영속성 오류
+   * USER_REGISTRATION_FAILED. 가입 또는 세션 저장·커밋 오류
    */
   500: ErrorResponse;
 };
@@ -1039,14 +1058,18 @@ export type VerifyResponses = {
 
 export type VerifyResponse = VerifyResponses[keyof VerifyResponses];
 
-export type SubmitData = {
+export type Submit1Data = {
   body: SubmitAttendanceReportRequest;
   path?: never;
   query?: never;
   url: '/api/attendance-reports';
 };
 
-export type SubmitErrors = {
+export type Submit1Errors = {
+  /**
+   * INVALID_ATTENDANCE_REPORT
+   */
+  400: ErrorResponse;
   /**
    * AUTHENTICATION_FAILED
    */
@@ -1060,21 +1083,21 @@ export type SubmitErrors = {
    */
   404: ErrorResponse;
   /**
-   * ATTENDANCE_REPORT_UNAVAILABLE
+   * ATTENDANCE_REPORT_UNAVAILABLE|ATTENDANCE_REPORT_SESSION_CONFLICT
    */
   409: ErrorResponse;
 };
 
-export type SubmitError = SubmitErrors[keyof SubmitErrors];
+export type Submit1Error = Submit1Errors[keyof Submit1Errors];
 
-export type SubmitResponses = {
+export type Submit1Responses = {
   /**
    * OK
    */
   200: AttendanceReportResponse;
 };
 
-export type SubmitResponse = SubmitResponses[keyof SubmitResponses];
+export type Submit1Response = Submit1Responses[keyof Submit1Responses];
 
 export type RejectData = {
   body: RejectMemberRequest;
@@ -1326,6 +1349,10 @@ export type CloseErrors = {
    * ATTENDANCE_SESSION_NOT_FOUND
    */
   404: ErrorResponse;
+  /**
+   * TEAM_ATTENDANCE_PENDING
+   */
+  409: ErrorResponse;
 };
 
 export type CloseError = CloseErrors[keyof CloseErrors];
@@ -1555,7 +1582,7 @@ export type Create2Responses = {
 
 export type Create2Response = Create2Responses[keyof Create2Responses];
 
-export type PresignData = {
+export type Presign1Data = {
   body: PresignPostImageRequest;
   path: {
     generationId: number;
@@ -1564,7 +1591,7 @@ export type PresignData = {
   url: '/api/admin/generations/{generationId}/post-images/presign';
 };
 
-export type PresignErrors = {
+export type Presign1Errors = {
   /**
    * INVALID_POST_REQUEST|INVALID_POST_IMAGE
    */
@@ -1583,16 +1610,16 @@ export type PresignErrors = {
   503: ErrorResponse;
 };
 
-export type PresignError = PresignErrors[keyof PresignErrors];
+export type Presign1Error = Presign1Errors[keyof Presign1Errors];
 
-export type PresignResponses = {
+export type Presign1Responses = {
   /**
    * OK
    */
   200: PresignPostImageResponse;
 };
 
-export type PresignResponse = PresignResponses[keyof PresignResponses];
+export type Presign1Response = Presign1Responses[keyof Presign1Responses];
 
 export type LoginData = {
   body: StaffLoginRequest;
@@ -1635,6 +1662,10 @@ export type OverrideData = {
 };
 
 export type OverrideErrors = {
+  /**
+   * INVALID_ATTENDANCE_REQUEST
+   */
+  400: ErrorResponse;
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -2097,7 +2128,7 @@ export type CandidatesResponses = {
 
 export type CandidatesResponse = CandidatesResponses[keyof CandidatesResponses];
 
-export type List1Data = {
+export type List3Data = {
   body?: never;
   path: {
     generationId: number;
@@ -2110,7 +2141,7 @@ export type List1Data = {
   url: '/api/admin/generations/{generationId}/sessions/{sessionId}/attendance';
 };
 
-export type List1Errors = {
+export type List3Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -2121,16 +2152,16 @@ export type List1Errors = {
   404: ErrorResponse;
 };
 
-export type List1Error = List1Errors[keyof List1Errors];
+export type List3Error = List3Errors[keyof List3Errors];
 
-export type List1Responses = {
+export type List3Responses = {
   /**
    * OK
    */
   200: AdminAttendanceListResponse;
 };
 
-export type List1Response = List1Responses[keyof List1Responses];
+export type List3Response = List3Responses[keyof List3Responses];
 
 export type RecipientsData = {
   body?: never;

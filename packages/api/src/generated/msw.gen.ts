@@ -45,15 +45,15 @@ import type {
   FindPendingResponses,
   FindResponses,
   GetResponses,
-  List1Responses,
+  List3Responses,
   ListResponses,
   LoginData,
   LoginResponses,
   LogoutResponses,
   OverrideData,
   OverrideResponses,
-  PresignData,
-  PresignResponses,
+  Presign1Data,
+  Presign1Responses,
   RecipientsResponses,
   RegisterData,
   RegisterResponses,
@@ -67,8 +67,8 @@ import type {
   RevokeData,
   RevokeResponses,
   StartResponses,
-  SubmitData,
-  SubmitResponses,
+  Submit1Data,
+  Submit1Responses,
   Update1Data,
   Update1Responses,
   UpdateData,
@@ -554,19 +554,19 @@ export function handleVerify(
   );
 }
 
-export type HandleSubmitResponse = {
-  body: SubmitResponses[200];
+export type HandleSubmit1Response = {
+  body: Submit1Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `POST /api/attendance-reports` operation.
  */
-export function handleSubmit(
-  response?: HandleSubmitResponse | HttpResponseResolver<never, SubmitData['body']>,
+export function handleSubmit1(
+  response?: HandleSubmit1Response | HttpResponseResolver<never, Submit1Data['body']>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
-  return http.post<never, SubmitData['body']>(
+  return http.post<never, Submit1Data['body']>(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/attendance-reports`,
     (info) => {
       if (typeof response === 'function') {
@@ -1196,22 +1196,22 @@ export function handleCreate2(
   );
 }
 
-export type HandlePresignResponse = {
-  body: PresignResponses[200];
+export type HandlePresign1Response = {
+  body: Presign1Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `POST /api/admin/generations/{generationId}/post-images/presign` operation.
  */
-export function handlePresign(
+export function handlePresign1(
   response?:
-    | HandlePresignResponse
+    | HandlePresign1Response
     | HttpResponseResolver<
         {
           generationId: string;
         },
-        PresignData['body']
+        Presign1Data['body']
       >,
   options?: RequestHandlerOptions,
 ): HttpHandler {
@@ -1219,7 +1219,7 @@ export function handlePresign(
     {
       generationId: string;
     },
-    PresignData['body']
+    Presign1Data['body']
   >(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/post-images/presign`,
     (info) => {
@@ -1882,17 +1882,17 @@ export function handleCandidates(
   );
 }
 
-export type HandleList1Response = {
-  body: List1Responses[200];
+export type HandleList3Response = {
+  body: List3Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance` operation.
  */
-export function handleList1(
+export function handleList3(
   response?:
-    | HandleList1Response
+    | HandleList3Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -2146,7 +2146,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `POST /api/attendance-reports` operation.
    */
-  submit: typeof handleSubmit;
+  submit1: typeof handleSubmit1;
   /**
    * Handler for the `POST /api/admin/membership-approvals/{memberId}/reject` operation.
    */
@@ -2202,7 +2202,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `POST /api/admin/generations/{generationId}/post-images/presign` operation.
    */
-  presign: typeof handlePresign;
+  presign1: typeof handlePresign1;
   /**
    * Handler for the `POST /api/admin/auth/sessions` operation.
    */
@@ -2270,7 +2270,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance` operation.
    */
-  list1: typeof handleList1;
+  list3: typeof handleList3;
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/posts/{postId}/recipients` operation.
    */
@@ -2318,7 +2318,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     authenticateApple: wrap(handleAuthenticateApple),
     completeAppleAuthorization: wrap(handleCompleteAppleAuthorization),
     verify: wrap(handleVerify),
-    submit: wrap(handleSubmit),
+    submit1: wrap(handleSubmit1),
     reject: wrap(handleReject),
     approve: wrap(handleApprove),
     findAll: wrap(handleFindAll),
@@ -2332,7 +2332,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     reissue: wrap(handleReissue),
     list: wrap(handleList),
     create2: wrap(handleCreate2),
-    presign: wrap(handlePresign),
+    presign1: wrap(handlePresign1),
     login: wrap(handleLogin),
     override: wrap(handleOverride),
     badge: wrap(handleBadge),
@@ -2349,7 +2349,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     findDetail: wrap(handleFindDetail),
     findCandidates: wrap(handleFindCandidates),
     candidates: wrap(handleCandidates),
-    list1: wrap(handleList1),
+    list3: wrap(handleList3),
     recipients: wrap(handleRecipients),
     revoke: wrap(handleRevoke),
     delete1: wrap(handleDelete1),
@@ -2370,9 +2370,9 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.replaceMembers, overrides.replaceMembers),
       invoke(pick.get, overrides.get),
       invoke(pick.start, overrides.start),
-      invoke(pick.list1, overrides.list1),
+      invoke(pick.list3, overrides.list3),
       invoke(pick.recipients, overrides.recipients),
-      invoke(pick.presign, overrides.presign),
+      invoke(pick.presign1, overrides.presign1),
       invoke(pick.delete, overrides.delete),
       invoke(pick.find, overrides.find),
       invoke(pick.update, overrides.update),
@@ -2409,7 +2409,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.findPending, overrides.findPending),
       invoke(pick.register, overrides.register),
       invoke(pick.verify, overrides.verify),
-      invoke(pick.submit, overrides.submit),
+      invoke(pick.submit1, overrides.submit1),
     ];
   };
   return { all, pick };
