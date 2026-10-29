@@ -24,7 +24,11 @@ export const LoadingIndicator = React.forwardRef<
   LoadingIndicatorProps
 >(
   (
-    { children, indicator = <ProgressCircle size="inherit" tone="inherit" />, ...otherProps },
+    {
+      children,
+      indicator = <ProgressCircle size="inherit" tone="inherit" aria-label="처리 중" />,
+      ...otherProps
+    },
     ref,
   ) => {
     return (
