@@ -1,50 +1,72 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+동기화 영향 보고
+버전: 미작성 템플릿 → 1.0.0 (기존 프로젝트 규칙의 최초 연결 문서)
+원칙: 5개 예시 슬롯 → 아래 5개 AGENTS 참조 원칙
+추가: 적용 범위, 검토 절차, 개정·버전 관리
+제거: 미사용 템플릿 예시와 placeholder
+후속 TODO: 없음. 규칙의 단일 원천은 AGENTS.md이며 upstream 템플릿은 수정하지 않음.
+-->
 
-## Core Principles
+# YAPP+ 프로젝트 헌법
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+## 핵심 원칙
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+이 문서는 Spec Kit이 프로젝트 규칙을 읽는 진입점이다. 규칙의 단일 원천은
+[저장소 AGENTS.md](../../AGENTS.md)다. 아래 요약만으로 점검을 끝내지 않고 원문 전체와
+변경 경로에 적용되는 하위 AGENTS.md를 읽는다. 수치·명령·예외를 이 문서에 중복 정의하지 않는다.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### I. 제품 맥락과 최소 범위
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+AGENTS의 **언어·작업 범위**를 적용한다. 제품 목적·정책은 [제품 맥락](../../docs/mission.md)과
+연결된 원문·기능 명세에서 확인하고, 현재 요구에 필요한 최소 변경을 만든다. 명확한 버그 수정과
+여러 앱·공용 계약·인증·데이터·배포에 걸친 계획 작업을 구분한다. 확인되지 않은 정책을 추정하여
+구현하지 않는 것이 목적이다.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. 앱과 공용 계약의 경계
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+AGENTS의 **모노레포 경계·생성 코드와 계약**을 적용한다. 앱과 패키지의 import 방향,
+공개 진입점, API·브리지의 단일 원천, 외부 입력 검증을 계획에서 확인한다. 생성 파일 수정이
+필요하면 생성 설정·명세·템플릿을 바꾸고 재생성하는 경로를 제시한다.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### III. 재현 가능한 도구와 의존성
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+AGENTS의 **도구와 의존성**을 적용한다. 고정 도구 버전과 명령 실행 방식, catalog,
+공급망 보호, 외부 Action·CLI 고정 조건을 지킨다. 새로운 의존성은 실제 필요와 기존 대안의
+한계를 설명한다. 계획과 실행 환경이 달라 검증이 무효가 되는 일을 막기 위한 원칙이다.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### IV. 변경에 가까운 검증
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+AGENTS의 **검증**을 적용한다. 변경의 실패 가능성을 가장 가까운 계층에서 확인하고,
+회귀 테스트·기본 품질 게이트·해당 변경의 추가 검증을 계획에 기록한다. 실제 실행과 캐시 재사용,
+실패와 미실행을 구분한다. 승인된 제외 정책은 기능 명세의 근거와 함께 적용하며 임의 확대하지 않는다.
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### V. 검토 가능한 변경과 복구
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+AGENTS의 **Git과 GitHub·보안과 배포** 및 연결된
+[GitHub 작업 흐름](../../.agents/skills/github-workflow/SKILL.md)을 적용한다.
+실제 base 대비 변경량, 단계별 검토, 외부 변경 승인 범위, 최소 권한과 실패 시 복구 방법을 확인한다.
+비밀·개인 정보는 문서와 검증 증거에도 기록하지 않는다.
+
+## 적용 범위
+
+저장소가 관리하는 코드·문서·설정에 적용한다. 하위 AGENTS의 추가 제약도 해당 경로에서 확인한다.
+기능의 승인된 범위·제외 사항은 그 명세에서 읽는다. upstream의 미사용 템플릿 예시는 프로젝트
+정책으로 간주하지 않는다. 이 문서는 기존 규칙을 연결하며 새로운 제품·배포 정책을 도입하지 않는다.
+
+## 계획과 리뷰의 점검
+
+Spec Kit 계획의 Constitution Check에는 원문을 확인한 기준 commit과 적용 항목을 기록한다.
+각 항목은 적용·해당 없음·확인 필요를 근거와 함께 구분한다. 링크 존재만으로 준수를 통과 처리하지 않는다.
+구현 후 실제 diff·검증 결과가 계획에 부합하는지 다시 확인하고 미확인 항목을 완료로 표시하지 않는다.
+
+## 개정 관리
+
+규칙 변경은 먼저 단일 원천인 AGENTS.md 또는 해당 기능 명세에서 검토한다. 이 진입점의 요약과
+링크가 그 원문과 어긋나면 함께 정리한다. 충돌을 발견하면 임의로 새 규칙을 만들지 말고
+사용자 지시와 적용 범위를 확인한다. 헌법이 AGENTS를 대체하거나 우선하지 않는다.
+
+이 문서의 개정 PR은 이유·영향·검증을 기록한다. 의미를 바꾸는 원칙 삭제·재정의는 major,
+새 원칙·실질적 확장은 minor, 표현·참조 정리는 patch로 버전을 올린다. 규칙 자체의 새 승인 절차를
+추가하지 않으며 기존 GitHub 작업 흐름의 리뷰를 따른다.
+
+**버전**: 1.0.0 | **최초 작성일**: 2026-10-29 | **최종 개정일**: 2026-10-29
