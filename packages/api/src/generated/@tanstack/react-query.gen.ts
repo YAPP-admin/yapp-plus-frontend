@@ -45,6 +45,7 @@ import {
   logout,
   type Options,
   override,
+  presign,
   presign1,
   recipients,
   register,
@@ -57,6 +58,7 @@ import {
   startAppleAuthorization,
   startGoogleAuthorization,
   startKakaoAuthorization,
+  submit,
   submit1,
   update,
   update1,
@@ -164,6 +166,9 @@ import type {
   Presign1Data,
   Presign1Error,
   Presign1Response,
+  PresignData,
+  PresignError,
+  PresignResponse,
   RecipientsData,
   RecipientsError,
   RecipientsResponse,
@@ -197,6 +202,9 @@ import type {
   Submit1Data,
   Submit1Error,
   Submit1Response,
+  SubmitData,
+  SubmitError,
+  SubmitResponse,
   Update1Data,
   Update1Error,
   Update1Response,
@@ -371,6 +379,44 @@ export const registerMutation = (
   > = {
     mutationFn: async (fnOptions) => {
       const { data } = await register({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * 팀 출석 사진 최종 제출
+ */
+export const submitMutation = (
+  options?: Partial<Options<SubmitData>>,
+): UseMutationOptions<SubmitResponse, SubmitError, Options<SubmitData>> => {
+  const mutationOptions: UseMutationOptions<SubmitResponse, SubmitError, Options<SubmitData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await submit({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * 팀 출석 사진 업로드 URL 발급
+ */
+export const presignMutation = (
+  options?: Partial<Options<PresignData>>,
+): UseMutationOptions<PresignResponse, PresignError, Options<PresignData>> => {
+  const mutationOptions: UseMutationOptions<PresignResponse, PresignError, Options<PresignData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await presign({
         ...options,
         ...fnOptions,
         throwOnError: true,

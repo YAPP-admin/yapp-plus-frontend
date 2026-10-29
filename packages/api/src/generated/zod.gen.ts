@@ -217,6 +217,54 @@ export const zErrorResponse = z.object({
   fieldErrors: z.array(zRegistrationFieldError).optional(),
 });
 
+export const zSubmitTeamPhotoRequest = z.object({
+  imageKey: z.string(),
+  selectedMembershipIds: z.array(
+    z.coerce
+      .bigint()
+      .min(BigInt('-9223372036854775808'), {
+        error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+      })
+      .max(BigInt('9223372036854775807'), {
+        error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+      }),
+  ),
+});
+
+export const zTeamPhotoSubmitted = z.object({
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  submittedAt: z.iso.datetime(),
+  status: z.string(),
+});
+
+export const zPresignTeamPhotoRequest = z.object({
+  filename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  checksumSha256: z.string(),
+});
+
+export const zTeamPhotoUploadUrl = z.object({
+  imageKey: z.string(),
+  uploadUrl: z.string(),
+  signedHeaders: z.record(z.string(), z.string()),
+  expiresAt: z.iso.datetime(),
+});
+
 export const zRenewSessionRequest = z.object({
   refreshToken: z.string().nullish(),
 });
@@ -1202,6 +1250,42 @@ export const zRegisterBody = zRegisterUserRequest;
  * User 생성 및 SIGNED_IN 세션 발급
  */
 export const zRegisterResponse = zAuthenticationResponse;
+
+export const zSubmitBody = zSubmitTeamPhotoRequest;
+
+export const zSubmitPath = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * Created
+ */
+export const zSubmitResponse = zTeamPhotoSubmitted;
+
+export const zPresignBody = zPresignTeamPhotoRequest;
+
+export const zPresignPath = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * OK
+ */
+export const zPresignResponse = zTeamPhotoUploadUrl;
 
 /**
  * Native refresh token. Web cookie 흐름에서는 body를 생략할 수 있다.

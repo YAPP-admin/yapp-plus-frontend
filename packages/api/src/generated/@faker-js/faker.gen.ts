@@ -110,8 +110,11 @@ import type {
   PostImageResponse,
   Presign1Errors,
   Presign1Responses,
+  PresignErrors,
   PresignPostImageRequest,
   PresignPostImageResponse,
+  PresignResponses,
+  PresignTeamPhotoRequest,
   RecipientsErrors,
   RecipientsResponses,
   RegisterErrors,
@@ -143,9 +146,14 @@ import type {
   Submit1Errors,
   Submit1Responses,
   SubmitAttendanceReportRequest,
+  SubmitErrors,
+  SubmitResponses,
+  SubmitTeamPhotoRequest,
   TeamMemberCandidateResponse,
   TeamMemberRequest,
   TeamMemberResponse,
+  TeamPhotoSubmitted,
+  TeamPhotoUploadUrl,
   TeamResponse,
   Update1Errors,
   Update1Responses,
@@ -362,6 +370,47 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { fieldErrors: f.helpers.multiple(() => fakeRegistrationFieldError(options)) }),
+  };
+};
+
+export const fakeSubmitTeamPhotoRequest = (options?: Options): SubmitTeamPhotoRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    imageKey: f.string.sample(),
+    selectedMembershipIds: f.helpers.multiple(() => f.number.int()),
+  };
+};
+
+export const fakeTeamPhotoSubmitted = (options?: Options): TeamPhotoSubmitted => {
+  const f = options?.faker ?? faker;
+  return {
+    photoId: f.number.int(),
+    submittedAt: f.date.recent().toISOString(),
+    status: f.string.sample(),
+  };
+};
+
+export const fakePresignTeamPhotoRequest = (options?: Options): PresignTeamPhotoRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    filename: f.system.fileName(),
+    contentType: f.system.mimeType(),
+    sizeBytes: f.number.int(),
+    checksumSha256: f.string.sample(),
+  };
+};
+
+export const fakeTeamPhotoUploadUrl = (options?: Options): TeamPhotoUploadUrl => {
+  const f = options?.faker ?? faker;
+  return {
+    imageKey: f.string.sample(),
+    uploadUrl: f.internet.url(),
+    signedHeaders: !resolveCondition(options?.includeOptional ?? true, f)
+      ? ({} as {})
+      : {
+          additionalProp: f.string.sample(),
+        },
+    expiresAt: f.date.recent().toISOString(),
   };
 };
 
@@ -1173,6 +1222,48 @@ export const fakeRegisterResponse409 = (options?: Options): RegisterErrors[409] 
   fakeErrorResponse(options);
 
 export const fakeRegisterResponse500 = (options?: Options): RegisterErrors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeSubmitResponse201 = (options?: Options): SubmitResponses[201] =>
+  fakeTeamPhotoSubmitted(options);
+
+export const fakeSubmitResponse400 = (options?: Options): SubmitErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeSubmitResponse401 = (options?: Options): SubmitErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeSubmitResponse403 = (options?: Options): SubmitErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeSubmitResponse404 = (options?: Options): SubmitErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeSubmitResponse409 = (options?: Options): SubmitErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeSubmitResponse503 = (options?: Options): SubmitErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakePresignResponse200 = (options?: Options): PresignResponses[200] =>
+  fakeTeamPhotoUploadUrl(options);
+
+export const fakePresignResponse400 = (options?: Options): PresignErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakePresignResponse401 = (options?: Options): PresignErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakePresignResponse403 = (options?: Options): PresignErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakePresignResponse404 = (options?: Options): PresignErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakePresignResponse409 = (options?: Options): PresignErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakePresignResponse503 = (options?: Options): PresignErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeRenewResponse200 = (options?: Options): RenewResponses[200] =>
