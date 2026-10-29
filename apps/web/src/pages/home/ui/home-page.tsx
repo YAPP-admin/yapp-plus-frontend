@@ -17,13 +17,7 @@ import {
   HelpBubbleTitle,
 } from '@seed-design/react';
 import { CompleteIllustration } from '@/pages/signup-complete/ui/complete-illustration';
-import {
-  ActionButton,
-  BottomSheetContent,
-  BottomSheetRoot,
-  RadioGroup,
-  RadioGroupItem,
-} from '@yapp-plus/ui';
+import { ActionButton, BottomSheetContent, BottomSheetRoot } from '@yapp-plus/ui';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -64,6 +58,12 @@ import {
   noticesSection,
   noticesSectionTitle,
   noticeTitle,
+  listRadioCircle,
+  listRadioCircleSelected,
+  listRadioItem,
+  listRadioItemSelected,
+  listRadioLabel,
+  visuallyHidden,
   quickCard,
   quickCardCol,
   quickCardContent,
@@ -135,25 +135,6 @@ const weeklyNotices = [
 
 type AttendanceState = 'before_session' | 'available' | 'attended';
 type ReportType = '지각' | '조퇴' | '결석';
-
-function isReportType(value: unknown): value is ReportType {
-  return value === '지각' || value === '조퇴' || value === '결석';
-}
-
-function extractRadioValue(details: unknown): string | undefined {
-  if (typeof details === 'string') {
-    return details;
-  }
-  if (
-    details !== null &&
-    typeof details === 'object' &&
-    'value' in details &&
-    typeof details.value === 'string'
-  ) {
-    return details.value;
-  }
-  return undefined;
-}
 
 export function HomePage() {
   const router = useRouter();
@@ -511,27 +492,34 @@ export function HomePage() {
                     <p className={sheetDescription}>미리 알려주시면 점수 차감이 줄어들어요</p>
                   </div>
 
-                  <RadioGroup
-                    value={selectedReportType}
-                    onValueChange={(details) => {
-                      const next = extractRadioValue(details);
-                      if (isReportType(next)) {
-                        setSelectedReportType(next);
-                      }
-                    }}
-                    aria-label="출결 유형"
-                    className={reportRadioGroup}
-                  >
-                    {(['지각', '조퇴', '결석'] as const).map((type) => (
-                      <RadioGroupItem
-                        key={type}
-                        value={type}
-                        label={type}
-                        size="large"
-                        tone="brand"
-                      />
-                    ))}
-                  </RadioGroup>
+                  <fieldset className={reportRadioGroup}>
+                    <legend className={visuallyHidden}>출결 유형</legend>
+                    {(['지각', '조퇴', '결석'] as const).map((type) => {
+                      const isSelected = selectedReportType === type;
+                      return (
+                        <label
+                          key={type}
+                          className={`${listRadioItem} ${isSelected ? listRadioItemSelected : ''}`}
+                        >
+                          <input
+                            type="radio"
+                            name="attendanceReportType"
+                            value={type}
+                            checked={isSelected}
+                            onChange={() => {
+                              setSelectedReportType(type);
+                            }}
+                            className={visuallyHidden}
+                          />
+                          <span className={listRadioLabel}>{type}</span>
+                          <span
+                            className={`${listRadioCircle} ${isSelected ? listRadioCircleSelected : ''}`}
+                            aria-hidden="true"
+                          />
+                        </label>
+                      );
+                    })}
+                  </fieldset>
                 </div>
 
                 <div className={sheetFooter}>

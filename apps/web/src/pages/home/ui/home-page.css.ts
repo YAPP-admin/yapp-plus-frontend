@@ -575,9 +575,70 @@ export const sheetFooter = style({
 export const reportRadioGroup = style({
   display: 'flex',
   flexDirection: 'column',
-  gap: '16px',
+  gap: '10px',
   width: '100%',
-  padding: '8px 0',
+  margin: '8px 0',
+  border: 0,
+  padding: 0,
+});
+
+export const listRadioItem = style({
+  display: 'flex',
+  flexDirection: 'row',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  width: '100%',
+  height: '48px',
+  padding: '0 18px',
+  borderRadius: '10px',
+  backgroundColor: '#FFFFFF',
+  border: '1px solid rgba(0, 0, 0, 0.08)',
+  boxSizing: 'border-box',
+  cursor: 'pointer',
+  transition: 'border-color 0.15s ease, background-color 0.15s ease',
+  textAlign: 'left',
+  appearance: 'none',
+  outline: 'none',
+  ':hover': {
+    backgroundColor: '#FAFBFB',
+  },
+});
+
+export const listRadioItemSelected = style({
+  borderColor: '#1A1C20 !important',
+});
+
+export const listRadioLabel = style({
+  fontSize: '14px',
+  fontWeight: 500,
+  lineHeight: '19px',
+  color: '#1A1C20',
+});
+
+export const listRadioCircle = style({
+  width: '20px',
+  height: '20px',
+  borderRadius: '50%',
+  boxSizing: 'border-box',
+  border: '1.2px solid rgba(0, 0, 0, 0.14)',
+  backgroundColor: '#FFFFFF',
+  flexShrink: 0,
+});
+
+export const listRadioCircleSelected = style({
+  border: '4.5px solid #1A1C20 !important',
+});
+
+export const visuallyHidden = style({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
 });
 
 export const textareaContainer = style({
