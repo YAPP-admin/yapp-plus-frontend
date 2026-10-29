@@ -681,6 +681,59 @@ export const zUserPostListResponse = z.object({
   nextCursor: z.string().nullable(),
 });
 
+export const zUserPostAssignmentResponse = z.object({
+  deadlineDate: z.iso.date(),
+  positions: z.array(z.string()),
+  submissionUrl: z.string(),
+  submissionLinkText: z.string(),
+});
+
+export const zUserPostImageResponse = z.object({
+  imageKey: z.string(),
+  filename: z.string(),
+  contentType: z.string(),
+  sizeBytes: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  displayOrder: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  readUrl: z.string(),
+  readUrlExpiresAt: z.iso.datetime(),
+});
+
+export const zUserPostDetailResponse = z.object({
+  postId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  type: z.enum(['SESSION', 'ASSIGNMENT', 'OPERATION']),
+  title: z.string(),
+  contentMarkdown: z.string(),
+  createdDate: z.iso.date(),
+  assignment: zUserPostAssignmentResponse.nullable(),
+  images: z.array(zUserPostImageResponse),
+  readCount: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  read: z.boolean(),
+});
+
 export const zCurrentGenerationSessionItemResponse = z.object({
   sessionId: z.coerce
     .bigint()
@@ -1627,6 +1680,22 @@ export const zList1Query = z.object({
  * OK
  */
 export const zList1Response = zUserPostListResponse;
+
+export const zDetail1Path = z.object({
+  postId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * OK
+ */
+export const zDetail1Response = zUserPostDetailResponse;
 
 /**
  * 조회 성공

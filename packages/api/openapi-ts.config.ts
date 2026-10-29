@@ -23,7 +23,6 @@ export default defineConfig({
           'POST /api/sessions/{sessionId}/team-attendance-photos',
           'POST /api/sessions/{sessionId}/team-attendance-photos/presign',
           'POST /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision',
-          'GET /api/posts/{postId}',
           'GET /api/attendance-scores/me',
           'GET /api/attendance-history',
           'GET /api/admin/users/{userId}/retained-history',

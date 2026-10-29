@@ -36,6 +36,7 @@ import type {
   CreateResponses,
   Delete1Responses,
   DeleteResponses,
+  Detail1Responses,
   DetailResponses,
   Find1Responses,
   Find2Responses,
@@ -1588,6 +1589,52 @@ export function handleList1(
   );
 }
 
+export type HandleDetail1Response = {
+  body: Detail1Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/posts/{postId}` operation.
+ */
+export function handleDetail1(
+  response?:
+    | HandleDetail1Response
+    | HttpResponseResolver<
+        {
+          postId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      postId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/posts/:postId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleFind3Response = {
   body: Find3Responses[200];
   status?: 200;
@@ -2318,6 +2365,10 @@ export type MswHandlerFactories = {
    */
   list1: typeof handleList1;
   /**
+   * Handler for the `GET /api/posts/{postId}` operation.
+   */
+  detail1: typeof handleDetail1;
+  /**
    * Handler for the `GET /api/generations/current/sessions` operation.
    */
   find3: typeof handleFind3;
@@ -2431,6 +2482,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     update1: wrap(handleUpdate1),
     find2: wrap(handleFind2),
     list1: wrap(handleList1),
+    detail1: wrap(handleDetail1),
     find3: wrap(handleFind3),
     completeKakaoAuthorization: wrap(handleCompleteKakaoAuthorization),
     startKakaoAuthorization: wrap(handleStartKakaoAuthorization),
@@ -2500,6 +2552,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.renew, overrides.renew),
       invoke(pick.find2, overrides.find2),
       invoke(pick.findPending, overrides.findPending),
+      invoke(pick.detail1, overrides.detail1),
       invoke(pick.register, overrides.register),
       invoke(pick.verify, overrides.verify),
       invoke(pick.submit1, overrides.submit1),
