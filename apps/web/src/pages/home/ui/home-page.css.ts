@@ -572,42 +572,13 @@ export const sheetFooter = style({
   width: '100%',
 });
 
-export const radioGroup = style({
+export const reportRadioGroup = style({
   display: 'flex',
   flexDirection: 'column',
-  gap: '10px',
-  margin: '12px 0',
+  gap: '16px',
+  width: '100%',
+  padding: '8px 0',
 });
-
-export const radioOption = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: '14px 18px',
-  borderRadius: '10px',
-  border: '1px solid #F3F4F5',
-  backgroundColor: '#FFFFFF',
-  cursor: 'pointer',
-  transition: 'all 0.15s ease',
-  fontSize: '16px',
-  fontWeight: 500,
-  color: '#1A1C20',
-  selectors: {
-    '&:hover': {
-      backgroundColor: '#F8F9FA',
-    },
-  },
-});
-
-export const radioOptionSelected = style([
-  radioOption,
-  {
-    borderColor: '#FF6600',
-    backgroundColor: '#FFF8F4',
-    fontWeight: 700,
-    color: '#FF6600',
-  },
-]);
 
 export const textareaContainer = style({
   display: 'flex',
