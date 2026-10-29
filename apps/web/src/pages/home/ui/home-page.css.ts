@@ -416,92 +416,27 @@ export const helpBubbleArrowTip = style({
   fill: '#2A3038 !important',
 });
 
-export const sheetBackdrop = style({
-  position: 'fixed',
-  inset: 0,
-  zIndex: 100,
-  backgroundColor: 'rgba(0, 0, 0, 0.5)',
-});
-
-export const sheetPositioner = style({
-  position: 'fixed',
-  inset: 0,
-  zIndex: 101,
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'flex-end',
-  pointerEvents: 'none',
-});
-
-export const sheetContent = style({
-  pointerEvents: 'auto',
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
-  maxWidth: '480px',
-  height: 'auto !important',
-  maxHeight: '85vh',
-  flex: '0 0 auto !important',
-  margin: '0 auto',
-  backgroundColor: '#FFFFFF !important',
-  borderTopLeftRadius: '16px !important',
-  borderTopRightRadius: '16px !important',
-  padding: '12px 20px calc(24px + env(safe-area-inset-bottom, 0px)) !important',
-  boxSizing: 'border-box',
-  gap: '16px',
-});
-
-export const sheetHandleBar = style({
-  alignSelf: 'center',
-  width: '52px',
-  height: '4px',
-  borderRadius: '9999px',
-  backgroundColor: '#DCDEE3',
-  marginBottom: '4px',
-  flexShrink: 0,
-});
-
-export const sheetHeader = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '4px',
-});
-
-export const sheetTitle = style({
-  fontSize: '20px',
-  fontWeight: 700,
-  lineHeight: '27px',
-  color: '#1A1C20',
-  margin: 0,
-});
-
-export const sheetDescription = style({
-  fontSize: '14px',
-  fontWeight: 500,
-  lineHeight: '19px',
-  color: '#868B94',
-  margin: 0,
-});
-
 export const codeInputsContainer = style({
   display: 'flex',
   justifyContent: 'center',
   alignItems: 'center',
-  gap: '12px',
+  gap: '6px',
   margin: '16px 0',
 });
 
 export const codeInput = style({
-  width: '52px',
-  height: '56px',
+  width: '54px',
+  height: '54px',
   borderRadius: '12px',
-  border: '1px solid #DCDEE3',
+  border: '1px solid #EFEFF0',
   textAlign: 'center',
-  fontSize: '20px',
+  fontSize: '18px',
   fontWeight: 700,
+  lineHeight: '24px',
   color: '#1A1C20',
   backgroundColor: '#FFFFFF',
   outline: 'none',
+  boxSizing: 'border-box',
   transition: 'border-color 0.15s ease',
   selectors: {
     '&:focus': {
@@ -513,8 +448,8 @@ export const codeInput = style({
 export const codeInputError = style([
   codeInput,
   {
-    borderColor: '#CA1D13 !important',
-    color: '#CA1D13',
+    borderColor: '#FA342C !important',
+    color: '#FA342C',
   },
 ]);
 
@@ -525,8 +460,9 @@ export const codeErrorMessage = style({
   gap: '4px',
   fontSize: '13px',
   fontWeight: 500,
-  color: '#CA1D13',
-  margin: '-8px 0 8px',
+  lineHeight: '18px',
+  color: '#FA342C',
+  margin: '8px 0',
 });
 
 export const radioGroup = style({

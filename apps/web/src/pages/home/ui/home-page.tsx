@@ -7,15 +7,6 @@ import {
   IconLocationpinFill,
 } from '@karrotmarket/react-monochrome-icon';
 import {
-  BottomSheetBackdrop,
-  BottomSheetBody,
-  BottomSheetContent,
-  BottomSheetDescription,
-  BottomSheetFooter,
-  BottomSheetHeader,
-  BottomSheetPositioner,
-  BottomSheetRoot,
-  BottomSheetTitle,
   HelpBubbleAnchor,
   HelpBubbleArrow,
   HelpBubbleArrowTip,
@@ -26,7 +17,13 @@ import {
   HelpBubbleTitle,
 } from '@seed-design/react';
 import { CompleteIllustration } from '@/pages/signup-complete/ui/complete-illustration';
-import { ActionButton } from '@yapp-plus/ui';
+import {
+  ActionButton,
+  BottomSheetBody,
+  BottomSheetContent,
+  BottomSheetFooter,
+  BottomSheetRoot,
+} from '@yapp-plus/ui';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -82,15 +79,8 @@ import {
   sessionCard,
   sessionHeader,
   sessionTitle,
-  sheetBackdrop,
-  sheetContent,
-  sheetDescription,
-  sheetHandleBar,
-  sheetHeader,
-  sheetPositioner,
   sheetPrimaryButton,
   sheetSecondaryButton,
-  sheetTitle,
   snackbar,
   srOnly,
   teamButtonsWrap,
@@ -400,208 +390,183 @@ export function HomePage() {
 
       {/* 1. 출석 코드 입력 바텀시트 */}
       <BottomSheetRoot open={isCodeSheetOpen} onOpenChange={setIsCodeSheetOpen}>
-        <BottomSheetBackdrop className={sheetBackdrop} />
-        <BottomSheetPositioner className={sheetPositioner}>
-          <BottomSheetContent className={sheetContent}>
-            <div className={sheetHandleBar} aria-hidden="true" />
-            <BottomSheetHeader className={sheetHeader}>
-              <BottomSheetTitle className={sheetTitle}>출석 코드를 입력해 주세요</BottomSheetTitle>
-              <BottomSheetDescription className={sheetDescription}>
-                코드를 입력하면 출석이 완료돼요
-              </BottomSheetDescription>
-            </BottomSheetHeader>
+        <BottomSheetContent
+          title="출석 코드를 입력해 주세요"
+          description="코드를 입력하면 출석이 완료돼요"
+          showHandle
+          showCloseButton={false}
+        >
+          <BottomSheetBody>
+            <div className={codeInputsContainer}>
+              {[0, 1, 2, 3].map((index) => (
+                <input
+                  key={index}
+                  ref={(el) => {
+                    inputRefs.current[index] = el;
+                  }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={code[index]}
+                  onChange={(e) => handleCodeChange(index, e.target.value)}
+                  onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                  className={codeError ? codeInputError : codeInput}
+                  aria-label={`출석 코드 ${index + 1}번째 자리`}
+                />
+              ))}
+            </div>
 
-            <BottomSheetBody>
-              <div className={codeInputsContainer}>
-                {[0, 1, 2, 3].map((index) => (
-                  <input
-                    key={index}
-                    ref={(el) => {
-                      inputRefs.current[index] = el;
-                    }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={code[index]}
-                    onChange={(e) => handleCodeChange(index, e.target.value)}
-                    onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                    className={codeError ? codeInputError : codeInput}
-                    aria-label={`출석 코드 ${index + 1}번째 자리`}
-                  />
-                ))}
+            {codeError && (
+              <div className={codeErrorMessage} role="alert">
+                <IconExclamationmarkCircleFill width={16} height={16} />
+                <span>출석 코드가 올바르지 않아요.</span>
               </div>
+            )}
+          </BottomSheetBody>
 
-              {codeError && (
-                <div className={codeErrorMessage} role="alert">
-                  <IconExclamationmarkCircleFill width={16} height={16} />
-                  <span>출석 코드가 올바르지 않아요.</span>
-                </div>
-              )}
-            </BottomSheetBody>
-
-            <BottomSheetFooter>
-              <ActionButton
-                variant="brandSolid"
-                size="large"
-                className={sheetPrimaryButton}
-                onClick={handleConfirmCode}
-              >
-                확인
-              </ActionButton>
-            </BottomSheetFooter>
-          </BottomSheetContent>
-        </BottomSheetPositioner>
+          <BottomSheetFooter>
+            <ActionButton
+              variant="brandSolid"
+              size="large"
+              className={sheetPrimaryButton}
+              onClick={handleConfirmCode}
+            >
+              확인
+            </ActionButton>
+          </BottomSheetFooter>
+        </BottomSheetContent>
       </BottomSheetRoot>
 
       {/* 2. 출결 보고 바텀시트 */}
       <BottomSheetRoot open={isReportSheetOpen} onOpenChange={setIsReportSheetOpen}>
-        <BottomSheetBackdrop className={sheetBackdrop} />
-        <BottomSheetPositioner className={sheetPositioner}>
-          <BottomSheetContent className={sheetContent}>
-            <div className={sheetHandleBar} aria-hidden="true" />
-            {reportStep === 1 ? (
-              <>
-                <BottomSheetHeader className={sheetHeader}>
-                  <BottomSheetTitle className={sheetTitle}>출결을 보고해 주세요</BottomSheetTitle>
-                  <BottomSheetDescription className={sheetDescription}>
-                    미리 알려주시면 점수 차감이 줄어들어요
-                  </BottomSheetDescription>
-                </BottomSheetHeader>
+        <BottomSheetContent
+          title={
+            reportStep === 1 ? '출결을 보고해 주세요' : `${selectedReportType} 사유를 입력해 주세요`
+          }
+          description={reportStep === 1 ? '미리 알려주시면 점수 차감이 줄어들어요' : undefined}
+          showHandle
+          showCloseButton={false}
+        >
+          {reportStep === 1 ? (
+            <>
+              <BottomSheetBody>
+                <div className={radioGroup} aria-label="출결 유형">
+                  {(['지각', '조퇴', '결석'] as const).map((type) => {
+                    const isSelected = selectedReportType === type;
+                    return (
+                      <button
+                        key={type}
+                        type="button"
+                        aria-pressed={isSelected}
+                        className={isSelected ? radioOptionSelected : radioOption}
+                        onClick={() => setSelectedReportType(type)}
+                      >
+                        <span>{type}</span>
+                        {isSelected && <IconCheckmarkCircleFill width={20} height={20} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </BottomSheetBody>
 
-                <BottomSheetBody>
-                  <div className={radioGroup} aria-label="출결 유형">
-                    {(['지각', '조퇴', '결석'] as const).map((type) => {
-                      const isSelected = selectedReportType === type;
-                      return (
-                        <button
-                          key={type}
-                          type="button"
-                          aria-pressed={isSelected}
-                          className={isSelected ? radioOptionSelected : radioOption}
-                          onClick={() => setSelectedReportType(type)}
-                        >
-                          <span>{type}</span>
-                          {isSelected && <IconCheckmarkCircleFill width={20} height={20} />}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </BottomSheetBody>
-
-                <BottomSheetFooter>
-                  <ActionButton
-                    variant="brandSolid"
-                    size="large"
-                    className={sheetPrimaryButton}
-                    onClick={handleReportNext}
-                  >
-                    확인
-                  </ActionButton>
-                </BottomSheetFooter>
-              </>
-            ) : (
-              <>
-                <BottomSheetHeader className={sheetHeader}>
-                  <BottomSheetTitle className={sheetTitle}>
-                    {selectedReportType} 사유를 입력해 주세요
-                  </BottomSheetTitle>
-                </BottomSheetHeader>
-
-                <BottomSheetBody>
-                  <div className={textareaContainer}>
-                    <textarea
-                      className={reportTextarea}
-                      placeholder="사유를 입력해 주세요"
-                      maxLength={30}
-                      value={reportReason}
-                      onChange={(e) => setReportReason(e.target.value)}
-                      aria-label={`${selectedReportType} 사유`}
-                    />
-                    <div className={charCount}>{reportReason.length}/30</div>
-                  </div>
-                </BottomSheetBody>
-
-                <BottomSheetFooter>
-                  <ActionButton
-                    variant="brandSolid"
-                    size="large"
-                    className={sheetPrimaryButton}
-                    onClick={handleSubmitReport}
-                  >
-                    확인
-                  </ActionButton>
-                </BottomSheetFooter>
-              </>
-            )}
-          </BottomSheetContent>
-        </BottomSheetPositioner>
-      </BottomSheetRoot>
-
-      {/* 3. 팀 세션 인증 안내 바텀시트 */}
-      <BottomSheetRoot open={isTeamGuideSheetOpen} onOpenChange={setIsTeamGuideSheetOpen}>
-        <BottomSheetBackdrop className={sheetBackdrop} />
-        <BottomSheetPositioner className={sheetPositioner}>
-          <BottomSheetContent className={sheetContent}>
-            <div className={sheetHandleBar} aria-hidden="true" />
-
-            <BottomSheetHeader className={sheetHeader}>
-              <BottomSheetTitle className={sheetTitle}>
-                팀 세션 인증 사진을 업로드해 주세요
-              </BottomSheetTitle>
-              <BottomSheetDescription className={sheetDescription}>
-                팀원 중 한 명만 올리면 팀 전체에 반영돼요
-              </BottomSheetDescription>
-            </BottomSheetHeader>
-
-            <BottomSheetBody>
-              <div className={teamGraphicWrap} aria-hidden="true">
-                <CompleteIllustration />
-              </div>
-
-              <ul className={teamRulesList} aria-label="인증 사진 규칙">
-                <li className={teamRuleItem}>
-                  <IconCheckmarkCircleFill width={16} height={16} />
-                  <span>참석한 팀원이 모두 보이게 찍어주세요</span>
-                </li>
-                <li className={teamRuleItem}>
-                  <IconCheckmarkCircleFill width={16} height={16} />
-                  <span>세션 시간(14:00 - 18:00) 안에 올려주세요</span>
-                </li>
-                <li className={teamRuleItem}>
-                  <IconCheckmarkCircleFill width={16} height={16} />
-                  <span>운영진 확인 후 출석이 확정돼요</span>
-                </li>
-              </ul>
-            </BottomSheetBody>
-
-            <BottomSheetFooter>
-              <div className={teamButtonsWrap}>
-                <ActionButton
-                  variant="neutralWeak"
-                  size="large"
-                  className={sheetSecondaryButton}
-                  onClick={() => {
-                    setIsTeamGuideSheetOpen(false);
-                    router.push('/team-attendance/upload');
-                  }}
-                >
-                  앨범에서 선택하기
-                </ActionButton>
+              <BottomSheetFooter>
                 <ActionButton
                   variant="brandSolid"
                   size="large"
                   className={sheetPrimaryButton}
-                  onClick={() => {
-                    setIsTeamGuideSheetOpen(false);
-                    router.push('/team-attendance/upload');
-                  }}
+                  onClick={handleReportNext}
                 >
-                  직접 사진 찍기
+                  확인
                 </ActionButton>
-              </div>
-            </BottomSheetFooter>
-          </BottomSheetContent>
-        </BottomSheetPositioner>
+              </BottomSheetFooter>
+            </>
+          ) : (
+            <>
+              <BottomSheetBody>
+                <div className={textareaContainer}>
+                  <textarea
+                    className={reportTextarea}
+                    placeholder="사유를 입력해 주세요"
+                    maxLength={30}
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    aria-label={`${selectedReportType} 사유`}
+                  />
+                  <div className={charCount}>{reportReason.length}/30</div>
+                </div>
+              </BottomSheetBody>
+
+              <BottomSheetFooter>
+                <ActionButton
+                  variant="brandSolid"
+                  size="large"
+                  className={sheetPrimaryButton}
+                  onClick={handleSubmitReport}
+                >
+                  확인
+                </ActionButton>
+              </BottomSheetFooter>
+            </>
+          )}
+        </BottomSheetContent>
+      </BottomSheetRoot>
+
+      {/* 3. 팀 세션 인증 안내 바텀시트 */}
+      <BottomSheetRoot open={isTeamGuideSheetOpen} onOpenChange={setIsTeamGuideSheetOpen}>
+        <BottomSheetContent
+          title="팀 세션 인증 사진을 업로드해 주세요"
+          description="팀원 중 한 명만 올리면 팀 전체에 반영돼요"
+          showHandle
+          showCloseButton={false}
+        >
+          <BottomSheetBody>
+            <div className={teamGraphicWrap} aria-hidden="true">
+              <CompleteIllustration />
+            </div>
+
+            <ul className={teamRulesList} aria-label="인증 사진 규칙">
+              <li className={teamRuleItem}>
+                <IconCheckmarkCircleFill width={16} height={16} />
+                <span>참석한 팀원이 모두 보이게 찍어주세요</span>
+              </li>
+              <li className={teamRuleItem}>
+                <IconCheckmarkCircleFill width={16} height={16} />
+                <span>세션 시간(14:00 - 18:00) 안에 올려주세요</span>
+              </li>
+              <li className={teamRuleItem}>
+                <IconCheckmarkCircleFill width={16} height={16} />
+                <span>운영진 확인 후 출석이 확정돼요</span>
+              </li>
+            </ul>
+          </BottomSheetBody>
+
+          <BottomSheetFooter>
+            <div className={teamButtonsWrap}>
+              <ActionButton
+                variant="neutralWeak"
+                size="large"
+                className={sheetSecondaryButton}
+                onClick={() => {
+                  setIsTeamGuideSheetOpen(false);
+                  router.push('/team-attendance/upload');
+                }}
+              >
+                앨범에서 선택하기
+              </ActionButton>
+              <ActionButton
+                variant="brandSolid"
+                size="large"
+                className={sheetPrimaryButton}
+                onClick={() => {
+                  setIsTeamGuideSheetOpen(false);
+                  router.push('/team-attendance/upload');
+                }}
+              >
+                직접 사진 찍기
+              </ActionButton>
+            </div>
+          </BottomSheetFooter>
+        </BottomSheetContent>
       </BottomSheetRoot>
 
       {/* 완료 스낵바 */}
