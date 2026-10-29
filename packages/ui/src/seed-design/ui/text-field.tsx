@@ -5,144 +5,147 @@
 
 'use client';
 
-import { IconExclamationmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
+import * as React from 'react';
 import {
-  Field as SeedField,
-  PrefixIcon,
   TextField as SeedTextField,
+  Field as SeedField,
+  type UseTextFieldWithGraphemesParams,
   useTextFieldWithGraphemes,
   VisuallyHidden,
-  type UseTextFieldWithGraphemesParams,
+  PrefixIcon,
 } from '@seed-design/react';
-import type { ReactNode, Ref } from 'react';
+import { IconExclamationmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 
 export type TextFieldProps = Omit<
   SeedTextField.RootProps,
   'prefix' | 'onValueChange' | 'asChild'
 > & {
-  label?: ReactNode;
+  label?: React.ReactNode;
   /**
    * @default "medium"
    */
   labelWeight?: SeedField.LabelProps['weight'];
 
-  indicator?: ReactNode;
+  indicator?: React.ReactNode;
 
-  prefixIcon?: ReactNode;
-  prefix?: ReactNode;
-  suffixIcon?: ReactNode;
-  suffix?: ReactNode;
+  prefixIcon?: React.ReactNode;
+  prefix?: React.ReactNode;
+  suffixIcon?: React.ReactNode;
+  suffix?: React.ReactNode;
 
-  description?: ReactNode;
-  errorMessage?: ReactNode;
+  description?: React.ReactNode;
+  errorMessage?: React.ReactNode;
 
   hideCharacterCount?: boolean;
   maxGraphemeCount?: number;
   showRequiredIndicator?: boolean;
 
-  ref?: Ref<HTMLDivElement>;
-  fieldRef?: Ref<HTMLDivElement>;
+  fieldRef?: React.Ref<HTMLDivElement>;
 
   onValueChange?: UseTextFieldWithGraphemesParams['onValueChange'];
 };
 
 /**
- * 라벨이 없으면 입력 요소에 `aria-label` 또는 `aria-labelledby`를 전달합니다.
  * @see https://seed-design.io/react/components/text-field-input
  */
-export function TextField({
-  prefix,
-  prefixIcon,
-  suffix,
-  suffixIcon,
-  label,
-  labelWeight,
-  indicator,
-  description,
-  errorMessage,
-  hideCharacterCount,
-  children,
+export const TextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
+  (
+    {
+      prefix,
+      prefixIcon,
+      suffix,
+      suffixIcon,
+      label,
+      labelWeight,
+      indicator,
+      description,
+      errorMessage,
+      hideCharacterCount,
+      children,
 
-  // field props
-  required,
-  disabled,
-  invalid,
-  readOnly,
-  name,
+      // field props
+      required,
+      disabled,
+      invalid,
+      readOnly,
+      name,
 
-  showRequiredIndicator,
+      showRequiredIndicator,
 
-  // useTextFieldWithGraphemes params
-  value,
-  defaultValue,
-  onValueChange,
-  maxGraphemeCount,
+      // useTextFieldWithGraphemes params
+      value,
+      defaultValue,
+      onValueChange,
+      maxGraphemeCount,
 
-  ref,
-  fieldRef,
+      fieldRef,
 
-  ...otherProps
-}: TextFieldProps) {
-  const { textFieldRootProps, counterProps } = useTextFieldWithGraphemes({
-    value,
-    defaultValue,
-    onValueChange,
-    maxGraphemeCount,
-  });
+      ...otherProps
+    },
+    ref,
+  ) => {
+    const { textFieldRootProps, counterProps } = useTextFieldWithGraphemes({
+      value,
+      defaultValue,
+      onValueChange,
+      maxGraphemeCount,
+    });
 
-  const renderHeader = Boolean(label) || Boolean(indicator);
-  const renderDescription = Boolean(description);
-  const renderErrorMessage = Boolean(errorMessage) && Boolean(invalid);
-  const renderGraphemeCount = !hideCharacterCount && maxGraphemeCount !== undefined;
-  const renderFooter = renderDescription || renderErrorMessage || renderGraphemeCount;
+    const renderHeader = label ?? indicator;
+    const renderDescription = Boolean(description);
+    const renderErrorMessage = Boolean(errorMessage && invalid);
+    const renderGraphemeCount = !hideCharacterCount && maxGraphemeCount !== undefined;
+    const renderFooter = renderDescription || renderErrorMessage || renderGraphemeCount;
 
-  return (
-    <SeedField.Root
-      required={required}
-      disabled={disabled}
-      invalid={invalid}
-      readOnly={readOnly}
-      name={name}
-      ref={fieldRef}
-    >
-      {renderHeader && (
-        <SeedField.Header>
-          <SeedField.Label weight={labelWeight}>
-            {label}
-            {showRequiredIndicator && <SeedField.RequiredIndicator />}
-            {indicator && <SeedField.IndicatorText>{indicator}</SeedField.IndicatorText>}
-          </SeedField.Label>
-        </SeedField.Header>
-      )}
-      <SeedTextField.Root ref={ref} {...otherProps} {...textFieldRootProps}>
-        {prefixIcon && <SeedTextField.PrefixIcon svg={prefixIcon} />}
-        {prefix && <SeedTextField.PrefixText>{prefix}</SeedTextField.PrefixText>}
-        {children}
-        {suffix && <SeedTextField.SuffixText>{suffix}</SeedTextField.SuffixText>}
-        {suffixIcon && <SeedTextField.SuffixIcon svg={suffixIcon} />}
-      </SeedTextField.Root>
-      {renderFooter && (
-        <SeedField.Footer>
-          {renderDescription &&
-            (renderErrorMessage ? (
-              <VisuallyHidden asChild>
+    return (
+      <SeedField.Root
+        required={required}
+        disabled={disabled}
+        invalid={invalid}
+        readOnly={readOnly}
+        name={name}
+        ref={fieldRef}
+      >
+        {renderHeader && (
+          <SeedField.Header>
+            <SeedField.Label weight={labelWeight}>
+              {label}
+              {showRequiredIndicator && <SeedField.RequiredIndicator />}
+              {indicator && <SeedField.IndicatorText>{indicator}</SeedField.IndicatorText>}
+            </SeedField.Label>
+          </SeedField.Header>
+        )}
+        <SeedTextField.Root ref={ref} {...otherProps} {...textFieldRootProps}>
+          {prefixIcon && <SeedTextField.PrefixIcon svg={prefixIcon} />}
+          {prefix && <SeedTextField.PrefixText>{prefix}</SeedTextField.PrefixText>}
+          {children}
+          {suffix && <SeedTextField.SuffixText>{suffix}</SeedTextField.SuffixText>}
+          {suffixIcon && <SeedTextField.SuffixIcon svg={suffixIcon} />}
+        </SeedTextField.Root>
+        {renderFooter && (
+          <SeedField.Footer>
+            {renderDescription &&
+              (renderErrorMessage ? (
+                <VisuallyHidden asChild>
+                  <SeedField.Description>{description}</SeedField.Description>
+                </VisuallyHidden>
+              ) : (
                 <SeedField.Description>{description}</SeedField.Description>
-              </VisuallyHidden>
-            ) : (
-              <SeedField.Description>{description}</SeedField.Description>
-            ))}
-          {renderErrorMessage && (
-            <SeedField.ErrorMessage>
-              <PrefixIcon svg={<IconExclamationmarkCircleFill />} />
-              {errorMessage}
-            </SeedField.ErrorMessage>
-          )}
-          {renderGraphemeCount && <SeedField.CharacterCount {...counterProps} />}
-        </SeedField.Footer>
-      )}
-    </SeedField.Root>
-  );
-}
+              ))}
+            {renderErrorMessage && (
+              <SeedField.ErrorMessage>
+                <PrefixIcon svg={<IconExclamationmarkCircleFill />} />
+                {errorMessage}
+              </SeedField.ErrorMessage>
+            )}
+            {renderGraphemeCount && <SeedField.CharacterCount {...counterProps} />}
+          </SeedField.Footer>
+        )}
+      </SeedField.Root>
+    );
+  },
+);
+TextField.displayName = 'TextField';
 
 export type TextFieldInputProps = SeedTextField.InputProps;
 
@@ -157,8 +160,3 @@ export type TextFieldTextareaProps = SeedTextField.TextareaProps;
  * @see https://seed-design.io/react/components/text-field-textarea
  */
 export const TextFieldTextarea = SeedTextField.Textarea;
-
-/**
- * This file is a snippet from SEED Design, helping you get started quickly with @seed-design/* packages.
- * You can extend this snippet however you want.
- */

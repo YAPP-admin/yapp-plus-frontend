@@ -2,6 +2,7 @@
 
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { installSafeAreaBridge } from '@yapp-plus/app-bridge/web';
+import { SnackbarProvider } from '@yapp-plus/ui';
 import { useEffect, useState, type ReactNode } from 'react';
 import { MockApiBoundary } from '../mocks/mock-api-boundary';
 import { NavigationHistory } from './navigation/navigation-history';
@@ -23,7 +24,9 @@ export function Providers({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
       <MockApiBoundary>
-        <NavigationHistory>{children}</NavigationHistory>
+        <SnackbarProvider>
+          <NavigationHistory>{children}</NavigationHistory>
+        </SnackbarProvider>
       </MockApiBoundary>
     </QueryClientProvider>
   );
