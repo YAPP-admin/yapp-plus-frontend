@@ -54,7 +54,15 @@ export const Disabled: Story = {
 };
 
 export const Loading: Story = {
-  name: '로딩',
+  name: '로딩 · 한국어 상태 안내',
+  parameters: {
+    docs: {
+      description: {
+        story:
+          '진행 표시의 접근성 이름은 처리 중입니다. loading은 클릭을 막지 않으므로 중복 실행 차단에는 disabled를 함께 사용합니다.',
+      },
+    },
+  },
   args: { loading: true },
 };
 

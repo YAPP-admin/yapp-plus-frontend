@@ -20,7 +20,7 @@ export type LoadingIndicatorProps = Omit<
 /** @see https://seed-design.io/react/components/loading-indicator */
 export function LoadingIndicator({
   children,
-  indicator = <ProgressCircle size="inherit" tone="inherit" />,
+  indicator = <ProgressCircle size="inherit" tone="inherit" aria-label="처리 중" />,
   ...otherProps
 }: LoadingIndicatorProps) {
   return (

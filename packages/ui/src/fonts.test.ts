@@ -1,3 +1,5 @@
+import { createHash } from 'node:crypto';
+import manifest from '../fonts/sha256.json';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
@@ -6,6 +8,21 @@ const fontsDirectory = resolve(import.meta.dirname, '../fonts');
 const css = readFileSync(resolve(fontsDirectory, 'pretendardvariable-dynamic-subset.css'), 'utf8');
 
 describe('배포하는 Pretendard 서브셋', () => {
+  it('검토된 CSS와 WOFF2 자산의 SHA-256을 유지한다', () => {
+    const sources = [...css.matchAll(/url\(([^)]+)\)/g)].map((match) =>
+      (match[1] ?? '').replace(/^\.\//, ''),
+    );
+    expect(new Set(Object.keys(manifest))).toEqual(
+      new Set(['pretendardvariable-dynamic-subset.css', ...sources]),
+    );
+    for (const [file, hash] of Object.entries(manifest)) {
+      expect(
+        createHash('sha256')
+          .update(readFileSync(resolve(fontsDirectory, file)))
+          .digest('hex'),
+      ).toBe(hash);
+    }
+  });
   it('모든 CSS 참조가 실제 로컬 WOFF2 파일을 가리킨다', () => {
     const sources = [...css.matchAll(/url\(([^)]+)\)/g)].map((match) => match[1] ?? '');
     expect(sources).toHaveLength(92);
