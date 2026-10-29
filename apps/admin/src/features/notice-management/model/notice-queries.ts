@@ -21,18 +21,25 @@ const noticesKey = ['admin', 'notices'] as const;
 export const noticesQueryOptions = queryOptions({
   queryKey: noticesKey,
   queryFn: listNotices,
+  networkMode: 'always',
   retry: false,
 });
 
 export const noticeMembersQueryOptions = queryOptions({
   queryKey: ['admin', 'notice-members'],
   queryFn: listNoticeMembers,
+  networkMode: 'always',
   retry: false,
 });
 
 /** 상세 캐시 키는 목록 키 뒤에 ID를 붙인다. */
 export const noticeQueryOptions = (id: string) =>
-  queryOptions({ queryKey: [...noticesKey, id], queryFn: () => getNotice(id), retry: false });
+  queryOptions({
+    queryKey: [...noticesKey, id],
+    queryFn: () => getNotice(id),
+    networkMode: 'always',
+    retry: false,
+  });
 
 /** 목록과 읽음 집계용 회원을 동시에 조회한다. */
 export function useNoticesQuery() {
@@ -63,18 +70,21 @@ export function useNoticeMutations() {
 
   const create = useMutation({
     mutationFn: createNotice,
+    networkMode: 'always',
     retry: false,
     onSuccess: () => client.invalidateQueries({ queryKey: noticesKey }),
   });
 
   const update = useMutation({
     mutationFn: ({ id, input }: { id: string; input: NoticeContent }) => updateNotice(id, input),
+    networkMode: 'always',
     retry: false,
     onSuccess: () => client.invalidateQueries({ queryKey: noticesKey }),
   });
 
   const remove = useMutation({
     mutationFn: deleteNotice,
+    networkMode: 'always',
     retry: false,
     onSuccess: async (_, id) => {
       client.removeQueries({ queryKey: noticeQueryOptions(id).queryKey, exact: true });
