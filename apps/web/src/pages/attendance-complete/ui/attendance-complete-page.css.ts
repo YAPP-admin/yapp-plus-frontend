@@ -1,4 +1,3 @@
-import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
@@ -30,11 +29,10 @@ export const headerSpacer = style({
 export const body = style({
   display: 'flex',
   flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
+  alignItems: 'stretch',
   flex: 1,
   padding: '20px 20px 30px',
-  textAlign: 'center',
+  textAlign: 'left',
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
@@ -44,25 +42,29 @@ export const body = style({
 export const titleSection = style({
   display: 'flex',
   flexDirection: 'column',
-  gap: '8px',
+  alignItems: 'flex-start',
+  gap: '10px',
   marginBottom: '32px',
   width: '100%',
+  textAlign: 'left',
 });
 
 export const title = style({
   fontSize: '26px',
   fontWeight: 700,
   lineHeight: '35px',
-  color: vars.$color.palette.gray900,
+  color: '#1A1C20',
   margin: 0,
+  textAlign: 'left',
 });
 
 export const description = style({
   fontSize: '16px',
   fontWeight: 400,
   lineHeight: '22px',
-  color: vars.$color.palette.gray700,
+  color: '#555D6D',
   margin: 0,
+  textAlign: 'left',
 });
 
 export const graphicSection = style({

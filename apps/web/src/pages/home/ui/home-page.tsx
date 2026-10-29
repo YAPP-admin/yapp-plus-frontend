@@ -149,6 +149,7 @@ export function HomePage() {
   const [isCodeSheetOpen, setIsCodeSheetOpen] = useState(false);
   const [code, setCode] = useState(['', '', '', '']);
   const [codeError, setCodeError] = useState(false);
+  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // 2. 팀 세션 인증 안내 바텀시트
@@ -428,8 +429,10 @@ export function HomePage() {
                       type="text"
                       inputMode="numeric"
                       maxLength={1}
-                      placeholder="0"
+                      placeholder={focusedIndex === index ? '' : '0'}
                       value={code[index]}
+                      onFocus={() => setFocusedIndex(index)}
+                      onBlur={() => setFocusedIndex(null)}
                       onChange={(e) => handleCodeChange(index, e.target.value)}
                       onKeyDown={(e) => handleCodeKeyDown(index, e)}
                       className={codeError ? codeInputError : codeInput}
