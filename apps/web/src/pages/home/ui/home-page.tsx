@@ -86,6 +86,7 @@ import {
   sheetHandleArea,
   sheetHandleBar,
   sheetHeader,
+  sheetHomeIndicatorArea,
   sheetPrimaryButton,
   sheetSecondaryButton,
   sheetTitle,
@@ -459,6 +460,7 @@ export function HomePage() {
               >
                 확인
               </ActionButton>
+              <div className={sheetHomeIndicatorArea} aria-hidden="true" />
             </div>
           </div>
         </BottomSheetContent>
