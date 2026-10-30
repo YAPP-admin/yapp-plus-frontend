@@ -1,5 +1,7 @@
 import type { Member } from '~/features/member-management';
+import { overlay } from 'overlay-kit';
 import { MemberList } from './member-list';
+import { MemberEditDialog } from './member-edit-dialog';
 import { PageHeader } from '~/shared/ui/page-header';
 import { MemberFilters } from './member-filters';
 import { TeamMappingNotice, type MemberTeamMapping } from './member-team-filter';
@@ -8,6 +10,12 @@ import { Link } from '@tanstack/react-router';
 import { type MemberSearch } from '../model/member-search';
 import { PendingMembers } from './pending-members';
 import * as styles from './members-page.css';
+
+function openMemberEdit(member: Member, activityId: string) {
+  overlay.open(({ unmount }) => (
+    <MemberEditDialog member={member} activityId={activityId} onClose={unmount} />
+  ));
+}
 
 export function MembersPage({
   search,
@@ -53,6 +61,7 @@ export function MembersPage({
           members={filterMembers(members, currentGeneration, listSearch)}
           currentGeneration={currentGeneration}
           teamMapping={teamMapping}
+          onEdit={openMemberEdit}
           hasMembers={members.some((member) =>
             member.activities.some((activity) => activity.generation === currentGeneration),
           )}

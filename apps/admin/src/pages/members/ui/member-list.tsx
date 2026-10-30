@@ -28,11 +28,13 @@ export function MemberList({
   currentGeneration,
   hasMembers = false,
   teamMapping = 'before',
+  onEdit,
 }: {
   members: readonly Member[];
   currentGeneration: number;
   hasMembers?: boolean;
   teamMapping?: MemberTeamMapping;
+  onEdit?: (member: Member, activityId: string) => void;
 }) {
   const rows = members.flatMap((member) => {
     const activity = member.activities.find((item) => item.generation === currentGeneration);
@@ -153,8 +155,9 @@ export function MemberList({
                     <ActionButton
                       variant="ghost"
                       size="small"
-                      disabled
-                      aria-label={`${member.name} 더보기 (준비 중)`}
+                      disabled={onEdit === undefined}
+                      aria-label={`${member.name} 더보기${onEdit === undefined ? ' (준비 중)' : ''}`}
+                      onClick={() => onEdit?.(member, activity.id)}
                     >
                       <Ellipsis size={20} aria-hidden="true" />
                     </ActionButton>
