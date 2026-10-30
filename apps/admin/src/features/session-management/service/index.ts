@@ -41,6 +41,16 @@ export async function getSessionAttendance(id: string) {
   return store.getSessionAttendance(id);
 }
 
+export async function closeAttendance(sessionId: string) {
+  const store = await getStore();
+  return store.closeAttendance(sessionId);
+}
+
+export async function cancelAttendance(sessionId: string) {
+  const store = await getStore();
+  return store.cancelAttendance(sessionId);
+}
+
 export async function updateMemberAttendance(sessionId: string, input: AttendanceEditInput) {
   const store = await getStore();
   return store.updateMemberAttendance(sessionId, attendanceEditInputSchema.parse(input));

@@ -11,6 +11,8 @@ export {
 } from './model/session';
 export {
   createSession,
+  closeAttendance,
+  cancelAttendance,
   deleteSession,
   getSessionAttendance,
   getAttendanceHistory,
@@ -21,6 +23,8 @@ export {
 } from './service';
 export {
   sessionsQueryOptions,
+  sessionAttendanceQueryOptions,
+  attendanceHistoryQueryOptions,
   useCreateSessionMutation,
   useSessionsQuery,
   useUpdateSessionMutation,

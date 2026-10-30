@@ -3,8 +3,10 @@ import { useHydrated } from '@tanstack/react-router';
 import { useState } from 'react';
 import { ActionButton } from '@yapp-plus/ui';
 import {
-  getSessionAttendance,
-  getAttendanceHistory,
+  closeAttendance,
+  cancelAttendance,
+  attendanceHistoryQueryOptions,
+  sessionAttendanceQueryOptions,
   updateMemberAttendance,
   updateMemberBadge,
   type AttendanceEditInput,
@@ -185,10 +187,8 @@ export function SessionAttendanceContent({
   const queryClient = useQueryClient();
   const hydrated = useHydrated();
   const query = useQuery({
-    queryKey: ['admin', 'sessions', sessionId, 'attendance'],
-    queryFn: () => getSessionAttendance(sessionId),
+    ...sessionAttendanceQueryOptions(sessionId),
     enabled: hydrated,
-    retry: false,
   });
   const attendanceMutation = useMutation({
     mutationFn: (input: AttendanceEditInput) => updateMemberAttendance(sessionId, input),
@@ -204,11 +204,27 @@ export function SessionAttendanceContent({
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['admin', 'sessions', sessionId, 'attendance'] }),
   });
+  const closeMutation = useMutation({
+    mutationFn: () => closeAttendance(sessionId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['admin', 'sessions', sessionId, 'attendance'],
+      });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'sessions'] });
+    },
+  });
+  const cancelMutation = useMutation({
+    mutationFn: () => cancelAttendance(sessionId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['admin', 'sessions', sessionId, 'attendance'],
+      });
+      void queryClient.invalidateQueries({ queryKey: ['admin', 'sessions'] });
+    },
+  });
   const historyQuery = useQuery({
-    queryKey: ['admin', 'sessions', sessionId, 'attendance-history', historyMember?.membershipId],
-    queryFn: () => getAttendanceHistory(sessionId, historyMember?.membershipId ?? ''),
+    ...attendanceHistoryQueryOptions(sessionId, historyMember?.membershipId ?? ''),
     enabled: hydrated && historyMember !== null,
-    retry: false,
   });
   if (query.isPending) {
     return <output>출석 내역을 불러오는 중입니다.</output>;
@@ -234,6 +250,30 @@ export function SessionAttendanceContent({
   }
   const visibleMembers = members.filter((member) => part === 'all' || member.part === part);
   const reportedMembers = visibleMembers.filter((member) => member.latestReport);
+  let sessionAction = null;
+  if (session.phase === 'closed' && session.canCancelClose) {
+    sessionAction = (
+      <ActionButton
+        variant="neutralWeak"
+        size="small"
+        disabled={cancelMutation.isPending}
+        onClick={() => cancelMutation.mutate()}
+      >
+        마감 취소
+      </ActionButton>
+    );
+  } else if (session.phase === 'open') {
+    sessionAction = (
+      <ActionButton
+        variant="brandSolid"
+        size="small"
+        disabled={closeMutation.isPending}
+        onClick={() => closeMutation.mutate()}
+      >
+        출석 마감
+      </ActionButton>
+    );
+  }
   return (
     <>
       <section className={styles.card} aria-label="세션 정보">
@@ -242,6 +282,17 @@ export function SessionAttendanceContent({
           정규 세션 ·{' '}
           {{ closed: '출석 마감', open: '출석 진행 중', unknown: '상태 확인 필요' }[session.phase]}
         </p>
+        {session.type === 'offline' && (
+          <div className={styles.sessionActions}>
+            {sessionAction}
+            {closeMutation.isError && (
+              <span role="alert">출석 마감에 실패했습니다. 다시 시도해 주세요.</span>
+            )}
+            {cancelMutation.isError && (
+              <span role="alert">마감 취소에 실패했습니다. 다시 시도해 주세요.</span>
+            )}
+          </div>
+        )}
       </section>
       <section className={styles.card} aria-label="출석 요약">
         <h2 className={styles.heading}>출석 요약 · 전체 {session.summary.total}명</h2>
