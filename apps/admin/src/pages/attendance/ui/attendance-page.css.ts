@@ -51,3 +51,28 @@ export const backLink = style({
     },
   },
 });
+
+export const sessionList = style({
+  display: 'grid',
+  gap: vars.$dimension.x3,
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+});
+
+export const sessionLink = style({
+  display: 'grid',
+  gap: vars.$dimension.x1,
+  padding: vars.$dimension.x5,
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r3,
+  color: vars.$color.fg.neutral,
+  textDecoration: 'none',
+  selectors: {
+    '&:hover': { background: vars.$color.bg.layerDefault },
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.brand}`,
+      outlineOffset: '0.125rem',
+    },
+  },
+});
