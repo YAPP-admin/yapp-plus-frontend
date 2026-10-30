@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 회원 관리 화면
 
 **입력**: [명세](spec.md), [계획](plan.md), [데이터](data-model.md), [화면 계약](contracts/member-ui.md)
-**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 리뷰·커밋 완료. 4c단계 리뷰·커밋 완료. 5a단계 리뷰·커밋 완료. 5b단계 구현·검증 완료, 사용자 리뷰 대기.
+**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 리뷰·커밋 완료. 4c단계 리뷰·커밋 완료. 5a단계 리뷰·커밋 완료. 5b단계 리뷰·커밋 완료. 6a단계 구현·검증 완료, 사용자 리뷰 대기.
 
 ## 진행 규칙
 
@@ -87,11 +87,11 @@
 
 ## 6a단계 — 파일 파서·양식 (US3, P2)
 
-- [ ] T030 [US3] pnpm-workspace.yaml, apps/admin/package.json, pnpm-lock.yaml에 SheetJS CE 0.20.3 공식 tarball을 고정한다. 설치 변경량과 공급망 정책을 확인한다.
-- [ ] T031 [US3] apps/admin/src/pages/member-import/model/import-file.ts와 import-template.ts에 파일 경계·지연 로딩·첫 시트·헤더·문자열 전화번호 양식을 구현한다.
-- [ ] T032 [US3] apps/admin/src/pages/member-import/model/import-file.test.ts에 실제 XLSX·XLS·CSV·다중 시트·손상/빈 파일·크기 경계·헤더·전화번호 앞자리를 검증한다.
+- [x] T030 [US3] pnpm-workspace.yaml, apps/admin/package.json, pnpm-lock.yaml에 Papa Parse 5.7.0과 `@types/papaparse`를 고정한다. 설치 변경량과 공급망 정책을 확인한다.
+- [x] T031 [US3] apps/admin/src/pages/member-import/model/import-file.ts와 import-template.ts에 CSV 파일 경계·지연 로딩·헤더·문자열 전화번호 양식을 구현한다.
+- [x] T032 [US3] apps/admin/src/pages/member-import/model/import-file.test.ts에 실제 CSV 인용부호·줄바꿈·손상/빈 파일·크기 경계·헤더·전화번호 앞자리를 검증한다.
 
-**독립 검증/중단점**: 실제 세 파일 형식과 양식 다운로드 왕복을 확인한다. catalog·lockfile까지 리뷰받는다.
+**독립 검증/중단점**: 실제 CSV와 양식 다운로드 왕복을 확인한다. catalog·lockfile까지 리뷰받는다.
 
 ## 6b단계 — 행 검증·중복 분류 (US3, P2)
 
@@ -159,8 +159,14 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 | 1    | 문서 작성·검증 완료 | 사용자 진행 확인 완료 |
 | 2a   | 구현·검증 완료      | 사용자 진행 확인 완료 |
 | 2b   | 구현·검증 완료      | 사용자 진행 확인 완료 |
-| 3    | 구현·검증 완료      | 대기                  |
-| 4~8  | 미착수              | 미요청                |
+| 3    | 구현·검증 완료      | 완료                  |
+| 4a   | 구현·검증 완료      | 완료                  |
+| 4b   | 구현·검증 완료      | 완료                  |
+| 4c   | 구현·검증 완료      | 완료                  |
+| 5a   | 구현·검증 완료      | 완료                  |
+| 5b   | 커밋·검증 완료      | 완료                  |
+| 6a   | 구현·검증 완료      | 대기                  |
+| 6b~8 | 미착수              | 미요청                |
 
 사용자 “작업 진행해”로 1단계 리뷰·2a 진행을 확인했고 “이슈 생성해”로 [#182](https://github.com/YAPP-admin/yapp-plus-frontend/issues/182)를 생성했다.
 사용자 “커밋하고 다음 진행해”로 2a 리뷰를 확인하고 문서 bf3055d·모델 9ca4901을 커밋했다.
@@ -204,4 +210,13 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 - 회원 행의 더보기 버튼에서 `overlay.open`으로 수정 모달을 연다. 모달은 SEED `ContentDialog`와 `MemberEditForm`을 재사용하며 취소·닫기 시 초안을 폐기한다.
 - 모달은 회원 행의 더보기 클릭으로만 열고, 취소·닫기 시 컨트롤러의 `unmount`로 제거한다. 페이지 경계를 넘는 경우에는 기존 `AdminOverlayProvider`의 페이지 수명 정리를 따른다.
 - 저장·비활동 처리는 계속 준비 중 비활성 상태이며 실제 mutation·토스트·팀 매핑 동작은 추가하지 않는다.
-- 이번 단계는 미커밋이며 push·PR은 수행하지 않았다. 사용자 리뷰 후 다음 단계 진행 여부를 확인한다.
+- `b5beecf`에 커밋했다. push·PR은 수행하지 않았다. 사용자 리뷰 후 6a 진행 여부를 확인했다.
+
+## 6a 진행 기록
+
+- 5b를 `b5beecf`에 커밋한 뒤 6a 파일 파서·양식을 진행했다. 6a는 현재 작업 트리에서 구현·검증했으며 별도 커밋은 아직 만들지 않았다.
+- Papa Parse 5.7.0과 `@types/papaparse`를 workspace catalog와 admin 의존성에 고정하고 lockfile을 갱신했다. `pnpm install --lockfile-only`의 공급망 정책 검사를 통과했다.
+- CSV만 읽고 지정된 한글 헤더를 정확히 확인하며, 10MB 초과·빈 파일·손상 CSV를 구분한다. 인용부호·줄바꿈을 보존하고 빈 행과 원본 행 번호를 6b 검증 단계에 전달한다.
+- CSV 양식은 UTF-8 BOM과 `이름,전화번호,기수,직군,권한` 헤더를 제공해 전화번호 앞자리 유실을 막는다. 실제 저장·중복 판정·행별 정정은 추가하지 않았다.
+- `import-file.test.ts`에서 CSV 인용부호·줄바꿈·빈 행·손상/빈 파일·10MB 경계·잘못된 헤더·양식 BOM을 검증했다.
+- 6a 구현·검증 완료, 사용자 리뷰 대기. 6b는 시작하지 않는다.

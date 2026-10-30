@@ -17,6 +17,8 @@ catalog:
   '@tiptap/extension-placeholder': 3.32.0
   '@karrotmarket/react-monochrome-icon': 1.30.0
   '@testing-library/user-event': 14.6.7
+  papaparse: 5.7.0
+  '@types/papaparse': 5.5.2
   '@seed-design/css': 3.1.0
   '@seed-design/react': 3.1.0
   '@seed-design/vite-plugin': 2.1.1

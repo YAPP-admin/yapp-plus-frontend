@@ -66,6 +66,9 @@ catalogs:
     '@types/node':
       specifier: 24.13.3
       version: 24.13.3
+    '@types/papaparse':
+      specifier: 5.5.2
+      version: 5.5.2
     '@types/react':
       specifier: 19.2.18
       version: 19.2.18
@@ -105,6 +108,9 @@ catalogs:
     oxc-transform-react:
       specifier: 0.155.0
       version: 0.155.0
+    papaparse:
+      specifier: 5.7.0
+      version: 5.7.0
     proj4:
       specifier: 2.22.0
       version: 2.22.0
@@ -234,6 +240,9 @@ importers:
       overlay-kit:
         specifier: 'catalog:'
         version: 1.9.0(react@19.2.8)
+      papaparse:
+        specifier: 'catalog:'
+        version: 5.7.0
       proj4:
         specifier: 'catalog:'
         version: 2.22.0
@@ -262,6 +271,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      '@types/papaparse':
+        specifier: 'catalog:'
+        version: 5.5.2
       '@types/react':
         specifier: 'catalog:'
         version: 19.2.18
@@ -3920,6 +3932,9 @@ packages:
   '@types/node@26.4.1':
     resolution: {integrity: sha512-k97ENvZWtvA6yqz5/FS6a7duDgOPEeOQOc2iKS/nY6mX6qJUKtLnWzQS+Xj6tXweyj6ZcTAK2Qecetnvi9nCLA==}
 
+  '@types/papaparse@5.5.2':
+    resolution: {integrity: sha512-gFnFp/JMzLHCwRf7tQHrNnfhN4eYBVYYI897CGX4MY1tzY9l2aLkVyx2IlKZ/SAqDbB3I1AOZW5gTMGGsqWliA==}
+
   '@types/react-dom@19.2.7':
     resolution: {integrity: sha512-I8bPpDLcHBv1qiIiXDCy71Rt8eQDKJP0sMSWJphDdAcdqiJ1sGpZamavoEIRZmYzjia9LuEb2HlYdDpmoENpvQ==}
     peerDependencies:
@@ -5929,6 +5944,9 @@ packages:
   p-locate@5.0.0:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
+
+  papaparse@5.7.0:
+    resolution: {integrity: sha512-qBGxg/7Q3Kl9Wfhrz2Z74UnvnHTXLNG6jmKJFeBvP2+y4lV7So+7SR62+Zd47JvdrCkX+nDcnr0ObPzek/+6RA==}
 
   parent-module@1.0.1:
     resolution: {integrity: sha512-GQ2EWRpQV8/o+Aw8YqtfZZPfNRWZYkbidE9k5rpl/hC3vtHHBfGm2Ifi6qWV+coDGkrUKZAxE3Lot5kcsRlh+g==}
@@ -10611,6 +10629,10 @@ snapshots:
     dependencies:
       undici-types: 8.3.0
 
+  '@types/papaparse@5.5.2':
+    dependencies:
+      '@types/node': 26.4.1
+
   '@types/react-dom@19.2.7(@types/react@19.2.18)':
     dependencies:
       '@types/react': 19.2.18
@@ -12814,6 +12836,8 @@ snapshots:
   p-locate@5.0.0:
     dependencies:
       p-limit: 3.1.0
+
+  papaparse@5.7.0: {}
 
   parent-module@1.0.1:
     dependencies:
