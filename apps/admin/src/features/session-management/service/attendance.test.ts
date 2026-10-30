@@ -191,6 +191,17 @@ it('사전 보고가 있는 회원의 실제 출결을 바꿔도 보고 내용�
 it('출석 마감은 전체 미정을 결석으로 바꾸고 마감 취소는 결과를 유지한 채 편집을 연다', async () => {
   const { service, session, first, edit } = await setup();
   await service.updateMemberAttendance(session.id, edit);
+  const pendingReview = (await service.getTeamReviews(session.id)).find(
+    (review) => review.reviewState === 'pending' && review.photo,
+  );
+  if (!pendingReview?.photo) {
+    throw new Error('검수 대기 사진이 필요합니다.');
+  }
+  await service.updateTeamPhotoReview(session.id, {
+    photoId: pendingReview.photo.photoId,
+    decision: 'approve',
+    reason: null,
+  });
   const beforeClose = await service.getSessionAttendance(session.id);
   const closed = await service.closeAttendance(session.id);
   expect(closed.session.phase).toBe('closed');
@@ -214,4 +225,23 @@ it('출석 마감은 전체 미정을 결석으로 바꾸고 마감 취소는 �
   expect(
     cancelled.members.find((member) => member.membershipId === first.membershipId)?.isEditable,
   ).toBe(true);
+});
+
+it('팀 세션은 검수 대기 사진이 남아 있으면 출석을 마감할 수 없다', async () => {
+  const { service, session } = await setup();
+  await expect(service.closeAttendance(session.id)).rejects.toThrow('검수 대기 사진');
+  const pendingReview = (await service.getTeamReviews(session.id)).find(
+    (review) => review.reviewState === 'pending' && review.photo,
+  );
+  if (!pendingReview?.photo) {
+    throw new Error('검수 대기 사진이 필요합니다.');
+  }
+  await service.updateTeamPhotoReview(session.id, {
+    photoId: pendingReview.photo.photoId,
+    decision: 'approve',
+    reason: null,
+  });
+  await expect(service.closeAttendance(session.id)).resolves.toMatchObject({
+    session: { phase: 'closed' },
+  });
 });

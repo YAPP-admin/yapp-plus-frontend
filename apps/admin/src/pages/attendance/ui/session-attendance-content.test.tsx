@@ -7,8 +7,10 @@ import {
   closeAttendance,
   getAttendanceHistory,
   getSessionAttendance,
+  getTeamReviews,
   updateMemberAttendance,
   updateMemberBadge,
+  updateTeamPhotoReview,
 } from '~/features/session-management';
 import { createSessionStore } from '~/features/session-management/testing';
 import { SessionAttendanceContent } from './session-attendance-content';
@@ -19,8 +21,10 @@ vi.mock('~/features/session-management', () => ({
   closeAttendance: vi.fn<typeof closeAttendance>(),
   getAttendanceHistory: vi.fn<typeof getAttendanceHistory>(),
   getSessionAttendance: vi.fn<typeof getSessionAttendance>(),
+  getTeamReviews: vi.fn<typeof getTeamReviews>(),
   updateMemberAttendance: vi.fn<typeof updateMemberAttendance>(),
   updateMemberBadge: vi.fn<typeof updateMemberBadge>(),
+  updateTeamPhotoReview: vi.fn<typeof updateTeamPhotoReview>(),
   sessionAttendanceQueryOptions: (sessionId: string) => ({
     queryKey: ['admin', 'sessions', sessionId, 'attendance'],
     queryFn: () => getSessionAttendance(sessionId),
@@ -31,10 +35,16 @@ vi.mock('~/features/session-management', () => ({
     queryFn: () => getAttendanceHistory(sessionId, membershipId),
     retry: false,
   }),
+  teamReviewsQueryOptions: (sessionId: string) => ({
+    queryKey: ['admin', 'sessions', sessionId, 'team-reviews'],
+    queryFn: () => getTeamReviews(sessionId),
+    retry: false,
+  }),
 }));
 
 void cancelAttendance;
 void closeAttendance;
+void updateTeamPhotoReview;
 
 it('열린 오프라인 세션에서 출석 마감 요청을 보낸다', async () => {
   const data = createSessionStore().getSessionAttendance('demo-offline-session');
@@ -141,5 +151,44 @@ it('출결 상태와 명찰 확인은 서로 독립적으로 mock mutation을 �
   expect(updateMemberBadge).toHaveBeenCalledWith(data.session.id, {
     membershipId: 'mock-member-1',
     verified: true,
+  });
+});
+
+it('팀 세션의 검수 대기 사진은 출석 마감을 막고 승인 후 마감할 수 있다', async () => {
+  const store = createSessionStore();
+  const data = store.getSessionAttendance('demo-team-session');
+  const reviews = store.getTeamReviews('demo-team-session');
+  const pending = reviews.find((review) => review.reviewState === 'pending');
+  if (!pending?.photo) {
+    throw new Error('검수 대기 사진이 필요합니다.');
+  }
+  const pendingPhoto = pending.photo;
+  vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(getTeamReviews).mockResolvedValue(reviews);
+  vi.mocked(updateTeamPhotoReview).mockResolvedValue({
+    teamId: pending.teamId,
+    teamName: pending.teamName,
+    members: pending.members,
+    reviewState: 'approved',
+    photo: pendingPhoto,
+    decisionDraft: null,
+  });
+  vi.mocked(closeAttendance).mockResolvedValue({
+    ...data,
+    session: { ...data.session, phase: 'closed', canCancelClose: true },
+  });
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <SessionAttendanceContent sessionId={data.session.id} part="all" />
+    </QueryClientProvider>,
+  );
+  await screen.findByText('검수 대기');
+  expect(screen.getByRole('region', { name: '팀 사진 검수' })).toHaveTextContent('검수 대기');
+  expect(screen.getByRole('button', { name: '출석 마감' })).toBeDisabled();
+  await userEvent.click(screen.getByRole('button', { name: '승인' }));
+  expect(updateTeamPhotoReview).toHaveBeenCalledWith(data.session.id, {
+    photoId: pendingPhoto.photoId,
+    decision: 'approve',
+    reason: null,
   });
 });
