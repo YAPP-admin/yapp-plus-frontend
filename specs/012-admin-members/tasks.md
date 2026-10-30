@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 회원 관리 화면
 
 **입력**: [명세](spec.md), [계획](plan.md), [데이터](data-model.md), [화면 계약](contracts/member-ui.md)
-**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 리뷰·커밋 완료. 4c단계 구현·검증 완료, 사용자 리뷰 대기.
+**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 리뷰·커밋 완료. 4c단계 리뷰·커밋 완료. 5a단계 구현·검증 완료, 사용자 리뷰 대기.
 
 ## 진행 규칙
 
@@ -72,9 +72,9 @@
 
 ## 5a단계 — 수정 폼과 정정 제한 (US2, P2)
 
-- [ ] T025 [US2] apps/admin/src/pages/members/model/member-form.ts와 member-form.test.ts에 필수 입력·기수 중복·팀/출석 연결 제한을 구현·검증한다.
-- [ ] T026 [US2] apps/admin/src/pages/members/ui/member-edit-form.tsx와 member-edit-form.css.ts에 TanStack Form 필드·초안·기존 변경 이력·비활성 버튼·준비 중 안내를 구현한다.
-- [ ] T027 [US2] apps/admin/src/pages/members/ui/member-edit-form.test.tsx에 입력 오류·제한 안내·Enter 제출 차단·원본 불변 검증을 추가한다.
+- [x] T025 [US2] apps/admin/src/pages/members/model/member-form.ts와 member-form.test.ts에 필수 입력·기수 중복·팀/출석 연결 제한을 구현·검증한다.
+- [x] T026 [US2] apps/admin/src/pages/members/ui/member-edit-form.tsx와 member-edit-form.css.ts에 TanStack Form 필드·초안·기존 변경 이력·비활성 버튼·준비 중 안내를 구현한다.
+- [x] T027 [US2] apps/admin/src/pages/members/ui/member-edit-form.test.tsx에 입력 오류·제한 안내·Enter 제출 차단·원본 불변 검증을 추가한다.
 
 **독립 검증/중단점**: 폼 입력과 제한을 독립 검토할 수 있다. 저장·비활동은 실행되지 않는다.
 
@@ -188,4 +188,12 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 - 4b 사용자 승인 후 4c 팀 표시·필터를 진행했다. 팀 매핑 변경·이동 동작은 추가하지 않았다.
 - 매핑 전 안내에서는 팀 열·팀 필터를 숨기고, 매핑 후에는 팀 배지·팀장·미배정 상태와 팀 필터를 표시한다.
 - 팀 인원은 검색·직군 필터 전 현재 기수 전체 활동을 기준으로 계산한다. 잘못된 team URL은 전체 팀으로 표시한다.
-- 이번 단계는 미커밋이며 push·PR은 수행하지 않았다. 다음 단계 5a는 사용자 리뷰 후 진행한다.
+- 4c는 사용자 승인으로 `330a6b1`에 커밋했다. push·PR은 수행하지 않았고 5a는 해당 커밋에서 진행했다.
+
+## 5a 진행 기록
+
+- 4c를 사용자 승인으로 `330a6b1`에 커밋한 뒤 5a를 진행했다. 실제 작업 base는 `brussels-v2/member-search`(6ac4a84)다.
+- `member-form.ts`에서 이름·기수·직군·권한의 입력 계약과 활동 조회를 정의했다. 기수 변경은 팀 연결·출석 기록·같은 회원의 중복 기수 활동이 있으면 제한한다.
+- `MemberEditForm`은 TanStack Form과 SEED Field·TextField·FilterSelect로 초안을 원본과 분리한다. 변경 이력과 준비 중 안내를 표시하고 저장·비활동 처리는 비활성 상태로 둔다.
+- Enter 제출은 `preventDefault`만 수행하며 저장 요청이나 토스트는 호출하지 않는다. 5b의 `overlay.open`·더보기 연결은 시작하지 않는다.
+- 이번 단계는 미커밋이며 push·PR은 수행하지 않았다. 사용자 리뷰 후 다음 단계 진행 여부를 확인한다.
