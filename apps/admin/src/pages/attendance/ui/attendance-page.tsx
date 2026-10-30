@@ -1,6 +1,7 @@
 import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
+import { useSessionsQuery } from '~/features/session-management';
 import {
   attendancePartSchema,
   attendanceSessionPartSchema,
@@ -51,6 +52,7 @@ function AttendanceLayout({
 }
 
 export function AttendanceSessionsPage(props: FilterProps<AttendanceSessionPart>) {
+  const sessionsQuery = useSessionsQuery();
   return (
     <AttendanceLayout title="출석부" description="출석을 확인할 세션을 선택합니다.">
       <PartFilter
@@ -58,7 +60,34 @@ export function AttendanceSessionsPage(props: FilterProps<AttendanceSessionPart>
         options={['all', ...attendanceSessionPartSchema.options.filter((part) => part !== 'all')]}
         allLabel="모든 세션"
       />
-      <p className={styles.placeholder}>세션 목록을 준비 중입니다.</p>
+      {sessionsQuery.isPending && <output>세션 목록을 불러오는 중입니다.</output>}
+      {sessionsQuery.isError && <p role="alert">세션 목록을 불러오지 못했습니다.</p>}
+      {sessionsQuery.data && sessionsQuery.data.length === 0 && (
+        <p className={styles.placeholder}>등록된 세션이 없습니다.</p>
+      )}
+      {sessionsQuery.data && sessionsQuery.data.length > 0 && (
+        <ul className={styles.sessionList} aria-label="출석 세션 목록">
+          {sessionsQuery.data.map((session) => (
+            <li key={session.id}>
+              <Link
+                className={styles.sessionLink}
+                to="/attendance/$sessionId"
+                params={{ sessionId: session.id }}
+                search={{ part: 'all' }}
+              >
+                <strong>{session.name}</strong>
+                <span>
+                  {session.type === 'offline' ? '정규 세션' : '팀 세션'} ·{' '}
+                  {session.date.replaceAll('-', '.')} · {session.startTime}
+                </span>
+                <span>
+                  출석 {session.attendance.present}명 · 미정 {session.attendance.pending}명
+                </span>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
     </AttendanceLayout>
   );
 }
