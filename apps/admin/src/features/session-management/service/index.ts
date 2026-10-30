@@ -1,3 +1,9 @@
+import {
+  attendanceEditInputSchema,
+  badgeEditInputSchema,
+  type AttendanceEditInput,
+  type BadgeEditInput,
+} from '../model/attendance-input';
 import { createSessionInputSchema, sessionSchema, type CreateSessionInput } from '../model/session';
 
 async function getStore() {
@@ -33,4 +39,19 @@ export async function deleteSession(id: string) {
 export async function getSessionAttendance(id: string) {
   const store = await getStore();
   return store.getSessionAttendance(id);
+}
+
+export async function updateMemberAttendance(sessionId: string, input: AttendanceEditInput) {
+  const store = await getStore();
+  return store.updateMemberAttendance(sessionId, attendanceEditInputSchema.parse(input));
+}
+
+export async function updateMemberBadge(sessionId: string, input: BadgeEditInput) {
+  const store = await getStore();
+  return store.updateMemberBadge(sessionId, badgeEditInputSchema.parse(input));
+}
+
+export async function getAttendanceHistory(sessionId: string, membershipId: string) {
+  const store = await getStore();
+  return store.getAttendanceHistory(sessionId, membershipId);
 }

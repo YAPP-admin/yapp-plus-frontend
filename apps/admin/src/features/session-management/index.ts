@@ -13,6 +13,9 @@ export {
   createSession,
   deleteSession,
   getSessionAttendance,
+  getAttendanceHistory,
+  updateMemberAttendance,
+  updateMemberBadge,
   listSessions,
   updateSession,
 } from './service';

@@ -1,3 +1,12 @@
+import { attendanceResultSchema } from './attendance';
+import {
+  attendanceEditInputSchema,
+  badgeEditInputSchema,
+  type AttendanceEditInput,
+  type BadgeEditInput,
+} from './attendance-input';
+import type { AttendanceHistoryEntry } from './attendance-view-model';
+import { calculateMockAttendanceDelta } from './mocks/attendance-score';
 import {
   createMockAttendanceSession,
   createMockSessionMembers,
@@ -27,7 +36,7 @@ const fixtures: Session[] = [
     startTime: '14:00',
     endTime: '17:00',
     type: 'offline',
-    attendance: { present: 30, late: 2, absent: 1, pending: 5, reported: 3 },
+    attendance: { present: 30, late: 2, earlyLeave: 0, absent: 1, pending: 5, reported: 3 },
   },
   {
     id: 'demo-team-session',
@@ -37,9 +46,11 @@ const fixtures: Session[] = [
     startTime: '13:00',
     endTime: '16:00',
     type: 'team',
-    attendance: { present: 0, late: 0, absent: 0, pending: 40, reported: 0 },
+    attendance: { present: 0, late: 0, earlyLeave: 0, absent: 0, pending: 40, reported: 0 },
   },
 ];
+
+export type AttendanceMockOperation = 'read' | 'history' | 'attendance' | 'badge';
 
 export function createSessionStore(initialSessions: readonly Session[] = fixtures) {
   let sessions = sessionSchema.array().parse(initialSessions);
@@ -47,18 +58,135 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
     sessions.map((session) => [session.id, createMockSessionMembers(session)]),
   );
 
+  const historyBySession = new Map<string, AttendanceHistoryEntry[]>();
+  let failures: { operation: AttendanceMockOperation; sessionId: string; membershipId?: string }[] =
+    [];
+
+  function checkFailure(
+    operation: AttendanceMockOperation,
+    sessionId: string,
+    membershipId?: string,
+  ) {
+    const index = failures.findIndex(
+      (failure) =>
+        failure.operation === operation &&
+        failure.sessionId === sessionId &&
+        failure.membershipId === membershipId,
+    );
+    if (index >= 0) {
+      failures.splice(index, 1);
+      throw new Error('모의 요청에 실패했습니다. 다시 시도해 주세요.');
+    }
+  }
+
+  function getContext(sessionId: string) {
+    const session = sessions.find((entry) => entry.id === sessionId);
+    const members = attendanceBySession.get(sessionId);
+    if (!session || !members) {
+      throw new Error('출석을 조회할 세션을 찾을 수 없습니다.');
+    }
+    return { session, members };
+  }
+
+  function getMember(sessionId: string, membershipId: string) {
+    const context = getContext(sessionId);
+    const member = context.members.find((entry) => entry.membershipId === membershipId);
+    if (!member) {
+      throw new Error('출결을 변경할 회원을 찾을 수 없습니다.');
+    }
+    return { ...context, member };
+  }
+
   return {
     listSessions(): Session[] {
       return sessionSchema.array().parse(sortSessions(sessions));
     },
 
     getSessionAttendance(id: string) {
-      const session = sessions.find((entry) => entry.id === id);
-      const members = attendanceBySession.get(id);
-      if (!session || !members) {
-        throw new Error('출석을 조회할 세션을 찾을 수 없습니다.');
-      }
+      const { session, members } = getContext(id);
+      checkFailure('read', id);
       return structuredClone({ session: createMockAttendanceSession(session, members), members });
+    },
+
+    getAttendanceHistory(sessionId: string, membershipId: string) {
+      getMember(sessionId, membershipId);
+      checkFailure('history', sessionId, membershipId);
+      return structuredClone(
+        (historyBySession.get(sessionId) ?? []).filter(
+          (entry) => entry.membershipId === membershipId,
+        ),
+      );
+    },
+
+    updateMemberAttendance(sessionId: string, input: AttendanceEditInput) {
+      const edit = attendanceEditInputSchema.parse(input);
+      const { session, members, member } = getMember(sessionId, edit.membershipId);
+      checkFailure('attendance', sessionId, edit.membershipId);
+      const before = member.attendance;
+      const unchanged =
+        before.explicitlyOverridden &&
+        before.status === edit.status &&
+        before.penaltyCategory === edit.penaltyCategory &&
+        before.durationBand === edit.durationBand &&
+        before.reason === edit.reason;
+      if (unchanged) {
+        return structuredClone(member);
+      }
+      const after = attendanceResultSchema.parse({
+        ...before,
+        ...edit,
+        explicitlyOverridden: true,
+      });
+      const delta = calculateMockAttendanceDelta(after);
+      member.attendance = after;
+      member.score =
+        delta === null
+          ? { source: 'unknown', delta: null, description: '미정' }
+          : { source: 'mock', delta, description: '운영진 정정 모의 점수' };
+      const summary = createMockAttendanceSession(session, members).summary;
+      session.attendance = {
+        present: summary.present,
+        late: summary.late,
+        earlyLeave: summary.earlyLeave,
+        absent: summary.absent,
+        pending: summary.undecided,
+        reported: summary.reported,
+      };
+      historyBySession.set(sessionId, [
+        {
+          id: crypto.randomUUID(),
+          membershipId: edit.membershipId,
+          changedAt: new Date().toISOString(),
+          actorName: '모의 운영진',
+          before: structuredClone(before),
+          after: structuredClone(after),
+          reason: edit.reason,
+        },
+        ...(historyBySession.get(sessionId) ?? []),
+      ]);
+      return structuredClone(member);
+    },
+
+    updateMemberBadge(sessionId: string, input: BadgeEditInput) {
+      const edit = badgeEditInputSchema.parse(input);
+      const { member } = getMember(sessionId, edit.membershipId);
+      checkFailure('badge', sessionId, edit.membershipId);
+      if (member.badge.verified !== edit.verified) {
+        member.badge = {
+          verified: edit.verified,
+          verifiedAt: edit.verified ? new Date().toISOString() : null,
+        };
+      }
+      return structuredClone(member);
+    },
+
+    // 대상 요청 한 번만 실패시켜 부분 성공 후 재시도를 확인합니다.
+    failNextAttendanceOperation(
+      operation: AttendanceMockOperation,
+      sessionId: string,
+      membershipId?: string,
+    ) {
+      failures.push({ operation, sessionId, membershipId });
     },
 
     createSession(input: CreateSessionInput): Session {
@@ -103,6 +231,8 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
 
       sessions = sessions.filter((session) => session.id !== id);
       attendanceBySession.delete(id);
+      historyBySession.delete(id);
+      failures = failures.filter((failure) => failure.sessionId !== id);
     },
   };
 }

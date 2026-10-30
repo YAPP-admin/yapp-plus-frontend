@@ -219,6 +219,7 @@ it.each([true, false])(
     expect(store.listSessions()[0]?.attendance).toEqual({
       present: 0,
       late: 0,
+      earlyLeave: 0,
       absent: 0,
       pending: 40,
       reported: 0,
