@@ -1,4 +1,5 @@
 import { Field, Select } from '@seed-design/react';
+import { Check, ChevronDown } from 'lucide-react';
 
 export function FilterSelect<T extends string>({
   label,
@@ -31,19 +32,7 @@ export function FilterSelect<T extends string>({
       >
         <Select.Trigger>
           <Select.Value>{labels[value]}</Select.Value>
-          <Select.SuffixIcon
-            svg={
-              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                <path
-                  d="m6 9 6 6 6-6"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-            }
-          />
+          <Select.SuffixIcon svg={<ChevronDown aria-hidden="true" size={18} />} />
         </Select.Trigger>
         <Select.Positioner>
           <Select.Content data-seed-color-mode="dark-only">
@@ -54,19 +43,7 @@ export function FilterSelect<T extends string>({
                     <Select.ItemBody>
                       <Select.ItemLabel />
                     </Select.ItemBody>
-                    <Select.ItemIndicator
-                      selected={
-                        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                          <path
-                            d="m5 12 4 4L19 6"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
-                      }
-                    />
+                    <Select.ItemIndicator selected={<Check aria-hidden="true" size={16} />} />
                   </Select.Item>
                 ))}
               </Select.Group>

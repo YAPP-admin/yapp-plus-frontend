@@ -169,3 +169,15 @@
 - `node --run check` 통과: admin lint·typecheck·503개 테스트 새 실행, 다른 패키지는 Turbo 캐시 재사용. `node --run build`는 admin 새 실행, web·Storybook 캐시 재사용으로 통과했다.
 - Chrome에서 한국어 문자열을 순차 입력해 Enter 없이 결과 1명·URL 갱신·검색 입력 포커스 유지를 확인했다. 화면 근거: `.context/member-live-search.jpg`.
 - 실제 OS 한글 입력기 조합·스크린 리더·터치 실기기는 미검증이다. 이번 변경은 미커밋 상태다.
+
+## 4c단계 — 팀 표시·필터
+
+- 4b를 사용자 승인으로 `6ac4a84`에 커밋한 뒤 4c를 계속 진행했다. 실제 작업 base는 `brussels-v2/member-search`(6ac4a84)다.
+- 매핑 전에는 안내 문구와 팀 정보 비노출을 유지하고, 매핑 후에는 팀 선택·팀 인원·팀 배지·팀장·팀 미배정을 표시한다. 팀 매핑 메뉴나 변경 동작은 제공하지 않는다.
+- 팀 인원은 현재 기수 전체 회원을 기준으로 계산하고, 이름·직군·팀 조건은 교집합으로 적용한다. 존재하지 않는 팀 URL은 전체 팀으로 표시한다.
+- 공용 FilterSelect의 직접 작성 SVG 아이콘을 제거하고 Lucide ChevronDown·Check를 사용했다.
+- 팀 옵션 집계와 라벨 생성은 `for...of` 대신 `flatMap`·`reduce`·`map` 중심으로 작성했다.
+- `node --run check` 통과: admin lint·typecheck·테스트 508개를 새로 실행했다. 다른 패키지 lint·typecheck 및 web 29개·ui 6개·app-bridge 17개 테스트는 Turbo 캐시를 재사용했다.
+- `node --run build` 통과: admin 빌드를 새로 실행했고 web·Storybook은 캐시를 재사용했다.
+- 매핑 전후·팀 선택·팀 인원·잘못된 team URL·팀 열·미배정·팀장 상태는 테스트로 확인했다. 브라우저에서는 기존 매핑 전 화면만 확인했으며 매핑 후 상태의 스크린 리더·터치 실기기는 미검증이다.
+- 4c 리뷰 대기. 이번 단계는 미커밋이며 push·PR은 수행하지 않았다.

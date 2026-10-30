@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 회원 관리 화면
 
 **입력**: [명세](spec.md), [계획](plan.md), [데이터](data-model.md), [화면 계약](contracts/member-ui.md)
-**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 구현·검증 완료, 사용자 리뷰 대기.
+**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 리뷰·커밋 완료. 4c단계 구현·검증 완료, 사용자 리뷰 대기.
 
 ## 진행 규칙
 
@@ -64,9 +64,9 @@
 
 ## 4c단계 — 팀 표시·필터 (US1, P1)
 
-- [ ] T022 [US1] apps/admin/src/pages/members/ui/member-team-filter.tsx와 member-list.tsx에 매핑 전후 안내·팀 배지·팀장·필터를 추가한다.
-- [ ] T023 [US1] apps/admin/src/pages/members/model/member-list.ts와 member-list.test.ts에 팀 교집합·현재 기수 전체 기준 팀 인원·잘못된 팀 정리를 추가한다.
-- [ ] T024 [US1] apps/admin/src/pages/members/ui/members-page.test.tsx에 팀 미배정·매핑 전후·잘못된 team URL·팀 인원 불변을 검증한다.
+- [x] T022 [US1] apps/admin/src/pages/members/ui/member-team-filter.tsx와 member-list.tsx에 매핑 전후 안내·팀 배지·팀장·필터를 추가한다.
+- [x] T023 [US1] apps/admin/src/pages/members/model/member-list.ts와 member-list.test.ts에 팀 교집합·현재 기수 전체 기준 팀 인원·잘못된 팀 정리를 추가한다.
+- [x] T024 [US1] apps/admin/src/pages/members/ui/members-page.test.tsx에 팀 미배정·매핑 전후·잘못된 team URL·팀 인원 불변을 검증한다.
 
 **독립 검증/중단점**: 팀 조회 UI가 완성된다. 팀 매핑 경로·변경 동작이 없는지 함께 리뷰한다.
 
@@ -181,4 +181,11 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 - 이름 부분 검색·직군 교집합·이름/식별자 정렬·결과 총원·검색 빈 결과를 연결했다.
 - 검색 입력과 직군 선택을 MemberFilters로 분리하고 기존 SEED 기반 FilterSelect를 재사용했다. 검색은 사용자 리뷰에 따라 입력 즉시 URL에 반영하고 비교 시 trim한다.
 - URL replace/history·직접 접근·잘못된 조건·다른 메뉴 이탈 회귀를 검증한다.
-- 이번 단계는 미커밋이며 4c 팀 표시·필터는 시작하지 않는다.
+- 4b는 6ac4a84에 커밋했다. 4c는 이 커밋을 base로 구현한다.
+
+## 4c 진행 기록
+
+- 4b 사용자 승인 후 4c 팀 표시·필터를 진행했다. 팀 매핑 변경·이동 동작은 추가하지 않았다.
+- 매핑 전 안내에서는 팀 열·팀 필터를 숨기고, 매핑 후에는 팀 배지·팀장·미배정 상태와 팀 필터를 표시한다.
+- 팀 인원은 검색·직군 필터 전 현재 기수 전체 활동을 기준으로 계산한다. 잘못된 team URL은 전체 팀으로 표시한다.
+- 이번 단계는 미커밋이며 push·PR은 수행하지 않았다. 다음 단계 5a는 사용자 리뷰 후 진행한다.
