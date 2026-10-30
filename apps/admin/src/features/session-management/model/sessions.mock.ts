@@ -7,8 +7,9 @@ import {
   type BadgeEditInput,
   type TeamDecisionInput,
 } from './attendance-input';
-import type { AttendanceHistoryEntry } from './attendance-view-model';
+import type { AttendanceCodeViewModel, AttendanceHistoryEntry } from './attendance-view-model';
 import { calculateMockAttendanceDelta } from './mocks/attendance-score';
+import { createMockAttendanceCode, issueMockAttendanceCode } from './mocks/attendance-code';
 import { createMockTeamReviews } from './mocks/team-reviews';
 import {
   createMockAttendanceSession,
@@ -60,6 +61,9 @@ export type AttendanceMockOperation =
   | 'badge'
   | 'teamRead'
   | 'teamDecision'
+  | 'codeRead'
+  | 'codeIssue'
+  | 'codeReissue'
   | 'close'
   | 'cancel';
 
@@ -76,6 +80,10 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
         : [],
     ]),
   );
+  const attendanceCodesBySession = new Map(
+    sessions.map((session) => [session.id, createMockAttendanceCode(session)]),
+  );
+  const attendanceCodeRevisions = new Map<string, number>();
 
   const historyBySession = new Map<string, AttendanceHistoryEntry[]>();
   const closedSessions = new Set<string>();
@@ -126,6 +134,42 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       const { session, members } = getContext(id);
       checkFailure('read', id);
       return structuredClone({ session: createMockAttendanceSession(session, members), members });
+    },
+
+    getAttendanceCode(sessionId: string): AttendanceCodeViewModel {
+      getContext(sessionId);
+      checkFailure('codeRead', sessionId);
+      return structuredClone(
+        attendanceCodesBySession.get(sessionId) ?? {
+          state: 'notIssued',
+          code: null,
+          expiresAt: null,
+        },
+      );
+    },
+
+    issueAttendanceCode(sessionId: string): AttendanceCodeViewModel {
+      const { session } = getContext(sessionId);
+      checkFailure('codeIssue', sessionId);
+      const revision = (attendanceCodeRevisions.get(sessionId) ?? 0) + 1;
+      attendanceCodeRevisions.set(sessionId, revision);
+      const code = issueMockAttendanceCode(revision, new Date());
+      attendanceCodesBySession.set(session.id, code);
+      return structuredClone(code);
+    },
+
+    reissueAttendanceCode(sessionId: string): AttendanceCodeViewModel {
+      const { session } = getContext(sessionId);
+      checkFailure('codeReissue', sessionId);
+      const current = attendanceCodesBySession.get(sessionId);
+      if (!current || current.state === 'notIssued') {
+        throw new Error('발급된 출석 코드가 없습니다. 먼저 출석 코드를 발급해 주세요.');
+      }
+      const revision = (attendanceCodeRevisions.get(sessionId) ?? 0) + 1;
+      attendanceCodeRevisions.set(sessionId, revision);
+      const code = issueMockAttendanceCode(revision, new Date());
+      attendanceCodesBySession.set(session.id, code);
+      return structuredClone(code);
     },
 
     getTeamReviews(sessionId: string) {
@@ -323,6 +367,8 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       });
 
       attendanceBySession.set(session.id, createMockSessionMembers(session));
+      attendanceCodesBySession.set(session.id, createMockAttendanceCode(session));
+      attendanceCodeRevisions.set(session.id, 0);
       teamReviewsBySession.set(
         session.id,
         session.type === 'team'
@@ -357,6 +403,8 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       sessions = sessions.filter((session) => session.id !== id);
       attendanceBySession.delete(id);
       teamReviewsBySession.delete(id);
+      attendanceCodesBySession.delete(id);
+      attendanceCodeRevisions.delete(id);
       historyBySession.delete(id);
       closedSessions.delete(id);
       failures = failures.filter((failure) => failure.sessionId !== id);

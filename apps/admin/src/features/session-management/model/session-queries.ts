@@ -4,6 +4,7 @@ import type { CreateSessionInput } from './session';
 import {
   createSession,
   getAttendanceHistory,
+  getAttendanceCode,
   getSessionAttendance,
   getTeamReviews,
   listSessions,
@@ -34,6 +35,13 @@ export const teamReviewsQueryOptions = (sessionId: string) =>
   queryOptions({
     queryKey: ['admin', 'sessions', sessionId, 'team-reviews'],
     queryFn: () => getTeamReviews(sessionId),
+    retry: false,
+  });
+
+export const attendanceCodeQueryOptions = (sessionId: string) =>
+  queryOptions({
+    queryKey: ['admin', 'sessions', sessionId, 'attendance-code'],
+    queryFn: () => getAttendanceCode(sessionId),
     retry: false,
   });
 

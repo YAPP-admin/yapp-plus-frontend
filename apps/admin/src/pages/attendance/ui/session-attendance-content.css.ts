@@ -135,3 +135,15 @@ export const reviewActions = style({
   gap: vars.$dimension.x2,
 });
 export const photoLink = style({ color: vars.$color.fg.brand, fontWeight: vars.$fontWeight.bold });
+export const codeContent = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: vars.$dimension.x3,
+  marginTop: vars.$dimension.x3,
+});
+export const codeValue = style({
+  fontSize: vars.$fontSize.t7,
+  letterSpacing: '0.16em',
+  fontVariantNumeric: 'tabular-nums',
+});

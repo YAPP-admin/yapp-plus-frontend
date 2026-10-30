@@ -5,12 +5,15 @@ import { expect, it, vi } from 'vitest';
 import {
   cancelAttendance,
   closeAttendance,
+  getAttendanceCode,
   getAttendanceHistory,
   getSessionAttendance,
   getTeamReviews,
   updateMemberAttendance,
   updateMemberBadge,
   updateTeamPhotoReview,
+  issueAttendanceCode,
+  reissueAttendanceCode,
 } from '~/features/session-management';
 import { createSessionStore } from '~/features/session-management/testing';
 import { SessionAttendanceContent } from './session-attendance-content';
@@ -19,12 +22,15 @@ vi.mock('@tanstack/react-router', () => ({ useHydrated: () => true }));
 vi.mock('~/features/session-management', () => ({
   cancelAttendance: vi.fn<typeof cancelAttendance>(),
   closeAttendance: vi.fn<typeof closeAttendance>(),
+  getAttendanceCode: vi.fn<typeof getAttendanceCode>(),
   getAttendanceHistory: vi.fn<typeof getAttendanceHistory>(),
   getSessionAttendance: vi.fn<typeof getSessionAttendance>(),
   getTeamReviews: vi.fn<typeof getTeamReviews>(),
   updateMemberAttendance: vi.fn<typeof updateMemberAttendance>(),
   updateMemberBadge: vi.fn<typeof updateMemberBadge>(),
   updateTeamPhotoReview: vi.fn<typeof updateTeamPhotoReview>(),
+  issueAttendanceCode: vi.fn<typeof issueAttendanceCode>(),
+  reissueAttendanceCode: vi.fn<typeof reissueAttendanceCode>(),
   sessionAttendanceQueryOptions: (sessionId: string) => ({
     queryKey: ['admin', 'sessions', sessionId, 'attendance'],
     queryFn: () => getSessionAttendance(sessionId),
@@ -40,15 +46,27 @@ vi.mock('~/features/session-management', () => ({
     queryFn: () => getTeamReviews(sessionId),
     retry: false,
   }),
+  attendanceCodeQueryOptions: (sessionId: string) => ({
+    queryKey: ['admin', 'sessions', sessionId, 'attendance-code'],
+    queryFn: () => getAttendanceCode(sessionId),
+    retry: false,
+  }),
 }));
 
 void cancelAttendance;
 void closeAttendance;
 void updateTeamPhotoReview;
+void issueAttendanceCode;
+void reissueAttendanceCode;
 
 it('열린 오프라인 세션에서 출석 마감 요청을 보낸다', async () => {
   const data = createSessionStore().getSessionAttendance('demo-offline-session');
   vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(getAttendanceCode).mockResolvedValue({
+    state: 'notIssued',
+    code: null,
+    expiresAt: null,
+  });
   vi.mocked(closeAttendance).mockResolvedValue(data);
   render(
     <QueryClientProvider client={new QueryClient()}>
@@ -58,6 +76,36 @@ it('열린 오프라인 세션에서 출석 마감 요청을 보낸다', async (
   await screen.findByRole('table', { name: /출석 체크/ });
   await userEvent.click(screen.getByRole('button', { name: '출석 마감' }));
   expect(closeAttendance).toHaveBeenCalledWith(data.session.id);
+});
+
+it('출석 코드를 발급하고 재발급하면 코드 조회를 갱신한다', async () => {
+  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(getAttendanceCode)
+    .mockResolvedValueOnce({ state: 'notIssued', code: null, expiresAt: null })
+    .mockResolvedValueOnce({
+      state: 'active',
+      code: '101739',
+      expiresAt: '2026-11-01T15:10:00+09:00',
+    });
+  vi.mocked(issueAttendanceCode).mockResolvedValue({
+    state: 'active',
+    code: '101739',
+    expiresAt: '2026-11-01T15:10:00+09:00',
+  });
+  vi.mocked(reissueAttendanceCode).mockResolvedValue({
+    state: 'active',
+    code: '103478',
+    expiresAt: '2026-11-01T15:20:00+09:00',
+  });
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <SessionAttendanceContent sessionId={data.session.id} part="all" />
+    </QueryClientProvider>,
+  );
+  await screen.findByRole('region', { name: '출석 코드' });
+  await userEvent.click(screen.getByRole('button', { name: '출석 코드 발급' }));
+  expect(issueAttendanceCode).toHaveBeenCalledWith(data.session.id);
 });
 
 it('직군을 바꿔도 세션 전체 집계는 유지하고 사전 보고와 실제 출결을 별도로 표시한다', async () => {

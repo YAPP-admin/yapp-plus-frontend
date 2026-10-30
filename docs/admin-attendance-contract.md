@@ -9,8 +9,13 @@
 - 명찰 확인 수정: `PATCH /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}/badge`
 - 출석 마감: `POST /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/close`
 - 마감 취소: `POST /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/close/cancel`
+- 출석 코드 조회: `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance-code`
+- 출석 코드 최초 발급: `POST /api/admin/generations/{generationId}/sessions/{sessionId}/attendance-code`
+- 출석 코드 재발급: `POST /api/admin/generations/{generationId}/sessions/{sessionId}/attendance-code/reissue`
 
 생성 API의 출석 응답에는 회원별 `status`, 최근 사전 보고 요약, 점수 변화, 명찰 확인 여부가 포함됩니다. 세션 생성 응답은 식별자만 반환하므로, 세션 생성 직후 출석 조회에서 자동 생성된 출석을 확인합니다.
+
+출석 코드 응답은 `status`, `code`, `revision`, `issuedAt`, `issuedByStaffId`를 반환합니다. 현재 응답에는 만료 시각이 없으므로 화면 ViewModel의 `expiresAt`은 mock에서만 표시하는 임시 값이며, 실제 API 연동 시 백엔드의 만료 정책 확인 없이 만료를 추론하지 않습니다.
 
 ## 화면에서 사용하는 독립 ViewModel
 
