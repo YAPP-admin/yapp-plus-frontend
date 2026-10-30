@@ -19,15 +19,26 @@ export const secondary = style({
   fontSize: vars.$fontSize.t3,
 });
 export const inlineControl = style({ display: 'inline-flex', alignItems: 'center' });
-export const badgeButton = style({
-  minHeight: '2rem',
-  paddingInline: vars.$dimension.x2,
+export const historyPanel = style({
+  display: 'grid',
+  gap: vars.$dimension.x3,
+  padding: vars.$dimension.x5,
   border: `1px solid ${vars.$color.stroke.neutralMuted}`,
-  borderRadius: vars.$radius.r2,
-  background: 'transparent',
-  color: vars.$color.fg.neutral,
-  font: 'inherit',
-  cursor: 'pointer',
+  borderRadius: vars.$radius.r3,
+  background: vars.$color.bg.neutralWeak,
+});
+export const historyHeader = style({
+  display: 'flex',
+  justifyContent: 'space-between',
+  alignItems: 'center',
+  gap: vars.$dimension.x3,
+});
+export const historyList = style({
+  display: 'grid',
+  gap: vars.$dimension.x3,
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
 });
 export const visuallyHidden = style({
   position: 'absolute',
