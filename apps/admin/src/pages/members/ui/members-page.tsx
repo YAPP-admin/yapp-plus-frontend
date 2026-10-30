@@ -1,10 +1,10 @@
 import type { Member } from '~/features/member-management';
 import { MemberList } from './member-list';
 import { PageHeader } from '~/shared/ui/page-header';
-import { FilterSelect } from '~/shared/ui/filter-select';
+import { MemberFilters } from './member-filters';
+import { filterMembers } from '../model/member-list';
 import { Link } from '@tanstack/react-router';
-import { memberPartSchema, partLabels, type MemberSearch } from '../model/member-search';
-import { ActionButton } from '@yapp-plus/ui';
+import { type MemberSearch } from '../model/member-search';
 import { PendingMembers } from './pending-members';
 import * as styles from './members-page.css';
 
@@ -35,43 +35,15 @@ export function MembersPage({
           명단 업로드
         </Link>
       </PageHeader>
-      <div className={styles.filters}>
-        <form
-          key={JSON.stringify(search)}
-          className={styles.searchForm}
-          onSubmit={(event) => {
-            event.preventDefault();
-
-            const query = new FormData(event.currentTarget).get('q');
-            if (typeof query === 'string') {
-              onSearch(query);
-            }
-          }}
-        >
-          <label className={styles.field}>
-            이름 검색
-            <input
-              className={styles.control}
-              type="search"
-              name="q"
-              autoComplete="off"
-              defaultValue={search.q}
-            />
-          </label>
-          <ActionButton className={styles.searchButton} type="submit">
-            검색
-          </ActionButton>
-        </form>
-        <FilterSelect
-          label="직군"
-          value={search.part}
-          options={memberPartSchema.options}
-          labels={partLabels}
-          onChange={(part) => onFilterChange({ part })}
-        />
-      </div>
+      <MemberFilters search={search} onSearch={onSearch} onFilterChange={onFilterChange} />
       {members !== undefined && currentGeneration !== undefined ? (
-        <MemberList members={members} currentGeneration={currentGeneration} />
+        <MemberList
+          members={filterMembers(members, currentGeneration, search)}
+          currentGeneration={currentGeneration}
+          hasMembers={members.some((member) =>
+            member.activities.some((activity) => activity.generation === currentGeneration),
+          )}
+        />
       ) : (
         <p className={styles.placeholder}>회원 목록을 준비 중입니다.</p>
       )}

@@ -1,5 +1,5 @@
 import type * as SeedDesign from '@seed-design/react';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createBrowserHistory, createMemoryHistory, RouterProvider } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
@@ -411,6 +411,43 @@ describe('출석 화면 탐색', () => {
 });
 
 describe('회원 목록 URL 상태', () => {
+  it('직접 접근과 뒤로가기에서 검색·직군 결과 및 총원을 복원한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members?q=회원&part=web');
+    const list = within(await screen.findByRole('region', { name: '회원 목록' }));
+    expect(await screen.findByText('예시 회원 5')).toBeVisible();
+    expect(list.getByText('1', { selector: 'strong' })).toBeVisible();
+    expect(list.getAllByRole('rowheader')).toHaveLength(1);
+    await user.click(screen.getByRole('combobox', { name: '직군' }));
+    await user.click(await screen.findByRole('option', { name: 'Android' }));
+    expect(await screen.findByText('예시 회원 3')).toBeVisible();
+    act(() => router.history.back());
+    expect(await screen.findByText('예시 회원 5')).toBeVisible();
+    expect(screen.getByRole('searchbox')).toHaveValue('회원');
+  });
+
+  it('한글 조합 입력을 유지하면서 결과를 갱신하고 Enter는 제출하지 않는다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members');
+    const input = await screen.findByRole('searchbox');
+    await user.click(input);
+    fireEvent.compositionStart(input);
+    fireEvent.change(input, { target: { value: 'ㅎ' } });
+    await waitFor(() => expect(router.state.location.search).toEqual({ q: 'ㅎ' }));
+    fireEvent.change(input, { target: { value: '회원' } });
+    fireEvent.compositionEnd(input);
+    await waitFor(() => expect(input).toHaveValue('회원'));
+    expect(screen.getByRole('searchbox')).toBe(input);
+    expect(input).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(router.state.location.search).toEqual({ q: '회원' });
+    expect(screen.queryByRole('button', { name: '검색' })).not.toBeInTheDocument();
+    await user.clear(input);
+    await user.type(input, '없는이름');
+    expect(await screen.findByRole('heading', { name: '검색 결과가 없어요' })).toBeVisible();
+    expect(screen.getByText('0', { selector: 'strong' })).toBeVisible();
+  });
+
   it('복합 쿼리를 복원하고 탭과 필터 변경 시 다른 조건을 보존한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute(
@@ -463,7 +500,7 @@ describe('회원 목록 URL 상태', () => {
     },
   );
 
-  it('입력만으로는 URL을 바꾸지 않고 Enter 제출 시 q만 replace한다', async () => {
+  it('입력 즉시 q만 replace하며 포커스와 history 길이를 유지한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members?part=web');
     const input = await screen.findByRole('searchbox');
@@ -471,53 +508,47 @@ describe('회원 목록 URL 상태', () => {
 
     await user.type(input, '김민수');
 
-    expect(router.state.location.search).toEqual({ part: 'web' });
-
-    await user.keyboard('{Enter}');
+    expect(input).toHaveFocus();
 
     await waitFor(() => expect(router.state.location.search).toEqual({ part: 'web', q: '김민수' }));
     expect(router.history.length).toBe(length);
   });
 
-  it('검색 버튼으로 제출하고 빈 검색어 제출 시 q만 생략한다', async () => {
+  it('입력과 지우기를 즉시 반영하고 빈 검색어는 q만 생략한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members?part=web&q=old');
 
     await user.clear(await screen.findByRole('searchbox'));
     await user.type(screen.getByRole('searchbox'), 'Kim');
-    await user.click(screen.getByRole('button', { name: '검색' }));
     await waitFor(() => expect(router.state.location.search).toEqual({ part: 'web', q: 'Kim' }));
 
     await user.clear(screen.getByRole('searchbox'));
-    await user.click(screen.getByRole('button', { name: '검색' }));
     await waitFor(() => expect(router.state.location.search).toEqual({ part: 'web' }));
   });
 
-  it('필터 변경과 history 이동에서는 미제출 입력 대신 URL 검색어를 복원한다', async () => {
+  it('직군 변경과 history 이동에서 실시간 검색어와 포커스를 유지한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members?q=Kim');
-
-    await user.type(await screen.findByRole('searchbox'), '미제출');
-    await user.click(screen.getByRole('combobox', { name: '직군' }));
+    const input = await screen.findByRole('searchbox');
+    await user.type(input, '미제출');
+    const select = screen.getByRole('combobox', { name: '직군' });
+    await user.click(select);
     await user.click(await screen.findByRole('option', { name: 'Web' }));
-
     await waitFor(() => expect(router.state.location.search.part).toBe('web'));
-    expect(screen.getByRole('searchbox')).toHaveValue('Kim');
+    expect(screen.getByRole('searchbox')).toBe(input);
+    expect(input).toHaveValue('Kim미제출');
+    await waitFor(() => expect(select).toHaveFocus());
 
-    await user.type(screen.getByRole('searchbox'), '미제출');
     act(() => router.history.back());
+    await waitFor(() => expect(router.state.location.search).toEqual({ q: 'Kim미제출' }));
+    expect(input).toHaveValue('Kim미제출');
 
-    await waitFor(() => expect(router.state.location.search).toEqual({ q: 'Kim' }));
-    expect(screen.getByRole('searchbox')).toHaveValue('Kim');
-
-    await user.type(screen.getByRole('searchbox'), '미제출');
     act(() => router.history.forward());
-
     await waitFor(() => expect(router.state.location.search.part).toBe('web'));
-    expect(screen.getByRole('searchbox')).toHaveValue('Kim');
+    expect(input).toHaveValue('Kim미제출');
   });
 
-  it('다른 검색 URL과 메뉴로 이동하면 미제출 입력을 버린다', async () => {
+  it('다른 검색 URL과 메뉴로 이동하면 해당 URL 검색어를 표시한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members?q=old');
 

@@ -127,3 +127,45 @@
 - Chrome 데스크톱 및 375px 화면을 확인했다. 모바일 문서 너비 375px, 표 스크롤 영역 327px로 페이지 넘침이 없고 키보드 오른쪽 방향키로 표 내부 scrollLeft가 40px 이동했다. 접근성 트리에서 표·행·버튼 이름을 확인했다.
 - 화면 근거: `.context/member-4a-desktop.jpg`, `.context/member-4a-mobile.jpg`. 실제 스크린 리더 낭독과 터치 실기기 검증은 미실행이다.
 - 4a 리뷰 대기. 이번 단계 변경은 미커밋이며 push·PR은 수행하지 않았다. 검색·직군 필터·정렬은 4b, 팀 표시는 4c에서 진행한다.
+
+## 4b단계 — 검색·직군·URL
+
+- 사용자 승인으로 `brussels-v2/member-search`를 생성했다. 실제 base는 `brussels-v2/member-list`(9d00c02)다.
+- 현재 기수 이름 부분 검색과 직군 교집합, 이름/식별자 정렬, 결과 총원, 검색 빈 결과를 연결했다. 입력 명단은 변경하지 않는다.
+- MemberFilters가 검색 제출과 기존 SEED 기반 직군 선택을 담당한다. 입력 중에는 URL을 변경하지 않고 제출 시 trim한다. 조합 상태·isComposing·229 키 코드에서는 Enter 기본 제출을 차단한다.
+- 기존 검색 replace·직군 history·잘못된 URL·이탈 테스트에 실제 결과 복원 및 한글 조합 회귀 검증을 추가했다.
+- `node --run check` 통과: admin lint·typecheck·테스트 503개 새 실행, 다른 패키지 lint·typecheck 및 web 29개·ui 6개·app-bridge 17개 테스트는 Turbo 캐시 재사용.
+- `node --run build` 통과: admin 새 실행, web·Storybook 캐시 재사용.
+- Chrome에서 한국어 검색어 입력·Enter·trim·검색 빈 결과, 직군 변경과 뒤로가기, 새로고침 복원을 확인했다. 화면 근거는 `.context/member-4b-result.jpg`, `.context/member-4b-empty.jpg`다.
+- OS 한글 입력기의 실제 조합 과정·스크린 리더 낭독·터치 실기기는 미검증이다. 조합 이벤트는 자동 테스트로 확인했다.
+- 4b 리뷰 대기. 이번 단계 변경은 미커밋이며 push·PR은 수행하지 않았다. 4c는 미착수다.
+
+## 4b 리뷰 수정 — SEED 검색 입력
+
+- 검색 input을 SEED Field·TextField로 교체하고 직접 지정한 높이·테두리·배경·포커스 스타일을 제거했다. 검색 버튼도 large 크기를 사용한다.
+- 공식 React Text Field Input·Select 문서를 확인했고 기본 large 크기를 맞췄다. Chrome에서 input과 select 높이가 모두 52px임을 측정했다.
+- `node --run check` 통과: admin lint·typecheck·503개 테스트 새 실행, 다른 패키지는 캐시 재사용. `node --run build`는 admin 새 실행, web·Storybook 캐시 재사용으로 통과했다.
+- 화면 근거: `.context/member-seed-input.jpg`. 실제 스크린 리더·터치 기기 검증은 미실행이다. 미커밋 상태다.
+
+## 4b 리뷰 수정 — 검색어 로컬 상태
+
+- MemberFilters에서 검색어를 useState로 관리하고 SEED TextField의 value·onValueChange로 연결했다. FormData를 제거하고 제출 시 로컬 검색어를 trim한다.
+- 기존 URL 조건 key로 입력 초안을 초기화하는 방식과 한글 조합 Enter 차단·설명 주석은 유지했다.
+- `node --run check` 통과: admin lint·typecheck·503개 테스트 새 실행, 다른 패키지는 캐시 재사용. `node --run build`는 admin 새 실행, web·Storybook 캐시 재사용으로 통과했다.
+- 검색 제출·IME 이벤트·조건 변경과 history 복원은 기존 회귀 테스트로 확인했다. 이번 수정에서 브라우저·실제 IME·스크린 리더·터치 실기기는 재검증하지 않았다.
+
+## 4b 리뷰 수정 — URL 검색어만 동기화
+
+- 사용자 요청에 따라 MemberFilters의 JSON.stringify(search) key를 제거했다. URL q 변경만 감지해 입력 상태를 맞추며 직군 변경·같은 q의 history 이동은 미제출 초안을 보존한다.
+- 직군 변경 시 동일 input 노드와 선택 컨트롤 포커스를 유지하는 회귀 테스트로 기존 초안 초기화 기대를 변경했다. 다른 q로 이동할 때 입력 복원 검증은 유지했다.
+- `node --run check` 통과: admin lint·typecheck·503개 테스트 새 실행, 다른 패키지는 캐시 재사용. `node --run build`는 admin 새 실행, web·Storybook 캐시 재사용으로 통과했다.
+- 이번 수정은 자동 테스트로 검증했으며 브라우저·실제 IME·스크린 리더·터치 실기기는 재검증하지 않았다. 미커밋 상태다.
+
+## 4b 리뷰 수정 — 실시간 검색
+
+- 사용자 선택에 따라 제출형 검색을 실시간 검색으로 변경했다. URL q를 SEED TextField 값으로 직접 사용하고 입력마다 replace로 갱신한다.
+- 검색 버튼·폼·FormData·로컬 검색어 상태·previousQuery·조합 ref·Enter 차단을 제거했다. 입력 원문은 유지하고 목록 비교 시에만 trim한다.
+- 한글 조합 이벤트, 입력 포커스·노드 유지, history 길이 불변, 지우기, 직군 변경·URL 복원 테스트를 실시간 동작에 맞게 갱신했다.
+- `node --run check` 통과: admin lint·typecheck·503개 테스트 새 실행, 다른 패키지는 Turbo 캐시 재사용. `node --run build`는 admin 새 실행, web·Storybook 캐시 재사용으로 통과했다.
+- Chrome에서 한국어 문자열을 순차 입력해 Enter 없이 결과 1명·URL 갱신·검색 입력 포커스 유지를 확인했다. 화면 근거: `.context/member-live-search.jpg`.
+- 실제 OS 한글 입력기 조합·스크린 리더·터치 실기기는 미검증이다. 이번 변경은 미커밋 상태다.

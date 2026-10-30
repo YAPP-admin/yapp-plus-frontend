@@ -25,9 +25,11 @@ function formatJoinedDate(value: string) {
 export function MemberList({
   members,
   currentGeneration,
+  hasMembers = false,
 }: {
   members: readonly Member[];
   currentGeneration: number;
+  hasMembers?: boolean;
 }) {
   const rows = members.flatMap((member) => {
     const activity = member.activities.find((item) => item.generation === currentGeneration);
@@ -49,8 +51,12 @@ export function MemberList({
               </Box>
             }
             titleAs="h2"
-            title="등록된 회원이 없어요"
-            description="명단을 업로드하면 이곳에서 회원 정보를 확인할 수 있어요."
+            title={hasMembers ? '검색 결과가 없어요' : '등록된 회원이 없어요'}
+            description={
+              hasMembers
+                ? '이름이나 직군 조건을 변경해 주세요.'
+                : '명단을 업로드하면 이곳에서 회원 정보를 확인할 수 있어요.'
+            }
           />
         </Box>
       ) : (
