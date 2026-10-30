@@ -180,4 +180,16 @@
 - `node --run check` 통과: admin lint·typecheck·테스트 508개를 새로 실행했다. 다른 패키지 lint·typecheck 및 web 29개·ui 6개·app-bridge 17개 테스트는 Turbo 캐시를 재사용했다.
 - `node --run build` 통과: admin 빌드를 새로 실행했고 web·Storybook은 캐시를 재사용했다.
 - 매핑 전후·팀 선택·팀 인원·잘못된 team URL·팀 열·미배정·팀장 상태는 테스트로 확인했다. 브라우저에서는 기존 매핑 전 화면만 확인했으며 매핑 후 상태의 스크린 리더·터치 실기기는 미검증이다.
-- 4c 리뷰 대기. 이번 단계는 미커밋이며 push·PR은 수행하지 않았다.
+- 4c는 사용자 승인으로 `330a6b1`에 커밋했고 push·PR은 수행하지 않았다.
+
+## 5a단계 — 수정 폼과 정정 제한
+
+- 포맷: `pnpm exec oxfmt`로 5개 신규 파일과 수정 파일을 실행했다.
+- `pnpm --filter @yapp-plus/admin lint` 통과.
+- `pnpm --filter @yapp-plus/admin typecheck` 통과.
+- `pnpm --filter @yapp-plus/admin test` 신규 실행: 47개 파일·519개 테스트 통과.
+- 모델 테스트에서 필수 입력 오류, 팀·출석 연결 제한, 같은 회원 기수 중복, 제한 없는 정정, 원본 불변을 검증했다.
+- 폼 테스트에서 SEED 입력·직군/권한 선택·기존 변경 이력·빈 이력·오류 안내·Enter 제출 차단·준비 중 버튼 비활성화를 검증했다.
+- 루트 `node --run check` 신규 실행 통과: admin lint·typecheck·test는 캐시 미스에서 실행했고, 나머지 패키지는 lint 6개·typecheck 6개·test 3개 캐시를 재사용했다.
+- 루트 `node --run build` 신규 실행 통과: admin build는 캐시 미스에서 실행했고, web·Storybook build는 캐시를 재사용했다. 기존 청크 크기 경고가 남아 있다.
+- 브라우저·Figma 대조·스크린 리더·터치 실기기 검증은 5b 모달 연결 후 실행한다.
