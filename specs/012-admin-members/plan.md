@@ -1,7 +1,7 @@
 # 구현 계획: 관리자 회원 관리 화면
 
 **브랜치**: `brussels-v2/member-management-fixtures` | **작성일**: 2026-10-29
-**명세**: [spec.md](spec.md) | **상태**: 1·2a·2b단계 리뷰 완료 · 3단계 완료·리뷰 대기
+**명세**: [spec.md](spec.md) | **상태**: 1~5b단계 리뷰·커밋 완료 · 6a CSV 전용 전환·검증 완료 · 사용자 리뷰 대기
 
 ## 요약과 기술 맥락
 
@@ -12,7 +12,7 @@
 - TypeScript 6·React 19·TanStack Start/Router/Form·Zod 4·SEED·vanilla-extract를 유지한다.
 - Node.js 24.20.0·pnpm 12.3.4를 사용한다. 테스트는 Vitest·Testing Library와 실제 브라우저다.
 - TanStack Query는 후속 SDK 연결에서 사용한다. 이번 fixture 조회에는 네트워크 수명을 흉내 내지 않는다.
-- SheetJS CE 0.20.3 공식 tarball을 6a에서 catalog·manifest·lockfile에 고정하고 지연 로딩한다.
+- Papa Parse 5.7.0과 `@types/papaparse`를 6a에서 catalog·manifest·lockfile에 고정하고 지연 로딩한다.
 - 저장은 없으며 폼 초안·파일·검증 결과·중복 선택만 화면 수명 동안 메모리에 둔다.
 - 관리자 데스크톱·375px을 대상으로 하며 10MB 파일 제한과 전체 결과 스크롤을 적용한다.
 - 새 성능 SLA·가상화·공용 패키지·배포 정책은 추가하지 않는다.

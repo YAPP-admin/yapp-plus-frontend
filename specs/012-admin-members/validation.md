@@ -204,3 +204,16 @@
 - 루트 `node --run check` 신규 실행 통과: admin lint·typecheck·test는 캐시 미스에서 실행했고, 나머지 패키지는 lint 6개·typecheck 6개·test 3개 캐시를 재사용했다.
 - 루트 `node --run build` 신규 실행 통과: admin build는 캐시 미스에서 실행했고, web·Storybook build는 캐시를 재사용했다. 기존 청크 크기 경고가 남아 있다.
 - 브라우저·Figma 대조·스크린 리더·터치 실기기 검증은 사용자 리뷰 후 별도 실행한다.
+- `b5beecf`에 커밋했으며 push·PR은 수행하지 않았다.
+
+## 6a단계 — 파일 파서·양식
+
+- `pnpm-workspace.yaml` catalog와 `apps/admin/package.json`에 Papa Parse 5.7.0과 `@types/papaparse`를 추가하고 `pnpm-lock.yaml`을 갱신했다.
+- `pnpm install --lockfile-only` 통과. lockfile의 integrity와 저장소 공급망 정책을 확인했다. 기존 deprecated subdependency·peer dependency 경고는 남아 있다.
+- `import-file.ts`는 `.csv`, 10MB 초과, 빈 파일, 손상 CSV를 파일 경계에서 구분한다. Papa Parse는 지연 로딩하고 인용부호·줄바꿈·빈 행을 보존하며, 지정 헤더와 원본 행 번호를 확인한다.
+- CSV는 `File.text()`로 UTF-8을 읽고 빈 행을 6b 행 검증에 전달한다. 행 끝의 개행만 별도 레코드로 만들지 않도록 정리한다.
+- `import-template.ts`는 UTF-8 BOM과 `이름,전화번호,기수,직군,권한` 헤더만 포함한 CSV 양식을 제공한다. 실제 저장·중복 판정·행별 오류 분류는 구현하지 않았다.
+- 대상 테스트 실행: `import-file.test.ts` 8개 통과. admin 전체 테스트는 49개 파일·531개 테스트를 새로 실행했다.
+- `node --run check` 통과: 포맷은 513개 파일 새 실행, admin lint·typecheck·test는 새 실행, 나머지 lint 6개·typecheck 6개·test 3개는 Turbo 캐시 재사용.
+- `node --run build` 통과: admin build는 새 실행, web·Storybook build는 Turbo 캐시 재사용. 기존 청크 크기 경고는 남아 있다.
+- 브라우저에서 실제 파일 선택·드롭·양식 다운로드·스크린 리더·터치 실기기 검증은 7a 단계에서 진행한다. 6a 구현은 현재 작업 트리에 있고 별도 커밋은 아직 만들지 않았다.

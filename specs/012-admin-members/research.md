@@ -34,9 +34,9 @@
 | 기존 Faker/MSW 재사용은 후속 | 생성 계약이 있어야 SDK/handler가 생성됨. 현재 이번 핵심 API는 없음 | 개발 화면에서 가입 심사 DTO를 전체 회원으로 가장 |
 | 저장 버튼 비활성             | 실제 결과가 유지되지 않는데 성공처럼 보이지 않게 함                | 로컬 저장 성공·가짜 완료 알림                    |
 | 순수 props와 화면 상태       | API 전환 시 공급부만 바꾸고 불필요한 네트워크 상태를 만들지 않음   | fixture용 Query·가짜 타이머                      |
-| SheetJS CE 0.20.3            | 실제 XLSX·XLS·CSV를 한 파서로 처리. 기존 관련 의존성 없음          | CSV만 지원·수동 XLS 파싱                         |
+| Papa Parse 5.7.0             | CSV 인용부호·줄바꿈·빈 행을 브라우저에서 처리                      | CSV 수동 분할·불필요한 XLSX/XLS 지원             |
 | 기존 셸 유지                 | 회원 하위 탐색 외 다른 메뉴 변경은 범위 밖                         | Figma 전체 사이드바 재작성                       |
 
-SheetJS 버전·공식 tarball은 계획 당시 [공식 설치 문서](https://docs.sheetjs.com/docs/getting-started/installation/frameworks/)에서 확인했다.
-6a에서 버전 고정·pnpm 호환·실제 XLS 입력을 검증하며 공급망 보호는 끄지 않는다.
+Papa Parse 버전·브라우저 파일 파싱 기능은 [공식 문서](https://www.papaparse.com/docs)에서 확인했다.
+6a에서 버전 고정·pnpm 호환·인용부호와 줄바꿈이 있는 실제 CSV 입력을 검증하며 공급망 보호는 끄지 않는다.
 사용자의 전화번호·기수·비활동·덮어쓰기 선택은 spec.md가 기준이다. 임의로 새로운 운영 정책을 확정하지 않는다.
