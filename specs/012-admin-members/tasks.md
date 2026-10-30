@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 회원 관리 화면
 
 **입력**: [명세](spec.md), [계획](plan.md), [데이터](data-model.md), [화면 계약](contracts/member-ui.md)
-**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 리뷰·커밋 완료. 4c단계 리뷰·커밋 완료. 5a단계 구현·검증 완료, 사용자 리뷰 대기.
+**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 리뷰·커밋 완료. 4c단계 리뷰·커밋 완료. 5a단계 리뷰·커밋 완료. 5b단계 구현·검증 완료, 사용자 리뷰 대기.
 
 ## 진행 규칙
 
@@ -80,8 +80,8 @@
 
 ## 5b단계 — 수정 모달 연결 (US2, P2)
 
-- [ ] T028 [US2] apps/admin/src/pages/members/ui/member-edit-dialog.tsx와 members-page.tsx에 overlay.open·더보기·초안 폐기·목록 조건 변경 시 닫기를 연결한다.
-- [ ] T029 [US2] apps/admin/src/pages/members/ui/member-edit-dialog.test.tsx에 초기값·취소·재진입·URL 조건 변경·포커스 복귀를 검증한다.
+- [x] T028 [US2] apps/admin/src/pages/members/ui/member-edit-dialog.tsx와 members-page.tsx에 클릭 기반 overlay.open·더보기·초안 폐기를 연결한다.
+- [x] T029 [US2] apps/admin/src/pages/members/ui/member-edit-dialog.test.tsx에 초기값·취소·재진입·포커스 복귀를 검증한다.
 
 **독립 검증/중단점**: 조회→수정→취소가 완성되고 명단·이력이 바뀌지 않는다. 키보드와 화면을 리뷰받는다.
 
@@ -196,4 +196,12 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 - `member-form.ts`에서 이름·기수·직군·권한의 입력 계약과 활동 조회를 정의했다. 기수 변경은 팀 연결·출석 기록·같은 회원의 중복 기수 활동이 있으면 제한한다.
 - `MemberEditForm`은 TanStack Form과 SEED Field·TextField·FilterSelect로 초안을 원본과 분리한다. 변경 이력과 준비 중 안내를 표시하고 저장·비활동 처리는 비활성 상태로 둔다.
 - Enter 제출은 `preventDefault`만 수행하며 저장 요청이나 토스트는 호출하지 않는다. 5b의 `overlay.open`·더보기 연결은 시작하지 않는다.
+- 이번 단계는 미커밋이며 push·PR은 수행하지 않았다. 사용자 리뷰 후 다음 단계 진행 여부를 확인한다.
+
+## 5b 진행 기록
+
+- 5a를 사용자 승인으로 `aa19898`에 커밋한 뒤 5b를 진행했다. 실제 작업 base는 `brussels-v2/member-search`(aa19898)다.
+- 회원 행의 더보기 버튼에서 `overlay.open`으로 수정 모달을 연다. 모달은 SEED `ContentDialog`와 `MemberEditForm`을 재사용하며 취소·닫기 시 초안을 폐기한다.
+- 모달은 회원 행의 더보기 클릭으로만 열고, 취소·닫기 시 컨트롤러의 `unmount`로 제거한다. 페이지 경계를 넘는 경우에는 기존 `AdminOverlayProvider`의 페이지 수명 정리를 따른다.
+- 저장·비활동 처리는 계속 준비 중 비활성 상태이며 실제 mutation·토스트·팀 매핑 동작은 추가하지 않는다.
 - 이번 단계는 미커밋이며 push·PR은 수행하지 않았다. 사용자 리뷰 후 다음 단계 진행 여부를 확인한다.

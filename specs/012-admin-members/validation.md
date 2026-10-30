@@ -193,3 +193,14 @@
 - 루트 `node --run check` 신규 실행 통과: admin lint·typecheck·test는 캐시 미스에서 실행했고, 나머지 패키지는 lint 6개·typecheck 6개·test 3개 캐시를 재사용했다.
 - 루트 `node --run build` 신규 실행 통과: admin build는 캐시 미스에서 실행했고, web·Storybook build는 캐시를 재사용했다. 기존 청크 크기 경고가 남아 있다.
 - 브라우저·Figma 대조·스크린 리더·터치 실기기 검증은 5b 모달 연결 후 실행한다.
+
+## 5b단계 — 수정 모달 연결
+
+- 포맷: `pnpm exec oxfmt`로 모달·목록·페이지와 테스트 파일을 실행했다.
+- Admin lint·typecheck 통과.
+- 대상 테스트 신규 실행: 회원 관련 48개 파일·523개 테스트 통과.
+- 모달 테스트에서 기본값, 취소, 닫기, 재진입 시 초안 폐기, 포커스 복귀, 준비 중 버튼 비활성화를 검증했다.
+- 회원 목록 테스트에서 더보기 버튼이 현재 활동 식별자를 전달하는지 검증했다.
+- 루트 `node --run check` 신규 실행 통과: admin lint·typecheck·test는 캐시 미스에서 실행했고, 나머지 패키지는 lint 6개·typecheck 6개·test 3개 캐시를 재사용했다.
+- 루트 `node --run build` 신규 실행 통과: admin build는 캐시 미스에서 실행했고, web·Storybook build는 캐시를 재사용했다. 기존 청크 크기 경고가 남아 있다.
+- 브라우저·Figma 대조·스크린 리더·터치 실기기 검증은 사용자 리뷰 후 별도 실행한다.

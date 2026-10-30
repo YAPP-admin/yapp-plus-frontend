@@ -39,6 +39,14 @@ it('현재 기수의 회원만 표에 표시하고 행 제목·열 제목을 연
   expect(last.queryByText('0점')).not.toBeInTheDocument();
 });
 
+it('회원 행 더보기는 현재 회원의 활동 식별자를 수정 콜백에 전달한다', async () => {
+  const user = userEvent.setup();
+  const onEdit = vi.fn<(member: (typeof fixture.members)[number], activityId: string) => void>();
+  render(<MemberList members={fixture.members} currentGeneration={33} onEdit={onEdit} />);
+  await user.click(screen.getByRole('button', { name: '예시 회원 1 더보기' }));
+  expect(onEdit).toHaveBeenCalledExactlyOnceWith(fixture.members[0], 'preview-activity-33-1');
+});
+
 it('긴 이름을 생략하지 않고 과거 활동과 현재 기수 점수를 섞지 않는다', () => {
   const name = '아주 긴 이름을 가진 예시 회원입니다';
   const member = memberSchema.parse({ ...fixture.members[0], name });
