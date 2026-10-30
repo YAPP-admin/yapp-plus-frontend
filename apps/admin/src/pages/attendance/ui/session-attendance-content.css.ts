@@ -18,6 +18,28 @@ export const secondary = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t3,
 });
+export const inlineControl = style({ display: 'inline-flex', alignItems: 'center' });
+export const badgeButton = style({
+  minHeight: '2rem',
+  paddingInline: vars.$dimension.x2,
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r2,
+  background: 'transparent',
+  color: vars.$color.fg.neutral,
+  font: 'inherit',
+  cursor: 'pointer',
+});
+export const visuallyHidden = style({
+  position: 'absolute',
+  width: '1px',
+  height: '1px',
+  padding: 0,
+  margin: '-1px',
+  overflow: 'hidden',
+  clip: 'rect(0, 0, 0, 0)',
+  whiteSpace: 'nowrap',
+  border: 0,
+});
 export const summary = style({
   display: 'grid',
   gridTemplateColumns: 'repeat(5, minmax(0, 1fr))',

@@ -2,13 +2,19 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { expect, it, vi } from 'vitest';
-import { getSessionAttendance } from '~/features/session-management';
+import {
+  getSessionAttendance,
+  updateMemberAttendance,
+  updateMemberBadge,
+} from '~/features/session-management';
 import { createSessionStore } from '~/features/session-management/testing';
 import { SessionAttendanceContent } from './session-attendance-content';
 
 vi.mock('@tanstack/react-router', () => ({ useHydrated: () => true }));
 vi.mock('~/features/session-management', () => ({
   getSessionAttendance: vi.fn<typeof getSessionAttendance>(),
+  updateMemberAttendance: vi.fn<typeof updateMemberAttendance>(),
+  updateMemberBadge: vi.fn<typeof updateMemberBadge>(),
 }));
 
 it('직군을 바꿔도 세션 전체 집계는 유지하고 사전 보고와 실제 출결을 별도로 표시한다', async () => {
@@ -48,4 +54,38 @@ it('조회 실패 후 다시 시도하면 빈 목록을 표시한다', async () 
   expect(await screen.findByRole('alert')).toHaveTextContent('출석 내역을 불러오지 못했습니다.');
   await userEvent.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(await screen.findByText('해당 직군의 출석 대상자가 없습니다.')).toBeVisible();
+});
+
+it('출결 상태와 명찰 확인은 서로 독립적으로 mock mutation을 호출한다', async () => {
+  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  const member = data.members[0];
+  if (!member) {
+    throw new Error('mock 회원이 없습니다.');
+  }
+  vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(updateMemberAttendance).mockResolvedValue(member);
+  vi.mocked(updateMemberBadge).mockResolvedValue(member);
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <SessionAttendanceContent sessionId={data.session.id} part="all" />
+    </QueryClientProvider>,
+  );
+  await screen.findByRole('table', { name: /출석 체크/ });
+  await userEvent.selectOptions(
+    screen.getByRole('combobox', { name: '가상 회원 1 출결 상태' }),
+    'absent',
+  );
+  const badgeButton = screen.getAllByRole('button', { name: '명찰 확인' })[0];
+  if (!badgeButton) {
+    throw new Error('명찰 버튼이 없습니다.');
+  }
+  await userEvent.click(badgeButton);
+  expect(updateMemberAttendance).toHaveBeenCalledWith(
+    data.session.id,
+    expect.objectContaining({ membershipId: 'mock-member-1', status: 'absent' }),
+  );
+  expect(updateMemberBadge).toHaveBeenCalledWith(data.session.id, {
+    membershipId: 'mock-member-1',
+    verified: true,
+  });
 });
