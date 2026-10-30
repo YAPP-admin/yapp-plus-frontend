@@ -9,6 +9,7 @@ import {
   type AttendanceSessionPart,
 } from '../model/attendance-search';
 import * as styles from './attendance-page.css';
+import { SessionAttendanceContent } from './session-attendance-content';
 
 type FilterProps<T extends AttendanceSessionPart> = { part: T; onPartChange: (part: T) => void };
 
@@ -73,7 +74,7 @@ export function SessionAttendancePage({
         세션 목록으로 돌아가기
       </Link>
       <PartFilter {...props} options={attendancePartSchema.options} />
-      <p className={styles.placeholder}>출석 내역을 준비 중입니다.</p>
+      <SessionAttendanceContent sessionId={sessionId} part={props.part} />
     </AttendanceLayout>
   );
 }
