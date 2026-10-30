@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { ActionButton } from '@yapp-plus/ui';
 import {
   getSessionAttendance,
+  getAttendanceHistory,
   updateMemberAttendance,
   updateMemberBadge,
   type AttendanceEditInput,
@@ -67,6 +68,7 @@ function MemberRow({
   member,
   onAttendanceChange,
   onBadgeChange,
+  onHistoryOpen,
   disabled,
 }: {
   member: AttendanceMemberViewModel;
@@ -75,6 +77,7 @@ function MemberRow({
     status: AttendanceEditInput['status'],
   ) => void;
   onBadgeChange: (member: AttendanceMemberViewModel) => void;
+  onHistoryOpen: (member: AttendanceMemberViewModel) => void;
   disabled: boolean;
 }) {
   const part = attendancePartSchema.safeParse(member.part);
@@ -116,17 +119,28 @@ function MemberRow({
         </span>
       </td>
       <td>
-        <button
-          className={styles.badgeButton}
+        <ActionButton
+          variant="neutralWeak"
+          size="small"
           type="button"
           disabled={disabled || !member.isEditable}
           onClick={() => onBadgeChange(member)}
         >
           {member.badge.verified ? '확인 해제' : '명찰 확인'}
-        </button>
+        </ActionButton>
         {member.badge.verified && (
           <span className={styles.secondary}>{formatTime(member.badge.verifiedAt)}</span>
         )}
+      </td>
+      <td>
+        <ActionButton
+          variant="neutralWeak"
+          size="small"
+          type="button"
+          onClick={() => onHistoryOpen(member)}
+        >
+          이력
+        </ActionButton>
       </td>
     </tr>
   );
@@ -167,6 +181,7 @@ export function SessionAttendanceContent({
   part: AttendancePart;
 }) {
   const [tab, setTab] = useState<'attendance' | 'reports'>('attendance');
+  const [historyMember, setHistoryMember] = useState<AttendanceMemberViewModel | null>(null);
   const queryClient = useQueryClient();
   const hydrated = useHydrated();
   const query = useQuery({
@@ -188,6 +203,12 @@ export function SessionAttendanceContent({
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['admin', 'sessions', sessionId, 'attendance'] }),
+  });
+  const historyQuery = useQuery({
+    queryKey: ['admin', 'sessions', sessionId, 'attendance-history', historyMember?.membershipId],
+    queryFn: () => getAttendanceHistory(sessionId, historyMember?.membershipId ?? ''),
+    enabled: hydrated && historyMember !== null,
+    retry: false,
   });
   if (query.isPending) {
     return <output>출석 내역을 불러오는 중입니다.</output>;
@@ -280,13 +301,18 @@ export function SessionAttendanceContent({
             <caption className={styles.caption}>출석 체크 · {visibleMembers.length}명</caption>
             <thead>
               <tr>
-                {['참가자', '사전 보고', '앱 출석', '현재 출결 · 점수', '명찰 확인'].map(
-                  (label) => (
-                    <th scope="col" key={label}>
-                      {label}
-                    </th>
-                  ),
-                )}
+                {[
+                  '참가자',
+                  '사전 보고',
+                  '앱 출석',
+                  '현재 출결 · 점수',
+                  '명찰 확인',
+                  '변경 이력',
+                ].map((label) => (
+                  <th scope="col" key={label}>
+                    {label}
+                  </th>
+                ))}
               </tr>
             </thead>
             <tbody>
@@ -299,11 +325,47 @@ export function SessionAttendanceContent({
                     attendanceMutation.mutate(createAttendanceEdit(nextMember, status))
                   }
                   onBadgeChange={(nextMember) => badgeMutation.mutate(nextMember)}
+                  onHistoryOpen={setHistoryMember}
                 />
               ))}
             </tbody>
           </table>
           {visibleMembers.length === 0 && <output>해당 직군의 출석 대상자가 없습니다.</output>}
+        </section>
+      )}
+      {historyMember && (
+        <section className={styles.historyPanel} aria-label="출결 변경 이력">
+          <div className={styles.historyHeader}>
+            <h2 className={styles.heading}>{historyMember.name} 출결 변경 이력</h2>
+            <ActionButton
+              variant="neutralWeak"
+              size="small"
+              type="button"
+              onClick={() => setHistoryMember(null)}
+            >
+              닫기
+            </ActionButton>
+          </div>
+          {historyQuery.isPending && <output>변경 이력을 불러오는 중입니다.</output>}
+          {historyQuery.isError && <p role="alert">변경 이력을 불러오지 못했습니다.</p>}
+          {historyQuery.data && historyQuery.data.length === 0 && (
+            <output>변경 이력이 없습니다.</output>
+          )}
+          {historyQuery.data && historyQuery.data.length > 0 && (
+            <ul className={styles.historyList}>
+              {historyQuery.data.map((entry) => (
+                <li key={entry.id}>
+                  <strong>
+                    {statusLabels[entry.before.status]} → {statusLabels[entry.after.status]}
+                  </strong>
+                  <span className={styles.secondary}>
+                    {formatTime(entry.changedAt)} · {entry.actorName ?? '담당자 미상'}
+                  </span>
+                  {entry.reason && <span className={styles.secondary}>사유: {entry.reason}</span>}
+                </li>
+              ))}
+            </ul>
+          )}
         </section>
       )}
     </>

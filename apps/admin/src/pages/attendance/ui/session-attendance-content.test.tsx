@@ -3,6 +3,7 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { expect, it, vi } from 'vitest';
 import {
+  getAttendanceHistory,
   getSessionAttendance,
   updateMemberAttendance,
   updateMemberBadge,
@@ -12,6 +13,7 @@ import { SessionAttendanceContent } from './session-attendance-content';
 
 vi.mock('@tanstack/react-router', () => ({ useHydrated: () => true }));
 vi.mock('~/features/session-management', () => ({
+  getAttendanceHistory: vi.fn<typeof getAttendanceHistory>(),
   getSessionAttendance: vi.fn<typeof getSessionAttendance>(),
   updateMemberAttendance: vi.fn<typeof updateMemberAttendance>(),
   updateMemberBadge: vi.fn<typeof updateMemberBadge>(),
@@ -39,6 +41,27 @@ it('직군을 바꿔도 세션 전체 집계는 유지하고 사전 보고와 �
   await userEvent.click(screen.getByRole('button', { name: /사전 보고 기록/ }));
   expect(screen.getByRole('table', { name: /사전 보고 기록/ })).toBeVisible();
   expect(screen.getByText('사전 보고 기록 · 3명')).toBeVisible();
+});
+
+it('회원별 변경 이력을 열고 이력이 없는 상태를 구분한다', async () => {
+  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(getAttendanceHistory).mockResolvedValue([]);
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <SessionAttendanceContent sessionId={data.session.id} part="all" />
+    </QueryClientProvider>,
+  );
+  await screen.findByRole('table', { name: /출석 체크/ });
+  const historyButton = screen.getAllByRole('button', { name: '이력' })[0];
+  if (!historyButton) {
+    throw new Error('이력 버튼이 없습니다.');
+  }
+  await userEvent.click(historyButton);
+  expect(await screen.findByRole('region', { name: '출결 변경 이력' })).toHaveTextContent(
+    '변경 이력이 없습니다.',
+  );
+  expect(getAttendanceHistory).toHaveBeenCalledWith(data.session.id, 'mock-member-1');
 });
 
 it('조회 실패 후 다시 시도하면 빈 목록을 표시한다', async () => {
