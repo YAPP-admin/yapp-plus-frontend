@@ -1,9 +1,12 @@
-import { useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHydrated } from '@tanstack/react-router';
 import { useState } from 'react';
 import { ActionButton } from '@yapp-plus/ui';
 import {
   getSessionAttendance,
+  updateMemberAttendance,
+  updateMemberBadge,
+  type AttendanceEditInput,
   type AttendanceMemberViewModel,
 } from '~/features/session-management';
 import { attendancePartSchema, partLabels, type AttendancePart } from '../model/attendance-search';
@@ -19,6 +22,7 @@ const statusLabels = {
 };
 const reportLabels = { late: '지각', earlyLeave: '조퇴', absence: '결석' };
 const summaryStatuses = ['present', 'late', 'earlyLeave', 'absent', 'undecided'] as const;
+const editableStatuses = ['undecided', 'present', 'late', 'earlyLeave', 'absent'] as const;
 const timeFormatter = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
   hour: '2-digit',
@@ -28,7 +32,51 @@ const timeFormatter = new Intl.DateTimeFormat('ko-KR', {
 const formatTime = (value: string | null) =>
   value ? timeFormatter.format(new Date(value)) : '기록 없음';
 
-function MemberRow({ member }: { member: AttendanceMemberViewModel }) {
+function createAttendanceEdit(
+  member: AttendanceMemberViewModel,
+  status: AttendanceEditInput['status'],
+): AttendanceEditInput {
+  if (status === 'late' || status === 'earlyLeave') {
+    return {
+      membershipId: member.membershipId,
+      status,
+      penaltyCategory: 'regular',
+      durationBand: 'withinOneHour',
+      reason: member.attendance.reason,
+    };
+  }
+  if (status === 'absent') {
+    return {
+      membershipId: member.membershipId,
+      status,
+      penaltyCategory: 'regular',
+      durationBand: null,
+      reason: member.attendance.reason,
+    };
+  }
+  return {
+    membershipId: member.membershipId,
+    status,
+    penaltyCategory: null,
+    durationBand: null,
+    reason: member.attendance.reason,
+  };
+}
+
+function MemberRow({
+  member,
+  onAttendanceChange,
+  onBadgeChange,
+  disabled,
+}: {
+  member: AttendanceMemberViewModel;
+  onAttendanceChange: (
+    member: AttendanceMemberViewModel,
+    status: AttendanceEditInput['status'],
+  ) => void;
+  onBadgeChange: (member: AttendanceMemberViewModel) => void;
+  disabled: boolean;
+}) {
   const part = attendancePartSchema.safeParse(member.part);
   return (
     <tr>
@@ -41,13 +89,41 @@ function MemberRow({ member }: { member: AttendanceMemberViewModel }) {
       <td>{member.latestReport ? reportLabels[member.latestReport.type] : '보고 없음'}</td>
       <td>{formatTime(member.attendance.checkedInAt)}</td>
       <td>
-        <strong>{statusLabels[member.attendance.status]}</strong>
+        <label className={styles.inlineControl}>
+          <span className={styles.visuallyHidden}>{member.name} 출결 상태</span>
+          <select
+            aria-label={`${member.name} 출결 상태`}
+            value={
+              member.attendance.status === 'unsupported' ? 'undecided' : member.attendance.status
+            }
+            disabled={disabled || !member.isEditable}
+            onChange={(event) => {
+              const status = editableStatuses.find((option) => option === event.target.value);
+              if (status) {
+                onAttendanceChange(member, status);
+              }
+            }}
+          >
+            {editableStatuses.map((status) => (
+              <option key={status} value={status}>
+                {statusLabels[status]}
+              </option>
+            ))}
+          </select>
+        </label>
         <span className={styles.secondary}>
           {member.score.delta === null ? '점수 확인 필요' : `${member.score.delta}점`}
         </span>
       </td>
       <td>
-        {member.badge.verified ? '확인 완료' : '미확인'}
+        <button
+          className={styles.badgeButton}
+          type="button"
+          disabled={disabled || !member.isEditable}
+          onClick={() => onBadgeChange(member)}
+        >
+          {member.badge.verified ? '확인 해제' : '명찰 확인'}
+        </button>
         {member.badge.verified && (
           <span className={styles.secondary}>{formatTime(member.badge.verifiedAt)}</span>
         )}
@@ -91,12 +167,27 @@ export function SessionAttendanceContent({
   part: AttendancePart;
 }) {
   const [tab, setTab] = useState<'attendance' | 'reports'>('attendance');
+  const queryClient = useQueryClient();
   const hydrated = useHydrated();
   const query = useQuery({
     queryKey: ['admin', 'sessions', sessionId, 'attendance'],
     queryFn: () => getSessionAttendance(sessionId),
     enabled: hydrated,
     retry: false,
+  });
+  const attendanceMutation = useMutation({
+    mutationFn: (input: AttendanceEditInput) => updateMemberAttendance(sessionId, input),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['admin', 'sessions', sessionId, 'attendance'] }),
+  });
+  const badgeMutation = useMutation({
+    mutationFn: (member: AttendanceMemberViewModel) =>
+      updateMemberBadge(sessionId, {
+        membershipId: member.membershipId,
+        verified: !member.badge.verified,
+      }),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: ['admin', 'sessions', sessionId, 'attendance'] }),
   });
   if (query.isPending) {
     return <output>출석 내역을 불러오는 중입니다.</output>;
@@ -200,7 +291,15 @@ export function SessionAttendanceContent({
             </thead>
             <tbody>
               {visibleMembers.map((member) => (
-                <MemberRow key={member.membershipId} member={member} />
+                <MemberRow
+                  key={member.membershipId}
+                  member={member}
+                  disabled={attendanceMutation.isPending || badgeMutation.isPending}
+                  onAttendanceChange={(nextMember, status) =>
+                    attendanceMutation.mutate(createAttendanceEdit(nextMember, status))
+                  }
+                  onBadgeChange={(nextMember) => badgeMutation.mutate(nextMember)}
+                />
               ))}
             </tbody>
           </table>
