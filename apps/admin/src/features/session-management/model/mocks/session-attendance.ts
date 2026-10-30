@@ -11,10 +11,11 @@ const parts = ['pm', 'design', 'android', 'ios', 'web', 'server'];
 
 // 기존 예시 집계와 일치하는 가상 명단입니다. 보고 적격성은 실제 정책 계산이 아닌 모의 값입니다.
 export function createMockSessionMembers(session: Session): AttendanceMemberViewModel[] {
-  const { present, late, absent, pending, reported } = session.attendance;
+  const { present, late, earlyLeave, absent, pending, reported } = session.attendance;
   const statuses = [
     { status: 'present', count: present },
     { status: 'late', count: late },
+    { status: 'earlyLeave', count: earlyLeave },
     { status: 'absent', count: absent },
     { status: 'undecided', count: pending },
   ].flatMap(({ status, count }) => Array.from({ length: count }, () => status));
@@ -22,8 +23,9 @@ export function createMockSessionMembers(session: Session): AttendanceMemberView
     const membershipId = `mock-member-${index + 1}`;
     const attendance = attendanceResultSchema.parse({
       status,
-      penaltyCategory: status === 'late' || status === 'absent' ? 'regular' : null,
-      durationBand: status === 'late' ? 'withinOneHour' : null,
+      penaltyCategory:
+        status === 'late' || status === 'earlyLeave' || status === 'absent' ? 'regular' : null,
+      durationBand: status === 'late' || status === 'earlyLeave' ? 'withinOneHour' : null,
       checkedInAt: null,
       earlyLeaveAt: null,
       reason: null,

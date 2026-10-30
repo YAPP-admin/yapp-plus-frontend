@@ -43,6 +43,7 @@ export const createSessionInputSchema = z
 export const sessionAttendanceSummarySchema = z.object({
   present: z.number().int().nonnegative(),
   late: z.number().int().nonnegative(),
+  earlyLeave: z.number().int().nonnegative().default(0),
   absent: z.number().int().nonnegative(),
   pending: z.number().int().nonnegative(),
   reported: z.number().int().nonnegative(),

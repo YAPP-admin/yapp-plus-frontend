@@ -20,7 +20,7 @@ const input = {
   type: 'offline',
 };
 
-const attendance = { present: 0, late: 0, absent: 0, pending: 0, reported: 0 };
+const attendance = { present: 0, late: 0, earlyLeave: 0, absent: 0, pending: 0, reported: 0 };
 
 describe('세션 입력 검증', () => {
   it('세션명의 앞뒤 공백을 제거한다', () => {
