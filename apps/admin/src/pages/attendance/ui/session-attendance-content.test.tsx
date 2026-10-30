@@ -3,6 +3,8 @@ import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { expect, it, vi } from 'vitest';
 import {
+  cancelAttendance,
+  closeAttendance,
   getAttendanceHistory,
   getSessionAttendance,
   updateMemberAttendance,
@@ -13,11 +15,40 @@ import { SessionAttendanceContent } from './session-attendance-content';
 
 vi.mock('@tanstack/react-router', () => ({ useHydrated: () => true }));
 vi.mock('~/features/session-management', () => ({
+  cancelAttendance: vi.fn<typeof cancelAttendance>(),
+  closeAttendance: vi.fn<typeof closeAttendance>(),
   getAttendanceHistory: vi.fn<typeof getAttendanceHistory>(),
   getSessionAttendance: vi.fn<typeof getSessionAttendance>(),
   updateMemberAttendance: vi.fn<typeof updateMemberAttendance>(),
   updateMemberBadge: vi.fn<typeof updateMemberBadge>(),
+  sessionAttendanceQueryOptions: (sessionId: string) => ({
+    queryKey: ['admin', 'sessions', sessionId, 'attendance'],
+    queryFn: () => getSessionAttendance(sessionId),
+    retry: false,
+  }),
+  attendanceHistoryQueryOptions: (sessionId: string, membershipId: string) => ({
+    queryKey: ['admin', 'sessions', sessionId, 'attendance-history', membershipId],
+    queryFn: () => getAttendanceHistory(sessionId, membershipId),
+    retry: false,
+  }),
 }));
+
+void cancelAttendance;
+void closeAttendance;
+
+it('열린 오프라인 세션에서 출석 마감 요청을 보낸다', async () => {
+  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(closeAttendance).mockResolvedValue(data);
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <SessionAttendanceContent sessionId={data.session.id} part="all" />
+    </QueryClientProvider>,
+  );
+  await screen.findByRole('table', { name: /출석 체크/ });
+  await userEvent.click(screen.getByRole('button', { name: '출석 마감' }));
+  expect(closeAttendance).toHaveBeenCalledWith(data.session.id);
+});
 
 it('직군을 바꿔도 세션 전체 집계는 유지하고 사전 보고와 실제 출결을 별도로 표시한다', async () => {
   const data = createSessionStore().getSessionAttendance('demo-offline-session');

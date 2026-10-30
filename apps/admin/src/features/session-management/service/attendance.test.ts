@@ -187,3 +187,31 @@ it('사전 보고가 있는 회원의 실제 출결을 바꿔도 보고 내용�
     session.summary.reported,
   );
 });
+
+it('출석 마감은 전체 미정을 결석으로 바꾸고 마감 취소는 결과를 유지한 채 편집을 연다', async () => {
+  const { service, session, first, edit } = await setup();
+  await service.updateMemberAttendance(session.id, edit);
+  const beforeClose = await service.getSessionAttendance(session.id);
+  const closed = await service.closeAttendance(session.id);
+  expect(closed.session.phase).toBe('closed');
+  expect(closed.session.canCancelClose).toBe(true);
+  expect(closed.session.summary.undecided).toBe(0);
+  expect(closed.members.filter((member) => member.attendance.status === 'absent')).toHaveLength(
+    beforeClose.members.length - 1,
+  );
+  expect(
+    closed.members.find((member) => member.membershipId === first.membershipId)?.isEditable,
+  ).toBe(false);
+  await expect(service.updateMemberAttendance(session.id, edit)).rejects.toThrow('마감된 세션');
+  const cancelled = await service.cancelAttendance(session.id);
+  expect(cancelled.session.phase).toBe('open');
+  expect(cancelled.session.canCancelClose).toBe(false);
+  expect(
+    cancelled.members.find((member) => member.membershipId === first.membershipId)?.attendance,
+  ).toEqual(
+    closed.members.find((member) => member.membershipId === first.membershipId)?.attendance,
+  );
+  expect(
+    cancelled.members.find((member) => member.membershipId === first.membershipId)?.isEditable,
+  ).toBe(true);
+});

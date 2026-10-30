@@ -72,8 +72,8 @@ export function createMockAttendanceSession(
     type: session.type,
     startsAt: `${session.date}T${session.startTime}:00+09:00`,
     endsAt: `${session.date}T${session.endTime}:00+09:00`,
-    phase: 'open',
-    canCancelClose: false,
+    phase: members.every((member) => !member.isEditable) ? 'closed' : 'open',
+    canCancelClose: members.every((member) => !member.isEditable),
     summary: {
       total: members.length,
       present: count('present'),

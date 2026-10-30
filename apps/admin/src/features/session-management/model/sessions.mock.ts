@@ -50,7 +50,13 @@ const fixtures: Session[] = [
   },
 ];
 
-export type AttendanceMockOperation = 'read' | 'history' | 'attendance' | 'badge';
+export type AttendanceMockOperation =
+  | 'read'
+  | 'history'
+  | 'attendance'
+  | 'badge'
+  | 'close'
+  | 'cancel';
 
 export function createSessionStore(initialSessions: readonly Session[] = fixtures) {
   let sessions = sessionSchema.array().parse(initialSessions);
@@ -59,6 +65,7 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
   );
 
   const historyBySession = new Map<string, AttendanceHistoryEntry[]>();
+  const closedSessions = new Set<string>();
   let failures: { operation: AttendanceMockOperation; sessionId: string; membershipId?: string }[] =
     [];
 
@@ -108,6 +115,62 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       return structuredClone({ session: createMockAttendanceSession(session, members), members });
     },
 
+    closeAttendance(sessionId: string) {
+      const { session, members } = getContext(sessionId);
+      checkFailure('close', sessionId);
+      if (closedSessions.has(sessionId)) {
+        throw new Error('이미 마감된 세션입니다.');
+      }
+      members.forEach((member) => {
+        if (member.attendance.status !== 'undecided') {
+          member.isEditable = false;
+          return;
+        }
+        const after = attendanceResultSchema.parse({
+          ...member.attendance,
+          status: 'absent',
+          penaltyCategory:
+            member.latestReport?.eligibility === 'eligible' ? 'regular' : 'unauthorized',
+          durationBand: null,
+          explicitlyOverridden: false,
+        });
+        member.attendance = after;
+        const delta = calculateMockAttendanceDelta(after);
+        member.score =
+          delta === null
+            ? { source: 'unknown', delta: null, description: '미정' }
+            : { source: 'mock', delta, description: '모의 출결 점수' };
+        member.isEditable = false;
+      });
+      closedSessions.add(sessionId);
+      const summary = createMockAttendanceSession(session, members).summary;
+      session.attendance = {
+        present: summary.present,
+        late: summary.late,
+        earlyLeave: summary.earlyLeave,
+        absent: summary.absent,
+        pending: summary.undecided,
+        reported: summary.reported,
+      };
+      return structuredClone({ session: createMockAttendanceSession(session, members), members });
+    },
+
+    cancelAttendance(sessionId: string) {
+      const context = getContext(sessionId);
+      checkFailure('cancel', sessionId);
+      if (!closedSessions.has(sessionId)) {
+        throw new Error('마감된 세션만 취소할 수 있습니다.');
+      }
+      closedSessions.delete(sessionId);
+      context.members.forEach((member) => {
+        member.isEditable = true;
+      });
+      return structuredClone({
+        session: createMockAttendanceSession(context.session, context.members),
+        members: context.members,
+      });
+    },
+
     getAttendanceHistory(sessionId: string, membershipId: string) {
       getMember(sessionId, membershipId);
       checkFailure('history', sessionId, membershipId);
@@ -121,6 +184,9 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
     updateMemberAttendance(sessionId: string, input: AttendanceEditInput) {
       const edit = attendanceEditInputSchema.parse(input);
       const { session, members, member } = getMember(sessionId, edit.membershipId);
+      if (closedSessions.has(sessionId)) {
+        throw new Error('마감된 세션은 출결을 변경할 수 없습니다.');
+      }
       checkFailure('attendance', sessionId, edit.membershipId);
       const before = member.attendance;
       const unchanged =
@@ -170,6 +236,9 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
     updateMemberBadge(sessionId: string, input: BadgeEditInput) {
       const edit = badgeEditInputSchema.parse(input);
       const { member } = getMember(sessionId, edit.membershipId);
+      if (closedSessions.has(sessionId)) {
+        throw new Error('마감된 세션은 명찰을 변경할 수 없습니다.');
+      }
       checkFailure('badge', sessionId, edit.membershipId);
       if (member.badge.verified !== edit.verified) {
         member.badge = {
@@ -232,6 +301,7 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       sessions = sessions.filter((session) => session.id !== id);
       attendanceBySession.delete(id);
       historyBySession.delete(id);
+      closedSessions.delete(id);
       failures = failures.filter((failure) => failure.sessionId !== id);
     },
   };

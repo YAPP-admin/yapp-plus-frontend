@@ -1,13 +1,33 @@
 import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useHydrated } from '@tanstack/react-router';
 import type { CreateSessionInput } from './session';
-import { createSession, listSessions, updateSession } from '../service';
+import {
+  createSession,
+  getAttendanceHistory,
+  getSessionAttendance,
+  listSessions,
+  updateSession,
+} from '../service';
 
 export const sessionsQueryOptions = queryOptions({
   queryKey: ['admin', 'sessions'],
   queryFn: listSessions,
   retry: false,
 });
+
+export const sessionAttendanceQueryOptions = (sessionId: string) =>
+  queryOptions({
+    queryKey: ['admin', 'sessions', sessionId, 'attendance'],
+    queryFn: () => getSessionAttendance(sessionId),
+    retry: false,
+  });
+
+export const attendanceHistoryQueryOptions = (sessionId: string, membershipId: string) =>
+  queryOptions({
+    queryKey: ['admin', 'sessions', sessionId, 'attendance-history', membershipId],
+    queryFn: () => getAttendanceHistory(sessionId, membershipId),
+    retry: false,
+  });
 
 export function useSessionsQuery() {
   const hydrated = useHydrated();

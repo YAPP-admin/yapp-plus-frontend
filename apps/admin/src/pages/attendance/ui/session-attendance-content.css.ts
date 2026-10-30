@@ -106,3 +106,10 @@ globalStyle(`${table} tbody tr`, { background: vars.$color.bg.neutralWeak });
 globalStyle(`${table} tbody th`, { borderRadius: '0.75rem 0 0 0.75rem' });
 globalStyle(`${table} tbody td:last-child`, { borderRadius: '0 0.75rem 0.75rem 0' });
 globalStyle(`${stat} dd`, { margin: '0.5rem 0 0', fontWeight: vars.$fontWeight.bold });
+export const sessionActions = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: vars.$dimension.x2,
+  marginTop: vars.$dimension.x4,
+});
