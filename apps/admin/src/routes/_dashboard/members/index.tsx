@@ -30,6 +30,7 @@ function MembersRoute() {
       currentGeneration={
         import.meta.env.DEV ? memberPreviewBeforeMapping.currentGeneration : undefined
       }
+      teamMapping={import.meta.env.DEV ? memberPreviewBeforeMapping.teamMapping : undefined}
       onSearch={(query) => {
         void navigate({
           search: (previous) => ({ ...previous, q: query }),

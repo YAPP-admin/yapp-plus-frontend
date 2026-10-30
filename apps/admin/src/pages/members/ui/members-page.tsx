@@ -2,6 +2,7 @@ import type { Member } from '~/features/member-management';
 import { MemberList } from './member-list';
 import { PageHeader } from '~/shared/ui/page-header';
 import { MemberFilters } from './member-filters';
+import { TeamMappingNotice, type MemberTeamMapping } from './member-team-filter';
 import { filterMembers } from '../model/member-list';
 import { Link } from '@tanstack/react-router';
 import { type MemberSearch } from '../model/member-search';
@@ -14,16 +15,19 @@ export function MembersPage({
   currentGeneration,
   onFilterChange,
   onSearch,
+  teamMapping = 'before',
 }: {
   search: MemberSearch;
   members?: readonly Member[];
   currentGeneration?: number;
   onSearch: (query: string) => void;
   onFilterChange: (change: Partial<Omit<MemberSearch, 'q' | 'tab'>>) => void;
+  teamMapping?: MemberTeamMapping;
 }) {
   if (search.tab === 'pending') {
     return <PendingMembers />;
   }
+  const listSearch = teamMapping === 'after' ? search : { ...search, team: undefined };
   return (
     <main className={styles.page}>
       <PageHeader
@@ -35,11 +39,20 @@ export function MembersPage({
           명단 업로드
         </Link>
       </PageHeader>
-      <MemberFilters search={search} onSearch={onSearch} onFilterChange={onFilterChange} />
+      {teamMapping === 'before' && <TeamMappingNotice />}
+      <MemberFilters
+        search={search}
+        onSearch={onSearch}
+        onFilterChange={onFilterChange}
+        members={members}
+        currentGeneration={currentGeneration}
+        teamMapping={teamMapping}
+      />
       {members !== undefined && currentGeneration !== undefined ? (
         <MemberList
-          members={filterMembers(members, currentGeneration, search)}
+          members={filterMembers(members, currentGeneration, listSearch)}
           currentGeneration={currentGeneration}
+          teamMapping={teamMapping}
           hasMembers={members.some((member) =>
             member.activities.some((activity) => activity.generation === currentGeneration),
           )}

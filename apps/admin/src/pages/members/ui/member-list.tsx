@@ -2,6 +2,7 @@ import { Badge, Box, HStack, Text } from '@seed-design/react';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
 import { Ellipsis, UserRound } from 'lucide-react';
 import type { Member, MemberRole } from '~/features/member-management';
+import type { MemberTeamMapping } from './member-team-filter';
 import { partLabels } from '../model/member-search';
 import * as styles from './member-list.css';
 
@@ -26,10 +27,12 @@ export function MemberList({
   members,
   currentGeneration,
   hasMembers = false,
+  teamMapping = 'before',
 }: {
   members: readonly Member[];
   currentGeneration: number;
   hasMembers?: boolean;
+  teamMapping?: MemberTeamMapping;
 }) {
   const rows = members.flatMap((member) => {
     const activity = member.activities.find((item) => item.generation === currentGeneration);
@@ -70,6 +73,11 @@ export function MemberList({
                 <th scope="col" className={styles.role}>
                   권한
                 </th>
+                {teamMapping === 'after' && (
+                  <th scope="col" className={styles.team}>
+                    팀
+                  </th>
+                )}
                 <th scope="col" className={styles.score}>
                   출석 점수
                 </th>
@@ -111,6 +119,26 @@ export function MemberList({
                     </HStack>
                   </th>
                   <td>{roleLabels[activity.role]}</td>
+                  {teamMapping === 'after' && (
+                    <td>
+                      {activity.team === null ? (
+                        <Text textStyle="t1Regular" color="fg.neutralMuted">
+                          팀 미배정
+                        </Text>
+                      ) : (
+                        <HStack gap="x1_5" flexWrap="wrap">
+                          <Badge variant="weak" tone="informative">
+                            {activity.team.name}
+                          </Badge>
+                          {activity.team.isLeader && (
+                            <Text textStyle="t1Regular" color="fg.neutralMuted">
+                              팀장
+                            </Text>
+                          )}
+                        </HStack>
+                      )}
+                    </td>
+                  )}
                   <td>
                     <Text textStyle="t2Bold">
                       {activity.attendance.score === null

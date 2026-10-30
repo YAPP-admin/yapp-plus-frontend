@@ -1,8 +1,13 @@
 import { render, screen, within } from '@testing-library/react';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { memberSchema } from '~/features/member-management';
-import { memberPreviewBeforeMapping } from '~/features/member-management/fixtures';
+import {
+  memberPreviewAfterMapping,
+  memberPreviewBeforeMapping,
+} from '~/features/member-management/fixtures';
 import { MemberList } from './member-list';
+import { MemberTeamFilter, TeamMappingNotice } from './member-team-filter';
+import userEvent from '@testing-library/user-event';
 
 const fixture = memberPreviewBeforeMapping;
 
@@ -49,4 +54,66 @@ it('현재 기수에 회원이 없으면 빈 명단 안내와 0명을 표시한�
   expect(screen.getByRole('heading', { name: '등록된 회원이 없어요', level: 2 })).toBeVisible();
   expect(screen.getByText('0', { selector: 'strong' }).parentElement).toHaveTextContent('총 0명');
   expect(screen.queryByRole('table')).not.toBeInTheDocument();
+});
+
+it('매핑 후 팀 열·팀장·미배정 상태를 표시한다', () => {
+  render(
+    <MemberList
+      members={memberPreviewAfterMapping.members}
+      currentGeneration={33}
+      teamMapping="after"
+    />,
+  );
+  const table = within(screen.getByRole('table', { name: '33기 회원 목록' }));
+  expect(table.getByRole('columnheader', { name: '팀' })).toBeVisible();
+  expect(
+    within(table.getByRole('row', { name: /예시 회원 1 PM/ })).getByText('예시 1팀'),
+  ).toBeVisible();
+  expect(
+    within(table.getByRole('row', { name: /예시 회원 1 PM/ })).getByText('팀장'),
+  ).toBeVisible();
+  expect(
+    within(table.getByRole('row', { name: /예시 회원 6 Server/ })).getByText('팀 미배정'),
+  ).toBeVisible();
+});
+
+it('매핑 전 안내에서는 팀 선택과 팀 열을 제공하지 않는다', () => {
+  render(
+    <>
+      <TeamMappingNotice />
+      <MemberList members={memberPreviewBeforeMapping.members} currentGeneration={33} />
+    </>,
+  );
+  expect(screen.getByRole('region', { name: '팀 매핑 안내' })).toHaveTextContent('팀 매핑 전');
+  expect(screen.queryByRole('combobox', { name: '팀' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('columnheader', { name: '팀' })).not.toBeInTheDocument();
+});
+
+it('팀 선택은 전체 회원 기준 인원을 보여주고 선택값을 전달한다', async () => {
+  const user = userEvent.setup();
+  const onChange = vi.fn<(team: string | undefined) => void>();
+  render(
+    <MemberTeamFilter
+      members={memberPreviewAfterMapping.members}
+      currentGeneration={33}
+      value={undefined}
+      onChange={onChange}
+    />,
+  );
+  expect(screen.getByRole('combobox', { name: '팀' })).toHaveTextContent('전체 팀 · 6명');
+  await user.click(screen.getByRole('combobox', { name: '팀' }));
+  await user.click(await screen.findByRole('option', { name: '예시 1팀 · 3명' }));
+  expect(onChange).toHaveBeenCalledWith('preview-team-1');
+});
+
+it('존재하지 않는 팀 URL은 전체 팀으로 정리한다', () => {
+  render(
+    <MemberTeamFilter
+      members={memberPreviewAfterMapping.members}
+      currentGeneration={33}
+      value="missing-team"
+      onChange={() => undefined}
+    />,
+  );
+  expect(screen.getByRole('combobox', { name: '팀' })).toHaveTextContent('전체 팀 · 6명');
 });

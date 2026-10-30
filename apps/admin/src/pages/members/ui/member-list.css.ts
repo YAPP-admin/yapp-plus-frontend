@@ -18,6 +18,7 @@ export const table = style({
 });
 export const role = style({ width: '7rem' });
 export const score = style({ width: '7rem' });
+export const team = style({ width: '10rem' });
 export const date = style({ width: '7rem' });
 export const more = style({ width: '4rem' });
 export const name = style({ overflowWrap: 'anywhere' });

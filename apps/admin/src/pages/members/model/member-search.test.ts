@@ -14,12 +14,12 @@ describe('회원 쿼리 검증', () => {
     ['tab', memberTabSchema.options],
     ['part', memberPartSchema.options],
   ])('%s의 허용값을 유지한다', (field, values) => {
-    for (const value of values) {
+    values.forEach((value) => {
       expect(memberSearchSchema.parse({ [field]: value })).toEqual({
         ...memberSearchDefaults,
         [field]: value,
       });
-    }
+    });
   });
   it.each([null, true, 123, ['web'], { q: '김' }])(
     '잘못된 외부 타입 %j를 기본값으로 처리한다',
