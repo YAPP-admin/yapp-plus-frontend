@@ -6,13 +6,17 @@ import {
   closeAttendance,
   cancelAttendance,
   attendanceHistoryQueryOptions,
+  attendanceCodeQueryOptions,
   teamReviewsQueryOptions,
   sessionAttendanceQueryOptions,
   updateMemberAttendance,
   updateMemberBadge,
   updateTeamPhotoReview,
+  issueAttendanceCode,
+  reissueAttendanceCode,
   type AttendanceEditInput,
   type AttendanceMemberViewModel,
+  type AttendanceCodeViewModel,
   type TeamDecisionInput,
   type TeamReviewViewModel,
 } from '~/features/session-management';
@@ -267,6 +271,71 @@ function TeamReviewRow({
   );
 }
 
+function AttendanceCodeCard({
+  code,
+  isPending,
+  error,
+  onIssue,
+  onReissue,
+}: {
+  code: AttendanceCodeViewModel | undefined;
+  isPending: boolean;
+  error: boolean;
+  onIssue: () => void;
+  onReissue: () => void;
+}) {
+  return (
+    <section className={styles.card} aria-label="출석 코드">
+      <h2 className={styles.heading}>출석 코드</h2>
+      {code?.state === 'notIssued' && (
+        <div className={styles.codeContent}>
+          <p className={styles.secondary}>아직 출석 코드가 발급되지 않았습니다.</p>
+          <ActionButton
+            variant="brandSolid"
+            size="small"
+            type="button"
+            disabled={isPending}
+            onClick={onIssue}
+          >
+            출석 코드 발급
+          </ActionButton>
+        </div>
+      )}
+      {code?.state === 'active' && (
+        <div className={styles.codeContent}>
+          <strong className={styles.codeValue}>{code.code}</strong>
+          <span className={styles.secondary}>만료 시각 · {formatTime(code.expiresAt)}</span>
+          <ActionButton
+            variant="neutralWeak"
+            size="small"
+            type="button"
+            disabled={isPending}
+            onClick={onReissue}
+          >
+            코드 재발급
+          </ActionButton>
+        </div>
+      )}
+      {code?.state === 'expired' && (
+        <div className={styles.codeContent}>
+          {code.code && <strong className={styles.codeValue}>{code.code}</strong>}
+          <span className={styles.secondary}>출석 코드가 만료되었습니다.</span>
+          <ActionButton
+            variant="brandSolid"
+            size="small"
+            type="button"
+            disabled={isPending}
+            onClick={onReissue}
+          >
+            코드 재발급
+          </ActionButton>
+        </div>
+      )}
+      {error && <span role="alert">출석 코드 처리에 실패했습니다. 다시 시도해 주세요.</span>}
+    </section>
+  );
+}
+
 export function SessionAttendanceContent({
   sessionId,
   part,
@@ -295,6 +364,24 @@ export function SessionAttendanceContent({
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['admin', 'sessions', sessionId, 'attendance'] }),
+  });
+  const attendanceCodeQuery = useQuery({
+    ...attendanceCodeQueryOptions(sessionId),
+    enabled: hydrated,
+  });
+  const issueCodeMutation = useMutation({
+    mutationFn: () => issueAttendanceCode(sessionId),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'sessions', sessionId, 'attendance-code'],
+      }),
+  });
+  const reissueCodeMutation = useMutation({
+    mutationFn: () => reissueAttendanceCode(sessionId),
+    onSuccess: () =>
+      queryClient.invalidateQueries({
+        queryKey: ['admin', 'sessions', sessionId, 'attendance-code'],
+      }),
   });
   const closeMutation = useMutation({
     mutationFn: () => closeAttendance(sessionId),
@@ -356,6 +443,17 @@ export function SessionAttendanceContent({
   const pendingReviewCount = teamReviews.filter(
     (review) => review.reviewState === 'pending',
   ).length;
+  const attendanceCodeCard = (
+    <AttendanceCodeCard
+      code={attendanceCodeQuery.data}
+      isPending={issueCodeMutation.isPending || reissueCodeMutation.isPending}
+      error={
+        attendanceCodeQuery.isError || issueCodeMutation.isError || reissueCodeMutation.isError
+      }
+      onIssue={() => issueCodeMutation.mutate()}
+      onReissue={() => reissueCodeMutation.mutate()}
+    />
+  );
   let sessionAction = null;
   if (session.phase === 'closed' && session.canCancelClose) {
     sessionAction = (
@@ -409,6 +507,7 @@ export function SessionAttendanceContent({
             )}
           </div>
         </section>
+        {attendanceCodeCard}
         <section className={styles.card} aria-label="팀 사진 검수">
           <h2 className={styles.heading}>팀 사진 검수</h2>
           {teamReviewsQuery.isPending && <output>팀 사진 검수 목록을 불러오는 중입니다.</output>}
@@ -464,6 +563,7 @@ export function SessionAttendanceContent({
           </div>
         )}
       </section>
+      {attendanceCodeCard}
       <section className={styles.card} aria-label="출석 요약">
         <h2 className={styles.heading}>출석 요약 · 전체 {session.summary.total}명</h2>
         <dl className={styles.summary}>

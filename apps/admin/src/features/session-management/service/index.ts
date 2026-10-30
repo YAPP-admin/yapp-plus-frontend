@@ -43,6 +43,21 @@ export async function getSessionAttendance(id: string) {
   return store.getSessionAttendance(id);
 }
 
+export async function getAttendanceCode(sessionId: string) {
+  const store = await getStore();
+  return store.getAttendanceCode(sessionId);
+}
+
+export async function issueAttendanceCode(sessionId: string) {
+  const store = await getStore();
+  return store.issueAttendanceCode(sessionId);
+}
+
+export async function reissueAttendanceCode(sessionId: string) {
+  const store = await getStore();
+  return store.reissueAttendanceCode(sessionId);
+}
+
 export async function getTeamReviews(sessionId: string) {
   const store = await getStore();
   return store.getTeamReviews(sessionId);

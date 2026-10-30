@@ -245,3 +245,19 @@ it('팀 세션은 검수 대기 사진이 남아 있으면 출석을 마감할 �
     session: { phase: 'closed' },
   });
 });
+
+it('출석 코드는 발급·재발급 시 새 만료 시각과 코드로 갱신된다', async () => {
+  const { service, session } = await setup();
+  expect(await service.getAttendanceCode(session.id)).toEqual({
+    state: 'notIssued',
+    code: null,
+    expiresAt: null,
+  });
+  const issued = await service.issueAttendanceCode(session.id);
+  expect(issued.state).toBe('active');
+  expect(issued.code).toHaveLength(6);
+  const reissued = await service.reissueAttendanceCode(session.id);
+  expect(reissued.state).toBe('active');
+  expect(reissued.code).not.toBe(issued.code);
+  expect(reissued.expiresAt).not.toBe(issued.expiresAt);
+});
