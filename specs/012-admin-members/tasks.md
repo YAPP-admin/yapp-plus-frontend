@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 회원 관리 화면
 
 **입력**: [명세](spec.md), [계획](plan.md), [데이터](data-model.md), [화면 계약](contracts/member-ui.md)
-**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 구현·검증 완료, 사용자 리뷰 대기.
+**상태**: 1단계 리뷰 완료. 이슈 #182 생성·확인 완료. 2a단계 리뷰 완료. 2b단계 리뷰·커밋 완료. 3단계 리뷰·커밋 완료. 4a단계 리뷰·커밋 완료. 4b단계 구현·검증 완료, 사용자 리뷰 대기.
 
 ## 진행 규칙
 
@@ -56,9 +56,9 @@
 
 ## 4b단계 — 검색·직군·URL (US1, P1)
 
-- [ ] T019 [US1] apps/admin/src/pages/members/model/member-list.ts와 member-list.test.ts에 이름 부분 검색·이름/식별자 정렬·직군 필터·총원을 구현·검증한다.
-- [ ] T020 [US1] apps/admin/src/pages/members/ui/member-filters.tsx와 members-page.tsx에 Enter 제출·직군 선택·URL 연결·한글 조합 처리를 구현한다.
-- [ ] T021 [US1] apps/admin/src/router.test.tsx에 검색 replace·조건 history·새로고침 복원·잘못된 URL·이탈 회귀를 추가한다.
+- [x] T019 [US1] apps/admin/src/pages/members/model/member-list.ts와 member-list.test.ts에 이름 부분 검색·이름/식별자 정렬·직군 필터·총원을 구현·검증한다.
+- [x] T020 [US1] apps/admin/src/pages/members/ui/member-filters.tsx와 members-page.tsx에 실시간 검색·직군 선택·URL 연결·한글 입력 유지를 구현한다.
+- [x] T021 [US1] apps/admin/src/router.test.tsx에 검색 replace·조건 history·새로고침 복원·잘못된 URL·이탈 회귀를 추가한다.
 
 **독립 검증/중단점**: 검색·필터·URL·총원이 일치한다. 브라우저 한글 입력 근거와 리뷰를 제출한다.
 
@@ -174,3 +174,11 @@ US3의 모델은 US2에 기술적으로 의존하지 않지만 사용자 리뷰 
 - 4a의 실제 PR base는 `brussels-v2/member-management-fixtures`(873029a)다.
 - T016~T018을 완료했다. 검색 결과 없음은 T020의 실제 검색과 함께 구현한다.
 - 사용자 리뷰 전 4b에 착수하지 않는다. 이번 단계는 미커밋이며 push·PR은 수행하지 않았다.
+
+## 4b 진행 기록
+
+- 4a는 9d00c02에 커밋했다. 사용자 승인으로 `brussels-v2/member-search`를 생성했으며 실제 PR base는 `brussels-v2/member-list`다.
+- 이름 부분 검색·직군 교집합·이름/식별자 정렬·결과 총원·검색 빈 결과를 연결했다.
+- 검색 입력과 직군 선택을 MemberFilters로 분리하고 기존 SEED 기반 FilterSelect를 재사용했다. 검색은 사용자 리뷰에 따라 입력 즉시 URL에 반영하고 비교 시 trim한다.
+- URL replace/history·직접 접근·잘못된 조건·다른 메뉴 이탈 회귀를 검증한다.
+- 이번 단계는 미커밋이며 4c 팀 표시·필터는 시작하지 않는다.

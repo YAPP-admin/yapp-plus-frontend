@@ -16,38 +16,6 @@ export const filters = style({
   gap: vars.$dimension.x4,
 });
 
-export const searchForm = style({
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr) auto',
-  alignItems: 'end',
-  gap: vars.$dimension.x2,
-});
-
-export const field = style({
-  display: 'grid',
-  gap: vars.$dimension.x2,
-  fontSize: vars.$fontSize.t4,
-});
-
-export const control = style({
-  width: '100%',
-  minWidth: 0,
-  minHeight: '2.75rem',
-  paddingInline: vars.$dimension.x3,
-  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
-  borderRadius: vars.$dimension.x2,
-  background: vars.$color.bg.layerDefault,
-  color: vars.$color.fg.neutral,
-  fontSize: '1rem',
-  touchAction: 'manipulation',
-  selectors: {
-    '&:focus-visible': {
-      outline: `2px solid ${vars.$color.fg.brand}`,
-      outlineOffset: '0.125rem',
-    },
-  },
-});
-
 export const placeholder = style({
   margin: 0,
   paddingBlock: vars.$dimension.x8,
@@ -68,5 +36,3 @@ export const tab = style({
     '&:focus-visible': { outline: `2px solid ${vars.$color.fg.brand}`, outlineOffset: '0.125rem' },
   },
 });
-
-export const searchButton = style({ minHeight: '2.75rem' });
