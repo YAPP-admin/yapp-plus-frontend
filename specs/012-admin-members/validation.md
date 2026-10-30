@@ -216,4 +216,14 @@
 - 대상 테스트 실행: `import-file.test.ts` 8개 통과. admin 전체 테스트는 49개 파일·531개 테스트를 새로 실행했다.
 - `node --run check` 통과: 포맷은 513개 파일 새 실행, admin lint·typecheck·test는 새 실행, 나머지 lint 6개·typecheck 6개·test 3개는 Turbo 캐시 재사용.
 - `node --run build` 통과: admin build는 새 실행, web·Storybook build는 Turbo 캐시 재사용. 기존 청크 크기 경고는 남아 있다.
-- 브라우저에서 실제 파일 선택·드롭·양식 다운로드·스크린 리더·터치 실기기 검증은 7a 단계에서 진행한다. 6a 구현은 현재 작업 트리에 있고 별도 커밋은 아직 만들지 않았다.
+- 브라우저에서 실제 파일 선택·드롭·양식 다운로드·스크린 리더·터치 실기기 검증은 7a 단계에서 진행한다. 6a 구현은 `acc4f48`에 커밋했다.
+
+## 7a 단계 — 파일 상태 훅 하위 작업(T037)
+
+- 6a CSV 파서 변경은 `acc4f48`에 커밋했다. T036 파일 선택 UI와 T038 화면 테스트는 아직 구현하지 않았다.
+- `use-import-file-mutation.ts`의 `useImportFileMutation`이 로컬 CSV 파싱 Promise를 `useMutation`으로 실행한다. `networkMode: 'always'`와 `retry: false`를 설정한다. `use-import-file.ts`는 파일 선택과 mutation 상태만 조합하며 별도 파일 상태를 두지 않는다.
+- 파일 교체 시 새 mutation을 실행한다. React Query의 최신 mutation observer 상태를 사용하므로 요청 식별자·ref·추가 상태를 두지 않는다. `reset()`은 다시 올리기와 이탈 전 상태 초기화에 사용한다.
+- 대상 테스트 실행: `use-import-file.test.tsx` 3개 통과. admin 전체 테스트는 50개 파일·534개 테스트 통과.
+- `node --run check` 통과: 포맷 515개 파일, admin lint·typecheck·test는 새 실행, 나머지 lint 6개·typecheck 6개·test 3개는 Turbo 캐시 재사용.
+- `node --run build` 통과: admin build는 새 실행, web·Storybook build는 Turbo 캐시 재사용. 기존 청크 크기 경고는 남아 있다.
+- 훅 변경은 현재 작업 트리에 있으며 별도 커밋하지 않았다. 사용자 리뷰 후 T036/T038 또는 6b 진행 여부를 확인한다.
