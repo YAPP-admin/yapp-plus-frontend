@@ -29,6 +29,10 @@ it('직군을 바꿔도 세션 전체 집계는 유지하고 사전 보고와 �
   expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(filtered.length + 1);
   expect(screen.getByRole('columnheader', { name: '사전 보고' })).toBeVisible();
   expect(screen.getByRole('columnheader', { name: '현재 출결 · 점수' })).toBeVisible();
+  rerender(view('all'));
+  await userEvent.click(screen.getByRole('button', { name: /사전 보고 기록/ }));
+  expect(screen.getByRole('table', { name: /사전 보고 기록/ })).toBeVisible();
+  expect(screen.getByText('사전 보고 기록 · 3명')).toBeVisible();
 });
 
 it('조회 실패 후 다시 시도하면 빈 목록을 표시한다', async () => {

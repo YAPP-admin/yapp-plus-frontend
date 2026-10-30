@@ -30,6 +30,30 @@ export const stat = style({
   background: vars.$color.bg.layerDefault,
 });
 export const scroll = style({ overflowX: 'auto', outlineOffset: '2px' });
+export const tabs = style({
+  display: 'flex',
+  gap: vars.$dimension.x2,
+  borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
+});
+export const tab = style({
+  padding: vars.$dimension.x3,
+  border: 0,
+  borderBottom: '2px solid transparent',
+  background: 'transparent',
+  color: vars.$color.fg.neutralMuted,
+  font: 'inherit',
+  cursor: 'pointer',
+});
+export const activeTab = style({
+  padding: vars.$dimension.x3,
+  border: 0,
+  borderBottom: `2px solid ${vars.$color.fg.brand}`,
+  background: 'transparent',
+  color: vars.$color.fg.neutral,
+  font: 'inherit',
+  fontWeight: vars.$fontWeight.bold,
+  cursor: 'pointer',
+});
 export const caption = style({
   textAlign: 'left',
   fontWeight: vars.$fontWeight.bold,

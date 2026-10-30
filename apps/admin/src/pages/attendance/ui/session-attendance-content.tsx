@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { useHydrated } from '@tanstack/react-router';
+import { useState } from 'react';
 import { ActionButton } from '@yapp-plus/ui';
 import {
   getSessionAttendance,
@@ -55,6 +56,33 @@ function MemberRow({ member }: { member: AttendanceMemberViewModel }) {
   );
 }
 
+function ReportRow({ member }: { member: AttendanceMemberViewModel }) {
+  const report = member.latestReport;
+  if (!report) {
+    return null;
+  }
+  const part = attendancePartSchema.safeParse(member.part);
+  const eligibilityLabels = {
+    eligible: '인정 대상',
+    ineligible: '확인 필요',
+    unknown: '판단 보류',
+  };
+  return (
+    <tr>
+      <th scope="row">
+        <strong>{member.name}</strong>
+        <span className={styles.secondary}>
+          {part.success ? partLabels[part.data] : '직군 미확인'}
+        </span>
+      </th>
+      <td>{reportLabels[report.type]}</td>
+      <td>{report.reason}</td>
+      <td>{formatTime(report.submittedAt)}</td>
+      <td>{eligibilityLabels[report.eligibility]}</td>
+    </tr>
+  );
+}
+
 export function SessionAttendanceContent({
   sessionId,
   part,
@@ -62,6 +90,7 @@ export function SessionAttendanceContent({
   sessionId: string;
   part: AttendancePart;
 }) {
+  const [tab, setTab] = useState<'attendance' | 'reports'>('attendance');
   const hydrated = useHydrated();
   const query = useQuery({
     queryKey: ['admin', 'sessions', sessionId, 'attendance'],
@@ -92,6 +121,7 @@ export function SessionAttendanceContent({
     return <p>팀 세션의 사진 검수 화면을 준비 중입니다.</p>;
   }
   const visibleMembers = members.filter((member) => part === 'all' || member.part === part);
+  const reportedMembers = visibleMembers.filter((member) => member.latestReport);
   return (
     <>
       <section className={styles.card} aria-label="세션 정보">
@@ -112,26 +142,71 @@ export function SessionAttendanceContent({
           ))}
         </dl>
       </section>
-      <section className={styles.scroll} aria-label="회원 출석 목록">
-        <table className={styles.table}>
-          <caption className={styles.caption}>출석 체크 · {visibleMembers.length}명</caption>
-          <thead>
-            <tr>
-              {['참가자', '사전 보고', '앱 출석', '현재 출결 · 점수', '명찰 확인'].map((label) => (
-                <th scope="col" key={label}>
-                  {label}
-                </th>
+      <nav className={styles.tabs} aria-label="출석부 보기">
+        <button
+          className={tab === 'attendance' ? styles.activeTab : styles.tab}
+          type="button"
+          aria-current={tab === 'attendance' ? 'page' : undefined}
+          onClick={() => setTab('attendance')}
+        >
+          출석 체크 {visibleMembers.length}
+        </button>
+        <button
+          className={tab === 'reports' ? styles.activeTab : styles.tab}
+          type="button"
+          aria-current={tab === 'reports' ? 'page' : undefined}
+          onClick={() => setTab('reports')}
+        >
+          사전 보고 기록 {reportedMembers.length}
+        </button>
+      </nav>
+      {tab === 'reports' ? (
+        <section className={styles.scroll} aria-label="사전 보고 기록 목록">
+          <table className={styles.table}>
+            <caption className={styles.caption}>
+              사전 보고 기록 · {reportedMembers.length}명
+            </caption>
+            <thead>
+              <tr>
+                {['참가자', '보고 유형', '사유', '제출 시각', '적격성'].map((label) => (
+                  <th scope="col" key={label}>
+                    {label}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {reportedMembers.map((member) => (
+                <ReportRow key={member.membershipId} member={member} />
               ))}
-            </tr>
-          </thead>
-          <tbody>
-            {visibleMembers.map((member) => (
-              <MemberRow key={member.membershipId} member={member} />
-            ))}
-          </tbody>
-        </table>
-        {visibleMembers.length === 0 && <output>해당 직군의 출석 대상자가 없습니다.</output>}
-      </section>
+            </tbody>
+          </table>
+          {reportedMembers.length === 0 && <output>사전 보고 기록이 없습니다.</output>}
+        </section>
+      ) : (
+        <section className={styles.scroll} aria-label="회원 출석 목록">
+          <table className={styles.table}>
+            <caption className={styles.caption}>출석 체크 · {visibleMembers.length}명</caption>
+            <thead>
+              <tr>
+                {['참가자', '사전 보고', '앱 출석', '현재 출결 · 점수', '명찰 확인'].map(
+                  (label) => (
+                    <th scope="col" key={label}>
+                      {label}
+                    </th>
+                  ),
+                )}
+              </tr>
+            </thead>
+            <tbody>
+              {visibleMembers.map((member) => (
+                <MemberRow key={member.membershipId} member={member} />
+              ))}
+            </tbody>
+          </table>
+          {visibleMembers.length === 0 && <output>해당 직군의 출석 대상자가 없습니다.</output>}
+        </section>
+      )}
     </>
   );
 }
