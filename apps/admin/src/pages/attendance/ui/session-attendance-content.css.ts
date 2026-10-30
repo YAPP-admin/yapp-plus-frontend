@@ -113,3 +113,25 @@ export const sessionActions = style({
   gap: vars.$dimension.x2,
   marginTop: vars.$dimension.x4,
 });
+export const reviewList = style({
+  display: 'grid',
+  gap: vars.$dimension.x3,
+  listStyle: 'none',
+  margin: `${vars.$dimension.x4} 0 0`,
+  padding: 0,
+});
+export const reviewCard = style({
+  display: 'grid',
+  gap: vars.$dimension.x2,
+  padding: vars.$dimension.x4,
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r2,
+  background: vars.$color.bg.layerDefault,
+});
+export const reviewMeta = style({ display: 'grid', gap: vars.$dimension.x1 });
+export const reviewActions = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: vars.$dimension.x2,
+});
+export const photoLink = style({ color: vars.$color.fg.brand, fontWeight: vars.$fontWeight.bold });

@@ -5,6 +5,7 @@ import {
   createSession,
   getAttendanceHistory,
   getSessionAttendance,
+  getTeamReviews,
   listSessions,
   updateSession,
 } from '../service';
@@ -26,6 +27,13 @@ export const attendanceHistoryQueryOptions = (sessionId: string, membershipId: s
   queryOptions({
     queryKey: ['admin', 'sessions', sessionId, 'attendance-history', membershipId],
     queryFn: () => getAttendanceHistory(sessionId, membershipId),
+    retry: false,
+  });
+
+export const teamReviewsQueryOptions = (sessionId: string) =>
+  queryOptions({
+    queryKey: ['admin', 'sessions', sessionId, 'team-reviews'],
+    queryFn: () => getTeamReviews(sessionId),
     retry: false,
   });
 

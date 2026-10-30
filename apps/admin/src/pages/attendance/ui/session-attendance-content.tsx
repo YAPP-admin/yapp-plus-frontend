@@ -6,11 +6,15 @@ import {
   closeAttendance,
   cancelAttendance,
   attendanceHistoryQueryOptions,
+  teamReviewsQueryOptions,
   sessionAttendanceQueryOptions,
   updateMemberAttendance,
   updateMemberBadge,
+  updateTeamPhotoReview,
   type AttendanceEditInput,
   type AttendanceMemberViewModel,
+  type TeamDecisionInput,
+  type TeamReviewViewModel,
 } from '~/features/session-management';
 import { attendancePartSchema, partLabels, type AttendancePart } from '../model/attendance-search';
 import * as styles from './session-attendance-content.css';
@@ -24,6 +28,13 @@ const statusLabels = {
   unsupported: '확인 필요',
 };
 const reportLabels = { late: '지각', earlyLeave: '조퇴', absence: '결석' };
+const reviewStateLabels = {
+  pending: '검수 대기',
+  approved: '검수 완료',
+  rejected: '반려됨',
+  notSubmitted: '사진 미제출',
+  unknown: '상태 확인 필요',
+};
 const summaryStatuses = ['present', 'late', 'earlyLeave', 'absent', 'undecided'] as const;
 const editableStatuses = ['undecided', 'present', 'late', 'earlyLeave', 'absent'] as const;
 const timeFormatter = new Intl.DateTimeFormat('ko-KR', {
@@ -175,6 +186,87 @@ function ReportRow({ member }: { member: AttendanceMemberViewModel }) {
   );
 }
 
+function TeamReviewRow({
+  review,
+  disabled,
+  onDecision,
+}: {
+  review: TeamReviewViewModel;
+  disabled: boolean;
+  onDecision: (input: TeamDecisionInput) => void;
+}) {
+  const selectedMembers = review.photo
+    ? review.members.filter((member) =>
+        review.photo?.selectedMembershipIds.includes(member.membershipId),
+      )
+    : [];
+  let attendanceTargetLabel = '미정';
+  if (review.photo) {
+    attendanceTargetLabel =
+      selectedMembers.length > 0 ? selectedMembers.map((member) => member.name).join(', ') : '없음';
+  }
+  return (
+    <li className={styles.reviewCard}>
+      <div>
+        <strong>{review.teamName}</strong>
+        <span className={styles.secondary}>{reviewStateLabels[review.reviewState]}</span>
+      </div>
+      {review.photo ? (
+        <div className={styles.reviewMeta}>
+          {review.photo.access === 'available' ? (
+            <a
+              className={styles.photoLink}
+              href={review.photo.readUrl}
+              target="_blank"
+              rel="noreferrer"
+            >
+              검수 사진 열기
+            </a>
+          ) : (
+            <span>사진을 확인할 수 없습니다.</span>
+          )}
+          <span className={styles.secondary}>
+            {review.photo.uploaderName ?? '업로더 미상'} · {formatTime(review.photo.submittedAt)}
+          </span>
+        </div>
+      ) : (
+        <span className={styles.secondary}>제출된 사진이 없습니다.</span>
+      )}
+      <span className={styles.secondary}>출석 대상: {attendanceTargetLabel}</span>
+      {review.reviewState === 'pending' && review.photo?.access === 'available' && (
+        <div className={styles.reviewActions}>
+          <ActionButton
+            variant="brandSolid"
+            size="small"
+            type="button"
+            disabled={disabled}
+            onClick={() =>
+              onDecision({
+                photoId: review.photo?.photoId ?? '',
+                decision: 'approve',
+                reason: null,
+              })
+            }
+          >
+            승인
+          </ActionButton>
+          <ActionButton
+            variant="neutralWeak"
+            size="small"
+            type="button"
+            disabled={disabled}
+            onClick={() =>
+              onDecision({ photoId: review.photo?.photoId ?? '', decision: 'reject', reason: null })
+            }
+          >
+            반려
+          </ActionButton>
+        </div>
+      )}
+    </li>
+  );
+}
+
 export function SessionAttendanceContent({
   sessionId,
   part,
@@ -222,9 +314,24 @@ export function SessionAttendanceContent({
       void queryClient.invalidateQueries({ queryKey: ['admin', 'sessions'] });
     },
   });
+  const teamReviewMutation = useMutation({
+    mutationFn: (input: TeamDecisionInput) => updateTeamPhotoReview(sessionId, input),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: ['admin', 'sessions', sessionId, 'team-reviews'],
+      });
+      void queryClient.invalidateQueries({
+        queryKey: ['admin', 'sessions', sessionId, 'attendance'],
+      });
+    },
+  });
   const historyQuery = useQuery({
     ...attendanceHistoryQueryOptions(sessionId, historyMember?.membershipId ?? ''),
     enabled: hydrated && historyMember !== null,
+  });
+  const teamReviewsQuery = useQuery({
+    ...teamReviewsQueryOptions(sessionId),
+    enabled: hydrated && query.data?.session.type === 'team',
   });
   if (query.isPending) {
     return <output>출석 내역을 불러오는 중입니다.</output>;
@@ -245,11 +352,10 @@ export function SessionAttendanceContent({
     );
   }
   const { session, members } = query.data;
-  if (session.type === 'team') {
-    return <p>팀 세션의 사진 검수 화면을 준비 중입니다.</p>;
-  }
-  const visibleMembers = members.filter((member) => part === 'all' || member.part === part);
-  const reportedMembers = visibleMembers.filter((member) => member.latestReport);
+  const teamReviews = teamReviewsQuery.data ?? [];
+  const pendingReviewCount = teamReviews.filter(
+    (review) => review.reviewState === 'pending',
+  ).length;
   let sessionAction = null;
   if (session.phase === 'closed' && session.canCancelClose) {
     sessionAction = (
@@ -267,13 +373,77 @@ export function SessionAttendanceContent({
       <ActionButton
         variant="brandSolid"
         size="small"
-        disabled={closeMutation.isPending}
+        disabled={closeMutation.isPending || (session.type === 'team' && pendingReviewCount > 0)}
         onClick={() => closeMutation.mutate()}
       >
         출석 마감
       </ActionButton>
     );
   }
+  if (session.type === 'team') {
+    return (
+      <>
+        <section className={styles.card} aria-label="세션 정보">
+          <h2 className={styles.heading}>{session.title}</h2>
+          <p className={styles.secondary}>
+            팀 세션 ·{' '}
+            {
+              { closed: '출석 마감', open: '출석 진행 중', unknown: '상태 확인 필요' }[
+                session.phase
+              ]
+            }
+          </p>
+          <div className={styles.sessionActions}>
+            {sessionAction}
+            {pendingReviewCount > 0 && (
+              <output>검수 대기 사진 {pendingReviewCount}건을 먼저 처리해 주세요.</output>
+            )}
+            {closeMutation.isError && (
+              <span role="alert">출석 마감에 실패했습니다. 다시 시도해 주세요.</span>
+            )}
+            {cancelMutation.isError && (
+              <span role="alert">마감 취소에 실패했습니다. 다시 시도해 주세요.</span>
+            )}
+            {teamReviewMutation.isError && (
+              <span role="alert">사진 검수 저장에 실패했습니다. 다시 시도해 주세요.</span>
+            )}
+          </div>
+        </section>
+        <section className={styles.card} aria-label="팀 사진 검수">
+          <h2 className={styles.heading}>팀 사진 검수</h2>
+          {teamReviewsQuery.isPending && <output>팀 사진 검수 목록을 불러오는 중입니다.</output>}
+          {teamReviewsQuery.isError && (
+            <div role="alert">
+              <p>팀 사진 검수 목록을 불러오지 못했습니다.</p>
+              <ActionButton
+                variant="neutralWeak"
+                size="small"
+                disabled={teamReviewsQuery.isFetching}
+                onClick={() => void teamReviewsQuery.refetch()}
+              >
+                다시 시도
+              </ActionButton>
+            </div>
+          )}
+          {teamReviewsQuery.data && (
+            <ul className={styles.reviewList}>
+              {teamReviewsQuery.data.map((review) => (
+                <TeamReviewRow
+                  key={review.teamId}
+                  review={review}
+                  disabled={teamReviewMutation.isPending || session.phase === 'closed'}
+                  onDecision={(input) => teamReviewMutation.mutate(input)}
+                />
+              ))}
+            </ul>
+          )}
+          {teamReviewsQuery.data?.length === 0 && <output>검수할 팀 사진이 없습니다.</output>}
+        </section>
+      </>
+    );
+  }
+  const visibleMembers = members.filter((member) => part === 'all' || member.part === part);
+  const reportedMembers = visibleMembers.filter((member) => member.latestReport);
   return (
     <>
       <section className={styles.card} aria-label="세션 정보">

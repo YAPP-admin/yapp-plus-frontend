@@ -2,11 +2,14 @@ import { attendanceResultSchema } from './attendance';
 import {
   attendanceEditInputSchema,
   badgeEditInputSchema,
+  teamDecisionInputSchema,
   type AttendanceEditInput,
   type BadgeEditInput,
+  type TeamDecisionInput,
 } from './attendance-input';
 import type { AttendanceHistoryEntry } from './attendance-view-model';
 import { calculateMockAttendanceDelta } from './mocks/attendance-score';
+import { createMockTeamReviews } from './mocks/team-reviews';
 import {
   createMockAttendanceSession,
   createMockSessionMembers,
@@ -55,6 +58,8 @@ export type AttendanceMockOperation =
   | 'history'
   | 'attendance'
   | 'badge'
+  | 'teamRead'
+  | 'teamDecision'
   | 'close'
   | 'cancel';
 
@@ -62,6 +67,14 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
   let sessions = sessionSchema.array().parse(initialSessions);
   const attendanceBySession = new Map(
     sessions.map((session) => [session.id, createMockSessionMembers(session)]),
+  );
+  const teamReviewsBySession = new Map(
+    sessions.map((session) => [
+      session.id,
+      session.type === 'team'
+        ? createMockTeamReviews(session, attendanceBySession.get(session.id) ?? [])
+        : [],
+    ]),
   );
 
   const historyBySession = new Map<string, AttendanceHistoryEntry[]>();
@@ -115,11 +128,48 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       return structuredClone({ session: createMockAttendanceSession(session, members), members });
     },
 
+    getTeamReviews(sessionId: string) {
+      const { session } = getContext(sessionId);
+      if (session.type !== 'team') {
+        throw new Error('팀 세션의 사진 검수만 조회할 수 있습니다.');
+      }
+      checkFailure('teamRead', sessionId);
+      return structuredClone(teamReviewsBySession.get(sessionId) ?? []);
+    },
+
+    updateTeamPhotoReview(sessionId: string, input: TeamDecisionInput) {
+      const decision = teamDecisionInputSchema.parse(input);
+      const { session } = getContext(sessionId);
+      if (session.type !== 'team') {
+        throw new Error('팀 세션의 사진 검수만 변경할 수 있습니다.');
+      }
+      if (closedSessions.has(sessionId)) {
+        throw new Error('마감된 세션은 사진 검수를 변경할 수 없습니다.');
+      }
+      checkFailure('teamDecision', sessionId, decision.photoId);
+      const reviews = teamReviewsBySession.get(sessionId) ?? [];
+      const review = reviews.find((entry) => entry.photo?.photoId === decision.photoId);
+      if (!review?.photo) {
+        throw new Error('검수할 사진을 찾을 수 없습니다.');
+      }
+      review.reviewState = decision.decision === 'approve' ? 'approved' : 'rejected';
+      review.decisionDraft = null;
+      return structuredClone(review);
+    },
+
     closeAttendance(sessionId: string) {
       const { session, members } = getContext(sessionId);
       checkFailure('close', sessionId);
       if (closedSessions.has(sessionId)) {
         throw new Error('이미 마감된 세션입니다.');
+      }
+      if (
+        session.type === 'team' &&
+        (teamReviewsBySession.get(sessionId) ?? []).some(
+          (review) => review.reviewState === 'pending',
+        )
+      ) {
+        throw new Error('검수 대기 사진이 있어 출석을 마감할 수 없습니다.');
       }
       members.forEach((member) => {
         if (member.attendance.status !== 'undecided') {
@@ -273,6 +323,12 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       });
 
       attendanceBySession.set(session.id, createMockSessionMembers(session));
+      teamReviewsBySession.set(
+        session.id,
+        session.type === 'team'
+          ? createMockTeamReviews(session, attendanceBySession.get(session.id) ?? [])
+          : [],
+      );
       sessions = [...sessions, session];
       return sessionSchema.parse(session);
     },
@@ -300,6 +356,7 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
 
       sessions = sessions.filter((session) => session.id !== id);
       attendanceBySession.delete(id);
+      teamReviewsBySession.delete(id);
       historyBySession.delete(id);
       closedSessions.delete(id);
       failures = failures.filter((failure) => failure.sessionId !== id);
