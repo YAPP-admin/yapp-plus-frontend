@@ -1,6 +1,6 @@
 /** 저장 성공 시 캐시 무효화와 실패 시 기존 데이터 보존을 검증한다. */
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { noticeContentSchema, noticeSchema } from './notice';
@@ -68,6 +68,26 @@ afterEach(() => {
 });
 
 describe('공지 변경 후 캐시 처리', () => {
+  it('삭제 후 목록 재조회가 실패해도 삭제된 항목을 캐시에 되살리지 않는다', async () => {
+    const { client, wrapper } = setup();
+    vi.mocked(service.listNotices)
+      .mockResolvedValueOnce([saved])
+      .mockRejectedValue(new Error('목록 실패'));
+    vi.mocked(service.deleteNotice).mockResolvedValue(undefined);
+    const { result } = renderHook(
+      () => ({ list: useQuery(noticesQueryOptions), mutations: useNoticeMutations() }),
+      { wrapper },
+    );
+    await waitFor(() => expect(result.current.list.data).toEqual([saved]));
+    await act(async () => {
+      await result.current.mutations.remove.mutateAsync(saved.id);
+    });
+    await waitFor(() => expect(result.current.list.isRefetchError).toBe(true));
+    expect(result.current.list.data).toEqual([]);
+    expect(client.getQueryData(noticesQueryOptions.queryKey)).toEqual([]);
+    expect(service.deleteNotice).toHaveBeenCalledTimes(1);
+  });
+
   it('생성·수정 성공은 목록과 상세를 무효화하고 삭제 성공은 대상 상세만 제거한다', async () => {
     const { client, wrapper } = setup();
     vi.mocked(service.createNotice).mockResolvedValue(saved);
