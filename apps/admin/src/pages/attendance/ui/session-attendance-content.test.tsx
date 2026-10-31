@@ -1,7 +1,9 @@
 import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import type * as TanStackRouter from '@tanstack/react-router';
 import { expect, it, vi } from 'vitest';
+import type * as SessionManagement from '~/features/session-management';
 import {
   cancelAttendance,
   closeAttendance,
@@ -18,40 +20,47 @@ import {
 import { createSessionStore } from '~/features/session-management/testing';
 import { SessionAttendanceContent } from './session-attendance-content';
 
-vi.mock('@tanstack/react-router', () => ({ useHydrated: () => true }));
-vi.mock('~/features/session-management', () => ({
-  cancelAttendance: vi.fn<typeof cancelAttendance>(),
-  closeAttendance: vi.fn<typeof closeAttendance>(),
-  getAttendanceCode: vi.fn<typeof getAttendanceCode>(),
-  getAttendanceHistory: vi.fn<typeof getAttendanceHistory>(),
-  getSessionAttendance: vi.fn<typeof getSessionAttendance>(),
-  getTeamReviews: vi.fn<typeof getTeamReviews>(),
-  updateMemberAttendance: vi.fn<typeof updateMemberAttendance>(),
-  updateMemberBadge: vi.fn<typeof updateMemberBadge>(),
-  updateTeamPhotoReview: vi.fn<typeof updateTeamPhotoReview>(),
-  issueAttendanceCode: vi.fn<typeof issueAttendanceCode>(),
-  reissueAttendanceCode: vi.fn<typeof reissueAttendanceCode>(),
-  sessionAttendanceQueryOptions: (sessionId: string) => ({
-    queryKey: ['admin', 'sessions', sessionId, 'attendance'],
-    queryFn: () => getSessionAttendance(sessionId),
-    retry: false,
-  }),
-  attendanceHistoryQueryOptions: (sessionId: string, membershipId: string) => ({
-    queryKey: ['admin', 'sessions', sessionId, 'attendance-history', membershipId],
-    queryFn: () => getAttendanceHistory(sessionId, membershipId),
-    retry: false,
-  }),
-  teamReviewsQueryOptions: (sessionId: string) => ({
-    queryKey: ['admin', 'sessions', sessionId, 'team-reviews'],
-    queryFn: () => getTeamReviews(sessionId),
-    retry: false,
-  }),
-  attendanceCodeQueryOptions: (sessionId: string) => ({
-    queryKey: ['admin', 'sessions', sessionId, 'attendance-code'],
-    queryFn: () => getAttendanceCode(sessionId),
-    retry: false,
-  }),
-}));
+vi.mock('@tanstack/react-router', async (importOriginal) => {
+  const actual = await importOriginal<typeof TanStackRouter>();
+  return { ...actual, useHydrated: () => true };
+});
+vi.mock('~/features/session-management', async (importOriginal) => {
+  const actual = await importOriginal<typeof SessionManagement>();
+  return {
+    ...actual,
+    cancelAttendance: vi.fn<typeof cancelAttendance>(),
+    closeAttendance: vi.fn<typeof closeAttendance>(),
+    getAttendanceCode: vi.fn<typeof getAttendanceCode>(),
+    getAttendanceHistory: vi.fn<typeof getAttendanceHistory>(),
+    getSessionAttendance: vi.fn<typeof getSessionAttendance>(),
+    getTeamReviews: vi.fn<typeof getTeamReviews>(),
+    updateMemberAttendance: vi.fn<typeof updateMemberAttendance>(),
+    updateMemberBadge: vi.fn<typeof updateMemberBadge>(),
+    updateTeamPhotoReview: vi.fn<typeof updateTeamPhotoReview>(),
+    issueAttendanceCode: vi.fn<typeof issueAttendanceCode>(),
+    reissueAttendanceCode: vi.fn<typeof reissueAttendanceCode>(),
+    sessionAttendanceQueryOptions: (sessionId: string) => ({
+      queryKey: ['admin', 'sessions', sessionId, 'attendance'],
+      queryFn: () => getSessionAttendance(sessionId),
+      retry: false,
+    }),
+    attendanceHistoryQueryOptions: (sessionId: string, membershipId: string) => ({
+      queryKey: ['admin', 'sessions', sessionId, 'attendance-history', membershipId],
+      queryFn: () => getAttendanceHistory(sessionId, membershipId),
+      retry: false,
+    }),
+    teamReviewsQueryOptions: (sessionId: string) => ({
+      queryKey: ['admin', 'sessions', sessionId, 'team-reviews'],
+      queryFn: () => getTeamReviews(sessionId),
+      retry: false,
+    }),
+    attendanceCodeQueryOptions: (sessionId: string) => ({
+      queryKey: ['admin', 'sessions', sessionId, 'attendance-code'],
+      queryFn: () => getAttendanceCode(sessionId),
+      retry: false,
+    }),
+  };
+});
 
 void cancelAttendance;
 void closeAttendance;
@@ -126,8 +135,17 @@ it('직군을 바꿔도 세션 전체 집계는 유지하고 사전 보고와 �
   expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(filtered.length + 1);
   expect(screen.getByRole('columnheader', { name: '사전 보고' })).toBeVisible();
   expect(screen.getByRole('columnheader', { name: '현재 출결 · 점수' })).toBeVisible();
+  const tabs = screen.getAllByRole('tab');
+  expect(tabs).toHaveLength(2);
+  expect(tabs[0]).toHaveAttribute('aria-selected', 'true');
+  expect(screen.getByRole('tabpanel')).toHaveAttribute('aria-labelledby', 'attendance-tab');
   rerender(view('all'));
-  await userEvent.click(screen.getByRole('button', { name: /사전 보고 기록/ }));
+  await userEvent.click(screen.getByRole('tab', { name: /사전 보고 기록/ }));
+  expect(screen.getByRole('tab', { name: /사전 보고 기록/ })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  expect(screen.getByRole('tabpanel')).toHaveAttribute('aria-labelledby', 'reports-tab');
   expect(screen.getByRole('table', { name: /사전 보고 기록/ })).toBeVisible();
   expect(screen.getByText('사전 보고 기록 · 3명')).toBeVisible();
 });
@@ -147,10 +165,35 @@ it('회원별 변경 이력을 열고 이력이 없는 상태를 구분한다', 
     throw new Error('이력 버튼이 없습니다.');
   }
   await userEvent.click(historyButton);
-  expect(await screen.findByRole('region', { name: '출결 변경 이력' })).toHaveTextContent(
-    '변경 이력이 없습니다.',
-  );
+  expect(await screen.findByText('변경 이력이 없습니다.')).toBeVisible();
+  expect(screen.getByRole('region', { name: '출결 변경 이력' })).toBeVisible();
   expect(getAttendanceHistory).toHaveBeenCalledWith(data.session.id, 'mock-member-1');
+});
+
+it('변경 이력 조회 실패 후 다시 시도할 수 있다', async () => {
+  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  const member = data.members[0];
+  if (!member) {
+    throw new Error('mock 회원이 없습니다.');
+  }
+  vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(getAttendanceHistory)
+    .mockRejectedValueOnce(new Error('조회 실패'))
+    .mockResolvedValueOnce([]);
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <SessionAttendanceContent sessionId={data.session.id} part="all" />
+    </QueryClientProvider>,
+  );
+  await screen.findByRole('table', { name: /출석 체크/ });
+  const historyButton = screen.getAllByRole('button', { name: '이력' })[0];
+  if (!historyButton) {
+    throw new Error('이력 버튼이 없습니다.');
+  }
+  await userEvent.click(historyButton);
+  expect(await screen.findByRole('alert')).toHaveTextContent('변경 이력을 불러오지 못했습니다.');
+  await userEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(await screen.findByText('변경 이력이 없습니다.')).toBeVisible();
 });
 
 it('조회 실패 후 다시 시도하면 빈 목록을 표시한다', async () => {

@@ -1,10 +1,15 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useHydrated } from '@tanstack/react-router';
-import { useState } from 'react';
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQueries,
+  useSuspenseQuery,
+} from '@tanstack/react-query';
+import { useState, type ReactNode } from 'react';
 import { ActionButton } from '@yapp-plus/ui';
 import {
   closeAttendance,
   cancelAttendance,
+  AttendanceQueryBoundary,
   attendanceHistoryQueryOptions,
   attendanceCodeQueryOptions,
   teamReviewsQueryOptions,
@@ -17,6 +22,7 @@ import {
   type AttendanceEditInput,
   type AttendanceMemberViewModel,
   type AttendanceCodeViewModel,
+  type AttendanceSessionViewModel,
   type TeamDecisionInput,
   type TeamReviewViewModel,
 } from '~/features/session-management';
@@ -285,8 +291,9 @@ function AttendanceCodeCard({
   onReissue: () => void;
 }) {
   return (
-    <section className={styles.card} aria-label="출석 코드">
+    <section className={styles.card} aria-busy={isPending} aria-label="출석 코드">
       <h2 className={styles.heading}>출석 코드</h2>
+      {isPending && <output>출석 코드를 처리하는 중입니다.</output>}
       {code?.state === 'notIssued' && (
         <div className={styles.codeContent}>
           <p className={styles.secondary}>아직 출석 코드가 발급되지 않았습니다.</p>
@@ -343,13 +350,22 @@ export function SessionAttendanceContent({
   sessionId: string;
   part: AttendancePart;
 }) {
-  const [tab, setTab] = useState<'attendance' | 'reports'>('attendance');
+  return (
+    <AttendanceQueryBoundary
+      fallback={<output>출석 내역을 불러오는 중입니다.</output>}
+      errorMessage="출석 내역을 불러오지 못했습니다."
+      resetKey={`session-attendance-${sessionId}`}
+    >
+      <SessionAttendanceData sessionId={sessionId} part={part} />
+    </AttendanceQueryBoundary>
+  );
+}
+
+function SessionAttendanceData({ sessionId, part }: { sessionId: string; part: AttendancePart }) {
   const [historyMember, setHistoryMember] = useState<AttendanceMemberViewModel | null>(null);
   const queryClient = useQueryClient();
-  const hydrated = useHydrated();
-  const query = useQuery({
-    ...sessionAttendanceQueryOptions(sessionId),
-    enabled: hydrated,
+  const [{ data: attendance }, { data: attendanceCode }] = useSuspenseQueries({
+    queries: [sessionAttendanceQueryOptions(sessionId), attendanceCodeQueryOptions(sessionId)],
   });
   const attendanceMutation = useMutation({
     mutationFn: (input: AttendanceEditInput) => updateMemberAttendance(sessionId, input),
@@ -364,10 +380,6 @@ export function SessionAttendanceContent({
       }),
     onSuccess: () =>
       queryClient.invalidateQueries({ queryKey: ['admin', 'sessions', sessionId, 'attendance'] }),
-  });
-  const attendanceCodeQuery = useQuery({
-    ...attendanceCodeQueryOptions(sessionId),
-    enabled: hydrated,
   });
   const issueCodeMutation = useMutation({
     mutationFn: () => issueAttendanceCode(sessionId),
@@ -412,137 +424,194 @@ export function SessionAttendanceContent({
       });
     },
   });
-  const historyQuery = useQuery({
-    ...attendanceHistoryQueryOptions(sessionId, historyMember?.membershipId ?? ''),
-    enabled: hydrated && historyMember !== null,
-  });
-  const teamReviewsQuery = useQuery({
-    ...teamReviewsQueryOptions(sessionId),
-    enabled: hydrated && query.data?.session.type === 'team',
-  });
-  if (query.isPending) {
-    return <output>출석 내역을 불러오는 중입니다.</output>;
-  }
-  if (query.isError) {
-    return (
-      <div role="alert">
-        <p>출석 내역을 불러오지 못했습니다.</p>
-        <ActionButton
-          variant="neutralWeak"
-          size="small"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        >
-          다시 시도
-        </ActionButton>
-      </div>
-    );
-  }
-  const { session, members } = query.data;
-  const teamReviews = teamReviewsQuery.data ?? [];
-  const pendingReviewCount = teamReviews.filter(
-    (review) => review.reviewState === 'pending',
-  ).length;
+  const { session, members } = attendance;
   const attendanceCodeCard = (
     <AttendanceCodeCard
-      code={attendanceCodeQuery.data}
+      code={attendanceCode}
       isPending={issueCodeMutation.isPending || reissueCodeMutation.isPending}
-      error={
-        attendanceCodeQuery.isError || issueCodeMutation.isError || reissueCodeMutation.isError
-      }
+      error={issueCodeMutation.isError || reissueCodeMutation.isError}
       onIssue={() => issueCodeMutation.mutate()}
       onReissue={() => reissueCodeMutation.mutate()}
     />
   );
-  let sessionAction = null;
-  if (session.phase === 'closed' && session.canCancelClose) {
-    sessionAction = (
-      <ActionButton
-        variant="neutralWeak"
-        size="small"
-        disabled={cancelMutation.isPending}
-        onClick={() => cancelMutation.mutate()}
-      >
-        마감 취소
-      </ActionButton>
-    );
-  } else if (session.phase === 'open') {
-    sessionAction = (
-      <ActionButton
-        variant="brandSolid"
-        size="small"
-        disabled={closeMutation.isPending || (session.type === 'team' && pendingReviewCount > 0)}
-        onClick={() => closeMutation.mutate()}
-      >
-        출석 마감
-      </ActionButton>
-    );
-  }
   if (session.type === 'team') {
     return (
-      <>
-        <section className={styles.card} aria-label="세션 정보">
-          <h2 className={styles.heading}>{session.title}</h2>
-          <p className={styles.secondary}>
-            팀 세션 ·{' '}
-            {
-              { closed: '출석 마감', open: '출석 진행 중', unknown: '상태 확인 필요' }[
-                session.phase
-              ]
-            }
-          </p>
-          <div className={styles.sessionActions}>
-            {sessionAction}
-            {pendingReviewCount > 0 && (
-              <output>검수 대기 사진 {pendingReviewCount}건을 먼저 처리해 주세요.</output>
-            )}
-            {closeMutation.isError && (
-              <span role="alert">출석 마감에 실패했습니다. 다시 시도해 주세요.</span>
-            )}
-            {cancelMutation.isError && (
-              <span role="alert">마감 취소에 실패했습니다. 다시 시도해 주세요.</span>
-            )}
-            {teamReviewMutation.isError && (
-              <span role="alert">사진 검수 저장에 실패했습니다. 다시 시도해 주세요.</span>
-            )}
-          </div>
-        </section>
-        {attendanceCodeCard}
-        <section className={styles.card} aria-label="팀 사진 검수">
-          <h2 className={styles.heading}>팀 사진 검수</h2>
-          {teamReviewsQuery.isPending && <output>팀 사진 검수 목록을 불러오는 중입니다.</output>}
-          {teamReviewsQuery.isError && (
-            <div role="alert">
-              <p>팀 사진 검수 목록을 불러오지 못했습니다.</p>
-              <ActionButton
-                variant="neutralWeak"
-                size="small"
-                disabled={teamReviewsQuery.isFetching}
-                onClick={() => void teamReviewsQuery.refetch()}
-              >
-                다시 시도
-              </ActionButton>
-            </div>
-          )}
-          {teamReviewsQuery.data && (
-            <ul className={styles.reviewList}>
-              {teamReviewsQuery.data.map((review) => (
-                <TeamReviewRow
-                  key={review.teamId}
-                  review={review}
-                  disabled={teamReviewMutation.isPending || session.phase === 'closed'}
-                  onDecision={(input) => teamReviewMutation.mutate(input)}
-                />
-              ))}
-            </ul>
-          )}
-          {teamReviewsQuery.data?.length === 0 && <output>검수할 팀 사진이 없습니다.</output>}
-        </section>
-      </>
+      <AttendanceQueryBoundary
+        fallback={<output>팀 사진 검수 목록을 불러오는 중입니다.</output>}
+        errorMessage="팀 사진 검수 목록을 불러오지 못했습니다."
+        resetKey={`team-reviews-${sessionId}`}
+      >
+        <TeamSessionContent
+          sessionId={sessionId}
+          session={session}
+          attendanceCodeCard={attendanceCodeCard}
+          closePending={closeMutation.isPending}
+          closeError={closeMutation.isError}
+          onClose={() => closeMutation.mutate()}
+          cancelPending={cancelMutation.isPending}
+          cancelError={cancelMutation.isError}
+          onCancel={() => cancelMutation.mutate()}
+          teamDecisionPending={teamReviewMutation.isPending}
+          teamDecisionError={teamReviewMutation.isError}
+          onTeamDecision={(input) => teamReviewMutation.mutate(input)}
+        />
+      </AttendanceQueryBoundary>
     );
   }
   const visibleMembers = members.filter((member) => part === 'all' || member.part === part);
   const reportedMembers = visibleMembers.filter((member) => member.latestReport);
+  return (
+    <RegularSessionContent
+      sessionId={sessionId}
+      session={session}
+      visibleMembers={visibleMembers}
+      reportedMembers={reportedMembers}
+      attendanceCodeCard={attendanceCodeCard}
+      attendancePending={attendanceMutation.isPending}
+      onAttendanceChange={(input) => attendanceMutation.mutate(input)}
+      badgePending={badgeMutation.isPending}
+      onBadgeChange={(member) => badgeMutation.mutate(member)}
+      historyMember={historyMember}
+      onHistoryOpen={setHistoryMember}
+      onHistoryClose={() => setHistoryMember(null)}
+      closePending={closeMutation.isPending}
+      closeError={closeMutation.isError}
+      onClose={() => closeMutation.mutate()}
+      cancelPending={cancelMutation.isPending}
+      cancelError={cancelMutation.isError}
+      onCancel={() => cancelMutation.mutate()}
+    />
+  );
+}
+
+function TeamSessionContent({
+  sessionId,
+  session,
+  attendanceCodeCard,
+  closePending,
+  closeError,
+  onClose,
+  cancelPending,
+  cancelError,
+  onCancel,
+  teamDecisionPending,
+  teamDecisionError,
+  onTeamDecision,
+}: {
+  sessionId: string;
+  session: AttendanceSessionViewModel;
+  attendanceCodeCard: ReactNode;
+  closePending: boolean;
+  closeError: boolean;
+  onClose: () => void;
+  cancelPending: boolean;
+  cancelError: boolean;
+  onCancel: () => void;
+  teamDecisionPending: boolean;
+  teamDecisionError: boolean;
+  onTeamDecision: (input: TeamDecisionInput) => void;
+}) {
+  const { data: teamReviews } = useSuspenseQuery(teamReviewsQueryOptions(sessionId));
+  const pendingReviewCount = teamReviews.filter(
+    (review) => review.reviewState === 'pending',
+  ).length;
+  const sessionAction = getSessionAction({
+    session,
+    closePending,
+    onClose,
+    cancelPending,
+    onCancel,
+    blockClose: pendingReviewCount > 0,
+  });
+
+  return (
+    <>
+      <section className={styles.card} aria-label="세션 정보">
+        <h2 className={styles.heading}>{session.title}</h2>
+        <p className={styles.secondary}>
+          팀 세션 ·{' '}
+          {{ closed: '출석 마감', open: '출석 진행 중', unknown: '상태 확인 필요' }[session.phase]}
+        </p>
+        <div className={styles.sessionActions}>
+          {sessionAction}
+          {pendingReviewCount > 0 && (
+            <output>검수 대기 사진 {pendingReviewCount}건을 먼저 처리해 주세요.</output>
+          )}
+          {closeError && <span role="alert">출석 마감에 실패했습니다. 다시 시도해 주세요.</span>}
+          {cancelError && <span role="alert">마감 취소에 실패했습니다. 다시 시도해 주세요.</span>}
+          {teamDecisionError && (
+            <span role="alert">사진 검수 저장에 실패했습니다. 다시 시도해 주세요.</span>
+          )}
+        </div>
+      </section>
+      {attendanceCodeCard}
+      <section className={styles.card} aria-label="팀 사진 검수">
+        <h2 className={styles.heading}>팀 사진 검수</h2>
+        <ul className={styles.reviewList}>
+          {teamReviews.map((review) => (
+            <TeamReviewRow
+              key={review.teamId}
+              review={review}
+              disabled={teamDecisionPending || session.phase === 'closed'}
+              onDecision={onTeamDecision}
+            />
+          ))}
+        </ul>
+        {teamReviews.length === 0 && <output>검수할 팀 사진이 없습니다.</output>}
+      </section>
+    </>
+  );
+}
+
+function RegularSessionContent({
+  sessionId,
+  session,
+  visibleMembers,
+  reportedMembers,
+  attendanceCodeCard,
+  attendancePending,
+  onAttendanceChange,
+  badgePending,
+  onBadgeChange,
+  historyMember,
+  onHistoryOpen,
+  onHistoryClose,
+  closePending,
+  closeError,
+  onClose,
+  cancelPending,
+  cancelError,
+  onCancel,
+}: {
+  sessionId: string;
+  session: AttendanceSessionViewModel;
+  visibleMembers: AttendanceMemberViewModel[];
+  reportedMembers: AttendanceMemberViewModel[];
+  attendanceCodeCard: ReactNode;
+  attendancePending: boolean;
+  onAttendanceChange: (input: AttendanceEditInput) => void;
+  badgePending: boolean;
+  onBadgeChange: (member: AttendanceMemberViewModel) => void;
+  historyMember: AttendanceMemberViewModel | null;
+  onHistoryOpen: (member: AttendanceMemberViewModel) => void;
+  onHistoryClose: () => void;
+  closePending: boolean;
+  closeError: boolean;
+  onClose: () => void;
+  cancelPending: boolean;
+  cancelError: boolean;
+  onCancel: () => void;
+}) {
+  const [tab, setTab] = useState<'attendance' | 'reports'>('attendance');
+  const sessionAction = getSessionAction({
+    session,
+    closePending,
+    onClose,
+    cancelPending,
+    onCancel,
+    blockClose: false,
+  });
+
   return (
     <>
       <section className={styles.card} aria-label="세션 정보">
@@ -551,17 +620,11 @@ export function SessionAttendanceContent({
           정규 세션 ·{' '}
           {{ closed: '출석 마감', open: '출석 진행 중', unknown: '상태 확인 필요' }[session.phase]}
         </p>
-        {session.type === 'offline' && (
-          <div className={styles.sessionActions}>
-            {sessionAction}
-            {closeMutation.isError && (
-              <span role="alert">출석 마감에 실패했습니다. 다시 시도해 주세요.</span>
-            )}
-            {cancelMutation.isError && (
-              <span role="alert">마감 취소에 실패했습니다. 다시 시도해 주세요.</span>
-            )}
-          </div>
-        )}
+        <div className={styles.sessionActions}>
+          {sessionAction}
+          {closeError && <span role="alert">출석 마감에 실패했습니다. 다시 시도해 주세요.</span>}
+          {cancelError && <span role="alert">마감 취소에 실패했습니다. 다시 시도해 주세요.</span>}
+        </div>
       </section>
       {attendanceCodeCard}
       <section className={styles.card} aria-label="출석 요약">
@@ -575,26 +638,39 @@ export function SessionAttendanceContent({
           ))}
         </dl>
       </section>
-      <nav className={styles.tabs} aria-label="출석부 보기">
+      <div className={styles.tabs} aria-label="출석부 보기" role="tablist">
         <button
           className={tab === 'attendance' ? styles.activeTab : styles.tab}
+          id="attendance-tab"
+          role="tab"
+          aria-controls="attendance-panel"
+          aria-selected={tab === 'attendance'}
           type="button"
-          aria-current={tab === 'attendance' ? 'page' : undefined}
           onClick={() => setTab('attendance')}
         >
           출석 체크 {visibleMembers.length}
         </button>
         <button
           className={tab === 'reports' ? styles.activeTab : styles.tab}
+          id="reports-tab"
+          role="tab"
+          aria-controls="reports-panel"
+          aria-selected={tab === 'reports'}
           type="button"
-          aria-current={tab === 'reports' ? 'page' : undefined}
           onClick={() => setTab('reports')}
         >
           사전 보고 기록 {reportedMembers.length}
         </button>
-      </nav>
+      </div>
       {tab === 'reports' ? (
-        <section className={styles.scroll} aria-label="사전 보고 기록 목록">
+        <section
+          className={styles.scroll}
+          id="reports-panel"
+          role="tabpanel"
+          aria-labelledby="reports-tab"
+          aria-label="사전 보고 기록 목록"
+          tabIndex={0}
+        >
           <table className={styles.table}>
             <caption className={styles.caption}>
               사전 보고 기록 · {reportedMembers.length}명
@@ -617,7 +693,14 @@ export function SessionAttendanceContent({
           {reportedMembers.length === 0 && <output>사전 보고 기록이 없습니다.</output>}
         </section>
       ) : (
-        <section className={styles.scroll} aria-label="회원 출석 목록">
+        <section
+          className={styles.scroll}
+          id="attendance-panel"
+          role="tabpanel"
+          aria-labelledby="attendance-tab"
+          aria-label="회원 출석 목록"
+          tabIndex={0}
+        >
           <table className={styles.table}>
             <caption className={styles.caption}>출석 체크 · {visibleMembers.length}명</caption>
             <thead>
@@ -641,12 +724,12 @@ export function SessionAttendanceContent({
                 <MemberRow
                   key={member.membershipId}
                   member={member}
-                  disabled={attendanceMutation.isPending || badgeMutation.isPending}
+                  disabled={attendancePending || badgePending}
                   onAttendanceChange={(nextMember, status) =>
-                    attendanceMutation.mutate(createAttendanceEdit(nextMember, status))
+                    onAttendanceChange(createAttendanceEdit(nextMember, status))
                   }
-                  onBadgeChange={(nextMember) => badgeMutation.mutate(nextMember)}
-                  onHistoryOpen={setHistoryMember}
+                  onBadgeChange={onBadgeChange}
+                  onHistoryOpen={onHistoryOpen}
                 />
               ))}
             </tbody>
@@ -658,37 +741,98 @@ export function SessionAttendanceContent({
         <section className={styles.historyPanel} aria-label="출결 변경 이력">
           <div className={styles.historyHeader}>
             <h2 className={styles.heading}>{historyMember.name} 출결 변경 이력</h2>
-            <ActionButton
-              variant="neutralWeak"
-              size="small"
-              type="button"
-              onClick={() => setHistoryMember(null)}
-            >
+            <ActionButton variant="neutralWeak" size="small" type="button" onClick={onHistoryClose}>
               닫기
             </ActionButton>
           </div>
-          {historyQuery.isPending && <output>변경 이력을 불러오는 중입니다.</output>}
-          {historyQuery.isError && <p role="alert">변경 이력을 불러오지 못했습니다.</p>}
-          {historyQuery.data && historyQuery.data.length === 0 && (
-            <output>변경 이력이 없습니다.</output>
-          )}
-          {historyQuery.data && historyQuery.data.length > 0 && (
-            <ul className={styles.historyList}>
-              {historyQuery.data.map((entry) => (
-                <li key={entry.id}>
-                  <strong>
-                    {statusLabels[entry.before.status]} → {statusLabels[entry.after.status]}
-                  </strong>
-                  <span className={styles.secondary}>
-                    {formatTime(entry.changedAt)} · {entry.actorName ?? '담당자 미상'}
-                  </span>
-                  {entry.reason && <span className={styles.secondary}>사유: {entry.reason}</span>}
-                </li>
-              ))}
-            </ul>
-          )}
+          <AttendanceQueryBoundary
+            fallback={<output>변경 이력을 불러오는 중입니다.</output>}
+            errorMessage="변경 이력을 불러오지 못했습니다."
+            resetKey={`attendance-history-${sessionId}-${historyMember.membershipId}`}
+          >
+            <AttendanceHistoryData
+              sessionId={sessionId}
+              membershipId={historyMember.membershipId}
+            />
+          </AttendanceQueryBoundary>
         </section>
       )}
     </>
   );
+}
+
+function AttendanceHistoryData({
+  sessionId,
+  membershipId,
+}: {
+  sessionId: string;
+  membershipId: string;
+}) {
+  const { data: history } = useSuspenseQuery(
+    attendanceHistoryQueryOptions(sessionId, membershipId),
+  );
+
+  if (history.length === 0) {
+    return <output>변경 이력이 없습니다.</output>;
+  }
+
+  return (
+    <ul className={styles.historyList}>
+      {history.map((entry) => (
+        <li key={entry.id}>
+          <strong>
+            {statusLabels[entry.before.status]} → {statusLabels[entry.after.status]}
+          </strong>
+          <span className={styles.secondary}>
+            {formatTime(entry.changedAt)} · {entry.actorName ?? '담당자 미상'}
+          </span>
+          {entry.reason && <span className={styles.secondary}>사유: {entry.reason}</span>}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function getSessionAction({
+  session,
+  closePending,
+  onClose,
+  cancelPending,
+  onCancel,
+  blockClose,
+}: {
+  session: AttendanceSessionViewModel;
+  closePending: boolean;
+  onClose: () => void;
+  cancelPending: boolean;
+  onCancel: () => void;
+  blockClose: boolean;
+}) {
+  if (session.phase === 'closed' && session.canCancelClose) {
+    return (
+      <ActionButton
+        variant="neutralWeak"
+        size="small"
+        type="button"
+        disabled={cancelPending}
+        onClick={onCancel}
+      >
+        마감 취소
+      </ActionButton>
+    );
+  }
+  if (session.phase === 'open') {
+    return (
+      <ActionButton
+        variant="brandSolid"
+        size="small"
+        type="button"
+        disabled={closePending || blockClose}
+        onClick={onClose}
+      >
+        출석 마감
+      </ActionButton>
+    );
+  }
+  return null;
 }
