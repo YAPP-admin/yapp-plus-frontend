@@ -53,7 +53,7 @@ describe('ActionButton', () => {
       </ActionButton>,
     );
 
-    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('progressbar', { name: '처리 중' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: /계속/ }));
     expect(onClick).toHaveBeenCalledOnce();
 
