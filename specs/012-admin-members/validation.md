@@ -258,3 +258,13 @@
 - 파일 선택·교체 테스트는 `userEvent.upload`로 변경했다. `userEvent`에 파일 드롭 API가 없어 실제 드롭 이벤트만 `fireEvent.drop`을 유지했다.
 - 리팩터링 후 Admin lint·typecheck·52개 파일·542개 테스트와 루트 `node --run check`, `node --run build`를 통과했다. Admin 빌드는 새 실행했고 나머지 패키지 빌드는 Turbo 캐시를 재사용했다.
 - Zustand·전역 store는 추가하지 않았다. 상태가 업로드 페이지 수명에 한정되고 파일 객체를 라우트 간 공유하거나 영속화할 요구가 없으므로, React Query mutation과 페이지 전용 훅이 현재 경계에 맞다.
+
+## 7b 단계 — 미리보기와 선택(T039~T041)
+
+- `ImportPreview`를 별도 컴포넌트로 분리하고, 오류·중복을 포함한 전체 행을 의미 있는 `<table>`과 원본 행 번호로 표시했다. 표 본문은 제한된 높이의 스크롤 영역에서 확인하며, 원본 번호·오류 메시지·중복 원본 행을 함께 노출한다.
+- 중복 행은 SEED `RadioGroupField`로 건너뛰기/덮어쓰기를 선택한다. 기본값은 건너뛰기이며, 덮어쓰기 선택만 예정 수에 포함한다. 실제 반영 API와 성공 상태는 연결하지 않고 비활성 안내 버튼을 표시한다.
+- 대상 테스트: `pnpm --filter @yapp-plus/admin test -- src/pages/member-import/ui/import-preview.test.tsx src/pages/member-import/ui/member-import-page.test.tsx`에서 2개 파일·6개 테스트 통과.
+- Admin 전체 테스트를 새로 실행해 53개 파일·544개 테스트가 통과했다.
+- `node --run check` 통과. 포맷과 admin lint/typecheck/test는 새로 실행했고, 나머지 패키지 작업은 Turbo 캐시를 재사용했다.
+- `node --run build` 통과. admin 빌드는 7b 변경 기준으로 새로 실행했고, web·Storybook 빌드는 Turbo 캐시를 재사용했다. Storybook의 기존 500kB 초과 청크 경고가 남아 있다.
+- 실제 브라우저·스크린 리더·터치 실기기와 실제 반영 API 연동은 아직 검증하지 않았다. 해당 검증은 8단계 T043~T046에서 수행한다.
