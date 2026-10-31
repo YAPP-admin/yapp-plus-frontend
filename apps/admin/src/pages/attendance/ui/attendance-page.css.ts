@@ -92,9 +92,13 @@ export const scoreDetail = style({
 });
 
 export const scoreDetailSummary = style({
+  display: 'inline-flex',
   width: 'fit-content',
+  minHeight: '2.75rem',
+  alignItems: 'center',
   cursor: 'pointer',
   color: vars.$color.fg.neutral,
+  touchAction: 'manipulation',
   textUnderlineOffset: '0.2em',
   selectors: {
     '&:focus-visible': {
@@ -149,11 +153,24 @@ export const sessionLink = style({
   borderRadius: vars.$radius.r3,
   color: vars.$color.fg.neutral,
   textDecoration: 'none',
+  '@media': {
+    '(hover: hover) and (pointer: fine)': {
+      selectors: {
+        '&:hover': { background: vars.$color.bg.layerDefault },
+      },
+    },
+  },
   selectors: {
-    '&:hover': { background: vars.$color.bg.layerDefault },
     '&:focus-visible': {
       outline: `2px solid ${vars.$color.fg.brand}`,
       outlineOffset: '0.125rem',
     },
   },
 });
+
+export const retry = style({
+  display: 'grid',
+  gap: vars.$dimension.x2,
+});
+
+export const retryMessage = style({ margin: 0 });

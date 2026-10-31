@@ -62,13 +62,22 @@ export const stat = style({
   borderRadius: vars.$radius.r2,
   background: vars.$color.bg.layerDefault,
 });
-export const scroll = style({ overflowX: 'auto', outlineOffset: '2px' });
+export const scroll = style({
+  overflowX: 'auto',
+  outlineOffset: '2px',
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.brand}`,
+    },
+  },
+});
 export const tabs = style({
   display: 'flex',
   gap: vars.$dimension.x2,
   borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
 });
 export const tab = style({
+  minHeight: '2.75rem',
   padding: vars.$dimension.x3,
   border: 0,
   borderBottom: '2px solid transparent',
@@ -76,8 +85,16 @@ export const tab = style({
   color: vars.$color.fg.neutralMuted,
   font: 'inherit',
   cursor: 'pointer',
+  touchAction: 'manipulation',
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.brand}`,
+      outlineOffset: '0.125rem',
+    },
+  },
 });
 export const activeTab = style({
+  minHeight: '2.75rem',
   padding: vars.$dimension.x3,
   border: 0,
   borderBottom: `2px solid ${vars.$color.fg.brand}`,
@@ -86,6 +103,13 @@ export const activeTab = style({
   font: 'inherit',
   fontWeight: vars.$fontWeight.bold,
   cursor: 'pointer',
+  touchAction: 'manipulation',
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.brand}`,
+      outlineOffset: '0.125rem',
+    },
+  },
 });
 export const caption = style({
   textAlign: 'left',
@@ -134,7 +158,20 @@ export const reviewActions = style({
   flexWrap: 'wrap',
   gap: vars.$dimension.x2,
 });
-export const photoLink = style({ color: vars.$color.fg.brand, fontWeight: vars.$fontWeight.bold });
+export const photoLink = style({
+  display: 'inline-flex',
+  minHeight: '2.75rem',
+  alignItems: 'center',
+  color: vars.$color.fg.brand,
+  fontWeight: vars.$fontWeight.bold,
+  touchAction: 'manipulation',
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.brand}`,
+      outlineOffset: '0.125rem',
+    },
+  },
+});
 export const codeContent = style({
   display: 'flex',
   flexWrap: 'wrap',
