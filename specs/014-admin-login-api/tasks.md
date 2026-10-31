@@ -22,10 +22,10 @@
 
 **독립 검증**: 저장·재조회·SSR·저장소 실패와 Staff/회원 인증 종류를 독립 단위 테스트로 확인한다.
 
-- [ ] T002 [US2] token 저장·재조회·빈 값·저장소 예외·SSR·인증 종류 테스트를 `apps/admin/src/features/login/admin-session.test.ts`에 먼저 추가하고 실패를 확인한다.
-- [ ] T003 [US2] `readAdminAccessToken`, `saveAdminAccessToken`, `configureAdminApiClient`를 `apps/admin/src/features/login/admin-session.ts`에 구현한다.
-- [ ] T004 [US2] 관리자 세션 함수를 `apps/admin/src/features/login/index.ts`에서 공개하고 `apps/admin/src/providers.tsx`에서 client 설정을 초기화한다.
-- [ ] T005 [US2] 2단계 집중 테스트와 변경량을 실행하고 결과·캐시 여부를 `specs/014-admin-login-api/validation.md`에 기록한 뒤 리뷰받는다.
+- [x] T002 [US2] token 저장·재조회·빈 값·저장소 예외·SSR·인증 종류 테스트를 `apps/admin/src/features/login/admin-session.test.ts`에 먼저 추가하고 실패를 확인한다.
+- [x] T003 [US2] `readAdminAccessToken`, `saveAdminAccessToken`, `configureAdminApiClient`를 `apps/admin/src/features/login/admin-session.ts`에 구현한다.
+- [x] T004 [US2] 관리자 세션 함수를 `apps/admin/src/features/login/index.ts`에서 공개하고 `apps/admin/src/providers.tsx`에서 client 설정을 초기화한다.
+- [x] T005 [US2] 2단계 집중 테스트와 변경량을 실행하고 결과·캐시 여부를 `specs/014-admin-login-api/validation.md`에 기록한 뒤 리뷰받는다.
 
 **체크포인트**: 로그인 API는 아직 연결하지 않으며 2단계 승인 전 T006을 시작하지 않는다.
 
