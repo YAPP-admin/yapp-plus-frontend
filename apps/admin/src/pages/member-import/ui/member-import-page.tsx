@@ -4,9 +4,9 @@ import { ActionButton } from '@yapp-plus/ui';
 import type { Member } from '~/features/member-management';
 import { useMemberImportUpload } from '../model/use-member-import-upload';
 import { actions, description, page, returnLink, section, title } from './member-import-page.css';
-import { MemberImportSummary } from './member-import-summary';
 import { MemberImportTemplateButton } from './member-import-template-button';
 import { MemberImportUpload } from './member-import-upload';
+import { ImportPreview } from './import-preview';
 
 type MemberImportPageProps = {
   members?: readonly Member[];
@@ -32,7 +32,8 @@ export function MemberImportPage({ members, currentGeneration }: MemberImportPag
           setEntries={upload.setEntries}
         />
 
-        <MemberImportSummary
+        <ImportPreview
+          key={upload.result?.fileName ?? 'empty'}
           result={upload.result}
           members={members}
           currentGeneration={currentGeneration}
