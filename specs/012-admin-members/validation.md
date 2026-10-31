@@ -226,4 +226,13 @@
 - 대상 테스트 실행: `use-import-file.test.tsx` 3개 통과. admin 전체 테스트는 50개 파일·534개 테스트 통과.
 - `node --run check` 통과: 포맷 515개 파일, admin lint·typecheck·test는 새 실행, 나머지 lint 6개·typecheck 6개·test 3개는 Turbo 캐시 재사용.
 - `node --run build` 통과: admin build는 새 실행, web·Storybook build는 Turbo 캐시 재사용. 기존 청크 크기 경고는 남아 있다.
-- 훅 변경은 현재 작업 트리에 있으며 별도 커밋하지 않았다. 사용자 리뷰 후 T036/T038 또는 6b 진행 여부를 확인한다.
+- 훅 변경은 `e9728f0`에 커밋했다. T036/T038은 아직 구현하지 않았고, 사용자 승인으로 6b를 진행했다.
+
+## 6b 단계 — 행 검증·중복 분류(T033~T035)
+
+- `import-rows.ts`에 빈 행 제외·trim·열 수·필수 값·기수/직군/권한·전화번호 검증을 추가했다. 기존 `memberPhoneNumberSchema`로 하이픈 제거와 앞자리 유실 오류를 동일하게 처리한다.
+- 유효 행의 전화번호·기수 조합만 내부 중복 집합에 추가한다. 오류 행 뒤의 유효 행은 정상으로 남고, 이후 동일 조합은 첫 유효 원본 행을 가리키는 `duplicate-in-file` 오류가 된다.
+- 읽기 전용 회원 명단과 비교해 신규 회원·새 기수·기존 활동 중복을 분류하고 기존 회원·활동 ID를 보존한다. 정상·오류·중복과 덮어쓰기 선택 기반 예정 수를 배타적으로 계산한다.
+- 대상 테스트 실행: `import-rows.test.ts` 4개 통과. admin 전체 테스트는 51개 파일·538개 테스트 통과.
+- admin lint·typecheck 통과. `node --run check`와 `node --run build`는 이 단계 보고 전 실행한다.
+- 6b 변경은 현재 작업 트리에 있으며 별도 커밋하지 않았다. 사용자 리뷰 후 7a UI(T036/T038) 진행 여부를 확인한다.
