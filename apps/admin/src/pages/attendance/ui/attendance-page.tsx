@@ -1,7 +1,11 @@
 import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { useSessionsQuery } from '~/features/session-management';
+import {
+  useMemberScoresQuery,
+  useSessionsQuery,
+  type MemberScoreViewModel,
+} from '~/features/session-management';
 import {
   attendancePartSchema,
   attendanceSessionPartSchema,
@@ -109,10 +113,89 @@ export function SessionAttendancePage({
 }
 
 export function AttendanceScoresPage(props: FilterProps<AttendancePart>) {
+  const scoresQuery = useMemberScoresQuery();
+  const labels = { ...partLabels, all: '모든 직군' };
+  const scores = scoresQuery.data ? filterMemberScores(scoresQuery.data, props.part) : undefined;
+
   return (
     <AttendanceLayout title="출석 총점" description="직군별 출석 총점을 확인합니다.">
       <PartFilter {...props} options={attendancePartSchema.options} />
-      <p className={styles.placeholder}>출석 총점을 준비 중입니다.</p>
+      <p className={styles.scoreNotice}>
+        현재는 화면 검증용 mock 점수입니다. 실제 관리자 누적 점수 API 연동 전까지 서버 점수로
+        간주하지 않습니다.
+      </p>
+      {scoresQuery.isPending && <output>회원 점수를 불러오는 중입니다.</output>}
+      {scoresQuery.isError && <p role="alert">회원 점수를 불러오지 못했습니다.</p>}
+      {scores && scores.length === 0 && (
+        <p className={styles.placeholder}>{labels[props.part]} 직군의 회원이 없습니다.</p>
+      )}
+      {scores && scores.length > 0 && (
+        <div className={styles.scoreTableWrap}>
+          <table className={styles.scoreTable} aria-label="회원 누적 점수">
+            <thead>
+              <tr>
+                <th className={styles.scoreHeader} scope="col">
+                  회원
+                </th>
+                <th className={styles.scoreHeader} scope="col">
+                  직군
+                </th>
+                <th className={styles.scoreHeader} scope="col">
+                  총점
+                </th>
+                <th className={styles.scoreHeader} scope="col">
+                  근거
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {scores.map((score) => (
+                <ScoreRow key={score.membershipId} score={score} />
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </AttendanceLayout>
+  );
+}
+
+export function filterMemberScores(scores: readonly MemberScoreViewModel[], part: AttendancePart) {
+  return scores.filter((score) => part === 'all' || score.part === part);
+}
+
+export function ScoreRow({ score }: { score: MemberScoreViewModel }) {
+  return (
+    <tr>
+      <th className={styles.scoreCell} scope="row">
+        {score.name}
+      </th>
+      <td className={styles.scoreCell}>{score.part ?? '미지정'}</td>
+      <td className={`${styles.scoreCell} ${score.warning ? styles.scoreWarning : ''}`}>
+        <span className={styles.scoreValue}>
+          {score.totalScore === null ? '계산 대기' : `${score.totalScore}점`}
+        </span>
+        {score.warning && <span> · 40점 미만</span>}
+      </td>
+      <td className={styles.scoreCell}>
+        <details className={styles.scoreDetail} aria-label={`${score.name} 점수 근거`}>
+          <summary className={styles.scoreDetailSummary}>상세 보기</summary>
+          <ul className={styles.scoreDetailList}>
+            {score.attendanceEntries.map((entry) => (
+              <li className={styles.scoreDetailItem} key={entry.sessionId}>
+                <span>{entry.title}</span>
+                <span>{entry.score.delta === null ? '확인 필요' : `${entry.score.delta}점`}</span>
+              </li>
+            ))}
+            {score.adjustmentEntries.map((entry) => (
+              <li className={styles.scoreDetailItem} key={entry.id}>
+                <span>{entry.description}</span>
+                <span>{entry.delta}점</span>
+              </li>
+            ))}
+          </ul>
+        </details>
+      </td>
+    </tr>
   );
 }

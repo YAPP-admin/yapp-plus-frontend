@@ -22,6 +22,11 @@ export async function listSessions() {
   return sessionSchema.array().parse(store.listSessions());
 }
 
+export async function listMemberScores() {
+  const store = await getStore();
+  return store.listMemberScores();
+}
+
 export async function createSession(input: CreateSessionInput) {
   const store = await getStore();
   return sessionSchema.parse(store.createSession(createSessionInputSchema.parse(input)));

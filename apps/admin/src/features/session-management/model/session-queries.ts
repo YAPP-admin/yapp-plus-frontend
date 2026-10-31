@@ -8,12 +8,19 @@ import {
   getSessionAttendance,
   getTeamReviews,
   listSessions,
+  listMemberScores,
   updateSession,
 } from '../service';
 
 export const sessionsQueryOptions = queryOptions({
   queryKey: ['admin', 'sessions'],
   queryFn: listSessions,
+  retry: false,
+});
+
+export const memberScoresQueryOptions = queryOptions({
+  queryKey: ['admin', 'attendance', 'member-scores'],
+  queryFn: listMemberScores,
   retry: false,
 });
 
@@ -50,6 +57,15 @@ export function useSessionsQuery() {
 
   return useQuery({
     ...sessionsQueryOptions,
+    enabled: hydrated,
+  });
+}
+
+export function useMemberScoresQuery() {
+  const hydrated = useHydrated();
+
+  return useQuery({
+    ...memberScoresQueryOptions,
     enabled: hydrated,
   });
 }

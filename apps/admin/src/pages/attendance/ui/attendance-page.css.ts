@@ -36,6 +36,87 @@ export const placeholder = style({
   fontSize: vars.$fontSize.t4,
 });
 
+export const scoreNotice = style({
+  margin: 0,
+  padding: vars.$dimension.x4,
+  borderRadius: vars.$radius.r3,
+  background: vars.$color.bg.layerDefault,
+  color: vars.$color.fg.neutralMuted,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+});
+
+export const scoreTableWrap = style({
+  overflowX: 'auto',
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r3,
+});
+
+export const scoreTable = style({
+  width: '100%',
+  minWidth: '44rem',
+  borderCollapse: 'collapse',
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+});
+
+export const scoreHeader = style({
+  padding: `${vars.$dimension.x3} ${vars.$dimension.x4}`,
+  borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  background: vars.$color.bg.layerDefault,
+  color: vars.$color.fg.neutralMuted,
+  fontWeight: vars.$fontWeight.bold,
+  textAlign: 'left',
+  whiteSpace: 'nowrap',
+});
+
+export const scoreCell = style({
+  padding: `${vars.$dimension.x3} ${vars.$dimension.x4}`,
+  borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  verticalAlign: 'top',
+});
+
+export const scoreValue = style({
+  fontWeight: vars.$fontWeight.bold,
+  whiteSpace: 'nowrap',
+});
+
+export const scoreWarning = style({
+  color: vars.$color.fg.critical,
+  fontWeight: vars.$fontWeight.bold,
+});
+
+export const scoreDetail = style({
+  marginTop: vars.$dimension.x2,
+  color: vars.$color.fg.neutralMuted,
+});
+
+export const scoreDetailSummary = style({
+  width: 'fit-content',
+  cursor: 'pointer',
+  color: vars.$color.fg.neutral,
+  textUnderlineOffset: '0.2em',
+  selectors: {
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.brand}`,
+      outlineOffset: '0.125rem',
+    },
+  },
+});
+
+export const scoreDetailList = style({
+  display: 'grid',
+  gap: vars.$dimension.x1,
+  margin: `${vars.$dimension.x3} 0 0`,
+  paddingLeft: vars.$dimension.x4,
+});
+
+export const scoreDetailItem = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: vars.$dimension.x2,
+});
+
 export const backLink = style({
   display: 'inline-flex',
   width: 'fit-content',

@@ -24,16 +24,19 @@ export {
   updateMemberAttendance,
   updateMemberBadge,
   listSessions,
+  listMemberScores,
   updateSession,
 } from './service';
 export {
   sessionsQueryOptions,
+  memberScoresQueryOptions,
   sessionAttendanceQueryOptions,
   attendanceHistoryQueryOptions,
   teamReviewsQueryOptions,
   attendanceCodeQueryOptions,
   useCreateSessionMutation,
   useSessionsQuery,
+  useMemberScoresQuery,
   useUpdateSessionMutation,
 } from './model/session-queries';
 export {

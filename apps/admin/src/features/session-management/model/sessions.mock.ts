@@ -8,8 +8,9 @@ import {
   type TeamDecisionInput,
 } from './attendance-input';
 import type { AttendanceCodeViewModel, AttendanceHistoryEntry } from './attendance-view-model';
-import { calculateMockAttendanceDelta } from './mocks/attendance-score';
 import { createMockAttendanceCode, issueMockAttendanceCode } from './mocks/attendance-code';
+import { calculateMockAttendanceDelta } from './mocks/attendance-score';
+import { createMockMemberScores } from './mocks/member-score';
 import { createMockTeamReviews } from './mocks/team-reviews';
 import {
   createMockAttendanceSession,
@@ -84,6 +85,7 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
     sessions.map((session) => [session.id, createMockAttendanceCode(session)]),
   );
   const attendanceCodeRevisions = new Map<string, number>();
+  const memberScores = createMockMemberScores();
 
   const historyBySession = new Map<string, AttendanceHistoryEntry[]>();
   const closedSessions = new Set<string>();
@@ -128,6 +130,10 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
   return {
     listSessions(): Session[] {
       return sessionSchema.array().parse(sortSessions(sessions));
+    },
+
+    listMemberScores() {
+      return structuredClone(memberScores);
     },
 
     getSessionAttendance(id: string) {

@@ -14,6 +14,7 @@ import { createAdminQueryClient } from '../../../query-client';
 import type { SessionFilter } from '../model/session-search';
 import { sessionsQueryOptions } from '~/features/session-management';
 import { createSession, listSessions, updateSession } from '~/features/session-management/service';
+import type { listMemberScores } from '~/features/session-management/service';
 import { lookupCoordinates } from '../model/location/coordinates';
 import { createSessionStore } from '~/features/session-management/testing';
 import { AdminOverlayProvider } from '../../../app/ui/admin-overlay-provider';
@@ -48,6 +49,7 @@ vi.mock('./session-schedule-field', () => ({
 }));
 
 vi.mock('~/features/session-management/service', () => ({
+  listMemberScores: vi.fn<typeof listMemberScores>(),
   listSessions: vi.fn<typeof listSessions>(),
   createSession: vi.fn<typeof createSession>(),
   updateSession: vi.fn<typeof updateSession>(),
