@@ -126,3 +126,38 @@ mock 생성 자체의 테스트는 추가하지 않았다. 기존 서비스 테�
 `mise exec -- node --run check`와 `mise exec -- node --run build` 통과. 서비스 흐름 테스트 7개를 추가해 어드민 501개가 통과했다.
 초기 lint의 테스트 진입점 import 순서를 수정한 뒤 전체 검사를 다시 통과했다. diff 공백 검사도 통과했다.
 3단계 서비스를 완료했으며 4단계 화면 구현은 사용자 리뷰 및 진행 확인 전까지 시작하지 않는다.
+
+## 4~12단계: 출석 화면 통합과 최종 검증
+
+정규·팀 세션 출석 화면, 사전 보고, 출결 변경 이력, 명찰 확인, 출석 마감·취소, 출석 코드,
+팀 사진 검수, 누적 점수 화면을 mock 서비스와 독립 ViewModel로 연결했다. 세션 생성 후 출석
+명단은 mock 저장소에서 자동 준비하며, 출석 코드 발급은 별도 명시적 작업으로 유지한다.
+
+조회 계층은 다음 원칙으로 정리했다.
+
+- 화면 진입에 필요한 조회는 `queryOptions`와 `useSuspenseQuery` 또는 병렬 `useSuspenseQueries`를 사용한다.
+- 로딩·조회 오류·재시도는 `AttendanceQueryBoundary`에서 담당하며, 화면 컴포넌트는 성공 데이터만 렌더링한다.
+- 팀 사진 검수와 선택 회원의 변경 이력처럼 조건부인 조회는 하위 Suspense 경계로 분리한다.
+- 조회 결과는 `const { data } = use...Query()` 형태로 구조분해하며, 조회 상태 객체를 화면 전체에 전달하지 않는다.
+- 현재 출석 mock API에는 검색·페이지네이션 계약이 없으므로 임의의 query parameter를 추가하지 않았다.
+  실제 계약이 확정되면 URL이 검색어·필터·페이지를 소유하고, 매개변수를 query key에 포함한
+  `queryOptions(params)`와 `placeholderData: keepPreviousData`를 사용한다. 검색어는 제출 또는
+  debounce 시점에만 URL을 갱신하고 검색 조건 변경 시 페이지를 1로 초기화한다.
+
+최종 검증 결과:
+
+- `mise exec -- node --run check`: 통과
+- `mise exec -- node --run build`: 통과
+- Admin 테스트 44개 파일, 514개 테스트: 통과
+- `git diff --check`: 통과
+- Chrome에서 `/attendance/demo-offline-session`의 출석 요약, 출결 표, 사전 보고 탭, 마감 버튼,
+  명찰 확인·이력 버튼을 확인했다.
+- 화면 확인 자료: `.context/attendance-stage12-accessibility.png`
+
+미검증 항목과 후속 계약:
+
+- 실제 백엔드 응답·인증·마감 동시성은 mock 경계 밖이므로 검증하지 않았다.
+- 실제 검색·페이지네이션 응답 계약이 확정되면 query key, URL 스키마, 부분 페이지·전체 마감 범위를
+  별도 단계로 검토한다.
+- 누적 점수는 실제 서버 점수 API가 제공되기 전까지 mock 표시이며, 클라이언트 계산을 실제 정책으로
+  사용하지 않는다.
