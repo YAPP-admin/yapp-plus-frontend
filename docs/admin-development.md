@@ -118,6 +118,48 @@ export const Route = createFileRoute('/_dashboard/')({ component: DashboardPage 
   인스턴스는 백엔드 인증 헤더·훅을 공유하지 않습니다. 원본 오류에 키·요청 URL이 포함될 수
   있으므로 화면이나 로그에 그대로 출력하지 않습니다.
 
+### TanStack Query 조회 규칙
+
+어드민 조회는 `useSuspenseQuery`와 `useSuspenseQueries`를 기본으로 사용합니다. 페이지 진입에
+필요한 데이터를 Suspense 경계에서 함께 조회하고, 로딩·오류·재시도 UI는 경계 컴포넌트가
+담당하게 합니다. 조회 컴포넌트는 성공한 `data`를 렌더링하는 데 집중합니다.
+
+```tsx
+const [{ data: sessions }, { data: members }] = useSuspenseQueries({
+  queries: [sessionsQueryOptions(search), membersQueryOptions(search)],
+});
+```
+
+`useQuery`는 금지하지 않지만 다음처럼 조회가 준비되지 않은 동안 이전 결과를 유지하거나
+조회 실행 자체를 조건부로 제어해야 할 때만 사용합니다.
+
+- 검색어·필터·페이지 변경 중 `placeholderData: keepPreviousData`로 목록을 유지해야 하는 서버 목록
+- 선택된 행, 열어 둔 패널처럼 사용자의 동작 이후에만 실행하는 조건부 조회
+- `enabled`가 필요한 의존 조회를 별도 하위 컴포넌트와 Suspense 경계로 분리할 수 없는 경우
+
+검색·페이지네이션 조회는 다음 규칙을 함께 적용합니다.
+
+1. 검색어·필터·정렬·`page`·`pageSize`는 URL search params가 소유하고 라우트에서 Zod로 검증합니다.
+2. 조회 함수와 query key에 동일한 매개변수를 포함한 `queryOptions(params)`를 만듭니다.
+3. 검색 조건이나 정렬이 바뀌면 `page`를 1로 초기화하고, 입력 중에는 debounce 또는 제출 시점에만 URL을 갱신합니다.
+4. 이전 목록을 유지하는 동안에는 `isFetching`을 갱신 표시로만 사용하고, 결과·오류 상태를 별도 React 상태에 복제하지 않습니다.
+5. 서버 페이지네이션은 Table의 manual 모드로 연결하며, 전체 작업의 대상 범위를 현재 페이지 데이터로 제한하지 않습니다.
+
+`useQuery` 결과는 화면에서 객체 이름을 반복해서 탐색하지 말고 구조분해합니다. 여러 조회의
+동일한 상태명은 `isFetching: isSessionsFetching`처럼 별칭을 사용합니다.
+
+```tsx
+const { data: sessions, isFetching: isSessionsFetching } = useQuery({
+  ...sessionsQueryOptions(search),
+  placeholderData: keepPreviousData,
+});
+```
+
+조건부 조회를 Suspense 하위 컴포넌트로 옮길 수 있다면 그 방식을 우선합니다. `useSuspenseQuery`에는
+`enabled`를 붙여 실행을 늦출 수 없으므로, 아직 선택되지 않은 식별자로 query를 호출하거나 빈
+문자열을 key에 넣어 우회하지 않습니다. 실제 백엔드가 검색·페이지네이션 계약을 제공하기 전에는
+화면에 임의의 query parameter와 페이지 상태를 추가하지 않습니다.
+
 좌표계·경위도 순서·proj4 선택 이유와 주소 API 정책은
 [세션 장소 설계](../specs/010-session-location/plan.md)와
 [운영·검증 기록](../specs/010-session-location/quickstart.md)에 둡니다.
