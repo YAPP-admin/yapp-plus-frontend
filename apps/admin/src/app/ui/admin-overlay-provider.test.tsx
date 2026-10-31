@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { ContentDialog, Portal } from '@seed-design/react';
+import { Dialog, Portal } from '@seed-design/react';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   createMemoryHistory,
@@ -28,7 +28,7 @@ function TestDialog({
   const pathname = useLocation({ select: (location) => location.pathname });
 
   return (
-    <ContentDialog.Root
+    <Dialog.Root
       open
       onOpenChange={(open) => {
         if (!open) {
@@ -37,13 +37,13 @@ function TestDialog({
       }}
     >
       <Portal>
-        <ContentDialog.Backdrop />
-        <ContentDialog.Positioner>
-          <ContentDialog.Content>
-            <ContentDialog.Header>
-              <ContentDialog.Title>연결 확인</ContentDialog.Title>
-            </ContentDialog.Header>
-            <ContentDialog.Body>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content>
+            <Dialog.Header>
+              <Dialog.Title>연결 확인</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
               <p>
                 {pathname}: {client.getQueryData<string>(['overlay-test'])}
               </p>
@@ -51,19 +51,19 @@ function TestDialog({
                 선택값
                 <input value={draft} onChange={(event) => setDraft(event.target.value)} />
               </label>
-            </ContentDialog.Body>
-            <ContentDialog.Footer>
+            </Dialog.Body>
+            <Dialog.Footer>
               <button type="button" onClick={onClose}>
                 취소
               </button>
               <button type="button" onClick={() => onConfirm(draft)}>
                 확인
               </button>
-            </ContentDialog.Footer>
-          </ContentDialog.Content>
-        </ContentDialog.Positioner>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
       </Portal>
-    </ContentDialog.Root>
+    </Dialog.Root>
   );
 }
 

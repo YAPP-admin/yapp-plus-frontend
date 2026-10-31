@@ -1,7 +1,10 @@
 /** SEED의 기본 파일 검증에 공지의 묶음 제한과 이미지 읽기 확인을 더한다. */
 import type { NoticeAttachment } from './notice';
-import type { AttachmentInputRootProps } from '@seed-design/react';
-import type { FileEntry, FileRejection } from '@seed-design/react/primitive';
+import type { AttachmentInputFileEntry, AttachmentInputRootProps } from '@seed-design/react';
+
+export type FileRejection = Parameters<
+  NonNullable<AttachmentInputRootProps['onFileReject']>
+>[0][number];
 
 export const MAX_NOTICE_ATTACHMENTS = 5;
 
@@ -27,9 +30,9 @@ export function getNoticeAttachmentCountError(currentCount: number, selectedCoun
 }
 
 /** SEED의 형식·크기 검증을 통과한 파일만 읽고, 실패한 파일과 정상 파일을 구분한다. */
-export async function validateNoticeAttachmentImages(entries: FileEntry[]) {
+export async function validateNoticeAttachmentImages(entries: AttachmentInputFileEntry[]) {
   const results = await Promise.all(entries.map(canReadImage));
-  const accepted: FileEntry[] = [];
+  const accepted: AttachmentInputFileEntry[] = [];
   const rejected: FileRejection[] = [];
 
   for (const [index, entry] of entries.entries()) {
@@ -44,7 +47,7 @@ export async function validateNoticeAttachmentImages(entries: FileEntry[]) {
 }
 
 /** 객체 URL을 만들지 않고 이미지 디코딩을 확인하며 임시 비트맵은 즉시 해제한다. */
-async function canReadImage({ file }: FileEntry) {
+async function canReadImage({ file }: AttachmentInputFileEntry) {
   try {
     const bitmap = await createImageBitmap(file);
     bitmap.close();
@@ -56,7 +59,9 @@ async function canReadImage({ file }: FileEntry) {
 }
 
 /** 저장 Blob을 SEED가 사용하는 편집용 File 목록으로 변환한다. 원본 배열은 바꾸지 않는다. */
-export function getNoticeAttachmentEntries(attachments: NoticeAttachment[]): FileEntry[] {
+export function getNoticeAttachmentEntries(
+  attachments: NoticeAttachment[],
+): AttachmentInputFileEntry[] {
   return attachments.map(({ id, name, blob }) => ({
     id,
     file: new File([blob], name, { type: blob.type }),

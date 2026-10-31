@@ -1,5 +1,4 @@
-import { Chip } from '@seed-design/react';
-import { RadioGroup } from '@seed-design/react/primitive';
+import { Chip, RadioGroup, RadioGroupField } from '@seed-design/react';
 import {
   sessionFilterLabels,
   sessionFilterSchema,
@@ -15,20 +14,20 @@ export function SessionTypeFilter({
   onValueChange: (value: SessionFilter) => void;
 }) {
   return (
-    <RadioGroup.Root
+    <RadioGroupField.Root.Primitive
       className={filter}
       aria-label="세션 유형"
       value={selectedType}
       onValueChange={(value) => onValueChange(sessionFilterSchema.parse(value))}
     >
       {sessionFilterSchema.options.map((value) => (
-        <Chip.Root key={value} asChild size="large" variant="solid">
-          <RadioGroup.Item value={value}>
+        <Chip.Button key={value} asChild size="large" variant="solid">
+          <RadioGroup.Item.Primitive value={value}>
             <Chip.Label>{sessionFilterLabels[value]}</Chip.Label>
             <RadioGroup.ItemHiddenInput />
-          </RadioGroup.Item>
-        </Chip.Root>
+          </RadioGroup.Item.Primitive>
+        </Chip.Button>
       ))}
-    </RadioGroup.Root>
+    </RadioGroupField.Root.Primitive>
   );
 }

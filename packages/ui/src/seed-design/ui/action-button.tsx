@@ -1,28 +1,34 @@
 /**
  * @file ui:action-button
- * @requires @seed-design/react@^2.0.0
- * @requires @seed-design/css@^2.0.0
+ * @requires @seed-design/react@^2.0.0 || ^3.0.0
  **/
 
 'use client';
 
-import { ActionButton as SeedActionButton } from '@seed-design/react';
-import type { ComponentProps } from 'react';
+import {
+  ActionButton as SeedActionButton,
+  type ActionButtonProps as SeedActionButtonProps,
+} from '@seed-design/react';
+import * as React from 'react';
 import { LoadingIndicator } from './loading-indicator';
 
-export type ActionButtonProps = ComponentProps<typeof SeedActionButton>;
+export type ActionButtonProps = SeedActionButtonProps;
 
 /**
  * @see https://seed-design.io/react/components/action-button
- * asChild를 사용하면 소비자가 LoadingIndicator를 직접 구성합니다.
+ * `asChild`를 사용하면 소비자가 `LoadingIndicator`를 직접 구성합니다.
  */
-export function ActionButton({ loading = false, children, ...otherProps }: ActionButtonProps) {
+export const ActionButton = React.forwardRef<
+  React.ElementRef<typeof SeedActionButton>,
+  ActionButtonProps
+>(({ loading = false, children, ...otherProps }, ref) => {
   return (
-    <SeedActionButton loading={loading} {...otherProps}>
+    <SeedActionButton ref={ref} loading={loading} {...otherProps}>
       {loading && !otherProps.asChild ? <LoadingIndicator>{children}</LoadingIndicator> : children}
     </SeedActionButton>
   );
-}
+});
+ActionButton.displayName = 'ActionButton';
 
 /**
  * This file is a snippet from SEED Design, helping you get started quickly with @seed-design/* packages.

@@ -68,7 +68,7 @@ export const cardHeader = style({
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: `${vars.$dimension.x2} ${vars.$dimension.x4}`,
-  background: vars.$color.bg.layerFill,
+  background: vars.$color.bg.neutralMuted,
   borderRadius: `${vars.$radius.r2} ${vars.$radius.r2} 0 0`,
 });
 
@@ -217,7 +217,7 @@ export const chipBase = style({
 export const attendedChip = style([
   chipBase,
   {
-    background: vars.$color.bg.layerFill,
+    background: vars.$color.bg.neutralMuted,
     color: vars.$color.fg.neutralSubtle,
   },
 ]);

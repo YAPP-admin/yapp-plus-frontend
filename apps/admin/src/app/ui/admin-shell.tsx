@@ -1,6 +1,7 @@
 /** 반응형 표시는 SEED의 CSS로 처리하여 첫 화면부터 탐색 영역의 너비를 유지한다. */
-import { Badge, Box, SideNavigation, Text, useBreakpointValue } from '@seed-design/react';
+import { Box, SideNavigation, Text, useBreakpointValue } from '@seed-design/react';
 import { useMatches } from '@tanstack/react-router';
+import { Badge } from '@yapp-plus/ui';
 import type { ReactNode } from 'react';
 import { AdminSidebar } from './admin-sidebar';
 import { AdminMobileNavigation } from './admin-mobile-navigation';

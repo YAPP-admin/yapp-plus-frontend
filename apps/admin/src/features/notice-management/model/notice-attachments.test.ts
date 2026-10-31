@@ -1,6 +1,6 @@
 /** 공지 전용 묶음 제한과 이미지 읽기 실패 처리만 검증한다. */
 import { afterEach, expect, it, vi } from 'vitest';
-import type { FileEntry } from '@seed-design/react/primitive';
+import type { AttachmentInputFileEntry } from '@seed-design/react';
 import {
   getNoticeAttachmentCountError,
   validateNoticeAttachmentImages,
@@ -25,11 +25,13 @@ it('기존 4개가 있으면 신규 2개 묶음을 거절하고 남은 개수를
 it('SEED 검증 후 읽기 실패만 제외하고 선택 순서와 파일별 오류를 보존한다', async () => {
   const close = vi.fn<() => void>();
   const damaged = file('손상.png');
-  const entries: FileEntry[] = [file('첫째.png'), damaged, file('셋째.png')].map((image) => ({
-    id: image.name,
-    file: image,
-    status: 'pending',
-  }));
+  const entries: AttachmentInputFileEntry[] = [file('첫째.png'), damaged, file('셋째.png')].map(
+    (image) => ({
+      id: image.name,
+      file: image,
+      status: 'pending',
+    }),
+  );
   const decode = vi
     .fn<(image: File) => Promise<Pick<ImageBitmap, 'close'>>>()
     .mockImplementation((image) => {

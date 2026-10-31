@@ -1,17 +1,18 @@
 /** SEED 파일 선택에 공지 전용 묶음 제한과 비동기 이미지 확인을 연결한다. */
 import { useId, useState, type Dispatch, type SetStateAction } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { AttachmentInput, Field } from '@seed-design/react';
 import {
-  useFileUploadContext,
-  type FileEntry,
-  type FileRejection,
-} from '@seed-design/react/primitive';
+  AttachmentInput,
+  Field,
+  useAttachmentInputContext,
+  type AttachmentInputFileEntry,
+} from '@seed-design/react';
 import { ImagePlus } from 'lucide-react';
 import {
   getNoticeAttachmentCountError,
   noticeAttachmentOptions,
   validateNoticeAttachmentImages,
+  type FileRejection,
 } from '../model/notice-attachments';
 import { NoticeAttachmentItems } from './notice-attachment-items';
 import * as styles from './notice-attachment-input.css';
@@ -28,8 +29,8 @@ export function NoticeAttachmentInput({
   onEntriesChange: setEntries,
   disabled = false,
 }: {
-  entries: FileEntry[];
-  onEntriesChange: Dispatch<SetStateAction<FileEntry[]>>;
+  entries: AttachmentInputFileEntry[];
+  onEntriesChange: Dispatch<SetStateAction<AttachmentInputFileEntry[]>>;
   disabled?: boolean;
 }) {
   const inputId = useId();
@@ -133,7 +134,7 @@ function NoticeAttachmentFileInput({
   id: string;
   canSelect: (count: number) => boolean;
 }) {
-  const { hiddenInputProps, inputRef, setFileEntries } = useFileUploadContext();
+  const { hiddenInputProps, inputRef, setFileEntries } = useAttachmentInputContext();
 
   return (
     <input

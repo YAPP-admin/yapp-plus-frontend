@@ -1,25 +1,28 @@
 /**
  * @file ui:progress-circle
- * @requires @seed-design/react@^2.0.0
- * @requires @seed-design/css@^2.0.0
+ * @requires @seed-design/react@^2.0.0 || ^3.0.0
  **/
 
 'use client';
 
 import { ProgressCircle as SeedProgressCircle } from '@seed-design/react';
-import type { ComponentProps } from 'react';
+import * as React from 'react';
 
-export type ProgressCircleProps = ComponentProps<typeof SeedProgressCircle.Root>;
+export type ProgressCircleProps = Omit<SeedProgressCircle.RootProps, 'children' | 'asChild'>;
 
-/** @see https://seed-design.io/react/components/progress-circle */
-export function ProgressCircle(props: ProgressCircleProps) {
+/**
+ * @see https://seed-design.io/react/components/progress-circle
+ */
+export const ProgressCircle = React.forwardRef<SVGSVGElement, ProgressCircleProps>((props, ref) => {
   return (
-    <SeedProgressCircle.Root {...props}>
+    <SeedProgressCircle.Root ref={ref} {...props}>
       <SeedProgressCircle.Track />
       <SeedProgressCircle.Range />
     </SeedProgressCircle.Root>
   );
-}
+});
+
+ProgressCircle.displayName = 'ProgressCircle';
 
 /**
  * This file is a snippet from SEED Design, helping you get started quickly with @seed-design/* packages.

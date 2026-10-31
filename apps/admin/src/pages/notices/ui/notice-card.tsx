@@ -1,7 +1,6 @@
 /** 공지의 대상·읽음 집계와 상세·수정 진입점을 한 행으로 표시한다. */
-import { ActionButton } from '@yapp-plus/ui';
+import { ActionButton, Badge } from '@yapp-plus/ui';
 import { Ellipsis } from 'lucide-react';
-import { Badge } from '@seed-design/react';
 import { Link } from '@tanstack/react-router';
 import {
   NoticeDeleteDialog,

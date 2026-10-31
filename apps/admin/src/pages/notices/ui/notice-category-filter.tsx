@@ -1,5 +1,5 @@
 /** URL 기반 공지 종류 선택을 라디오 그룹으로 제공한다. */
-import { RadioGroup } from '@seed-design/react/primitive';
+import { RadioGroup, RadioGroupField } from '@seed-design/react';
 import {
   noticeCategoryLabels,
   noticeCategorySchema,
@@ -16,18 +16,18 @@ export function NoticeCategoryFilter({
   onCategoryChange: (category: NoticeCategory) => void;
 }) {
   return (
-    <RadioGroup.Root
+    <RadioGroupField.Root.Primitive
       className={styles.filter}
       aria-label="공지 종류"
       value={category}
       onValueChange={(value) => onCategoryChange(noticeCategorySchema.parse(value))}
     >
       {noticeCategorySchema.options.map((value) => (
-        <RadioGroup.Item key={value} value={value} className={styles.filterItem}>
+        <RadioGroup.Item.Primitive key={value} value={value} className={styles.filterItem}>
           {noticeCategoryLabels[value]}
           <RadioGroup.ItemHiddenInput />
-        </RadioGroup.Item>
+        </RadioGroup.Item.Primitive>
       ))}
-    </RadioGroup.Root>
+    </RadioGroupField.Root.Primitive>
   );
 }

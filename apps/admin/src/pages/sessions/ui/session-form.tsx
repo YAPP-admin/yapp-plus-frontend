@@ -2,14 +2,7 @@
 import { useState } from 'react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useQuery } from '@tanstack/react-query';
-import {
-  ContentDialog,
-  Field,
-  Portal,
-  RadioGroup,
-  RadioGroupField,
-  TextField,
-} from '@seed-design/react';
+import { Dialog, Field, Portal, RadioGroup, RadioGroupField, TextField } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
 import { X } from 'lucide-react';
 import type { CreateSessionInput } from '~/features/session-management';
@@ -80,7 +73,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
       })}
     >
       {({ pending, type, attempted }) => (
-        <ContentDialog.Root
+        <Dialog.Root
           open
           closeOnInteractOutside={false}
           closeOnEscape={!pending}
@@ -91,21 +84,17 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
           }}
         >
           <Portal>
-            <ContentDialog.Backdrop />
-            <ContentDialog.Positioner>
+            <Dialog.Backdrop />
+            <Dialog.Positioner>
               {/* Portal 밖의 어드민 셸과 같은 다크 테마를 적용합니다. */}
-              <ContentDialog.Content className={styles.dialog} data-seed-color-mode="dark-only">
-                <ContentDialog.Header>
-                  <ContentDialog.Title>
-                    {initialValues ? '세션 수정' : '세션 추가'}
-                  </ContentDialog.Title>
-                  <ContentDialog.Description>
-                    일정과 세션 장소를 입력해 주세요.
-                  </ContentDialog.Description>
-                  <ContentDialog.CloseButton disabled={pending} aria-label="닫기">
+              <Dialog.Content className={styles.dialog} data-seed-color-mode="dark-only">
+                <Dialog.Header>
+                  <Dialog.Title>{initialValues ? '세션 수정' : '세션 추가'}</Dialog.Title>
+                  <Dialog.Description>일정과 세션 장소를 입력해 주세요.</Dialog.Description>
+                  <Dialog.CloseButton disabled={pending} aria-label="닫기">
                     <X size={20} aria-hidden="true" />
-                  </ContentDialog.CloseButton>
-                </ContentDialog.Header>
+                  </Dialog.CloseButton>
+                </Dialog.Header>
                 <form
                   className={styles.form}
                   aria-label="세션 입력"
@@ -119,7 +108,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                     void form.handleSubmit();
                   }}
                 >
-                  <ContentDialog.Body className={styles.body}>
+                  <Dialog.Body className={styles.body}>
                     <fieldset disabled={pending} className={styles.fields}>
                       <div className={styles.schedule}>
                         {fields.map(({ name, label, type: inputType }) => (
@@ -272,8 +261,8 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                       )}
                     </fieldset>
                     {submitError && <p role="alert">{submitError}</p>}
-                  </ContentDialog.Body>
-                  <ContentDialog.Footer className={styles.actions}>
+                  </Dialog.Body>
+                  <Dialog.Footer className={styles.actions}>
                     <ActionButton
                       type="button"
                       variant="neutralWeak"
@@ -289,12 +278,12 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                     >
                       {pending ? '저장 중' : '저장'}
                     </ActionButton>
-                  </ContentDialog.Footer>
+                  </Dialog.Footer>
                 </form>
-              </ContentDialog.Content>
-            </ContentDialog.Positioner>
+              </Dialog.Content>
+            </Dialog.Positioner>
           </Portal>
-        </ContentDialog.Root>
+        </Dialog.Root>
       )}
     </form.Subscribe>
   );

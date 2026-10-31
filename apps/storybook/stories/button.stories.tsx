@@ -18,7 +18,7 @@ const meta = {
     },
     variant: {
       control: 'inline-radio',
-      options: ['brandSolid', 'neutralWeak'],
+      options: ['brandSolid', 'neutralSolid', 'neutralWeak'],
     },
   },
 } satisfies Meta<typeof ActionButton>;
@@ -61,4 +61,26 @@ export const Loading: Story = {
 export const LoadingDisabled: Story = {
   name: '로딩 중 비활성화',
   args: { loading: true, disabled: true },
+};
+
+export const NeutralSolidLoadingModes: Story = {
+  name: 'neutralSolid 로딩·색상 모드',
+  args: {
+    children: '불러오는 중',
+    loading: true,
+    variant: 'neutralSolid',
+  },
+  render: (args) => (
+    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
+      {(['light-only', 'dark-only'] as const).map((colorMode) => (
+        <section
+          key={colorMode}
+          data-seed-color-mode={colorMode}
+          style={{ background: 'var(--seed-color-bg-layer-default)', padding: 24 }}
+        >
+          <ActionButton {...args} />
+        </section>
+      ))}
+    </div>
+  ),
 };

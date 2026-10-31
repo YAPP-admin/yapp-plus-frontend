@@ -153,7 +153,7 @@ export const logoutButton = style({
   transition: 'background-color 0.15s ease, transform 0.15s ease',
   ':active': {
     transform: 'scale(0.99)',
-    background: vars.$color.bg.layerFill,
+    background: vars.$color.bg.neutralMuted,
   },
 });
 

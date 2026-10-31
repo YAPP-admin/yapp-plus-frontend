@@ -17,9 +17,9 @@ catalog:
   '@tiptap/extension-placeholder': 3.32.0
   '@karrotmarket/react-monochrome-icon': 1.30.0
   '@testing-library/user-event': 14.6.7
-  '@seed-design/css': 2.8.3
-  '@seed-design/react': 2.5.0
-  '@seed-design/vite-plugin': 2.1.0
+  '@seed-design/css': 3.1.0
+  '@seed-design/react': 3.1.0
+  '@seed-design/vite-plugin': 2.1.1
   '@storybook/addon-a11y': 10.6.0
   '@storybook/addon-docs': 10.6.0
   '@storybook/react-vite': 10.6.0
@@ -39,6 +39,7 @@ catalog:
   kakao.maps.d.ts: 0.1.40
   msw: 2.15.0
   ky: 2.1.0
+  clsx: 2.1.1
   proj4: 2.22.0
   overlay-kit: 1.9.0
   oxc-transform-react: 0.155.0

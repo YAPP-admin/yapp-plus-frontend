@@ -101,7 +101,7 @@ export const cardHeader = style({
   alignItems: 'center',
   justifyContent: 'space-between',
   padding: `${vars.$dimension.x2} ${vars.$dimension.x4}`,
-  background: vars.$color.bg.layerFill,
+  background: vars.$color.bg.neutralMuted,
   borderRadius: `${vars.$radius.r2} ${vars.$radius.r2} 0 0`,
 });
 
@@ -196,7 +196,7 @@ export const statValue = style({
 
 export const sectionDivider = style({
   height: vars.$dimension.x2,
-  background: vars.$color.bg.layerFill,
+  background: vars.$color.bg.neutralMuted,
   border: 'none',
   margin: 0,
   marginTop: vars.$dimension.x7,
