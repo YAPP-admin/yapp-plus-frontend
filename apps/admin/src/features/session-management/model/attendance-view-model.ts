@@ -87,6 +87,7 @@ export type ScoreAdjustment = {
 export type MemberScoreViewModel = {
   membershipId: string;
   name: string;
+  part: string | null;
   initialScore: 100;
   attendanceEntries: AttendanceScoreEntry[];
   adjustmentEntries: ScoreAdjustment[];
