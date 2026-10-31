@@ -374,3 +374,26 @@ it.each(['성공', '실패'])(
     expect(lookup).toHaveBeenCalledOnce();
   },
 );
+
+it('좌표 키 누락은 설정 안내만 제공하고 팀 세션 저장을 막지 않는다', async () => {
+  vi.stubEnv('VITE_JUSO_COORD_KEY', '');
+  const { user, save } = setup(initial);
+  await user.click(screen.getByRole('button', { name: '주소 A' }));
+  expect(
+    await screen.findByText('좌표 조회 설정이 준비되지 않았습니다. 관리자에게 문의해 주세요.'),
+  ).toBeVisible();
+  expect(screen.queryByRole('button', { name: '좌표 다시 조회' })).not.toBeInTheDocument();
+  expect(lookup).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('radio', { name: '팀 세션' }));
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  expect(save).toHaveBeenCalledWith({ ...initial, type: 'team', location: { guide: '' } });
+});
+
+it('좌표 키가 없어도 기존 유효 좌표를 유지한 수정은 저장한다', async () => {
+  vi.stubEnv('VITE_JUSO_COORD_KEY', '');
+  const { user, save } = setup(initial);
+  fill('세션명', '이름만 수정');
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  expect(save).toHaveBeenCalledWith({ ...initial, name: '이름만 수정' });
+  expect(lookup).not.toHaveBeenCalled();
+});
