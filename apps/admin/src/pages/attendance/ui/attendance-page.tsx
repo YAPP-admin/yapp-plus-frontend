@@ -2,6 +2,7 @@ import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
 import {
+  AttendanceQueryBoundary,
   useMemberScoresQuery,
   useSessionsQuery,
   type MemberScoreViewModel,
@@ -56,7 +57,6 @@ function AttendanceLayout({
 }
 
 export function AttendanceSessionsPage(props: FilterProps<AttendanceSessionPart>) {
-  const sessionsQuery = useSessionsQuery();
   return (
     <AttendanceLayout title="출석부" description="출석을 확인할 세션을 선택합니다.">
       <PartFilter
@@ -64,34 +64,13 @@ export function AttendanceSessionsPage(props: FilterProps<AttendanceSessionPart>
         options={['all', ...attendanceSessionPartSchema.options.filter((part) => part !== 'all')]}
         allLabel="모든 세션"
       />
-      {sessionsQuery.isPending && <output>세션 목록을 불러오는 중입니다.</output>}
-      {sessionsQuery.isError && <p role="alert">세션 목록을 불러오지 못했습니다.</p>}
-      {sessionsQuery.data && sessionsQuery.data.length === 0 && (
-        <p className={styles.placeholder}>등록된 세션이 없습니다.</p>
-      )}
-      {sessionsQuery.data && sessionsQuery.data.length > 0 && (
-        <ul className={styles.sessionList} aria-label="출석 세션 목록">
-          {sessionsQuery.data.map((session) => (
-            <li key={session.id}>
-              <Link
-                className={styles.sessionLink}
-                to="/attendance/$sessionId"
-                params={{ sessionId: session.id }}
-                search={{ part: 'all' }}
-              >
-                <strong>{session.name}</strong>
-                <span>
-                  {session.type === 'offline' ? '정규 세션' : '팀 세션'} ·{' '}
-                  {session.date.replaceAll('-', '.')} · {session.startTime}
-                </span>
-                <span>
-                  출석 {session.attendance.present}명 · 미정 {session.attendance.pending}명
-                </span>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      <AttendanceQueryBoundary
+        fallback={<output>세션 목록을 불러오는 중입니다.</output>}
+        errorMessage="세션 목록을 불러오지 못했습니다."
+        resetKey="attendance-sessions"
+      >
+        <AttendanceSessionsData />
+      </AttendanceQueryBoundary>
     </AttendanceLayout>
   );
 }
@@ -113,9 +92,7 @@ export function SessionAttendancePage({
 }
 
 export function AttendanceScoresPage(props: FilterProps<AttendancePart>) {
-  const scoresQuery = useMemberScoresQuery();
   const labels = { ...partLabels, all: '모든 직군' };
-  const scores = scoresQuery.data ? filterMemberScores(scoresQuery.data, props.part) : undefined;
 
   return (
     <AttendanceLayout title="출석 총점" description="직군별 출석 총점을 확인합니다.">
@@ -124,39 +101,83 @@ export function AttendanceScoresPage(props: FilterProps<AttendancePart>) {
         현재는 화면 검증용 mock 점수입니다. 실제 관리자 누적 점수 API 연동 전까지 서버 점수로
         간주하지 않습니다.
       </p>
-      {scoresQuery.isPending && <output>회원 점수를 불러오는 중입니다.</output>}
-      {scoresQuery.isError && <p role="alert">회원 점수를 불러오지 못했습니다.</p>}
-      {scores && scores.length === 0 && (
-        <p className={styles.placeholder}>{labels[props.part]} 직군의 회원이 없습니다.</p>
-      )}
-      {scores && scores.length > 0 && (
-        <div className={styles.scoreTableWrap}>
-          <table className={styles.scoreTable} aria-label="회원 누적 점수">
-            <thead>
-              <tr>
-                <th className={styles.scoreHeader} scope="col">
-                  회원
-                </th>
-                <th className={styles.scoreHeader} scope="col">
-                  직군
-                </th>
-                <th className={styles.scoreHeader} scope="col">
-                  총점
-                </th>
-                <th className={styles.scoreHeader} scope="col">
-                  근거
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {scores.map((score) => (
-                <ScoreRow key={score.membershipId} score={score} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <AttendanceQueryBoundary
+        fallback={<output>회원 점수를 불러오는 중입니다.</output>}
+        errorMessage="회원 점수를 불러오지 못했습니다."
+        resetKey="attendance-member-scores"
+      >
+        <AttendanceScoresData part={props.part} emptyLabel={labels[props.part]} />
+      </AttendanceQueryBoundary>
     </AttendanceLayout>
+  );
+}
+
+function AttendanceSessionsData() {
+  const { data: sessions } = useSessionsQuery();
+
+  if (sessions.length === 0) {
+    return <p className={styles.placeholder}>등록된 세션이 없습니다.</p>;
+  }
+
+  return (
+    <ul className={styles.sessionList} aria-label="출석 세션 목록">
+      {sessions.map((session) => (
+        <li key={session.id}>
+          <Link
+            className={styles.sessionLink}
+            to="/attendance/$sessionId"
+            params={{ sessionId: session.id }}
+            search={{ part: 'all' }}
+          >
+            <strong>{session.name}</strong>
+            <span>
+              {session.type === 'offline' ? '정규 세션' : '팀 세션'} ·{' '}
+              {session.date.replaceAll('-', '.')} · {session.startTime}
+            </span>
+            <span>
+              출석 {session.attendance.present}명 · 미정 {session.attendance.pending}명
+            </span>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function AttendanceScoresData({ part, emptyLabel }: { part: AttendancePart; emptyLabel: string }) {
+  const { data: scoresData } = useMemberScoresQuery();
+  const scores = filterMemberScores(scoresData, part);
+
+  if (scores.length === 0) {
+    return <p className={styles.placeholder}>{emptyLabel} 직군의 회원이 없습니다.</p>;
+  }
+
+  return (
+    <div className={styles.scoreTableWrap}>
+      <table className={styles.scoreTable} aria-label="회원 누적 점수">
+        <thead>
+          <tr>
+            <th className={styles.scoreHeader} scope="col">
+              회원
+            </th>
+            <th className={styles.scoreHeader} scope="col">
+              직군
+            </th>
+            <th className={styles.scoreHeader} scope="col">
+              총점
+            </th>
+            <th className={styles.scoreHeader} scope="col">
+              근거
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {scores.map((score) => (
+            <ScoreRow key={score.membershipId} score={score} />
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
 

@@ -1,5 +1,4 @@
-import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useHydrated } from '@tanstack/react-router';
+import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
 import type { CreateSessionInput } from './session';
 import {
   createSession,
@@ -53,21 +52,11 @@ export const attendanceCodeQueryOptions = (sessionId: string) =>
   });
 
 export function useSessionsQuery() {
-  const hydrated = useHydrated();
-
-  return useQuery({
-    ...sessionsQueryOptions,
-    enabled: hydrated,
-  });
+  return useSuspenseQuery(sessionsQueryOptions);
 }
 
 export function useMemberScoresQuery() {
-  const hydrated = useHydrated();
-
-  return useQuery({
-    ...memberScoresQueryOptions,
-    enabled: hydrated,
-  });
+  return useSuspenseQuery(memberScoresQueryOptions);
 }
 
 /** 생성 결과가 목록과 개수에 반영될 때까지 저장 완료를 기다립니다. */

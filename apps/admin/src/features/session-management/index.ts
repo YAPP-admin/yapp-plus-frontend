@@ -39,6 +39,7 @@ export {
   useMemberScoresQuery,
   useUpdateSessionMutation,
 } from './model/session-queries';
+export { AttendanceQueryBoundary } from './ui/attendance-query-boundary';
 export {
   attendanceResultSchema,
   badgeSchema,
