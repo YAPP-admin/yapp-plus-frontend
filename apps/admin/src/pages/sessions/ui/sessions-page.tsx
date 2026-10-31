@@ -23,7 +23,7 @@ export function SessionsPage({ type, onTypeChange }: Props) {
     if (!hydrated) {
       return <output className={placeholder}>세션 목록을 불러오는 중입니다.</output>;
     }
-    if (sessionsQuery.isError) {
+    if (sessionsQuery.isError && !sessionsQuery.data) {
       return (
         <div role="alert" className={placeholder}>
           <p>세션 목록을 불러오지 못했습니다.</p>
@@ -38,23 +38,42 @@ export function SessionsPage({ type, onTypeChange }: Props) {
         </div>
       );
     }
-    if (!sessionsQuery.isSuccess) {
+    if (!sessionsQuery.data) {
       return <output className={placeholder}>세션 목록을 불러오는 중입니다.</output>;
     }
-    const sessions = sortSessions(sessionsQuery.data).filter(
+    const sessions = sortSessions(sessionsQuery.data.sessions).filter(
       (session) => type === 'all' || session.type === type,
     );
     return (
-      <SessionList
-        sessions={sessions}
-        type={type}
-        totalCount={sessionsQuery.data.length}
-        onEdit={(session) => {
-          overlay.open(({ unmount }) => (
-            <EditSessionDialog session={session} filter={type} onClose={unmount} />
-          ));
-        }}
-      />
+      <>
+        {sessionsQuery.isError && (
+          <div role="alert" className={placeholder}>
+            <p>목록을 다시 불러오지 못했습니다. 저장 결과와 마지막 확인한 세션을 표시합니다.</p>
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              disabled={sessionsQuery.isFetching}
+              onClick={() => void sessionsQuery.refetch({ cancelRefetch: false })}
+            >
+              다시 시도
+            </ActionButton>
+          </div>
+        )}
+        {!sessionsQuery.data.complete && (
+          <p>저장한 세션만 표시합니다. 전체 목록 확인이 필요합니다.</p>
+        )}
+        <SessionList
+          sessions={sessions}
+          type={type}
+          totalCount={sessionsQuery.data.sessions.length}
+          complete={sessionsQuery.data.complete}
+          onEdit={(session) => {
+            overlay.open(({ unmount }) => (
+              <EditSessionDialog session={session} filter={type} onClose={unmount} />
+            ));
+          }}
+        />
+      </>
     );
   }
 
