@@ -182,6 +182,7 @@ Web/Admin 배포를 모두 실행해 workflow 회귀를 검증합니다.
 - `.github/actions/deployment-config-changed/action.yml`
 - `.github/actions/turbo-affected/action.yml`
 - `.github/actions/vercel-deploy/action.yml`
+- `.github/scripts/production-baseline.mts`
 
 자동 배포 workflow는 `.github/actions/deployment-config-changed` 복합 액션으로 배포 설정 변경을
 먼저 확인하고, `.github/actions/turbo-affected` 복합 액션으로 앱별 Turbo build 영향 범위를
@@ -189,6 +190,16 @@ Web/Admin 배포를 모두 실행해 workflow 회귀를 검증합니다.
 검증하고, 그렇지 않으면 앱별 build 입력이 바뀐 경우에만 배포합니다. 실제 Preview 배포가 실행된
 경우에만 Pull Request의 Web 및 Admin 댓글을 작성하거나 갱신하며, 배포를 생략한 경우에는 Job
 Summary에만 생략 사유를 기록합니다. 생략 시 기존 sticky 댓글은 삭제하거나 수정하지 않습니다.
+
+Production은 프로젝트별 최근 배포 시도를 GitHub Deployments의 `production-<project-id>` 환경과
+`deploy:yapp-plus` task에 기록합니다. 자동·수동 Production job에만 `deployments: write`를 부여합니다.
+최근 시도가 성공한 경우 그 SHA부터 누적 비교하므로 이전 CI 취소·배포 실패의 변경도 포함됩니다.
+첫 실행, 미완료·실패 기록, 유실되거나 조상이 아닌 SHA는 강제 배포하고 조회 오류는 job을 실패시킵니다.
+시도 기록은 Vercel 실행 전에 생성합니다. 실제 배포 후 성공 기록이 실패해도 다음 배포를 잘못
+생략하지 않습니다. Preview는 이 이력을 사용하지 않습니다. 외부 Vercel 콘솔 배포·롤백 후에는
+GitHub 수동 Production으로 검증된 main을 다시 배포해 이력을 복구합니다.
+검증과 복구 절차는 [배포 기준 가이드](specs/012-production-baseline/quickstart.md)를 따릅니다.
+동시 배포의 완료 순서 보호는 별도 이슈 #132에서 다룹니다.
 
 workflow를 사용하려면 저장소의 GitHub Actions 설정에 다음 값을 등록합니다.
 
