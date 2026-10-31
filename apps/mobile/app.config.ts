@@ -2,8 +2,15 @@
 
 import type { ExpoConfig } from 'expo/config';
 
-const mobileWebUrl = process.env.MOBILE_WEB_URL;
-const configuredWebUrl = typeof mobileWebUrl === 'string' ? mobileWebUrl.trim() : '';
+import { validateMobileWebUrl } from './src/mobile-url-policy.ts';
+
+// EAS의 명시적 development 프로필 외 빌드와 production export는 로컬 fallback을 허용하지 않습니다.
+const buildProfile = process.env.EAS_BUILD_PROFILE;
+const development =
+  process.env.NODE_ENV !== 'production' &&
+  (!buildProfile || buildProfile === 'development') &&
+  process.env.EAS_BUILD !== 'true';
+const configuredWebUrl = validateMobileWebUrl(process.env.MOBILE_WEB_URL, development);
 
 const config: ExpoConfig = {
   name: 'YAPP Plus Mobile (Temporary)',
@@ -25,7 +32,7 @@ const config: ExpoConfig = {
     typedRoutes: true,
   },
   extra: {
-    mobileWebUrl: configuredWebUrl.length > 0 ? configuredWebUrl : null,
+    mobileWebUrl: configuredWebUrl ?? null,
   },
 };
 
