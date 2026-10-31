@@ -174,7 +174,8 @@ matrix job으로 배포되므로 한 앱의 실패가 다른 앱의 실행을 �
 배포 전에 `turbo query affected`가 각 앱의 `build` task와 workspace 의존성 그래프를 기준으로
 변경 영향을 계산합니다. 앱 또는 앱이 의존하는 내부 패키지가 영향을 받지 않았다면 해당 앱의
 Vercel build와 배포를 생략합니다. 배포 절차 자체를 바꾸는 다음 파일은 앱 그래프와 무관하게
-Web/Admin 배포를 모두 실행해 workflow 회귀를 검증합니다.
+Web/Admin 배포를 모두 실행합니다. PR에서 checkout한 앱 코드·로컬 복합 액션의 배포 결과를 확인할 수 있지만,
+`workflow_run`은 기본 브랜치의 workflow 본문으로 실행하므로 PR에서 수정한 workflow YAML 자체의 실행 증거는 아닙니다.
 
 - `.github/workflows/deploy-preview.yml`
 - `.github/workflows/cd.yml`
@@ -186,7 +187,7 @@ Web/Admin 배포를 모두 실행해 workflow 회귀를 검증합니다.
 자동 배포 workflow는 `.github/actions/deployment-config-changed` 복합 액션으로 배포 설정 변경을
 먼저 확인하고, `.github/actions/turbo-affected` 복합 액션으로 앱별 Turbo build 영향 범위를
 계산합니다. 배포 설정이 바뀌면 `turbo-affected`의 `force-all` 입력으로 Web/Admin 배포를 모두
-검증하고, 그렇지 않으면 앱별 build 입력이 바뀐 경우에만 배포합니다. 실제 Preview 배포가 실행된
+실행하고, 그렇지 않으면 앱별 build 입력이 바뀐 경우에만 배포합니다. 실제 Preview 배포가 실행된
 경우에만 Pull Request의 Web 및 Admin 댓글을 작성하거나 갱신하며, 배포를 생략한 경우에는 Job
 Summary에만 생략 사유를 기록합니다. 생략 시 기존 sticky 댓글은 삭제하거나 수정하지 않습니다.
 
@@ -288,3 +289,22 @@ SDK 요청 및 응답 검증은 기본적으로 비활성화되어 있습니다.
 
 Spec Kit `1.0.4`는 저장소 루트에 Codex 스킬과 함께 한 번 초기화되어 있습니다. Git 확장
 기능은 설치하지 않았으므로 Spec Kit은 Conductor 워크스페이스 브랜치를 관리하지 않습니다.
+
+### Workflow 변경 검증 범위
+
+CI의 `Validate workflows`는 PR의 checkout에서 actionlint 1.7.12로 workflow 구문·표현식·참조를
+검사합니다. 바이너리는 고정 버전과 SHA-256으로 검증하며 배포 Secret·Vercel 권한을 쓰지 않습니다.
+ShellCheck·Pyflakes는 별도 고정 설치가 없어 이 단계에서 실행하지 않습니다. 앱의 check·build나
+Preview 성공만으로 변경된 trigger·permissions·concurrency·조건 분기의 실제 실행을 통과 처리하지 않습니다.
+
+workflow 변경 PR에는 다음을 별도로 기록합니다.
+
+1. actionlint 결과와 변경한 이벤트·조건·권한의 검토 결과.
+2. 로컬 복합 액션·스크립트의 무권한 fixture 검증 결과. 실제 배포가 필요한 항목은 미검증으로 표시.
+3. 실행 검증이 필요하면 배포 Secret·환경·쓰기 권한이 없는 격리된 시험 저장소에서 수정 YAML의
+   이벤트·조건을 재현한 실행 URL과 SHA를 첨부. 운영 저장소의 privileged `workflow_run`으로
+   임의 PR workflow를 실행하지 않음.
+4. 병합 후 기본 브랜치 workflow의 최초 실행에서 실행 SHA·조건·결과 확인. 실패하면 해당 변경을
+   되돌리고 정상 기준 실행을 재확인. Production 배포를 시험 목적으로 실행하지 않음.
+
+외부 GitHub 이벤트·권한·Vercel 설정까지 로컬 정적 검사로 검증했다고 표현하지 않습니다.
