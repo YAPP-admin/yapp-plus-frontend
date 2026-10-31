@@ -3,6 +3,7 @@
 import {
   type Client,
   type ClientMeta,
+  headersToObject,
   type Options as Options2,
   type RequestResult,
   type TDataShape,
@@ -277,7 +278,7 @@ export const update = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -301,7 +302,7 @@ export const replaceMembers = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -318,7 +319,7 @@ export const register = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -340,7 +341,7 @@ export const submit = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -362,7 +363,7 @@ export const presign = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -379,7 +380,7 @@ export const renew = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...headersToObject(options?.headers),
     },
   });
 
@@ -396,7 +397,7 @@ export const consumeHandoff = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -417,7 +418,7 @@ export const authenticateKakao = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -438,7 +439,7 @@ export const authenticateGoogle = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -459,7 +460,7 @@ export const authenticateApple = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -477,7 +478,7 @@ export const completeAppleAuthorization = <ThrowOnError extends boolean = false>
     ...options,
     headers: {
       'Content-Type': 'application/x-www-form-urlencoded',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -499,7 +500,7 @@ export const verify = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -521,7 +522,7 @@ export const submit1 = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -543,7 +544,7 @@ export const reject = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -565,7 +566,7 @@ export const approve = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -609,7 +610,7 @@ export const create = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -653,7 +654,7 @@ export const create1 = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -675,7 +676,7 @@ export const decide = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -803,7 +804,7 @@ export const create2 = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -827,7 +828,7 @@ export const presign1 = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -844,7 +845,7 @@ export const login = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -863,7 +864,7 @@ export const override = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -882,7 +883,7 @@ export const badge = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -924,7 +925,7 @@ export const update1 = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options.headers,
+      ...headersToObject(options.headers),
     },
   });
 
@@ -1298,7 +1299,7 @@ export const revoke = <ThrowOnError extends boolean = false>(
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...options?.headers,
+      ...headersToObject(options?.headers),
     },
   });
 

@@ -13,7 +13,8 @@
   "scripts": {
     "generate": "openapi-ts",
     "lint": "oxlint --deny-warnings .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run src/sdk-regressions"
   },
   "dependencies": {
     "@faker-js/faker": "catalog:",
@@ -26,6 +27,7 @@
     "@hey-api/openapi-ts": "0.99.0",
     "@types/node": "catalog:",
     "@yapp-plus/config": "workspace:*",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
