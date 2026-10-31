@@ -7,14 +7,14 @@ import type { Login, LoginResult } from './login';
 
 const invalid: LoginResult = { status: 'invalid-credentials' };
 
-function setup(login = vi.fn<Login>().mockResolvedValue(invalid), available = true) {
+function setup(login = vi.fn<Login>().mockResolvedValue(invalid)) {
   const onSuccess = vi.fn<() => void>();
   const user = userEvent.setup();
   const queryClient = new QueryClient();
 
-  render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
-      <LoginForm login={login} onSuccess={onSuccess} available={available} />
+      <LoginForm login={login} onSuccess={onSuccess} />
     </QueryClientProvider>,
   );
 
@@ -22,7 +22,7 @@ function setup(login = vi.fn<Login>().mockResolvedValue(invalid), available = tr
   const password = screen.getByLabelText('비밀번호');
   const submit = screen.getByRole('button', { name: '로그인' });
 
-  return { user, login, onSuccess, username, password, submit };
+  return { user, login, onSuccess, username, password, submit, unmount: view.unmount };
 }
 
 describe('로그인 폼', () => {
@@ -97,6 +97,30 @@ describe('로그인 폼', () => {
     expect(password).not.toHaveAttribute('readonly');
   });
 
+  it('로그인 화면을 떠난 뒤 늦은 성공은 이동시키지 않는다', async () => {
+    let resolveRequest: ((result: LoginResult) => void) | undefined;
+    const request = new Promise<LoginResult>((resolve) => {
+      resolveRequest = resolve;
+    });
+    const { user, username, password, submit, onSuccess, unmount } = setup(
+      vi.fn<Login>().mockReturnValue(request),
+    );
+
+    await user.type(username, 'admin-demo');
+    await user.type(password, 'password');
+    await user.click(submit);
+    await waitFor(() => expect(submit).toBeDisabled());
+
+    unmount();
+
+    await act(async () => {
+      resolveRequest?.({ status: 'success' });
+      await request;
+    });
+
+    expect(onSuccess).not.toHaveBeenCalled();
+  });
+
   it('실패 입력을 유지하고 수정 후 재시도할 수 있다', async () => {
     const login = vi
       .fn<Login>()
@@ -149,16 +173,16 @@ describe('로그인 폼', () => {
     },
   );
 
-  it('사용 불가 환경에서는 클릭과 Enter 모두 로그인 함수를 호출하지 않는다', async () => {
-    const { user, username, password, submit, login } = setup(vi.fn<Login>(), false);
+  it('환경과 관계없이 로그인 제출을 허용한다', async () => {
+    const login = vi.fn<Login>().mockResolvedValue({ status: 'success' });
+    const { user, username, password, submit, onSuccess } = setup(login);
 
-    expect(screen.getByText('로그인 기능을 준비 중입니다.')).toBeVisible();
-    expect(submit).toBeDisabled();
+    expect(submit).toBeEnabled();
 
     await user.type(username, 'admin-demo');
-    await user.type(password, 'demo-password{Enter}');
-    fireEvent.submit(screen.getByRole('form', { name: '관리자 로그인' }));
+    await user.type(password, 'password{Enter}');
 
-    expect(login).not.toHaveBeenCalled();
+    await waitFor(() => expect(login).toHaveBeenCalledOnce());
+    expect(onSuccess).toHaveBeenCalledOnce();
   });
 });

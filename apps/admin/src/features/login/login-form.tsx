@@ -9,7 +9,6 @@ import * as styles from './login-form.css';
 type LoginFormProps = {
   login: Login;
   onSuccess: () => void | Promise<void>;
-  available: boolean;
 };
 
 function getSubmissionError(result: LoginResult | undefined, isError: boolean) {
@@ -24,15 +23,10 @@ function getSubmissionError(result: LoginResult | undefined, isError: boolean) {
   return null;
 }
 
-export function LoginForm({ login, onSuccess, available }: LoginFormProps) {
+export function LoginForm({ login, onSuccess }: LoginFormProps) {
   const formElement = useRef<HTMLFormElement>(null);
   const loginMutation = useMutation({
     mutationFn: (input: LoginInput) => login(input),
-    onSuccess: async (result) => {
-      if (result.status === 'success') {
-        await onSuccess();
-      }
-    },
   });
   const submissionError = getSubmissionError(loginMutation.data, loginMutation.isError);
   const form = useForm({
@@ -47,11 +41,16 @@ export function LoginForm({ login, onSuccess, available }: LoginFormProps) {
       }
     },
     onSubmit: ({ value }) => {
-      if (!available) {
-        return;
-      }
-
-      loginMutation.mutate({ username: value.username.trim(), password: value.password });
+      loginMutation.mutate(
+        { username: value.username.trim(), password: value.password },
+        {
+          onSuccess: (result) => {
+            if (result.status === 'success') {
+              void onSuccess();
+            }
+          },
+        },
+      );
     },
   });
 
@@ -69,7 +68,7 @@ export function LoginForm({ login, onSuccess, available }: LoginFormProps) {
           onSubmit={(event) => {
             event.preventDefault();
 
-            if (!available || loginMutation.isPending) {
+            if (loginMutation.isPending) {
               return;
             }
 
@@ -130,14 +129,14 @@ export function LoginForm({ login, onSuccess, available }: LoginFormProps) {
             type="submit"
             className={styles.submit}
             variant="neutralSolid"
-            disabled={!available || loginMutation.isPending}
+            disabled={loginMutation.isPending}
             loading={loginMutation.isPending}
             aria-busy={loginMutation.isPending}
           >
             로그인
           </ActionButton>
           <div className={styles.feedback} role="alert" aria-atomic="true">
-            {available ? submissionError : '로그인 기능을 준비 중입니다.'}
+            {submissionError}
           </div>
         </form>
       </div>

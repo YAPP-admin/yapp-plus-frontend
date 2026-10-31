@@ -10,11 +10,5 @@ export const Route = createFileRoute('/login')({
 export function LoginRoute() {
   const navigate = useNavigate();
 
-  return (
-    <LoginPage
-      login={login}
-      available={import.meta.env.DEV}
-      onSuccess={() => navigate({ to: '/' })}
-    />
-  );
+  return <LoginPage login={login} onSuccess={() => navigate({ to: '/' })} />;
 }
