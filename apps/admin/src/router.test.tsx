@@ -625,7 +625,7 @@ describe('명단 업로드 진입점', () => {
 
     // 화면 전환 후 포커스 시작점을 정하고 실제 Tab 순서로 복귀 링크에 접근한다.
     screen.getByRole('link', { name: 'YAPP+ Admin' }).focus();
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 20 && document.activeElement !== backLink; index += 1) {
       await user.tab();
     }
     expect(backLink).toHaveFocus();

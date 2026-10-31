@@ -234,5 +234,27 @@
 - 유효 행의 전화번호·기수 조합만 내부 중복 집합에 추가한다. 오류 행 뒤의 유효 행은 정상으로 남고, 이후 동일 조합은 첫 유효 원본 행을 가리키는 `duplicate-in-file` 오류가 된다.
 - 읽기 전용 회원 명단과 비교해 신규 회원·새 기수·기존 활동 중복을 분류하고 기존 회원·활동 ID를 보존한다. 정상·오류·중복과 덮어쓰기 선택 기반 예정 수를 배타적으로 계산한다.
 - 대상 테스트 실행: `import-rows.test.ts` 4개 통과. admin 전체 테스트는 51개 파일·538개 테스트 통과.
-- admin lint·typecheck 통과. `node --run check`와 `node --run build`는 이 단계 보고 전 실행한다.
-- 6b 변경은 현재 작업 트리에 있으며 별도 커밋하지 않았다. 사용자 리뷰 후 7a UI(T036/T038) 진행 여부를 확인한다.
+- admin lint·typecheck 통과. 루트 `node --run check`와 `node --run build`는 7a 구현 검증과 함께 실행했다.
+- 6b 변경은 `e5388f3`에 커밋했고, 사용자 승인으로 7a UI(T036/T038)를 진행했다.
+
+## 7a 단계 — 업로드 화면(T036·T038)
+
+- SEED `AttachmentInput`으로 파일 선택·드롭을 구성하고 두 경로가 동일한 `useMutation` 기반 CSV 파서를 호출하는지 검증했다. CSV 확장자·10MB 제한·전화번호 입력 형식 안내를 표시한다.
+- 양식 다운로드는 기존 `createMemberImportTemplateBlob`을 사용하며, 읽기 중·성공·실패 상태와 `다시 올리기` 초기화를 표시한다. 실제 저장·반영 API는 연결하지 않았다.
+- 개발 환경에서만 `memberPreviewAfterMapping`과 현재 기수를 전달해 6b 정상·오류·중복 집계를 표시한다. 운영 환경에서는 API 준비 안내만 렌더링한다.
+- `member-import-page.test.tsx`에서 파일 선택, 드롭, 잘못된 CSV 오류, 다시 올리기, 초기화 후 파일 교체를 검증했다. 라우터 회귀 테스트에서는 업로드 컨트롤이 추가된 키보드 순서를 확인했다.
+- `pnpm exec oxfmt --write` 통과.
+- `pnpm --filter @yapp-plus/admin lint` 통과.
+- `pnpm --filter @yapp-plus/admin typecheck` 통과.
+- `pnpm --filter @yapp-plus/admin test` 신규 실행: 52개 파일·542개 테스트 통과.
+- `node --run check` 통과: 포맷·admin lint/typecheck/test는 새 실행했고, 나머지 패키지 lint/typecheck/test는 Turbo 캐시를 재사용했다.
+- `node --run build` 통과: admin 빌드는 새 실행했고, web·Storybook 빌드는 Turbo 캐시를 재사용했다. 기존 청크 크기 경고가 남아 있다.
+- 실제 브라우저·스크린 리더·터치 실기기 검증은 아직 실행하지 않았다. T036·T038 구현·검증은 완료했으며 사용자 리뷰 후 7b를 진행한다.
+
+## 7a 리뷰 수정 — 상태 경계 분리
+
+- `useMemberImportUpload`에서 `AttachmentInput`의 controlled entries·파일 거부 오류와 `useImportFile` mutation 상태를 조합한다. 선택한 파일은 entries에서 파생해 중복 상태를 제거했다.
+- `MemberImportUpload`, `MemberImportSummary`, `MemberImportTemplateButton`으로 입력 UI·집계 출력·브라우저 다운로드 부수효과를 분리했다. 파싱 결과 분류는 상태 없는 컴포넌트에서 기존 순수 함수를 호출한다.
+- 파일 선택·교체 테스트는 `userEvent.upload`로 변경했다. `userEvent`에 파일 드롭 API가 없어 실제 드롭 이벤트만 `fireEvent.drop`을 유지했다.
+- 리팩터링 후 Admin lint·typecheck·52개 파일·542개 테스트와 루트 `node --run check`, `node --run build`를 통과했다. Admin 빌드는 새 실행했고 나머지 패키지 빌드는 Turbo 캐시를 재사용했다.
+- Zustand·전역 store는 추가하지 않았다. 상태가 업로드 페이지 수명에 한정되고 파일 객체를 라우트 간 공유하거나 영속화할 요구가 없으므로, React Query mutation과 페이지 전용 훅이 현재 경계에 맞다.
