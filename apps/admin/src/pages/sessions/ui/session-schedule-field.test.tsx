@@ -1,7 +1,7 @@
 /** 실제 SEED Picker로 선택·확정·취소와 공통 폼의 저장 연결을 검증합니다. */
 import { useState } from 'react';
 import { OverlayProvider, overlay } from 'overlay-kit';
-import { render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, it, vi } from 'vitest';
@@ -162,3 +162,65 @@ it('수정 폼에서 날짜·시간을 바꿔도 부모 폼을 유지하고 새 
     location: { guide: '' },
   });
 });
+
+it('휠이 정착하기 전에는 이전 시간으로 확정하지 않는다', async () => {
+  const { user, change } = setup('time', '23:58');
+  await user.click(screen.getByRole('button', { name: '일정, 23:58' }));
+  const minute = screen.getByRole('spinbutton', { name: '분' });
+  fireEvent.keyDown(minute, { key: 'ArrowDown' });
+  const confirm = screen.getByRole('button', { name: '확인' });
+  expect(confirm).toBeDisabled();
+  fireEvent.click(confirm);
+  expect(change).not.toHaveBeenCalled();
+  await waitFor(() => expect(confirm).toBeEnabled());
+  await user.click(confirm);
+  expect(change).toHaveBeenCalledWith('23:59');
+});
+
+it('여러 컬럼의 터치가 모두 끝나야 변경 없는 시간도 확정할 수 있다', async () => {
+  const { user, change } = setup('time', '23:58');
+  await user.click(screen.getByRole('button', { name: '일정, 23:58' }));
+  const hour = screen.getByRole('spinbutton', { name: '시' });
+  const minute = screen.getByRole('spinbutton', { name: '분' });
+  fireEvent.touchStart(hour);
+  fireEvent.touchStart(minute);
+  fireEvent.touchCancel(minute);
+  const confirm = screen.getByRole('button', { name: '확인' });
+  expect(confirm).toBeDisabled();
+  await new Promise((resolve) => setTimeout(resolve, 180));
+  expect(confirm).toBeDisabled();
+  fireEvent.touchEnd(hour, { touches: [] });
+  await waitFor(() => expect(confirm).toBeEnabled());
+  await user.click(confirm);
+  expect(change).toHaveBeenCalledWith('23:58');
+});
+
+it('정착 중 취소하면 이후에도 시간 초안을 저장하지 않는다', async () => {
+  const { user, change } = setup('time', '23:58');
+  await user.click(screen.getByRole('button', { name: '일정, 23:58' }));
+  fireEvent.keyDown(screen.getByRole('spinbutton', { name: '분' }), { key: 'ArrowDown' });
+  await user.click(screen.getByRole('button', { name: '취소' }));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(change).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: '일정, 23:58' }));
+  expect(screen.getByRole('button', { name: '확인' })).toBeEnabled();
+});
+
+it.each([false, true])(
+  '마우스로 누른 뒤 움직이지 않고 떼도 정착을 완료한다(키보드 이동: %s)',
+  async (move) => {
+    const { user, change } = setup('time', '23:58');
+    await user.click(screen.getByRole('button', { name: '일정, 23:58' }));
+    const minute = screen.getByRole('spinbutton', { name: '분' });
+    if (move) {
+      fireEvent.keyDown(minute, { key: 'ArrowDown' });
+    }
+    fireEvent.pointerDown(minute, { pointerId: 1, pointerType: 'mouse', button: 0, clientY: 10 });
+    const confirm = screen.getByRole('button', { name: '확인' });
+    expect(confirm).toBeDisabled();
+    fireEvent.pointerUp(minute, { pointerId: 1, pointerType: 'mouse', button: 0, clientY: 10 });
+    await waitFor(() => expect(confirm).toBeEnabled());
+    await user.click(confirm);
+    expect(change).toHaveBeenCalledWith(move ? '23:59' : '23:58');
+  },
+);

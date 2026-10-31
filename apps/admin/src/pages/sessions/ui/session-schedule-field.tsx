@@ -81,6 +81,7 @@ function SchedulePickerDialog({
   onClose: () => void;
 }) {
   const today = new Date().toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' });
+  const [timeSettling, setTimeSettling] = useState(false);
   const [draft, setDraft] = useState(value || (type === 'date' ? today : '00:00'));
 
   return (
@@ -115,6 +116,7 @@ function SchedulePickerDialog({
                 <TimePicker
                   locale="ko-KR"
                   minuteStep={1}
+                  onSettlingChange={setTimeSettling}
                   value={{ hour: Number(draft.slice(0, 2)), minute: Number(draft.slice(3, 5)) }}
                   onValueChange={({ hour, minute }) =>
                     setDraft(`${twoDigits(hour)}:${twoDigits(minute)}`)
@@ -128,6 +130,7 @@ function SchedulePickerDialog({
               </ActionButton>
               <ActionButton
                 type="button"
+                disabled={timeSettling}
                 onClick={() => {
                   onConfirm(draft);
                   onClose();
