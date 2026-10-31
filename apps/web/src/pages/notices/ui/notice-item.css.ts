@@ -53,7 +53,7 @@ export const assignmentChip = style([
 export const etcChip = style([
   baseChip,
   {
-    background: vars.$color.bg.layerFill,
+    background: vars.$color.bg.neutralMuted,
     color: vars.$color.fg.neutralMuted,
   },
 ]);

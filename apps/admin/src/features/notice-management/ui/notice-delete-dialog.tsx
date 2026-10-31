@@ -1,6 +1,6 @@
 /** 공지 제목을 확인한 뒤 삭제하고 실패 시 같은 창에서 재시도한다. */
 import { useState } from 'react';
-import { Dialog, Portal, ResponsivePair, Text } from '@seed-design/react';
+import { AlertDialog, Portal, ResponsivePair, Text } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
 import type { Notice } from '../model/notice';
 import { useNoticeMutations } from '../model/notice-queries';
@@ -18,7 +18,7 @@ export function NoticeDeleteDialog({ notice }: { notice: Notice }) {
   }
 
   return (
-    <Dialog.Root
+    <AlertDialog.Root
       role="alertdialog"
       open={open}
       onOpenChange={(next) => {
@@ -31,31 +31,31 @@ export function NoticeDeleteDialog({ notice }: { notice: Notice }) {
       closeOnInteractOutside={false}
       closeOnEscape={!remove.isPending}
     >
-      <Dialog.Trigger asChild>
+      <AlertDialog.Trigger asChild>
         <ActionButton variant="ghost" size="small">
           삭제
         </ActionButton>
-      </Dialog.Trigger>
+      </AlertDialog.Trigger>
       <Portal>
-        <Dialog.Backdrop />
-        <Dialog.Positioner>
-          <Dialog.Content>
-            <Dialog.Header>
-              <Dialog.Title>공지를 삭제할까요?</Dialog.Title>
-              <Dialog.Description>“{notice.title}” 공지가 삭제됩니다.</Dialog.Description>
-            </Dialog.Header>
+        <AlertDialog.Backdrop />
+        <AlertDialog.Positioner>
+          <AlertDialog.Content>
+            <AlertDialog.Header>
+              <AlertDialog.Title>공지를 삭제할까요?</AlertDialog.Title>
+              <AlertDialog.Description>“{notice.title}” 공지가 삭제됩니다.</AlertDialog.Description>
+            </AlertDialog.Header>
             {remove.isError && (
               <Text as="p" role="alert" color="fg.critical">
                 삭제하지 못했습니다. 다시 시도해 주세요.
               </Text>
             )}
-            <Dialog.Footer>
+            <AlertDialog.Footer>
               <ResponsivePair gap="x2">
-                <Dialog.Action asChild>
+                <AlertDialog.Action asChild>
                   <ActionButton variant="neutralWeak" disabled={remove.isPending}>
                     취소
                   </ActionButton>
-                </Dialog.Action>
+                </AlertDialog.Action>
                 <ActionButton
                   variant="criticalSolid"
                   disabled={remove.isPending}
@@ -65,10 +65,10 @@ export function NoticeDeleteDialog({ notice }: { notice: Notice }) {
                   삭제
                 </ActionButton>
               </ResponsivePair>
-            </Dialog.Footer>
-          </Dialog.Content>
-        </Dialog.Positioner>
+            </AlertDialog.Footer>
+          </AlertDialog.Content>
+        </AlertDialog.Positioner>
       </Portal>
-    </Dialog.Root>
+    </AlertDialog.Root>
   );
 }

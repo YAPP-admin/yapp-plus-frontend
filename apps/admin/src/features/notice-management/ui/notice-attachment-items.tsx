@@ -1,6 +1,5 @@
 /** 작성·수정·상세에서 같은 SEED 이미지 미리보기와 파일명을 표시한다. */
-import { AttachmentInput, Text, VStack } from '@seed-design/react';
-import type { FileEntry } from '@seed-design/react/primitive';
+import { AttachmentInput, Text, VStack, type AttachmentInputFileEntry } from '@seed-design/react';
 import { X } from 'lucide-react';
 import * as styles from './notice-attachment-input.css';
 
@@ -10,7 +9,7 @@ export function NoticeAttachmentItems({
   readOnly = false,
   disabled = false,
 }: {
-  entries: FileEntry[];
+  entries: AttachmentInputFileEntry[];
   readOnly?: boolean;
   disabled?: boolean;
 }) {

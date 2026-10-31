@@ -20,7 +20,8 @@
   },
   "dependencies": {
     "@karrotmarket/react-monochrome-icon": "catalog:",
-    "@vanilla-extract/css": "catalog:"
+    "@vanilla-extract/css": "catalog:",
+    "clsx": "catalog:"
   },
   "devDependencies": {
     "@seed-design/css": "catalog:",
@@ -39,8 +40,8 @@
     "vitest": "catalog:"
   },
   "peerDependencies": {
-    "@seed-design/css": "^2.8.3",
-    "@seed-design/react": "^2.5.0",
+    "@seed-design/css": "^3.1.0",
+    "@seed-design/react": "^3.1.0",
     "react": ">=19.0.0",
     "react-dom": ">=19.0.0"
   }

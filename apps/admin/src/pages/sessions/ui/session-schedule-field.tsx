@@ -1,8 +1,8 @@
 /** 일정 선택창의 초안만 보관하고, 확인한 날짜·시간을 부모 폼에 전달합니다. */
 import { useState } from 'react';
 import { overlay } from 'overlay-kit';
-import { ContentDialog, DatePicker, FieldButton, Portal, TimePicker } from '@seed-design/react';
-import { ActionButton } from '@yapp-plus/ui';
+import { Dialog, FieldButton, Portal } from '@seed-design/react';
+import { ActionButton, DatePicker, TimePicker } from '@yapp-plus/ui';
 import * as styles from './session-form.css';
 
 type Props = {
@@ -84,7 +84,7 @@ function SchedulePickerDialog({
   const [draft, setDraft] = useState(value || (type === 'date' ? today : '00:00'));
 
   return (
-    <ContentDialog.Root
+    <Dialog.Root
       open
       onOpenChange={(open) => {
         if (!open) {
@@ -93,13 +93,13 @@ function SchedulePickerDialog({
       }}
     >
       <Portal>
-        <ContentDialog.Backdrop />
-        <ContentDialog.Positioner>
-          <ContentDialog.Content className={styles.pickerDialog} data-seed-color-mode="dark-only">
-            <ContentDialog.Header>
-              <ContentDialog.Title>{label} 선택</ContentDialog.Title>
-            </ContentDialog.Header>
-            <ContentDialog.Body>
+        <Dialog.Backdrop />
+        <Dialog.Positioner>
+          <Dialog.Content className={styles.pickerDialog} data-seed-color-mode="dark-only">
+            <Dialog.Header>
+              <Dialog.Title>{label} 선택</Dialog.Title>
+            </Dialog.Header>
+            <Dialog.Body>
               {type === 'date' ? (
                 <DatePicker
                   locale="ko-KR"
@@ -121,8 +121,8 @@ function SchedulePickerDialog({
                   }
                 />
               )}
-            </ContentDialog.Body>
-            <ContentDialog.Footer className={styles.actions}>
+            </Dialog.Body>
+            <Dialog.Footer className={styles.actions}>
               <ActionButton type="button" variant="neutralWeak" onClick={onClose}>
                 취소
               </ActionButton>
@@ -135,10 +135,10 @@ function SchedulePickerDialog({
               >
                 확인
               </ActionButton>
-            </ContentDialog.Footer>
-          </ContentDialog.Content>
-        </ContentDialog.Positioner>
+            </Dialog.Footer>
+          </Dialog.Content>
+        </Dialog.Positioner>
       </Portal>
-    </ContentDialog.Root>
+    </Dialog.Root>
   );
 }

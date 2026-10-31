@@ -58,7 +58,7 @@ export const assignmentChip = style([
 export const etcChip = style([
   baseChip,
   {
-    background: vars.$color.bg.layerFill,
+    background: vars.$color.bg.neutralMuted,
     color: vars.$color.fg.neutralMuted,
   },
 ]);
@@ -94,7 +94,7 @@ export const metaBox = style({
   gap: '12px',
   padding: '16px 18px',
   borderRadius: '8px',
-  background: vars.$color.bg.layerFill,
+  background: vars.$color.bg.neutralMuted,
   marginBottom: '28px',
 });
 
@@ -206,7 +206,7 @@ export const checkButton = style({
 export const checkButtonUnconfirmed = style([
   checkButton,
   {
-    background: vars.$color.bg.layerFill,
+    background: vars.$color.bg.neutralMuted,
     color: vars.$color.fg.neutralMuted,
   },
 ]);

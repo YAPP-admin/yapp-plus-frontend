@@ -1,5 +1,6 @@
-import { Badge, SideNavigation, Text } from '@seed-design/react';
+import { SideNavigation, Text } from '@seed-design/react';
 import { Link } from '@tanstack/react-router';
+import { Badge } from '@yapp-plus/ui';
 import { navigationItems } from './admin-navigation';
 import * as styles from './admin-shell.css';
 
