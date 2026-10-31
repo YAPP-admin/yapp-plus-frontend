@@ -53,14 +53,14 @@ vi.mock('./address-search', () => ({
     disabled: boolean;
   }) => (
     <div>
-      {['주소 A', '주소 B'].map((roadAddress) => (
+      {['주소 A', '주소 B', '주소 A의 다른 건물'].map((roadAddress) => (
         <button
           key={roadAddress}
           type="button"
           disabled={disabled}
           onClick={() =>
             onSelect({
-              roadAddress,
+              roadAddress: roadAddress === '주소 A의 다른 건물' ? '주소 A' : roadAddress,
               lookupReference: {
                 administrativeAreaCode: roadAddress,
                 roadNameManagementNumber: '1',
@@ -374,3 +374,19 @@ it.each(['성공', '실패'])(
     expect(lookup).toHaveBeenCalledOnce();
   },
 );
+
+it('주소 문자열이 같아도 선택한 건물 식별자가 다르면 좌표와 상세주소를 새 선택으로 바꾼다', async () => {
+  lookup.mockResolvedValueOnce({ status: 'success', data: { latitude: 37.5, longitude: 127.1 } });
+  const { user } = setup(initial);
+  await user.click(screen.getByRole('button', { name: '주소 A' }));
+  await waitFor(() => expect(lookup).toHaveBeenCalledOnce());
+  await screen.findByText('37.5, 127.1');
+  fill('상세주소 (선택)', '이전 건물 초안');
+  await user.click(screen.getByRole('button', { name: '마커 조정' }));
+  lookup.mockResolvedValueOnce({ status: 'success', data: { latitude: 38, longitude: 129 } });
+  await user.click(screen.getByRole('button', { name: '주소 A의 다른 건물' }));
+  await screen.findByText('38, 129');
+  expect(lookup).toHaveBeenCalledTimes(2);
+  expect(lookup.mock.lastCall?.[0].buildingManagementNumber).toBe('주소 A의 다른 건물');
+  expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('');
+});

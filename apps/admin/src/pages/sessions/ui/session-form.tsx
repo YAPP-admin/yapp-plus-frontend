@@ -1,3 +1,4 @@
+import { addressIdentity } from '../model/location/location-view-model';
 /** 생성·수정 공통 모달입니다. 닫을 때 부모에서 해제하고 다른 세션은 새 key로 엽니다. */
 import { useState } from 'react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
@@ -200,7 +201,11 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                             value={address}
                             disabled={pending}
                             onSelect={(next) => {
-                              if (next.roadAddress === roadAddress) {
+                              if (
+                                address
+                                  ? addressIdentity(next) === addressIdentity(address)
+                                  : next.roadAddress === roadAddress
+                              ) {
                                 return;
                               }
                               setAddress(next);
