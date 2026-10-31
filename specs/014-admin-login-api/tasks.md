@@ -37,10 +37,10 @@
 
 **독립 검증**: MSW로 요청 body, 200·401·기타 오류·잘못된 응답·저장 실패와 기존 token 보존을 확인한다.
 
-- [ ] T006 [US1] API 요청 변환과 성공·401·400·5xx·네트워크·검증·저장 실패 회귀 테스트를 `apps/admin/src/features/login/login.test.ts`에 먼저 추가하고 실패를 확인한다.
-- [ ] T007 [US1] 생성 SDK·Zod 검증·token 저장을 사용한 `Login` 어댑터를 `apps/admin/src/features/login/login.ts`에 구현한다.
-- [ ] T008 [US1] 개발용 직접 판정을 제거해 `apps/admin/src/features/login/login.mock.ts`와 `apps/admin/src/features/login/login.mock.test.ts`를 삭제한다.
-- [ ] T009 [US1] 3단계 집중 테스트와 변경량을 실행하고 결과·캐시 여부를 `specs/014-admin-login-api/validation.md`에 기록한 뒤 리뷰받는다.
+- [x] T006 [US1] API 요청 변환과 성공·401·400·5xx·네트워크·검증·저장 실패 회귀 테스트를 `apps/admin/src/features/login/login.test.ts`에 먼저 추가하고 실패를 확인한다.
+- [x] T007 [US1] 생성 SDK·Zod 검증·token 저장을 사용한 `Login` 어댑터를 `apps/admin/src/features/login/login.ts`에 구현한다.
+- [x] T008 [US1] 개발용 직접 판정을 제거해 `apps/admin/src/features/login/login.mock.ts`와 `apps/admin/src/features/login/login.mock.test.ts`를 삭제한다.
+- [x] T009 [US1] 3단계 집중 테스트와 변경량을 실행하고 결과·캐시 여부를 `specs/014-admin-login-api/validation.md`에 기록한 뒤 리뷰받는다.
 
 **체크포인트**: API 어댑터까지 독립 검증하고 3단계 승인 전 폼·라우트 계약을 변경하지 않는다.
 
