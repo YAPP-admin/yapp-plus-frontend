@@ -65,9 +65,9 @@
 
 **목적**: 전체 저장소 품질 게이트와 세 실행 환경에서 사용자 흐름을 확인한다.
 
-- [ ] T014 로그인 집중 테스트, `node --run check`, `node --run build`를 실행하고 새 실행·Turbo 캐시·실패를 `specs/014-admin-login-api/validation.md`에 구분해 기록한다.
-- [ ] T015 MSW 개발·실서버 개발·프로덕션 빌드의 로그인, 재시작 후 Staff 인증과 늦은 성공을 `specs/014-admin-login-api/quickstart.md`대로 검증해 `specs/014-admin-login-api/validation.md`에 기록한다.
-- [ ] T016 실제 base 대비 변경량·format·비밀 비기록·복구 위험을 점검하고 최종 결과를 `specs/014-admin-login-api/validation.md`에 기록해 리뷰받는다.
+- [x] T014 로그인 집중 테스트, `node --run check`, `node --run build`를 실행하고 새 실행·Turbo 캐시·실패를 `specs/014-admin-login-api/validation.md`에 구분해 기록한다.
+- [x] T015 MSW 개발·실서버 개발·프로덕션 빌드의 로그인, 재시작 후 Staff 인증과 늦은 성공을 `specs/014-admin-login-api/quickstart.md`대로 검증해 `specs/014-admin-login-api/validation.md`에 기록한다.
+- [x] T016 실제 base 대비 변경량·format·비밀 비기록·복구 위험을 점검하고 최종 결과를 `specs/014-admin-login-api/validation.md`에 기록해 리뷰받는다.
 
 ## 의존성과 실행 순서
 
