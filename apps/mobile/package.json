@@ -16,11 +16,11 @@
   "dependencies": {
     "@webview-bridge/react-native": "1.8.0",
     "@yapp-plus/app-bridge": "workspace:*",
-    "expo": "58.0.21",
+    "expo": "58.0.22",
     "expo-constants": "58.0.14",
     "expo-font": "58.0.11",
     "expo-linking": "58.0.15",
-    "expo-router": "58.0.28",
+    "expo-router": "58.0.29",
     "expo-splash-screen": "58.0.12",
     "expo-system-ui": "58.0.7",
     "react": "catalog:expo",
@@ -29,7 +29,7 @@
     "react-native-gesture-handler": "3.3.0",
     "react-native-reanimated": "4.7.1",
     "react-native-safe-area-context": "5.10.1",
-    "react-native-screens": "4.30.0",
+    "react-native-screens": "4.30.1",
     "react-native-web": "0.21.4",
     "react-native-webview": "14.0.1",
     "react-native-worklets": "0.13.0"
