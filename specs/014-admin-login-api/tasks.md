@@ -52,10 +52,10 @@
 
 **독립 검증**: 정상 성공은 이동하고 unmount 뒤 성공은 이동하지 않는 폼 수명 회귀를 확인한다.
 
-- [ ] T010 [US3] unmount 뒤 늦은 성공과 환경 제한 제거 회귀 테스트를 `apps/admin/src/features/login/login-form.test.tsx`와 `apps/admin/src/routes/login.test.tsx`에 먼저 추가하고 실패를 확인한다.
-- [ ] T011 [US3] `available` prop을 제거하고 제출별 성공 callback으로 이동을 제한하도록 `apps/admin/src/features/login/login-form.tsx`를 수정한다.
-- [ ] T012 [US3] 환경 제한을 제거하도록 `apps/admin/src/pages/login/ui/login-page.tsx`와 `apps/admin/src/routes/login.tsx`를 수정한다.
-- [ ] T013 [US3] 4단계 집중 테스트와 변경량을 실행하고 #157 회귀 결과를 `specs/014-admin-login-api/validation.md`에 기록한 뒤 리뷰받는다.
+- [x] T010 [US3] unmount 뒤 늦은 성공과 환경 제한 제거 회귀 테스트를 `apps/admin/src/features/login/login-form.test.tsx`와 `apps/admin/src/routes/login.test.tsx`에 먼저 추가하고 실패를 확인한다.
+- [x] T011 [US3] `available` prop을 제거하고 제출별 성공 callback으로 이동을 제한하도록 `apps/admin/src/features/login/login-form.tsx`를 수정한다.
+- [x] T012 [US3] 환경 제한을 제거하도록 `apps/admin/src/pages/login/ui/login-page.tsx`와 `apps/admin/src/routes/login.tsx`를 수정한다.
+- [x] T013 [US3] 4단계 집중 테스트와 변경량을 실행하고 #157 회귀 결과를 `specs/014-admin-login-api/validation.md`에 기록한 뒤 리뷰받는다.
 
 **체크포인트**: 정상 성공·오류 재시도·늦은 성공 격리를 함께 통과하고 4단계 승인 전 전체 검증을 시작하지 않는다.
 
