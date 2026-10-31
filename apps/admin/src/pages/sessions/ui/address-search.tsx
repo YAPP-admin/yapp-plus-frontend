@@ -134,6 +134,18 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
           </ActionButton>
         )}
       </div>
+      {error && conditions.page > 1 && (
+        <nav className={styles.pages} aria-label="주소 검색 페이지">
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            disabled={disabled}
+            onClick={() => setConditions({ keyword: searchKeyword, page: 1 })}
+          >
+            첫 페이지로 돌아가기
+          </ActionButton>
+        </nav>
+      )}
       {data && (
         <>
           {data.items.length > 0 && (
