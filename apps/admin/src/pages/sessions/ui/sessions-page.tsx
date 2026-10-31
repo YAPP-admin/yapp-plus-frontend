@@ -3,7 +3,11 @@ import { useHydrated } from '@tanstack/react-router';
 import { overlay } from 'overlay-kit';
 import { ActionButton } from '@yapp-plus/ui';
 import type { SessionFilter } from '../model/session-search';
-import { sortSessions, useSessionsQuery } from '~/features/session-management';
+import {
+  AttendanceQueryBoundary,
+  sortSessions,
+  useSessionsQuery,
+} from '~/features/session-management';
 import { SessionTypeFilter } from './session-type-filter';
 import { SessionList } from './session-list';
 import { CreateSessionDialog, EditSessionDialog } from './session-dialogs';
@@ -16,46 +20,6 @@ type Props = {
 
 export function SessionsPage({ type, onTypeChange }: Props) {
   const hydrated = useHydrated();
-  const sessionsQuery = useSessionsQuery();
-
-  function renderList() {
-    if (!hydrated) {
-      return <output className={placeholder}>세션 목록을 불러오는 중입니다.</output>;
-    }
-    if (sessionsQuery.isError) {
-      return (
-        <div role="alert" className={placeholder}>
-          <p>세션 목록을 불러오지 못했습니다.</p>
-          <ActionButton
-            type="button"
-            variant="neutralWeak"
-            disabled={sessionsQuery.isFetching}
-            onClick={() => void sessionsQuery.refetch({ cancelRefetch: false })}
-          >
-            다시 시도
-          </ActionButton>
-        </div>
-      );
-    }
-    if (!sessionsQuery.isSuccess) {
-      return <output className={placeholder}>세션 목록을 불러오는 중입니다.</output>;
-    }
-    const sessions = sortSessions(sessionsQuery.data).filter(
-      (session) => type === 'all' || session.type === type,
-    );
-    return (
-      <SessionList
-        sessions={sessions}
-        type={type}
-        totalCount={sessionsQuery.data.length}
-        onEdit={(session) => {
-          overlay.open(({ unmount }) => (
-            <EditSessionDialog session={session} filter={type} onClose={unmount} />
-          ));
-        }}
-      />
-    );
-  }
 
   return (
     <main className={page}>
@@ -75,7 +39,33 @@ export function SessionsPage({ type, onTypeChange }: Props) {
         세션 추가
       </ActionButton>
       <SessionTypeFilter value={type} onValueChange={onTypeChange} />
-      {renderList()}
+      <AttendanceQueryBoundary
+        fallback={<output className={placeholder}>세션 목록을 불러오는 중입니다.</output>}
+        errorMessage="세션 목록을 불러오지 못했습니다."
+        resetKey="session-management-list"
+      >
+        <SessionListData type={type} />
+      </AttendanceQueryBoundary>
     </main>
+  );
+}
+
+function SessionListData({ type }: { type: SessionFilter }) {
+  const { data: sessionData } = useSessionsQuery();
+  const sessions = sortSessions(sessionData).filter(
+    (session) => type === 'all' || session.type === type,
+  );
+
+  return (
+    <SessionList
+      sessions={sessions}
+      type={type}
+      totalCount={sessionData.length}
+      onEdit={(session) => {
+        overlay.open(({ unmount }) => (
+          <EditSessionDialog session={session} filter={type} onClose={unmount} />
+        ));
+      }}
+    />
   );
 }
