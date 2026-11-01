@@ -294,3 +294,10 @@
 - `pnpm --filter @yapp-plus/ui lint` 통과.
 - `pnpm --filter @yapp-plus/ui typecheck` 통과.
 - `pnpm --filter @yapp-plus/ui test` 통과: 3개 파일·8개 테스트.
+
+## 8단계 최종 품질 게이트 — T045
+
+- `node --run check` 통과: 포맷은 526개 파일을 새로 확인했다. ui·admin·web·storybook의 lint/typecheck와 ui·admin·web 테스트는 새 실행했고, api·app-bridge·mobile 및 일부 공용 작업은 Turbo 캐시를 재사용했다.
+- `node --run build` 통과: admin·web·Storybook 빌드를 모두 새로 실행했다(`Cached: 0 cached, 3 total`).
+- 기존 테스트의 실패 시나리오 검증에서 출력되는 `Error: 실패` 로그와 Seed Drawer 테스트의 `getTranslate` 경고는 테스트 실패가 아니다.
+- Storybook의 기존 500kB 초과 청크 경고와 TanStack Router code-split 경고는 계속 남아 있다.
