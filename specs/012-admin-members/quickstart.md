@@ -42,3 +42,11 @@ mise exec -- node --run build
 모델 규칙은 가까운 테스트에서 검증하고 페이지마다 같은 조합을 반복하지 않는다.
 공통 UI를 바꾸면 해당 테스트·Storybook 사례를 갱신한다. 화면 전용 UI를 위해 다른 앱 내부를 import하지 않는다.
 스크린샷은 합성 데이터로 .context/에 저장한다. 결과에 새 실행·Turbo 캐시·실패·미실행을 구분한다.
+
+## 현재 인수 결과
+
+- T042: 회원 목록→수정 모달→취소와 명단 업로드→미리보기→목록 복귀를 route tree 테스트로 확인했다.
+- T043: 데스크톱·375px·키보드·접근성 트리·운영 SSR HTML을 확인했다. 실제 VoiceOver·터치 실기기와 업로드 전용 Figma 프레임의 픽셀 단위 비교는 미실행이다.
+- T044: 공용 `ResultSection` Storybook 사례를 유지하고 제목 계층·기본/보조 액션 테스트를 추가했다.
+- T045: `node --run check`와 `node --run build`를 새로 실행해 통과했다. 기존 테스트 오류 로그와 번들 경고는 validation.md에 구분했다.
+- T046: `member-ui.md`의 후속 API 요구와 현재 `/members`, `/members/import` props 입력을 대조했다. 실제 API·저장·팀 매핑·명단 반영은 연결하지 않았다.

@@ -301,3 +301,10 @@
 - `node --run build` 통과: admin·web·Storybook 빌드를 모두 새로 실행했다(`Cached: 0 cached, 3 total`).
 - 기존 테스트의 실패 시나리오 검증에서 출력되는 `Error: 실패` 로그와 Seed Drawer 테스트의 `getTranslate` 경고는 테스트 실패가 아니다.
 - Storybook의 기존 500kB 초과 청크 경고와 TanStack Router code-split 경고는 계속 남아 있다.
+
+## 8단계 API 계약 대조 — T046
+
+- `contracts/member-ui.md`의 후속 API 요구(회원/팀 조회, 수정·비활동, 변경 이력, 명단 검증·반영)를 현재 route props와 대조했다.
+- `/members`는 `search`, 선택적 `members`·`currentGeneration`·`teamMapping`, URL 변경 콜백을 사용한다. `/members/import`는 선택적 `members`·`currentGeneration`만 사용한다. 두 화면 모두 개발 환경에서만 fixture를 주입하고 운영 환경은 준비 안내를 표시한다.
+- 현재 화면 타입과 fixture는 OpenAPI DTO가 아니며, 실제 HTTP 경로·요청/응답 DTO·반영 정책은 미정으로 남겼다. API 확정 후 생성 SDK와 Query 경계에서 연결해야 한다.
+- `quickstart.md`의 현재 인수 결과에 T042~T046 검증·미실행 범위를 연결했다.
