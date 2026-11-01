@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Providers } from './providers';
 import { getRouter } from './router';
 import type * as RootRouteModule from './routes/__root';
+import { memberImportHeaders } from './pages/member-import/model/import-file';
 
 // 기존 라우팅 회귀는 데스크톱 레이아웃에서 검증합니다.
 vi.mock('@seed-design/react', async (importOriginal) => ({
@@ -570,6 +571,45 @@ describe('회원 목록 URL 상태', () => {
 });
 
 describe('명단 업로드 진입점', () => {
+  it('회원 목록에서 수정 모달을 열고 취소하면 원본 목록으로 돌아온다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/members');
+
+    const editButton = await screen.findByRole('button', { name: '예시 회원 1 더보기' });
+    await user.click(editButton);
+
+    const dialog = await screen.findByRole('dialog');
+    expect(dialog).toHaveTextContent('예시 회원 1 회원의 정보를 수정해요.');
+
+    await user.click(within(dialog).getByRole('button', { name: '취소' }));
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('table', { name: '33기 회원 목록' })).toBeVisible();
+    expect(editButton).toHaveFocus();
+  });
+
+  it('업로드 결과를 미리보고 목록으로 복귀한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members/import');
+    const file = new File(
+      [
+        `${memberImportHeaders.join(',')}
+새 회원,01012345678,33,web,active-member`,
+      ],
+      'members.csv',
+      { type: 'text/csv' },
+    );
+
+    await user.upload(screen.getByLabelText('회원 명단 파일'), file);
+
+    expect(await screen.findByRole('status')).toHaveTextContent('members.csv 파일을 읽었어요.');
+    expect(screen.getByRole('table', { name: 'CSV 회원 명단 검증 결과' })).toBeVisible();
+
+    await user.click(screen.getByRole('link', { name: '회원 목록으로 돌아가기' }));
+
+    expect(await screen.findByRole('table', { name: '33기 회원 목록' })).toBeVisible();
+    expect(router.state.location.href).toBe('/members');
+  });
+
   it('직접 접근하면 공통 메뉴와 업로드 안내만 표시한다', async () => {
     const router = await renderRoute('/members/import');
 
