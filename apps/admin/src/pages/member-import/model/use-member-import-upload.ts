@@ -1,6 +1,11 @@
 import { useState } from 'react';
-import type { FileEntry, FileRejection } from '@seed-design/react/primitive';
+import type { ComponentProps } from 'react';
+import type { AttachmentInput } from '@seed-design/react';
 import { useImportFile } from './use-import-file';
+
+type AttachmentInputProps = ComponentProps<typeof AttachmentInput.Root>;
+type FileEntry = NonNullable<AttachmentInputProps['acceptedFileEntries']>[number];
+type FileRejection = Parameters<NonNullable<AttachmentInputProps['onFileReject']>>[0][number];
 
 const fileRejectionMessages: Record<string, string> = {
   INVALID_TYPE: 'CSV 파일만 선택할 수 있어요.',
