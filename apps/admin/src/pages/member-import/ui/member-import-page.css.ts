@@ -49,11 +49,18 @@ export const dropzone = style({
   display: 'grid',
   justifyItems: 'center',
   gap: vars.$dimension.x2,
-  padding: `${vars.$dimension.x8} ${vars.$dimension.x4}`,
+  padding: vars.$dimension.x4,
   border: `1px dashed ${vars.$color.stroke.neutralMuted}`,
   borderRadius: vars.$dimension.x2,
   textAlign: 'center',
   touchAction: 'manipulation',
+});
+
+export const triggerContainer = style({
+  justifyContent: 'center',
+  overflow: 'visible',
+  padding: 0,
+  margin: 0,
 });
 
 export const dropzoneDescription = style({

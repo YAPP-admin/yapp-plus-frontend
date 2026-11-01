@@ -9,6 +9,7 @@ import {
   fileName,
   sectionTitle,
   statusError,
+  triggerContainer,
 } from './member-import-page.css';
 
 const importFileOptions = {
@@ -72,11 +73,13 @@ export function MemberImportUpload({
             <Text as="p" className={dropzoneDescription}>
               전화번호는 010-1234-5678 또는 01012345678 형식을 지원해요.
             </Text>
+          </AttachmentInput.Dropzone>
+          <AttachmentInput.Container className={triggerContainer}>
             <AttachmentInput.Trigger aria-label="CSV 파일 선택">
               <Upload size={18} aria-hidden="true" />
               파일 선택
             </AttachmentInput.Trigger>
-          </AttachmentInput.Dropzone>
+          </AttachmentInput.Container>
         </AttachmentInput.Root>
         {selectedFile !== null && (
           <Text as="p" className={fileName}>

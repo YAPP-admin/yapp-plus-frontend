@@ -601,7 +601,9 @@ describe('명단 업로드 진입점', () => {
 
     await user.upload(screen.getByLabelText('회원 명단 파일'), file);
 
-    expect(await screen.findByRole('status')).toHaveTextContent('members.csv 파일을 읽었어요.');
+    await waitFor(() =>
+      expect(screen.getByRole('status')).toHaveTextContent('members.csv 파일을 읽었어요.'),
+    );
     expect(screen.getByRole('table', { name: 'CSV 회원 명단 검증 결과' })).toBeVisible();
 
     await user.click(screen.getByRole('link', { name: '회원 목록으로 돌아가기' }));

@@ -276,3 +276,13 @@
 - `pnpm --filter @yapp-plus/admin test -- src/router.test.tsx` 통과: 53개 파일·546개 테스트.
 - 모달 취소 후 대화상자 제거·회원 목록 표·트리거 포커스 복귀와 업로드 미리보기 표·`/members` URL을 검증했다.
 - 실제 브라우저·스크린 리더·터치 실기기 검증, 재사용 UI Storybook 검토, 후속 API 계약 대조는 T043~T046에 남아 있다.
+
+## 8단계 화면·접근성 인수 — T043
+
+- 제공된 Figma Admin 화면을 열어 다크 테마 셸, 회원 관리 메뉴 계층, 표/빈 상태 방향을 확인했다. 업로드 전용 Figma 프레임의 픽셀 단위 대조와 디자인 토큰 차이 검토는 별도 디자인 리뷰가 필요하다.
+- 로컬 개발 서버의 기본 뷰포트에서 명단 업로드 화면을 확인했다. 제목·CSV 안내·드롭존·파일 선택·양식 다운로드·목록 복귀 링크가 표시된다.
+- 브라우저 viewport를 `375×800`으로 설정해 좁은 화면을 확인했다. 최초 구현에서 `AttachmentInput.Trigger`가 드롭존 아래 액션과 겹쳤고, 트리거를 `AttachmentInput.Container`로 이동하고 드롭존 패딩을 조정해 겹침을 제거했다.
+- 브라우저 접근성 트리에서 메뉴→CSV 파일 선택→양식 다운로드→목록 복귀 순서와 각 버튼/링크의 접근 가능한 이름을 확인했다. 실제 VoiceOver와 터치 실기기 검증은 현재 실행 환경에서 수행하지 못했다.
+- 운영 빌드(`node .output/server/index.mjs`, `PORT=3002`)를 실행하고 SSR HTML을 확인했다. `/members/import`에는 `회원 명단 조회와 중복 판정 API 연결을 준비 중입니다`, `/members`에는 `회원 목록을 준비 중입니다`가 포함되며 `예시 회원`은 포함되지 않는다.
+- T043 관련 새 검증: `node --run check` 통과. 포맷은 525개 파일 새 실행, admin lint/typecheck/test는 새 실행, 나머지 패키지 lint/typecheck/test는 Turbo 캐시를 재사용했다. Admin 테스트는 53개 파일·546개 테스트 통과.
+- `node --run build` 통과. admin 빌드는 새 실행했고 web·Storybook 빌드는 Turbo 캐시를 재사용했다. Storybook의 기존 500kB 초과 청크 경고와 TanStack Router code-split 경고가 남아 있다.
