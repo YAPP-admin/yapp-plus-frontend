@@ -13,7 +13,8 @@ vi.mock('@webview-bridge/web', () => ({
 type Snapshot = Pick<AppBridgeState, 'safeAreaInsets'>;
 type StoreListener = (state: Snapshot) => void;
 
-const createStore = (state: Snapshot) => {
+const createStore = (initialState: Snapshot) => {
+  let state = initialState;
   let listener: StoreListener | undefined;
   const unsubscribe = vi.fn<() => void>(() => {
     listener = undefined;
@@ -27,7 +28,10 @@ const createStore = (state: Snapshot) => {
         return unsubscribe;
       },
     },
-    emit: (nextState: Snapshot) => listener?.(nextState),
+    emit: (nextState: Snapshot) => {
+      state = nextState;
+      listener?.(nextState);
+    },
     hasListener: () => listener !== undefined,
     unsubscribe,
   };
@@ -95,11 +99,11 @@ describe('installSafeAreaBridge', () => {
     nativeBridgeReady = true;
     await vi.advanceTimersByTimeAsync(16);
 
-    expect(getSafeAreaInsets).toHaveBeenCalledOnce();
+    expect(getSafeAreaInsets).not.toHaveBeenCalled();
     expect(initialStore.unsubscribe).toHaveBeenCalledOnce();
     expect(initialStore.hasListener()).toBe(false);
     expect(hydratedStore.hasListener()).toBe(true);
-    expect(setProperty).toHaveBeenLastCalledWith('--safe-area-inset-left', '2px');
+    expect(setProperty).toHaveBeenLastCalledWith('--safe-area-inset-left', '0px');
 
     hydratedStore.emit({ safeAreaInsets: { top: 50, right: 3, bottom: 36, left: 4 } });
     expect(setProperty).toHaveBeenLastCalledWith('--safe-area-inset-left', '4px');
@@ -131,5 +135,70 @@ describe('installSafeAreaBridge', () => {
 
     expect(initialStore.unsubscribe).toHaveBeenCalledOnce();
     expect(getSafeAreaInsets).not.toHaveBeenCalled();
+  });
+
+  it.each([2_001, 2_100, 10_000])('%ims 후 준비되어도 최신 저장소를 연결한다', async (delay) => {
+    const initialStore = createStore({ safeAreaInsets: INITIAL_SAFE_AREA_INSETS });
+    const hydratedStore = createStore({
+      safeAreaInsets: { top: 60, right: 0, bottom: 34, left: 0 },
+    });
+    const bridge = {
+      store: initialStore.store,
+      isNativeMethodAvailable: () => false,
+      getSafeAreaInsets: vi
+        .fn<() => Promise<Snapshot['safeAreaInsets']>>()
+        .mockResolvedValue({ top: 47, right: 0, bottom: 0, left: 0 }),
+    };
+    linkBridgeMock.mockReturnValue(bridge);
+    const setProperty = vi.fn<(property: string, value: string) => void>();
+    vi.stubGlobal('document', { documentElement: { style: { setProperty } } });
+    vi.stubGlobal('window', { ReactNativeWebView: {} });
+    const { installSafeAreaBridge } = await import('../src/web');
+    const cleanup = installSafeAreaBridge();
+    await vi.advanceTimersByTimeAsync(delay);
+    bridge.store = hydratedStore.store;
+    bridge.isNativeMethodAvailable = () => true;
+    await vi.advanceTimersByTimeAsync(250);
+    expect(hydratedStore.hasListener()).toBe(true);
+    expect(setProperty).toHaveBeenCalledWith('--safe-area-inset-top', '60px');
+    expect(bridge.getSafeAreaInsets).not.toHaveBeenCalled();
+    hydratedStore.emit({ safeAreaInsets: { top: 70, right: 0, bottom: 0, left: 0 } });
+    expect(setProperty).toHaveBeenCalledWith('--safe-area-inset-top', '70px');
+    cleanup();
+    expect(hydratedStore.hasListener()).toBe(false);
+    expect(vi.getTimerCount()).toBe(0);
+    setProperty.mockClear();
+    hydratedStore.emit({ safeAreaInsets: INITIAL_SAFE_AREA_INSETS });
+    await vi.advanceTimersByTimeAsync(1_000);
+    expect(setProperty).not.toHaveBeenCalled();
+  });
+
+  it('준비 이후 저장소가 교체되어도 기존 구독을 해제하고 최신 값만 적용한다', async () => {
+    const first = createStore({ safeAreaInsets: { top: 47, right: 0, bottom: 0, left: 0 } });
+    const next = createStore({ safeAreaInsets: { top: 60, right: 0, bottom: 0, left: 0 } });
+    const bridge = {
+      store: first.store,
+      isNativeMethodAvailable: () => true,
+      getSafeAreaInsets: vi
+        .fn<() => Promise<Snapshot['safeAreaInsets']>>()
+        .mockRejectedValue(new Error('timeout')),
+    };
+    linkBridgeMock.mockReturnValue(bridge);
+    const setProperty = vi.fn<(property: string, value: string) => void>();
+    vi.stubGlobal('document', { documentElement: { style: { setProperty } } });
+    vi.stubGlobal('window', { ReactNativeWebView: {} });
+    const { installSafeAreaBridge } = await import('../src/web');
+    const cleanup = installSafeAreaBridge();
+    await vi.advanceTimersByTimeAsync(250);
+    bridge.store = next.store;
+    await vi.advanceTimersByTimeAsync(250);
+    expect(first.hasListener()).toBe(false);
+    expect(next.hasListener()).toBe(true);
+    expect(setProperty).toHaveBeenCalledWith('--safe-area-inset-top', '60px');
+    setProperty.mockClear();
+    first.emit({ safeAreaInsets: INITIAL_SAFE_AREA_INSETS });
+    expect(setProperty).not.toHaveBeenCalled();
+    cleanup();
+    expect(vi.getTimerCount()).toBe(0);
   });
 });
