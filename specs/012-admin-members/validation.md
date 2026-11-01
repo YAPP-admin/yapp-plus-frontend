@@ -268,3 +268,11 @@
 - `node --run check` 통과. 포맷과 admin lint/typecheck/test는 새로 실행했고, 나머지 패키지 작업은 Turbo 캐시를 재사용했다.
 - `node --run build` 통과. admin 빌드는 7b 변경 기준으로 새로 실행했고, web·Storybook 빌드는 Turbo 캐시를 재사용했다. Storybook의 기존 500kB 초과 청크 경고가 남아 있다.
 - 실제 브라우저·스크린 리더·터치 실기기와 실제 반영 API 연동은 아직 검증하지 않았다. 해당 검증은 8단계 T043~T046에서 수행한다.
+
+## 8단계 진행 — 통합 대표 흐름(T042)
+
+- `apps/admin/src/router.test.tsx`에 회원 목록→수정 모달→취소→목록 복귀와 명단 업로드→CSV 미리보기→회원 목록 복귀를 추가했다.
+- 라우터 테스트는 실제 route tree와 개발 fixture를 사용하며, 업로드 단계는 `userEvent.upload`로 파일 선택을 수행한다.
+- `pnpm --filter @yapp-plus/admin test -- src/router.test.tsx` 통과: 53개 파일·546개 테스트.
+- 모달 취소 후 대화상자 제거·회원 목록 표·트리거 포커스 복귀와 업로드 미리보기 표·`/members` URL을 검증했다.
+- 실제 브라우저·스크린 리더·터치 실기기 검증, 재사용 UI Storybook 검토, 후속 API 계약 대조는 T043~T046에 남아 있다.
