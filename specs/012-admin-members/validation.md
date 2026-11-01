@@ -286,3 +286,11 @@
 - 운영 빌드(`node .output/server/index.mjs`, `PORT=3002`)를 실행하고 SSR HTML을 확인했다. `/members/import`에는 `회원 명단 조회와 중복 판정 API 연결을 준비 중입니다`, `/members`에는 `회원 목록을 준비 중입니다`가 포함되며 `예시 회원`은 포함되지 않는다.
 - T043 관련 새 검증: `node --run check` 통과. 포맷은 525개 파일 새 실행, admin lint/typecheck/test는 새 실행, 나머지 패키지 lint/typecheck/test는 Turbo 캐시를 재사용했다. Admin 테스트는 53개 파일·546개 테스트 통과.
 - `node --run build` 통과. admin 빌드는 새 실행했고 web·Storybook 빌드는 Turbo 캐시를 재사용했다. Storybook의 기존 500kB 초과 청크 경고와 TanStack Router code-split 경고가 남아 있다.
+
+## 8단계 재사용 UI 인수 — T044
+
+- 회원 목록의 빈 상태는 공용 `@yapp-plus/ui` `ResultSection`을 사용한다. 공개 진입점과 `apps/storybook/stories/result-section.stories.tsx`의 빈 상태/액션 사례가 이미 존재해 Storybook 변경은 추가하지 않았다.
+- `packages/ui/src/seed-design/ui/result-section.test.tsx`를 추가해 `titleAs`에 따른 heading semantics와 기본·보조 액션 클릭 전달을 `userEvent`로 검증했다.
+- `pnpm --filter @yapp-plus/ui lint` 통과.
+- `pnpm --filter @yapp-plus/ui typecheck` 통과.
+- `pnpm --filter @yapp-plus/ui test` 통과: 3개 파일·8개 테스트.
