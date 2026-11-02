@@ -197,6 +197,7 @@ export function isTeamCompositionComplete(counts: TeamPartCounts): boolean {
   return counts.pm > 0 && counts.design > 0;
 }
 
+/** 팀의 PM·Design 구성 여부로 목록 필터 상태를 계산한다. */
 export function getTeamFilter(
   snapshot: TeamMappingSnapshot,
   team: TeamMappingTeam,
