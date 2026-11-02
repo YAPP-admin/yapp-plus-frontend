@@ -22,6 +22,7 @@ import { TeamCreateDialog } from './team-create-dialog';
 import { TeamDetailPanel } from './team-detail-panel';
 import * as styles from './team-mapping-page.css';
 import { TeamFilters } from './team-filters';
+import { UnassignedMembers } from './unassigned-members';
 
 /** 화면 상태에 따라 빈 상태 또는 읽기 전용 팀 목록을 표시한다. */
 export function TeamMappingPage({
@@ -60,6 +61,37 @@ export function TeamMappingPage({
         <TeamDetailPanel snapshot={snapshot} team={team} onClose={unmount} />
       ));
     }
+  }
+
+  function renderTeamContent() {
+    if (search.filter === 'unassigned') {
+      return <UnassignedMembers snapshot={snapshot} />;
+    }
+
+    if (hasEmptyFilterResult) {
+      return (
+        <section className={styles.filterEmpty} aria-labelledby="team-mapping-filter-empty-title">
+          <ResultSection
+            size="medium"
+            titleAs="h3"
+            title={
+              <span id="team-mapping-filter-empty-title">
+                {teamMappingFilterLabels[search.filter]} 팀이 없어요
+              </span>
+            }
+            description="다른 필터를 선택해 팀 목록을 확인해 보세요."
+          />
+        </section>
+      );
+    }
+
+    return (
+      <div className={styles.teamGrid}>
+        {teams.map((team) => (
+          <TeamCard key={team.id} snapshot={snapshot} team={team} onOpen={openTeamDetail} />
+        ))}
+      </div>
+    );
   }
 
   return (
@@ -140,29 +172,7 @@ export function TeamMappingPage({
               </p>
             </section>
           )}
-          {hasEmptyFilterResult ? (
-            <section
-              className={styles.filterEmpty}
-              aria-labelledby="team-mapping-filter-empty-title"
-            >
-              <ResultSection
-                size="medium"
-                titleAs="h3"
-                title={
-                  <span id="team-mapping-filter-empty-title">
-                    {teamMappingFilterLabels[search.filter]} 팀이 없어요
-                  </span>
-                }
-                description="다른 필터를 선택해 팀 목록을 확인해 보세요."
-              />
-            </section>
-          ) : (
-            <div className={styles.teamGrid}>
-              {teams.map((team) => (
-                <TeamCard key={team.id} snapshot={snapshot} team={team} onOpen={openTeamDetail} />
-              ))}
-            </div>
-          )}
+          {renderTeamContent()}
         </section>
       )}
     </main>

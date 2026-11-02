@@ -132,3 +132,17 @@ it('미배정 필터 변경 callback을 호출한다', async () => {
   await user.click(screen.getByRole('option', { name: '미배정 회원 · 9' }));
   expect(onFilterChange).toHaveBeenCalledWith('unassigned');
 });
+
+it('미배정 필터에서 회원 작업 영역을 표시한다', () => {
+  render(
+    <TeamMappingPage
+      snapshot={teamMappingDraftFixture}
+      search={{ ...teamMappingSearchDefaults, preview: 'draft', filter: 'unassigned' }}
+      onPreviewChange={() => undefined}
+    />,
+  );
+
+  expect(screen.getByRole('heading', { name: '미배정 회원 10명' })).toBeVisible();
+  expect(screen.getByRole('checkbox', { name: '이도윤 선택' })).toBeVisible();
+  expect(screen.queryByRole('heading', { name: 'Orbit', level: 2 })).not.toBeInTheDocument();
+});

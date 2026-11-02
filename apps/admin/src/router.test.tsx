@@ -178,7 +178,7 @@ describe('관리자 라우팅', () => {
     await waitFor(() =>
       expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned'),
     );
-    expect(screen.getByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
+    expect(screen.getByRole('heading', { name: '미배정 회원 10명', level: 3 })).toBeVisible();
 
     act(() => router.history.back());
 
