@@ -165,6 +165,30 @@ describe('관리자 라우팅', () => {
     ).not.toBeInTheDocument();
   });
 
+  it('팀 매핑 필터를 URL에 남기고 뒤로가기에서 원래 필터를 복원한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members/teams?preview=draft');
+
+    expect(await screen.findByRole('heading', { name: '팀 목록', level: 2 })).toBeVisible();
+    expect(screen.getByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
+
+    await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
+    await user.click(await screen.findByRole('option', { name: '확인 필요 · 1' }));
+
+    await waitFor(() =>
+      expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=needs-check'),
+    );
+    expect(
+      screen.getByRole('heading', { name: '혼자서 준비하는 아주 긴 이름의 팀' }),
+    ).toBeVisible();
+    expect(screen.queryByRole('heading', { name: 'Orbit', level: 2 })).not.toBeInTheDocument();
+
+    act(() => router.history.back());
+
+    expect(await screen.findByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
+    expect(screen.getByRole('combobox', { name: '팀 목록 필터' })).toHaveTextContent('전체 팀 · 8');
+  });
+
   it('클라이언트 이동으로 로그인에 진입하면 대시보드 메뉴가 사라진다', async () => {
     const router = await renderRoute('/');
 

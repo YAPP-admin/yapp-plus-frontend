@@ -20,6 +20,21 @@ export const previewField = style({
   '@media': { [narrowScreen]: { width: '100%', justifySelf: 'stretch' } },
 });
 
+export const headerActions = style({
+  display: 'flex',
+  alignItems: 'flex-end',
+  justifyContent: 'flex-end',
+  flexWrap: 'wrap',
+  gap: vars.$dimension.x3,
+  width: 'min(100%, 34rem)',
+  '@media': { [narrowScreen]: { width: '100%', alignItems: 'stretch' } },
+});
+
+export const filterField = style({
+  width: 'min(100%, 16rem)',
+  '@media': { [narrowScreen]: { width: '100%' } },
+});
+
 export const emptyState = style({
   display: 'grid',
   justifyItems: 'center',
@@ -56,6 +71,71 @@ export const emptyDescription = style({
   fontSize: vars.$fontSize.t3,
   lineHeight: vars.$lineHeight.t3,
   textWrap: 'pretty',
+});
+
+export const teamListSection = style({
+  display: 'grid',
+  gap: vars.$dimension.x5,
+});
+
+export const listHeader = style({
+  display: 'flex',
+  alignItems: 'flex-end',
+  justifyContent: 'space-between',
+  flexWrap: 'wrap',
+  gap: vars.$dimension.x3,
+});
+
+export const listTitle = style({
+  margin: 0,
+  fontSize: vars.$fontSize.t6,
+  lineHeight: vars.$lineHeight.t6,
+  fontWeight: vars.$fontWeight.bold,
+});
+
+export const listSummary = style({
+  margin: `${vars.$dimension.x1} 0 0`,
+  color: vars.$color.fg.neutralMuted,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+});
+
+export const unassignedSummary = style({
+  display: 'grid',
+  gap: vars.$dimension.x1,
+  padding: `${vars.$dimension.x4} ${vars.$dimension.x5}`,
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r3,
+  background: vars.$color.bg.layerDefault,
+});
+
+export const unassignedSummaryTitle = style({
+  margin: 0,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  fontWeight: vars.$fontWeight.bold,
+});
+
+export const unassignedSummaryDescription = style({
+  margin: 0,
+  color: vars.$color.fg.neutralMuted,
+  fontSize: vars.$fontSize.t2,
+  lineHeight: vars.$lineHeight.t2,
+});
+
+export const teamGrid = style({
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr)',
+  gap: vars.$dimension.x3,
+});
+
+export const filterEmpty = style({
+  minHeight: '16rem',
+  display: 'grid',
+  alignItems: 'center',
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r4,
+  background: vars.$color.bg.layerDefault,
 });
 
 export const footerAction = style({

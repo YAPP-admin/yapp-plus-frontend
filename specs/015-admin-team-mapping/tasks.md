@@ -42,9 +42,9 @@
 
 **4단계 중단점**: 개발/운영 빈 화면과 탐색을 리뷰한다. 실제 생성 폼은 6단계에 연결한다.
 
-- [ ] T020 [US1] apps/admin/src/pages/team-mapping/ui/team-mapping-page.test.tsx에 필터·빈 결과·URL·상세/메뉴 이벤트 분리를 검증한다.
-- [ ] T021 [US1] apps/admin/src/pages/team-mapping/ui/team-card.tsx와 team-card.css.ts에 카드·원본 직군 집계·팀장·경고·비활성 메뉴를 구현한다.
-- [ ] T022 [US1] apps/admin/src/pages/team-mapping/ui/team-filters.tsx와 team-mapping-page.tsx에 필터·개수·스크롤 유지·진입 callback을 연결한다.
+- [x] T020 [US1] apps/admin/src/pages/team-mapping/ui/team-mapping-page.test.tsx에 필터·빈 결과·URL·상세/메뉴 이벤트 분리를 검증한다.
+- [x] T021 [US1] apps/admin/src/pages/team-mapping/ui/team-card.tsx와 team-card.css.ts에 카드·원본 직군 집계·경고·비활성 메뉴를 구현한다. 팀장 정보는 카드에 표시하지 않는다.
+- [x] T022 [US1] apps/admin/src/pages/team-mapping/ui/team-filters.tsx와 team-mapping-page.tsx에 필터·개수·스크롤 유지·진입 callback을 연결한다.
 
 **5단계 중단점**: US1 목록을 독립 검증한다. 상세 패널은 8단계, 미배정 본문은 9단계에서 연결한다.
 
