@@ -73,9 +73,9 @@
 
 ## US4 — 9단계 미배정 개별·일괄 선택 (P2)
 
-- [ ] T033 [US4] apps/admin/src/pages/team-mapping/ui/unassigned-members.test.tsx에 개별→일괄→개별·체크 해제·예정 취소·팀 없음·인원 보존을 검증한다.
-- [ ] T034 [US4] apps/admin/src/pages/team-mapping/ui/unassigned-members.tsx와 unassigned-members.css.ts에 회원 이력·체크·개별 대상·일괄 덮어쓰기·예정 표시를 구현한다.
-- [ ] T035 [US4] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx에 미배정 본문을 연결하고 실제 반영을 비활성으로 유지한다.
+- [x] T033 [US4] apps/admin/src/pages/team-mapping/ui/unassigned-members.test.tsx에 개별→일괄→개별·체크 해제·예정 취소·팀 없음·인원 보존을 검증한다.
+- [x] T034 [US4] apps/admin/src/pages/team-mapping/ui/unassigned-members.tsx와 unassigned-members.css.ts에 회원 이력·체크·개별 대상·일괄 덮어쓰기·예정 표시를 구현한다.
+- [x] T035 [US4] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx에 미배정 본문을 연결하고 실제 반영을 비활성으로 유지한다.
 
 **9단계 중단점**: US4 체크와 예정의 차이를 독립 검증하고 리뷰받는다.
 
