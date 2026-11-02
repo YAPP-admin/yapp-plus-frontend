@@ -125,3 +125,16 @@
 - 범위 조정 후 검증: PM·Design 누락 판정과 구성 상태/경고 UI를 제거하고 `all|unassigned` 필터만 유지했다. 기존 `needs-check` URL은 `teamMappingSearchSchema`에서 `all`로 복원한다.
 - 조정 후 근접 테스트: 팀 매핑 모델·fixture·검색·페이지·카드·라우터 관련 5개 파일 123개 테스트 통과. 관리자 lint·typecheck와 전체 68개 파일·638개 테스트도 새로 통과했다.
 - 조정 후 품질 게이트: `mise exec -- node --run check` 통과(관리자 lint·typecheck·test는 새 실행, 나머지는 Turbo 캐시 재사용), `mise exec -- pnpm --filter @yapp-plus/admin build` 통과. `git diff --check` 통과.
+
+## 9단계 — 미배정 회원 개별·일괄 선택
+
+- 변경: `UnassignedMembers` 화면을 추가해 미배정 회원의 이름·직군·과거 기수 이력·체크 상태·개별 대상 팀을 표시한다. 개별 선택은 회원별 배정 예정으로 기록하고, 일괄 선택은 체크된 회원의 기존 예정 대상을 선택한 팀으로 덮어쓴다.
+- 원본 보존: 체크 상태와 배정 예정 상태를 분리했다. 체크 해제는 일괄 작업 대상에서만 제외하며, 이미 정한 배정 예정은 회원별 `배정 예정 취소`로 제거한다. 원본 팀 인원·미배정 집계·카드는 변경하지 않는다.
+- 상태 경계: `confirmed`에서는 체크와 Select를 읽기 전용으로 표시한다. 팀이 없는 `before` fixture에서는 일괄 작업 대신 `배정할 팀이 없어요`를 표시한다. 실제 배정 요청·저장·성공 알림은 추가하지 않았다.
+- 화면 연결: `filter=unassigned`일 때 팀 카드 대신 미배정 회원 작업 영역을 표시하도록 `TeamMappingPage`를 연결했다. 기존 라우터 회귀 테스트는 필터 변경 후 미배정 회원 영역을, 뒤로가기 후 팀 목록을 확인하도록 갱신했다.
+- 근접 검증: 집중 테스트 3개 파일·113개 테스트와 관리자 전체 테스트 69개 파일·643개 테스트를 새로 실행해 통과했다.
+- 품질 게이트: `mise exec -- node --run check` 통과(7개 작업 중 1개 새 실행, 6개 Turbo 캐시 재사용), `mise exec -- pnpm --filter @yapp-plus/admin build` 통과. `oxfmt`와 `git diff --check`를 실행했다.
+- 변경량: Stage 9 증분은 미배정 회원 컴포넌트·스타일·테스트와 페이지/라우터 연결 및 문서 변경으로 약 370줄이다. 650줄 미만이며 독립 PR 분리 없이 하나의 리뷰 단위로 유지한다.
+- 구조 개선: `UnassignedMembers`에서 상태·검증을 `useUnassignedMembers`로, 회원 한 행을 `UnassignedMemberRow`로, 개별·일괄 팀 선택을 `UnassignedTeamSelect`로 분리했다. 상위 컴포넌트는 빈 상태·툴바·목록 조합만 담당한다.
+- 구조 개선 후 검증: 집중 테스트 2개 파일·11개 테스트, `mise exec -- node --run check`를 다시 실행해 통과했다. 관리자 전체 테스트는 앞선 실행과 동일하게 69개 파일·643개 테스트 통과 상태다.
+- 사용자 리뷰: 대기. 체크 해제와 배정 예정 취소의 차이, 일괄 덮어쓰기, 실제 반영 비활성 상태를 확인한 뒤 10단계 이탈 보호를 시작한다.
