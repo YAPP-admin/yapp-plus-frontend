@@ -3,6 +3,8 @@ export const memberNavigationItems = [
   { tab: 'pending', label: '가입 신청' },
 ] as const;
 
+export const teamMappingNavigationItem = { to: '/members/teams', label: '팀 매핑' } as const;
+
 export const navigationItems = {
   dashboard: { to: '/', label: '대시보드', section: '워크스페이스', exact: true },
   sessions: { to: '/sessions', label: '세션 관리', section: '활동 관리', exact: false },

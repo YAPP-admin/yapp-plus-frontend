@@ -19,6 +19,7 @@ import { Route as DashboardAttendanceSessionIdRouteImport } from './routes/_dash
 import { Route as DashboardAttendanceScoresRouteImport } from './routes/_dashboard/attendance/scores'
 import { Route as DashboardMembersIndexRouteImport } from './routes/_dashboard/members/index'
 import { Route as DashboardMembersImportRouteImport } from './routes/_dashboard/members/import'
+import { Route as DashboardMembersTeamsRouteImport } from './routes/_dashboard/members/teams'
 import { Route as DashboardNoticesIndexRouteImport } from './routes/_dashboard/notices/index'
 import { Route as DashboardNoticesNewRouteImport } from './routes/_dashboard/notices/new'
 import { Route as DashboardNoticesNoticeIdIndexRouteImport } from './routes/_dashboard/notices/$noticeId/index'
@@ -76,6 +77,11 @@ const DashboardMembersImportRoute = DashboardMembersImportRouteImport.update({
   path: '/members/import',
   getParentRoute: () => DashboardRouteRoute,
 } as any)
+const DashboardMembersTeamsRoute = DashboardMembersTeamsRouteImport.update({
+  id: '/members/teams',
+  path: '/members/teams',
+  getParentRoute: () => DashboardRouteRoute,
+} as any)
 const DashboardNoticesIndexRoute = DashboardNoticesIndexRouteImport.update({
   id: '/notices/',
   path: '/notices/',
@@ -107,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/members/import': typeof DashboardMembersImportRoute
+  '/members/teams': typeof DashboardMembersTeamsRoute
   '/notices/new': typeof DashboardNoticesNewRoute
   '/attendance/': typeof DashboardAttendanceIndexRoute
   '/members/': typeof DashboardMembersIndexRoute
@@ -122,6 +129,7 @@ export interface FileRoutesByTo {
   '/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/members/import': typeof DashboardMembersImportRoute
+  '/members/teams': typeof DashboardMembersTeamsRoute
   '/notices/new': typeof DashboardNoticesNewRoute
   '/attendance': typeof DashboardAttendanceIndexRoute
   '/members': typeof DashboardMembersIndexRoute
@@ -139,6 +147,7 @@ export interface FileRoutesById {
   '/_dashboard/attendance/$sessionId': typeof DashboardAttendanceSessionIdRoute
   '/_dashboard/attendance/scores': typeof DashboardAttendanceScoresRoute
   '/_dashboard/members/import': typeof DashboardMembersImportRoute
+  '/_dashboard/members/teams': typeof DashboardMembersTeamsRoute
   '/_dashboard/notices/new': typeof DashboardNoticesNewRoute
   '/_dashboard/attendance/': typeof DashboardAttendanceIndexRoute
   '/_dashboard/members/': typeof DashboardMembersIndexRoute
@@ -156,6 +165,7 @@ export interface FileRouteTypes {
     | '/attendance/$sessionId'
     | '/attendance/scores'
     | '/members/import'
+    | '/members/teams'
     | '/notices/new'
     | '/attendance/'
     | '/members/'
@@ -171,6 +181,7 @@ export interface FileRouteTypes {
     | '/attendance/$sessionId'
     | '/attendance/scores'
     | '/members/import'
+    | '/members/teams'
     | '/notices/new'
     | '/attendance'
     | '/members'
@@ -187,6 +198,7 @@ export interface FileRouteTypes {
     | '/_dashboard/attendance/$sessionId'
     | '/_dashboard/attendance/scores'
     | '/_dashboard/members/import'
+    | '/_dashboard/members/teams'
     | '/_dashboard/notices/new'
     | '/_dashboard/attendance/'
     | '/_dashboard/members/'
@@ -272,6 +284,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardMembersImportRouteImport
       parentRoute: typeof DashboardRouteRoute
     }
+    '/_dashboard/members/teams': {
+      id: '/_dashboard/members/teams'
+      path: '/members/teams'
+      fullPath: '/members/teams'
+      preLoaderRoute: typeof DashboardMembersTeamsRouteImport
+      parentRoute: typeof DashboardRouteRoute
+    }
     '/_dashboard/notices/': {
       id: '/_dashboard/notices/'
       path: '/notices'
@@ -310,6 +329,7 @@ interface DashboardRouteRouteChildren {
   DashboardAttendanceSessionIdRoute: typeof DashboardAttendanceSessionIdRoute
   DashboardAttendanceScoresRoute: typeof DashboardAttendanceScoresRoute
   DashboardMembersImportRoute: typeof DashboardMembersImportRoute
+  DashboardMembersTeamsRoute: typeof DashboardMembersTeamsRoute
   DashboardNoticesNewRoute: typeof DashboardNoticesNewRoute
   DashboardAttendanceIndexRoute: typeof DashboardAttendanceIndexRoute
   DashboardMembersIndexRoute: typeof DashboardMembersIndexRoute
@@ -325,6 +345,7 @@ const DashboardRouteRouteChildren: DashboardRouteRouteChildren = {
   DashboardAttendanceSessionIdRoute: DashboardAttendanceSessionIdRoute,
   DashboardAttendanceScoresRoute: DashboardAttendanceScoresRoute,
   DashboardMembersImportRoute: DashboardMembersImportRoute,
+  DashboardMembersTeamsRoute: DashboardMembersTeamsRoute,
   DashboardNoticesNewRoute: DashboardNoticesNewRoute,
   DashboardAttendanceIndexRoute: DashboardAttendanceIndexRoute,
   DashboardMembersIndexRoute: DashboardMembersIndexRoute,

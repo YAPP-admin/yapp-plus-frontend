@@ -93,6 +93,10 @@ it('매핑 전 안내에서는 팀 선택과 팀 열을 제공하지 않는다',
     </>,
   );
   expect(screen.getByRole('region', { name: '팀 매핑 안내' })).toHaveTextContent('팀 매핑 전');
+  expect(screen.getByRole('link', { name: '팀 매핑 화면 열기' })).toHaveAttribute(
+    'href',
+    '/members/teams',
+  );
   expect(screen.queryByRole('combobox', { name: '팀' })).not.toBeInTheDocument();
   expect(screen.queryByRole('columnheader', { name: '팀' })).not.toBeInTheDocument();
 });

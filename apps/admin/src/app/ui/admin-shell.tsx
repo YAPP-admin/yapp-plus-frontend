@@ -1,6 +1,6 @@
 /** 반응형 표시는 SEED의 CSS로 처리하여 첫 화면부터 탐색 영역의 너비를 유지한다. */
 import { Box, SideNavigation, Text, useBreakpointValue } from '@seed-design/react';
-import { useMatch, useMatches } from '@tanstack/react-router';
+import { useMatch, useMatches, useRouterState } from '@tanstack/react-router';
 import { Badge } from '@yapp-plus/ui';
 import type { ReactNode } from 'react';
 import { AdminSidebar } from './admin-sidebar';
@@ -10,6 +10,8 @@ import * as styles from './admin-shell.css';
 
 export function AdminShell({ children }: { children: ReactNode }) {
   const memberMatch = useMatch({ from: '/_dashboard/members/', shouldThrow: false });
+  const pathname = useRouterState({ select: (state) => state.location.pathname });
+  const isTeamMapping = pathname === '/members/teams';
   const isNarrow = useBreakpointValue({ base: true, lg: false });
   const navigation = useMatches({
     select: (matches) => matches.at(-1)?.staticData.navigation,
@@ -29,14 +31,22 @@ export function AdminShell({ children }: { children: ReactNode }) {
           height="100dvh"
           flexShrink={0}
         >
-          <AdminSidebar menu={navigation.menu} memberSearch={memberMatch?.search} />
+          <AdminSidebar
+            menu={navigation.menu}
+            memberSearch={memberMatch?.search}
+            teamMapping={isTeamMapping}
+          />
         </Box>
         <div className={styles.workspace}>
           <header className={styles.header}>
             <Box hideFrom="lg" flexShrink={0}>
               {/* 화면 너비 훅은 데스크톱 전환 시 열린 모바일 패널을 해제하는 데만 사용한다. */}
               {isNarrow && (
-                <AdminMobileNavigation menu={navigation.menu} memberSearch={memberMatch?.search} />
+                <AdminMobileNavigation
+                  menu={navigation.menu}
+                  memberSearch={memberMatch?.search}
+                  teamMapping={isTeamMapping}
+                />
               )}
             </Box>
             <nav aria-label="현재 위치">

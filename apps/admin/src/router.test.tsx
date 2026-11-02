@@ -256,6 +256,7 @@ describe('세션 목록 탐색', () => {
     await user.tab();
 
     await user.tab();
+    await user.tab();
     expect(screen.getByRole('button', { name: '세션 추가' })).toHaveFocus();
     await user.tab();
     expect(filter).toHaveFocus();
@@ -373,6 +374,7 @@ describe('출석 화면 탐색', () => {
     await user.tab();
     await user.tab();
 
+    await user.tab();
     await user.tab();
     expect(backLink).toHaveFocus();
 
@@ -657,7 +659,7 @@ describe('명단 업로드 진입점', () => {
     const user = userEvent.setup();
     await renderRoute('/members');
 
-    for (let index = 0; index < 10; index += 1) {
+    for (let index = 0; index < 11; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
@@ -749,7 +751,7 @@ describe('공지 목록 URL 상태', () => {
     const user = userEvent.setup();
     await renderRoute('/');
 
-    for (let index = 0; index < 8; index += 1) {
+    for (let index = 0; index < 9; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveFocus();
@@ -1074,7 +1076,7 @@ describe('알림 발송 내역 탐색', () => {
     const user = userEvent.setup();
     await renderRoute('/');
 
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveFocus();
