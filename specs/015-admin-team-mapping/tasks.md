@@ -56,9 +56,9 @@
 
 **6단계 중단점**: 폼 배치·입력·원본 보존을 리뷰한다. 회원 선택과 이탈 보호는 후속 연결이다.
 
-- [ ] T026 [US2] apps/admin/src/pages/team-mapping/ui/team-member-search.test.tsx에 한글 조합·키보드·동명이인·검색 없음·중복/마지막 팀원 차단을 검증한다.
-- [ ] T027 [US2] apps/admin/src/pages/team-mapping/ui/team-member-search.tsx와 team-member-search.css.ts에 후보 검색·현재 소속·선택 포커스 복원을 구현한다.
-- [ ] T028 [US2] apps/admin/src/pages/team-mapping/ui/team-create-dialog.tsx에 후보 선택/제거·선택 인원·직군 구성·원래 팀 최소 인원 검증을 연결한다.
+- [x] T026 [US2] apps/admin/src/pages/team-mapping/ui/team-member-search.test.tsx에 한글 조합·키보드·동명이인·검색 없음·중복/마지막 팀원 차단을 검증한다.
+- [x] T027 [US2] apps/admin/src/pages/team-mapping/ui/team-member-search.tsx와 team-member-search.css.ts에 후보 검색·현재 소속·선택 포커스 복원을 구현한다.
+- [x] T028 [US2] apps/admin/src/pages/team-mapping/ui/team-create-dialog.tsx에 후보 선택/제거·선택 인원·직군 구성·원래 팀 최소 인원 검증을 연결한다.
 
 **7단계 중단점**: US2 검색→선택→원복을 독립 검증한다. 만들기 실제 반영은 없다.
 
