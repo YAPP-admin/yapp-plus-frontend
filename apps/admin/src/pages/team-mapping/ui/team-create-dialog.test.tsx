@@ -23,7 +23,7 @@ it('열리면 팀명 입력과 팀원 선택 영역을 표시한다', async () =
 
   expect(nameInput).toBeVisible();
   expect(screen.getByRole('heading', { name: '팀 만들기' })).toBeVisible();
-  expect(screen.getByText('회원 선택은 다음 단계에서 연결합니다.')).toBeVisible();
+  expect(screen.getByRole('searchbox', { name: '회원 검색' })).toBeVisible();
 });
 
 it('팀명과 팀원 필수 조건을 검증하고 만들기를 비활성화한다', async () => {
