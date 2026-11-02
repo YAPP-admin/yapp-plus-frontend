@@ -1,8 +1,10 @@
 /** 팀 매핑 합성 fixture의 참조 무결성과 화면 시나리오를 검증한다. */
 import { describe, expect, it } from 'vitest';
 
+import { getCandidateMembers } from './team-draft';
 import {
   getTeamFilterCounts,
+  getTeamsForFilter,
   getUnassignedMembers,
   teamMappingSnapshotSchema,
 } from './team-mapping';
@@ -59,6 +61,11 @@ describe('team mapping fixtures', () => {
     expect(duplicateNames.map((member) => member.activityId)).toEqual(['member-21', 'member-26']);
     expect(oneMemberTeam?.memberActivityIds).toEqual(['member-40']);
     expect(longNameMember?.activityId).toBe('member-40');
+  });
+
+  it('keeps explicit empty search and filter results reproducible', () => {
+    expect(getCandidateMembers(teamMappingDraftFixture, '없는회원검색어')).toEqual([]);
+    expect(getTeamsForFilter(teamMappingConfirmedFixture, 'needs-check')).toEqual([]);
   });
 
   it('returns the same status mapping without environment branching', () => {
