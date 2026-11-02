@@ -208,6 +208,81 @@ describe('Stackflow 탭·Alerts 구조', () => {
     ).toBeVisible();
   }, 10000);
 
+  it('가입·승인 상태 직접 진입은 Login을 복원하고 가입 입력은 상태 화면으로 이동한다', async () => {
+    window.history.replaceState({}, '', '/signup/status');
+    renderStack();
+    await new Promise((resolve) => window.setTimeout(resolve, 3000));
+
+    const statusScreen = await waitForTopHeading('운영진 승인을 기다리고 있어요...');
+    fireEvent.click(statusScreen.getByRole('button', { name: '뒤로' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/login'));
+    const loginScreen = await waitForTopHeading('당신의 작은 아이디어가 세상을 바꿉니다');
+    expect(loginScreen.getByRole('button', { name: '애플로 계속하기' })).toBeVisible();
+
+    fireEvent.click(loginScreen.getByRole('button', { name: '애플로 계속하기' }));
+    const signupScreen = await waitForTopHeading('이름을 입력해 주세요');
+    fireEvent.change(signupScreen.getByRole('textbox', { name: '이름' }), {
+      target: { value: '홍길동' },
+    });
+    fireEvent.click(signupScreen.getByRole('button', { name: '다음' }));
+    expect(await waitForTopHeading('휴대폰 번호를 입력해 주세요')).toBeTruthy();
+    fireEvent.change(screen.getByRole('textbox', { name: '휴대폰 번호' }), {
+      target: { value: '01012345678' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    await waitFor(() =>
+      expect(window.location.pathname.replace(/\/+$/, '')).toBe('/signup/status'),
+    );
+    expect(await waitForTopHeading('운영진 승인을 기다리고 있어요...')).toBeTruthy();
+  }, 15000);
+
+  it('LoginError는 /login/error와 /error에서 같은 화면을 표시하고 Login으로 돌아간다', async () => {
+    for (const pathname of ['/login/error', '/error']) {
+      window.history.replaceState({}, '', pathname);
+      const rendered = renderStack();
+      await new Promise((resolve) => window.setTimeout(resolve, 3000));
+
+      const errorScreen = await waitForTopHeading('앗, 문제가 발생했어요!');
+      expect(document.title).toBe('오류 안내 | YAPP+');
+      expect(errorScreen.getByRole('link', { name: '운영진에게 문의하기' })).toHaveAttribute(
+        'href',
+        'https://pf.kakao.com/_xkxmxjxd',
+      );
+      fireEvent.click(errorScreen.getByRole('button', { name: '뒤로' }));
+      await waitFor(() => expect(window.location.pathname).toBe('/login'));
+      expect(await waitForTopHeading('당신의 작은 아이디어가 세상을 바꿉니다')).toBeTruthy();
+      expect(document.title).toBe('로그인 | YAPP+');
+      rendered.unmount();
+    }
+  }, 20000);
+
+  it('가입 완료·미등록·개발 경로의 명시적 이동과 화면을 등록한다', async () => {
+    window.history.replaceState({}, '', '/signup/complete');
+    let rendered = renderStack();
+    await new Promise((resolve) => window.setTimeout(resolve, 3000));
+
+    const completeScreen = await waitForTopHeading('회원가입을 완료했어요!');
+    fireEvent.click(completeScreen.getByTestId('signup-home-link'));
+    await waitFor(() => expect(window.location.pathname).toBe('/'));
+    expect(await waitForTopHeading('홈 패널')).toBeTruthy();
+    rendered.unmount();
+
+    window.history.replaceState({}, '', '/signup/unregistered');
+    rendered = renderStack();
+    await new Promise((resolve) => window.setTimeout(resolve, 3000));
+    const unregisteredScreen = await waitForTopHeading('미등록 회원 안내');
+    fireEvent.click(unregisteredScreen.getByTestId('unregistered-login-link'));
+    await waitFor(() => expect(window.location.pathname).toBe('/login'));
+    rendered.unmount();
+
+    window.history.replaceState({}, '', '/dev/routes');
+    rendered = renderStack();
+    await new Promise((resolve) => window.setTimeout(resolve, 3000));
+    const devScreen = await waitForTopHeading('개발용 화면 경로');
+    expect(devScreen.getByRole('link', { name: '가입 완료' })).toBeVisible();
+    rendered.unmount();
+  }, 25000);
+
   it('reduced motion 셸은 전환 정책 표식을 유지하면서 화면을 렌더링한다', async () => {
     const { Stack } = createStackflowApp({ reducedMotion: true });
 
@@ -235,6 +310,14 @@ describe('Stackflow 탭·Alerts 구조', () => {
       'TeamAttendanceUpload',
       'TeamAttendanceError',
       'TeamAttendanceComplete',
+      'Login',
+      'LoginError',
+      'Error',
+      'Signup',
+      'SignupStatus',
+      'SignupComplete',
+      'SignupUnregistered',
+      'DevRoutes',
       'NotFound',
     ]);
   });

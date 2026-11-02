@@ -28,6 +28,10 @@ describe('safe-area CSS adapter', () => {
       ['--safe-area-inset-right', '0px'],
       ['--safe-area-inset-bottom', '34px'],
       ['--safe-area-inset-left', '0px'],
+      ['--seed-safe-area-top', '47px'],
+      ['--seed-safe-area-right', '0px'],
+      ['--seed-safe-area-bottom', '34px'],
+      ['--seed-safe-area-left', '0px'],
     ]);
   });
 
@@ -50,13 +54,13 @@ describe('safe-area CSS adapter', () => {
       { setProperty },
     );
 
-    expect(setProperty).toHaveBeenCalledTimes(4);
+    expect(setProperty).toHaveBeenCalledTimes(8);
 
     state = {
       safeAreaInsets: { top: 20, right: 1, bottom: 10, left: 2 },
     };
     listener?.(state);
-    expect(setProperty).toHaveBeenLastCalledWith('--safe-area-inset-left', '2px');
+    expect(setProperty).toHaveBeenLastCalledWith('--seed-safe-area-left', '2px');
 
     unsubscribe();
     expect(listener).toBeUndefined();

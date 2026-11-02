@@ -34,6 +34,13 @@ export const SAFE_AREA_CSS_VARIABLES = Object.freeze({
   left: '--safe-area-inset-left',
 } as const);
 
+export const SEED_SAFE_AREA_CSS_VARIABLES = Object.freeze({
+  top: '--seed-safe-area-top',
+  right: '--seed-safe-area-right',
+  bottom: '--seed-safe-area-bottom',
+  left: '--seed-safe-area-left',
+} as const);
+
 const normalizeInset = (value: number | undefined): number => {
   if (typeof value !== 'number' || !Number.isFinite(value)) {
     return 0;

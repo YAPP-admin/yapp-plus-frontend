@@ -85,11 +85,11 @@ describe('installSafeAreaBridge', () => {
     const cleanup = installSafeAreaBridge();
 
     expect(initialStore.hasListener()).toBe(true);
-    expect(setProperty).toHaveBeenCalledTimes(4);
+    expect(setProperty).toHaveBeenCalledTimes(8);
     expect(getSafeAreaInsets).not.toHaveBeenCalled();
 
     initialStore.emit({ safeAreaInsets: { top: 20, right: 1, bottom: 10, left: 2 } });
-    expect(setProperty).toHaveBeenLastCalledWith('--safe-area-inset-left', '2px');
+    expect(setProperty).toHaveBeenLastCalledWith('--seed-safe-area-left', '2px');
 
     bridge.store = hydratedStore.store;
     nativeBridgeReady = true;
@@ -99,10 +99,10 @@ describe('installSafeAreaBridge', () => {
     expect(initialStore.unsubscribe).toHaveBeenCalledOnce();
     expect(initialStore.hasListener()).toBe(false);
     expect(hydratedStore.hasListener()).toBe(true);
-    expect(setProperty).toHaveBeenLastCalledWith('--safe-area-inset-left', '2px');
+    expect(setProperty).toHaveBeenLastCalledWith('--seed-safe-area-left', '2px');
 
     hydratedStore.emit({ safeAreaInsets: { top: 50, right: 3, bottom: 36, left: 4 } });
-    expect(setProperty).toHaveBeenLastCalledWith('--safe-area-inset-left', '4px');
+    expect(setProperty).toHaveBeenLastCalledWith('--seed-safe-area-left', '4px');
 
     cleanup();
     expect(hydratedStore.unsubscribe).toHaveBeenCalledOnce();
