@@ -96,12 +96,18 @@ describe('Stackflow FSD 화면 연결', () => {
     renderStack();
 
     await waitForTopHeading('홈');
+    expect(document.title).toBe('홈 | YAPP+');
+    expect(document.head.querySelectorAll('title')).toHaveLength(1);
     await user.click(screen.getByRole('link', { name: '알림' }));
     await waitFor(() => expect(window.location.pathname).toBe('/alerts'));
     expect(await waitForTopHeading('알림')).toBeTruthy();
+    expect(document.title).toBe('알림 | YAPP+');
+    expect(document.head.querySelectorAll('title')).toHaveLength(1);
 
     await user.click(screen.getByRole('button', { name: '뒤로가기' }));
     expect(await waitForTopHeading('홈')).toBeTruthy();
+    expect(document.title).toBe('홈 | YAPP+');
+    expect(document.head.querySelectorAll('title')).toHaveLength(1);
   });
 
   it('Alerts에서 다른 탭으로 이동하면 Alerts를 pop하고 탭을 replace한다', async () => {
