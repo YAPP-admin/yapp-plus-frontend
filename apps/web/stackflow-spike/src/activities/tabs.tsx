@@ -217,6 +217,21 @@ function MyPanel() {
           onChange={(event) => setName(event.target.value)}
         />
       </label>
+      <div className="spike-panel-links">
+        <Link activityName="Attendance" activityParams={{}} data-testid="my-attendance-link">
+          출석 내역
+        </Link>
+        <Link activityName="Settings" activityParams={{}} data-testid="my-settings-link">
+          설정
+        </Link>
+        <Link
+          activityName="TeamAttendanceUpload"
+          activityParams={{}}
+          data-testid="my-team-upload-link"
+        >
+          팀 세션 인증 사진 올리기
+        </Link>
+      </div>
     </div>
   );
 }

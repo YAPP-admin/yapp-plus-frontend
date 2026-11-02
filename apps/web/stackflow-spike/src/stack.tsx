@@ -22,6 +22,13 @@ declare module '@stackflow/config' {
       noticeId: string;
     };
     NotFound: EmptyActivityParams;
+    Attendance: EmptyActivityParams;
+    AttendanceRules: EmptyActivityParams;
+    AttendanceComplete: EmptyActivityParams;
+    Settings: EmptyActivityParams;
+    TeamAttendanceUpload: EmptyActivityParams;
+    TeamAttendanceError: EmptyActivityParams;
+    TeamAttendanceComplete: EmptyActivityParams;
   }
 }
 
@@ -42,6 +49,39 @@ const components = {
   NotFound: lazy<EmptyActivityParams>(() =>
     import('./activities/not-found').then(({ NotFoundActivity }) => ({
       default: NotFoundActivity,
+    })),
+  ),
+  Attendance: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase6').then(({ AttendanceActivity }) => ({
+      default: AttendanceActivity,
+    })),
+  ),
+  AttendanceRules: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase6').then(({ AttendanceRulesActivity }) => ({
+      default: AttendanceRulesActivity,
+    })),
+  ),
+  AttendanceComplete: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase6').then(({ AttendanceCompleteActivity }) => ({
+      default: AttendanceCompleteActivity,
+    })),
+  ),
+  Settings: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase6').then(({ SettingsActivity }) => ({ default: SettingsActivity })),
+  ),
+  TeamAttendanceUpload: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase6').then(({ TeamAttendanceUploadActivity }) => ({
+      default: TeamAttendanceUploadActivity,
+    })),
+  ),
+  TeamAttendanceError: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase6').then(({ TeamAttendanceErrorActivity }) => ({
+      default: TeamAttendanceErrorActivity,
+    })),
+  ),
+  TeamAttendanceComplete: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase6').then(({ TeamAttendanceCompleteActivity }) => ({
+      default: TeamAttendanceCompleteActivity,
     })),
   ),
 };
@@ -73,6 +113,58 @@ export const stackflowConfig = defineConfig({
       route: {
         path: '/notices/:noticeId',
         defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'notices' } }],
+      },
+    },
+    {
+      name: 'Attendance',
+      route: {
+        path: '/my/attendance',
+        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'my' } }],
+      },
+    },
+    {
+      name: 'AttendanceRules',
+      route: {
+        path: '/my/attendance/rules',
+        defaultHistory: () => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'my' } },
+          { activityName: 'Attendance', activityParams: {} },
+        ],
+      },
+    },
+    {
+      name: 'AttendanceComplete',
+      route: {
+        path: '/attendance/complete',
+        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
+      },
+    },
+    {
+      name: 'Settings',
+      route: {
+        path: '/settings',
+        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'my' } }],
+      },
+    },
+    {
+      name: 'TeamAttendanceUpload',
+      route: {
+        path: '/team-attendance/upload',
+        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
+      },
+    },
+    {
+      name: 'TeamAttendanceError',
+      route: {
+        path: '/team-attendance/error',
+        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
+      },
+    },
+    {
+      name: 'TeamAttendanceComplete',
+      route: {
+        path: '/team-attendance/complete',
+        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
       },
     },
     { name: 'NotFound', route: '*' },
