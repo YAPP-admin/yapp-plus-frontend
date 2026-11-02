@@ -30,6 +30,18 @@
 - 변경량: 2단계 코드 5개 파일 +640/-0줄, 문서 +589줄과 가이드 변경을 합산하면 현재 작업 트리의 base 대비 +1229/-0줄 이상으로 800줄 제한을 초과하므로, commit/PR 단계에서 문서와 모델을 독립 검토 단위로 분리해야 한다. 파일을 제외하지 않고 합산했다.
 - 리뷰 상태: 사용자 리뷰 대기. 3단계 fixture 구현은 시작하지 않는다.
 
+## 3단계 — 2026-11-02
+
+- 변경: `model/team-fixtures.ts`에 before/draft/confirmed 합성 snapshot과 고정 확정 이력을 추가하고, `fixtures.ts`에서 환경 공통 공급 진입점을 공개했다.
+- 입력 사례: 후보 52명, draft 8팀·42명 배정·10명 미배정, confirmed 8팀 구성 완료·9명 미배정, 동명이인·1명 팀·긴 이름·서비스명 없음·검색 결과 없음 사례를 포함한다.
+- 무결성: 모든 회원·팀·팀장 참조를 `teamMappingSnapshotSchema`로 검증하고, 환경 분기·API 요청·저장소를 추가하지 않았다.
+- 근접 테스트: `mise exec -- pnpm --filter @yapp-plus/admin test -- src/features/team-management/model/team-fixtures.test.ts src/features/team-management/model/team-mapping.test.ts src/features/team-management/model/team-draft.test.ts` 실행. 스크립트 특성상 관리자 전체 63개 파일·612개 테스트가 새로 실행되어 통과했다.
+- 품질 게이트: `mise exec -- node --run check` 통과. admin lint/typecheck/test는 새 실행, 나머지 패키지는 Turbo 캐시 재사용.
+- build: `mise exec -- node --run build` 통과. admin build는 새 실행, Storybook·기타 build는 Turbo 캐시 재사용.
+- 포맷·diff: `oxfmt`와 `git diff --check` 통과. 새 fixture 파일·공급부에 한국어 파일·공개 함수 주석을 추가했다.
+- 변경량: 3단계 코드·테스트·작업 기록의 실제 base 대비 합계는 commit 전 untracked 포함 별도 산정하며, 800줄 미만으로 유지한다.
+- 사용자 리뷰: 대기. 4단계 경로·화면 구현은 시작하지 않는다.
+
 ## 남은 검증과 위험
 
 문서가 제품 동작을 보증하지 않는다. fixture 구현·초안 보호·접근성·환경별 화면 검증은 tasks.md의 미완료 항목이다.
