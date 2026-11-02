@@ -1,9 +1,9 @@
 'use client';
 
 import { IconBellFill, IconGearFill } from '@karrotmarket/react-monochrome-icon';
-import Image from 'next/image';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Image } from '@/app/navigation/image';
+import { Link } from '@/app/navigation/link';
+import { usePathname } from '@/app/navigation/router';
 import {
   bellButton,
   defaultHeader,

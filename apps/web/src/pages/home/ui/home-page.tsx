@@ -24,9 +24,9 @@ import {
   TextFieldTextarea,
   useSnackbarAdapter,
 } from '@yapp-plus/ui';
-import Image from 'next/image';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Image } from '@/app/navigation/image';
+import { Link } from '@/app/navigation/link';
+import { useRouter, useSearchParams } from '@/app/navigation/router';
 import { useEffect, useRef, useState } from 'react';
 import {
   attendanceButton,

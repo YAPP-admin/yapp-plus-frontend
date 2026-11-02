@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@seed-design/react';
 import { ActionButton, PrefixIcon, Text } from '@yapp-plus/ui';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter, useSearchParams } from '@/app/navigation/router';
 import { useState } from 'react';
 import {
   buttonGroup,

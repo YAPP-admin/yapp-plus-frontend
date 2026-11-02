@@ -16,11 +16,11 @@ mise exec -- node --run dev:web
 ## API 모킹 켜기와 끄기
 
 ```sh
-NEXT_PUBLIC_API_MOCKING=true mise exec -- node --run dev:web
+VITE_API_MOCKING=true mise exec -- node --run dev:web
 ```
 
 반복해서 사용할 때는 앱 디렉터리에 `.env.local`을 만들고
-[.env.example](.env.example)을 참고해 `NEXT_PUBLIC_API_MOCKING=true`를 설정합니다.
+[.env.example](.env.example)을 참고해 `VITE_API_MOCKING=true`를 설정합니다.
 설정 변경 후 개발 서버를 재시작하고 페이지를 새로고침합니다.
 
 - 미지정·`false`: 모킹 비활성. 기존 화면을 바로 표시합니다.
@@ -28,7 +28,7 @@ NEXT_PUBLIC_API_MOCKING=true mise exec -- node --run dev:web
 - 그 밖의 값: 개발 환경에서 오류 안내를 표시합니다.
 - production·test: 이 플래그로 브라우저 worker를 시작하지 않습니다.
 
-끄려면 `NEXT_PUBLIC_API_MOCKING=false`로 설정한 뒤 개발 서버와 페이지를 다시 시작합니다.
+끄려면 `VITE_API_MOCKING=false`로 설정한 뒤 개발 서버와 페이지를 다시 시작합니다.
 모킹은 생성 client의 base URL을 기준으로 구성합니다. 주소를 바꿀 때는 worker 초기화 전에
 client 설정을 적용하고 페이지를 새로고침합니다.
 

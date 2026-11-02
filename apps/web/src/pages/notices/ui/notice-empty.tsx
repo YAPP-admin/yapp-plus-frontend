@@ -1,4 +1,4 @@
-import Image from 'next/image';
+import { Image } from '@/app/navigation/image';
 import { emptyContainer, emptyGraphic, emptyText } from './notice-empty.css';
 
 export function NoticeEmpty() {

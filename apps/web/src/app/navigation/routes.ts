@@ -1,4 +1,4 @@
-import type { TabName } from '../tab';
+import type { TabName } from './tab';
 
 export type StackflowRouteTarget =
   | { activityName: 'Tabs'; activityParams: { initialTab: TabName } }
@@ -28,7 +28,7 @@ const tabByPath: Record<string, TabName> = {
   '/my': 'my',
 };
 
-export function resolveStackflowRoute(href: string): StackflowRouteTarget {
+export function mapHrefToStackflowTarget(href: string): StackflowRouteTarget {
   const url = new URL(href, 'http://yapp.local');
   const pathname = url.pathname.replace(/\/+$/, '') || '/';
   const initialTab = tabByPath[pathname];

@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomePage } from './home-page';
 
 const mockPush = vi.fn<(url: string) => void>();
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => ({
     back: vi.fn<() => void>(),
     push: mockPush,

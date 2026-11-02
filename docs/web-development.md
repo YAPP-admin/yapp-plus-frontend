@@ -10,9 +10,9 @@
 
 ## 적용 상태
 
-13개 회원 페이지의 라우트 진입점과 화면 슬라이스를 구성했습니다. 루트 레이아웃은
-`apps/web/app`, 화면 코드는 `apps/web/src/pages`, Provider·전역 스타일·공통 페이지 레이아웃은
-`apps/web/src/app`에 있습니다. 페이지에는 제목과 공통 준비 중 안내를 제공합니다.
+13개 회원 페이지의 Stackflow Activity와 화면 슬라이스를 구성했습니다. Vite HTML·Stackflow
+진입점은 `apps/web/stackflow-spike`, 화면 코드는 `apps/web/src/pages`, Provider·전역 스타일·
+공통 페이지 레이아웃은 `apps/web/src/app`에 있습니다. 화면에는 제목과 공통 준비 중 안내를 제공합니다.
 홈·일정·공지·마이페이지는 하단 메뉴를 공유하며 홈과 마이페이지에는 바로가기 링크를 제공합니다.
 상세 화면에는 내부 이력 또는 고정 상위 경로로 돌아가는 뒤로가기를 제공합니다. 실제 본문 기능은 후속 단계입니다.
 로컬 개발에서는 홈의 개발용 링크와 `/dev/routes`에서 전체 화면을 확인할 수 있습니다.
@@ -26,16 +26,16 @@
 FSD의 `app`, `pages`, `features`, `shared`를 사용합니다. 화면 단위로 작업을 시작하고 실제
 재사용이 확인되면 분리합니다. `widgets`, `entities`는 도입하지 않습니다.
 
-| 위치                           | 역할                                                           |
-| ------------------------------ | -------------------------------------------------------------- |
-| `apps/web/app`                 | Next.js 라우트, 문서 레이아웃, 메타데이터 등 프레임워크 진입점 |
-| `apps/web/src/app`             | Provider, 전역 초기화, 공통 레이아웃과 스타일 연결             |
-| `apps/web/src/pages/<화면>`    | 화면과 해당 화면에서만 사용하는 코드                           |
-| `apps/web/src/features/<기능>` | 여러 화면에서 재사용하는 사용자 행동                           |
-| `apps/web/src/shared`          | 웹 내부에서 공유하는 도메인 비의존 코드                        |
-| `packages/ui`                  | SEED 기반 공용 UI와 스타일·폰트·테마 계약                      |
-| `packages/api`                 | 공용 API 계약과 클라이언트                                     |
-| `packages/app-bridge`          | WebView와 네이티브 사이의 브리지 계약                          |
+| 위치                           | 역할                                                    |
+| ------------------------------ | ------------------------------------------------------- |
+| `apps/web/stackflow-spike`     | Vite HTML 진입점, Stackflow Activity와 URL·history 구성 |
+| `apps/web/src/app`             | Provider, 전역 초기화, 공통 레이아웃과 스타일 연결      |
+| `apps/web/src/pages/<화면>`    | 화면과 해당 화면에서만 사용하는 코드                    |
+| `apps/web/src/features/<기능>` | 여러 화면에서 재사용하는 사용자 행동                    |
+| `apps/web/src/shared`          | 웹 내부에서 공유하는 도메인 비의존 코드                 |
+| `packages/ui`                  | SEED 기반 공용 UI와 스타일·폰트·테마 계약               |
+| `packages/api`                 | 공용 API 계약과 클라이언트                              |
+| `packages/app-bridge`          | WebView와 네이티브 사이의 브리지 계약                   |
 
 `pages/home`처럼 하나의 화면이나 기능을 묶는 폴더를 **슬라이스**라고 합니다.
 슬라이스 안에서는 `ui`, `model`처럼 코드의 역할에 따라 폴더를 나눕니다.
@@ -45,25 +45,12 @@ FSD의 `app`, `pages`, `features`, `shared`를 사용합니다. 화면 단위로
 
 ```text
 apps/web/
-├── app/
-│   ├── layout.tsx
-│   ├── not-found.tsx
-│   ├── dev/routes/page.tsx  # 로컬 개발 전용 목록
-│   ├── (tabs)/          # 홈·일정·공지 목록·마이페이지
-│   │   ├── layout.tsx
-│   │   └── page.tsx    # 홈의 / 경로
-│   ├── notices/        # 공지 상세
-│   │   └── [noticeId]/page.tsx
-│   ├── my/             # 출석 내역·출석 규칙
-│   │   └── attendance/
-│   │       ├── page.tsx
-│   │       └── rules/page.tsx
-│   ├── settings/
-│   │   └── page.tsx
-│   └── (auth)/         # 로그인·가입
-│       └── layout.tsx
-├── pages/
-│   └── README.md
+├── stackflow-spike/
+│   ├── index.html
+│   └── src/
+│       ├── main.tsx
+│       ├── stack.tsx
+│       └── activities/       # FSD 화면을 Stackflow Activity로 연결
 └── src/
     ├── app/
     │   ├── providers.tsx
@@ -88,8 +75,8 @@ apps/web/
             └── page.css.ts
 ```
 
-루트의 `app`은 Next.js가 URL과 연결하는 위치이고, `src/app`은 앱의 전역 구성을 담당합니다.
-라우트의 `page.tsx`는 `src/pages`의 화면을 연결하고 화면 구현은 해당 슬라이스에 둡니다.
+`stackflow-spike/src/stack.tsx`가 URL과 Activity를 연결하고, `src/app`은 앱의 전역 구성을
+담당합니다. Activity는 `src/pages`의 공개 `index.ts`를 통해 화면 슬라이스를 조합합니다.
 
 라우트 그룹 `(tabs)`, `(auth)`는 URL에 포함되지 않습니다. 위 트리는 두 그룹의 화면별 하위
 경로를 생략했습니다. `(tabs)/layout.tsx`는 탭 이동 사이에 유지되는 공통 레이아웃이며,
@@ -103,9 +90,6 @@ apps/web/
 `(tabs)`는 `PageShell`의 내비게이션 슬롯에 하단 메뉴를 넣고, `(auth)`는 `AuthLayout`으로 `PageShell`의 `plain` 옵션을 사용해 YAPP+ 문구와 구분선 없이 흰색 배경으로 표시합니다. 가입 정보 입력(`/signup`)과 승인 상태(`/signup/status`) 화면에만 헤더에 아이콘 뒤로가기를 표시하고, 이력이 없으면 `/login`으로 돌아갑니다. 가입 흐름 화면의 본문·하단 CTA 배치는 `shared/ui/step-screen.css.ts`를 사용합니다. 헤더와 safe-area는 셸에서 한 번만
 적용하고 페이지 본문에 중복 적용하지 않습니다. 여러 준비 중 페이지의 도메인 비의존 스타일은
 `shared/ui/page.css.ts`를 사용합니다.
-
-`apps/web/pages/README.md`는 Next.js가 `src/pages`를 Pages Router로 인식하지 않도록 루트
-`pages` 폴더를 유지하는 이유를 설명합니다. 이 폴더에는 Pages Router 라우트를 추가하지 않습니다.
 
 새 `features` 슬라이스와 `shared` 하위 모듈은 실제 사용처가 생길 때 생성합니다. 빈 레이어·역할별 폴더·슬라이스 그룹을
 미리 만들지 않습니다.
@@ -141,7 +125,7 @@ apps/web/
 
 의존성은 `app → pages → features → shared` 방향으로 흐릅니다. 상위 레이어는 필요한 하위
 레이어를 직접 사용할 수 있습니다. 페이지에서 `shared`를 쓰기 위해 빈 feature를 만들 필요는
-없습니다. 루트 Next.js 라우트는 `src/app`의 전역 구성과 `src/pages`의 화면을 연결합니다.
+없습니다. Stackflow Activity는 `src/app`의 전역 구성과 `src/pages`의 화면을 연결합니다.
 
 - `pages`·`features`에서 같은 레이어의 다른 슬라이스를 직접 import하지 않습니다.
   서로 다른 슬라이스를 조합해야 하면 상위 레이어에서 조합합니다.
@@ -159,8 +143,8 @@ apps/web/
 다음은 현재 홈의 연결 방식입니다. `@/*` alias는 `apps/web/src/*`를 가리킵니다.
 
 ```tsx
-// apps/web/app/(tabs)/page.tsx
-export { HomePage as default } from '@/pages/home';
+// apps/web/stackflow-spike/src/activities/legacy.tsx
+import { HomePage } from '@/pages/home';
 ```
 
 ```ts
@@ -175,8 +159,7 @@ export { HomePage } from './ui/home-page';
 
 - 파일·폴더는 `home-page.tsx`, `report-attendance`처럼 kebab-case로 작성합니다.
 - 컴포넌트는 `HomePage`처럼 PascalCase, 훅은 `use` 접두사로 작성합니다.
-- 일반 컴포넌트는 named export를 사용합니다. Next.js가 요구하는 라우트 진입점에서는
-  프레임워크 규칙에 따라 default export를 사용합니다.
+- 일반 컴포넌트와 Activity는 named export를 사용합니다.
 - 스타일은 기존 vanilla-extract와 SEED 토큰을 사용합니다. 새 스타일 도구나 자체 디자인 토큰
   체계를 추가하지 않습니다.
 
@@ -197,10 +180,9 @@ export { HomePage } from './ui/home-page';
 mise exec -- pnpm --filter @yapp-plus/web dev
 ```
 
-페이지를 추가할 때는 `apps/web/app/<경로>/page.tsx`를 Next.js 라우트 진입점으로 두고,
-하단 메뉴나 인증 화면의 공통 레이아웃이 필요한 경우 `(tabs)` 또는 `(auth)` 아래에 배치합니다.
-실제 화면은 `apps/web/src/pages/<화면>`에 작성합니다. 라우트 파일에서 화면 슬라이스의 공개
-`index.ts`만 가져옵니다.
+페이지를 추가할 때는 `apps/web/src/pages/<화면>`에 화면을 작성하고, `stackflow-spike/src/stack.tsx`에
+Activity와 URL·fallback을 등록합니다. 하단 메뉴나 인증 화면의 공통 레이아웃은 `src/app/layouts`에서
+조합하고, Activity에서는 화면 슬라이스의 공개 `index.ts`만 가져옵니다.
 
 ## SEED와 공용 UI 사용
 

@@ -7,7 +7,7 @@ const navigation = vi.hoisted(() => ({
   replace: vi.fn<(url: string) => void>(),
   canGoBack: vi.fn<() => boolean>(),
 }));
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => navigation,
   useParams: () => ({ noticeId: '1' }),
 }));

@@ -16,8 +16,8 @@ import {
   SwitchRoot,
   SwitchThumb,
 } from '@seed-design/react';
-import Image from 'next/image';
-import { useRouter } from 'next/navigation';
+import { Image } from '@/app/navigation/image';
+import { useRouter } from '@/app/navigation/router';
 import { useState } from 'react';
 import {
   body,

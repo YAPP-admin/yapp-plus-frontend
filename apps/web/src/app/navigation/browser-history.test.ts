@@ -94,7 +94,7 @@ describe('현재 문서의 복귀 이력', () => {
     expect(history.canGoBack()).toBe(false);
   });
 
-  it('Next.js가 메서드를 감싼 뒤 재마운트해도 해제된 관찰기가 식별자를 바꾸지 않는다', () => {
+  it('라우터가 메서드를 감싼 뒤 재마운트해도 해제된 관찰기가 식별자를 바꾸지 않는다', () => {
     const first = start('/');
     const pushThrough = window.history.pushState.bind(window.history);
     const replaceThrough = window.history.replaceState.bind(window.history);

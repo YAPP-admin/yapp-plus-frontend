@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SignupPage } from './signup-page';
 
 const router = vi.hoisted(() => ({ push: vi.fn<(url: string) => void>() }));
-vi.mock('next/navigation', () => ({ useRouter: () => router }));
+vi.mock('@/app/navigation/router', () => ({ useRouter: () => router }));
 beforeEach(() => vi.clearAllMocks());
 
 function goToPhoneStep() {

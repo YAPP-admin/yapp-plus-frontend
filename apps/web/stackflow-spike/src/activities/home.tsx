@@ -15,7 +15,7 @@ export function HomeActivity() {
         <main className="spike-content">
           <p className="spike-eyebrow">Stackflow 호환성 셸</p>
           <h1>Home Activity</h1>
-          <p>Next production 경로와 분리된 Vite 검증 화면입니다.</p>
+          <p>기존 FSD 화면과 분리된 Vite 검증 화면입니다.</p>
           <Link
             className="spike-link"
             activityName="Tabs"

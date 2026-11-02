@@ -1,8 +1,8 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
-import Image from 'next/image';
-import { useSearchParams } from 'next/navigation';
+import { Image } from '@/app/navigation/image';
+import { useSearchParams } from '@/app/navigation/router';
 import {
   absentChip,
   attendedChip,

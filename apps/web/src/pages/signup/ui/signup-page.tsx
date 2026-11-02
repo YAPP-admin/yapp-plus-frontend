@@ -1,7 +1,7 @@
 'use client';
 
 import { ActionButton, Text, TextField, TextFieldInput } from '@yapp-plus/ui';
-import { useRouter } from 'next/navigation';
+import { useRouter } from '@/app/navigation/router';
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
 import { body, footer, screen } from '@/shared/ui/step-screen.css';
 import { fields, form } from './signup-page.css';

@@ -6,8 +6,8 @@ import {
   IconHouseFill,
   IconPersonFill,
 } from '@karrotmarket/react-monochrome-icon';
-import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { Link } from '@/app/navigation/link';
+import { usePathname } from '@/app/navigation/router';
 import {
   bottomBar,
   homeIndicatorArea,

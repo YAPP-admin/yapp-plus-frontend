@@ -3,8 +3,8 @@
 import { BackButton } from '@/app/navigation/back-button';
 import { IconCameraLine, IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import Image from 'next/image';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { Image } from '@/app/navigation/image';
+import { useRouter, useSearchParams } from '@/app/navigation/router';
 import { useRef, useState } from 'react';
 import {
   body,

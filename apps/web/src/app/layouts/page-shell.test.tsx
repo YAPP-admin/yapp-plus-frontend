@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { HomePage } from '../../pages/home';
 import { PageShell } from './page-shell';
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => ({
     back: vi.fn<() => void>(),
     push: vi.fn<(url: string) => void>(),

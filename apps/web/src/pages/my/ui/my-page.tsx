@@ -1,6 +1,6 @@
 import { IconQuestionmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Image } from '@/app/navigation/image';
+import { Link } from '@/app/navigation/link';
 import { AttendanceRulesDialog } from './attendance-rules-dialog';
 import {
   activeChip,
