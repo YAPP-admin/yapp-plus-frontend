@@ -38,6 +38,7 @@ catalog:
   '@tanstack/react-form': 1.33.5
   '@testing-library/jest-dom': 7.0.1
   '@testing-library/react': 16.3.3
+  '@vitejs/plugin-react': 6.1.1
   '@types/node': 24.13.3
   '@types/react': 19.2.18
   '@types/react-dom': 19.2.7
@@ -52,7 +53,7 @@ catalog:
   clsx: 2.1.1
   proj4: 2.22.0
   overlay-kit: 1.9.0
-  oxc-transform-react: 0.155.0
+  oxc-transform-react: 0.145.0
   react: 19.2.8
   react-dom: 19.2.8
   react-kakao-maps-sdk: 1.2.2
