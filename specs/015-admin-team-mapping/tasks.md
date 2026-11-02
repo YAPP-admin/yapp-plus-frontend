@@ -32,13 +32,13 @@
 
 ## US1 — 4단계 진입과 5단계 목록 (P1)
 
-- [ ] T013 [P] [US1] apps/admin/src/pages/team-mapping/model/team-search.test.ts에 filter/preview 기본값·잘못된 값·URL 복원을 검증한다.
-- [ ] T014 [P] [US1] apps/admin/src/app/ui/admin-shell.test.tsx에 팀 매핑 활성 메뉴·기존 회원 메뉴·모바일 이동 사례를 추가한다.
-- [ ] T015 [US1] apps/admin/src/pages/team-mapping/model/team-search.ts와 index.ts에 검색 스키마·공개 진입점을 작성한다.
-- [ ] T016 [US1] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx와 team-mapping-page.css.ts에 공통 헤더·빌딩 전 화면·생성 진입 callback을 구현한다.
-- [ ] T017 [US1] apps/admin/src/routes/_dashboard/members/teams.tsx에 환경 공통 fixture·URL·현재 위치를 연결하고 공식 생성기로 routeTree를 갱신한다.
-- [ ] T018 [US1] apps/admin/src/app/ui/admin-navigation.ts·admin-sidebar.tsx·admin-shell.tsx·admin-mobile-navigation.tsx에 별도 경로 하위 메뉴를 연결한다.
-- [ ] T019 [US1] apps/admin/src/pages/members/ui/member-team-filter.tsx와 members-page.test.tsx에 팀 매핑 진입 링크와 회귀 검증을 추가한다.
+- [x] T013 [P] [US1] apps/admin/src/pages/team-mapping/model/team-search.test.ts에 filter/preview 기본값·잘못된 값·URL 복원을 검증한다.
+- [x] T014 [P] [US1] apps/admin/src/app/ui/admin-shell.test.tsx에 팀 매핑 활성 메뉴·기존 회원 메뉴·모바일 이동 사례를 추가한다.
+- [x] T015 [P] [US1] apps/admin/src/pages/team-mapping/model/team-search.ts와 index.ts에 검색 스키마·공개 진입점을 작성한다.
+- [x] T016 [US1] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx와 team-mapping-page.css.ts에 공통 헤더·빌딩 전 화면·생성 진입 callback을 구현한다.
+- [x] T017 [US1] apps/admin/src/routes/_dashboard/members/teams.tsx에 환경 공통 fixture·URL·현재 위치를 연결하고 공식 생성기로 routeTree를 갱신한다.
+- [x] T018 [US1] apps/admin/src/app/ui/admin-navigation.ts·admin-sidebar.tsx·admin-shell.tsx·admin-mobile-navigation.tsx에 별도 경로 하위 메뉴를 연결한다.
+- [x] T019 [US1] apps/admin/src/pages/members/ui/member-team-filter.tsx와 members-page.test.tsx에 팀 매핑 진입 링크와 회귀 검증을 추가한다.
 
 **4단계 중단점**: 개발/운영 빈 화면과 탐색을 리뷰한다. 실제 생성 폼은 6단계에 연결한다.
 

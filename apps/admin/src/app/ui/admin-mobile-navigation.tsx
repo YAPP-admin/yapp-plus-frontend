@@ -9,9 +9,11 @@ import * as styles from './admin-shell.css';
 export function AdminMobileNavigation({
   menu,
   memberSearch,
+  teamMapping,
 }: {
   menu: keyof typeof navigationItems;
   memberSearch?: MemberSearch;
+  teamMapping?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const router = useRouter();
@@ -61,6 +63,7 @@ export function AdminMobileNavigation({
             <AdminSidebar
               menu={menu}
               memberSearch={memberSearch}
+              teamMapping={teamMapping}
               onNavigate={() => setOpen(false)}
             />
           </SidePanel.Content>

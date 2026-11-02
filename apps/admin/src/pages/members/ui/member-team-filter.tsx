@@ -43,7 +43,8 @@ export function TeamMappingNotice() {
       <HStack align="flex-start" gap="x3">
         <Info aria-hidden="true" size={18} />
         <Text textStyle="t2Regular">
-          아직 팀 매핑 전이에요. 팀 정보가 연결되면 회원 목록에서 팀을 확인할 수 있어요.
+          아직 팀 매핑 전이에요. 팀 정보가 연결되면 회원 목록에서 팀을 확인할 수 있어요.{' '}
+          <a href="/members/teams">팀 매핑 화면 열기</a>
         </Text>
       </HStack>
     </Box>

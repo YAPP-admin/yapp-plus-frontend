@@ -128,6 +128,26 @@ describe('좁은 화면 관리자 메뉴', () => {
     });
   });
 
+  it('모바일 팀 매핑 선택 후 페이지를 표시하고 하위 메뉴를 활성화한다', async () => {
+    const user = userEvent.setup();
+    await renderShell();
+
+    await user.click(await screen.findByRole('button', { name: '메뉴' }));
+    const dialog = await screen.findByRole('dialog');
+    await user.click(within(dialog).getByRole('link', { name: '팀 매핑' }));
+
+    expect(await screen.findByRole('heading', { name: '팀 매핑', level: 1 })).toBeVisible();
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+
+    await user.click(screen.getByRole('button', { name: '메뉴' }));
+    expect(
+      await within(screen.getByRole('dialog')).findByRole('link', {
+        name: '팀 매핑',
+        current: 'page',
+      }),
+    ).toBeVisible();
+  });
+
   it('브라우저 뒤로 가기로 경로가 바뀌어도 열린 메뉴를 닫는다', async () => {
     const user = userEvent.setup();
     const { router } = await renderShell();

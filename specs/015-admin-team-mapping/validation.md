@@ -47,3 +47,16 @@
 문서가 제품 동작을 보증하지 않는다. fixture 구현·초안 보호·접근성·환경별 화면 검증은 tasks.md의 미완료 항목이다.
 최신 OpenAPI 원문은 조회 시간 초과로 검증하지 못했다. 이번은 생성 API를 변경하거나 연결하지 않는다.
 외부 기능명세서·용어 문서는 접근되지 않았으며 Figma·사용자 확정 범위를 따른다.
+
+## 4단계 — 2026-11-02
+
+- 변경: `/members/teams` 라우트와 URL `preview`·`filter` 스키마, 환경 공통 fixture 공급, 팀 빌딩 전 빈 화면과 상태 선택 UI를 추가했다. 회원 관리 하위 메뉴·모바일 메뉴·회원 목록 안내에서 팀 매핑으로 진입할 수 있다.
+- 실행 경계: 생성 callback은 아직 연결하지 않아 첫 팀 만들기·팀 만들기 버튼은 비활성이다. draft/confirmed preview는 fixture 상태를 선택할 수 있으며 팀 목록은 5단계에서 연결한다. API 요청·저장·localStorage는 추가하지 않았다.
+- 생성 파일: 새 route를 Vite로 생성해 `apps/admin/src/routeTree.gen.ts`를 갱신했다. 생성 결과를 수동 편집하지 않았다.
+- 근접 테스트: 팀 검색·페이지·관리자 셸·회원 목록·기존 router 테스트를 지정 실행해 5개 파일·123개 테스트가 새로 통과했다. 팀 매핑 페이지 3개 테스트, admin shell 8개 테스트, router 101개 테스트를 포함한다.
+- 품질 게이트: `mise exec -- node --run check` 통과. 포맷은 새 실행, admin lint/typecheck/test는 새 실행, 나머지 패키지는 Turbo 캐시 재사용이다. 관리자 전체 테스트는 65개 파일·620개 테스트가 새로 통과했다.
+- build: `mise exec -- node --run build` 통과. admin build는 새 실행, Storybook·web·기타 패키지 build는 Turbo 캐시 재사용이다. 기존 의도적 오류 경계 테스트 stderr와 청크 크기 경고는 exit code 0으로 종료됐다.
+- 회귀: 새 하위 메뉴가 추가되어 고정 탭 순서가 바뀐 기존 router 키보드 테스트 5곳을 새 순서에 맞게 갱신했다. 회원 목록의 팀 매핑 안내 링크와 모바일 메뉴 선택·닫힘을 검증했다.
+- 화면 근거: 테스트 DOM으로 빌딩 전 빈 상태·헤더·생성 진입점·모바일 하위 메뉴를 확인했다. 실제 브라우저·375px·스크린 리더·터치·Figma 픽셀 비교는 12단계에서 수행한다.
+- 변경량: `origin/DongjaJ/team-mapping-fixtures...HEAD` 기준 확인 후 commit한다. 650줄부터 분리를 검토하고 800줄 미만으로 유지한다.
+- 사용자 리뷰: 대기. 5단계 팀 목록·카드·필터 구현은 시작하지 않는다.

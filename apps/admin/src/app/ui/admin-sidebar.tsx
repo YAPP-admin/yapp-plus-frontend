@@ -3,16 +3,21 @@ import { Link } from '@tanstack/react-router';
 import { Badge } from '@yapp-plus/ui';
 import { Fragment } from 'react';
 import type { MemberSearch } from '~/pages/members';
-import { navigationItems, memberNavigationItems } from './admin-navigation';
+import {
+  navigationItems,
+  memberNavigationItems,
+  teamMappingNavigationItem,
+} from './admin-navigation';
 import * as styles from './admin-shell.css';
 
 type AdminSidebarProps = {
   menu: keyof typeof navigationItems;
   memberSearch?: MemberSearch;
+  teamMapping?: boolean;
   onNavigate?: () => void;
 };
 
-export function AdminSidebar({ menu, memberSearch, onNavigate }: AdminSidebarProps) {
+export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: AdminSidebarProps) {
   return (
     <SideNavigation.Root className={styles.sidebar} asChild>
       <aside aria-label="관리자">
@@ -56,7 +61,7 @@ export function AdminSidebar({ menu, memberSearch, onNavigate }: AdminSidebarPro
                       <SideNavigation.Item
                         current={
                           navigationItems[menu].to === item.to &&
-                          !(item.to === '/members' && memberSearch)
+                          !(item.to === '/members' && (memberSearch ?? teamMapping))
                         }
                         asChild
                       >
@@ -119,6 +124,21 @@ export function AdminSidebar({ menu, memberSearch, onNavigate }: AdminSidebarPro
                               </Link>
                             </SideNavigation.Item>
                           ))}
+                          <SideNavigation.Item current={teamMapping === true} asChild>
+                            <Link
+                              to={teamMappingNavigationItem.to}
+                              search={{}}
+                              resetScroll={false}
+                              onClick={onNavigate}
+                              className={styles.navigationLink}
+                              aria-current={teamMapping ? 'page' : undefined}
+                              activeOptions={{ exact: true, includeSearch: true }}
+                            >
+                              <SideNavigation.ItemLabel>
+                                {teamMappingNavigationItem.label}
+                              </SideNavigation.ItemLabel>
+                            </Link>
+                          </SideNavigation.Item>
                         </div>
                       )}
                     </Fragment>
