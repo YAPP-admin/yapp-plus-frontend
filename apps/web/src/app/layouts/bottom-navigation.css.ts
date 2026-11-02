@@ -72,7 +72,7 @@ export const itemLabel = style({
 
 export const homeIndicatorArea = style({
   height: '34px',
-  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+  paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
   boxSizing: 'content-box',
 });
 
@@ -80,7 +80,7 @@ globalStyle('.seed-snackbar-region', {
   position: 'fixed',
   left: 0,
   right: 0,
-  bottom: 'calc(env(safe-area-inset-bottom, 0px) + 108px)',
+  bottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 108px)',
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',

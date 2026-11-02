@@ -104,6 +104,6 @@ export const contactButton = style({
 
 export const homeIndicatorArea = style({
   height: '34px',
-  paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+  paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
   boxSizing: 'content-box',
 });

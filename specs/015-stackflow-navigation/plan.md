@@ -90,7 +90,9 @@ User-Agent에서 `ios | android | web`을 판별하여 initialContext로 전달�
 
 ### 4단계 — 탭·Alerts·history 구조
 
-Home·Schedule·Notices·My를 TabsActivity의 lazy panel로 구성하고 탭 전환은 `replaceStep`으로 history·애니메이션을 만들지 않습니다. 실행 중 탭별 상태를 유지하고 Alerts를 Home 위의 step으로 복원합니다. unknown surface는 NotFound로 처리합니다.
+Home·Schedule·Notices·My를 TabsActivity의 lazy panel로 구성하고, 각 panel은 React 19 `<Activity>`로 표시·숨김을 제어합니다. `Activity`는 방문한 탭의 state·DOM을 유지하면서 숨겨진 panel의 Effect를 정리합니다. 탭 전환은 `replaceStep`으로 history·애니메이션을 만들지 않습니다. 실행 중 탭별 상태를 유지하고 Alerts를 Home 위의 step으로 복원합니다. unknown surface는 NotFound로 처리합니다.
+
+SEED Tabs의 `lazyMount`·`unmountOnExit`는 panel 마운트 정책과 중복될 수 있으므로, 하단 메뉴처럼 URL을 소유하는 현재 navigation Link에는 강제로 적용하지 않습니다. SEED Tabs UI를 별도 local tab control로 도입할 때만 `unmountOnExit={false}`와 Activity 경계를 함께 검토합니다.
 
 ### 5단계 — 공지 대표 흐름 완성
 

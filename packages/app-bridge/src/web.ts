@@ -21,6 +21,7 @@ type SafeAreaStore = {
 
 const BRIDGE_READY_TIMEOUT_MS = 2_000;
 const BRIDGE_READY_POLL_MS = 16;
+const noop: () => void = () => undefined;
 
 export const applySafeAreaCssVariables = (
   target: CssVariableTarget,
@@ -36,6 +37,27 @@ export const applySafeAreaCssVariables = (
   target.setProperty(SEED_SAFE_AREA_CSS_VARIABLES.right, `${normalizedInsets.right}px`);
   target.setProperty(SEED_SAFE_AREA_CSS_VARIABLES.bottom, `${normalizedInsets.bottom}px`);
   target.setProperty(SEED_SAFE_AREA_CSS_VARIABLES.left, `${normalizedInsets.left}px`);
+};
+
+/**
+ * 네이티브 브리지 응답 전에는 WebKit의 safe-area 환경 변수를 사용합니다.
+ * CSS 변수를 0px로 먼저 설정하면 var()의 fallback인 env()가 실행되지 않습니다.
+ */
+export const applySafeAreaCssVariableFallbacks = (target: CssVariableTarget): void => {
+  const fallbackValues = [
+    [SAFE_AREA_CSS_VARIABLES.top, 'env(safe-area-inset-top, 0px)'],
+    [SAFE_AREA_CSS_VARIABLES.right, 'env(safe-area-inset-right, 0px)'],
+    [SAFE_AREA_CSS_VARIABLES.bottom, 'env(safe-area-inset-bottom, 0px)'],
+    [SAFE_AREA_CSS_VARIABLES.left, 'env(safe-area-inset-left, 0px)'],
+    [SEED_SAFE_AREA_CSS_VARIABLES.top, 'env(safe-area-inset-top, 0px)'],
+    [SEED_SAFE_AREA_CSS_VARIABLES.right, 'env(safe-area-inset-right, 0px)'],
+    [SEED_SAFE_AREA_CSS_VARIABLES.bottom, 'env(safe-area-inset-bottom, 0px)'],
+    [SEED_SAFE_AREA_CSS_VARIABLES.left, 'env(safe-area-inset-left, 0px)'],
+  ] as const;
+
+  for (const [property, value] of fallbackValues) {
+    target.setProperty(property, value);
+  }
 };
 
 export const bindSafeAreaCssVariables = (
@@ -106,7 +128,9 @@ export const installSafeAreaBridge = (target?: CssVariableTarget): (() => void) 
   const cssTarget = target ?? document.documentElement.style;
   const bridge = getLinkedBridge();
   let disposed = false;
-  let unsubscribe = bindSafeAreaCssVariables(bridge.store, cssTarget);
+  let unsubscribe = noop;
+
+  applySafeAreaCssVariableFallbacks(cssTarget);
 
   void (async () => {
     const isReady = await waitForNativeBridge(bridge, () => disposed);

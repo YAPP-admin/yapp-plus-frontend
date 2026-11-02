@@ -32,7 +32,7 @@ export const SnackbarProvider = (props: SnackbarProviderProps) => {
             position: 'fixed',
             left: 0,
             right: 0,
-            bottom: 'calc(env(safe-area-inset-bottom, 0px) + 108px)',
+            bottom: 'calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + 108px)',
             '--snackbar-region-offset': '108px',
             display: 'flex',
             flexDirection: 'column',
