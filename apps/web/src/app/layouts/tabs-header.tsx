@@ -59,7 +59,7 @@ export function TabsHeader({ activeTab }: TabsHeaderProps = {}) {
   );
 }
 
-function getActivePathname(activeTab: TabsHeaderProps['activeTab'], pathname: string) {
+function getActivePathname(activeTab: TabsHeaderProps['activeTab'], pathname: string | null) {
   if (activeTab === undefined) {
     return pathname;
   }
