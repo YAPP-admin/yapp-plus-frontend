@@ -1,5 +1,5 @@
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
-import { useActivity } from '@stackflow/react';
+import { useStep } from '@stackflow/react';
 import { useActivityParams } from '@stackflow/react/future';
 import { useEffect, type ReactNode } from 'react';
 import { SnackbarProvider } from '@yapp-plus/ui';
@@ -28,8 +28,6 @@ import { AuthLayout } from '@/app/layouts/auth-layout';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabsLayout } from '@/app/layouts/tabs-layout';
-import { notifyNavigation } from '../legacy/routes';
-import { usePathname } from '../legacy/next-navigation';
 import { useAppScreenOptions } from '../platform';
 import { isTabName, type TabName } from '../tab';
 
@@ -42,28 +40,12 @@ const TAB_TITLES: Record<TabName, string> = {
 
 export function LegacyTabsActivity() {
   const { initialTab } = useActivityParams<'Tabs'>();
-  const { isTop } = useActivity();
-  const pathname = usePathname();
-  const activeTab = normalizeTab(tabFromPathname(pathname) ?? initialTab);
-
-  useEffect(() => {
-    if (!isTop) {
-      return;
-    }
-
-    const url = new URL(window.location.href);
-    url.pathname = tabPath(activeTab);
-    window.history.replaceState(
-      window.history.state,
-      '',
-      `${url.pathname}${url.search}${url.hash}`,
-    );
-    notifyNavigation();
-  }, [activeTab, isTop]);
+  const step = useStep();
+  const activeTab = normalizeTab(step?.params.initialTab ?? initialTab);
 
   return (
     <LegacyScreen title={TAB_TITLES[activeTab]}>
-      <TabsLayout>
+      <TabsLayout activeTab={activeTab}>
         <div hidden={activeTab !== 'home'}>
           <HomePage />
         </div>
@@ -85,25 +67,10 @@ function normalizeTab(value: unknown): TabName {
   return isTabName(value) ? value : 'home';
 }
 
-function tabPath(tab: TabName) {
-  return tab === 'home' ? '/' : `/${tab}`;
-}
-
-function tabFromPathname(pathname: string): TabName | undefined {
-  if (pathname === '/') {
-    return 'home';
-  }
-  if (pathname === '/schedule' || pathname === '/notices' || pathname === '/my') {
-    const tab = pathname.slice(1);
-    return isTabName(tab) ? tab : undefined;
-  }
-  return undefined;
-}
-
 export function LegacyAlertsActivity() {
   return (
     <LegacyScreen title="알림">
-      <TabsLayout>
+      <TabsLayout activeTab={null}>
         <AlertsPage />
       </TabsLayout>
     </LegacyScreen>

@@ -87,7 +87,6 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(await waitForTopHeading('팀빌딩 소개서 작성')).toBeTruthy();
     await user.click(screen.getByRole('button', { name: '뒤로가기' }));
 
-    await waitFor(() => expect(window.location.pathname).toBe('/notices'));
     const restored = await waitForTopHeading('게시판');
     expect(restored.getByRole('tab', { name: '과제' })).toHaveAttribute('aria-selected', 'true');
   });
@@ -102,7 +101,6 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(await waitForTopHeading('알림')).toBeTruthy();
 
     await user.click(screen.getByRole('button', { name: '뒤로가기' }));
-    await waitFor(() => expect(window.location.pathname).toBe('/'));
     expect(await waitForTopHeading('홈')).toBeTruthy();
   });
 
@@ -137,7 +135,6 @@ describe('Stackflow FSD 화면 연결', () => {
 
     const detailScreen = await waitForTopHeading('팀빌딩 소개서 작성');
     await user.click(detailScreen.getByRole('button', { name: '뒤로가기' }));
-    await waitFor(() => expect(window.location.pathname).toBe('/notices'));
     expect(await waitForTopHeading('게시판')).toBeTruthy();
     detailRendered.unmount();
   });
@@ -189,7 +186,6 @@ describe('Stackflow FSD 화면 연결', () => {
     const rendered = renderStack();
     const completeScreen = await waitForTopHeading('회원가입을 완료했어요!');
     await user.click(completeScreen.getByRole('link', { name: '시작하기' }));
-    await waitFor(() => expect(window.location.pathname).toBe('/'));
     expect(await waitForTopHeading('홈')).toBeTruthy();
     rendered.unmount();
 
