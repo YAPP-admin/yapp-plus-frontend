@@ -44,87 +44,99 @@ type EmptyActivityParams = ActivityBaseParams;
 
 const components = {
   Tabs: lazy<TabsParams>(() =>
-    import('./activities/tabs').then(({ TabsActivity }) => ({ default: TabsActivity })),
+    import('./activities/legacy').then(({ LegacyTabsActivity }) => ({
+      default: LegacyTabsActivity,
+    })),
   ),
   Alerts: lazy<EmptyActivityParams>(() =>
-    import('./activities/alerts').then(({ AlertsActivity }) => ({ default: AlertsActivity })),
+    import('./activities/legacy').then(({ LegacyAlertsActivity }) => ({
+      default: LegacyAlertsActivity,
+    })),
   ),
   NoticeDetail: lazy<{ noticeId: string }>(() =>
-    import('./activities/notice-detail').then(({ NoticeDetailActivity }) => ({
-      default: NoticeDetailActivity,
+    import('./activities/legacy').then(({ LegacyNoticeDetailActivity }) => ({
+      default: LegacyNoticeDetailActivity,
     })),
   ),
   NotFound: lazy<EmptyActivityParams>(() =>
-    import('./activities/not-found').then(({ NotFoundActivity }) => ({
-      default: NotFoundActivity,
+    import('./activities/legacy').then(({ LegacyNotFoundActivity }) => ({
+      default: LegacyNotFoundActivity,
     })),
   ),
   Attendance: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase6').then(({ AttendanceActivity }) => ({
-      default: AttendanceActivity,
+    import('./activities/legacy').then(({ LegacyAttendanceActivity }) => ({
+      default: LegacyAttendanceActivity,
     })),
   ),
   AttendanceRules: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase6').then(({ AttendanceRulesActivity }) => ({
-      default: AttendanceRulesActivity,
+    import('./activities/legacy').then(({ LegacyAttendanceRulesActivity }) => ({
+      default: LegacyAttendanceRulesActivity,
     })),
   ),
   AttendanceComplete: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase6').then(({ AttendanceCompleteActivity }) => ({
-      default: AttendanceCompleteActivity,
+    import('./activities/legacy').then(({ LegacyAttendanceCompleteActivity }) => ({
+      default: LegacyAttendanceCompleteActivity,
     })),
   ),
   Settings: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase6').then(({ SettingsActivity }) => ({ default: SettingsActivity })),
+    import('./activities/legacy').then(({ LegacySettingsActivity }) => ({
+      default: LegacySettingsActivity,
+    })),
   ),
   TeamAttendanceUpload: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase6').then(({ TeamAttendanceUploadActivity }) => ({
-      default: TeamAttendanceUploadActivity,
+    import('./activities/legacy').then(({ LegacyTeamAttendanceUploadActivity }) => ({
+      default: LegacyTeamAttendanceUploadActivity,
     })),
   ),
   TeamAttendanceError: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase6').then(({ TeamAttendanceErrorActivity }) => ({
-      default: TeamAttendanceErrorActivity,
+    import('./activities/legacy').then(({ LegacyTeamAttendanceErrorActivity }) => ({
+      default: LegacyTeamAttendanceErrorActivity,
     })),
   ),
   TeamAttendanceComplete: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase6').then(({ TeamAttendanceCompleteActivity }) => ({
-      default: TeamAttendanceCompleteActivity,
+    import('./activities/legacy').then(({ LegacyTeamAttendanceCompleteActivity }) => ({
+      default: LegacyTeamAttendanceCompleteActivity,
     })),
   ),
   Login: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase7').then(({ LoginActivity }) => ({ default: LoginActivity })),
+    import('./activities/legacy').then(({ LegacyLoginActivity }) => ({
+      default: LegacyLoginActivity,
+    })),
   ),
   LoginError: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase7').then(({ LoginErrorActivity }) => ({
-      default: LoginErrorActivity,
+    import('./activities/legacy').then(({ LegacyLoginErrorActivity }) => ({
+      default: LegacyLoginErrorActivity,
     })),
   ),
   Error: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase7').then(({ LoginErrorActivity }) => ({
-      default: LoginErrorActivity,
+    import('./activities/legacy').then(({ LegacyLoginErrorActivity }) => ({
+      default: LegacyLoginErrorActivity,
     })),
   ),
   Signup: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase7').then(({ SignupActivity }) => ({ default: SignupActivity })),
+    import('./activities/legacy').then(({ LegacySignupActivity }) => ({
+      default: LegacySignupActivity,
+    })),
   ),
   SignupStatus: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase7').then(({ SignupStatusActivity }) => ({
-      default: SignupStatusActivity,
+    import('./activities/legacy').then(({ LegacySignupStatusActivity }) => ({
+      default: LegacySignupStatusActivity,
     })),
   ),
   SignupComplete: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase7').then(({ SignupCompleteActivity }) => ({
-      default: SignupCompleteActivity,
+    import('./activities/legacy').then(({ LegacySignupCompleteActivity }) => ({
+      default: LegacySignupCompleteActivity,
     })),
   ),
   SignupUnregistered: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase7').then(({ SignupUnregisteredActivity }) => ({
-      default: SignupUnregisteredActivity,
+    import('./activities/legacy').then(({ LegacySignupUnregisteredActivity }) => ({
+      default: LegacySignupUnregisteredActivity,
     })),
   ),
   DevRoutes: lazy<EmptyActivityParams>(() =>
-    import('./activities/phase7').then(({ DevRoutesActivity }) => ({ default: DevRoutesActivity })),
+    import('./activities/legacy').then(({ LegacyDevRoutesActivity }) => ({
+      default: LegacyDevRoutesActivity,
+    })),
   ),
 };
 
