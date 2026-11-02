@@ -13,7 +13,7 @@ import {
 import { teamMappingSearchDefaults } from '../model/team-search';
 import { TeamMappingPage } from './team-mapping-page';
 
-it('팀 빌딩 전 빈 화면과 두 생성 진입점을 표시한다', async () => {
+it('팀 빌딩 전 빈 화면과 생성 진입점을 표시한다', async () => {
   const user = userEvent.setup();
   const onCreateTeam = vi.fn<() => void>();
 
@@ -75,7 +75,6 @@ it('preview 상태를 URL 입력으로 받아 팀 목록과 필터 개수를 표
   expect(screen.getByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
   expect(screen.getByRole('combobox', { name: '팀 목록 필터' })).toHaveTextContent('전체 팀 · 8');
   expect(screen.getByText('총 8팀 · 42명 배정 · 10명 미배정')).toBeVisible();
-  expect(screen.getByText('Design 직군이 없어요.')).toBeVisible();
   expect(screen.getAllByText('김민서')).not.toHaveLength(0);
 });
 
@@ -97,11 +96,30 @@ it('팀 상세 진입과 더보기 버튼을 별도 조작 대상으로 구분�
   expect(screen.getByRole('button', { name: 'Orbit 더보기' })).toBeDisabled();
 });
 
-it('필터 변경 callback과 결과 없음 화면을 표시한다', async () => {
+it('상세 callback이 없으면 카드에서 상세 패널을 연다', async () => {
+  const user = userEvent.setup();
+
+  render(
+    <OverlayProvider>
+      <TeamMappingPage
+        snapshot={teamMappingDraftFixture}
+        search={{ ...teamMappingSearchDefaults, preview: 'draft' }}
+        onPreviewChange={() => undefined}
+      />
+    </OverlayProvider>,
+  );
+
+  await user.click(screen.getByRole('button', { name: 'Orbit' }));
+
+  expect(await screen.findByRole('heading', { name: 'Orbit' })).toBeVisible();
+  expect(screen.queryByRole('heading', { name: '변경 예정' })).not.toBeInTheDocument();
+});
+
+it('미배정 필터 변경 callback을 호출한다', async () => {
   const user = userEvent.setup();
   const onFilterChange = vi.fn<(filter: TeamMappingFilter) => void>();
 
-  const { rerender } = render(
+  render(
     <TeamMappingPage
       snapshot={teamMappingConfirmedFixture}
       search={{ ...teamMappingSearchDefaults, preview: 'confirmed', filter: 'all' }}
@@ -111,16 +129,6 @@ it('필터 변경 callback과 결과 없음 화면을 표시한다', async () =>
   );
 
   await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
-  await user.click(screen.getByRole('option', { name: '확인 필요 · 0' }));
-  expect(onFilterChange).toHaveBeenCalledWith('needs-check');
-
-  rerender(
-    <TeamMappingPage
-      snapshot={teamMappingConfirmedFixture}
-      search={{ ...teamMappingSearchDefaults, preview: 'confirmed', filter: 'needs-check' }}
-      onPreviewChange={() => undefined}
-    />,
-  );
-
-  expect(screen.getByRole('heading', { name: '확인 필요 팀이 없어요', level: 3 })).toBeVisible();
+  await user.click(screen.getByRole('option', { name: '미배정 회원 · 9' }));
+  expect(onFilterChange).toHaveBeenCalledWith('unassigned');
 });

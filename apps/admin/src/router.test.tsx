@@ -173,15 +173,12 @@ describe('관리자 라우팅', () => {
     expect(screen.getByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
 
     await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
-    await user.click(await screen.findByRole('option', { name: '확인 필요 · 1' }));
+    await user.click(await screen.findByRole('option', { name: '미배정 회원 · 10' }));
 
     await waitFor(() =>
-      expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=needs-check'),
+      expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned'),
     );
-    expect(
-      screen.getByRole('heading', { name: '혼자서 준비하는 아주 긴 이름의 팀' }),
-    ).toBeVisible();
-    expect(screen.queryByRole('heading', { name: 'Orbit', level: 2 })).not.toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
 
     act(() => router.history.back());
 

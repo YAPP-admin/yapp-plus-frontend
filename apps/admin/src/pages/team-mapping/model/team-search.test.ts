@@ -8,14 +8,14 @@ describe('team mapping search', () => {
   });
 
   it('keeps preview and filter values from the URL', () => {
-    expect(teamMappingSearchSchema.parse({ preview: 'confirmed', filter: 'needs-check' })).toEqual({
+    expect(teamMappingSearchSchema.parse({ preview: 'confirmed', filter: 'unassigned' })).toEqual({
       preview: 'confirmed',
-      filter: 'needs-check',
+      filter: 'unassigned',
     });
   });
 
   it('restores invalid values to the safe defaults', () => {
-    expect(teamMappingSearchSchema.parse({ preview: 'unknown', filter: 'invalid' })).toEqual(
+    expect(teamMappingSearchSchema.parse({ preview: 'unknown', filter: 'needs-check' })).toEqual(
       teamMappingSearchDefaults,
     );
   });

@@ -8,7 +8,7 @@
 
 | URL     | 계약                                                                  |
 | ------- | --------------------------------------------------------------------- |
-| filter  | all/complete/needs-check/unassigned, 기본 all, 잘못된 값 all          |
+| filter  | all/unassigned, 기본 all, 잘못된 값 all                               |
 | preview | before/draft/confirmed, 기본 before, 모든 환경 허용, 잘못된 값 before |
 | 탐색    | 기본값 생략, 알 수 없는 키 제거, 필터 변경은 history 추가·스크롤 유지 |
 | 복원    | 뒤로가기/앞으로가기에서 필터·preview 복원; 초안 있으면 먼저 확인      |

@@ -25,7 +25,6 @@ mise exec -- pnpm --filter @yapp-plus/admin start
 
 - `/members/teams`: 빌딩 전, 생성 진입점.
 - `/members/teams?preview=draft`: 배정 중, 8팀·42명 배정·10명 미배정.
-- `/members/teams?preview=draft&filter=needs-check`: PM/Design 경고 필터.
 - `/members/teams?preview=draft&filter=unassigned`: 개별·일괄 대상 선택.
 - `/members/teams?preview=confirmed`: 확정 이력·조회·팀원 전용 편집.
 

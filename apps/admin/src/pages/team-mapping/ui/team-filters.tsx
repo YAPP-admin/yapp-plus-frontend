@@ -9,7 +9,7 @@ import { FilterSelect } from '~/shared/ui/filter-select';
 import { teamMappingFilterLabels } from '../model/team-search';
 import * as styles from './team-mapping-page.css';
 
-/** 원본 집계 개수를 포함한 팀 목록 필터를 표시한다. */
+/** 전체 팀과 미배정 회원 수를 포함한 팀 목록 필터를 표시한다. */
 export function TeamFilters({
   snapshot,
   value,
@@ -22,8 +22,6 @@ export function TeamFilters({
   const counts = getTeamFilterCounts(snapshot);
   const labels: Record<TeamMappingFilter, string> = {
     all: `${teamMappingFilterLabels.all} · ${counts.all}`,
-    complete: `${teamMappingFilterLabels.complete} · ${counts.complete}`,
-    'needs-check': `${teamMappingFilterLabels['needs-check']} · ${counts.needsCheck}`,
     unassigned: `${teamMappingFilterLabels.unassigned} · ${counts.unassigned}`,
   };
 

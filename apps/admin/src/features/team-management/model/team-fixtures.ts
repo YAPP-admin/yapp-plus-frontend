@@ -174,7 +174,7 @@ export const teamMappingBeforeFixture = snapshot('before', [], null);
 /** 배정 중 상태는 8팀·42명 배정·10명 미배정 사례를 담는다. */
 export const teamMappingDraftFixture = snapshot('draft', draftTeams, null);
 
-/** 확정됨 상태는 고정된 합성 확정 이력과 모든 팀의 PM·Design을 담는다. */
+/** 확정됨 상태는 고정된 합성 확정 이력과 팀원 관계를 담는다. */
 export const teamMappingConfirmedFixture = snapshot('confirmed', confirmedTeams, {
   confirmedAt: CONFIRMED_AT,
   actorName: '운영자 김관리',
