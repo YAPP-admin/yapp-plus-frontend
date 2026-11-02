@@ -1,4 +1,5 @@
 /** 팀 빌딩 전 빈 상태와 원본 팀 목록·필터를 제공한다. 실제 생성·상세는 후속 단계에서 연결한다. */
+import { overlay } from 'overlay-kit';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
 import { UsersRound } from 'lucide-react';
 import {
@@ -17,6 +18,7 @@ import {
   type TeamMappingSearch,
 } from '../model/team-search';
 import { TeamCard } from './team-card';
+import { TeamCreateDialog } from './team-create-dialog';
 import * as styles from './team-mapping-page.css';
 import { TeamFilters } from './team-filters';
 
@@ -44,6 +46,11 @@ export function TeamMappingPage({
     (total, team) => total + team.memberActivityIds.length,
     0,
   );
+
+  function openCreateDialog() {
+    onCreateTeam?.();
+    overlay.open(({ unmount }) => <TeamCreateDialog snapshot={snapshot} onClose={unmount} />);
+  }
 
   return (
     <main className={styles.page}>
@@ -86,10 +93,8 @@ export function TeamMappingPage({
             primaryActionProps={{
               type: 'button',
               variant: 'neutralSolid',
-              disabled: onCreateTeam === undefined,
-              'aria-label':
-                onCreateTeam === undefined ? '첫 팀 만들기 (다음 단계에서 연결)' : '첫 팀 만들기',
-              onClick: onCreateTeam,
+              'aria-label': '첫 팀 만들기',
+              onClick: openCreateDialog,
               children: '첫 팀 만들기',
             }}
           />
@@ -147,9 +152,8 @@ export function TeamMappingPage({
         <ActionButton
           type="button"
           variant="neutralWeak"
-          disabled={onCreateTeam === undefined}
-          aria-label={onCreateTeam === undefined ? '팀 만들기 (다음 단계에서 연결)' : '팀 만들기'}
-          onClick={onCreateTeam}
+          aria-label="팀 만들기"
+          onClick={openCreateDialog}
         >
           팀 만들기
         </ActionButton>

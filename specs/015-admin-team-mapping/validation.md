@@ -75,3 +75,17 @@
 - 변경량: Stage 5 작업 트리 기준 +564/-28줄(새 파일 286줄 포함), 합계 592줄이다. Stage 4 PR #277에 누적하면 base 대비 약 1,033줄이 되어 800줄 제한을 넘으므로, 커밋·PR은 Stage 5를 별도 검토 단위로 분리한다.
 - API 경계: API 요청·Query/Mutation·모의 저장소·localStorage·가짜 성공 처리는 추가하지 않았다. 새로고침 시 fixture로 돌아가며 초안 상태는 아직 후속 단계에서 연결한다.
 - 사용자 리뷰: 대기. 6단계 생성 폼 구현은 시작하지 않는다.
+
+## 6단계 — 2026-11-02
+
+- 변경: 팀 빌딩 전 빈 상태와 팀 목록의 `첫 팀 만들기`·하단 `팀 만들기` 두 진입점을 `overlay-kit` 기반 생성 모달로 연결했다. 팀명·서비스명 입력과 선택 회원 영역은 TanStack Form의 메모리 상태로 제공한다.
+- 입력 정책: 팀명은 공백 기준 필수로 검증하고 팀원 1명 이상 조건을 표시한다. 회원 검색·선택은 7단계로 남겨 두었으며, 만들기 버튼은 `준비 중` 비활성 상태다. Enter 제출도 차단하고 원본 fixture·목록·통계를 변경하지 않는다.
+- 접근성·상호작용: 포커스 이동은 SEED Dialog의 기본 포커스 관리에 맡기고, 팀명 입력에 레이블·필수 표시·오류 연결을 제공한다. 취소·닫기 시 모달만 닫히며 이탈 확인은 10단계에서 통합한다.
+- 화면 근거: Chrome의 `http://localhost:3001/members/teams`에서 빈 상태의 두 진입점을 열어 팀 생성 모달·입력 레이블·선택 회원 안내·비활성 만들기 버튼을 확인했다. 현재 브라우저 탭은 모달 상태로 유지했다.
+- 근접 테스트: `mise exec -- pnpm --filter @yapp-plus/admin test --run src/features/team-management/model/team-draft.test.ts src/pages/team-mapping/ui/team-create-dialog.test.tsx src/pages/team-mapping/ui/team-mapping-page.test.tsx` 실행. Zod 경로 검증을 포함해 3개 파일·14개 테스트가 새로 통과했다.
+- 구현 단순화: `createTeamDraftSchema(snapshot)`를 TanStack Form의 Standard Schema validator에 직접 연결해 값·blur·필드 오류·제출을 Form이 관리한다. `getTeamDraftIssues`는 도메인 규칙과 `superRefine`의 오류 메시지 공급원으로 유지한다. `useMemo`·dirty 전달용 `useEffect`·입력 포커스 `useEffect`는 사용하지 않으며, 포커스 이동은 SEED Dialog 기본 동작에 위임했다.
+- 품질 검사: 관리자 `typecheck`와 `lint`를 각각 새로 실행해 통과했다. `node --run check`도 통과했으며 관리자 lint/typecheck/test는 새 실행, 나머지 패키지는 Turbo 캐시 재사용이다. `node --run build`도 통과했으며 관리자 build는 새 실행, Storybook·web build는 Turbo 캐시 재사용이다.
+- 포맷·diff: 변경 파일에 `oxfmt`를 새로 실행했고, `git diff --check`도 통과했다.
+- 변경량: Stage 6 증분은 새 파일 322줄과 기존 파일 93줄 추가·29줄 삭제로 추가·삭제 합계 444줄이다. Stage 5 변경과 같은 작업 트리에 있으므로 commit/PR은 단계별 독립 검토 단위로 분리한다.
+- 미실행·위험: 회원 검색/선택, 이탈 확인, 실제 생성·저장은 아직 연결하지 않았다. 브라우저 화면·375px·스크린 리더·터치 비교는 12단계에서 수행한다.
+- 사용자 리뷰: 대기. 폼 배치·입력·필수 문구·비활성 만들기·원본 보존을 확인한 뒤 7단계 회원 검색/선택을 시작한다.

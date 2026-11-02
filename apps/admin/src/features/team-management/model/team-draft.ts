@@ -1,4 +1,5 @@
 /** 생성 폼과 현재 작업의 팀원 변경 예정에서 공유하는 순수 검증 규칙이다. */
+import { z } from 'zod';
 import {
   getMemberByActivityId,
   getMemberTeamId,
@@ -26,6 +27,25 @@ export type TeamDraftIssue = Readonly<{
   field: 'name' | 'members' | 'changes';
   message: string;
 }>;
+
+/** 팀 생성 입력을 TanStack Form에 연결하는 Standard Schema를 만든다. */
+export function createTeamDraftSchema(snapshot: TeamMappingSnapshot) {
+  return z
+    .object({
+      name: z.string(),
+      serviceName: z.string(),
+      memberActivityIds: z.array(z.string()),
+    })
+    .superRefine((values, context) => {
+      getTeamDraftIssues(snapshot, values).forEach((issue) => {
+        context.addIssue({
+          code: 'custom',
+          path: [issue.field === 'name' ? 'name' : 'memberActivityIds'],
+          message: issue.message,
+        });
+      });
+    });
+}
 
 const searchAliases: Readonly<Record<TeamMappingPart, readonly string[]>> = {
   pm: ['pm'],
