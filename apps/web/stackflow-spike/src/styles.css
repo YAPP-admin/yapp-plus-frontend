@@ -1,0 +1,24 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--seed-color-bg-layer-basement);
+}
+
+[data-reduced-motion='true'] [data-stackflow-component-name='AppScreen'],
+[data-reduced-motion='true'] [data-stackflow-component-name='AppScreen'] * {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}
