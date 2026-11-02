@@ -4,11 +4,11 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "next dev",
-    "build": "next build",
+    "dev": "vite --config vite.config.ts",
+    "build": "vite build --config vite.config.ts",
     "lint": "oxlint --deny-warnings .",
-    "start": "next start",
-    "typecheck": "next typegen && tsc --noEmit",
+    "start": "vite preview --config vite.config.ts",
+    "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest"
   },
@@ -29,7 +29,6 @@
     "@yapp-plus/api": "workspace:*",
     "@yapp-plus/app-bridge": "workspace:*",
     "@yapp-plus/ui": "workspace:*",
-    "next": "16.3.4",
     "react": "catalog:",
     "react-dom": "catalog:"
   },
@@ -41,7 +40,6 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
-    "@vanilla-extract/next-plugin": "2.5.2",
     "@vanilla-extract/vite-plugin": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@yapp-plus/config": "workspace:*",
