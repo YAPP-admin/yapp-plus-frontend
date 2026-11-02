@@ -10,8 +10,14 @@ function readEntry(state: unknown): string | undefined {
 
 function withEntry(state: unknown, id: string) {
   // 일반 객체·null 이외의 상태는 변환하지 않아 외부 호출자의 계약을 보존합니다.
-  if (state !== null && (typeof state !== 'object' || Array.isArray(state))) {
-    return undefined;
+  if (state !== null) {
+    if (typeof state !== 'object') {
+      return undefined;
+    }
+    const prototype = Object.getPrototypeOf(state);
+    if (prototype !== Object.prototype && prototype !== null) {
+      return undefined;
+    }
   }
   return { ...state, [entryKey]: id };
 }

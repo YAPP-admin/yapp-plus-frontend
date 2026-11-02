@@ -118,3 +118,33 @@ describe('현재 문서의 복귀 이력', () => {
     expect(window.history.state).toEqual({ replaced: true });
   });
 });
+
+it.each([
+  ['Map', new Map([['key', 'value']])],
+  ['Set', new Set(['value'])],
+  ['Date', new Date('2026-10-29T00:00:00Z')],
+  ['배열', ['value']],
+  ['문자열', 'value'],
+  ['숫자', 42],
+])(
+  '%s 상태를 초기 설치·push·replace에서 보존하고 추적 불가 이력은 신뢰하지 않는다',
+  (_label, state) => {
+    originalReplace(state, '', '/');
+    observer = observeBrowserHistory(window);
+    expect(window.history.state).toEqual(state);
+    expect(observer.canGoBack()).toBe(false);
+    push({}, '/my');
+    expect(observer.canGoBack()).toBe(false);
+    push({}, '/settings');
+    expect(observer.canGoBack()).toBe(true);
+    push(state, '/notices');
+    expect(window.history.state).toEqual(state);
+    expect(observer.canGoBack()).toBe(false);
+    push({}, '/my');
+    push({}, '/settings');
+    expect(observer.canGoBack()).toBe(true);
+    window.history.replaceState(state, '', '/settings');
+    expect(window.history.state).toEqual(state);
+    expect(observer.canGoBack()).toBe(false);
+  },
+);
