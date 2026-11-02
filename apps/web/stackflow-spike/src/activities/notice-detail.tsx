@@ -17,7 +17,7 @@ export function NoticeDetailActivity() {
         <main className="spike-content">
           <p className="spike-eyebrow">NoticeDetail Activity</p>
           <h1>{noticeId}</h1>
-          <p>직접 `/notices/:noticeId`로 진입하면 Home → Notices → Detail을 복원합니다.</p>
+          <p>직접 `/notices/:noticeId`로 진입하면 Notices 탭 위에 상세 화면을 복원합니다.</p>
         </main>
       </AppScreenContent>
     </AppScreen>

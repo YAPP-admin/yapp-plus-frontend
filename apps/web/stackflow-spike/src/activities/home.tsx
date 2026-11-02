@@ -18,8 +18,8 @@ export function HomeActivity() {
           <p>Next production 경로와 분리된 Vite 검증 화면입니다.</p>
           <Link
             className="spike-link"
-            activityName="Notices"
-            activityParams={{}}
+            activityName="Tabs"
+            activityParams={{ initialTab: 'notices' }}
             data-testid="notices-link"
           >
             공지 목록 열기
