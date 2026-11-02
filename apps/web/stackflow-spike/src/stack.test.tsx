@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -23,13 +23,38 @@ function renderStack() {
 }
 
 async function waitForTopActivity() {
-  await waitFor(() =>
-    expect(
-      document.querySelector(
-        '[data-stackflow-component-name="AppScreen"][data-activity-is-top][data-transition-state="enter-done"]',
-      ),
-    ).toBeInTheDocument(),
-  );
+  let element: HTMLElement | null = null;
+  await waitFor(() => {
+    element = document.querySelector(
+      '[data-stackflow-component-name="AppScreen"][data-activity-is-top][data-transition-state="enter-done"]',
+    );
+    expect(element).toBeInTheDocument();
+  });
+
+  if (!element) {
+    throw new Error('최상단 Activity를 찾지 못했습니다.');
+  }
+
+  return within(element);
+}
+
+async function waitForTopHeading(name: string) {
+  let element: HTMLElement | null = null;
+  await waitFor(() => {
+    element =
+      [
+        ...document.querySelectorAll<HTMLElement>(
+          '[data-stackflow-component-name="AppScreen"][data-activity-is-top][data-transition-state="enter-done"]',
+        ),
+      ].find((candidate) => candidate.querySelector('h1')?.textContent === name) ?? null;
+    expect(element).toBeInTheDocument();
+  });
+
+  if (!element) {
+    throw new Error(`최상단 Activity(${name})를 찾지 못했습니다.`);
+  }
+
+  return within(element);
 }
 
 describe('Stackflow 탭·Alerts 구조', () => {
@@ -150,6 +175,39 @@ describe('Stackflow 탭·Alerts 구조', () => {
     expect(screen.getByText('요청한 공지 ID(missing)가 존재하지 않습니다.')).toBeInTheDocument();
   });
 
+  it('출석·규칙·설정 직접 진입은 기존 fallback stack을 복원한다', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, '', '/my/attendance/rules');
+    renderStack();
+    await new Promise((resolve) => window.setTimeout(resolve, 3000));
+
+    const rulesScreen = await waitForTopHeading('출석 규칙');
+    expect(rulesScreen.getByRole('heading', { name: '출석 규칙' })).toBeVisible();
+    await user.click(rulesScreen.getByRole('button', { name: '뒤로' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/my/attendance'));
+    const attendanceScreen = await waitForTopHeading('출석 내역');
+    expect(attendanceScreen.getByRole('heading', { name: '출석 내역' })).toBeVisible();
+  }, 10000);
+
+  it('팀 출석 업로드는 입력 중 swipe back을 차단하고 완료·오류 흐름을 분기한다', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, '', '/team-attendance/upload');
+    renderStack();
+    await new Promise((resolve) => window.setTimeout(resolve, 3000));
+
+    const uploadScreen = await waitForTopHeading('팀 세션 인증 사진 올리기');
+    expect(uploadScreen.getByRole('heading', { name: '팀 세션 인증 사진 올리기' })).toBeVisible();
+    expect(document.querySelector('[data-part="edge"]')).not.toBeInTheDocument();
+    await user.click(uploadScreen.getByTestId('team-upload-error'));
+    const errorScreen = await waitForTopHeading('팀 세션 인증 오류');
+    expect(errorScreen.getByRole('heading', { name: '팀 세션 인증 오류' })).toBeVisible();
+    await user.click(errorScreen.getByTestId('team-error-retry-link'));
+    const retryUploadScreen = await waitForTopHeading('팀 세션 인증 사진 올리기');
+    expect(
+      retryUploadScreen.getByRole('heading', { name: '팀 세션 인증 사진 올리기' }),
+    ).toBeVisible();
+  }, 10000);
+
   it('reduced motion 셸은 전환 정책 표식을 유지하면서 화면을 렌더링한다', async () => {
     const { Stack } = createStackflowApp({ reducedMotion: true });
 
@@ -170,6 +228,13 @@ describe('Stackflow 탭·Alerts 구조', () => {
       'Tabs',
       'Alerts',
       'NoticeDetail',
+      'Attendance',
+      'AttendanceRules',
+      'AttendanceComplete',
+      'Settings',
+      'TeamAttendanceUpload',
+      'TeamAttendanceError',
+      'TeamAttendanceComplete',
       'NotFound',
     ]);
   });
