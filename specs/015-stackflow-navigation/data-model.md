@@ -31,7 +31,7 @@
 - `draftInput`: 해당 탭의 입력 초안
 - `lifetime`: 현재 앱 실행 동안만 유지. 새로고침·재실행 시 초기화
 
-탭 전환은 Tab State를 삭제하지 않고 panel을 `replaceStep`합니다. 상세·알림으로 push했다가 pop하면 해당 탭의 State를 다시 표시합니다.
+탭 전환은 Tab State를 삭제하지 않고 React `<Activity>` panel을 `replaceStep`합니다. 숨겨진 panel은 state·DOM을 유지하고 Effect만 정리합니다. 상세·알림으로 push했다가 pop하면 해당 탭의 State를 다시 표시합니다.
 
 ## Platform Context
 

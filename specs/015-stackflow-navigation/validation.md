@@ -66,17 +66,17 @@
 
 ## safe-area inventory
 
-| 계층              | 현재 계약                                                                       | 근거                                                     |
-| ----------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------- |
-| Native iOS        | `react-native-safe-area-context`의 `initialWindowMetrics`와 `useSafeAreaInsets` | `apps/mobile/src/bridge.ts`, `apps/mobile/app/index.tsx` |
-| Bridge state      | `safeAreaInsets: { top, right, bottom, left }`                                  | `packages/app-bridge/src/index.ts`                       |
-| CSS adapter       | `--safe-area-inset-top/right/bottom/left`                                       | `packages/app-bridge/src/web.ts`                         |
-| Page shell        | `var(--safe-area-inset-*, env(safe-area-inset-*, 0px))`                         | `apps/web/src/app/layouts/page-shell.css.ts`             |
-| Bottom navigation | bottom indicator와 snackbar 위치에 `env(safe-area-inset-bottom)`                | `apps/web/src/app/layouts/bottom-navigation.css.ts`      |
-| Viewport          | `viewportFit: 'cover'`                                                          | `apps/web/app/layout.tsx`                                |
-| SEED variables    | 아직 브리지에서 설정하지 않음                                                   | Stage 8에서 alias 추가 예정                              |
+| 계층              | 현재 계약                                                                                               | 근거                                                     |
+| ----------------- | ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
+| Native iOS        | `react-native-safe-area-context`의 `initialWindowMetrics`와 `useSafeAreaInsets`                         | `apps/mobile/src/bridge.ts`, `apps/mobile/app/index.tsx` |
+| Bridge state      | `safeAreaInsets: { top, right, bottom, left }`                                                          | `packages/app-bridge/src/index.ts`                       |
+| CSS adapter       | 브리지 응답 전 `env()`를 사용하고 응답 후 `--safe-area-inset-*`와 `--seed-safe-area-*`를 함께 px로 갱신 | `packages/app-bridge/src/web.ts`                         |
+| Page shell        | 상단 padding 없음, 하단은 하단 메뉴가 없는 셸에서만 `var(--safe-area-inset-bottom, env(...))` 적용      | `apps/web/src/app/layouts/page-shell.css.ts`             |
+| Bottom navigation | bottom indicator와 snackbar 위치에 브리지 CSS 변수와 `env()` fallback 사용                              | `apps/web/src/app/layouts/bottom-navigation.css.ts`      |
+| Viewport          | `viewportFit: 'cover'`                                                                                  | `apps/web/app/layout.tsx`                                |
+| SEED variables    | 브리지 응답 전 `env()` fallback, 응답 후 `--seed-safe-area-*` px 값                                     | `packages/app-bridge/src/web.ts`                         |
 
-현재 위험: AppScreen 도입 후 PageShell, AppScreen, bottom navigation이 같은 inset을 각각 적용할 수 있으므로 Stage 8에서 한 번만 적용하도록 통합해야 합니다.
+현재 정책: 좌우·상단은 AppScreen, 하단은 화면별 하단 메뉴 또는 home-indicator 영역이 소유합니다. 같은 가장자리에 두 레이어가 padding을 추가하지 않도록 화면별 셸을 확인해야 합니다.
 
 ## 기준선 검증 결과
 
@@ -101,3 +101,54 @@
 - Stage 1은 `apps/web`에만 dependency·seed config·공식 snippet을 추가해야 하며 `packages/ui` diff가 없어야 합니다.
 - Stage 2의 호환성 판정은 이 문서의 22개 URL, query, fallback과 현재 25개 웹 테스트를 기준으로 합니다.
 - Stage 3 이후 iOS gesture와 Android system back은 실제 터치 가능한 WebView surface 또는 네이티브 팀 계약 검증 전까지 완료로 표시하지 않습니다.
+
+## 탭 panel 생명주기 정책
+
+- TabsActivity의 Home·Schedule·Notices·My panel은 React 19 `<Activity>`로 표시·숨김을 제어합니다.
+- 숨겨진 panel은 state·DOM을 유지하고 Effect를 정리하므로, 탭별 스크롤·필터·입력 상태는 실행 중 보존하고 polling·타이머·구독은 비활성화합니다.
+- URL을 소유하는 하단 메뉴는 typed `Link`를 유지합니다. SEED Tabs는 URL navigation과 분리된 local tab control이 필요한 화면에서만 검토합니다.
+- `unmountOnExit`를 사용하는 SEED Tabs와 Activity를 중첩할 때는 Activity가 보존할 panel을 제거하지 않도록 `unmountOnExit={false}`를 명시해야 합니다.
+
+## Activity·WebView·focus 검증 (2026-11-02)
+
+| 대상                        | 결과       | 증거·남은 위험                                                                                                                                                                                                                                                             |
+| --------------------------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 브라우저 탭 전환 focus      | PASS       | `/` → `/schedule` 전환 뒤 클릭한 `일정` 링크가 `document.activeElement`로 유지됨                                                                                                                                                                                           |
+| 브라우저 상세 진입 focus    | PASS       | 공지 상세 진입 시 AppScreen content layer가 focus를 받고, 뒤로 복귀하면 진입 공지 링크가 focus를 복원함                                                                                                                                                                    |
+| 브라우저 탭 상태            | PASS       | Notices에서 `과제` 필터를 선택한 뒤 Home 왕복 후 `aria-selected=true` 유지                                                                                                                                                                                                 |
+| iOS Simulator WebView 로드  | PASS       | iPhone 15 Pro iOS 17.5에서 Expo Go가 `http://localhost:3000`의 Home을 로드함                                                                                                                                                                                               |
+| iOS safe area               | PARTIAL    | 브리지 초기 `0px` 마스킹, PageShell 좌우 중복 padding, 상단 이중 소유를 수정했습니다. 실제 native inset과 회전·하단 메뉴는 iOS WebView 재검증이 필요합니다                                                                                                                 |
+| iOS touch·edge swipe        | UNVERIFIED | Device Hub의 embedded Simulator 화면에서 touch·scroll 이벤트가 WebView로 전달되지 않음. 캡처: `.context/ios-webview-activity.png`                                                                                                                                          |
+| Android AVD 부팅            | PASS       | `Medium_Phone_API_35` 부팅 및 ADB 연결 확인                                                                                                                                                                                                                                |
+| Android native WebView 로드 | PASS       | `expo run:android`로 SDK 58용 debug APK를 빌드·설치하고 `http://10.0.2.2:3000`의 YAPP+ Home을 로드함. 캡처: `.context/android-native-debug.png`                                                                                                                            |
+| Android 앱 내부 뒤로가기    | PASS       | 공지 상세에서 AppBar 뒤로가기 버튼으로 Home에 복귀함. 캡처: `.context/android-in-app-back-result.png`                                                                                                                                                                      |
+| Android system back         | FAIL       | 공지 상세에서 `adb shell input keyevent 4` 실행 시 Notices로 복귀하지 않고 앱이 런처로 종료됨. `BackHandler`, `canGoBack`, `webView.goBack()` 계약이 아직 없어 Stage 8 구현이 필요함. 캡처: `.context/android-notice-tap-2.png`, `.context/android-native-back-result.png` |
+
+브라우저 focus 검증은 React Activity의 state·DOM 보존과 Stackflow 복귀 focus를 확인한 것이며, 실제 iOS VoiceOver·Android TalkBack 및 native back 검증을 대체하지 않습니다.
+
+# Stage 10 Vite·Vercel 최종 검증
+
+## 배포 설정
+
+- `apps/web/vercel.json`에서 Framework를 `vite`, Output Directory를 `dist`로 고정했습니다.
+- 모든 공개 경로의 새로고침이 Vite의 `index.html`로 전달되도록 SPA rewrite를 추가했습니다.
+- `apps/web/vercel.json` 변경은 앱 영향도 계산과 무관하게 Web/Admin 배포 설정 검증을 실행합니다.
+- Stage 9에서 임시 이름으로 남아 있던 `stackflow-spike` 디렉터리를 `stackflow`로 정식화하고 미사용 스파이크 Activity를 제거했습니다.
+
+## 검증 기록
+
+검증 명령과 결과는 Stage 10 구현 완료 후 아래 표에 기록합니다.
+
+| 검증                                | 결과       | 비고                                                                                       |
+| ----------------------------------- | ---------- | ------------------------------------------------------------------------------------------ |
+| `TURBO_FORCE=true node --run check` | PASS       | lint 7개, typecheck 7개, test 4개; Web 26개 파일/97개 테스트, Admin 46개 파일/529개 테스트 |
+| `TURBO_FORCE=true node --run build` | PASS       | Web Vite·Admin·Storybook 3개 build task, 캐시 0                                            |
+| `node --run expo:doctor`            | PASS       | 20/20 checks passed                                                                        |
+| 공개 URL 직접 진입·새로고침         | PASS(로컬) | Vite Preview에서 22개 공개 경로가 모두 HTTP 200; `/notices/1` Activity 렌더링 확인         |
+| Vercel Preview                      | 대기       | push/CI 권한과 Secret이 필요하므로 로컬에서 생성하지 않음                                  |
+
+## 남은 기술 부채와 중단 조건
+
+- 현재 URL adapter는 `initialTab` query를 사용합니다. Stage 4 이전 Stackflow plugin 확장 지점을 확인한 뒤 URL 템플릿 자체를 교체합니다.
+- iOS edge swipe와 Android system back은 아직 완료 처리하지 않습니다. Android는 실제 debug WebView에서 상세 진입까지 성공했지만 system back 계약이 없어 앱이 종료되는 실패를 확인했습니다. safe-area 중복 여부는 회전·실기기 조건까지 검증해야 합니다.
+- Vercel Preview 링크와 CI 통과는 이 작업 트리에서 push하지 않았으므로 미검증 상태입니다. Preview에서 직접 경로 404 또는 asset rewrite 문제가 재현되면 Stage 10을 승인하지 않고 `vercel.json`을 먼저 수정합니다.

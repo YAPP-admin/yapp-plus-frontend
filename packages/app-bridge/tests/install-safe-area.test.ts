@@ -84,19 +84,27 @@ describe('installSafeAreaBridge', () => {
     const { installSafeAreaBridge } = await import('../src/web');
     const cleanup = installSafeAreaBridge();
 
-    expect(initialStore.hasListener()).toBe(true);
+    expect(initialStore.hasListener()).toBe(false);
     expect(setProperty).toHaveBeenCalledTimes(8);
+    expect(setProperty).toHaveBeenNthCalledWith(
+      1,
+      '--safe-area-inset-top',
+      'env(safe-area-inset-top, 0px)',
+    );
     expect(getSafeAreaInsets).not.toHaveBeenCalled();
 
     initialStore.emit({ safeAreaInsets: { top: 20, right: 1, bottom: 10, left: 2 } });
-    expect(setProperty).toHaveBeenLastCalledWith('--seed-safe-area-left', '2px');
+    expect(setProperty).toHaveBeenLastCalledWith(
+      '--seed-safe-area-left',
+      'env(safe-area-inset-left, 0px)',
+    );
 
     bridge.store = hydratedStore.store;
     nativeBridgeReady = true;
     await vi.advanceTimersByTimeAsync(16);
 
     expect(getSafeAreaInsets).toHaveBeenCalledOnce();
-    expect(initialStore.unsubscribe).toHaveBeenCalledOnce();
+    expect(initialStore.unsubscribe).not.toHaveBeenCalled();
     expect(initialStore.hasListener()).toBe(false);
     expect(hydratedStore.hasListener()).toBe(true);
     expect(setProperty).toHaveBeenLastCalledWith('--seed-safe-area-left', '2px');
@@ -129,7 +137,7 @@ describe('installSafeAreaBridge', () => {
     cleanup();
     await vi.advanceTimersByTimeAsync(16);
 
-    expect(initialStore.unsubscribe).toHaveBeenCalledOnce();
+    expect(initialStore.unsubscribe).not.toHaveBeenCalled();
     expect(getSafeAreaInsets).not.toHaveBeenCalled();
   });
 });
