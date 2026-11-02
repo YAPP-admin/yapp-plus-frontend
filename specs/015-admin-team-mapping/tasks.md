@@ -3,7 +3,7 @@
 입력: [spec.md](spec.md), [plan.md](plan.md), [data-model.md](data-model.md), [화면 계약](contracts/team-mapping-ui.md).
 테스트는 사용자 요청에 포함된다. 체크 완료는 실제 구현/검증 완료만 뜻하며 사용자 단계 승인과 구분한다.
 각 단계 끝에 quickstart.md 검증·diff 크기·화면 근거를 validation.md에 기록하고 사용자 리뷰를 기다린다.
-제품 코드 단계는 이슈 번호 확인과 이전 단계 진행 승인 후 시작한다. 현재 1단계만 수행한다.
+제품 코드 단계는 이슈 번호 확인과 이전 단계 진행 승인 후 시작한다. 현재 승인된 단계까지만 수행한다.
 
 ## 준비 — 1단계
 
@@ -24,9 +24,9 @@
 
 **2단계 중단점**: 순수 함수로 원본 보존과 양쪽 팀 최소 인원을 검증하고 리뷰받는다.
 
-- [ ] T010 apps/admin/src/features/team-management/model/team-fixtures.test.ts에 상태별 무결성·8팀/42명/10명·고정 시각을 검증한다.
-- [ ] T011 apps/admin/src/features/team-management/model/team-fixtures.ts에 before/draft/confirmed·동명이인·1명 팀·빈 결과·긴 이름 사례를 작성한다.
-- [ ] T012 apps/admin/src/features/team-management/fixtures.ts에 환경 공통 공급용 fixture 진입점을 작성한다.
+- [x] T010 apps/admin/src/features/team-management/model/team-fixtures.test.ts에 상태별 무결성·8팀/42명/10명·고정 시각을 검증한다.
+- [x] T011 apps/admin/src/features/team-management/model/team-fixtures.ts에 before/draft/confirmed·동명이인·1명 팀·빈 결과·긴 이름 사례를 작성한다.
+- [x] T012 apps/admin/src/features/team-management/fixtures.ts에 환경 공통 공급용 fixture 진입점을 작성한다.
 
 **3단계 중단점**: 합성 입력만으로 각 시나리오를 구성하고 리뷰받는다. 네트워크 모킹은 없다.
 

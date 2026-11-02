@@ -34,3 +34,10 @@ export {
   type TeamDraftValues,
   type TeamMemberChange,
 } from './model/team-draft';
+export {
+  getTeamMappingFixture,
+  teamMappingBeforeFixture,
+  teamMappingConfirmedFixture,
+  teamMappingDraftFixture,
+  teamMappingFixtures,
+} from './fixtures';
