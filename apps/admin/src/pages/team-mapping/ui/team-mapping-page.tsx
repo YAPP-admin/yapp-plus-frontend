@@ -19,6 +19,7 @@ import {
 } from '../model/team-search';
 import { TeamCard } from './team-card';
 import { TeamCreateDialog } from './team-create-dialog';
+import { TeamDetailPanel } from './team-detail-panel';
 import * as styles from './team-mapping-page.css';
 import { TeamFilters } from './team-filters';
 
@@ -50,6 +51,15 @@ export function TeamMappingPage({
   function openCreateDialog() {
     onCreateTeam?.();
     overlay.open(({ unmount }) => <TeamCreateDialog snapshot={snapshot} onClose={unmount} />);
+  }
+
+  function openTeamDetail(team: TeamMappingTeam) {
+    onTeamSelect?.(team);
+    if (onTeamSelect === undefined) {
+      overlay.open(({ unmount }) => (
+        <TeamDetailPanel snapshot={snapshot} team={team} onClose={unmount} />
+      ));
+    }
   }
 
   return (
@@ -111,6 +121,14 @@ export function TeamMappingPage({
                 {filterCounts.unassigned}명 미배정
               </p>
             </div>
+            <ActionButton
+              type="button"
+              variant="neutralSolid"
+              aria-label="팀 만들기"
+              onClick={openCreateDialog}
+            >
+              팀 만들기
+            </ActionButton>
           </div>
           {search.filter === 'unassigned' && (
             <section className={styles.unassignedSummary} aria-label="미배정 회원 요약">
@@ -141,23 +159,12 @@ export function TeamMappingPage({
           ) : (
             <div className={styles.teamGrid}>
               {teams.map((team) => (
-                <TeamCard key={team.id} snapshot={snapshot} team={team} onOpen={onTeamSelect} />
+                <TeamCard key={team.id} snapshot={snapshot} team={team} onOpen={openTeamDetail} />
               ))}
             </div>
           )}
         </section>
       )}
-
-      <div className={styles.footerAction}>
-        <ActionButton
-          type="button"
-          variant="neutralWeak"
-          aria-label="팀 만들기"
-          onClick={openCreateDialog}
-        >
-          팀 만들기
-        </ActionButton>
-      </div>
     </main>
   );
 }

@@ -137,10 +137,3 @@ export const filterEmpty = style({
   borderRadius: vars.$radius.r4,
   background: vars.$color.bg.layerDefault,
 });
-
-export const footerAction = style({
-  display: 'flex',
-  justifyContent: 'flex-end',
-  paddingTop: vars.$dimension.x2,
-  borderTop: `1px solid ${vars.$color.stroke.neutralMuted}`,
-});
