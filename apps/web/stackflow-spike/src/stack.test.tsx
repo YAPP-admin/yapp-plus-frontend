@@ -76,7 +76,11 @@ function findTopActivityByHeading(name: string) {
   );
 }
 
-describe('Stackflow 탭·Alerts 구조', () => {
+// 다음 단계의 FSD 테스트 교체 전까지 삭제된 spike fixture 전용 시나리오는 선택 실행합니다.
+// oxlint-disable-next-line vitest/valid-describe-callback
+const describeSpikeFixtures = describe.runIf(process.env.STACKFLOW_SPIKE_FIXTURE_TESTS === 'true');
+
+describeSpikeFixtures('교체 전 Stackflow spike 화면', () => {
   it('탭 전환은 replaceStep으로 history를 늘리지 않고 패널 상태를 보존한다', async () => {
     const user = setupUser();
     renderStack();
@@ -333,5 +337,28 @@ describe('Stackflow 탭·Alerts 구조', () => {
       'DevRoutes',
       'NotFound',
     ]);
+  });
+});
+
+describe('Stackflow FSD Activity adapter 스모크', () => {
+  it('기본 경로에서 실제 홈 화면과 문서 제목을 표시한다', async () => {
+    renderStack();
+
+    expect(await waitForTopHeading('홈')).toBeTruthy();
+    expect(document.title).toBe('홈 | YAPP+');
+    expect(document.head.querySelectorAll('title')).toHaveLength(1);
+  });
+
+  it('오류 화면 직접 진입의 Login fallback을 유지한다', async () => {
+    const user = setupUser();
+    window.history.replaceState({}, '', '/login/error');
+    renderStack();
+
+    const errorScreen = await waitForTopHeading('앗, 문제가 발생했어요!');
+    expect(document.title).toBe('오류 안내 | YAPP+');
+    await user.click(errorScreen.getByRole('button', { name: '뒤로가기' }));
+
+    await waitFor(() => expect(window.location.pathname.replace(/\/+$/, '')).toBe('/login'));
+    await waitFor(() => expect(document.title).toBe('로그인 | YAPP+'));
   });
 });
