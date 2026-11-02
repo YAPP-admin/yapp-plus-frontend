@@ -58,14 +58,6 @@ export const emptyDescription = style({
   textWrap: 'pretty',
 });
 
-export const actions = style({
-  display: 'flex',
-  flexWrap: 'wrap',
-  justifyContent: 'center',
-  gap: vars.$dimension.x2,
-  marginTop: vars.$dimension.x3,
-});
-
 export const footerAction = style({
   display: 'flex',
   justifyContent: 'flex-end',
