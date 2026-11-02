@@ -49,7 +49,7 @@ describe('Stackflow 탭·Alerts 구조', () => {
 
     await user.click(screen.getByTestId('tab-notices'));
     await waitFor(() => expect(window.location.pathname).toBe('/notices'));
-    await user.selectOptions(screen.getByTestId('notices-state'), '세션');
+    await user.click(screen.getByTestId('notice-filter-session'));
 
     await user.click(screen.getByTestId('tab-home'));
     await waitFor(() => expect(window.location.pathname).toBe('/'));
@@ -61,8 +61,29 @@ describe('Stackflow 탭·Alerts 구조', () => {
 
     await user.click(screen.getByTestId('tab-notices'));
     await waitFor(() => expect(window.location.pathname).toBe('/notices'));
-    expect(screen.getByTestId('notices-state')).toHaveValue('세션');
+    expect(screen.getByTestId('notice-filter-session')).toHaveAttribute('aria-selected', 'true');
     expect(window.history.length).toBe(historyLength);
+  });
+
+  it('공지 목록에서 상세로 이동하고 browser back으로 필터·스크롤 상태를 복원한다', async () => {
+    const user = userEvent.setup();
+    renderStack();
+
+    await user.click(await screen.findByTestId('tab-notices'));
+    await waitFor(() => expect(window.location.pathname).toBe('/notices'));
+    await user.click(screen.getByTestId('notice-filter-assignment'));
+    const noticesScroll = screen.getByTestId('notices-scroll');
+    Object.assign(noticesScroll, { scrollTop: 120 });
+
+    await user.click(screen.getByTestId('notice-item-1'));
+    await waitFor(() => expect(window.location.pathname).toBe('/notices/1'));
+    const detailHeading = await screen.findByRole('heading', { name: '팀빌딩 소개서 작성' });
+    await waitFor(() => expect(detailHeading).toBeVisible());
+
+    await user.click(screen.getByRole('button', { name: '뒤로' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/notices'));
+    expect(screen.getByTestId('notice-filter-assignment')).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByTestId('notices-scroll')).toHaveProperty('scrollTop', 120);
   });
 
   it('Home 위에 Alerts를 push하고 뒤로가면 Home을 복원한다', async () => {
@@ -87,7 +108,7 @@ describe('Stackflow 탭·Alerts 구조', () => {
     renderStack();
 
     await waitForTopActivity();
-    await waitFor(() => expect(screen.getByRole('heading', { name: '알림' })).toBeVisible());
+    expect(await screen.findByRole('heading', { name: '알림' }, { timeout: 5000 })).toBeVisible();
     await user.click(screen.getByTestId('alerts-notices'));
 
     await waitFor(() => expect(window.location.pathname).toBe('/notices'));
@@ -106,16 +127,27 @@ describe('Stackflow 탭·Alerts 구조', () => {
   });
 
   it('공지 상세 URL 직접 진입은 Notices 탭 위에 상세를 복원한다', async () => {
-    window.history.replaceState({}, '', '/notices/direct-entry');
+    window.history.replaceState({}, '', '/notices/1');
     renderStack();
 
     const detailHeading = await screen.findByRole(
       'heading',
-      { name: 'direct-entry' },
+      { name: '팀빌딩 소개서 작성' },
       { timeout: 5000 },
     );
     await waitFor(() => expect(detailHeading).toBeVisible());
     expect(screen.getByText('공지 패널')).toBeInTheDocument();
+  });
+
+  it('존재하지 않는 공지 ID는 상세 오류 상태를 표시한다', async () => {
+    window.history.replaceState({}, '', '/notices/missing');
+    renderStack();
+
+    const notFoundHeading = await screen.findByRole('heading', {
+      name: '공지사항을 찾을 수 없습니다.',
+    });
+    await waitFor(() => expect(notFoundHeading).toBeVisible());
+    expect(screen.getByText('요청한 공지 ID(missing)가 존재하지 않습니다.')).toBeInTheDocument();
   });
 
   it('reduced motion 셸은 전환 정책 표식을 유지하면서 화면을 렌더링한다', async () => {

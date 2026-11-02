@@ -1,8 +1,10 @@
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
 import { AppBar, AppBarMain } from '../../../seed-design/ui/app-bar';
+import { Link } from '@stackflow/link/future';
 import { useStep } from '@stackflow/react';
 import { useActivityParams, useFlow, useStepFlow } from '@stackflow/react/future';
 import { useState, type ReactNode } from 'react';
+import { noticeCategories, notices, type NoticeCategory } from '../notice-data';
 import { useAppScreenOptions } from '../platform';
 import { isTabName, tabNames, type TabName } from '../tab';
 
@@ -144,26 +146,56 @@ function SchedulePanel() {
 }
 
 function NoticesPanel() {
-  const [filter, setFilter] = useState('전체');
+  const [selectedCategory, setSelectedCategory] = useState<NoticeCategory>('ALL');
+  const filteredNotices =
+    selectedCategory === 'ALL'
+      ? notices
+      : notices.filter((notice) => notice.category === selectedCategory);
 
   return (
     <div className="spike-panel-content">
       <p className="spike-eyebrow">TabsActivity · Notices</p>
       <h1>공지 패널</h1>
-      <p>공지 목록은 5단계에서 대표 흐름으로 이전합니다.</p>
-      <label>
-        공지 필터
-        <select
-          aria-label="공지 필터"
-          data-testid="notices-state"
-          value={filter}
-          onChange={(event) => setFilter(event.target.value)}
-        >
-          <option>전체</option>
-          <option>세션</option>
-          <option>제출</option>
-        </select>
-      </label>
+      <p>필터와 스크롤 상태를 유지한 채 공지 상세로 이동합니다.</p>
+      <div className="spike-notice-filters" role="tablist" aria-label="공지 카테고리">
+        {noticeCategories.map(({ id, label }) => (
+          <button
+            key={id}
+            type="button"
+            role="tab"
+            aria-selected={selectedCategory === id}
+            data-testid={`notice-filter-${id.toLowerCase()}`}
+            onClick={() => setSelectedCategory(id)}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      <div className="spike-notice-scroll" data-testid="notices-scroll">
+        {filteredNotices.length > 0 ? (
+          <ul className="spike-notice-list" aria-label="공지사항 목록">
+            {filteredNotices.map((notice) => (
+              <li key={notice.id}>
+                <Link
+                  className="spike-notice-item"
+                  activityName="NoticeDetail"
+                  activityParams={{ noticeId: notice.id }}
+                  data-testid={`notice-item-${notice.id}`}
+                >
+                  <span className="spike-notice-meta">
+                    {notice.categoryLabel}
+                    {notice.dDay ? ` · ${notice.dDay}` : ''}
+                  </span>
+                  <strong>{notice.title}</strong>
+                  <time>{notice.date}</time>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p>해당 카테고리의 공지가 없습니다.</p>
+        )}
+      </div>
     </div>
   );
 }
