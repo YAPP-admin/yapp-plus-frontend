@@ -28,8 +28,6 @@ describe('team mapping fixtures', () => {
     expect(getUnassignedMembers(teamMappingDraftFixture)).toHaveLength(10);
     expect(getTeamFilterCounts(teamMappingDraftFixture)).toEqual({
       all: 8,
-      complete: 7,
-      needsCheck: 1,
       unassigned: 10,
     });
   });
@@ -43,8 +41,6 @@ describe('team mapping fixtures', () => {
     });
     expect(getTeamFilterCounts(teamMappingConfirmedFixture)).toEqual({
       all: 8,
-      complete: 8,
-      needsCheck: 0,
       unassigned: 9,
     });
   });
@@ -65,7 +61,7 @@ describe('team mapping fixtures', () => {
 
   it('keeps explicit empty search and filter results reproducible', () => {
     expect(getCandidateMembers(teamMappingDraftFixture, '없는회원검색어')).toEqual([]);
-    expect(getTeamsForFilter(teamMappingConfirmedFixture, 'needs-check')).toEqual([]);
+    expect(getTeamsForFilter(teamMappingConfirmedFixture, 'unassigned')).toHaveLength(8);
   });
 
   it('returns the same status mapping without environment branching', () => {

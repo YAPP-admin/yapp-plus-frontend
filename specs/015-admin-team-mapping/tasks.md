@@ -16,7 +16,7 @@
 
 ## 기반 — 2단계 모델, 3단계 fixture
 
-- [x] T005 apps/admin/src/features/team-management/model/team-mapping.test.ts에 참조·중복 소속·집계·PM/Design 분류 사례를 작성한다.
+- [x] T005 apps/admin/src/features/team-management/model/team-mapping.test.ts에 참조·중복 소속·직군 집계·필터 사례를 작성한다.
 - [x] T006 apps/admin/src/features/team-management/model/team-mapping.ts에 readonly 타입·입력 검증·원본 집계를 구현한다.
 - [x] T007 apps/admin/src/features/team-management/model/team-draft.test.ts에 필수 입력·검색·중복·동명이인·최소 인원·개별 취소/전체 취소 사례를 작성한다.
 - [x] T008 apps/admin/src/features/team-management/model/team-draft.ts에 검색·생성 입력·변경 예정 합산 검증을 구현한다.
@@ -64,10 +64,10 @@
 
 ## US3 — 8단계 상세와 변경 예정 (P2)
 
-- [ ] T029 [US3] apps/admin/src/pages/team-mapping/ui/team-detail-panel.test.tsx에 추가/이동/제외/취소·원본 보존·최소 인원·포커스를 검증한다.
-- [ ] T030 [US3] apps/admin/src/pages/team-mapping/ui/team-detail-panel.tsx와 team-detail-panel.css.ts에 SidePanel·원본 팀원·내부 추가 검색·회원 메뉴를 구현한다.
-- [ ] T031 [US3] apps/admin/src/pages/team-mapping/ui/team-pending-changes.tsx에 회원별 변경 예정·취소·전체 취소·차단 사유·비활성 반영을 구현한다.
-- [ ] T032 [US3] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx에 상세 진입을 연결하고 패널이 현재 작업의 예정만 소유하도록 구성한다.
+- [x] T029 [US3] apps/admin/src/pages/team-mapping/ui/team-detail-panel.test.tsx에 추가/이동/제외/취소·원본 보존·최소 인원·포커스를 검증한다.
+- [x] T030 [US3] apps/admin/src/pages/team-mapping/ui/team-detail-panel.tsx와 team-detail-panel.css.ts에 SidePanel·원본 팀원·내부 추가 검색·회원 메뉴를 구현한다.
+- [x] T031 [US3] apps/admin/src/pages/team-mapping/ui/team-pending-changes.tsx에 회원별 변경 예정·취소·전체 취소·차단 사유·비활성 반영을 구현한다.
+- [x] T032 [US3] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx에 상세 진입을 연결하고 패널이 현재 작업의 예정만 소유하도록 구성한다.
 
 **8단계 중단점**: US3 원본과 예정을 독립 검증한다. 팀 정보 수정·삭제는 계속 비활성이다.
 

@@ -3,7 +3,7 @@ import { z } from 'zod';
 
 export const teamMappingStatusSchema = z.enum(['before', 'draft', 'confirmed']);
 export const teamMappingPartSchema = z.enum(['pm', 'design', 'android', 'ios', 'web', 'server']);
-export const teamMappingFilterSchema = z.enum(['all', 'complete', 'needs-check', 'unassigned']);
+export const teamMappingFilterSchema = z.enum(['all', 'unassigned']);
 
 const identifier = z.string().trim().min(1);
 
@@ -192,19 +192,6 @@ export function getTeamPartCounts(
   return counts;
 }
 
-/** PM과 Design이 모두 포함된 팀만 구성 완료로 분류한다. */
-export function isTeamCompositionComplete(counts: TeamPartCounts): boolean {
-  return counts.pm > 0 && counts.design > 0;
-}
-
-/** 팀의 PM·Design 구성 여부로 목록 필터 상태를 계산한다. */
-export function getTeamFilter(
-  snapshot: TeamMappingSnapshot,
-  team: TeamMappingTeam,
-): TeamMappingFilter {
-  return isTeamCompositionComplete(getTeamPartCounts(snapshot, team)) ? 'complete' : 'needs-check';
-}
-
 /** 팀원 목록을 원본 기준으로 계산해 미배정 회원만 반환한다. */
 export function getUnassignedMembers(snapshot: TeamMappingSnapshot): readonly TeamMappingMember[] {
   const assigned = new Set(snapshot.teams.flatMap((team) => team.memberActivityIds));
@@ -214,21 +201,15 @@ export function getUnassignedMembers(snapshot: TeamMappingSnapshot): readonly Te
 /** 필터에 해당하는 원본 팀 목록을 반환한다. 변경 예정은 반영하지 않는다. */
 export function getTeamsForFilter(
   snapshot: TeamMappingSnapshot,
-  filter: TeamMappingFilter,
+  _filter: TeamMappingFilter,
 ): readonly TeamMappingTeam[] {
-  if (filter === 'all' || filter === 'unassigned') {
-    return snapshot.teams;
-  }
-  return snapshot.teams.filter((team) => getTeamFilter(snapshot, team) === filter);
+  return snapshot.teams;
 }
 
 /** 목록 필터 배지에 표시할 원본 팀·미배정 개수다. */
 export function getTeamFilterCounts(snapshot: TeamMappingSnapshot) {
   return {
     all: snapshot.teams.length,
-    complete: snapshot.teams.filter((team) => getTeamFilter(snapshot, team) === 'complete').length,
-    needsCheck: snapshot.teams.filter((team) => getTeamFilter(snapshot, team) === 'needs-check')
-      .length,
     unassigned: getUnassignedMembers(snapshot).length,
   } as const;
 }

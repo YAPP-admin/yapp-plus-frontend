@@ -102,3 +102,26 @@
 - 변경량: Stage 7 증분은 신규 검색 컴포넌트·스타일·테스트 356줄과 기존 생성 모달·테스트 변경 63줄 추가·19줄 삭제, 작업 목록/검증 문서 변경을 포함해 약 450줄이다. 650줄 미만으로 분리 불필요하며 커밋은 사용자 리뷰 후 별도 검토 단위로 만든다.
 - 미실행·위험: 상세 패널의 변경 예정, 미배정 일괄 배정, 이탈 확인, 실제 생성/저장은 후속 단계다. 실제 브라우저·375px·스크린 리더·터치·Figma 픽셀 비교는 12단계에서 수행한다.
 - 사용자 리뷰: 대기. 8단계 상세 패널·변경 예정 구현은 리뷰 승인 후 시작한다.
+
+## 8단계 — 2026-11-02
+
+- 변경: 팀 카드 제목에서 `overlay-kit`으로 SidePanel을 열고 원본 팀 정보·직군 구성·원본 팀원을 표시한다. 회원 추가를 누르면 회원 목록 위에 패널 내부 검색 영역이 펼쳐지고, 다른 팀/미배정 회원을 현재 팀에 추가 예정으로 지정할 수 있다.
+- 변경 예정: 기존 팀원은 SEED `Select`에서 다른 팀 이동·제외를 지정한다. 회원별 예정 취소와 전체 취소를 제공하며, 원본 팀원 목록·팀 카드·전체 통계는 변경하지 않는다. 초안은 패널 인스턴스 메모리에만 유지되고 패널 닫기 시 제거된다.
+- 규칙: `getTeamChangeIssues`로 모든 예정 변경을 합산해 기존 팀의 최소 1명 유지를 검사한다. 마지막 팀원 이동·제외는 반영하지 않고 차단 사유를 `role="alert"`로 표시한다. 팀 정보 수정·삭제·변경 반영은 비활성화했다.
+- 화면 근거: 개발 서버 `http://localhost:3001/members/teams?preview=draft`에서 Orbit 카드 제목을 선택해 SidePanel·직군 배지·원본 팀원·회원 추가·변경 메뉴·비활성 하단 동작을 확인했다. 실제 추가 예정·취소·이동·최소 인원 차단은 DOM 테스트로 확인했다.
+- 근접 테스트: `mise exec -- pnpm --filter @yapp-plus/admin test --run src/pages/team-mapping/ui/team-detail-panel.test.tsx src/pages/team-mapping/ui/team-mapping-page.test.tsx` 실행. 2개 파일·10개 테스트가 새로 통과했다.
+- 전체 테스트: `mise exec -- pnpm --filter @yapp-plus/admin test --run` 실행. 68개 파일·638개 테스트가 새로 통과했다. SidePanel/react-drawer의 기존 jsdom pointer-up 경고 로그가 있었지만 실패 테스트는 없다.
+- 품질 검사: `mise exec -- node --run check` 통과. 포맷·admin lint/typecheck/test는 새 실행, 나머지 패키지는 Turbo 캐시 재사용이다. `mise exec -- node --run build` 통과. admin build는 새 실행, Storybook·web 및 기타 build는 Turbo 캐시 재사용이다.
+- 포맷·diff: `oxfmt` 및 `git diff --check` 통과.
+- 변경량: Stage 8 증분은 신규 패널·스타일·테스트·변경 예정 컴포넌트 666줄과 기존 페이지 연결 30줄, 문서 변경을 포함해 약 720줄이다. 650줄을 넘어 분리를 검토했으나 상세와 변경 예정이 동일 패널 상태·검증 계약에 강하게 결합되어 하나의 8단계 리뷰 단위로 유지했다. 800줄 미만이다.
+- 사용자 피드백 반영: 회원 추가 시 검색 영역을 팀원 목록 위에 배치하고, 기존 회원 변경 메뉴를 SEED `Select`로 교체했다. SidePanel 안에서 Select 메뉴가 접근성 레이어에 가려지지 않도록 패널 컨테이너에 렌더링하며, 회원명·변경 메뉴가 같은 행에서 자연스럽게 배치되도록 너비를 조정했다.
+- 추가 피드백 반영: 팀 목록이 긴 경우에도 생성 진입점을 찾을 수 있도록 `팀 만들기` 버튼을 목록 헤더 오른쪽으로 이동하고, 하단 고정 영역은 제거했다. 팀 빌딩 전 빈 화면에서는 `첫 팀 만들기`를 유지한다.
+- 구조 개선: `TeamDetailPanel`의 변경 예정 상태·검증·Select 표시를 `useTeamMemberChanges`로, 회원 검색·후보 선택을 `useTeamMemberSearch`로 분리했다. 순수 검증 규칙은 기존 기능 모델에 남기고 패널은 화면 조합을 담당한다.
+- UI 구조 개선: `TeamMemberSearchPanel`과 `TeamMemberList`를 분리해 검색 후보·팀원 Select의 렌더링과 테스트 경계를 나눴다. 팀 요약과 SidePanel 골격은 `TeamDetailPanel`에 유지했다.
+- 범위 결정 반영: PM·Design 누락 판정과 `complete`·`needs-check` 필터, 카드·패널의 구성 상태/경고 UI를 제거했다. 직군별 인원 배지는 유지하고 필터는 `all|unassigned`만 제공한다. 기존 `needs-check` URL은 검색 스키마의 안전한 기본값(`all`)으로 복원한다.
+- 피드백 후 검증: 관리자 lint/typecheck와 전체 테스트 68개 파일·638개 테스트, `node --run check`, 관리자 build를 새로 실행해 통과했다. `git diff --check`와 `oxfmt`도 통과했다. SidePanel/react-drawer의 기존 jsdom pointer-up 경고는 테스트 실패로 이어지지 않았다.
+- 미실행·위험: 패널을 닫거나 다른 팀으로 전환할 때 변경 예정 폐기 확인은 10단계에서 통합한다. 미배정 본문 일괄 배정, 확정 후 편집, 실제 API 반영은 후속 단계다. 375px·스크린 리더·터치·Figma 픽셀 비교는 12단계에서 수행한다.
+- 사용자 리뷰: 대기. 회원 추가 검색 위치·SEED Select 메뉴·회원명 배치를 확인한 뒤 9단계 미배정 회원 개별·일괄 선택을 시작한다.
+- 범위 조정 후 검증: PM·Design 누락 판정과 구성 상태/경고 UI를 제거하고 `all|unassigned` 필터만 유지했다. 기존 `needs-check` URL은 `teamMappingSearchSchema`에서 `all`로 복원한다.
+- 조정 후 근접 테스트: 팀 매핑 모델·fixture·검색·페이지·카드·라우터 관련 5개 파일 123개 테스트 통과. 관리자 lint·typecheck와 전체 68개 파일·638개 테스트도 새로 통과했다.
+- 조정 후 품질 게이트: `mise exec -- node --run check` 통과(관리자 lint·typecheck·test는 새 실행, 나머지는 Turbo 캐시 재사용), `mise exec -- pnpm --filter @yapp-plus/admin build` 통과. `git diff --check` 통과.

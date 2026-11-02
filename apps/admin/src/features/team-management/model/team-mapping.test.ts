@@ -1,7 +1,6 @@
-/** 팀 원본 참조·집계·구성 분류가 변경 예정 없이 동작하는지 검증한다. */
+/** 팀 원본 참조·직군 집계·필터가 변경 예정 없이 동작하는지 검증한다. */
 import { describe, expect, it } from 'vitest';
 import {
-  getTeamFilter,
   getTeamFilterCounts,
   getTeamPartCounts,
   getTeamsForFilter,
@@ -22,14 +21,14 @@ const snapshot = teamMappingSnapshotSchema.parse({
   members,
   teams: [
     {
-      id: 'team-complete',
+      id: 'team-alpha',
       name: '1팀 모아',
       serviceName: '일정 조율',
       memberActivityIds: ['pm-1', 'design-1'],
       leaderActivityId: 'pm-1',
     },
     {
-      id: 'team-needs-check',
+      id: 'team-beta',
       name: '2팀 루틴',
       serviceName: null,
       memberActivityIds: ['android-1'],
@@ -40,13 +39,12 @@ const snapshot = teamMappingSnapshotSchema.parse({
 });
 
 describe('팀 매핑 원본 집계', () => {
-  it('직군 수와 PM·Design 구성 상태를 계산한다', () => {
-    const complete = snapshot.teams[0];
-    const needsCheck = snapshot.teams[1];
-    if (complete === undefined || needsCheck === undefined) {
+  it('직군 수를 계산하고 구성 누락 여부와 무관하게 팀을 유지한다', () => {
+    const team = snapshot.teams[0];
+    if (team === undefined) {
       throw new Error('팀 fixture가 비어 있습니다.');
     }
-    expect(getTeamPartCounts(snapshot, complete)).toEqual({
+    expect(getTeamPartCounts(snapshot, team)).toEqual({
       pm: 1,
       design: 1,
       android: 0,
@@ -54,8 +52,10 @@ describe('팀 매핑 원본 집계', () => {
       web: 0,
       server: 0,
     });
-    expect(getTeamFilter(snapshot, complete)).toBe('complete');
-    expect(getTeamFilter(snapshot, needsCheck)).toBe('needs-check');
+    expect(getTeamsForFilter(snapshot, 'all').map((candidate) => candidate.id)).toEqual([
+      'team-alpha',
+      'team-beta',
+    ]);
   });
 
   it('미배정 회원과 필터별 개수를 원본에서 계산한다', () => {
@@ -64,15 +64,11 @@ describe('팀 매핑 원본 집계', () => {
     ]);
     expect(getTeamFilterCounts(snapshot)).toEqual({
       all: 2,
-      complete: 1,
-      needsCheck: 1,
       unassigned: 1,
     });
-    expect(getTeamsForFilter(snapshot, 'complete').map((team) => team.id)).toEqual([
-      'team-complete',
-    ]);
-    expect(getTeamsForFilter(snapshot, 'needs-check').map((team) => team.id)).toEqual([
-      'team-needs-check',
+    expect(getTeamsForFilter(snapshot, 'unassigned').map((team) => team.id)).toEqual([
+      'team-alpha',
+      'team-beta',
     ]);
   });
 });

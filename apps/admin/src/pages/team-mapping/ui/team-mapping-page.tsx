@@ -42,7 +42,7 @@ export function TeamMappingPage({
   const hasTeams = snapshot.status !== 'before';
   const filterCounts = getTeamFilterCounts(snapshot);
   const teams = getTeamsForFilter(snapshot, search.filter);
-  const hasEmptyFilterResult = search.filter !== 'unassigned' && teams.length === 0;
+  const hasEmptyFilterResult = teams.length === 0;
   const assignedMemberCount = snapshot.teams.reduce(
     (total, team) => total + team.memberActivityIds.length,
     0,

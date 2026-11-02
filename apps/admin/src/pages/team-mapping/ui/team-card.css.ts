@@ -1,4 +1,4 @@
-/** 팀 카드의 원본 정보·경고·팀원 목록 레이아웃을 정의한다. */
+/** 팀 카드의 원본 정보·팀원 목록 레이아웃을 정의한다. */
 import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 
@@ -90,29 +90,6 @@ export const content = style({
   gap: vars.$dimension.x3,
   '@media': {
     '(width < 960px)': { gridColumn: '1 / -1' },
-  },
-});
-
-export const statusRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  flexWrap: 'wrap',
-  gap: vars.$dimension.x2,
-  minWidth: 0,
-  '@media': {
-    '(width < 960px)': { justifyContent: 'flex-start' },
-  },
-});
-
-export const warning = style({
-  maxWidth: '14rem',
-  color: vars.$color.fg.critical,
-  fontSize: vars.$fontSize.t2,
-  lineHeight: vars.$lineHeight.t2,
-  textAlign: 'right',
-  '@media': {
-    '(width < 960px)': { maxWidth: 'none', textAlign: 'left' },
   },
 });
 
