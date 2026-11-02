@@ -1,0 +1,50 @@
+html,
+body,
+#root {
+  min-height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--seed-color-bg-layer-basement);
+}
+
+.spike-content {
+  display: grid;
+  gap: 16px;
+  min-height: 100vh;
+  align-content: start;
+  padding: calc(88px + var(--seed-safe-area-top)) 24px 32px;
+}
+
+.spike-eyebrow {
+  margin: 0;
+  color: var(--seed-color-fg-neutral-muted);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.spike-content h1,
+.spike-content p {
+  margin: 0;
+}
+
+.spike-link {
+  width: fit-content;
+  color: var(--seed-color-fg-accent);
+  font-weight: 600;
+}
+
+[data-reduced-motion='true'] [data-stackflow-component-name='AppScreen'],
+[data-reduced-motion='true'] [data-stackflow-component-name='AppScreen'] * {
+  animation-duration: 0s !important;
+  transition-duration: 0s !important;
+}
+
+button,
+a,
+input,
+textarea,
+select {
+  touch-action: manipulation;
+}

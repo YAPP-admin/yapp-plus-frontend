@@ -22,6 +22,7 @@
     "apps/web/public/mockServiceWorker.js",
     "**/.expo/**",
     "**/.next/**",
+    "apps/web/.stackflow-spike-dist/**",
     "**/.open-next/**",
     "**/.output/**",
     ".specify/**",

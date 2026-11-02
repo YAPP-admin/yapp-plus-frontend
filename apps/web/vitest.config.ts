@@ -10,7 +10,13 @@ export default defineConfig({
     server: {
       deps: {
         // SEED 컴포넌트의 recipe CSS를 Vite가 처리합니다.
-        inline: ['@seed-design/react', '@seed-design/css'],
+        inline: [
+          '@seed-design/react',
+          '@seed-design/css',
+          '@seed-design/stackflow',
+          '@stackflow/link',
+          '@stackflow/react',
+        ],
       },
     },
     setupFiles: ['./vitest.setup.ts'],
