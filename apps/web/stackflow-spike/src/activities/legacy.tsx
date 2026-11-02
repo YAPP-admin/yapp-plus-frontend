@@ -1,7 +1,7 @@
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
-import { useStep } from '@stackflow/react';
+import { useActivity, useStep } from '@stackflow/react';
 import { useActivityParams } from '@stackflow/react/future';
-import { useEffect, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import { SnackbarProvider } from '@yapp-plus/ui';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
