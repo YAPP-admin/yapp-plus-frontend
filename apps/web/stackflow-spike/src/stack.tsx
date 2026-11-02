@@ -5,52 +5,77 @@ import { lazy, stackflow as createStackflow } from '@stackflow/react/future';
 import { Primitive, seedPlugin } from '@seed-design/stackflow';
 import { useEffect, type ReactNode } from 'react';
 import type { StackflowInitialContext } from './platform';
+import type { TabName } from './tab';
+
+type TabsParams = {
+  initialTab?: TabName;
+};
 
 declare module '@stackflow/config' {
   // Stackflow의 module augmentation은 interface 병합이 필요합니다.
   // oxlint-disable-next-line typescript/consistent-type-definitions
   interface Register {
-    Home: EmptyActivityParams;
-    Notices: EmptyActivityParams;
+    Tabs: TabsParams;
+    Alerts: EmptyActivityParams;
     NoticeDetail: {
       noticeId: string;
     };
+    NotFound: EmptyActivityParams;
   }
 }
 
 type EmptyActivityParams = ActivityBaseParams;
 
 const components = {
-  Home: lazy<EmptyActivityParams>(() =>
-    import('./activities/home').then(({ HomeActivity }) => ({ default: HomeActivity })),
+  Tabs: lazy<TabsParams>(() =>
+    import('./activities/tabs').then(({ TabsActivity }) => ({ default: TabsActivity })),
   ),
-  Notices: lazy<EmptyActivityParams>(() =>
-    import('./activities/notices').then(({ NoticesActivity }) => ({ default: NoticesActivity })),
+  Alerts: lazy<EmptyActivityParams>(() =>
+    import('./activities/alerts').then(({ AlertsActivity }) => ({ default: AlertsActivity })),
   ),
   NoticeDetail: lazy<{ noticeId: string }>(() =>
     import('./activities/notice-detail').then(({ NoticeDetailActivity }) => ({
       default: NoticeDetailActivity,
     })),
   ),
+  NotFound: lazy<EmptyActivityParams>(() =>
+    import('./activities/not-found').then(({ NotFoundActivity }) => ({
+      default: NotFoundActivity,
+    })),
+  ),
 };
+
+const tabRoutes = [
+  { path: '/', decode: () => ({ initialTab: 'home' as const }) },
+  { path: '/schedule', decode: () => ({ initialTab: 'schedule' as const }) },
+  { path: '/notices', decode: () => ({ initialTab: 'notices' as const }) },
+  { path: '/my', decode: () => ({ initialTab: 'my' as const }) },
+];
 
 export const stackflowConfig = defineConfig({
   activities: [
-    { name: 'Home', route: '/' },
-    { name: 'Notices', route: '/notices' },
+    { name: 'Tabs', route: tabRoutes },
+    {
+      name: 'Alerts',
+      route: {
+        path: '/alerts',
+        defaultHistory: () => [
+          {
+            activityName: 'Tabs',
+            activityParams: { initialTab: 'home' },
+          },
+        ],
+      },
+    },
     {
       name: 'NoticeDetail',
       route: {
         path: '/notices/:noticeId',
-        defaultHistory: ({ noticeId }) => [
-          { activityName: 'Home', activityParams: {} },
-          { activityName: 'Notices', activityParams: {} },
-          { activityName: 'NoticeDetail', activityParams: { noticeId: noticeId ?? 'unknown' } },
-        ],
+        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'notices' } }],
       },
     },
+    { name: 'NotFound', route: '*' },
   ],
-  initialActivity: () => 'Home',
   transitionDuration: 350,
 });
 
@@ -140,7 +165,7 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
       basicRendererPlugin(),
       historySyncPlugin({
         config,
-        fallbackActivity: () => 'Home',
+        fallbackActivity: () => 'NotFound',
       }),
       seedPlugin(({ initialContext }) => ({
         theme:
