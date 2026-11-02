@@ -1,0 +1,68 @@
+/** 팀 생성 입력의 필수 조건·초안 상태와 제출 경계를 검증한다. */
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
+import { expect, it, vi } from 'vitest';
+import { teamMappingBeforeFixture, type TeamDraftValues } from '~/features/team-management';
+import { TeamCreateDialog } from './team-create-dialog';
+
+function renderDialog() {
+  const onClose = vi.fn<() => void>();
+  const onCreate = vi.fn<(values: TeamDraftValues) => void>();
+
+  render(
+    <TeamCreateDialog snapshot={teamMappingBeforeFixture} onClose={onClose} onCreate={onCreate} />,
+  );
+
+  return { onCreate, onClose };
+}
+
+it('열리면 팀명 입력과 팀원 선택 영역을 표시한다', async () => {
+  renderDialog();
+
+  const nameInput = await screen.findByRole('textbox', { name: '팀명' });
+
+  expect(nameInput).toBeVisible();
+  expect(screen.getByRole('heading', { name: '팀 만들기' })).toBeVisible();
+  expect(screen.getByText('회원 선택은 다음 단계에서 연결합니다.')).toBeVisible();
+});
+
+it('팀명과 팀원 필수 조건을 검증하고 만들기를 비활성화한다', async () => {
+  const user = userEvent.setup();
+  renderDialog();
+
+  const nameInput = await screen.findByRole('textbox', { name: '팀명' });
+  const createButton = screen.getByRole('button', { name: '팀 만들기 (준비 중)' });
+
+  expect(createButton).toBeDisabled();
+  await user.click(nameInput);
+  await user.tab();
+  expect(await screen.findByText('팀명을 입력하세요.')).toBeVisible();
+
+  await user.type(nameInput, '새 팀');
+  expect(createButton).toBeDisabled();
+  expect(screen.getAllByText('팀원을 1명 이상 추가하세요.')).not.toHaveLength(0);
+});
+
+it('초안 입력을 원래 값으로 되돌릴 수 있다', async () => {
+  const user = userEvent.setup();
+  renderDialog();
+
+  const nameInput = await screen.findByRole('textbox', { name: '팀명' });
+  await user.type(nameInput, '임시 팀');
+  expect(nameInput).toHaveValue('임시 팀');
+
+  await user.clear(nameInput);
+  expect(nameInput).toHaveValue('');
+});
+
+it('유효한 이름을 입력해도 Enter 제출과 실제 생성을 실행하지 않는다', async () => {
+  const user = userEvent.setup();
+  const { onCreate } = renderDialog();
+
+  const nameInput = await screen.findByRole('textbox', { name: '팀명' });
+  await user.type(nameInput, '새 팀');
+  await user.keyboard('{Enter}');
+
+  expect(onCreate).not.toHaveBeenCalled();
+  expect(screen.getByRole('dialog')).toBeVisible();
+});

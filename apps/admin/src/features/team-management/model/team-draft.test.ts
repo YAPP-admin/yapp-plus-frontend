@@ -1,6 +1,7 @@
 /** 후보 검색·생성 입력·팀원 변경 예정의 순수 정책을 검증한다. */
 import { describe, expect, it } from 'vitest';
 import {
+  createTeamDraftSchema,
   getCandidateMembers,
   getTeamChangeIssues,
   getTeamDraftIssues,
@@ -61,6 +62,24 @@ describe('팀 후보 검색', () => {
 });
 
 describe('팀 생성·변경 예정 검증', () => {
+  it('Zod 스키마가 도메인 오류를 필드 경로로 연결한다', () => {
+    const result = createTeamDraftSchema(snapshot).safeParse({
+      name: ' ',
+      serviceName: '',
+      memberActivityIds: [],
+    });
+
+    expect(result.success).toBe(false);
+    if (result.success) {
+      return;
+    }
+
+    expect(result.error.issues.map(({ path, message }) => ({ path, message }))).toEqual([
+      { path: ['name'], message: '팀명을 입력하세요.' },
+      { path: ['memberActivityIds'], message: '팀원을 1명 이상 추가하세요.' },
+    ]);
+  });
+
   it('팀명·팀원 필수와 중복·존재하지 않는 회원을 검증한다', () => {
     expect(
       getTeamDraftIssues(snapshot, { name: ' ', serviceName: '', memberActivityIds: [] }),

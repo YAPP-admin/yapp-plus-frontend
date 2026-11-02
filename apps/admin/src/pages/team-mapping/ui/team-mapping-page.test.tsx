@@ -1,6 +1,7 @@
 /** 팀 빌딩 전 화면의 빈 상태와 생성 진입 callback을 검증한다. */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { OverlayProvider } from 'overlay-kit';
 import { expect, it, vi } from 'vitest';
 import {
   teamMappingBeforeFixture,
@@ -17,12 +18,14 @@ it('팀 빌딩 전 빈 화면과 두 생성 진입점을 표시한다', async ()
   const onCreateTeam = vi.fn<() => void>();
 
   render(
-    <TeamMappingPage
-      snapshot={teamMappingBeforeFixture}
-      search={teamMappingSearchDefaults}
-      onPreviewChange={() => undefined}
-      onCreateTeam={onCreateTeam}
-    />,
+    <OverlayProvider>
+      <TeamMappingPage
+        snapshot={teamMappingBeforeFixture}
+        search={teamMappingSearchDefaults}
+        onPreviewChange={() => undefined}
+        onCreateTeam={onCreateTeam}
+      />
+    </OverlayProvider>,
   );
 
   expect(screen.getByRole('heading', { name: '팀 매핑', level: 1 })).toBeVisible();
@@ -31,25 +34,28 @@ it('팀 빌딩 전 빈 화면과 두 생성 진입점을 표시한다', async ()
   ).toBeVisible();
   expect(screen.queryByRole('combobox', { name: '팀 목록 필터' })).not.toBeInTheDocument();
 
-  await user.click(screen.getByRole('button', { name: '첫 팀 만들기' }));
-  await user.click(screen.getByRole('button', { name: '팀 만들기' }));
+  await user.click(screen.getByRole('button', { name: /^첫 팀 만들기$/ }));
+  expect(await screen.findByRole('dialog')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '취소' }));
+  await user.click(screen.getByRole('button', { name: /^팀 만들기$/ }));
 
   expect(onCreateTeam).toHaveBeenCalledTimes(2);
 });
 
-it('생성 callback이 연결되지 않으면 진입 버튼을 비활성화한다', () => {
+it('생성 callback이 없어도 두 진입점에서 생성 모달을 연다', async () => {
+  const user = userEvent.setup();
   render(
-    <TeamMappingPage
-      snapshot={teamMappingBeforeFixture}
-      search={teamMappingSearchDefaults}
-      onPreviewChange={() => undefined}
-    />,
+    <OverlayProvider>
+      <TeamMappingPage
+        snapshot={teamMappingBeforeFixture}
+        search={teamMappingSearchDefaults}
+        onPreviewChange={() => undefined}
+      />
+    </OverlayProvider>,
   );
 
-  expect(screen.getAllByRole('button', { name: /팀 만들기/ })).toHaveLength(2);
-  screen.getAllByRole('button', { name: /팀 만들기/ }).forEach((button) => {
-    expect(button).toBeDisabled();
-  });
+  await user.click(screen.getByRole('button', { name: /^첫 팀 만들기$/ }));
+  expect(await screen.findByRole('dialog')).toBeVisible();
 });
 
 it('preview 상태를 URL 입력으로 받아 팀 목록과 필터 개수를 표시한다', () => {

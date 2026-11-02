@@ -50,9 +50,9 @@
 
 ## US2 — 6단계 생성 입력과 7단계 검색 (P2)
 
-- [ ] T023 [US2] apps/admin/src/pages/team-mapping/ui/team-create-dialog.test.tsx에 초기 포커스·필수 입력·값 원복·Enter 차단을 검증한다.
-- [ ] T024 [US2] apps/admin/src/pages/team-mapping/ui/team-create-dialog.tsx와 team-create-dialog.css.ts에 생성 폼·선택 영역·dirty·비활성 만들기를 구현한다.
-- [ ] T025 [US2] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx에 두 생성 진입점과 모달을 연결한다.
+- [x] T023 [US2] apps/admin/src/pages/team-mapping/ui/team-create-dialog.test.tsx에 모달 표시·필수 입력·값 원복·Enter 차단을 검증한다.
+- [x] T024 [US2] apps/admin/src/pages/team-mapping/ui/team-create-dialog.tsx와 team-create-dialog.css.ts에 생성 폼·선택 영역·dirty·비활성 만들기를 구현한다.
+- [x] T025 [US2] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx에 두 생성 진입점과 모달을 연결한다.
 
 **6단계 중단점**: 폼 배치·입력·원본 보존을 리뷰한다. 회원 선택과 이탈 보호는 후속 연결이다.
 
