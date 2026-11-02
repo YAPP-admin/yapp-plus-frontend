@@ -1,4 +1,5 @@
 /** 마커 드래그와 초기 위치 복귀로 좌표를 조정합니다. 최종 좌표는 부모 폼이 소유합니다. */
+import { useEffect, useEffectEvent, useState } from 'react';
 import { ActionButton } from '@yapp-plus/ui';
 import { Map, MapMarker, useKakaoLoader } from 'react-kakao-maps-sdk';
 import type { CoordinatesViewModel } from '../model/location/location-view-model';
@@ -77,6 +78,29 @@ function LocationMapCanvas({
   onMove: (value: CoordinatesViewModel) => void;
 }) {
   const [loading, error] = useKakaoLoader({ appkey });
+  const [map, setMap] = useState<Pick<kakao.maps.Map, 'getNode' | 'relayout' | 'setCenter'> | null>(
+    null,
+  );
+  const relayout = useEffectEvent(() => {
+    map?.relayout();
+    map?.setCenter(new kakao.maps.LatLng(center.latitude, center.longitude));
+  });
+  useEffect(() => {
+    if (!map || loading || error) {
+      return undefined;
+    }
+    let active = true;
+    const observer = new ResizeObserver(() => {
+      if (active) {
+        relayout();
+      }
+    });
+    observer.observe(map.getNode());
+    return () => {
+      active = false;
+      observer.disconnect();
+    };
+  }, [map, loading, error]);
   if (error) {
     return (
       <p role="alert">
@@ -89,6 +113,7 @@ function LocationMapCanvas({
   }
   return (
     <Map
+      onCreate={setMap}
       className={styles.map}
       center={{ lat: center.latitude, lng: center.longitude }}
       level={3}
