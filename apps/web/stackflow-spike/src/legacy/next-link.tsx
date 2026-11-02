@@ -1,4 +1,5 @@
 import { useActions } from '@stackflow/react';
+import { useHistoryTick } from '@stackflow/plugin-history-sync';
 import { useFlow, useStepFlow } from '@stackflow/react/future';
 import { type MouseEvent, type ReactNode } from 'react';
 import { notifyNavigation, resolveStackflowRoute } from './routes';
@@ -18,6 +19,7 @@ export function Link({
   }) {
   const flow = useFlow();
   const actions = useActions();
+  const { requestHistoryTick } = useHistoryTick();
   const tabsStep = useStepFlow('Tabs');
   const target = resolveStackflowRoute(href);
 
@@ -44,7 +46,7 @@ export function Link({
       tabsStep.replaceStep(target.activityParams);
     } else if (targetIsTab && currentPathname === '/alerts') {
       actions.pop({ animate: false });
-      window.setTimeout(() => tabsStep.replaceStep(target.activityParams), 0);
+      tabsStep.replaceStep(target.activityParams);
     } else if (replace) {
       flow.replace(target.activityName, target.activityParams, { animate: false });
     } else {
@@ -52,8 +54,8 @@ export function Link({
     }
 
     const url = new URL(href, window.location.href);
-    window.setTimeout(() => {
-      if (url.search || url.hash) {
+    requestHistoryTick((resolve) => {
+      if (targetIsTab || url.search || url.hash) {
         window.history.replaceState(
           window.history.state,
           '',
@@ -61,7 +63,8 @@ export function Link({
         );
       }
       notifyNavigation();
-    }, 0);
+      resolve();
+    });
   }
 
   return (
