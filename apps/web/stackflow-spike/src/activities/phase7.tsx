@@ -1,8 +1,9 @@
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
 import { AppBar, AppBarBackButton, AppBarMain } from '../../../seed-design/ui/app-bar';
 import { Link } from '@stackflow/link/future';
+import { useActivity } from '@stackflow/react';
 import { useFlow } from '@stackflow/react/future';
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 import { useAppScreenOptions } from '../platform';
 
 export function LoginActivity() {
@@ -159,25 +160,20 @@ function Phase7Screen({
   title: string;
 }) {
   const appScreenOptions = useAppScreenOptions();
-
-  useEffect(() => {
-    const previousTitle = document.title;
-    document.title = `${title} | YAPP+`;
-
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [title]);
+  const { isTop } = useActivity();
 
   return (
-    <AppScreen {...appScreenOptions} preventSwipeBack={preventSwipeBack}>
-      <AppScreenContent>
-        <AppBar>
-          {showBack ? <AppBarBackButton /> : null}
-          <AppBarMain title={title} />
-        </AppBar>
-        <main className="spike-content spike-phase7-content">{children}</main>
-      </AppScreenContent>
-    </AppScreen>
+    <>
+      {isTop ? <title>{`${title} | YAPP+`}</title> : null}
+      <AppScreen {...appScreenOptions} preventSwipeBack={preventSwipeBack}>
+        <AppScreenContent>
+          <AppBar>
+            {showBack ? <AppBarBackButton /> : null}
+            <AppBarMain title={title} />
+          </AppBar>
+          <main className="spike-content spike-phase7-content">{children}</main>
+        </AppScreenContent>
+      </AppScreen>
+    </>
   );
 }

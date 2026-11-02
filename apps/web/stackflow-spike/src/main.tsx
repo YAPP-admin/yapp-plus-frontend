@@ -26,7 +26,14 @@ function App() {
   useEffect(() => installSafeAreaBridge(), []);
 
   return (
-    <Suspense fallback={<div>로딩 중…</div>}>
+    <Suspense
+      fallback={
+        <>
+          <title>YAPP+</title>
+          <div>로딩 중…</div>
+        </>
+      }
+    >
       <Stack initialContext={initialContext} />
     </Suspense>
   );
