@@ -3,6 +3,7 @@ import { linkBridge } from '@webview-bridge/web';
 import {
   INITIAL_SAFE_AREA_INSETS,
   SAFE_AREA_CSS_VARIABLES,
+  SEED_SAFE_AREA_CSS_VARIABLES,
   normalizeSafeAreaInsets,
   type AppBridgeState,
   type AppBridgeStore,
@@ -31,6 +32,10 @@ export const applySafeAreaCssVariables = (
   target.setProperty(SAFE_AREA_CSS_VARIABLES.right, `${normalizedInsets.right}px`);
   target.setProperty(SAFE_AREA_CSS_VARIABLES.bottom, `${normalizedInsets.bottom}px`);
   target.setProperty(SAFE_AREA_CSS_VARIABLES.left, `${normalizedInsets.left}px`);
+  target.setProperty(SEED_SAFE_AREA_CSS_VARIABLES.top, `${normalizedInsets.top}px`);
+  target.setProperty(SEED_SAFE_AREA_CSS_VARIABLES.right, `${normalizedInsets.right}px`);
+  target.setProperty(SEED_SAFE_AREA_CSS_VARIABLES.bottom, `${normalizedInsets.bottom}px`);
+  target.setProperty(SEED_SAFE_AREA_CSS_VARIABLES.left, `${normalizedInsets.left}px`);
 };
 
 export const bindSafeAreaCssVariables = (

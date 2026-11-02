@@ -29,6 +29,14 @@ declare module '@stackflow/config' {
     TeamAttendanceUpload: EmptyActivityParams;
     TeamAttendanceError: EmptyActivityParams;
     TeamAttendanceComplete: EmptyActivityParams;
+    Login: EmptyActivityParams;
+    LoginError: EmptyActivityParams;
+    Error: EmptyActivityParams;
+    Signup: EmptyActivityParams;
+    SignupStatus: EmptyActivityParams;
+    SignupComplete: EmptyActivityParams;
+    SignupUnregistered: EmptyActivityParams;
+    DevRoutes: EmptyActivityParams;
   }
 }
 
@@ -83,6 +91,40 @@ const components = {
     import('./activities/phase6').then(({ TeamAttendanceCompleteActivity }) => ({
       default: TeamAttendanceCompleteActivity,
     })),
+  ),
+  Login: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase7').then(({ LoginActivity }) => ({ default: LoginActivity })),
+  ),
+  LoginError: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase7').then(({ LoginErrorActivity }) => ({
+      default: LoginErrorActivity,
+    })),
+  ),
+  Error: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase7').then(({ LoginErrorActivity }) => ({
+      default: LoginErrorActivity,
+    })),
+  ),
+  Signup: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase7').then(({ SignupActivity }) => ({ default: SignupActivity })),
+  ),
+  SignupStatus: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase7').then(({ SignupStatusActivity }) => ({
+      default: SignupStatusActivity,
+    })),
+  ),
+  SignupComplete: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase7').then(({ SignupCompleteActivity }) => ({
+      default: SignupCompleteActivity,
+    })),
+  ),
+  SignupUnregistered: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase7').then(({ SignupUnregisteredActivity }) => ({
+      default: SignupUnregisteredActivity,
+    })),
+  ),
+  DevRoutes: lazy<EmptyActivityParams>(() =>
+    import('./activities/phase7').then(({ DevRoutesActivity }) => ({ default: DevRoutesActivity })),
   ),
 };
 
@@ -167,6 +209,38 @@ export const stackflowConfig = defineConfig({
         defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
       },
     },
+    { name: 'Login', route: '/login' },
+    {
+      name: 'LoginError',
+      route: {
+        path: '/login/error',
+        defaultHistory: () => [{ activityName: 'Login', activityParams: {} }],
+      },
+    },
+    {
+      name: 'Error',
+      route: {
+        path: '/error',
+        defaultHistory: () => [{ activityName: 'Login', activityParams: {} }],
+      },
+    },
+    {
+      name: 'Signup',
+      route: {
+        path: '/signup',
+        defaultHistory: () => [{ activityName: 'Login', activityParams: {} }],
+      },
+    },
+    {
+      name: 'SignupStatus',
+      route: {
+        path: '/signup/status',
+        defaultHistory: () => [{ activityName: 'Login', activityParams: {} }],
+      },
+    },
+    { name: 'SignupComplete', route: '/signup/complete' },
+    { name: 'SignupUnregistered', route: '/signup/unregistered' },
+    { name: 'DevRoutes', route: '/dev/routes' },
     { name: 'NotFound', route: '*' },
   ],
   transitionDuration: 350,

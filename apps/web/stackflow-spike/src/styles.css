@@ -14,7 +14,8 @@ body {
   gap: 16px;
   min-height: 100vh;
   align-content: start;
-  padding: calc(88px + var(--seed-safe-area-top)) 24px 32px;
+  /* AppScreen Layer가 AppBar와 safe-area 상단을 이미 확보합니다. */
+  padding: 24px 24px calc(32px + var(--seed-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 .spike-eyebrow {
@@ -32,8 +33,9 @@ body {
 .spike-tabs-content {
   display: grid;
   grid-template-rows: 1fr auto;
-  min-height: 100vh;
-  padding: calc(88px + var(--seed-safe-area-top)) 16px 0;
+  height: 100%;
+  min-height: 100%;
+  padding: 24px 16px 0;
 }
 
 .spike-tab-panels {
@@ -191,7 +193,7 @@ body {
   gap: 20px;
   min-height: 100vh;
   align-content: start;
-  padding: calc(88px + var(--seed-safe-area-top)) 24px calc(32px + var(--seed-safe-area-bottom));
+  padding: 24px 24px calc(32px + var(--seed-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
 }
 
 .spike-notice-detail h1,
@@ -273,7 +275,7 @@ body {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 4px;
-  padding: 8px 0 calc(8px + var(--seed-safe-area-bottom));
+  padding: 8px 0 calc(8px + var(--seed-safe-area-bottom, env(safe-area-inset-bottom, 0px)));
   border-top: 1px solid var(--seed-color-stroke-neutral-muted);
   background: var(--seed-color-bg-layer-default);
 }
@@ -311,4 +313,69 @@ input,
 textarea,
 select {
   touch-action: manipulation;
+}
+
+.spike-phase7-content {
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+  align-content: center;
+}
+
+.spike-phase7-content h1,
+.spike-phase7-content p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.spike-phase7-content a {
+  width: fit-content;
+  color: var(--seed-color-fg-accent);
+  font-weight: 600;
+}
+
+.spike-phase7-actions,
+.spike-phase7-form,
+.spike-phase7-route-list {
+  display: grid;
+  gap: 12px;
+}
+
+.spike-phase7-actions button,
+.spike-phase7-form button {
+  min-height: 48px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 10px;
+  background: var(--seed-color-bg-accent-solid);
+  color: var(--seed-color-fg-on-color);
+  font: inherit;
+  font-weight: 700;
+}
+
+.spike-phase7-actions button + button {
+  background: var(--seed-color-bg-neutral-muted);
+  color: var(--seed-color-fg-neutral);
+}
+
+.spike-phase7-form input {
+  min-height: 48px;
+  padding: 0 14px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-layer-default);
+  color: var(--seed-color-fg-neutral);
+  font: inherit;
+}
+
+.spike-phase7-form button:disabled {
+  opacity: 0.5;
+}
+
+.spike-phase7-route-list a {
+  padding: 12px 14px;
+  border: 1px solid var(--seed-color-stroke-neutral-muted);
+  border-radius: 10px;
+  background: var(--seed-color-bg-layer-default);
+  text-decoration: none;
 }
