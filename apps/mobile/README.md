@@ -316,3 +316,24 @@ App Store 제출을 별도 승인 절차로 진행한다. EAS Update는 OTA 업�
 - [모노레포에서 EAS Build 사용](https://docs.expo.dev/build-reference/build-with-monorepos/)
 - [`eas.json` 빌드 프로필](https://docs.expo.dev/build/eas-json/)
 - [EAS 환경변수 관리](https://docs.expo.dev/eas/environment-variables/manage/)
+
+### WebView URL 빌드 검증 (#164)
+
+`app.config.ts`는 Preview/Production 등 EAS 배포 프로필, EAS 원격 빌드,
+`NODE_ENV=production` export에서 URL 누락·HTTP·loopback·내장 credentials를 거부한다.
+URL 값 자체를 오류 메시지에 출력하지 않는다. 공개 HTTPS 주소의 경로·쿼리는 유지한다.
+개발 Metro 실행(배포 프로필·production 지정 없음)에서만 URL 생략 시 기존 Metro host fallback을 쓴다.
+`development` 프로필도 원격 EAS 빌드에서는 명시적인 URL이 필요하다.
+런타임 역시 `__DEV__`가 false이면 누락·잘못된 URL을 거부하여 이전 설정 산출물의 fallback도 막는다.
+
+로컬 배포용 export에는 실제 환경의 `MOBILE_WEB_URL`을 주입한다. 단순 설정 검증에는
+통신하지 않는 `https://web.example.com`을 사용할 수 있으나 앱 배포 값으로 사용하지 않는다.
+
+```sh
+mise exec -- node --test apps/mobile/tests/mobile-url-policy.test.ts
+MOBILE_WEB_URL=https://web.example.com NODE_ENV=production mise exec -- pnpm --filter @yapp-plus/mobile exec expo config --type public
+```
+
+이 검사는 URL 문법·로컬 주소를 막는 출시 가드이며 실제 도메인의 소유·DNS·접근성·OAuth 정책을
+증명하지 않는다. 실제 운영 주소 확인과 기기 탐색은 #165에서 별도로 진행한다.
+복구는 URL 환경 설정 수정 후 재빌드이며, 검증을 끄고 localhost 산출물을 배포하지 않는다.

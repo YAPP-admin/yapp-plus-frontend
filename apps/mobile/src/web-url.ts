@@ -1,5 +1,6 @@
 import Constants from 'expo-constants';
 import { Platform } from 'react-native';
+import { validateMobileWebUrl } from './mobile-url-policy';
 
 const WEB_DEV_PORT = 3000;
 
@@ -11,7 +12,7 @@ const readConfiguredWebUrl = (): string | undefined => {
   const extra = Constants.expoConfig?.extra as MobileExtra | undefined;
   const value = extra?.mobileWebUrl;
 
-  return typeof value === 'string' && value.length > 0 ? value : undefined;
+  return validateMobileWebUrl(value, __DEV__);
 };
 
 const readMetroHost = (): string | undefined => {

@@ -11,7 +11,8 @@
     "doctor": "expo-doctor",
     "lint": "oxlint --deny-warnings .",
     "prebuild": "expo prebuild",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.ts"
   },
   "dependencies": {
     "@webview-bridge/react-native": "1.8.0",
