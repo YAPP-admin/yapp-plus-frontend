@@ -2,9 +2,9 @@ import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen'
 import { AppBar, AppBarMain } from '../../../seed-design/ui/app-bar';
 import { useStep } from '@stackflow/react';
 import { useActivityParams, useFlow, useStepFlow } from '@stackflow/react/future';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useAppScreenOptions } from '../platform';
-import { isTabName, tabNames, tabPath, type TabName } from '../tab';
+import { isTabName, tabNames, type TabName } from '../tab';
 
 const tabLabels: Record<TabName, string> = {
   home: '홈',
@@ -20,14 +20,6 @@ export function TabsActivity() {
   const stepFlow = useStepFlow('Tabs');
   const appScreenOptions = useAppScreenOptions();
   const activeTab = normalizeTab(step?.params.initialTab ?? initialTab);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return;
-    }
-
-    window.history.replaceState(window.history.state, '', tabPath(activeTab));
-  }, [activeTab]);
 
   const selectTab = (tab: TabName) => {
     if (tab === activeTab) {

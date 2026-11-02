@@ -1,11 +1,12 @@
 import { defineConfig, type ActivityBaseParams } from '@stackflow/config';
+import type { StackflowPlugin } from '@stackflow/core';
 import { historySyncPlugin } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { lazy, stackflow as createStackflow } from '@stackflow/react/future';
 import { Primitive, seedPlugin } from '@seed-design/stackflow';
-import { useEffect, type ReactNode } from 'react';
+import { type ReactNode } from 'react';
 import type { StackflowInitialContext } from './platform';
-import type { TabName } from './tab';
+import { isTabName, tabPath, type TabName } from './tab';
 
 type TabsParams = {
   initialTab?: TabName;
@@ -110,33 +111,59 @@ function reducedMotionPlugin() {
   });
 }
 
-function canonicalUrlPlugin() {
+function tabHistoryPlugin(): StackflowPlugin {
   return () => ({
-    key: 'canonical-url',
-    wrapStack({ stack }: { stack: { render: () => ReactNode } }) {
-      return <CanonicalUrlBoundary>{stack.render()}</CanonicalUrlBoundary>;
+    key: 'tab-history',
+    onStepReplaced({ effect }) {
+      if (effect.activity.name !== 'Tabs' || !effect.activity.isActive) {
+        return;
+      }
+
+      queueMicrotask(() => replaceTabHistory(effect.step.params));
     },
   });
 }
 
-function CanonicalUrlBoundary({ children }: { children: ReactNode }) {
-  useEffect(() => {
+function replaceTabHistory(params: unknown) {
+  if (typeof window === 'undefined' || !params || typeof params !== 'object') {
+    return;
+  }
+
+  const initialTab = 'initialTab' in params ? params.initialTab : undefined;
+  if (!isTabName(initialTab)) {
+    return;
+  }
+
+  window.history.replaceState(window.history.state, '', tabPath(initialTab));
+}
+
+function canonicalHistoryPlugin(): StackflowPlugin {
+  return () => ({
+    key: 'canonical-history',
+    onPushed: scheduleCanonicalPath,
+    onReplaced: scheduleCanonicalPath,
+    onStepPushed: scheduleCanonicalPath,
+    onStepReplaced: scheduleCanonicalPath,
+  });
+}
+
+function scheduleCanonicalPath() {
+  queueMicrotask(() => {
     if (typeof window === 'undefined') {
       return;
     }
 
     const url = new URL(window.location.href);
-    if (url.pathname !== '/') {
-      const canonicalPathname = url.pathname.replace(/\/+$/, '');
-      window.history.replaceState(
-        window.history.state,
-        '',
-        `${canonicalPathname}${url.search}${url.hash}`,
-      );
+    if (url.pathname === '/' || !url.pathname.endsWith('/')) {
+      return;
     }
-  });
 
-  return children;
+    window.history.replaceState(
+      window.history.state,
+      '',
+      `${url.pathname.replace(/\/+$/, '')}${url.search}${url.hash}`,
+    );
+  });
 }
 
 function isStackflowInitialContext(context: unknown): context is StackflowInitialContext {
@@ -174,9 +201,8 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
             : 'cupertino',
       })),
       reducedMotionPlugin(),
-      canonicalUrlPlugin(),
+      tabHistoryPlugin(),
+      canonicalHistoryPlugin(),
     ],
   });
 }
-
-export const { Stack } = createStackflowApp();

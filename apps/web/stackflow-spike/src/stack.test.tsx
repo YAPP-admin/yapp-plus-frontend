@@ -1,4 +1,5 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { render, screen, waitFor } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { createStackflowApp, stackflowConfig } from './stack';
@@ -33,58 +34,61 @@ async function waitForTopActivity() {
 
 describe('Stackflow 탭·Alerts 구조', () => {
   it('탭 전환은 replaceStep으로 history를 늘리지 않고 패널 상태를 보존한다', async () => {
+    const user = userEvent.setup();
     renderStack();
 
     expect(
       await screen.findByRole('heading', { name: '홈 패널' }, { timeout: 5000 }),
     ).toBeVisible();
-    fireEvent.change(screen.getByTestId('home-state'), { target: { value: '보존할 홈 상태' } });
+    await user.type(screen.getByTestId('home-state'), '보존할 홈 상태');
     const historyLength = window.history.length;
 
-    fireEvent.click(screen.getByTestId('tab-schedule'));
+    await user.click(screen.getByTestId('tab-schedule'));
     await waitFor(() => expect(window.location.pathname).toBe('/schedule'));
-    fireEvent.change(screen.getByTestId('schedule-state'), { target: { value: '이번 달' } });
+    await user.selectOptions(screen.getByTestId('schedule-state'), '이번 달');
 
-    fireEvent.click(screen.getByTestId('tab-notices'));
+    await user.click(screen.getByTestId('tab-notices'));
     await waitFor(() => expect(window.location.pathname).toBe('/notices'));
-    fireEvent.change(screen.getByTestId('notices-state'), { target: { value: '세션' } });
+    await user.selectOptions(screen.getByTestId('notices-state'), '세션');
 
-    fireEvent.click(screen.getByTestId('tab-home'));
+    await user.click(screen.getByTestId('tab-home'));
     await waitFor(() => expect(window.location.pathname).toBe('/'));
     expect(screen.getByTestId('home-state')).toHaveValue('보존할 홈 상태');
 
-    fireEvent.click(screen.getByTestId('tab-schedule'));
+    await user.click(screen.getByTestId('tab-schedule'));
     await waitFor(() => expect(window.location.pathname).toBe('/schedule'));
     expect(screen.getByTestId('schedule-state')).toHaveValue('이번 달');
 
-    fireEvent.click(screen.getByTestId('tab-notices'));
+    await user.click(screen.getByTestId('tab-notices'));
     await waitFor(() => expect(window.location.pathname).toBe('/notices'));
     expect(screen.getByTestId('notices-state')).toHaveValue('세션');
     expect(window.history.length).toBe(historyLength);
   });
 
   it('Home 위에 Alerts를 push하고 뒤로가면 Home을 복원한다', async () => {
+    const user = userEvent.setup();
     renderStack();
 
-    fireEvent.click(await screen.findByTestId('open-alerts'));
+    expect(await screen.findByRole('heading', { name: '홈 패널' })).toBeVisible();
+    await user.click(await screen.findByTestId('open-alerts'));
     await waitForTopActivity();
     await waitFor(() => expect(window.location.pathname).toBe('/alerts'));
     expect(await screen.findByRole('heading', { name: '알림' }, { timeout: 5000 })).toBeVisible();
 
-    fireEvent.click(screen.getByRole('button', { name: '뒤로' }));
-    await waitFor(() => expect(window.location.pathname).toBe('/'));
+    await user.click(screen.getByRole('button', { name: '뒤로' }));
     expect(
       await screen.findByRole('heading', { name: '홈 패널' }, { timeout: 5000 }),
     ).toBeVisible();
   });
 
   it('Alerts 직접 진입은 Home을 복원하고 다른 탭 이동은 pop + replace로 처리한다', async () => {
+    const user = userEvent.setup();
     window.history.replaceState({}, '', '/alerts');
     renderStack();
 
     await waitForTopActivity();
-    expect(await screen.findByRole('heading', { name: '알림' }, { timeout: 5000 })).toBeVisible();
-    fireEvent.click(screen.getByTestId('alerts-notices'));
+    await waitFor(() => expect(screen.getByRole('heading', { name: '알림' })).toBeVisible());
+    await user.click(screen.getByTestId('alerts-notices'));
 
     await waitFor(() => expect(window.location.pathname).toBe('/notices'));
     expect(
