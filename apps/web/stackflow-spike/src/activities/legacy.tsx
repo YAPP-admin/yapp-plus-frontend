@@ -277,20 +277,16 @@ function LegacyScreen({
   title: string;
 }) {
   const appScreenOptions = useAppScreenOptions();
-
-  useEffect(() => {
-    const previousTitle = document.title;
-    document.title = `${title} | YAPP+`;
-    return () => {
-      document.title = previousTitle;
-    };
-  }, [title]);
+  const { isTop } = useActivity();
 
   return (
-    <SnackbarProvider>
-      <AppScreen {...appScreenOptions} layerOffsetTop="none" preventSwipeBack={preventSwipeBack}>
-        <AppScreenContent>{children}</AppScreenContent>
-      </AppScreen>
-    </SnackbarProvider>
+    <>
+      {isTop ? <title>{`${title} | YAPP+`}</title> : null}
+      <SnackbarProvider>
+        <AppScreen {...appScreenOptions} layerOffsetTop="none" preventSwipeBack={preventSwipeBack}>
+          <AppScreenContent>{children}</AppScreenContent>
+        </AppScreen>
+      </SnackbarProvider>
+    </>
   );
 }
