@@ -299,6 +299,16 @@ function tabHistoryPlugin(): StackflowPlugin {
 
       queueMicrotask(() => replaceTabHistory(effect.step.params));
     },
+    onPopped({ actions }) {
+      queueMicrotask(() => {
+        const tabsActivity = actions
+          .getStack()
+          .activities.find((activity) => activity.name === 'Tabs' && activity.isActive);
+        const currentStep = tabsActivity?.steps.at(-1);
+
+        replaceTabHistory(currentStep?.params ?? tabsActivity?.params);
+      });
+    },
   });
 }
 
@@ -313,6 +323,7 @@ function replaceTabHistory(params: unknown) {
   }
 
   window.history.replaceState(window.history.state, '', tabPath(initialTab));
+  window.dispatchEvent(new Event('yapp:navigation'));
 }
 
 function canonicalHistoryPlugin(): StackflowPlugin {
@@ -341,6 +352,7 @@ function scheduleCanonicalPath() {
       '',
       `${url.pathname.replace(/\/+$/, '')}${url.search}${url.hash}`,
     );
+    window.dispatchEvent(new Event('yapp:navigation'));
   });
 }
 

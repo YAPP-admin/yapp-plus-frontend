@@ -20,10 +20,16 @@ const TAB_TITLES: Record<string, string> = {
   '/alerts': '알림',
 };
 
-export function TabsHeader() {
-  const pathname = usePathname();
+type TabsHeaderProps = {
+  /** Stackflow Activity가 전달하면 URL adapter보다 우선합니다. */
+  activeTab?: 'home' | 'schedule' | 'notices' | 'my' | null;
+};
 
-  if (pathname === '/') {
+export function TabsHeader({ activeTab }: TabsHeaderProps = {}) {
+  const pathname = usePathname();
+  const activePathname = getActivePathname(activeTab, pathname);
+
+  if (activePathname === '/') {
     return (
       <div className={homeHeader}>
         <Link href="/" className={logoLink} aria-label="YAPP 홈">
@@ -36,19 +42,32 @@ export function TabsHeader() {
     );
   }
 
-  if (pathname === '/alerts') {
+  if (activePathname === '/alerts') {
     return null;
   }
 
-  const title = (pathname ? TAB_TITLES[pathname] : undefined) ?? 'YAPP+';
+  const title = (activePathname ? TAB_TITLES[activePathname] : undefined) ?? 'YAPP+';
   return (
     <div className={defaultHeader}>
       <span className={defaultTitle}>{title}</span>
-      {pathname === '/my' ? (
+      {activePathname === '/my' ? (
         <Link href="/settings" className={headerActionButton} aria-label="설정">
           <IconGearFill width={24} height={24} />
         </Link>
       ) : null}
     </div>
   );
+}
+
+function getActivePathname(activeTab: TabsHeaderProps['activeTab'], pathname: string) {
+  if (activeTab === undefined) {
+    return pathname;
+  }
+  if (activeTab === null) {
+    return '/alerts';
+  }
+  if (activeTab === 'home') {
+    return '/';
+  }
+  return `/${activeTab}`;
 }

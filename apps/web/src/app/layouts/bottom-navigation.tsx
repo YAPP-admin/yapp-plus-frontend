@@ -40,14 +40,20 @@ const destinations = [
   },
 ];
 
-export function BottomNavigation() {
+export function BottomNavigation({
+  activeTab,
+}: {
+  /** Stackflow Activity가 전달하면 URL adapter보다 우선합니다. */
+  activeTab?: 'home' | 'schedule' | 'notices' | 'my' | null;
+} = {}) {
   const pathname = usePathname();
+  const activePathname = getActivePathname(activeTab, pathname);
 
   return (
     <div className={bottomBar}>
       <nav className={navigation} aria-label="주요 메뉴">
         {destinations.map(({ href, label, Icon }) => {
-          const isCurrent = pathname === href;
+          const isCurrent = activePathname === href;
 
           return (
             <Link
@@ -67,4 +73,20 @@ export function BottomNavigation() {
       <div className={homeIndicatorArea} aria-hidden="true" />
     </div>
   );
+}
+
+function getActivePathname(
+  activeTab: 'home' | 'schedule' | 'notices' | 'my' | null | undefined,
+  pathname: string,
+) {
+  if (activeTab === undefined) {
+    return pathname;
+  }
+  if (activeTab === null) {
+    return undefined;
+  }
+  if (activeTab === 'home') {
+    return '/';
+  }
+  return `/${activeTab}`;
 }
