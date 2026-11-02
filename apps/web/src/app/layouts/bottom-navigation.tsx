@@ -77,7 +77,7 @@ export function BottomNavigation({
 
 function getActivePathname(
   activeTab: 'home' | 'schedule' | 'notices' | 'my' | null | undefined,
-  pathname: string,
+  pathname: string | null,
 ) {
   if (activeTab === undefined) {
     return pathname;
