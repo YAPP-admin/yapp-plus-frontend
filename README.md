@@ -150,7 +150,7 @@ mise exec -- node --run build
 [검증 결과](./specs/005-seed-design/validation.md)를 따릅니다.
 
 웹 앱은 Vite의 React Compiler 플러그인과 SEED Design Vite 플러그인을 사용합니다. 개발·배포
-진입점은 `apps/web/vite.config.ts`와 `apps/web/stackflow-spike`입니다.
+진입점은 `apps/web/vite.config.ts`와 `apps/web/stackflow`입니다.
 
 ## 배포
 
@@ -160,6 +160,8 @@ mise exec -- node --run build
 | ------- | ----------------- | -------------- | -------------- |
 | `web`   | `yapp-plus-web`   | `apps/web`     | Vite (dist)    |
 | `admin` | `yapp-plus-admin` | `apps/admin`   | TanStack Start |
+
+Web 프로젝트의 Vercel 설정은 [`apps/web/vercel.json`](apps/web/vercel.json)에서 `vite`와 `dist`를 고정하고, SPA 공개 경로를 `index.html`로 rewrite합니다.
 
 `.github/workflows/ci.yml`은 Pull Request와 `main` push의 품질 검증만 담당합니다.
 `.github/workflows/deploy-preview.yml`은 내부 브랜치 Pull Request의 `CI`가 성공한 뒤 검증된
@@ -181,6 +183,7 @@ Web/Admin 배포를 모두 실행해 workflow 회귀를 검증합니다.
 - `.github/actions/deployment-config-changed/action.yml`
 - `.github/actions/turbo-affected/action.yml`
 - `.github/actions/vercel-deploy/action.yml`
+- `apps/web/vercel.json`
 
 자동 배포 workflow는 `.github/actions/deployment-config-changed` 복합 액션으로 배포 설정 변경을
 먼저 확인하고, `.github/actions/turbo-affected` 복합 액션으로 앱별 Turbo build 영향 범위를

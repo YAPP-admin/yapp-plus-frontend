@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 
 const webSourcePath = fileURLToPath(new URL('./src', import.meta.url));
-const stackflowRoot = fileURLToPath(new URL('./stackflow-spike', import.meta.url));
+const stackflowRoot = fileURLToPath(new URL('./stackflow', import.meta.url));
 const publicPath = fileURLToPath(new URL('./public', import.meta.url));
 const outputPath = fileURLToPath(new URL('./dist', import.meta.url));
 

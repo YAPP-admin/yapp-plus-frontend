@@ -31,9 +31,7 @@ async function waitForTopHeading(name: string | RegExp) {
           ...document.querySelectorAll<HTMLElement>('[data-stackflow-component-name="AppScreen"]'),
         ].find((candidate) => {
           const heading =
-            [...candidate.querySelectorAll<HTMLHeadingElement>('h1')].find(
-              (candidateHeading) => !candidateHeading.closest('[hidden]'),
-            ) ?? null;
+            [...candidate.querySelectorAll<HTMLHeadingElement>('h1')].find(isVisible) ?? null;
           const matches =
             typeof name === 'string'
               ? heading?.textContent === name
@@ -50,6 +48,19 @@ async function waitForTopHeading(name: string | RegExp) {
   }
 
   return within(element);
+}
+
+function isVisible(element: HTMLElement) {
+  let current: HTMLElement | null = element;
+
+  while (current) {
+    if (current.hidden || window.getComputedStyle(current).display === 'none') {
+      return false;
+    }
+    current = current.parentElement;
+  }
+
+  return true;
 }
 
 describe('Stackflow FSD 화면 연결', () => {
