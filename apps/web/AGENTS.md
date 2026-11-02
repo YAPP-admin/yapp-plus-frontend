@@ -17,7 +17,7 @@
 
 ```text
 apps/web/
-├── stackflow-spike/     # Stackflow Activity와 Vite HTML 진입점
+├── stackflow/           # Stackflow Activity와 Vite HTML 진입점
 └── src/
     ├── app/             # Provider, 전역 스타일과 초기화
     ├── pages/<화면>/    # 화면 슬라이스
@@ -25,7 +25,7 @@ apps/web/
     └── shared/          # 웹 내부의 도메인 비의존 코드
 ```
 
-새 화면은 `src/pages/<화면>/ui`에서 시작하고 `stackflow-spike/src/activities`에서 Activity로
+새 화면은 `src/pages/<화면>/ui`에서 시작하고 `stackflow/src/activities`에서 Activity로
 연결합니다. 화면 전용 스타일·테스트·상태는 해당 슬라이스에 두고, 실제 재사용이 생겼을 때만
 `features`나 `shared`로 이동합니다.
 

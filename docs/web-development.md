@@ -11,7 +11,7 @@
 ## 적용 상태
 
 13개 회원 페이지의 Stackflow Activity와 화면 슬라이스를 구성했습니다. Vite HTML·Stackflow
-진입점은 `apps/web/stackflow-spike`, 화면 코드는 `apps/web/src/pages`, Provider·전역 스타일·
+진입점은 `apps/web/stackflow`, 화면 코드는 `apps/web/src/pages`, Provider·전역 스타일·
 공통 페이지 레이아웃은 `apps/web/src/app`에 있습니다. 화면에는 제목과 공통 준비 중 안내를 제공합니다.
 홈·일정·공지·마이페이지는 하단 메뉴를 공유하며 홈과 마이페이지에는 바로가기 링크를 제공합니다.
 상세 화면에는 내부 이력 또는 고정 상위 경로로 돌아가는 뒤로가기를 제공합니다. 실제 본문 기능은 후속 단계입니다.
@@ -28,7 +28,7 @@ FSD의 `app`, `pages`, `features`, `shared`를 사용합니다. 화면 단위로
 
 | 위치                           | 역할                                                    |
 | ------------------------------ | ------------------------------------------------------- |
-| `apps/web/stackflow-spike`     | Vite HTML 진입점, Stackflow Activity와 URL·history 구성 |
+| `apps/web/stackflow`           | Vite HTML 진입점, Stackflow Activity와 URL·history 구성 |
 | `apps/web/src/app`             | Provider, 전역 초기화, 공통 레이아웃과 스타일 연결      |
 | `apps/web/src/pages/<화면>`    | 화면과 해당 화면에서만 사용하는 코드                    |
 | `apps/web/src/features/<기능>` | 여러 화면에서 재사용하는 사용자 행동                    |
@@ -45,7 +45,7 @@ FSD의 `app`, `pages`, `features`, `shared`를 사용합니다. 화면 단위로
 
 ```text
 apps/web/
-├── stackflow-spike/
+├── stackflow/
 │   ├── index.html
 │   └── src/
 │       ├── main.tsx
@@ -75,13 +75,15 @@ apps/web/
             └── page.css.ts
 ```
 
-`stackflow-spike/src/stack.tsx`가 URL과 Activity를 연결하고, `src/app`은 앱의 전역 구성을
+`stackflow/src/stack.tsx`가 URL과 Activity를 연결하고, `src/app`은 앱의 전역 구성을
 담당합니다. Activity는 `src/pages`의 공개 `index.ts`를 통해 화면 슬라이스를 조합합니다.
 
 라우트 그룹 `(tabs)`, `(auth)`는 URL에 포함되지 않습니다. 위 트리는 두 그룹의 화면별 하위
 경로를 생략했습니다. `(tabs)/layout.tsx`는 탭 이동 사이에 유지되는 공통 레이아웃이며,
-`TabsLayout`에서 `PageShell`과 하단 메뉴를 조합합니다. 페이지 전환 애니메이션 자체는 아직
-구현하지 않았습니다.
+`TabsLayout`에서 `PageShell`과 하단 메뉴를 조합합니다. TabsActivity의 각 탭 panel은 React
+`Activity`로 표시·숨김을 제어해 실행 중 state·DOM을 보존하고 숨겨진 panel의 Effect를 정리합니다.
+하단 메뉴는 URL을 소유하는 typed `Link`이므로 SEED Tabs는 URL navigation과 분리된 local tab
+control이 필요한 경우에만 사용합니다.
 
 포괄적인 `(detail)` 그룹은 사용하지 않습니다. 공지 상세·출석·설정은 각각 `notices`, `my`,
 `settings` 아래에 배치합니다. 각 상세 라우트의 `page.tsx`에서 `DetailLayout`과 화면을 조합하고
@@ -143,7 +145,7 @@ apps/web/
 다음은 현재 홈의 연결 방식입니다. `@/*` alias는 `apps/web/src/*`를 가리킵니다.
 
 ```tsx
-// apps/web/stackflow-spike/src/activities/legacy.tsx
+// apps/web/stackflow/src/activities/legacy.tsx
 import { HomePage } from '@/pages/home';
 ```
 
@@ -180,7 +182,7 @@ export { HomePage } from './ui/home-page';
 mise exec -- pnpm --filter @yapp-plus/web dev
 ```
 
-페이지를 추가할 때는 `apps/web/src/pages/<화면>`에 화면을 작성하고, `stackflow-spike/src/stack.tsx`에
+페이지를 추가할 때는 `apps/web/src/pages/<화면>`에 화면을 작성하고, `stackflow/src/stack.tsx`에
 Activity와 URL·fallback을 등록합니다. 하단 메뉴나 인증 화면의 공통 레이아웃은 `src/app/layouts`에서
 조합하고, Activity에서는 화면 슬라이스의 공개 `index.ts`만 가져옵니다.
 

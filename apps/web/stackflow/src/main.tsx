@@ -13,7 +13,7 @@ import { detectPlatform, getReducedMotionPreference } from './platform';
 const root = document.getElementById('root');
 
 if (!root) {
-  throw new Error('Stackflow 호환성 셸의 root 요소를 찾을 수 없습니다.');
+  throw new Error('YAPP+ 웹 앱의 root 요소를 찾을 수 없습니다.');
 }
 
 const initialContext = {
