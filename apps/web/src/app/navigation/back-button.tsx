@@ -2,7 +2,7 @@
 
 import { IconChevronLeftLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Icon } from '@yapp-plus/ui';
-import { useRouter } from 'next/navigation';
+import { useRouter } from './router';
 import { useCanGoBack } from './navigation-history';
 import { backButton, iconBackButton } from './back-button.css';
 

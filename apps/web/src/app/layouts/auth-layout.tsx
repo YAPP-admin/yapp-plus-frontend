@@ -1,6 +1,6 @@
 'use client';
 
-import { useSelectedLayoutSegments } from 'next/navigation';
+import { useSelectedLayoutSegments } from '@/app/navigation/router';
 import type { ReactNode } from 'react';
 import { BackButton } from '../navigation/back-button';
 import { PageShell } from './page-shell';

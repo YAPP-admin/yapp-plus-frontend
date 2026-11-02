@@ -1,4 +1,4 @@
-import Link from 'next/link';
+import { Link } from '@/app/navigation/link';
 import { content, description, title } from '../../../shared/ui/page.css';
 import { link } from '../../../shared/ui/page-links.css';
 

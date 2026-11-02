@@ -17,8 +17,7 @@
 
 ```text
 apps/web/
-├── app/                 # Next.js App Router 진입점
-├── pages/               # Pages Router 탐색 경계를 설명하는 README만 유지
+├── stackflow-spike/     # Stackflow Activity와 Vite HTML 진입점
 └── src/
     ├── app/             # Provider, 전역 스타일과 초기화
     ├── pages/<화면>/    # 화면 슬라이스
@@ -26,9 +25,9 @@ apps/web/
     └── shared/          # 웹 내부의 도메인 비의존 코드
 ```
 
-새 화면은 `src/pages/<화면>/ui`에서 시작합니다. Next.js 라우트의 `app/<경로>/page.tsx`는
-화면 슬라이스의 `index.ts`만 가져옵니다. 화면 전용 스타일·테스트·상태는 해당 슬라이스에
-두고, 실제 재사용이 생겼을 때만 `features`나 `shared`로 이동합니다.
+새 화면은 `src/pages/<화면>/ui`에서 시작하고 `stackflow-spike/src/activities`에서 Activity로
+연결합니다. 화면 전용 스타일·테스트·상태는 해당 슬라이스에 두고, 실제 재사용이 생겼을 때만
+`features`나 `shared`로 이동합니다.
 
 의존성 방향은 `app → pages → features → shared`입니다. 페이지와 feature 슬라이스끼리 직접
 가져오지 않으며, 슬라이스 외부에서는 공개 `index.ts`를 사용합니다. 다른 앱의 내부 파일을
@@ -41,8 +40,7 @@ apps/web/
 사용하고 화면 안에 공용 컴포넌트나 토큰을 복제하지 않습니다.
 
 웹 앱은 일반 브라우저와 모바일 WebView에서 함께 실행됩니다. 브라우저 전용 전역 객체를
-렌더링 중 바로 읽지 않고, safe-area·터치·키보드·라이트/다크 모드를 확인합니다. 서버 컴포넌트와
-클라이언트 컴포넌트의 경계를 유지하고, 클라이언트 모듈에 서버 전용 코드를 섞지 않습니다.
+렌더링 중 바로 읽지 않고, safe-area·터치·키보드·라이트/다크 모드를 확인합니다.
 
 ## 실행과 검증
 
@@ -65,5 +63,4 @@ mise exec -- node --run build
 ```
 
 브라우저에서 핵심 문구와 접근성 이름, 가로 스크롤, safe-area와 테마를 확인하고, 화면 동작을
-변경했다면 인접 테스트를 갱신합니다. `app` 라우트, `.next` 산출물과 도구 생성 파일은 직접
-수정하지 않습니다.
+변경했다면 인접 테스트를 갱신합니다. `dist` 산출물과 도구 생성 파일은 직접 수정하지 않습니다.

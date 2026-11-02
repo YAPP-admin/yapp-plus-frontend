@@ -1,7 +1,7 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
-import Image from 'next/image';
+import { Image } from '@/app/navigation/image';
 import {
   body,
   bottomSection,

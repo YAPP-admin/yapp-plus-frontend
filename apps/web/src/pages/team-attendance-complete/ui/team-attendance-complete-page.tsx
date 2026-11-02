@@ -3,7 +3,7 @@
 import { BackButton } from '@/app/navigation/back-button';
 import { CompleteIllustration } from '@/pages/signup-complete/ui/complete-illustration';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import Link from 'next/link';
+import { Link } from '@/app/navigation/link';
 import {
   body,
   bottomSection,

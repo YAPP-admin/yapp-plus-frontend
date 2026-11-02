@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { LoginPage } from './login-page';
 
 const router = vi.hoisted(() => ({ push: vi.fn<(url: string) => void>() }));
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => router,
   useSearchParams: () => new URLSearchParams(),
 }));

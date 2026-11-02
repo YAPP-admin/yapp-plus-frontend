@@ -3,11 +3,11 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
-      "outputs": [".next/**", "!.next/cache/**", ".output/**", "dist/**", "storybook-static/**"]
+      "outputs": [".output/**", "dist/**", "storybook-static/**"]
     },
     "dev": {
       "cache": false,
-      "env": ["MOBILE_WEB_URL", "VITE_API_MOCKING", "NEXT_PUBLIC_API_MOCKING"],
+      "env": ["MOBILE_WEB_URL", "VITE_API_MOCKING"],
       "persistent": true
     },
     "lint": {

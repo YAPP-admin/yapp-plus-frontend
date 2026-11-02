@@ -2,7 +2,7 @@ import { useActions } from '@stackflow/react';
 import { useHistoryTick } from '@stackflow/plugin-history-sync';
 import { useFlow, useStepFlow } from '@stackflow/react/future';
 import { type MouseEvent, type ReactNode } from 'react';
-import { notifyNavigation, resolveStackflowRoute } from './routes';
+import { mapHrefToStackflowTarget, notifyNavigation } from './routes';
 
 export function Link({
   href,
@@ -21,7 +21,7 @@ export function Link({
   const actions = useActions();
   const { requestHistoryTick } = useHistoryTick();
   const tabsStep = useStepFlow('Tabs');
-  const target = resolveStackflowRoute(href);
+  const target = mapHrefToStackflowTarget(href);
 
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
     onClick?.(event);
@@ -73,6 +73,3 @@ export function Link({
     </a>
   );
 }
-
-// oxlint-disable-next-line import/no-default-export
-export default Link;

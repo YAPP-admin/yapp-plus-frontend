@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { AuthLayout } from './auth-layout';
 
 const location = vi.hoisted(() => ({ segments: [] as string[] }));
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useSelectedLayoutSegments: () => location.segments,
   useRouter: () => ({ back: vi.fn<() => void>(), replace: vi.fn<(url: string) => void>() }),
 }));

@@ -5,7 +5,7 @@ import { TeamAttendanceUploadPage } from './team-attendance-upload-page';
 const mockPush = vi.fn<(url: string) => void>();
 const mockBack = vi.fn<() => void>();
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => ({
     push: mockPush,
     back: mockBack,

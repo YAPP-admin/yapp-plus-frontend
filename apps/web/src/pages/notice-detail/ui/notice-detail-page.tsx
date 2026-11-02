@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams } from '@/app/navigation/router';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import { NoticeErrorPage } from '@/pages/notices';
 import { getNoticeDetailById, type NoticeDetail } from '../model/notice-detail-data';
@@ -49,7 +49,7 @@ function getCategoryChipClass(category: NoticeDetail['category']) {
 }
 
 export function NoticeDetailPage({ noticeId: propNoticeId, initialDetail }: NoticeDetailPageProps) {
-  const params = useParams<{ noticeId?: string }>();
+  const params = useParams();
   const id = propNoticeId ?? params?.noticeId ?? '1';
   const detail = initialDetail ?? getNoticeDetailById(id);
 

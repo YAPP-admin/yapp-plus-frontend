@@ -4,7 +4,7 @@ import { TabsLayout } from './tabs-layout';
 import { PageShell } from './page-shell';
 
 const location = vi.hoisted(() => ({ pathname: '/' }));
-vi.mock('next/navigation', () => ({ usePathname: () => location.pathname }));
+vi.mock('@/app/navigation/router', () => ({ usePathname: () => location.pathname }));
 
 describe('TabsLayout', () => {
   it.each([

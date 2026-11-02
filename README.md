@@ -31,7 +31,7 @@ mise exec -- pnpm install
 
 | 경로                  | 역할                                       |
 | --------------------- | ------------------------------------------ |
-| `apps/web`            | 모바일 WebView에서 렌더링되는 Next.js 앱   |
+| `apps/web`            | Stackflow·SEED 기반 Vite 웹 앱             |
 | `apps/mobile`         | Expo/React Native 기반 WebView 셸          |
 | `apps/admin`          | TanStack Start 기반 관리자 앱              |
 | `apps/storybook`      | 공용 UI를 독립적으로 확인하는 Storybook    |
@@ -72,8 +72,7 @@ Lefthook은 커밋 전에 스테이징된 소스 파일을 포맷팅하고 린�
 훅이 설치되지 않은 환경에서 만든 커밋은 자동으로 검사되지 않습니다.
 
 Oxlint는 `oxlint-tsgolint`의 type-aware 규칙과 React Compiler 검증 규칙을 함께 사용합니다.
-Next.js 규칙은 웹 앱에만 적용하고, 프레임워크가 default export를 요구하는 파일은 별도
-예외로 관리합니다.
+웹 앱은 Vite와 React Compiler를 사용하며, Stackflow Activity가 URL과 화면 상태를 관리합니다.
 
 Storybook은 `packages/ui`의 웹 컴포넌트만 다룹니다. 제품 앱 개발 서버와 항상 함께 실행하지
 않도록 `node --run dev`와 분리했으며, 정적 Storybook 빌드는 `node --run build`에 포함합니다.
@@ -150,8 +149,8 @@ mise exec -- node --run build
 [Seed Design 검증 가이드](./specs/005-seed-design/quickstart.md)와
 [검증 결과](./specs/005-seed-design/validation.md)를 따릅니다.
 
-웹 앱은 Next.js의 React Compiler와 Turbopack Rust 구현을 사용합니다. Rust 구현은 아직
-실험 기능이므로 Next.js를 올릴 때 관련 변경 사항과 빌드 결과를 함께 확인합니다.
+웹 앱은 Vite의 React Compiler 플러그인과 SEED Design Vite 플러그인을 사용합니다. 개발·배포
+진입점은 `apps/web/vite.config.ts`와 `apps/web/stackflow-spike`입니다.
 
 ## 배포
 
@@ -159,7 +158,7 @@ mise exec -- node --run build
 
 | 앱      | Vercel 프로젝트   | Root Directory | Framework      |
 | ------- | ----------------- | -------------- | -------------- |
-| `web`   | `yapp-plus-web`   | `apps/web`     | Next.js        |
+| `web`   | `yapp-plus-web`   | `apps/web`     | Vite (dist)    |
 | `admin` | `yapp-plus-admin` | `apps/admin`   | TanStack Start |
 
 `.github/workflows/ci.yml`은 Pull Request와 `main` push의 품질 검증만 담당합니다.

@@ -8,7 +8,7 @@ const navigation = vi.hoisted(() => ({
   canGoBack: vi.fn<() => boolean>(),
 }));
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => navigation,
   useSearchParams: () => new URLSearchParams(),
 }));

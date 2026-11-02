@@ -4,9 +4,9 @@ import '@seed-design/css/recipes/app-bar-main.css';
 import '@seed-design/css/recipes/app-screen.css';
 import '@yapp-plus/ui/styles';
 import './styles.css';
-import { installSafeAreaBridge } from '@yapp-plus/app-bridge/web';
-import { StrictMode, Suspense, useEffect } from 'react';
+import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Providers } from '@/app/providers';
 import { createStackflowApp } from './stack';
 import { detectPlatform, getReducedMotionPreference } from './platform';
 
@@ -23,19 +23,19 @@ const initialContext = {
 const { Stack } = createStackflowApp({ reducedMotion: initialContext.reducedMotion });
 
 function App() {
-  useEffect(() => installSafeAreaBridge(), []);
-
   return (
-    <Suspense
-      fallback={
-        <>
-          <title>YAPP+</title>
-          <div>로딩 중…</div>
-        </>
-      }
-    >
-      <Stack initialContext={initialContext} />
-    </Suspense>
+    <Providers>
+      <Suspense
+        fallback={
+          <>
+            <title>YAPP+</title>
+            <div>로딩 중…</div>
+          </>
+        }
+      >
+        <Stack initialContext={initialContext} />
+      </Suspense>
+    </Providers>
   );
 }
 

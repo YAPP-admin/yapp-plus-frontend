@@ -1,6 +1,6 @@
 import { body, footer, heading, screen } from '@/shared/ui/step-screen.css';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import Link from 'next/link';
+import { Link } from '@/app/navigation/link';
 import { contents, illustration } from './signup-complete-page.css';
 import { CompleteIllustration } from './complete-illustration';
 

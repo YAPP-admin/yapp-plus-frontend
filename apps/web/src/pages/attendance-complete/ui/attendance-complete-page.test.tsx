@@ -2,7 +2,7 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AttendanceCompletePage } from './attendance-complete-page';
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => ({
     back: vi.fn<() => void>(),
     push: vi.fn<(url: string) => void>(),

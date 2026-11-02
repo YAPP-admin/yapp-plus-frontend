@@ -4,7 +4,7 @@ import { AlertsPage } from './alerts-page';
 
 let mockSearchParams = new URLSearchParams();
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => ({
     back: vi.fn<() => void>(),
     push: vi.fn<(url: string) => void>(),

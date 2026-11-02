@@ -2,8 +2,8 @@
 
 import { BackButton } from '@/app/navigation/back-button';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import Image from 'next/image';
-import Link from 'next/link';
+import { Image } from '@/app/navigation/image';
+import { Link } from '@/app/navigation/link';
 import {
   body,
   bottomSection,

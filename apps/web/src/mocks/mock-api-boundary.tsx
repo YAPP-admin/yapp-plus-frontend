@@ -3,16 +3,16 @@
 import { useEffect, useState, type ReactNode } from 'react';
 
 export function MockApiBoundary({ children }: { children: ReactNode }) {
-  if (process.env.NODE_ENV !== 'development') {
+  if (!import.meta.env.DEV) {
     return children;
   }
 
-  const flag = process.env.NEXT_PUBLIC_API_MOCKING;
+  const flag = import.meta.env.VITE_API_MOCKING;
   if (flag === undefined || flag === 'false') {
     return children;
   }
   if (flag !== 'true') {
-    return <p role="alert">NEXT_PUBLIC_API_MOCKING에는 true 또는 false를 설정해 주세요.</p>;
+    return <p role="alert">VITE_API_MOCKING에는 true 또는 false를 설정해 주세요.</p>;
   }
   return <EnabledMockApiBoundary>{children}</EnabledMockApiBoundary>;
 }
@@ -23,9 +23,6 @@ function EnabledMockApiBoundary({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     async function start() {
-      if (process.env.NODE_ENV !== 'development') {
-        return;
-      }
       try {
         const { startMocking } = await import('./browser');
         await startMocking();

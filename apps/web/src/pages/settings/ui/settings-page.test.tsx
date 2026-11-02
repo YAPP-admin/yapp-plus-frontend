@@ -9,7 +9,7 @@ const navigation = vi.hoisted(() => ({
   canGoBack: true,
 }));
 
-vi.mock('next/navigation', () => ({
+vi.mock('@/app/navigation/router', () => ({
   useRouter: () => navigation,
   usePathname: () => '/settings',
 }));

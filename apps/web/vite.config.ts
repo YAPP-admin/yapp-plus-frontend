@@ -1,20 +1,20 @@
 import { seedDesignPlugin } from '@seed-design/vite-plugin';
 import { vanillaExtractPlugin } from '@vanilla-extract/vite-plugin';
 import react from '@vitejs/plugin-react';
-import { defineConfig } from 'vite';
 import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'vite';
 
-const webSourcePath = fileURLToPath(new URL('../src', import.meta.url));
-const legacyPath = fileURLToPath(new URL('./src/legacy', import.meta.url));
+const webSourcePath = fileURLToPath(new URL('./src', import.meta.url));
+const stackflowRoot = fileURLToPath(new URL('./stackflow-spike', import.meta.url));
+const publicPath = fileURLToPath(new URL('./public', import.meta.url));
+const outputPath = fileURLToPath(new URL('./dist', import.meta.url));
 
 export default defineConfig({
-  root: 'stackflow-spike',
+  root: stackflowRoot,
+  publicDir: publicPath,
   resolve: {
     alias: {
       '@': webSourcePath,
-      'next/navigation': `${legacyPath}/next-navigation.ts`,
-      'next/link': `${legacyPath}/next-link.tsx`,
-      'next/image': `${legacyPath}/next-image.tsx`,
     },
   },
   plugins: [
@@ -24,6 +24,6 @@ export default defineConfig({
   ],
   build: {
     emptyOutDir: true,
-    outDir: '../.stackflow-spike-dist',
+    outDir: outputPath,
   },
 });

@@ -1,7 +1,7 @@
 import { useActions } from '@stackflow/react';
 import { useFlow } from '@stackflow/react/future';
 import { useSyncExternalStore } from 'react';
-import { notifyNavigation, resolveStackflowRoute } from './routes';
+import { mapHrefToStackflowTarget, notifyNavigation } from './routes';
 
 function subscribe(onChange: () => void) {
   if (typeof window === 'undefined') {
@@ -48,12 +48,12 @@ export function useRouter() {
 
   return {
     push(href: string) {
-      const target = resolveStackflowRoute(href);
+      const target = mapHrefToStackflowTarget(href);
       flow.push(target.activityName, target.activityParams, { animate: false });
       queueMicrotask(notifyNavigation);
     },
     replace(href: string) {
-      const target = resolveStackflowRoute(href);
+      const target = mapHrefToStackflowTarget(href);
       flow.replace(target.activityName, target.activityParams, { animate: false });
       queueMicrotask(notifyNavigation);
     },
