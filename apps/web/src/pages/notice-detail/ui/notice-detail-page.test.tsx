@@ -3,14 +3,11 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NoticeDetailPage } from './notice-detail-page';
 
 const navigation = vi.hoisted(() => ({
-  back: vi.fn<() => void>(),
-  replace: vi.fn<(url: string) => void>(),
+  pop: vi.fn<() => void>(),
+  replace: vi.fn<(activityName: string, params: object) => void>(),
   canGoBack: vi.fn<() => boolean>(),
 }));
-vi.mock('@/app/navigation/router', () => ({
-  useRouter: () => navigation,
-  useParams: () => ({ noticeId: '1' }),
-}));
+vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
 vi.mock('@/app/navigation/navigation-history', () => ({
   useCanGoBack: () => ({ current: navigation.canGoBack }),
 }));

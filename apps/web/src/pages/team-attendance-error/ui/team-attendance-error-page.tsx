@@ -1,9 +1,9 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
+import { Link } from '@/app/navigation/link';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import { Image } from '@/app/navigation/image';
-import { Link } from '@/app/navigation/link';
 import {
   body,
   bottomSection,
@@ -22,7 +22,11 @@ export function TeamAttendanceErrorPage() {
   return (
     <div className={container}>
       <header className={header}>
-        <BackButton fallback="/" iconOnly />
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'home' }}
+          iconOnly
+        />
         <div className={headerSpacer} aria-hidden="true" />
       </header>
 

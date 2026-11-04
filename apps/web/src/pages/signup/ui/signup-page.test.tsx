@@ -3,8 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SignupPage } from './signup-page';
 
-const router = vi.hoisted(() => ({ push: vi.fn<(url: string) => void>() }));
-vi.mock('@/app/navigation/router', () => ({ useRouter: () => router }));
+const flow = vi.hoisted(() => ({ push: vi.fn<(activityName: string, params: object) => void>() }));
+vi.mock('@stackflow/react/future', () => ({ useFlow: () => flow }));
 beforeEach(() => vi.clearAllMocks());
 
 function goToPhoneStep() {
@@ -60,10 +60,10 @@ describe('SignupPage', () => {
   it('휴대폰 번호를 입력하고 다음을 누르면 승인 대기 화면으로 이동한다', () => {
     render(<SignupPage />);
     const phone = goToPhoneStep();
-    expect(router.push).not.toHaveBeenCalled();
+    expect(flow.push).not.toHaveBeenCalled();
 
     fireEvent.change(phone, { target: { value: '010-1234-5678' } });
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
-    expect(router.push).toHaveBeenCalledWith('/signup/status');
+    expect(flow.push).toHaveBeenCalledWith('SignupStatus', {});
   });
 });

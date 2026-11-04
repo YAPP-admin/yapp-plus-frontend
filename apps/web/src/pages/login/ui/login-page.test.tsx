@@ -3,11 +3,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LoginPage } from './login-page';
 
-const router = vi.hoisted(() => ({ push: vi.fn<(url: string) => void>() }));
-vi.mock('@/app/navigation/router', () => ({
-  useRouter: () => router,
-  useSearchParams: () => new URLSearchParams(),
-}));
+const flow = vi.hoisted(() => ({ push: vi.fn<(activityName: string, params: object) => void>() }));
+vi.mock('@stackflow/react/future', () => ({ useFlow: () => flow }));
 beforeEach(() => vi.clearAllMocks());
 
 describe('LoginPage', () => {
@@ -52,7 +49,7 @@ describe('LoginPage', () => {
   it('애플로 계속하기를 누르면 추가 정보 입력 화면으로 이동한다', () => {
     render(<LoginPage />);
     fireEvent.click(screen.getByRole('button', { name: '애플로 계속하기' }));
-    expect(router.push).toHaveBeenCalledWith('/signup');
+    expect(flow.push).toHaveBeenCalledWith('Signup', {});
   });
 
   it('구글로 계속하기를 누르면 피그마 375:11225 에러 팝업이 노출된다', () => {

@@ -2,25 +2,24 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AuthLayout } from './auth-layout';
 
-const location = vi.hoisted(() => ({ segments: [] as string[] }));
-vi.mock('@/app/navigation/router', () => ({
-  useSelectedLayoutSegments: () => location.segments,
-  useRouter: () => ({ back: vi.fn<() => void>(), replace: vi.fn<(url: string) => void>() }),
+vi.mock('@stackflow/react/future', () => ({
+  useFlow: () => ({
+    pop: vi.fn<() => void>(),
+    replace: vi.fn<(activityName: string, params: object) => void>(),
+  }),
 }));
 
 describe('AuthLayout', () => {
-  it.each([[['signup']], [['signup', 'status']]])('%j 화면에 뒤로가기를 표시한다', (segments) => {
-    location.segments = segments;
+  it('showBack이 설정된 화면에 뒤로가기를 표시한다', () => {
     render(
-      <AuthLayout>
+      <AuthLayout showBack>
         <main>본문</main>
       </AuthLayout>,
     );
     expect(screen.getByRole('button', { name: '뒤로가기' })).toBeInTheDocument();
   });
 
-  it.each([[['login']], [['signup', 'complete']]])('%j 화면에는 뒤로가기가 없다', (segments) => {
-    location.segments = segments;
+  it('기본 화면에는 뒤로가기가 없다', () => {
     render(
       <AuthLayout>
         <main>본문</main>

@@ -2,12 +2,16 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { TeamAttendanceErrorPage } from './team-attendance-error-page';
 
-vi.mock('@/app/navigation/router', () => ({
-  useRouter: () => ({
-    back: vi.fn<() => void>(),
-    push: vi.fn<(url: string) => void>(),
-    replace: vi.fn<(url: string) => void>(),
+vi.mock('@stackflow/react/future', () => ({
+  useFlow: () => ({
+    pop: vi.fn<() => void>(),
+    replace: vi.fn<(activityName: string, params: object) => void>(),
   }),
+}));
+vi.mock('@/app/navigation/link', () => ({
+  Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...props}>{children}</a>
+  ),
 }));
 
 describe('TeamAttendanceErrorPage', () => {

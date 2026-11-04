@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useParams } from '@/app/navigation/router';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import { NoticeErrorPage } from '@/pages/notices';
 import { getNoticeDetailById, type NoticeDetail } from '../model/notice-detail-data';
@@ -32,7 +31,7 @@ import {
 import { NoticeDetailHeader } from './notice-detail-header';
 
 export type NoticeDetailPageProps = {
-  noticeId?: string;
+  noticeId: string;
   initialDetail?: NoticeDetail;
 };
 
@@ -48,13 +47,11 @@ function getCategoryChipClass(category: NoticeDetail['category']) {
   }
 }
 
-export function NoticeDetailPage({ noticeId: propNoticeId, initialDetail }: NoticeDetailPageProps) {
-  const params = useParams();
-  const id = propNoticeId ?? params?.noticeId ?? '1';
-  const detail = initialDetail ?? getNoticeDetailById(id);
+export function NoticeDetailPage({ noticeId, initialDetail }: NoticeDetailPageProps) {
+  const detail = initialDetail ?? getNoticeDetailById(noticeId);
 
   if (!detail) {
-    return <NoticeErrorPage fallbackUrl="/notices" />;
+    return <NoticeErrorPage />;
   }
 
   return <NoticeDetailContent detail={detail} />;

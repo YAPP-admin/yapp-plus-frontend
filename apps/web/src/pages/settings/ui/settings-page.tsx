@@ -17,7 +17,7 @@ import {
   SwitchThumb,
 } from '@seed-design/react';
 import { Image } from '@/app/navigation/image';
-import { useRouter } from '@/app/navigation/router';
+import { useFlow } from '@stackflow/react/future';
 import { useState } from 'react';
 import {
   body,
@@ -59,21 +59,25 @@ const SETTINGS_LINKS = [
 ];
 
 export function SettingsPage() {
-  const router = useRouter();
+  const flow = useFlow();
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
 
   const handleWithdraw = () => {
-    router.push('/login');
+    flow.push('Login', {});
   };
 
   const handleLogout = () => {
-    router.push('/login');
+    flow.push('Login', {});
   };
 
   return (
     <div className={container}>
       <header className={header}>
-        <BackButton fallback="/my" iconOnly />
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'my' }}
+          iconOnly
+        />
         <h1 className={headerTitle}>설정</h1>
         <div className={headerSpacer} aria-hidden="true" />
       </header>

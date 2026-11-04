@@ -2,7 +2,6 @@
 
 import { BackButton } from '@/app/navigation/back-button';
 import { Image } from '@/app/navigation/image';
-import { useSearchParams } from '@/app/navigation/router';
 import {
   absentChip,
   attendedChip,
@@ -85,9 +84,7 @@ function getStatusChip(status: AttendanceStatus) {
 }
 
 export function AttendancePage({ initialMode, records }: AttendancePageProps) {
-  const searchParams = useSearchParams();
-  const queryMode = parseMode(searchParams?.get('mode') ?? null);
-  const effectiveMode = initialMode ?? queryMode ?? 'active';
+  const effectiveMode = parseMode(initialMode ?? null) ?? 'active';
 
   let currentRecords: AttendanceRecord[];
   if (records) {
@@ -111,7 +108,11 @@ export function AttendancePage({ initialMode, records }: AttendancePageProps) {
   return (
     <div className={container}>
       <header className={header}>
-        <BackButton fallback="/my" iconOnly />
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'my' }}
+          iconOnly
+        />
         <h1 className={headerTitle}>출석 내역</h1>
         <div className={headerSpacer} aria-hidden="true" />
       </header>

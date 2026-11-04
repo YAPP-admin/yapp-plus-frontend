@@ -3,16 +3,12 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import { HomePage } from './home-page';
 
-const mockPush = vi.fn<(url: string) => void>();
-vi.mock('@/app/navigation/router', () => ({
-  useRouter: () => ({
-    back: vi.fn<() => void>(),
-    push: mockPush,
-    replace: vi.fn<(url: string) => void>(),
-  }),
-  useSearchParams: () => ({
-    get: vi.fn<(name: string) => string | null>().mockReturnValue(null),
-  }),
+const mockPush = vi.fn<(activityName: string, params: object) => void>();
+vi.mock('@stackflow/react/future', () => ({ useFlow: () => ({ push: mockPush }) }));
+vi.mock('@/app/navigation/link', () => ({
+  Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...props}>{children}</a>
+  ),
 }));
 
 afterEach(() => {

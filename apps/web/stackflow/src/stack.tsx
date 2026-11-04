@@ -5,31 +5,32 @@ import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { lazy, stackflow as createStackflow } from '@stackflow/react/future';
 import { Primitive, seedPlugin } from '@seed-design/stackflow';
 import { type ReactNode } from 'react';
+import { isTabName, tabUrl, type TabsState } from '@/app/navigation/tab';
 import type { StackflowInitialContext } from './platform';
-import { isTabName, tabPath, type TabName } from './tab';
 
-type TabsParams = {
-  initialTab?: TabName;
-};
+type TabsParams = ActivityBaseParams & TabsState;
+type BooleanQueryParams = ActivityBaseParams & { error?: 'true' };
+type AlertsParams = ActivityBaseParams & { empty?: 'true' };
+type AttendanceParams = ActivityBaseParams & { mode?: 'none' | 'active' | 'warning' };
 
 declare module '@stackflow/config' {
   // Stackflow의 module augmentation은 interface 병합이 필요합니다.
   // oxlint-disable-next-line typescript/consistent-type-definitions
   interface Register {
     Tabs: TabsParams;
-    Alerts: EmptyActivityParams;
+    Alerts: AlertsParams;
     NoticeDetail: {
       noticeId: string;
     };
     NotFound: EmptyActivityParams;
-    Attendance: EmptyActivityParams;
+    Attendance: AttendanceParams;
     AttendanceRules: EmptyActivityParams;
     AttendanceComplete: EmptyActivityParams;
     Settings: EmptyActivityParams;
-    TeamAttendanceUpload: EmptyActivityParams;
+    TeamAttendanceUpload: BooleanQueryParams;
     TeamAttendanceError: EmptyActivityParams;
     TeamAttendanceComplete: EmptyActivityParams;
-    Login: EmptyActivityParams;
+    Login: BooleanQueryParams;
     LoginError: EmptyActivityParams;
     Error: EmptyActivityParams;
     Signup: EmptyActivityParams;
@@ -48,7 +49,7 @@ const components = {
       default: LegacyTabsActivity,
     })),
   ),
-  Alerts: lazy<EmptyActivityParams>(() =>
+  Alerts: lazy<AlertsParams>(() =>
     import('./activities/legacy').then(({ LegacyAlertsActivity }) => ({
       default: LegacyAlertsActivity,
     })),
@@ -63,7 +64,7 @@ const components = {
       default: LegacyNotFoundActivity,
     })),
   ),
-  Attendance: lazy<EmptyActivityParams>(() =>
+  Attendance: lazy<AttendanceParams>(() =>
     import('./activities/legacy').then(({ LegacyAttendanceActivity }) => ({
       default: LegacyAttendanceActivity,
     })),
@@ -83,7 +84,7 @@ const components = {
       default: LegacySettingsActivity,
     })),
   ),
-  TeamAttendanceUpload: lazy<EmptyActivityParams>(() =>
+  TeamAttendanceUpload: lazy<BooleanQueryParams>(() =>
     import('./activities/legacy').then(({ LegacyTeamAttendanceUploadActivity }) => ({
       default: LegacyTeamAttendanceUploadActivity,
     })),
@@ -98,7 +99,7 @@ const components = {
       default: LegacyTeamAttendanceCompleteActivity,
     })),
   ),
-  Login: lazy<EmptyActivityParams>(() =>
+  Login: lazy<BooleanQueryParams>(() =>
     import('./activities/legacy').then(({ LegacyLoginActivity }) => ({
       default: LegacyLoginActivity,
     })),
@@ -141,7 +142,14 @@ const components = {
 };
 
 const tabRoutes = [
-  { path: '/', decode: () => ({ initialTab: 'home' as const }) },
+  {
+    path: '/',
+    decode: ({ session, attendance }: Record<string, string | undefined>) => ({
+      initialTab: 'home' as const,
+      ...(session === 'team' ? { session } : {}),
+      ...(attendance === 'attended' ? { attendance } : {}),
+    }),
+  },
   { path: '/schedule', decode: () => ({ initialTab: 'schedule' as const }) },
   { path: '/notices', decode: () => ({ initialTab: 'notices' as const }) },
   { path: '/my', decode: () => ({ initialTab: 'my' as const }) },
@@ -322,7 +330,15 @@ function replaceTabHistory(params: unknown) {
     return;
   }
 
-  window.history.replaceState(window.history.state, '', tabPath(initialTab));
+  const session = 'session' in params && params.session === 'team' ? params.session : undefined;
+  const attendance =
+    'attendance' in params && params.attendance === 'attended' ? params.attendance : undefined;
+
+  window.history.replaceState(
+    window.history.state,
+    '',
+    tabUrl({ initialTab, session, attendance }),
+  );
   window.dispatchEvent(new Event('yapp:navigation'));
 }
 

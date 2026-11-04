@@ -2,6 +2,7 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { NavigationHistory } from '@/app/navigation/navigation-history';
 import { createStackflowApp, stackflowConfig } from './stack';
 
 beforeEach(() => {
@@ -16,9 +17,11 @@ function renderStack() {
   const { Stack } = createStackflowApp();
 
   return render(
-    <Suspense fallback={<div>로딩 중…</div>}>
-      <Stack />
-    </Suspense>,
+    <NavigationHistory>
+      <Suspense fallback={<div>로딩 중…</div>}>
+        <Stack />
+      </Suspense>
+    </NavigationHistory>,
   );
 }
 
@@ -117,8 +120,30 @@ describe('Stackflow FSD 화면 연결', () => {
 
     await user.click(screen.getByRole('button', { name: '뒤로가기' }));
     expect(await waitForTopHeading('홈')).toBeTruthy();
-    expect(document.title).toBe('홈 | YAPP+');
+    await waitFor(() => expect(document.title).toBe('홈 | YAPP+'));
     expect(document.head.querySelectorAll('title')).toHaveLength(1);
+  });
+
+  it('Alerts에서 돌아오면 Home의 조회 조건과 URL query를 복원한다', async () => {
+    const user = userEvent.setup();
+    window.history.replaceState({}, '', '/?session=team&attendance=attended');
+    renderStack();
+
+    const homeScreen = await waitForTopHeading('홈');
+    expect(homeScreen.getByRole('heading', { name: '이번 주는 팀 세션이에요' })).toBeVisible();
+    expect(homeScreen.getAllByText('출석').some(isVisible)).toBe(true);
+
+    await user.click(homeScreen.getByRole('link', { name: '알림' }));
+    expect(await waitForTopHeading('알림')).toBeTruthy();
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }));
+
+    const restoredHome = await waitForTopHeading('홈');
+    expect(restoredHome.getByRole('heading', { name: '이번 주는 팀 세션이에요' })).toBeVisible();
+    await waitFor(() => {
+      expect(`${window.location.pathname}${window.location.search}`).toBe(
+        '/?session=team&attendance=attended',
+      );
+    });
   });
 
   it('Alerts에서 다른 탭으로 이동하면 Alerts를 pop하고 탭을 replace한다', async () => {

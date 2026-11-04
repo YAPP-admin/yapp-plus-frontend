@@ -22,7 +22,7 @@ export function LoginErrorPage() {
   return (
     <div className={container}>
       <header className={header}>
-        <BackButton fallback="/login" iconOnly />
+        <BackButton fallbackActivityName="Login" fallbackActivityParams={{}} iconOnly />
         <div className={headerSpacer} aria-hidden="true" />
       </header>
 

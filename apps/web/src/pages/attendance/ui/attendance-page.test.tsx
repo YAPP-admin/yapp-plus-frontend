@@ -8,10 +8,7 @@ const navigation = vi.hoisted(() => ({
   canGoBack: vi.fn<() => boolean>(),
 }));
 
-vi.mock('@/app/navigation/router', () => ({
-  useRouter: () => navigation,
-  useSearchParams: () => new URLSearchParams(),
-}));
+vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
 
 vi.mock('@/app/navigation/navigation-history', () => ({
   useCanGoBack: () => ({ current: navigation.canGoBack }),
