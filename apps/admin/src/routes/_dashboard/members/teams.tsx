@@ -29,7 +29,7 @@ function TeamMappingRoute() {
 function TeamMappingRouteContent() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
-  const { hasDirtyDraft } = useTeamMappingDraft();
+  const { hasDirtyDraft, resetDraft } = useTeamMappingDraft();
   const blocker = useBlocker({
     shouldBlockFn: () => hasDirtyDraft,
     enableBeforeUnload: hasDirtyDraft,
@@ -39,6 +39,7 @@ function TeamMappingRouteContent() {
   return (
     <>
       <TeamMappingPage
+        key={search.preview}
         snapshot={getTeamMappingFixture(search.preview)}
         search={search}
         onPreviewChange={(preview) => {
@@ -51,7 +52,10 @@ function TeamMappingRouteContent() {
       <TeamLeaveDialog
         open={blocker.status === 'blocked'}
         onKeepEditing={() => blocker.reset?.()}
-        onDiscard={() => blocker.proceed?.()}
+        onDiscard={() => {
+          resetDraft();
+          blocker.proceed?.();
+        }}
       />
     </>
   );

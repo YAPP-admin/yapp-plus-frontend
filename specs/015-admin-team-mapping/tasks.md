@@ -89,9 +89,9 @@
 
 **10단계 중단점**: US2~US4의 종료 경로까지 US5 보호를 통합 검증한다. 모바일 탐색 취소 시에도 원래 페이지·초안을 보존한다.
 
-- [ ] T041 [US5] apps/admin/src/pages/team-mapping/ui/team-confirm-dialog.test.tsx에 원본 집계·미배정 경고·확정 비활성·요약 열기/닫기 시 기존 예정 보존을 검증한다.
-- [ ] T042 [US5] apps/admin/src/pages/team-mapping/ui/team-confirm-dialog.tsx에 확정 확인 모달을 구현한다.
-- [ ] T043 [US5] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx와 team-mapping-page.test.tsx에 확정 이력·팀원 전용 편집·편집 종료 확인·상태 유지·새 팀 금지를 구현/검증한다.
+- [x] T041 [US5] apps/admin/src/pages/team-mapping/ui/team-confirm-dialog.test.tsx에 원본 집계·미배정 경고·확정 비활성·요약 열기/닫기를 검증한다.
+- [x] T042 [US5] apps/admin/src/pages/team-mapping/ui/team-confirm-dialog.tsx에 확정 확인 모달을 구현한다.
+- [x] T043 [US5] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx와 team-mapping-page.test.tsx에 확정 이력·팀원 전용 편집·조회 모드·새 팀 금지를 구현/검증한다.
 
 **11단계 중단점**: US5 확정 조회/편집을 독립 검증한다. 실제 확정·성공 처리는 없다.
 

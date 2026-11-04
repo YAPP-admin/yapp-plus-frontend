@@ -12,6 +12,7 @@ export type TeamMappingDraftContextValue = TeamMappingDraftState & {
   setCreateDirty: (dirty: boolean) => void;
   setDetailDirty: (dirty: boolean) => void;
   setUnassignedDirty: (dirty: boolean) => void;
+  resetDraft: () => void;
 };
 
 const initialState: TeamMappingDraftState = {
@@ -26,6 +27,7 @@ const defaultContext: TeamMappingDraftContextValue = {
   setCreateDirty: () => undefined,
   setDetailDirty: () => undefined,
   setUnassignedDirty: () => undefined,
+  resetDraft: () => undefined,
 };
 
 const TeamMappingDraftContext = createContext(defaultContext);
@@ -33,7 +35,8 @@ const TeamMappingDraftContext = createContext(defaultContext);
 type DraftAction =
   | { type: 'create'; dirty: boolean }
   | { type: 'detail'; dirty: boolean }
-  | { type: 'unassigned'; dirty: boolean };
+  | { type: 'unassigned'; dirty: boolean }
+  | { type: 'reset' };
 
 function reducer(state: TeamMappingDraftState, action: DraftAction): TeamMappingDraftState {
   switch (action.type) {
@@ -43,6 +46,8 @@ function reducer(state: TeamMappingDraftState, action: DraftAction): TeamMapping
       return { ...state, detailDirty: action.dirty };
     case 'unassigned':
       return { ...state, unassignedDirty: action.dirty };
+    case 'reset':
+      return initialState;
   }
 
   return state;
@@ -57,6 +62,7 @@ export function TeamMappingDraftProvider({ children }: { children: ReactNode }) 
     setCreateDirty: (dirty) => dispatch({ type: 'create', dirty }),
     setDetailDirty: (dirty) => dispatch({ type: 'detail', dirty }),
     setUnassignedDirty: (dirty) => dispatch({ type: 'unassigned', dirty }),
+    resetDraft: () => dispatch({ type: 'reset' }),
   };
 
   return (

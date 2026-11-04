@@ -16,6 +16,7 @@ type TeamMemberListProps = {
   team: TeamMappingTeam;
   panelElement: HTMLDivElement | null;
   panelRef: RefObject<HTMLDivElement | null>;
+  readOnly?: boolean;
   getSelection: (activityId: string) => { value: string; label: string };
   onSelectDestination: (activityId: string, value: string) => void;
 };
@@ -33,6 +34,7 @@ export function TeamMemberList({
   team,
   panelElement,
   panelRef,
+  readOnly = false,
   getSelection,
   onSelectDestination,
 }: TeamMemberListProps) {
@@ -48,6 +50,7 @@ export function TeamMemberList({
               <span className={styles.memberMeta}>현재 팀 소속</span>
             </div>
             <Select.Root
+              disabled={readOnly}
               value={[selection.value]}
               onValueChange={(values) => {
                 onSelectDestination(activityId, values[0] ?? selection.value);

@@ -23,9 +23,22 @@ type TeamDetailPanelProps = {
   snapshot: TeamMappingSnapshot;
   team: TeamMappingTeam;
   onClose: () => void;
+  readOnly?: boolean;
 };
 
-export function TeamDetailPanel({ snapshot, team, onClose }: TeamDetailPanelProps) {
+function getMemberAddLabel(readOnly: boolean, isAddOpen: boolean): string {
+  if (readOnly) {
+    return '회원 추가 (조회 전용)';
+  }
+  return isAddOpen ? '회원 추가 닫기' : '회원 추가';
+}
+
+export function TeamDetailPanel({
+  snapshot,
+  team,
+  onClose,
+  readOnly = false,
+}: TeamDetailPanelProps) {
   const { setDetailDirty } = useTeamMappingDraft();
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelElement, setPanelElement] = useState<HTMLDivElement | null>(null);
@@ -113,12 +126,13 @@ export function TeamDetailPanel({ snapshot, team, onClose }: TeamDetailPanelProp
                     type="button"
                     variant="neutralWeak"
                     size="small"
+                    disabled={readOnly}
                     onClick={toggleAdd}
                   >
-                    {isAddOpen ? '회원 추가 닫기' : '회원 추가'}
+                    {getMemberAddLabel(readOnly, isAddOpen)}
                   </ActionButton>
                 </div>
-                {isAddOpen && (
+                {!readOnly && isAddOpen && (
                   <TeamMemberSearchPanel
                     snapshot={snapshot}
                     query={query}
@@ -132,6 +146,7 @@ export function TeamDetailPanel({ snapshot, team, onClose }: TeamDetailPanelProp
                   team={team}
                   panelElement={panelElement}
                   panelRef={panelRef}
+                  readOnly={readOnly}
                   getSelection={getSelection}
                   onSelectDestination={selectDestination}
                 />

@@ -16,7 +16,13 @@ function EmptyState({ title, description }: { title: string; description: string
 }
 
 /** 미배정 회원 영역은 하위 상태 훅과 행 컴포넌트를 조합한다. */
-export function UnassignedMembers({ snapshot }: { snapshot: TeamMappingSnapshot }) {
+export function UnassignedMembers({
+  snapshot,
+  readOnly,
+}: {
+  snapshot: TeamMappingSnapshot;
+  readOnly?: boolean;
+}) {
   const { setUnassignedDirty } = useTeamMappingDraft();
   const members = getUnassignedMembers(snapshot);
   const {
@@ -30,7 +36,12 @@ export function UnassignedMembers({ snapshot }: { snapshot: TeamMappingSnapshot 
     selectMemberDestination,
     toggleChecked,
     updateAssignments,
-  } = useUnassignedMembers({ snapshot, members, onDirtyChange: setUnassignedDirty });
+  } = useUnassignedMembers({
+    snapshot,
+    members,
+    readOnly,
+    onDirtyChange: setUnassignedDirty,
+  });
 
   if (members.length === 0) {
     return (

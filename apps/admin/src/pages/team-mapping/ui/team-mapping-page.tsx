@@ -1,4 +1,4 @@
-/** 팀 빌딩 전 빈 상태와 원본 팀 목록·필터를 제공한다. 실제 생성·상세는 후속 단계에서 연결한다. */
+/** 팀 빌딩 전·배정 중·확정됨 상태의 원본 목록과 화면 편집 진입을 제공한다. */
 import { overlay } from 'overlay-kit';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
 import { UsersRound } from 'lucide-react';
@@ -18,12 +18,19 @@ import {
   type TeamMappingSearch,
 } from '../model/team-search';
 import { TeamCard } from './team-card';
+import { TeamConfirmDialog } from './team-confirm-dialog';
 import { TeamCreateDialog } from './team-create-dialog';
 import { TeamDetailPanel } from './team-detail-panel';
 import * as styles from './team-mapping-page.css';
 import { TeamFilters } from './team-filters';
 import { UnassignedMembers } from './unassigned-members';
 import { TeamMappingDraftContext, useTeamMappingDraft } from './team-mapping-draft-context';
+import { useConfirmedTeamEditing } from './use-confirmed-team-editing';
+
+function formatConfirmationDate(confirmedAt: string): string {
+  const date = confirmedAt.split('T')[0];
+  return date === undefined ? confirmedAt : date.replaceAll('-', '. ');
+}
 
 /** 화면 상태에 따라 빈 상태 또는 읽기 전용 팀 목록을 표시한다. */
 export function TeamMappingPage({
@@ -42,6 +49,13 @@ export function TeamMappingPage({
   onCreateTeam?: () => void;
 }) {
   const draft = useTeamMappingDraft();
+  const {
+    isEditing: isConfirmedEditing,
+    startEditing,
+    requestExit,
+  } = useConfirmedTeamEditing({
+    status: snapshot.status,
+  });
   const hasTeams = snapshot.status !== 'before';
   const filterCounts = getTeamFilterCounts(snapshot);
   const teams = getTeamsForFilter(snapshot, search.filter);
@@ -60,12 +74,21 @@ export function TeamMappingPage({
     ));
   }
 
+  function openConfirmDialog() {
+    overlay.open(({ unmount }) => <TeamConfirmDialog snapshot={snapshot} onClose={unmount} />);
+  }
+
   function openTeamDetail(team: TeamMappingTeam) {
     onTeamSelect?.(team);
     if (onTeamSelect === undefined) {
       overlay.open(({ unmount }) => (
         <TeamMappingDraftContext.Provider value={draft}>
-          <TeamDetailPanel snapshot={snapshot} team={team} onClose={unmount} />
+          <TeamDetailPanel
+            snapshot={snapshot}
+            team={team}
+            onClose={unmount}
+            readOnly={snapshot.status === 'confirmed' && !isConfirmedEditing}
+          />
         </TeamMappingDraftContext.Provider>
       ));
     }
@@ -73,7 +96,12 @@ export function TeamMappingPage({
 
   function renderTeamContent() {
     if (search.filter === 'unassigned') {
-      return <UnassignedMembers snapshot={snapshot} />;
+      return (
+        <UnassignedMembers
+          snapshot={snapshot}
+          readOnly={snapshot.status === 'confirmed' && !isConfirmedEditing}
+        />
+      );
     }
 
     if (hasEmptyFilterResult) {
@@ -150,38 +178,73 @@ export function TeamMappingPage({
           />
         </section>
       ) : (
-        <section className={styles.teamListSection} aria-labelledby="team-mapping-list-title">
-          <div className={styles.listHeader}>
-            <div>
-              <h2 id="team-mapping-list-title" className={styles.listTitle}>
-                팀 목록
-              </h2>
-              <p className={styles.listSummary}>
-                총 {snapshot.teams.length}팀 · {assignedMemberCount}명 배정 ·{' '}
-                {filterCounts.unassigned}명 미배정
-              </p>
-            </div>
-            <ActionButton
-              type="button"
-              variant="neutralSolid"
-              aria-label="팀 만들기"
-              onClick={openCreateDialog}
-            >
-              팀 만들기
-            </ActionButton>
-          </div>
-          {search.filter === 'unassigned' && (
-            <section className={styles.unassignedSummary} aria-label="미배정 회원 요약">
-              <h3 className={styles.unassignedSummaryTitle}>
-                미배정 회원 {filterCounts.unassigned}명
-              </h3>
-              <p className={styles.unassignedSummaryDescription}>
-                아직 팀에 배정되지 않은 회원이 있어요.
-              </p>
+        <>
+          {snapshot.status === 'confirmed' && snapshot.confirmation !== null && (
+            <section className={styles.confirmationBanner} aria-label="확정 이력">
+              <div className={styles.confirmationContent}>
+                <span className={styles.confirmationEyebrow}>확정됨</span>
+                <h2 className={styles.confirmationTitle}>{snapshot.generation}기 팀 매핑</h2>
+                <p className={styles.confirmationDescription}>
+                  {formatConfirmationDate(snapshot.confirmation.confirmedAt)} ·{' '}
+                  {snapshot.confirmation.actorName} 확정
+                </p>
+                {isConfirmedEditing && (
+                  <output className={styles.editingDescription}>
+                    편집 중 · 팀원 배정만 변경할 수 있어요.
+                  </output>
+                )}
+              </div>
+              <ActionButton
+                type="button"
+                variant={isConfirmedEditing ? 'neutralWeak' : 'neutralSolid'}
+                onClick={isConfirmedEditing ? requestExit : startEditing}
+              >
+                {isConfirmedEditing ? '편집 종료' : '수정하기'}
+              </ActionButton>
             </section>
           )}
-          {renderTeamContent()}
-        </section>
+          <section className={styles.teamListSection} aria-labelledby="team-mapping-list-title">
+            <div className={styles.listHeader}>
+              <div>
+                <h2 id="team-mapping-list-title" className={styles.listTitle}>
+                  팀 목록
+                </h2>
+                <p className={styles.listSummary}>
+                  총 {snapshot.teams.length}팀 · {assignedMemberCount}명 배정 ·{' '}
+                  {filterCounts.unassigned}명 미배정
+                </p>
+              </div>
+              <div className={styles.listActions}>
+                {snapshot.status === 'draft' && (
+                  <ActionButton type="button" variant="neutralWeak" onClick={openConfirmDialog}>
+                    팀 확정
+                  </ActionButton>
+                )}
+                {snapshot.status !== 'confirmed' && (
+                  <ActionButton
+                    type="button"
+                    variant="neutralSolid"
+                    aria-label="팀 만들기"
+                    onClick={openCreateDialog}
+                  >
+                    팀 만들기
+                  </ActionButton>
+                )}
+              </div>
+            </div>
+            {search.filter === 'unassigned' && (
+              <section className={styles.unassignedSummary} aria-label="미배정 회원 요약">
+                <h3 className={styles.unassignedSummaryTitle}>
+                  미배정 회원 {filterCounts.unassigned}명
+                </h3>
+                <p className={styles.unassignedSummaryDescription}>
+                  아직 팀에 배정되지 않은 회원이 있어요.
+                </p>
+              </section>
+            )}
+            {renderTeamContent()}
+          </section>
+        </>
       )}
     </main>
   );
