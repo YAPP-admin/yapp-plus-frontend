@@ -45,10 +45,35 @@ Native는 deep link의 path와 query를 변경하지 않고 WebView에 전달합
 Native는 위 부모 흐름을 중복 생성하지 않습니다. 첫 로드 시 WebView의 현재 URL을 유지하고,
 웹의 history sync가 다음 URL을 관리하도록 둡니다.
 
-## 검증 체크리스트
+## 검증 책임
 
-- 표준 Android User-Agent와 `YAPPPlusWebView` 식별 토큰이 필요한 환경에서 유지되는가
-- 일반 화면에서 `canGoBack()`이 `true`일 때 `webView.goBack()`이 한 번만 호출되는가
+환경마다 확인할 수 있는 범위가 다르므로 실행하지 못한 항목을 다른 계층의 통과 결과로 대체하지
+않습니다.
+
+### 자동 테스트와 브라우저
+
+- route의 typed params, query와 `defaultHistory`가 URL에서 복원되는가
+- 탭 이동이 history를 추가하지 않고 실행 중 state를 보존하는가
+- browser back·forward와 Stackflow stack이 같은 화면을 가리키는가
+- 플랫폼·reduced motion·화면별 swipe 차단 정책이 합성되는가
+- reduced motion에서 이동 애니메이션과 edge swipe가 비활성화되는가
+
+### iOS Simulator
+
+- 일반 상세 화면은 edge swipe로 한 번만 뒤로 가는가
+- 입력 손실 위험이 있는 화면은 같은 edge swipe에도 유지되는가
+- 회전 전후 AppBar·본문·하단 메뉴에 safe-area가 한 번만 적용되는가
+- 직접 URL을 로드하고 새로고침해도 부모 흐름이 복원되는가
+
+### 실제 iOS 기기
+
+- 실제 노치와 홈 인디케이터에서 safe-area가 한 번만 적용되는가
+- cold launch와 background 복귀 후 WebView URL·Stackflow 상태가 유지되는가
+- 기기 설정의 reduced motion이 WebView 전환 정책에 반영되는가
+
+### Android Native
+
+- 표준 Android User-Agent와 `YAPPPlusWebView` 식별 토큰이 유지되는가
+- `canGoBack()`이 `true`일 때 `webView.goBack()`이 한 번만 호출되는가
 - root 화면에서 시스템 back 동작이 중복 호출되지 않는가
-- `/signup/status`, `/error`, `/notices/:noticeId`를 직접 로드해 부모 흐름이 복원되는가
-- iOS 노치와 홈 인디케이터에서 safe-area가 두 번 적용되지 않는가
+- `/signup/status`, `/error`, `/notices/:noticeId` deep link의 path와 query를 변경하지 않는가
