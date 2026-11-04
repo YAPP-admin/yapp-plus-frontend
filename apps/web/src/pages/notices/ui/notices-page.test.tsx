@@ -4,10 +4,14 @@ import { DEFAULT_NOTICES, NoticesPage } from './notices-page';
 
 vi.mock('@/app/navigation/activity-link', () => ({
   ActivityLink: ({
+    activityName: _activityName,
     activityParams,
     children,
     ...props
-  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { activityParams: { noticeId: string } }) => (
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+    activityName: string;
+    activityParams: { noticeId: string };
+  }) => (
     <a {...props} href={`/notices/${activityParams.noticeId}`}>
       {children}
     </a>
