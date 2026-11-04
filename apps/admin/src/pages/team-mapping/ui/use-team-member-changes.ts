@@ -28,6 +28,7 @@ type UseTeamMemberChangesResult = {
 export function useTeamMemberChanges(
   snapshot: TeamMappingSnapshot,
   team: TeamMappingTeam,
+  onDirtyChange?: (dirty: boolean) => void,
 ): UseTeamMemberChangesResult {
   const [changes, setChanges] = useState<readonly TeamMemberChange[]>([]);
   const [feedback, setFeedback] = useState<string | undefined>();
@@ -45,11 +46,14 @@ export function useTeamMemberChanges(
     }
 
     setChanges(nextChanges);
+    onDirtyChange?.(nextChanges.length > 0);
     setFeedback(undefined);
   }
 
   function cancelChange(activityId: string) {
-    setChanges(changes.filter((change) => change.activityId !== activityId));
+    const nextChanges = changes.filter((change) => change.activityId !== activityId);
+    setChanges(nextChanges);
+    onDirtyChange?.(nextChanges.length > 0);
     setFeedback(undefined);
   }
 
@@ -59,6 +63,7 @@ export function useTeamMemberChanges(
 
   function clearChanges() {
     setChanges([]);
+    onDirtyChange?.(false);
     setFeedback(undefined);
   }
 

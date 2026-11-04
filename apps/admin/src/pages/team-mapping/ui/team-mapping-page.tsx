@@ -23,6 +23,7 @@ import { TeamDetailPanel } from './team-detail-panel';
 import * as styles from './team-mapping-page.css';
 import { TeamFilters } from './team-filters';
 import { UnassignedMembers } from './unassigned-members';
+import { TeamMappingDraftContext, useTeamMappingDraft } from './team-mapping-draft-context';
 
 /** 화면 상태에 따라 빈 상태 또는 읽기 전용 팀 목록을 표시한다. */
 export function TeamMappingPage({
@@ -40,6 +41,7 @@ export function TeamMappingPage({
   onTeamSelect?: (team: TeamMappingTeam) => void;
   onCreateTeam?: () => void;
 }) {
+  const draft = useTeamMappingDraft();
   const hasTeams = snapshot.status !== 'before';
   const filterCounts = getTeamFilterCounts(snapshot);
   const teams = getTeamsForFilter(snapshot, search.filter);
@@ -51,14 +53,20 @@ export function TeamMappingPage({
 
   function openCreateDialog() {
     onCreateTeam?.();
-    overlay.open(({ unmount }) => <TeamCreateDialog snapshot={snapshot} onClose={unmount} />);
+    overlay.open(({ unmount }) => (
+      <TeamMappingDraftContext.Provider value={draft}>
+        <TeamCreateDialog snapshot={snapshot} onClose={unmount} />
+      </TeamMappingDraftContext.Provider>
+    ));
   }
 
   function openTeamDetail(team: TeamMappingTeam) {
     onTeamSelect?.(team);
     if (onTeamSelect === undefined) {
       overlay.open(({ unmount }) => (
-        <TeamDetailPanel snapshot={snapshot} team={team} onClose={unmount} />
+        <TeamMappingDraftContext.Provider value={draft}>
+          <TeamDetailPanel snapshot={snapshot} team={team} onClose={unmount} />
+        </TeamMappingDraftContext.Provider>
       ));
     }
   }

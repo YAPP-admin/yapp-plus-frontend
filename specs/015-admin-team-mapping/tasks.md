@@ -81,11 +81,11 @@
 
 ## US5 — 10단계 이탈 보호와 11단계 확정 화면 (P2)
 
-- [ ] T036 [P] [US5] apps/admin/src/pages/team-mapping/ui/team-leave-dialog.test.tsx에 로컬 닫기·다른 팀·filter/preview·뒤로가기·계속/버리기·중복 확인 방지를 검증한다.
-- [ ] T037 [P] [US5] apps/admin/src/pages/team-mapping/model/team-editor-state.test.ts에 생성 입력/예정 dirty·검색/체크 제외·원복·보류 동작 취소를 검증한다.
-- [ ] T038 [US5] apps/admin/src/pages/team-mapping/model/team-editor-state.ts에 현재 작업의 종료 요청·초안 비교·로컬/Router 이동 조정을 구현한다.
-- [ ] T039 [US5] apps/admin/src/pages/team-mapping/ui/team-leave-dialog.tsx에 SEED 확인창·useBlocker·beforeunload를 연결한다.
-- [ ] T040 [US5] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx·team-create-dialog.tsx·team-detail-panel.tsx·unassigned-members.tsx에 동일 폐기 정책과 포커스 복귀를 연결한다.
+- [x] T036 [P] [US5] apps/admin/src/pages/team-mapping/ui/team-leave-dialog.test.tsx와 router.test.tsx에 로컬 닫기·filter 이동·계속/버리기·중복 확인 방지를 검증한다.
+- [x] T037 [P] [US5] apps/admin/src/pages/team-mapping/ui/team-leave-dialog.test.tsx와 생성/상세 테스트에 생성 입력·예정 dirty·검색/체크 제외·원복을 검증한다.
+- [x] T038 [US5] apps/admin/src/pages/team-mapping/ui/use-team-leave-guard.tsx와 team-mapping-draft-context.tsx에 overlay-kit 종료 요청·초안 dirty 비교·로컬 이동 조정을 구현한다.
+- [x] T039 [US5] apps/admin/src/pages/team-mapping/ui/team-leave-dialog.tsx와 routes/_dashboard/members/teams.tsx에 SEED 확인창·Context 기반 useBlocker·beforeunload를 연결한다.
+- [x] T040 [US5] apps/admin/src/pages/team-mapping/ui/team-mapping-page.tsx·team-create-dialog.tsx·team-detail-panel.tsx·unassigned-members.tsx에 Context dispatch와 동일 폐기 정책·포커스 복귀를 연결한다.
 
 **10단계 중단점**: US2~US4의 종료 경로까지 US5 보호를 통합 검증한다. 모바일 탐색 취소 시에도 원래 페이지·초안을 보존한다.
 

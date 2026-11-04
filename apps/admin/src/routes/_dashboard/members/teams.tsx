@@ -1,8 +1,11 @@
 /** 팀 매핑 URL과 환경 공통 합성 fixture를 팀 매핑 페이지에 연결한다. */
-import { createFileRoute, stripSearchParams } from '@tanstack/react-router';
+import { createFileRoute, stripSearchParams, useBlocker } from '@tanstack/react-router';
 import { getTeamMappingFixture } from '~/features/team-management';
 import {
   TeamMappingPage,
+  TeamMappingDraftProvider,
+  TeamLeaveDialog,
+  useTeamMappingDraft,
   teamMappingSearchDefaults,
   teamMappingSearchSchema,
 } from '~/pages/team-mapping';
@@ -16,19 +19,40 @@ export const Route = createFileRoute('/_dashboard/members/teams')({
 });
 
 function TeamMappingRoute() {
+  return (
+    <TeamMappingDraftProvider>
+      <TeamMappingRouteContent />
+    </TeamMappingDraftProvider>
+  );
+}
+
+function TeamMappingRouteContent() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const { hasDirtyDraft } = useTeamMappingDraft();
+  const blocker = useBlocker({
+    shouldBlockFn: () => hasDirtyDraft,
+    enableBeforeUnload: hasDirtyDraft,
+    withResolver: true,
+  });
 
   return (
-    <TeamMappingPage
-      snapshot={getTeamMappingFixture(search.preview)}
-      search={search}
-      onPreviewChange={(preview) => {
-        void navigate({ search: (previous) => ({ ...previous, preview }), resetScroll: false });
-      }}
-      onFilterChange={(filter) => {
-        void navigate({ search: (previous) => ({ ...previous, filter }), resetScroll: false });
-      }}
-    />
+    <>
+      <TeamMappingPage
+        snapshot={getTeamMappingFixture(search.preview)}
+        search={search}
+        onPreviewChange={(preview) => {
+          void navigate({ search: (previous) => ({ ...previous, preview }), resetScroll: false });
+        }}
+        onFilterChange={(filter) => {
+          void navigate({ search: (previous) => ({ ...previous, filter }), resetScroll: false });
+        }}
+      />
+      <TeamLeaveDialog
+        open={blocker.status === 'blocked'}
+        onKeepEditing={() => blocker.reset?.()}
+        onDiscard={() => blocker.proceed?.()}
+      />
+    </>
   );
 }
