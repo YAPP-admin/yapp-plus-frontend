@@ -33,14 +33,39 @@ apps/web/
 가져오지 않으며, 슬라이스 외부에서는 공개 `index.ts`를 사용합니다. 다른 앱의 내부 파일을
 가져오지 않고 패키지 공개 진입점만 사용합니다.
 
+## Stackflow 탐색
+
+- `stackflow/src/stack.tsx`의 Activity route와 typed params를 URL·fallback 계약의 단일 진실
+  공급원으로 사용합니다. 새 화면은 직접 진입 시 필요한 부모 흐름까지 `defaultHistory`로
+  선언합니다.
+- 일반 화면 링크는 `ActivityLink`, 명령형 이동은 typed `useFlow`를 사용합니다. Next.js 호환
+  router, href mapper 또는 별도 navigation adapter를 만들지 않습니다.
+- 하단 메뉴는 `TabLink`의 `replaceStep`으로 현재 Tabs Activity를 갱신합니다. 탭 이동은 browser
+  history에 쌓거나 화면 전환 애니메이션을 실행하지 않습니다.
+- URL로 복원해야 하는 조회 조건은 Activity params에 포함합니다. `window.history` 직접 수정은
+  history-sync와 canonical URL을 조정하는 `src/app/navigation` 훅 또는 Stackflow plugin
+  경계에서만 수행합니다.
+- 일반 Activity의 push·replace·pop에는 `animate: false`를 지정하지 않고 플랫폼 전환 정책을
+  사용합니다. 여러 Stackflow 동작을 하나의 탭 전환으로 합치는 경우처럼 의도가 명확하고 테스트된
+  경로에서만 애니메이션을 끕니다.
+- 탭 panel은 React `Activity`로 표시·숨김을 제어합니다. 숨겨진 panel의 state와 DOM은 보존되지만
+  Effect는 정리되므로 timer와 전역 event listener는 cleanup을 제공해야 합니다.
+
 ## UI와 실행 환경
 
 공용 UI는 `@yapp-plus/ui`, API는 `@yapp-plus/api`, WebView 기능은
 `@yapp-plus/app-bridge/web`의 공개 API를 사용합니다. SEED 토큰과 vanilla-extract 스타일을
 사용하고 화면 안에 공용 컴포넌트나 토큰을 복제하지 않습니다.
 
+둘 이상의 앱이 사용하는 일반 SEED 스니펫은 `packages/ui`에 둡니다. Stackflow `AppScreen`처럼
+웹 앱의 탐색 의존성에 결합된 스니펫은 `apps/web/seed-design`에 두고, 단일 앱 때문에
+`packages/ui`에 Stackflow 의존성을 추가하지 않습니다.
+
 웹 앱은 일반 브라우저와 모바일 WebView에서 함께 실행됩니다. 브라우저 전용 전역 객체를
-렌더링 중 바로 읽지 않고, safe-area·터치·키보드·라이트/다크 모드를 확인합니다.
+렌더링 중 바로 읽지 않고, safe-area·터치·키보드·라이트/다크 모드를 확인합니다. 화면별 swipe
+차단은 화면 정책, reduced motion, 플랫폼 정책을 합성하며 생략된 prop으로 기존 차단을
+해제하지 않습니다. Native 뒤로가기와 deep link 책임은
+[WebView와 Native 탐색 계약](../../docs/webview-navigation-contract.md)을 따릅니다.
 
 ## 실행과 검증
 
@@ -63,4 +88,7 @@ mise exec -- node --run build
 ```
 
 브라우저에서 핵심 문구와 접근성 이름, 가로 스크롤, safe-area와 테마를 확인하고, 화면 동작을
-변경했다면 인접 테스트를 갱신합니다. `dist` 산출물과 도구 생성 파일은 직접 수정하지 않습니다.
+변경했다면 인접 테스트를 갱신합니다. 탐색 테스트는 URL·query·browser back·fallback과 상태
+복원을 검증하고 Stackflow 내부 DOM을 계약으로 삼지 않습니다. Link mock은 `activityName`,
+`activityParams` 같은 전용 prop을 소비한 뒤 HTML prop만 DOM에 전달합니다. `dist` 산출물과 도구
+생성 파일은 직접 수정하지 않습니다.

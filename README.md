@@ -95,10 +95,9 @@ Storybook 정적 문서는 [GitHub Pages](https://yapp-admin.github.io/yapp-plus
 pnpm dlx skills add https://github.com/daangn/seed-design --skill seed-design
 ```
 
-`packages/ui/seed-design.json`은 React·TSX·RSC 스니펫 경로를 정의하며 telemetry를 끕니다. 현재
-지원하고 검증한 범위는 React 19, `@seed-design/react` 2.5.0, `@seed-design/css` 2.8.3,
-`@seed-design/vite-plugin` 2.1.0, CLI 1.7.0입니다. 공용 UI의 peer 범위는
-`@seed-design/react ^2.5.0`, `@seed-design/css ^2.8.3`, React·ReactDOM 19 이상입니다.
+`packages/ui/seed-design.json`은 공용 React 스니펫 경로를, `apps/web/seed-design.json`은 웹 앱
+전용 Stackflow 스니펫 경로를 정의하며 telemetry를 끕니다. React와 SEED·Stackflow의 지원 버전은
+`pnpm-workspace.yaml` catalog와 각 패키지의 peer dependency를 단일 진실 공급원으로 사용합니다.
 
 공용 컴포넌트는 `@yapp-plus/ui`에서 가져옵니다. ActionButton은 Seed의 `loading`과 `disabled`를
 독립된 상태로 유지하므로 클릭을 막아야 하는 로딩 사례에서는 두 prop을 함께 전달합니다. Seed
@@ -122,23 +121,26 @@ import '@yapp-plus/ui/styles';
 
 기본 디자인 토큰과 전역 reset은 `packages/ui`가 관리합니다. 패키지의 일반 진입점을 가져오는
 것만으로 전역 스타일이 적용되지는 않습니다. web의 `global.css.ts`는 스타일을 다시 선언하는
-파일이 아니라 Turbopack이 외부 스타일 진입점을 추적하게 하는 연결 파일입니다.
+파일이 아니라 Vite 진입점에서 공용 스타일을 연결하는 파일입니다.
 
-web과 admin은 SSR 문서 head에서 `@yapp-plus/ui/seed-theme`의 공식 Manual 시스템 테마
-스크립트를 사용합니다. Storybook은 Vite builder의 `seedDesignPlugin()`으로 preview iframe에
-테마 스크립트와 `color-scheme` 메타를 주입합니다. Vite plugin은 Storybook만 개발 의존성으로
-소유합니다.
+web은 `seedDesignPlugin()`을 Vite에 연결하고, admin은 문서 head에서
+`@yapp-plus/ui/seed-theme`의 공식 Manual 시스템 테마 스크립트를 사용합니다. Storybook은 Vite
+builder의 `seedDesignPlugin()`으로 preview iframe에 테마 스크립트와 `color-scheme` 메타를
+주입합니다.
 
 현재 공용 UI는 ActionButton과 TextField 스니펫을 제공합니다. 아이콘은 Seed 공식 아이콘 패키지
 `@karrotmarket/react-monochrome-icon`을 사용하고, Seed 아이콘 래퍼 `Icon`·`PrefixIcon`은
 `@yapp-plus/ui`에서 가져옵니다. Seed에 없는 브랜드 로고만 화면에서 SVG로 관리합니다.
 
-스니펫을 추가하거나 갱신할 때는 `packages/ui`의 설정을 사용하고 생성 결과가 기존 React 19 코드와
-공개 API를 덮어쓰지 않는지 diff를 검토합니다. 새 컴포넌트와 필수 종속 스니펫만 추가합니다.
+둘 이상의 앱에서 사용하는 일반 UI 스니펫은 `packages/ui` 설정으로 추가합니다. Stackflow
+`AppScreen`처럼 웹 앱의 탐색 의존성에 결합된 스니펫은 `apps/web` 설정으로 추가하며, 단일 앱
+때문에 `packages/ui`에 Stackflow 의존성을 추가하지 않습니다. 생성 결과가 기존 React 19 코드와
+공개 API를 덮어쓰지 않는지 diff를 검토하고 새 컴포넌트와 필수 종속 스니펫만 추가합니다.
 
 ```sh
 pnpm dlx @seed-design/cli@1.7.0 add ui:action-button --cwd packages/ui
 pnpm dlx @seed-design/cli@1.7.0 compat --cwd packages/ui
+pnpm dlx @seed-design/cli@1.7.0 compat --cwd apps/web
 mise exec -- pnpm --filter @yapp-plus/ui test
 mise exec -- node --run check
 mise exec -- node --run build

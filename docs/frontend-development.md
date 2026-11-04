@@ -7,7 +7,7 @@
 [웹 작업 가이드](./web-development.md)에서 확인합니다.
 
 이 문서에는 여러 앱에서 반복될 수 있는 기술 선택과 경계만 둡니다. 관리자 전용 TanStack
-Router·Form·Table 규칙, 웹 전용 Next.js 규칙, 특정 화면의 제품 정책은 각 앱이나 기능 명세에
+Router·Form·Table 규칙, 웹 전용 Stackflow·Vite 규칙, 특정 화면의 제품 정책은 각 앱이나 기능 명세에
 작성합니다.
 
 `apps/admin`과 `apps/web`은 모두 SEED 기반의 DOM UI를 사용하므로 이 문서의 디자인 시스템과
@@ -108,6 +108,10 @@ React Compiler가 적용된 영역에서는 먼저 읽기 쉬운 일반 코드�
 라이브러리 계약상 필요한 경우가 아니면 `React.memo`, `useMemo`, `useCallback`을 선제적으로
 추가하지 않습니다.
 
+React 19를 사용하는 새 로컬 컴포넌트는 `ref`를 일반 prop으로 받고, 기존 라이브러리 호환 계약이
+없는 한 `forwardRef`를 새로 추가하지 않습니다. 문서 metadata는 JSX의 `<title>`·`<meta>`로
+선언하고 `useEffect`에서 `document.title`을 직접 변경하지 않습니다.
+
 ## 접근성과 상호작용
 
 - 입력에는 연결된 label과 명확한 accessible name을 제공합니다.
@@ -131,6 +135,8 @@ React Compiler가 적용된 영역에서는 먼저 읽기 쉬운 일반 코드�
 - 사용자 상호작용은 `userEvent`를 기본으로 사용합니다.
 - `fireEvent`는 `userEvent`로 표현할 수 없는 실제 이벤트(예: 파일 드롭)에만 제한적으로
   사용하고 이유를 남깁니다.
+- 컴포넌트 mock은 router·디자인 시스템 전용 prop을 명시적으로 소비한 뒤 유효한 HTML prop만
+  DOM에 전달합니다. 알 수 없는 prop 경고를 숨기기 위해 콘솔을 mock하지 않습니다.
 - 라우팅·모달·업로드처럼 여러 컴포넌트가 연결되는 기능은 route tree 기준의 대표 흐름을
   추가합니다.
 - 같은 실패 조합을 모델·컴포넌트·페이지에서 반복하지 않고, 오류가 처음 변환되거나 연결되는
@@ -167,6 +173,6 @@ React Compiler가 적용된 영역에서는 먼저 읽기 쉬운 일반 코드�
 
 - [관리자 앱 작업 가이드](./admin-development.md): TanStack Start/Router, 관리자 FSD, Query·Form·
   Table과 관리자 셸 규칙
-- [웹 작업 가이드](./web-development.md): Next.js App Router, 회원 앱 레이아웃·WebView·safe-area
+- [웹 작업 가이드](./web-development.md): Vite·Stackflow, 회원 앱 레이아웃·WebView·safe-area
   규칙
 - [기능별 명세](../specs/): 제품 정책, 화면 계약, 단계별 검증과 미연결 범위

@@ -10,13 +10,14 @@
 
 ## 적용 상태
 
-13개 회원 페이지의 Stackflow Activity와 화면 슬라이스를 구성했습니다. Vite HTML·Stackflow
-진입점은 `apps/web/stackflow`, 화면 코드는 `apps/web/src/pages`, Provider·전역 스타일·
-공통 페이지 레이아웃은 `apps/web/src/app`에 있습니다. 화면에는 제목과 공통 준비 중 안내를 제공합니다.
-홈·일정·공지·마이페이지는 하단 메뉴를 공유하며 홈과 마이페이지에는 바로가기 링크를 제공합니다.
-상세 화면에는 내부 이력 또는 고정 상위 경로로 돌아가는 뒤로가기를 제공합니다. 실제 본문 기능은 후속 단계입니다.
-로컬 개발에서는 홈의 개발용 링크와 `/dev/routes`에서 전체 화면을 확인할 수 있습니다.
-프로덕션 빌드에서는 개발용 목록에 404를 반환합니다. 미정의 주소에는 공통 404 안내와 홈 링크를 제공합니다.
+회원 앱은 Vite SPA와 Stackflow Activity로 구성합니다. Vite HTML·Stackflow 진입점은
+`apps/web/stackflow`, 화면 코드는 `apps/web/src/pages`, Provider·전역 스타일·공통 페이지
+레이아웃은 `apps/web/src/app`에 있습니다. 홈·일정·공지·마이페이지는 하나의 Tabs Activity 안에서
+하단 메뉴를 공유하고, 상세·인증 화면은 독립 Activity로 이동합니다. 직접 URL 진입은 route의
+`defaultHistory`로 부모 흐름을 복원합니다.
+
+로컬 개발에서는 홈의 개발용 링크와 `/dev/routes`에서 전체 화면을 확인할 수 있습니다. 프로덕션
+빌드에서는 개발용 목록에 404를 반환하며, 미정의 주소에는 공통 404 안내와 홈 링크를 제공합니다.
 
 적용 대상은 사용자 웹 앱입니다. 관리자·모바일 앱의 폴더 구조를 이 문서에 맞춰 변경하지
 않습니다.
@@ -78,18 +79,16 @@ apps/web/
 `stackflow/src/stack.tsx`가 URL과 Activity를 연결하고, `src/app`은 앱의 전역 구성을
 담당합니다. Activity는 `src/pages`의 공개 `index.ts`를 통해 화면 슬라이스를 조합합니다.
 
-라우트 그룹 `(tabs)`, `(auth)`는 URL에 포함되지 않습니다. 위 트리는 두 그룹의 화면별 하위
-경로를 생략했습니다. `(tabs)/layout.tsx`는 탭 이동 사이에 유지되는 공통 레이아웃이며,
-`TabsLayout`에서 `PageShell`과 하단 메뉴를 조합합니다. TabsActivity의 각 탭 panel은 React
+`TabsLayout`은 `PageShell`과 하단 메뉴를 조합합니다. Tabs Activity의 각 탭 panel은 React
 `Activity`로 표시·숨김을 제어해 실행 중 state·DOM을 보존하고 숨겨진 panel의 Effect를 정리합니다.
-하단 메뉴는 URL을 소유하는 typed `Link`이므로 SEED Tabs는 URL navigation과 분리된 local tab
+하단 메뉴는 URL을 소유하는 `TabLink`이므로 SEED Tabs는 URL navigation과 분리된 local tab
 control이 필요한 경우에만 사용합니다.
 
-포괄적인 `(detail)` 그룹은 사용하지 않습니다. 공지 상세·출석·설정은 각각 `notices`, `my`,
-`settings` 아래에 배치합니다. 각 상세 라우트의 `page.tsx`에서 `DetailLayout`과 화면을 조합하고
-직접 접근 시 복귀 경로를 전달합니다. 출석 내역과 규칙에 서로 다른 복귀 경로를 지정하고 중첩
-헤더를 피하기 위한 구조입니다. `DetailLayout`은 `PageShell`의 뒤로가기 슬롯을 사용합니다.
-`(tabs)`는 `PageShell`의 내비게이션 슬롯에 하단 메뉴를 넣고, `(auth)`는 `AuthLayout`으로 `PageShell`의 `plain` 옵션을 사용해 YAPP+ 문구와 구분선 없이 흰색 배경으로 표시합니다. 가입 정보 입력(`/signup`)과 승인 상태(`/signup/status`) 화면에만 헤더에 아이콘 뒤로가기를 표시하고, 이력이 없으면 `/login`으로 돌아갑니다. 가입 흐름 화면의 본문·하단 CTA 배치는 `shared/ui/step-screen.css.ts`를 사용합니다. 헤더와 safe-area는 셸에서 한 번만
+공지 상세·출석·설정 Activity는 `DetailLayout` 또는 `PageShell`을 조합합니다. `AuthLayout`은
+`PageShell`의 `plain` 옵션을 사용해 YAPP+ 문구와 구분선 없이 흰색 배경으로 표시합니다. 가입
+정보 입력(`/signup`)과 승인 상태(`/signup/status`) 화면에만 헤더에 아이콘 뒤로가기를 표시하고,
+이력이 없으면 `/login`으로 돌아갑니다. 가입 흐름 화면의 본문·하단 CTA 배치는
+`shared/ui/step-screen.css.ts`를 사용합니다. 헤더와 safe-area는 AppScreen과 셸에서 한 번만
 적용하고 페이지 본문에 중복 적용하지 않습니다. 여러 준비 중 페이지의 도메인 비의존 스타일은
 `shared/ui/page.css.ts`를 사용합니다.
 
@@ -157,6 +156,32 @@ export { HomePage } from './ui/home-page';
 홈과 마이페이지의 기본 본문·바로가기 스타일은 `shared/ui`에서 가져옵니다.
 화면 전용 스타일이 필요해지면 해당 슬라이스의 `ui`에 작성합니다.
 
+## Stackflow 탐색 계약
+
+`stackflow/src/stack.tsx`의 Activity route와 typed params가 URL·fallback 계약의 단일 진실
+공급원입니다. 새 화면을 추가할 때는 Activity 컴포넌트, route와 params를 함께 등록하고 직접 진입에
+부모 흐름이 필요하면 `defaultHistory`를 선언합니다. path를 Activity로 다시 해석하는 별도 mapper나
+Next.js 호환 router를 만들지 않습니다.
+
+- 일반 선언형 이동은 `ActivityLink`, 명령형 이동은 typed `useFlow`를 사용합니다.
+- 하단 메뉴는 `TabLink`와 `replaceStep`으로 현재 Tabs Activity를 갱신합니다. 탭 이동은 browser
+  history에 쌓지 않고 애니메이션을 실행하지 않습니다.
+- 일반 Activity의 push·replace·pop은 AppScreen의 플랫폼별 전환을 사용합니다. `animate: false`는
+  여러 동작을 하나의 탭 전환으로 합치는 등 의도가 명확한 경로에만 사용합니다.
+- URL로 복원해야 하는 조회 조건은 Activity params에 포함합니다. history-sync가 기록을 완료한 뒤
+  canonical URL을 조정해야 할 때만 `src/app/navigation` 훅 또는 Stackflow plugin 안에서
+  `window.history`를 직접 수정합니다.
+- 뒤로가기는 Stackflow stack을 우선 사용하고 직접 진입의 fallback은 route의 `defaultHistory`로
+  복원합니다. Native가 부모 Activity를 중복 생성하지 않도록 합니다.
+
+화면별 swipe 차단은 화면 정책, reduced motion, 플랫폼 정책의 OR 조건입니다. iOS 일반 화면만
+edge swipe를 허용하고 입력 손실 위험이 있는 화면, reduced motion, Android와 일반 web에서는
+차단합니다. 화면 prop을 생략했다고 플랫폼 정책을 `undefined`로 덮어쓰지 않습니다.
+
+Tabs Activity의 panel은 CSS `hidden` wrapper 대신 React `Activity`를 사용합니다. hidden panel은
+state와 DOM을 보존하지만 Effect를 정리하므로 timer, subscription과 전역 event listener는 cleanup을
+반환해야 합니다. 탭을 다시 열면 Effect가 새로 시작된다는 수명 계약을 전제로 작성합니다.
+
 ## 명명과 스타일
 
 - 파일·폴더는 `home-page.tsx`, `report-attendance`처럼 kebab-case로 작성합니다.
@@ -183,8 +208,9 @@ mise exec -- pnpm --filter @yapp-plus/web dev
 ```
 
 페이지를 추가할 때는 `apps/web/src/pages/<화면>`에 화면을 작성하고, `stackflow/src/stack.tsx`에
-Activity와 URL·fallback을 등록합니다. 하단 메뉴나 인증 화면의 공통 레이아웃은 `src/app/layouts`에서
-조합하고, Activity에서는 화면 슬라이스의 공개 `index.ts`만 가져옵니다.
+Activity의 typed params, URL과 `defaultHistory`를 등록합니다. 하단 메뉴나 인증 화면의 공통
+레이아웃은 `src/app/layouts`에서 조합하고, Activity에서는 화면 슬라이스의 공개 `index.ts`만
+가져옵니다.
 
 ## SEED와 공용 UI 사용
 
@@ -205,10 +231,14 @@ import { ActionButton } from '@yapp-plus/ui';
 ```
 
 SEED 컴포넌트가 필요할 때는 [공식 React 컴포넌트 문서](https://seed-design.io/react/components)와
-현재 `packages/ui/seed-design.json`을 확인합니다. CLI 스니펫은 `packages/ui`에서만 추가하고,
-생성된 코드의 공개 export와 기존 React 19 계약을 검토한 뒤 화면에서 사용합니다. 토큰은
-`@seed-design/css/vars`와 기존 vanilla-extract 스타일을 사용하며 임의의 색상·간격 상수를
-새로 만들지 않습니다.
+소유 위치의 `seed-design.json`을 확인합니다. 둘 이상의 앱이 사용하는 일반 UI 스니펫은
+`packages/ui`에 추가하고 공개 진입점으로 제공합니다. Stackflow `AppScreen`처럼 웹 앱의 탐색
+의존성에 결합된 스니펫은 `apps/web/seed-design`에 두며, 단일 앱 때문에 `packages/ui`에 Stackflow
+의존성을 추가하지 않습니다.
+
+CLI 생성 결과는 React 19 계약과 기존 공개 API를 덮어쓰지 않는지 diff를 검토합니다. 토큰은
+`@seed-design/css/vars`와 기존 vanilla-extract 스타일을 사용하며 임의의 색상·간격 상수를 새로
+만들지 않습니다.
 
 ## 브라우저와 WebView 확인
 
@@ -222,6 +252,11 @@ SEED 컴포넌트가 필요할 때는 [공식 React 컴포넌트 문서](https:/
 - 작은 화면에서 가로 스크롤이나 텍스트 잘림이 없는지
 - 키보드·터치 입력과 `:focus-visible` 상태가 동작하는지
 - 시스템 라이트·다크 모드에서 SEED 색상 토큰의 대비가 유지되는지
+
+탐색 변경은 자동 테스트에서 URL·query·browser back·`defaultHistory`와 탭 상태 복원을 확인합니다.
+iOS Simulator에서는 일반 화면과 입력 화면의 edge swipe, 회전과 safe-area를 확인합니다. 실제 iOS
+기기와 Android Native에서만 확인할 항목은
+[WebView와 Native 탐색 계약](./webview-navigation-contract.md)의 검증 책임 구분을 따릅니다.
 
 화면 정책에 없는 로딩·오류·빈 상태를 임의로 확정하지 않습니다. 필요한 상태가 불분명하면
 기획 원문에 질문을 남기고, 구현에서는 확인된 상태와 기존 컴포넌트 계약만 반영합니다.
@@ -246,7 +281,6 @@ AI에게 제품 정책이나 출시 범위를 추측하게 하지 않습니다. 
 ## 참고 자료
 
 - [선택적 FSD 구성 참고 저장소](https://github.com/YAPP-Github/28th-Web-Team-4-FE/blob/main/docs/architecture.md)
-- [FSD의 Next.js 연동 가이드](https://fsd.how/kr/docs/guides/tech/with-nextjs/)
 - [SEED Design React 컴포넌트](https://seed-design.io/react/components)
 - [SEED Design React 설치](https://seed-design.io/react/getting-started/installation/manual)
 
