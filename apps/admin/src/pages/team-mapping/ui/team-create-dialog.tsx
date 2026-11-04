@@ -1,6 +1,6 @@
 /** 팀 생성 입력과 다음 단계의 회원 선택 영역을 제공한다. 실제 생성은 아직 연결하지 않는다. */
 import { type FormEventHandler, type KeyboardEventHandler } from 'react';
-import { revalidateLogic, useForm } from '@tanstack/react-form';
+import { revalidateLogic, useForm, useStore } from '@tanstack/react-form';
 import { Dialog, Portal } from '@seed-design/react';
 import { ActionButton, TextField, TextFieldInput } from '@yapp-plus/ui';
 import { X } from 'lucide-react';
@@ -14,6 +14,8 @@ import {
 } from '~/features/team-management';
 import * as styles from './team-create-dialog.css';
 import { TeamMemberSearch } from './team-member-search';
+import { useTeamMappingDraft } from './team-mapping-draft-context';
+import { useTeamLeaveGuard } from './use-team-leave-guard';
 
 /** 생성 모달의 화면 상태와 초안 변경을 부모에 전달하는 입력 계약이다. */
 type TeamCreateDialogProps = {
@@ -60,6 +62,7 @@ function getFieldErrorMessage(errors: readonly unknown[]): string | undefined {
 
 /** 팀 생성 입력 모달입니다. 회원 선택은 7단계에서 이 영역에 연결합니다. */
 export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDialogProps) {
+  const { setCreateDirty } = useTeamMappingDraft();
   const form = useForm({
     defaultValues: initialValues,
     validationLogic: revalidateLogic({ mode: 'blur', modeAfterSubmission: 'change' }),
@@ -67,6 +70,17 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
       onDynamic: createTeamDraftSchema(snapshot),
     },
     onSubmit: ({ value }) => onCreate?.(value),
+    listeners: {
+      onChange: ({ formApi }) => setCreateDirty(!formApi.state.isDefaultValue),
+    },
+  });
+  const dirty = useStore(form.store, (state) => !state.isDefaultValue);
+  const { requestLeave } = useTeamLeaveGuard({
+    dirty,
+    onLeave: () => {
+      setCreateDirty(false);
+      onClose();
+    },
   });
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
@@ -75,14 +89,7 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
   };
 
   return (
-    <Dialog.Root
-      open
-      onOpenChange={(nextOpen) => {
-        if (!nextOpen) {
-          onClose();
-        }
-      }}
-    >
+    <Dialog.Root open onOpenChange={(nextOpen) => !nextOpen && requestLeave()}>
       <Portal>
         <Dialog.Backdrop />
         <Dialog.Positioner>
@@ -180,14 +187,14 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
                         <TeamMemberSearch
                           snapshot={snapshot}
                           selectedActivityIds={field.state.value}
-                          onSelect={(activityId) =>
-                            field.handleChange([...field.state.value, activityId])
-                          }
-                          onRemove={(activityId) =>
+                          onSelect={(activityId) => {
+                            field.handleChange([...field.state.value, activityId]);
+                          }}
+                          onRemove={(activityId) => {
                             field.handleChange(
                               field.state.value.filter((selectedId) => selectedId !== activityId),
-                            )
-                          }
+                            );
+                          }}
                         />
                         {field.state.meta.errors.length > 0 && (
                           <p>{getFieldErrorMessage(field.state.meta.errors)}</p>
@@ -198,7 +205,7 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
                 </form.Field>
               </Dialog.Body>
               <Dialog.Footer className={styles.footer}>
-                <ActionButton type="button" variant="neutralWeak" onClick={onClose}>
+                <ActionButton type="button" variant="neutralWeak" onClick={requestLeave}>
                   취소
                 </ActionButton>
                 <ActionButton

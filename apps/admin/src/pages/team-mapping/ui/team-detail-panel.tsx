@@ -14,8 +14,10 @@ import { TeamPendingChanges } from './team-pending-changes';
 import { TeamMemberList } from './team-member-list';
 import { TeamMemberSearchPanel } from './team-member-search-panel';
 import * as styles from './team-detail-panel.css';
+import { useTeamMappingDraft } from './team-mapping-draft-context';
 import { useTeamMemberChanges } from './use-team-member-changes';
 import { useTeamMemberSearch } from './use-team-member-search';
+import { useTeamLeaveGuard } from './use-team-leave-guard';
 
 type TeamDetailPanelProps = {
   snapshot: TeamMappingSnapshot;
@@ -24,6 +26,7 @@ type TeamDetailPanelProps = {
 };
 
 export function TeamDetailPanel({ snapshot, team, onClose }: TeamDetailPanelProps) {
+  const { setDetailDirty } = useTeamMappingDraft();
   const panelRef = useRef<HTMLDivElement>(null);
   const [panelElement, setPanelElement] = useState<HTMLDivElement | null>(null);
   const counts = getTeamPartCounts(snapshot, team);
@@ -35,24 +38,23 @@ export function TeamDetailPanel({ snapshot, team, onClose }: TeamDetailPanelProp
     clearChanges,
     selectDestination,
     getSelection,
-  } = useTeamMemberChanges(snapshot, team);
+  } = useTeamMemberChanges(snapshot, team, setDetailDirty);
   const { isAddOpen, query, candidates, toggleAdd, setQuery, selectMember } = useTeamMemberSearch({
     snapshot,
     team,
     changes,
     onSelectMember: addMember,
   });
+  const { requestLeave } = useTeamLeaveGuard({
+    dirty: changes.length > 0,
+    onLeave: () => {
+      setDetailDirty(false);
+      onClose();
+    },
+  });
 
   return (
-    <SidePanel.Root
-      direction="right"
-      open
-      onOpenChange={(open) => {
-        if (!open) {
-          onClose();
-        }
-      }}
-    >
+    <SidePanel.Root direction="right" open onOpenChange={(open) => !open && requestLeave()}>
       <Portal>
         <SidePanel.Backdrop />
         <SidePanel.Positioner>
