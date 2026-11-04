@@ -163,3 +163,15 @@
 - 근접 검증: 확정 요약 2개, 팀 매핑 페이지 확정·조회 3개를 포함한 집중 테스트 21개가 통과했다. 관리자 전체 테스트는 71개 파일·655개 테스트가 통과했다.
 - 품질 게이트: `node --run check` 통과(이번 admin lint/typecheck/test는 새 실행, 나머지는 Turbo 캐시 재사용), `node --run build` 통과(admin build는 새 실행, 나머지는 Turbo 캐시 재사용), `git diff --check` 통과.
 - 사용자 리뷰: 대기. 배정 중 확정 요약, 확정됨 배너·조회 전용 상세, 수정하기 진입과 팀원 배정 편집 범위를 확인한 뒤 12단계 통합 검증을 시작한다.
+
+## 12단계 — 통합 검증 (진행 중)
+
+- 브라우저 화면: 개발 서버 `http://localhost:3001/members/teams?preview=draft`에서 8팀·42명 배정·10명 미배정 목록과 팀 확정 요약 모달을 확인했다. `preview=confirmed`에서는 확정 이력 배너, 새 팀 만들기 미표시, 수정하기와 원본 8팀 목록을 확인했다.
+- 운영 빌드: `node --run build`로 만든 Nitro 서버를 `http://localhost:3002/members/teams?preview=confirmed`에서 열어 개발과 같은 `12기 팀 매핑`, `2026. 10. 17 · 운영자 김관리 확정` fixture 이력과 수정하기를 확인했다. API 요청·Query/Mutation·모의 저장소·localStorage·성공 토스트는 추가하지 않았다.
+- Figma 비교: research.md의 12개 노드를 다시 대조했다. 빌딩 전·생성·후보 검색/선택·배정 중 카드·상세/회원 메뉴·미배정 배정·확정 모달·확정됨은 현재 범위에 대응한다. `683:39402`의 확인 필요 필터와 PM·Design 경고는 사용자 결정으로 구현하지 않았고, 생성/확정 성공 토스트는 실제 실행이 없으므로 고정 시각 사례도 만들지 않았다.
+- 접근성·키보드: 브라우저 DOM에서 현재 위치, 페이지 제목, 상태/필터 combobox, 팀 목록 region, 확정 이력 region, 카드 상세 버튼과 비활성 더보기의 이름·역할을 확인했다. 단위·라우터 테스트는 Enter/Escape, Select, 이탈 확인, 읽기 전용·편집 모드 전환을 검증한다. 실제 VoiceOver 낭독은 이번 환경에서 실행하지 않았다.
+- 터치·375px: Chrome viewport override를 외형 폭 375px·높이 812px로 적용해 `preview=draft`·`confirmed`를 시각 점검했다. 자동화 브라우저의 축소 비율 때문에 CSS `innerWidth`는 500px로 보고되지만 `outerWidth`는 375px이며, 가로 넘침은 없었다. 모바일 메뉴, 세로형 상태/필터 선택, 확정 이력 배너, 카드의 팀원 줄바꿈, 팀 확정 모달, Orbit 상세 SidePanel을 확인했다. 실제 손가락 터치와 VoiceOver 낭독은 이 환경에서 실행하지 않았다.
+- 공용 UI: `@yapp-plus/ui`와 Storybook은 수정하지 않았다. 기존 SEED Dialog·AlertDialog·SidePanel·Select와 기존 공용 ActionButton/ResultSection만 조합했으므로 공용 Storybook 사례 변경 대상이 없다.
+- 품질 게이트: 11단계 완료 시 `node --run check` 통과(admin lint/typecheck/test 새 실행, 나머지는 Turbo 캐시 재사용), `node --run build` 통과(admin build 새 실행, 나머지는 Turbo 캐시 재사용)했다. 편집 모드 훅 분리 후 팀 매핑 페이지·확정 모달·라우터 집중 테스트 116개와 oxlint, `git diff --check`를 새로 통과했다. 이후 최신 `origin/main` 위로 9~11단계를 재배치한 뒤 `mise exec -- node --run check`와 `mise exec -- node --run build`를 다시 실행해 통과했다. 두 명령 모두 admin 작업은 새로 실행했고, 변경되지 않은 패키지 작업은 Turbo 캐시를 재사용했다. 테스트의 기존 오류 경계·Drawer jsdom 경고와 빌드 청크 경고는 있었으나 exit code는 0이었다.
+- 기준점 점검: 최신 `origin/main`은 `9345edd`다. 1~~8단계는 `main`에 새 commit SHA로 이미 반영돼 있어, 현재 브랜치는 9~~11단계만 재적용했다. 스택은 9단계 `+631/-27`(658줄), 10단계 `+446/-49`(495줄), 11단계와 이 검증 기록 `+520/-49` 이하(569줄 이하)로 각각 800줄 미만이다. 9단계는 650줄을 넘어섰으나 기능·테스트·검증 기록이 하나의 검토 단위여서 더 나누지 않는다.
+- 남은 항목: 375px 브라우저 시각 점검은 완료했다. 실제 손가락 터치와 VoiceOver 낭독, `.context/`에 저장 가능한 화면 캡처 증빙은 이 자동화 세션에서 제공되지 않아 남아 있다. 따라서 T046과 최종 리뷰·PR 준비는 아직 완료하지 않았다.
