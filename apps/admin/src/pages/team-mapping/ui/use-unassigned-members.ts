@@ -26,15 +26,17 @@ export function useUnassignedMembers({
   snapshot,
   members,
   onDirtyChange,
+  readOnly: readOnlyOverride,
 }: {
   snapshot: TeamMappingSnapshot;
   members: readonly TeamMappingMember[];
   onDirtyChange?: (dirty: boolean) => void;
+  readOnly?: boolean;
 }) {
   const [checkedActivityIds, setCheckedActivityIds] = useState<ReadonlySet<string>>(new Set());
   const [changes, setChanges] = useState<readonly TeamMemberChange[]>([]);
   const [feedback, setFeedback] = useState<string | undefined>();
-  const isReadOnly = snapshot.status === 'confirmed';
+  const isReadOnly = readOnlyOverride ?? snapshot.status === 'confirmed';
   const pendingByActivityId = new Map(changes.map((change) => [change.activityId, change]));
   const checkedIds = members
     .filter((member) => checkedActivityIds.has(member.activityId))
