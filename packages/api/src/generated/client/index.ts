@@ -24,4 +24,4 @@ export type {
   ResponseStyle,
   TDataShape,
 } from './types.gen';
-export { createConfig, mergeHeaders } from './utils.gen';
+export { createConfig, headersToObject, mergeHeaders } from './utils.gen';

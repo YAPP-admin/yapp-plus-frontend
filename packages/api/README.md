@@ -119,3 +119,14 @@ Zod 검증을 거치지 않으므로 생성 타입을 사용하고, 필요할 �
   기존 화면의 직접 mock 서비스를 생성 SDK로 전환하는 작업도 별도입니다.
 
 앱별 실행과 worker 갱신은 [어드민](../../apps/admin/README.md), [회원 웹](../../apps/web/README.md)을 참고합니다.
+
+## SDK 결함 회귀 검증
+
+#158~#161에 한해 사용자가 SDK 전용 최소 회귀 테스트를 허용했습니다.
+`mise exec -- pnpm --filter @yapp-plus/api test`는 실제 생성 함수와 Ky를 사용하고
+응답만 메모리 fetch로 제공합니다. 실제 백엔드·인증·브라우저 통합을 대신하지 않습니다.
+
+Hey API 0.99.0의 Ky 헤더 생성 결함은 `patches/@hey-api__openapi-ts@0.99.0.patch`로
+생성기 원본 템플릿에 적용합니다. `pnpm install --frozen-lockfile` 후 재생성에도 유지됩니다.
+버전 업그레이드 시 upstream 수정 여부와 회귀 테스트를 확인하고 해결되면 패치를 제거합니다.
+생성 파일을 직접 고치지 않으며 롤백은 패치·lockfile·생성 결과를 함께 되돌립니다.
