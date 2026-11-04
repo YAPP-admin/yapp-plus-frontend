@@ -186,6 +186,38 @@ describe('관리자 라우팅', () => {
     expect(screen.getByRole('combobox', { name: '팀 목록 필터' })).toHaveTextContent('전체 팀 · 8');
   });
 
+  it('미배정 배정 예정이 있으면 필터 이동 전에 이탈을 확인한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/members/teams?preview=draft');
+
+    await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
+    await user.click(await screen.findByRole('option', { name: '미배정 회원 · 10' }));
+    await screen.findByRole('heading', { name: '미배정 회원 10명' });
+
+    await user.click(screen.getByRole('combobox', { name: '이도윤 대상 팀' }));
+    const orbitOptions = await screen.findAllByRole('option', { name: 'Orbit으로 배정' });
+    const orbitOption = orbitOptions.find((option) => option.closest('[data-hidden]') === null);
+    if (orbitOption === undefined) {
+      throw new Error('Orbit 배정 옵션을 찾을 수 없습니다.');
+    }
+    await user.click(orbitOption);
+
+    await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
+    await user.click(await screen.findByRole('option', { name: '전체 팀 · 8' }));
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('변경을 버리고 나갈까요?');
+    expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned');
+
+    await user.click(screen.getByRole('button', { name: '계속 편집' }));
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+    expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned');
+
+    await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
+    await user.click(await screen.findByRole('option', { name: '전체 팀 · 8' }));
+    await user.click(await screen.findByRole('button', { name: '변경 버리기' }));
+    await waitFor(() => expect(router.state.location.href).toBe('/members/teams?preview=draft'));
+    expect(await screen.findByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
+  });
+
   it('클라이언트 이동으로 로그인에 진입하면 대시보드 메뉴가 사라진다', async () => {
     const router = await renderRoute('/');
 

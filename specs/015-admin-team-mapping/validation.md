@@ -138,3 +138,17 @@
 - 구조 개선: `UnassignedMembers`에서 상태·검증을 `useUnassignedMembers`로, 회원 한 행을 `UnassignedMemberRow`로, 개별·일괄 팀 선택을 `UnassignedTeamSelect`로 분리했다. 상위 컴포넌트는 빈 상태·툴바·목록 조합만 담당한다.
 - 구조 개선 후 검증: 집중 테스트 2개 파일·11개 테스트, `mise exec -- node --run check`를 다시 실행해 통과했다. 관리자 전체 테스트는 앞선 실행과 동일하게 69개 파일·643개 테스트 통과 상태다.
 - 사용자 리뷰: 대기. 체크 해제와 배정 예정 취소의 차이, 일괄 덮어쓰기, 실제 반영 비활성 상태를 확인한 뒤 10단계 이탈 보호를 시작한다.
+
+## 10단계 — 이탈 보호
+
+- 변경: `TeamLeaveDialog`와 `useTeamLeaveGuard`를 추가해 팀 생성 모달·팀 상세 패널의 닫기/취소/배경 이탈을 공통 처리한다. 변경이 없으면 바로 닫고, 변경이 있으면 `overlay.openAsync`로 `계속 편집`·`변경 버리기` 결과를 기다린다. 로컬 guard는 React state/effect 없이 overlay를 열고 종료 결과만 처리한다.
+- dirty 공급: `TeamMappingDraftProvider`가 생성·상세·미배정 초안의 dirty 상태와 합산값을 한 곳에서 관리한다. overlay-kit 포털로 열리는 모달·패널에도 같은 Context 값과 dispatch를 주입해 라우트 blocker가 동일한 상태를 읽는다.
+- TanStack Form: 생성 폼은 `listeners.onChange`에서 `formApi.state.isDefaultValue`를 기준으로 Context를 갱신하고, `useStore(form.store, state => !state.isDefaultValue)`로 로컬 종료 여부를 계산한다. 따라서 검색·검증 blur는 dirty가 아니며 값을 원래대로 되돌리면 확인창이 사라진다.
+- 라우터 보호: 팀 매핑 라우트에 TanStack Router `useBlocker`와 `enableBeforeUnload`를 연결했다. 미배정 배정 예정이 있는 상태에서 필터·화면 상태·뒤로가기·다른 페이지 이동을 시도하면 URL과 초안을 유지한 채 확인한다.
+- dirty 기준: 팀 생성은 이름·서비스명·선택 회원이 원래 값과 다를 때만 dirty로 보고, 검색어·검증 blur만으로는 확인하지 않는다. 상세 패널은 회원 변경 예정이 있을 때만, 미배정 화면은 배정 예정이 있을 때만 dirty로 보고 체크만 한 경우에는 확인하지 않는다.
+- 폐기 정책: `계속 편집`은 현재 입력·패널·필터와 URL을 보존한다. `변경 버리기`는 로컬 초안을 제거한 뒤 원래 닫기 또는 Router 이동을 실행한다. 실제 저장·API 요청·성공 알림은 추가하지 않았다.
+- 포커스: SEED Dialog·AlertDialog·SidePanel의 기본 포커스 관리에 위임하고, 확인창을 닫으면 현재 편집 UI로 돌아간다. 로컬 확인창은 기본 Dialog가 닫힌 뒤 표시되도록 제어해 접근성 레이어가 서로 가리지 않게 했다.
+- 근접 검증: 이탈 확인 단위 테스트 3개, 생성 모달·상세 패널 테스트 11개, 라우터 테스트 103개가 통과했다. 관리자 전체 테스트는 70개 파일·650개 테스트가 통과했다.
+- 품질 게이트: `node --run check` 통과(이번 변경이 있는 admin lint/typecheck/test는 새 실행, 나머지는 Turbo 캐시 재사용), `node --run build` 통과(admin build는 새 실행, 나머지는 Turbo 캐시 재사용). `oxfmt`와 `git diff --check`도 통과했다.
+- 변경량: Stage 10 증분은 공통 이탈 확인·guard·라우트 연결·테스트·문서 변경으로 약 260줄이다. 650줄 미만이며 독립 PR 분리 없이 하나의 리뷰 단위로 유지한다.
+- 사용자 리뷰: 대기. 생성 모달·상세 패널 닫기, 미배정 배정 예정 후 필터 이동, 계속 편집/변경 버리기, 체크만 한 상태에서 확인창이 뜨지 않는 동작을 확인한 뒤 11단계 확정 화면을 시작한다.

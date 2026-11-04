@@ -3,6 +3,7 @@ import { getUnassignedMembers, type TeamMappingSnapshot } from '~/features/team-
 import { UnassignedMemberRow } from './unassigned-member-row';
 import { UnassignedTeamSelect } from './unassigned-team-select';
 import { useUnassignedMembers } from './use-unassigned-members';
+import { useTeamMappingDraft } from './team-mapping-draft-context';
 import * as styles from './unassigned-members.css';
 
 function EmptyState({ title, description }: { title: string; description: string }) {
@@ -16,6 +17,7 @@ function EmptyState({ title, description }: { title: string; description: string
 
 /** 미배정 회원 영역은 하위 상태 훅과 행 컴포넌트를 조합한다. */
 export function UnassignedMembers({ snapshot }: { snapshot: TeamMappingSnapshot }) {
+  const { setUnassignedDirty } = useTeamMappingDraft();
   const members = getUnassignedMembers(snapshot);
   const {
     checkedActivityIds,
@@ -28,7 +30,7 @@ export function UnassignedMembers({ snapshot }: { snapshot: TeamMappingSnapshot 
     selectMemberDestination,
     toggleChecked,
     updateAssignments,
-  } = useUnassignedMembers({ snapshot, members });
+  } = useUnassignedMembers({ snapshot, members, onDirtyChange: setUnassignedDirty });
 
   if (members.length === 0) {
     return (

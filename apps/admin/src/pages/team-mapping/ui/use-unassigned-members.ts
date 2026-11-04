@@ -25,9 +25,11 @@ function replaceAssignments(
 export function useUnassignedMembers({
   snapshot,
   members,
+  onDirtyChange,
 }: {
   snapshot: TeamMappingSnapshot;
   members: readonly TeamMappingMember[];
+  onDirtyChange?: (dirty: boolean) => void;
 }) {
   const [checkedActivityIds, setCheckedActivityIds] = useState<ReadonlySet<string>>(new Set());
   const [changes, setChanges] = useState<readonly TeamMemberChange[]>([]);
@@ -51,6 +53,7 @@ export function useUnassignedMembers({
     }
 
     setChanges(nextChanges);
+    onDirtyChange?.(nextChanges.length > 0);
     setFeedback(undefined);
   }
 
