@@ -4,7 +4,7 @@ import { BackButton } from '@/app/navigation/back-button';
 import { IconCameraLine, IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import { Image } from '@/app/navigation/image';
-import { useRouter, useSearchParams } from '@/app/navigation/router';
+import { useFlow } from '@stackflow/react/future';
 import { useRef, useState } from 'react';
 import {
   body,
@@ -54,9 +54,8 @@ const DEFAULT_MEMBERS: TeamMember[] = [
   { id: '5', name: '최야뿌', role: 'Server', checked: true },
 ];
 
-export function TeamAttendanceUploadPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
+export function TeamAttendanceUploadPage({ simulateError = false }: { simulateError?: boolean }) {
+  const flow = useFlow();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // 기본적으로 피그마처럼 샘플 사진이 들어가 있거나, 사용자가 직접 올릴 수 있게 지원
@@ -78,18 +77,21 @@ export function TeamAttendanceUploadPage() {
   }
 
   function handleSubmit() {
-    const isError = searchParams?.get('error') === 'true';
-    if (isError) {
-      router.push('/team-attendance/error');
+    if (simulateError) {
+      flow.push('TeamAttendanceError', {});
     } else {
-      router.push('/team-attendance/complete');
+      flow.push('TeamAttendanceComplete', {});
     }
   }
 
   return (
     <div className={container}>
       <header className={header}>
-        <BackButton fallback="/" iconOnly />
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'home' }}
+          iconOnly
+        />
         <h1 className={headerTitle}>팀 세션 인증</h1>
         <div className={headerSpacer} aria-hidden="true" />
       </header>

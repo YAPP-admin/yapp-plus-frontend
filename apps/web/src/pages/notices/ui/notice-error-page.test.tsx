@@ -1,13 +1,14 @@
-import { fireEvent, render, screen } from '@testing-library/react';
+import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { NoticeErrorPage } from './notice-error-page';
 
 const navigation = vi.hoisted(() => ({
-  back: vi.fn<() => void>(),
-  replace: vi.fn<(url: string) => void>(),
+  pop: vi.fn<() => void>(),
+  replace: vi.fn<(activityName: string, params: object) => void>(),
   canGoBack: vi.fn<() => boolean>(),
 }));
-vi.mock('@/app/navigation/router', () => ({ useRouter: () => navigation }));
+vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
 vi.mock('@/app/navigation/navigation-history', () => ({
   useCanGoBack: () => ({ current: navigation.canGoBack }),
 }));
@@ -23,13 +24,14 @@ describe('NoticeErrorPage', () => {
     expect(screen.getByText('잠시 후 다시 시도해 주세요.')).toBeInTheDocument();
   });
 
-  it('뒤로가기 버튼 클릭 시 기본 fallback 경로(/notices)로 이동한다', () => {
+  it('뒤로가기 버튼 클릭 시 Notices 탭으로 이동한다', async () => {
+    const user = userEvent.setup();
     navigation.canGoBack.mockReturnValue(false);
-    render(<NoticeErrorPage fallbackUrl="/notices" />);
+    render(<NoticeErrorPage />);
 
     const backButton = screen.getByRole('button', { name: '뒤로가기' });
-    fireEvent.click(backButton);
+    await user.click(backButton);
 
-    expect(navigation.replace).toHaveBeenCalledWith('/notices');
+    expect(navigation.replace).toHaveBeenCalledWith('Tabs', { initialTab: 'notices' });
   });
 });

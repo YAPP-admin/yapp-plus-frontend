@@ -15,18 +15,20 @@ import { NoticeErrorIllustration } from './notice-error-illustration';
 export type NoticeErrorPageProps = {
   titleText?: string;
   descriptionText?: string;
-  fallbackUrl?: string;
 };
 
 export function NoticeErrorPage({
   titleText = '앗, 오류가 발생했어요!',
   descriptionText = '잠시 후 다시 시도해 주세요.',
-  fallbackUrl = '/notices',
 }: NoticeErrorPageProps) {
   return (
     <main className={container}>
       <header className={header}>
-        <BackButton fallback={fallbackUrl} iconOnly />
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'notices' }}
+          iconOnly
+        />
       </header>
 
       <div className={content}>

@@ -4,15 +4,13 @@ import { SettingsPage } from './settings-page';
 
 const navigation = vi.hoisted(() => ({
   back: vi.fn<() => void>(),
-  push: vi.fn<(url: string) => void>(),
-  replace: vi.fn<(url: string) => void>(),
+  push: vi.fn<(activityName: string, params: object) => void>(),
+  replace: vi.fn<(activityName: string, params: object) => void>(),
+  pop: vi.fn<() => void>(),
   canGoBack: true,
 }));
 
-vi.mock('@/app/navigation/router', () => ({
-  useRouter: () => navigation,
-  usePathname: () => '/settings',
-}));
+vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
 
 vi.mock('@/app/navigation/navigation-history', () => ({
   useCanGoBack: () => ({ current: navigation.canGoBack }),
@@ -44,7 +42,7 @@ describe('SettingsPage', () => {
     const confirmWithdrawBtn = screen.getByRole('button', { name: '탈퇴하기' });
     fireEvent.click(confirmWithdrawBtn);
 
-    expect(navigation.push).toHaveBeenCalledWith('/login');
+    expect(navigation.push).toHaveBeenCalledWith('Login', {});
   });
 
   it('로그아웃 클릭 시 SEED 다이얼로그가 열리고 로그아웃 확인 클릭 시 로그인으로 이동한다', () => {
@@ -63,7 +61,7 @@ describe('SettingsPage', () => {
       fireEvent.click(confirmBtn);
     }
 
-    expect(navigation.push).toHaveBeenCalledWith('/login');
+    expect(navigation.push).toHaveBeenCalledWith('Login', {});
   });
 
   it('뒤로가기 버튼이 렌더링된다', () => {

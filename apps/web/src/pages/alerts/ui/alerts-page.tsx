@@ -2,8 +2,7 @@
 
 import { BackButton } from '@/app/navigation/back-button';
 import { Image } from '@/app/navigation/image';
-import { useSearchParams } from '@/app/navigation/router';
-import { Suspense, useState } from 'react';
+import { useState } from 'react';
 import {
   body,
   container,
@@ -58,15 +57,17 @@ const mockAlerts: AlertItem[] = [
   },
 ];
 
-function AlertsPageContent() {
-  const searchParams = useSearchParams();
-  const showEmpty = searchParams?.get('empty') === 'true';
+export function AlertsPage({ showEmpty = false }: { showEmpty?: boolean }) {
   const [alerts] = useState<AlertItem[]>(showEmpty ? [] : mockAlerts);
 
   return (
     <div className={container}>
       <header className={header}>
-        <BackButton fallback="/" iconOnly />
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'home' }}
+          iconOnly
+        />
         <h1 className={headerTitle}>알림</h1>
         <div className={headerSpacer} aria-hidden="true" />
       </header>
@@ -95,13 +96,5 @@ function AlertsPageContent() {
         )}
       </div>
     </div>
-  );
-}
-
-export function AlertsPage() {
-  return (
-    <Suspense fallback={null}>
-      <AlertsPageContent />
-    </Suspense>
   );
 }

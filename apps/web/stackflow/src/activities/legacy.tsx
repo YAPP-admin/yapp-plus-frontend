@@ -29,7 +29,8 @@ import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabsLayout } from '@/app/layouts/tabs-layout';
 import { useAppScreenOptions } from '../platform';
-import { isTabName, type TabName } from '../tab';
+import { isTabName, type TabName, type TabsState } from '@/app/navigation/tab';
+import { useTabsUrl } from '@/app/navigation/use-tabs-url';
 
 const TAB_TITLES: Record<TabName, string> = {
   home: '홈',
@@ -39,15 +40,23 @@ const TAB_TITLES: Record<TabName, string> = {
 };
 
 export function LegacyTabsActivity() {
-  const { initialTab } = useActivityParams<'Tabs'>();
+  const activityParams = useActivityParams<'Tabs'>();
   const step = useStep();
-  const activeTab = normalizeTab(step?.params.initialTab ?? initialTab);
+  const stepParams = readTabsParams(step?.params);
+  const initialParams = readTabsParams(activityParams);
+  const activeTab = normalizeTab(stepParams.initialTab ?? initialParams.initialTab);
+  const tabsState = {
+    initialTab: activeTab,
+    session: stepParams.session ?? initialParams.session,
+    attendance: stepParams.attendance ?? initialParams.attendance,
+  } satisfies TabsState;
+  useTabsUrl(tabsState);
 
   return (
     <LegacyScreen title={TAB_TITLES[activeTab]}>
       <TabsLayout activeTab={activeTab}>
         <div hidden={activeTab !== 'home'}>
-          <HomePage />
+          <HomePage initialSession={tabsState.session} initialAttendance={tabsState.attendance} />
         </div>
         <div hidden={activeTab !== 'schedule'}>
           <SchedulePage />
@@ -67,11 +76,26 @@ function normalizeTab(value: unknown): TabName {
   return isTabName(value) ? value : 'home';
 }
 
+function readTabsParams(params: unknown): TabsState {
+  if (!params || typeof params !== 'object') {
+    return {};
+  }
+
+  const initialTab = 'initialTab' in params ? params.initialTab : undefined;
+  return {
+    ...(isTabName(initialTab) ? { initialTab } : {}),
+    session: 'session' in params && params.session === 'team' ? params.session : undefined,
+    attendance:
+      'attendance' in params && params.attendance === 'attended' ? params.attendance : undefined,
+  };
+}
+
 export function LegacyAlertsActivity() {
+  const { empty } = useActivityParams<'Alerts'>();
   return (
     <LegacyScreen title="알림">
       <TabsLayout activeTab={null}>
-        <AlertsPage />
+        <AlertsPage showEmpty={empty === 'true'} />
       </TabsLayout>
     </LegacyScreen>
   );
@@ -89,10 +113,11 @@ export function LegacyNoticeDetailActivity() {
 }
 
 export function LegacyAttendanceActivity() {
+  const { mode } = useActivityParams<'Attendance'>();
   return (
     <LegacyScreen title="출석 내역" preventSwipeBack>
       <PageShell header={null} plain>
-        <AttendancePage />
+        <AttendancePage initialMode={mode} />
       </PageShell>
     </LegacyScreen>
   );
@@ -101,7 +126,7 @@ export function LegacyAttendanceActivity() {
 export function LegacyAttendanceRulesActivity() {
   return (
     <LegacyScreen title="출석 규칙" preventSwipeBack>
-      <DetailLayout fallback="/my/attendance">
+      <DetailLayout>
         <AttendanceRulesPage />
       </DetailLayout>
     </LegacyScreen>
@@ -129,9 +154,10 @@ export function LegacySettingsActivity() {
 }
 
 export function LegacyTeamAttendanceUploadActivity() {
+  const { error } = useActivityParams<'TeamAttendanceUpload'>();
   return (
     <LegacyScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
-      <TeamAttendanceUploadPage />
+      <TeamAttendanceUploadPage simulateError={error === 'true'} />
     </LegacyScreen>
   );
 }
@@ -153,10 +179,11 @@ export function LegacyTeamAttendanceCompleteActivity() {
 }
 
 export function LegacyLoginActivity() {
+  const { error } = useActivityParams<'Login'>();
   return (
     <LegacyScreen title="로그인" showBack={false} preventSwipeBack>
       <AuthLayout>
-        <LoginPage />
+        <LoginPage initialError={error === 'true'} />
       </AuthLayout>
     </LegacyScreen>
   );
@@ -175,7 +202,7 @@ export function LegacyLoginErrorActivity() {
 export function LegacySignupActivity() {
   return (
     <LegacyScreen title="회원가입" preventSwipeBack>
-      <AuthLayout>
+      <AuthLayout showBack>
         <SignupPage />
       </AuthLayout>
     </LegacyScreen>
@@ -185,7 +212,7 @@ export function LegacySignupActivity() {
 export function LegacySignupStatusActivity() {
   return (
     <LegacyScreen title="가입 승인 상태" preventSwipeBack>
-      <AuthLayout>
+      <AuthLayout showBack>
         <SignupStatusPage />
       </AuthLayout>
     </LegacyScreen>

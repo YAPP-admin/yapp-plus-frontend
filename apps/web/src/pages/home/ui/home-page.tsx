@@ -24,9 +24,9 @@ import {
   TextFieldTextarea,
   useSnackbarAdapter,
 } from '@yapp-plus/ui';
+import { useFlow } from '@stackflow/react/future';
 import { Image } from '@/app/navigation/image';
 import { Link } from '@/app/navigation/link';
-import { useRouter, useSearchParams } from '@/app/navigation/router';
 import { useEffect, useRef, useState } from 'react';
 import {
   attendanceButton,
@@ -125,21 +125,21 @@ const weeklyNotices = [
     tag: '세션',
     isSession: true,
     title: '5주차 개발-디자인 세션 공지',
-    href: '/notices/3',
+    noticeId: '3',
   },
   {
     id: 2,
     tag: '기타',
     isSession: false,
     title: '뒷풀이 참석 여부 수요 조사',
-    href: '/notices/4',
+    noticeId: '4',
   },
   {
     id: 3,
     tag: '기타',
     isSession: false,
     title: '운영진 공지 사항',
-    href: '/notices/5',
+    noticeId: '5',
   },
 ];
 
@@ -168,21 +168,24 @@ function OrangeCheckIcon() {
 type AttendanceState = 'before_session' | 'available' | 'attended';
 type ReportType = '지각' | '조퇴' | '결석';
 
-export function HomePage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const sessionParam = searchParams?.get('session');
+export function HomePage({
+  initialSession,
+  initialAttendance,
+}: {
+  initialSession?: 'team';
+  initialAttendance?: 'attended';
+} = {}) {
+  const flow = useFlow();
   const [internalSessionMode, setInternalSessionMode] = useState<'team' | 'offline' | null>(null);
   const isTeamSession =
-    (internalSessionMode ?? (sessionParam === 'team' ? 'team' : 'offline')) === 'team';
-  const attendanceParam = searchParams?.get('attendance');
+    (internalSessionMode ?? (initialSession === 'team' ? 'team' : 'offline')) === 'team';
 
   // 출석 상태 관리: 파라미터가 'attended'이면 출석 완료, 내부 상태가 있으면 내부 상태 우선
   const [internalAttendanceState, setInternalAttendanceState] = useState<AttendanceState | null>(
     null,
   );
   const attendanceState: AttendanceState =
-    internalAttendanceState ?? (attendanceParam === 'attended' ? 'attended' : 'available');
+    internalAttendanceState ?? (initialAttendance === 'attended' ? 'attended' : 'available');
 
   // 1. 출석 코드 바텀시트
   const [isCodeSheetOpen, setIsCodeSheetOpen] = useState(false);
@@ -263,7 +266,7 @@ export function HomePage() {
 
     setIsCodeSheetOpen(false);
     setInternalAttendanceState('attended');
-    router.push('/attendance/complete');
+    flow.push('AttendanceComplete', {});
   }
 
   // 출결 보고 핸들러
@@ -495,7 +498,7 @@ export function HomePage() {
             {weeklyNotices.map((notice) => (
               <Link
                 key={notice.id}
-                href={notice.href}
+                href={`/notices/${notice.noticeId}`}
                 className={noticeCard}
                 aria-label={notice.title}
               >
@@ -730,7 +733,7 @@ export function HomePage() {
                   className={sheetSecondaryButton}
                   onClick={() => {
                     setIsTeamGuideSheetOpen(false);
-                    router.push('/team-attendance/upload');
+                    flow.push('TeamAttendanceUpload', {});
                   }}
                 >
                   앨범에서 선택하기
@@ -741,7 +744,7 @@ export function HomePage() {
                   className={sheetPrimaryButton}
                   onClick={() => {
                     setIsTeamGuideSheetOpen(false);
-                    router.push('/team-attendance/upload');
+                    flow.push('TeamAttendanceUpload', {});
                   }}
                 >
                   직접 사진 찍기

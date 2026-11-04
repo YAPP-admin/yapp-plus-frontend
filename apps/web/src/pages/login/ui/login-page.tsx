@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@seed-design/react';
 import { ActionButton, PrefixIcon, Text } from '@yapp-plus/ui';
-import { useRouter, useSearchParams } from '@/app/navigation/router';
+import { useFlow } from '@stackflow/react/future';
 import { useState } from 'react';
 import {
   buttonGroup,
@@ -32,17 +32,16 @@ import {
 import { LoginIllustration } from './login-illustration';
 import { appleIcon, googleIcon } from './social-login-icons';
 
-export function LoginPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const [isErrorOpen, setIsErrorOpen] = useState(searchParams?.get('error') === 'true');
+export function LoginPage({ initialError = false }: { initialError?: boolean }) {
+  const flow = useFlow();
+  const [isErrorOpen, setIsErrorOpen] = useState(initialError);
 
   function handleGoogleLogin() {
     setIsErrorOpen(true);
   }
 
   function handleAppleLogin() {
-    router.push('/signup');
+    flow.push('Signup', {});
   }
 
   return (

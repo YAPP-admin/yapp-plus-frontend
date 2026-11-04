@@ -1,26 +1,29 @@
 'use client';
 
 import { IconChevronLeftLine } from '@karrotmarket/react-monochrome-icon';
+import type { InferActivityParams, RegisteredActivityName } from '@stackflow/config';
+import { useFlow } from '@stackflow/react/future';
 import { ActionButton, Icon } from '@yapp-plus/ui';
-import { useRouter } from './router';
 import { useCanGoBack } from './navigation-history';
 import { backButton, iconBackButton } from './back-button.css';
 
-export function BackButton({
-  fallback,
+export function BackButton<ActivityName extends RegisteredActivityName>({
+  fallbackActivityName,
+  fallbackActivityParams,
   iconOnly = false,
 }: {
-  fallback: string;
+  fallbackActivityName: ActivityName;
+  fallbackActivityParams: InferActivityParams<ActivityName>;
   iconOnly?: boolean;
 }) {
-  const router = useRouter();
+  const flow = useFlow();
   const canGoBack = useCanGoBack();
 
   function handleClick() {
     if (canGoBack.current()) {
-      router.back();
+      flow.pop();
     } else {
-      router.replace(fallback);
+      flow.replace(fallbackActivityName, fallbackActivityParams);
     }
   }
 

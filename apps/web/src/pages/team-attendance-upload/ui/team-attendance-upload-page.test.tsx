@@ -2,17 +2,14 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TeamAttendanceUploadPage } from './team-attendance-upload-page';
 
-const mockPush = vi.fn<(url: string) => void>();
-const mockBack = vi.fn<() => void>();
+const mockPush = vi.fn<(activityName: string, params: object) => void>();
+const mockPop = vi.fn<() => void>();
 
-vi.mock('@/app/navigation/router', () => ({
-  useRouter: () => ({
+vi.mock('@stackflow/react/future', () => ({
+  useFlow: () => ({
     push: mockPush,
-    back: mockBack,
-    replace: vi.fn<(url: string) => void>(),
-  }),
-  useSearchParams: () => ({
-    get: vi.fn<(name: string) => string | null>().mockReturnValue(null),
+    pop: mockPop,
+    replace: vi.fn<(activityName: string, params: object) => void>(),
   }),
 }));
 
@@ -42,6 +39,6 @@ describe('TeamAttendanceUploadPage', () => {
     // 확인 버튼 클릭 시 이동
     const confirmBtn = screen.getByRole('button', { name: '확인' });
     fireEvent.click(confirmBtn);
-    expect(mockPush).toHaveBeenCalledWith('/team-attendance/complete');
+    expect(mockPush).toHaveBeenCalledWith('TeamAttendanceComplete', {});
   });
 });

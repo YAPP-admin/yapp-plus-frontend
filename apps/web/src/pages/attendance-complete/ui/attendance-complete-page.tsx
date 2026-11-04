@@ -1,9 +1,9 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
+import { Link } from '@/app/navigation/link';
 import { CompleteIllustration } from '@/pages/signup-complete/ui/complete-illustration';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import { Link } from '@/app/navigation/link';
 import {
   body,
   bottomSection,
@@ -22,7 +22,11 @@ export function AttendanceCompletePage() {
   return (
     <div className={container}>
       <header className={header}>
-        <BackButton fallback="/?attendance=attended" iconOnly />
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'home', attendance: 'attended' }}
+          iconOnly
+        />
         <div className={headerSpacer} aria-hidden="true" />
       </header>
 
