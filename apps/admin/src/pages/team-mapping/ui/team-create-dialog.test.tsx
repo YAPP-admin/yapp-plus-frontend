@@ -1,6 +1,7 @@
 /** 팀 생성 입력의 필수 조건·초안 상태와 제출 경계를 검증한다. */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import { OverlayProvider } from 'overlay-kit';
 import { expect, it, vi } from 'vitest';
 import { teamMappingBeforeFixture, type TeamDraftValues } from '~/features/team-management';
 import { TeamCreateDialog } from './team-create-dialog';
@@ -10,7 +11,9 @@ function renderDialog() {
   const onCreate = vi.fn<(values: TeamDraftValues) => void>();
 
   render(
-    <TeamCreateDialog snapshot={teamMappingBeforeFixture} onClose={onClose} onCreate={onCreate} />,
+    <OverlayProvider>
+      <TeamCreateDialog snapshot={teamMappingBeforeFixture} onClose={onClose} onCreate={onCreate} />
+    </OverlayProvider>,
   );
 
   return { onCreate, onClose };
@@ -55,6 +58,19 @@ it('초안 입력을 원래 값으로 되돌릴 수 있다', async () => {
   expect(nameInput).toHaveValue('');
 });
 
+it('입력을 원래 값으로 되돌리면 이탈 확인 없이 닫힌다', async () => {
+  const user = userEvent.setup();
+  const { onClose } = renderDialog();
+  const nameInput = await screen.findByRole('textbox', { name: '팀명' });
+
+  await user.type(nameInput, '임시 팀');
+  await user.clear(nameInput);
+  await user.click(screen.getByRole('button', { name: '취소' }));
+
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  expect(onClose).toHaveBeenCalledTimes(1);
+});
+
 it('유효한 이름을 입력해도 Enter 제출과 실제 생성을 실행하지 않는다', async () => {
   const user = userEvent.setup();
   const { onCreate } = renderDialog();
@@ -65,4 +81,23 @@ it('유효한 이름을 입력해도 Enter 제출과 실제 생성을 실행하�
 
   expect(onCreate).not.toHaveBeenCalled();
   expect(screen.getByRole('dialog')).toBeVisible();
+});
+
+it('변경 후 닫으면 계속 편집과 변경 버리기를 선택할 수 있다', async () => {
+  const user = userEvent.setup();
+  const { onClose } = renderDialog();
+  const nameInput = await screen.findByRole('textbox', { name: '팀명' });
+
+  await user.type(nameInput, '임시 팀');
+  await user.click(screen.getByRole('button', { name: '취소' }));
+
+  const leaveDialog = await screen.findByRole('alertdialog');
+  expect(leaveDialog).toHaveTextContent('변경을 버리고 나갈까요?');
+  await user.click(screen.getByRole('button', { name: '계속 편집' }));
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  expect(nameInput).toHaveValue('임시 팀');
+
+  await user.click(screen.getByRole('button', { name: '취소' }));
+  await user.click(await screen.findByRole('button', { name: '변경 버리기' }));
+  expect(onClose).toHaveBeenCalledTimes(1);
 });
