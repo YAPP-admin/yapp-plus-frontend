@@ -66,6 +66,7 @@ export function useReducedMotionPreference() {
 export function getAppScreenOptions(
   platform: StackflowPlatform,
   reducedMotion: boolean,
+  screenPreventsSwipeBack = false,
 ): AppScreenOptions {
   let transitionStyle: AppScreenOptions['transitionStyle'] = 'fadeIn';
 
@@ -78,13 +79,13 @@ export function getAppScreenOptions(
   return {
     theme: platform === 'android' ? 'android' : 'cupertino',
     transitionStyle,
-    preventSwipeBack: reducedMotion || platform !== 'ios',
+    preventSwipeBack: screenPreventsSwipeBack || reducedMotion || platform !== 'ios',
   };
 }
 
-export function useAppScreenOptions(): AppScreenOptions {
+export function useAppScreenOptions(screenPreventsSwipeBack = false): AppScreenOptions {
   const platform = detectPlatform();
   const reducedMotion = useReducedMotionPreference();
 
-  return getAppScreenOptions(platform, reducedMotion);
+  return getAppScreenOptions(platform, reducedMotion, screenPreventsSwipeBack);
 }

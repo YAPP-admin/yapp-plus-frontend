@@ -67,6 +67,14 @@ function isVisible(element: HTMLElement) {
 }
 
 describe('Stackflow FSD 화면 연결', () => {
+  it('web에서는 화면별 prop을 생략해도 swipe edge를 렌더링하지 않는다', async () => {
+    window.history.replaceState({}, '', '/alerts');
+    renderStack();
+
+    expect(await waitForTopHeading('알림')).toBeTruthy();
+    expect(document.querySelector('[data-part="edge"]')).not.toBeInTheDocument();
+  });
+
   it('탭 전환은 history를 늘리지 않고 실행 중인 탭 상태를 보존한다', async () => {
     const user = userEvent.setup();
     renderStack();

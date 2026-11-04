@@ -34,4 +34,11 @@ describe('Stackflow 플랫폼 정책', () => {
       preventSwipeBack: true,
     });
   });
+
+  it('화면별 차단은 iOS 기본 swipe를 끄고 플랫폼 차단을 해제하지 않는다', () => {
+    expect(getAppScreenOptions('ios', false, true).preventSwipeBack).toBe(true);
+    expect(getAppScreenOptions('android', false, false).preventSwipeBack).toBe(true);
+    expect(getAppScreenOptions('web', false, false).preventSwipeBack).toBe(true);
+    expect(getAppScreenOptions('ios', true, false).preventSwipeBack).toBe(true);
+  });
 });
