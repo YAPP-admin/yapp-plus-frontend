@@ -1,7 +1,7 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
-import { Link } from '@/app/navigation/link';
+import { TabLink } from '@/app/navigation/tab-link';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import { Image } from '@/app/navigation/image';
 import {
@@ -47,7 +47,7 @@ export function TeamAttendanceErrorPage() {
 
       <footer className={bottomSection}>
         <ActionButton asChild variant="brandSolid" size="large" className={confirmButton}>
-          <Link href="/">확인</Link>
+          <TabLink tab="home">확인</TabLink>
         </ActionButton>
         <div className={homeIndicatorArea} aria-hidden="true" />
       </footer>

@@ -6,8 +6,8 @@ import {
   IconHouseFill,
   IconPersonFill,
 } from '@karrotmarket/react-monochrome-icon';
-import { Link } from '@/app/navigation/link';
-import { usePathname } from '@/app/navigation/router';
+import { TabLink } from '@/app/navigation/tab-link';
+import type { TabName } from '@/app/navigation/tab';
 import {
   bottomBar,
   homeIndicatorArea,
@@ -19,46 +19,38 @@ import {
 
 const destinations = [
   {
-    href: '/',
+    tab: 'home' as const,
     label: '홈',
     Icon: IconHouseFill,
   },
   {
-    href: '/schedule',
+    tab: 'schedule' as const,
     label: '일정',
     Icon: IconCalendarFill,
   },
   {
-    href: '/notices',
+    tab: 'notices' as const,
     label: '게시판',
     Icon: IconArticleFill,
   },
   {
-    href: '/my',
+    tab: 'my' as const,
     label: 'MY',
     Icon: IconPersonFill,
   },
 ];
 
-export function BottomNavigation({
-  activeTab,
-}: {
-  /** Stackflow Activity가 전달하면 URL adapter보다 우선합니다. */
-  activeTab?: 'home' | 'schedule' | 'notices' | 'my' | null;
-} = {}) {
-  const pathname = usePathname();
-  const activePathname = getActivePathname(activeTab, pathname);
-
+export function BottomNavigation({ activeTab }: { activeTab: TabName | null }) {
   return (
     <div className={bottomBar}>
       <nav className={navigation} aria-label="주요 메뉴">
-        {destinations.map(({ href, label, Icon }) => {
-          const isCurrent = activePathname === href;
+        {destinations.map(({ tab, label, Icon }) => {
+          const isCurrent = activeTab === tab;
 
           return (
-            <Link
-              key={href}
-              href={href}
+            <TabLink
+              key={tab}
+              tab={tab}
               className={item}
               aria-current={isCurrent ? 'page' : undefined}
             >
@@ -66,27 +58,11 @@ export function BottomNavigation({
                 <Icon width={24} height={24} />
               </span>
               <span className={itemLabel}>{label}</span>
-            </Link>
+            </TabLink>
           );
         })}
       </nav>
       <div className={homeIndicatorArea} aria-hidden="true" />
     </div>
   );
-}
-
-function getActivePathname(
-  activeTab: 'home' | 'schedule' | 'notices' | 'my' | null | undefined,
-  pathname: string | null,
-) {
-  if (activeTab === undefined) {
-    return pathname;
-  }
-  if (activeTab === null) {
-    return undefined;
-  }
-  if (activeTab === 'home') {
-    return '/';
-  }
-  return `/${activeTab}`;
 }

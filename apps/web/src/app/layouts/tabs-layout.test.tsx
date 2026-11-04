@@ -3,19 +3,42 @@ import { describe, expect, it, vi } from 'vitest';
 import { TabsLayout } from './tabs-layout';
 import { PageShell } from './page-shell';
 
-const location = vi.hoisted(() => ({ pathname: '/' }));
-vi.mock('@/app/navigation/router', () => ({ usePathname: () => location.pathname }));
+vi.mock('@/app/navigation/tab-link', () => ({
+  TabLink: ({
+    tab,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { tab: string }) => (
+    <a {...props} href={tab === 'home' ? '/' : `/${tab}`}>
+      {children}
+    </a>
+  ),
+}));
+vi.mock('@/app/navigation/activity-link', () => ({
+  ActivityLink: ({
+    activityName,
+    activityParams: _activityParams,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+    activityName: string;
+    activityParams?: object;
+  }) => (
+    <a {...props} href={activityName === 'Alerts' ? '/alerts' : '/settings'}>
+      {children}
+    </a>
+  ),
+}));
 
 describe('TabsLayout', () => {
   it.each([
-    ['/', '홈'],
-    ['/schedule', '일정'],
-    ['/notices', '게시판'],
-    ['/my', 'MY'],
-  ])('%s에서 현재 메뉴 하나만 표시한다', (pathname, label) => {
-    location.pathname = pathname;
+    ['/', '홈', 'home'],
+    ['/schedule', '일정', 'schedule'],
+    ['/notices', '게시판', 'notices'],
+    ['/my', 'MY', 'my'],
+  ] as const)('%s에서 현재 메뉴 하나만 표시한다', (pathname, label, activeTab) => {
     render(
-      <TabsLayout>
+      <TabsLayout activeTab={activeTab}>
         <main>본문</main>
       </TabsLayout>,
     );
@@ -28,16 +51,14 @@ describe('TabsLayout', () => {
   });
 
   it('탭 경로가 바뀌어도 공통 메뉴 DOM을 유지하며 활성 표시를 갱신한다', () => {
-    location.pathname = '/';
     const { rerender } = render(
-      <TabsLayout>
+      <TabsLayout activeTab="home">
         <main>홈</main>
       </TabsLayout>,
     );
     const navigation = screen.getByRole('navigation', { name: '주요 메뉴' });
-    location.pathname = '/notices';
     rerender(
-      <TabsLayout>
+      <TabsLayout activeTab="notices">
         <main>공지</main>
       </TabsLayout>,
     );
@@ -46,9 +67,8 @@ describe('TabsLayout', () => {
   });
 
   it('홈 탭에서는 상단 헤더에 YAPP 로고와 알림 링크를 렌더링한다', () => {
-    location.pathname = '/';
     render(
-      <TabsLayout>
+      <TabsLayout activeTab="home">
         <main>홈</main>
       </TabsLayout>,
     );
@@ -57,9 +77,8 @@ describe('TabsLayout', () => {
   });
 
   it('마이페이지 탭에서는 상단 헤더에 마이페이지 타이틀과 설정 링크를 렌더링한다', () => {
-    location.pathname = '/my';
     render(
-      <TabsLayout>
+      <TabsLayout activeTab="my">
         <main>마이</main>
       </TabsLayout>,
     );

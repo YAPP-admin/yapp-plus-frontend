@@ -1,6 +1,18 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_NOTICES, NoticesPage } from './notices-page';
+
+vi.mock('@/app/navigation/activity-link', () => ({
+  ActivityLink: ({
+    activityParams,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { activityParams: { noticeId: string } }) => (
+    <a {...props} href={`/notices/${activityParams.noticeId}`}>
+      {children}
+    </a>
+  ),
+}));
 
 describe('NoticesPage', () => {
   it('게시판 기본 목록과 탭을 정상적으로 렌더링한다', () => {

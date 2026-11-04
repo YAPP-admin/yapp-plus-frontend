@@ -1,6 +1,6 @@
 import { IconQuestionmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
+import { ActivityLink } from '@/app/navigation/activity-link';
 import { Image } from '@/app/navigation/image';
-import { Link } from '@/app/navigation/link';
 import { AttendanceRulesDialog } from './attendance-rules-dialog';
 import {
   activeChip,
@@ -107,7 +107,7 @@ export function MyPage() {
       <hr className={sectionDivider} />
 
       <nav className={menuList} aria-label="마이페이지 메뉴">
-        <Link href="/my/attendance" className={menuItem}>
+        <ActivityLink activityName="Attendance" activityParams={{}} className={menuItem}>
           <span className={menuLabel}>출석 내역</span>
           <Image
             src="/images/my/chevron-right.svg"
@@ -116,7 +116,7 @@ export function MyPage() {
             height={24}
             className={menuChevron}
           />
-        </Link>
+        </ActivityLink>
       </nav>
     </div>
   );

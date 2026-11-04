@@ -1,6 +1,22 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { MyPage } from './my-page';
+
+vi.mock('@/app/navigation/activity-link', () => ({
+  ActivityLink: ({
+    activityName: _activityName,
+    activityParams: _activityParams,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+    activityName?: string;
+    activityParams?: object;
+  }) => (
+    <a {...props} href="/my/attendance">
+      {children}
+    </a>
+  ),
+}));
 
 describe('MyPage', () => {
   it('사용자 프로필 정보(이름, 상태 칩, 기수, 직군)를 렌더링한다', () => {

@@ -1,6 +1,6 @@
 'use client';
 
-import { Link } from '@/app/navigation/link';
+import { ActivityLink } from '@/app/navigation/activity-link';
 import {
   assignmentChip,
   chipRow,
@@ -38,13 +38,18 @@ export function NoticeItem({ id, category, categoryLabel, title, date, dDay }: N
   const categoryChipClass = getCategoryChipClass(category);
 
   return (
-    <Link href={`/notices/${id}`} className={item} aria-label={`${categoryLabel} 공지: ${title}`}>
+    <ActivityLink
+      activityName="NoticeDetail"
+      activityParams={{ noticeId: id }}
+      className={item}
+      aria-label={`${categoryLabel} 공지: ${title}`}
+    >
       <div className={chipRow}>
         <span className={categoryChipClass}>{categoryLabel}</span>
         {dDay ? <span className={dDayChip}>{dDay}</span> : null}
       </div>
       <h2 className={titleText}>{title}</h2>
       <time className={dateText}>{date}</time>
-    </Link>
+    </ActivityLink>
   );
 }

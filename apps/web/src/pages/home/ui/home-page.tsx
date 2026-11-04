@@ -25,8 +25,9 @@ import {
   useSnackbarAdapter,
 } from '@yapp-plus/ui';
 import { useFlow } from '@stackflow/react/future';
+import { ActivityLink } from '@/app/navigation/activity-link';
 import { Image } from '@/app/navigation/image';
-import { Link } from '@/app/navigation/link';
+import { TabLink } from '@/app/navigation/tab-link';
 import { useEffect, useRef, useState } from 'react';
 import {
   attendanceButton,
@@ -429,7 +430,7 @@ export function HomePage({
 
           <nav className={quickCardsGrid} aria-label="홈 바로가기">
             <div className={quickCardCol}>
-              <Link href="/schedule" className={quickCard} aria-label="이번 달 전체 세션 확인하기">
+              <TabLink tab="schedule" className={quickCard} aria-label="이번 달 전체 세션 확인하기">
                 <div className={quickCardContent}>
                   <p className={quickCardTitle}>전체 세션</p>
                   <p className={quickCardSubtitle}>확인하기</p>
@@ -441,7 +442,7 @@ export function HomePage({
                   height={106}
                   className={quickCardGraphicSession}
                 />
-              </Link>
+              </TabLink>
             </div>
 
             <div className={quickCardCol}>
@@ -496,9 +497,10 @@ export function HomePage({
 
           <div className={noticesList}>
             {weeklyNotices.map((notice) => (
-              <Link
+              <ActivityLink
                 key={notice.id}
-                href={`/notices/${notice.noticeId}`}
+                activityName="NoticeDetail"
+                activityParams={{ noticeId: notice.noticeId }}
                 className={noticeCard}
                 aria-label={notice.title}
               >
@@ -511,7 +513,7 @@ export function HomePage({
                 <span className={noticeChevron} aria-hidden="true">
                   <IconChevronRightFill width={20} height={20} />
                 </span>
-              </Link>
+              </ActivityLink>
             ))}
           </div>
         </section>
