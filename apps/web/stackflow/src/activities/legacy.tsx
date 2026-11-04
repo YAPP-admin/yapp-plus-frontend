@@ -1,7 +1,7 @@
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
 import { useActivity, useStep } from '@stackflow/react';
 import { useActivityParams } from '@stackflow/react/future';
-import type { ReactNode } from 'react';
+import { Activity, type ReactNode } from 'react';
 import { SnackbarProvider } from '@yapp-plus/ui';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
@@ -55,18 +55,18 @@ export function LegacyTabsActivity() {
   return (
     <LegacyScreen title={TAB_TITLES[activeTab]}>
       <TabsLayout activeTab={activeTab}>
-        <div hidden={activeTab !== 'home'}>
+        <Activity mode={activeTab === 'home' ? 'visible' : 'hidden'} name="HomeTab">
           <HomePage initialSession={tabsState.session} initialAttendance={tabsState.attendance} />
-        </div>
-        <div hidden={activeTab !== 'schedule'}>
+        </Activity>
+        <Activity mode={activeTab === 'schedule' ? 'visible' : 'hidden'} name="ScheduleTab">
           <SchedulePage />
-        </div>
-        <div hidden={activeTab !== 'notices'}>
+        </Activity>
+        <Activity mode={activeTab === 'notices' ? 'visible' : 'hidden'} name="NoticesTab">
           <NoticesPage />
-        </div>
-        <div hidden={activeTab !== 'my'}>
+        </Activity>
+        <Activity mode={activeTab === 'my' ? 'visible' : 'hidden'} name="MyTab">
           <MyPage />
-        </div>
+        </Activity>
       </TabsLayout>
     </LegacyScreen>
   );

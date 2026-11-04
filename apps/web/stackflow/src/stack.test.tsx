@@ -1,7 +1,7 @@
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NavigationHistory } from '@/app/navigation/navigation-history';
 import { createStackflowApp, stackflowConfig } from './stack';
 
@@ -10,6 +10,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  vi.restoreAllMocks();
   window.history.replaceState({}, '', '/');
 });
 
@@ -67,6 +68,17 @@ function isVisible(element: HTMLElement) {
 }
 
 describe('Stackflow FSD 화면 연결', () => {
+  it('비활성 탭은 상태를 보존하되 effect를 실행하지 않는다', async () => {
+    const addEventListener = vi.spyOn(window, 'addEventListener');
+    window.history.replaceState({}, '', '/schedule');
+    renderStack();
+
+    expect(await waitForTopHeading('일정')).toBeTruthy();
+    expect(addEventListener.mock.calls.some(([eventName]) => eventName === 'pointerdown')).toBe(
+      false,
+    );
+  });
+
   it('web에서는 화면별 prop을 생략해도 swipe edge를 렌더링하지 않는다', async () => {
     window.history.replaceState({}, '', '/alerts');
     renderStack();
