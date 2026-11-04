@@ -1,4 +1,3 @@
-import { Link } from '@/app/navigation/link';
 import { content, description, title } from '../../../shared/ui/page.css';
 import { link, links } from '../../../shared/ui/page-links.css';
 
@@ -35,9 +34,9 @@ export function DevRoutesPage() {
       </p>
       <nav className={links} aria-label="개발용 화면 목록">
         {routes.map(({ href, label }) => (
-          <Link key={href} className={link} href={href}>
+          <a key={href} className={link} href={href}>
             {label}
-          </Link>
+          </a>
         ))}
       </nav>
     </main>

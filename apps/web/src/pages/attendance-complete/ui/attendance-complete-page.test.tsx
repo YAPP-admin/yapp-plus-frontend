@@ -8,9 +8,11 @@ vi.mock('@stackflow/react/future', () => ({
     replace: vi.fn<(activityName: string, params: object) => void>(),
   }),
 }));
-vi.mock('@/app/navigation/link', () => ({
-  Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a {...props}>{children}</a>
+vi.mock('@/app/navigation/tab-link', () => ({
+  TabLink: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...props} href="/?attendance=attended">
+      {children}
+    </a>
   ),
 }));
 

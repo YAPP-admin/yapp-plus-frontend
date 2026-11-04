@@ -1,6 +1,6 @@
 import { body, footer, heading, screen } from '@/shared/ui/step-screen.css';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import { Link } from '@/app/navigation/link';
+import { TabLink } from '@/app/navigation/tab-link';
 import { contents, illustration } from './signup-complete-page.css';
 import { CompleteIllustration } from './complete-illustration';
 
@@ -21,7 +21,7 @@ export function SignupCompletePage() {
       </div>
       <div className={footer}>
         <ActionButton asChild size="large" variant="brandSolid">
-          <Link href="/">시작하기</Link>
+          <TabLink tab="home">시작하기</TabLink>
         </ActionButton>
       </div>
     </main>

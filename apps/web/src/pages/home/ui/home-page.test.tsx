@@ -5,9 +5,30 @@ import { HomePage } from './home-page';
 
 const mockPush = vi.fn<(activityName: string, params: object) => void>();
 vi.mock('@stackflow/react/future', () => ({ useFlow: () => ({ push: mockPush }) }));
-vi.mock('@/app/navigation/link', () => ({
-  Link: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
-    <a {...props}>{children}</a>
+vi.mock('@/app/navigation/tab-link', () => ({
+  TabLink: ({
+    tab,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { tab: string }) => (
+    <a {...props} href={tab === 'home' ? '/' : `/${tab}`}>
+      {children}
+    </a>
+  ),
+}));
+vi.mock('@/app/navigation/activity-link', () => ({
+  ActivityLink: ({
+    activityName: _activityName,
+    activityParams,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+    activityName?: string;
+    activityParams: { noticeId: string };
+  }) => (
+    <a {...props} href={`/notices/${activityParams.noticeId}`}>
+      {children}
+    </a>
   ),
 }));
 

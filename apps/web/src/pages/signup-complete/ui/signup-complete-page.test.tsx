@@ -1,6 +1,14 @@
 import { render, screen } from '@testing-library/react';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { SignupCompletePage } from './signup-complete-page';
+
+vi.mock('@/app/navigation/tab-link', () => ({
+  TabLink: ({ children, ...props }: React.AnchorHTMLAttributes<HTMLAnchorElement>) => (
+    <a {...props} href="/">
+      {children}
+    </a>
+  ),
+}));
 
 describe('SignupCompletePage', () => {
   it('가입 완료 안내와 홈으로 가는 시작하기 링크를 제공한다', () => {

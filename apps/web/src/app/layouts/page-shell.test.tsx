@@ -3,15 +3,34 @@ import { describe, expect, it, vi } from 'vitest';
 import { HomePage } from '../../pages/home';
 import { PageShell } from './page-shell';
 
-vi.mock('@/app/navigation/router', () => ({
-  useRouter: () => ({
-    back: vi.fn<() => void>(),
-    push: vi.fn<(url: string) => void>(),
-    replace: vi.fn<(url: string) => void>(),
-  }),
-  useSearchParams: () => ({
-    get: vi.fn<(name: string) => string | null>().mockReturnValue(null),
-  }),
+vi.mock('@stackflow/react/future', () => ({
+  useFlow: () => ({ push: vi.fn<(activityName: string, params: object) => void>() }),
+}));
+vi.mock('@/app/navigation/tab-link', () => ({
+  TabLink: ({
+    tab,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { tab: string }) => (
+    <a {...props} href={tab === 'home' ? '/' : `/${tab}`}>
+      {children}
+    </a>
+  ),
+}));
+vi.mock('@/app/navigation/activity-link', () => ({
+  ActivityLink: ({
+    activityName: _activityName,
+    activityParams,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+    activityName?: string;
+    activityParams: { noticeId: string };
+  }) => (
+    <a {...props} href={`/notices/${activityParams.noticeId}`}>
+      {children}
+    </a>
+  ),
 }));
 
 describe('PageShell', () => {

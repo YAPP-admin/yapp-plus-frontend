@@ -1,11 +1,13 @@
 import { defineConfig, type ActivityBaseParams } from '@stackflow/config';
 import type { StackflowPlugin } from '@stackflow/core';
 import { historySyncPlugin } from '@stackflow/plugin-history-sync';
+import { preloadPlugin } from '@stackflow/plugin-preload';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { lazy, stackflow as createStackflow } from '@stackflow/react/future';
 import { Primitive, seedPlugin } from '@seed-design/stackflow';
 import { type ReactNode } from 'react';
-import { isTabName, tabUrl, type TabsState } from '@/app/navigation/tab';
+import type { TabsState } from '@/app/navigation/tab';
+import { runPendingTabTransition } from '@/app/navigation/tab-transition';
 import type { StackflowInitialContext } from './platform';
 
 type TabsParams = ActivityBaseParams & TabsState;
@@ -43,7 +45,7 @@ declare module '@stackflow/config' {
 
 type EmptyActivityParams = ActivityBaseParams;
 
-const components = {
+export const activityComponents = {
   Tabs: lazy<TabsParams>(() =>
     import('./activities/legacy').then(({ LegacyTabsActivity }) => ({
       default: LegacyTabsActivity,
@@ -297,49 +299,13 @@ function reducedMotionPlugin() {
   });
 }
 
-function tabHistoryPlugin(): StackflowPlugin {
+function tabTransitionPlugin(): StackflowPlugin {
   return () => ({
-    key: 'tab-history',
-    onStepReplaced({ effect }) {
-      if (effect.activity.name !== 'Tabs' || !effect.activity.isActive) {
-        return;
-      }
-
-      queueMicrotask(() => replaceTabHistory(effect.step.params));
-    },
-    onPopped({ actions }) {
-      queueMicrotask(() => {
-        const tabsActivity = actions
-          .getStack()
-          .activities.find((activity) => activity.name === 'Tabs' && activity.isActive);
-        const currentStep = tabsActivity?.steps.at(-1);
-
-        replaceTabHistory(currentStep?.params ?? tabsActivity?.params);
-      });
+    key: 'tab-transition',
+    onPopped() {
+      queueMicrotask(runPendingTabTransition);
     },
   });
-}
-
-function replaceTabHistory(params: unknown) {
-  if (typeof window === 'undefined' || !params || typeof params !== 'object') {
-    return;
-  }
-
-  const initialTab = 'initialTab' in params ? params.initialTab : undefined;
-  if (!isTabName(initialTab)) {
-    return;
-  }
-
-  const session = 'session' in params && params.session === 'team' ? params.session : undefined;
-  const attendance =
-    'attendance' in params && params.attendance === 'attended' ? params.attendance : undefined;
-
-  window.history.replaceState(
-    window.history.state,
-    '',
-    tabUrl({ initialTab, session, attendance }),
-  );
-  window.dispatchEvent(new Event('yapp:navigation'));
 }
 
 function canonicalHistoryPlugin(): StackflowPlugin {
@@ -368,7 +334,6 @@ function scheduleCanonicalPath() {
       '',
       `${url.pathname.replace(/\/+$/, '')}${url.search}${url.hash}`,
     );
-    window.dispatchEvent(new Event('yapp:navigation'));
   });
 }
 
@@ -392,7 +357,7 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
     : stackflowConfig;
 
   return createStackflow({
-    components,
+    components: activityComponents,
     config,
     plugins: [
       basicRendererPlugin(),
@@ -400,6 +365,7 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
         config,
         fallbackActivity: () => 'NotFound',
       }),
+      preloadPlugin<typeof activityComponents>({ loaders: {} }),
       seedPlugin(({ initialContext }) => ({
         theme:
           isStackflowInitialContext(initialContext) && initialContext.platform === 'android'
@@ -407,7 +373,7 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
             : 'cupertino',
       })),
       reducedMotionPlugin(),
-      tabHistoryPlugin(),
+      tabTransitionPlugin(),
       canonicalHistoryPlugin(),
     ],
   });
