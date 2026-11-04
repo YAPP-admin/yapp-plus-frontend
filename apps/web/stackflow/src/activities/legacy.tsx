@@ -270,14 +270,14 @@ function LegacyScreen({
   showBack?: boolean;
   title: string;
 }) {
-  const appScreenOptions = useAppScreenOptions();
+  const appScreenOptions = useAppScreenOptions(preventSwipeBack);
   const { isTop } = useActivity();
 
   return (
     <>
       {isTop ? <title>{`${title} | YAPP+`}</title> : null}
       <SnackbarProvider>
-        <AppScreen {...appScreenOptions} layerOffsetTop="none" preventSwipeBack={preventSwipeBack}>
+        <AppScreen {...appScreenOptions} layerOffsetTop="none">
           <AppScreenContent>{children}</AppScreenContent>
         </AppScreen>
       </SnackbarProvider>
