@@ -97,11 +97,11 @@
 
 ## 마무리 — 12단계
 
-- [ ] T044 apps/admin/src/pages/team-mapping/ui/team-mapping-page.test.tsx에 최종 실행 비활성·원본 보존·상태/탐색 회귀를 보완한다.
-- [ ] T045 specs/015-admin-team-mapping/validation.md에 개발/운영 동일 URL·새로고침·실제 요청 없음·기존 회원 탐색 검증을 기록한다.
+- [x] T044 apps/admin/src/pages/team-mapping/ui/team-mapping-page.test.tsx에 최종 실행 비활성·원본 보존·상태/탐색 회귀를 보완한다.
+- [x] T045 specs/015-admin-team-mapping/validation.md에 개발/운영 동일 URL·새로고침·실제 요청 없음·기존 회원 탐색 검증을 기록한다.
 - [ ] T046 specs/015-admin-team-mapping/validation.md에 .context/ 화면 근거·Figma 12개 비교·토스트 고정 시각 사례·375px·키보드/스크린 리더/터치 결과를 기록한다.
-- [ ] T047 apps/storybook/stories/와 관련 packages/ui/src/ 테스트에서 이번에 변경한 공용 UI 사례만 갱신한다. 공용 UI 미변경이면 사유를 validation.md에 기록한다.
-- [ ] T048 specs/015-admin-team-mapping/validation.md에 check/build·실행/캐시·미실행·실제 base 대비 변경량·최종 리뷰 결과를 기록한다.
+- [x] T047 apps/storybook/stories/와 관련 packages/ui/src/ 테스트에서 이번에 변경한 공용 UI 사례만 갱신한다. 공용 UI 미변경이면 사유를 validation.md에 기록한다.
+- [x] T048 specs/015-admin-team-mapping/validation.md에 check/build·실행/캐시·미실행·실제 base 대비 변경량·최종 리뷰 결과를 기록한다.
 
 ## 의존성과 실행 전략
 
