@@ -55,12 +55,12 @@ const SETTINGS_LINKS = [
   {
     id: 'privacy',
     label: '개인정보 처리 방침',
-    href: 'https://yapp.co.kr/privacy',
+    href: 'https://app.notion.com/p/yapp-workspace/3db2106a0e8480899e28c3788ebeaa6f',
   },
   {
     id: 'terms',
     label: '이용 약관',
-    href: 'https://yapp.co.kr/terms',
+    href: 'https://app.notion.com/p/yapp-workspace/3db2106a0e84806f91f8d6c4ac97af5f',
   },
 ];
 
@@ -147,8 +147,8 @@ export function SettingsPage() {
             <a
               key={link.id}
               href={link.href}
-              target="_blank"
-              rel="noopener noreferrer"
+              target={isNative ? '_self' : '_blank'}
+              rel={isNative ? undefined : 'noopener noreferrer'}
               className={menuItem}
             >
               <span className={menuLabel}>{link.label}</span>
