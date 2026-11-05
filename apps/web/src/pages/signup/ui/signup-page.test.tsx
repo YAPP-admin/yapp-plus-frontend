@@ -48,12 +48,12 @@ function renderSignupPage() {
   );
 }
 
-function goToPhoneStep() {
+async function goToPhoneStep() {
   fireEvent.change(screen.getByRole('textbox', { name: '이름을 입력해 주세요' }), {
     target: { value: '김야뿌' },
   });
   fireEvent.click(screen.getByRole('button', { name: '다음' }));
-  return screen.getByRole('textbox', { name: '휴대폰 번호를 입력해 주세요' });
+  return waitFor(() => screen.getByRole('textbox', { name: '휴대폰 번호를 입력해 주세요' }));
 }
 
 describe('SignupPage', () => {
@@ -83,9 +83,9 @@ describe('SignupPage', () => {
     expect(next).toBeEnabled();
   });
 
-  it('이름 다음에 휴대폰 번호 입력 단계를 표시한다', () => {
+  it('이름 다음에 휴대폰 번호 입력 단계를 표시한다', async () => {
     renderSignupPage();
-    const phone = goToPhoneStep();
+    const phone = await goToPhoneStep();
 
     expect(
       screen.getByRole('heading', { level: 1, name: '휴대폰 번호를 입력해 주세요' }),
@@ -98,14 +98,14 @@ describe('SignupPage', () => {
     expect(screen.getByRole('button', { name: '다음' })).toBeEnabled();
   });
 
-  it('휴대폰 번호를 입력하고 다음을 누르면 승인 대기 화면으로 이동한다', () => {
+  it('휴대폰 번호를 입력하고 다음을 누르면 승인 대기 화면으로 이동한다', async () => {
     renderSignupPage();
-    const phone = goToPhoneStep();
+    const phone = await goToPhoneStep();
     expect(flow.push).not.toHaveBeenCalled();
 
     fireEvent.change(phone, { target: { value: '010-1234-5678' } });
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
-    expect(flow.push).toHaveBeenCalledWith('SignupStatus', {});
+    await waitFor(() => expect(flow.push).toHaveBeenCalledWith('SignupStatus', {}));
   });
 
   it('native 가입 성공은 가입 완료 화면으로 이동한다', async () => {
@@ -130,7 +130,7 @@ describe('SignupPage', () => {
       );
     });
     renderSignupPage();
-    const phone = goToPhoneStep();
+    const phone = await goToPhoneStep();
 
     fireEvent.change(phone, { target: { value: '010-1234-5678' } });
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
