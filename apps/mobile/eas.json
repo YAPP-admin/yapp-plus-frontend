@@ -25,7 +25,8 @@
     "testflight": {
       "extends": "base",
       "distribution": "store",
-      "autoIncrement": true
+      "autoIncrement": true,
+      "channel": "testflight"
     }
   },
   "submit": {

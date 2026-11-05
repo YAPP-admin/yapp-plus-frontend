@@ -24,6 +24,12 @@ const config: ExpoConfig = {
   // Expo Router의 앱 URL과 iOS Bundle ID를 같은 안정 식별자로 유지합니다.
   scheme: 'org.yapp.yappplus',
   version: '1.0.0',
+  runtimeVersion: {
+    policy: 'appVersion',
+  },
+  updates: {
+    url: 'https://u.expo.dev/e34d595c-d553-4007-ac7c-8e85d6549e44',
+  },
   icon: './assets/icon.png',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
