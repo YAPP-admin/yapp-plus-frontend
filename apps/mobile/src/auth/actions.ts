@@ -103,7 +103,11 @@ export class AuthActions {
   public async signOut(): Promise<AuthResult> {
     const refreshToken = this.session.refreshToken;
     if (refreshToken) {
-      await revoke({ body: { refreshToken } });
+      try {
+        await revoke({ body: { refreshToken } });
+      } catch {
+        // 서버 해제가 실패해도 기기에서 refresh token을 제거해 로그아웃을 완료합니다.
+      }
     }
 
     return this.session.clear();
@@ -117,7 +121,7 @@ export class AuthActions {
     }
 
     const result = await withdraw({ headers: { Authorization: `Bearer ${accessToken}` } });
-    if (result.data === undefined) {
+    if (result.error !== undefined) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.server, retryable: true };
     }
 
