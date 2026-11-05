@@ -187,3 +187,13 @@
 - `node --run build`: exit 0. 생성 계약 영향을 받은 web·admin build를 새로 실행했고, 일부 Storybook 결과는 Turbo 캐시를 재사용했다.
 - `node --run expo:doctor`: exit 0, 20/20 checks passed.
 - 앞서 제출한 TestFlight build `14`는 재생성 전 커밋에서 만들어졌으므로 이번 계약 변경은 포함하지 않는다. 이 변경을 실기기에서 검증하려면 리뷰 후 새 build 또는 네이티브 런타임과 호환되는 EAS Update가 추가로 필요하다.
+
+## EAS Update 설정·검증 — 2026-11-05
+
+- `eas update:configure --platform ios --non-interactive`를 실행했지만 동적 `apps/mobile/app.config.ts`를 자동 수정할 수 없어 설정 단계에서 종료됐다. 도구가 설치한 `expo-updates`와 lockfile 변경은 유지하고, 나머지 설정은 동적 설정 파일에 직접 반영했다.
+- `apps/mobile/app.config.ts`에 EAS project ID 기반 `updates.url`과 `runtimeVersion: { policy: 'appVersion' }`를 추가했다. `expo config --json`에서 `updates.url`이 `https://u.expo.dev/e34d595c-d553-4007-ac7c-8e85d6549e44`, runtime policy가 `appVersion`으로 해석되는 것을 확인했다.
+- `apps/mobile/eas.json`의 `testflight` 빌드 프로필에 `channel: 'testflight'`를 연결했다. 이후 `eas update --channel testflight`로 같은 네이티브 런타임에 JavaScript·asset 업데이트를 배포할 수 있다.
+- `node --run check`: exit 0. 모바일 lint·typecheck·test는 새로 실행했고, 다른 패키지 일부는 Turbo 캐시를 재사용했다.
+- `node --run build`: exit 0. 전체 빌드가 통과했으며 이번 실행에서는 Turbo 캐시를 재사용했다.
+- `node --run expo:doctor`: exit 0, 20/20 checks passed.
+- 기존 TestFlight build `14`에는 이번 `updates.url`·runtime·channel 설정이 포함되지 않았으므로, EAS Update를 사용하려면 이 설정을 포함한 새 네이티브 build를 먼저 생성해야 한다. 아직 새 build·submit·update 배포는 실행하지 않았다.
