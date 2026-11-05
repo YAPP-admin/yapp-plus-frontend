@@ -59,7 +59,7 @@
 
 ## 후속 외부 검증 — 현재 대기
 
-- [ ] T031 1B 별도 승인 후 packages/api/에서 최신 snapshot으로 재생성하고 mock·소비자 함수 변경, check 결과와 변경량을 validation.md에 기록한다.
+- [x] T031 1B 별도 승인 후 packages/api/에서 최신 snapshot으로 재생성하고 mock·소비자 함수 변경, check 결과와 변경량을 validation.md에 기록한다.
 - [ ] T032 validation.md에 서비스 origin의 CORS 실제 브라우저 확인을 기록한다.
 - [ ] T033 validation.md에 iPhone의 Apple/Google 로그인·가입·복구·로그아웃·테스트 계정 탈퇴 결과를 기록한다.
 - [ ] T034 apps/mobile/README.md와 validation.md에 승인된 TestFlight 업로드·설치 결과, build number·commit SHA·웹 버전을 기록한다.

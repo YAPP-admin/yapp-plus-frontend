@@ -4,6 +4,11 @@ export type ClientOptions = {
   baseUrl: 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com' | (string & {});
 };
 
+export type RegisterNotificationDeviceRequest = {
+  platform: 'ANDROID' | 'IOS';
+  registrationToken: string;
+};
+
 export type UpdateTeamRequest = {
   expectedVersion: number;
   name: string;
@@ -36,6 +41,53 @@ export type TeamMemberRequest = {
    * 후보 조회 시 확인한 현재 Team ID. 미배정이면 null
    */
   expectedCurrentTeamId?: number | null;
+};
+
+export type CreateSessionRequest = {
+  name: string;
+  /**
+   * REGULAR 세션 장소. TEAM이면 null
+   */
+  location: string | null;
+  date: string;
+  startTime: string;
+  endTime: string;
+  type: 'REGULAR' | 'TEAM';
+};
+
+export type AdminMemberUpdateRequest = {
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'WITHDRAWN';
+  expectedRevision: number;
+};
+
+export type AdminMemberChangeResponse = {
+  field: string;
+  before: string | null;
+  after: string | null;
+  changedByStaffId: number;
+  changedAt: string;
+};
+
+export type AdminMemberDetailResponse = {
+  memberId: number;
+  membershipId: number;
+  name: string;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'WITHDRAWN';
+  previousActivities: Array<AdminPreviousActivityResponse>;
+  attendanceScore: number | null;
+  signedUpDate: string;
+  teamName: string | null;
+  phoneNumber: string | null;
+  revision: number;
+  changes: Array<AdminMemberChangeResponse>;
+};
+
+export type AdminPreviousActivityResponse = {
+  generationNumber: number;
+  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'WITHDRAWN';
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
 };
 
 export type RegisterUserRequest = {
@@ -111,12 +163,18 @@ export type ErrorResponse = {
    * 기계 판독용 오류 코드
    */
   code:
+    | 'APPLE_REVOKE_PENDING'
+    | 'APPLE_UNAVAILABLE'
+    | 'APPLE_NOTIFICATION_INVALID'
+    | 'APPLE_NOTIFICATION_UNAVAILABLE'
+    | 'APPLE_NOTIFICATION_FAILED'
     | 'ACTIVE_GENERATION_CONFLICT'
     | 'ATTENDANCE_CODE_CONFLICT'
     | 'ATTENDANCE_CODE_NOT_ISSUED'
     | 'ATTENDANCE_CODE_UPDATE_FAILED'
     | 'ATTENDANCE_REPORT_NOT_ELIGIBLE'
     | 'ATTENDANCE_REPORT_SESSION_CONFLICT'
+    | 'ATTENDANCE_REPORT_SESSION_CHANGED'
     | 'ATTENDANCE_REPORT_UNAVAILABLE'
     | 'ATTENDANCE_SCORE_NOT_ELIGIBLE'
     | 'ATTENDANCE_SCORE_INCONSISTENT'
@@ -135,24 +193,43 @@ export type ErrorResponse = {
     | 'INVALID_ATTENDANCE_REQUEST'
     | 'INVALID_HISTORY_REQUEST'
     | 'INVALID_MEMBER_REQUEST'
+    | 'MEMBER_APPROVAL_UNAVAILABLE'
+    | 'INVALID_MEMBER_CURSOR'
     | 'INVALID_POST_CURSOR'
     | 'INVALID_POST_IMAGE'
     | 'INVALID_POST_REQUEST'
     | 'INVALID_REQUEST'
+    | 'INVALID_ROSTER_LIST_REQUEST'
     | 'INVALID_SESSION_REQUEST'
     | 'INVALID_STAFF_AUTHENTICATION_REQUEST'
     | 'INVALID_TEAM_REQUEST'
     | 'MEMBER_CONFLICT'
     | 'MEMBER_NOT_FOUND'
+    | 'MEMBER_DATA_UNAVAILABLE'
+    | 'MEMBER_UPDATE_CONFLICT'
+    | 'MEMBER_UPDATE_INELIGIBLE'
+    | 'INVALID_NOTIFICATION_REQUEST'
+    | 'INVALID_NOTIFICATION_HISTORY_CURSOR'
+    | 'INVALID_NOTIFICATION_DEVICE_REQUEST'
+    | 'INVALID_USER_NOTIFICATION_CURSOR'
+    | 'NOTIFICATION_CONFLICT'
+    | 'NOTIFICATION_DEVICE_CONFLICT'
+    | 'NOTIFICATION_NOT_FOUND'
+    | 'NOTIFICATION_UNAVAILABLE'
     | 'POST_IDEMPOTENCY_CONFLICT'
     | 'POST_IMAGE_CONFLICT'
     | 'POST_IMAGE_STORAGE_FAILED'
     | 'POST_NOT_FOUND'
     | 'RETAINED_HISTORY_UNAVAILABLE'
+    | 'ROSTER_CONFLICT'
+    | 'ROSTER_PERSISTENCE_FAILED'
+    | 'ROSTER_QUERY_FAILED'
+    | 'ROSTER_VALIDATION_FAILED'
     | 'SESSION_DATE_CONFLICT'
     | 'SESSION_DELETE_CONFLICT'
     | 'SESSION_MANAGEMENT_DISABLED'
     | 'SESSION_NOT_FOUND'
+    | 'SESSION_UPDATE_CONFLICT'
     | 'STAFF_AUTHENTICATION_FAILED'
     | 'TEAM_ASSIGNMENT_STALE'
     | 'TEAM_CONFLICT'
@@ -258,6 +335,13 @@ export type GoogleNativeAuthenticationRequest = {
   nonce: string;
 };
 
+export type AppleNotificationRequest = {
+  /**
+   * Apple 계정 변경 알림 JWS
+   */
+  payload: string;
+};
+
 export type AppleNativeAuthenticationRequest = {
   /**
    * Apple OIDC ID Token
@@ -308,6 +392,29 @@ export type AttendanceReportResponse = {
   submittedAt: string;
 };
 
+export type CreateNotificationRequest = {
+  content: string;
+  targetRole: 'ALL_USERS' | 'PLAYER' | 'OB_AND_PLAYER' | 'COMPLETED_MEMBER';
+  position: string;
+  scheduledAt?: string | null;
+};
+
+export type CreatedNotificationResponse = {
+  id: number;
+  status:
+    | 'SCHEDULED'
+    | 'QUEUED'
+    | 'SENDING'
+    | 'RETRY_PENDING'
+    | 'COMPLETED'
+    | 'PARTIALLY_FAILED'
+    | 'FAILED'
+    | 'NO_RECIPIENTS'
+    | 'NO_DEVICES'
+    | 'CANCELED';
+  scheduledAt: string | null;
+};
+
 export type RejectMemberRequest = {
   reason: string;
 };
@@ -334,7 +441,7 @@ export type MemberMembershipResponse = {
 
 export type ApproveMemberRequest = {
   approvalType: 'ROSTER' | 'MANUAL';
-  role: 'PLAYER' | 'OB';
+  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED';
   position?: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
   phoneNumber?: string | null;
   generationId?: number | null;
@@ -345,18 +452,6 @@ export type CreateTeamRequest = {
   name: string;
   serviceName?: string | null;
   members: Array<TeamMemberRequest>;
-};
-
-export type CreateSessionRequest = {
-  name: string;
-  /**
-   * REGULAR 세션 장소. TEAM이면 null
-   */
-  location: string | null;
-  date: string;
-  startTime: string;
-  endTime: string;
-  type: 'REGULAR' | 'TEAM';
 };
 
 export type CreateSessionResponse = {
@@ -380,6 +475,54 @@ export type AttendanceCodeResponse = {
   revision: number | null;
   issuedAt: string | null;
   issuedByStaffId: number | null;
+};
+
+export type GenerationRosterEntryRequest = {
+  clientRowId: string;
+  generationId: number;
+  name: string;
+  /**
+   * 010-1234-5678 형식
+   */
+  phoneNumber: string;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE';
+  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED';
+};
+
+export type RegisterGenerationRosterRequest = {
+  generationId: number;
+  /**
+   * 1~1000행
+   */
+  entries: Array<GenerationRosterEntryRequest>;
+};
+
+export type GenerationRosterFieldError = {
+  rowIndex: number | null;
+  clientRowId: string | null;
+  field: string;
+  errorCode: string;
+};
+
+export type GenerationRosterRegistrationErrorResponse = {
+  code: string;
+  message: string | null;
+  fieldErrors: Array<GenerationRosterFieldError>;
+};
+
+export type GenerationRosterRegistrationResult = {
+  registrationId: number;
+  generationId: number;
+  rows: Array<GenerationRosterRowResult>;
+  createdCount?: number;
+  updatedCount?: number;
+  unchangedCount?: number;
+};
+
+export type GenerationRosterRowResult = {
+  clientRowId: string;
+  rosterEntryId: number;
+  action: 'CREATED' | 'UPDATED' | 'UNCHANGED';
 };
 
 export type AssignmentPostRequest = {
@@ -502,6 +645,31 @@ export type PostImageResponse = {
   sizeBytes: number;
   displayOrder: number;
   readUrl: string | null;
+};
+
+export type UserNotificationListItemResponse = {
+  id: number;
+  content: string;
+  /**
+   * 논리 발송 시각의 한국 날짜
+   */
+  sentDate: string;
+  /**
+   * 알림 출처
+   */
+  type: 'GENERAL' | 'POST';
+  /**
+   * 공지 상세 이동용 ID. 일반 알림이면 null
+   */
+  postId: number | null;
+};
+
+export type UserNotificationListResponse = {
+  items: Array<UserNotificationListItemResponse>;
+  /**
+   * 다음 페이지 커서. 마지막 페이지이면 null
+   */
+  nextCursor: string | null;
 };
 
 export type CurrentWeekSessionDetailResponse = {
@@ -691,6 +859,28 @@ export type RetainedHistoryPage = {
   nextCursor: string | null;
 };
 
+export type NotificationHistoryItemResponse = {
+  id: number;
+  content: string;
+  targetRole: 'ALL_USERS' | 'PLAYER' | 'OB_AND_PLAYER' | 'COMPLETED_MEMBER';
+  position: string;
+  status:
+    | 'SCHEDULED'
+    | 'IN_PROGRESS'
+    | 'COMPLETED'
+    | 'PARTIALLY_FAILED'
+    | 'FAILED'
+    | 'NO_RECIPIENTS'
+    | 'NO_DEVICES'
+    | 'CANCELED';
+  referenceAt: string;
+};
+
+export type NotificationHistoryPageResponse = {
+  items: Array<NotificationHistoryItemResponse>;
+  nextCursor: string | null;
+};
+
 export type PendingMemberListResponse = {
   items: Array<PendingMemberView>;
   nextCursor: string | null;
@@ -702,6 +892,7 @@ export type PendingMemberView = {
   name: string;
   phoneNumber: string;
   signedUpAt: string;
+  reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED';
 };
 
 export type RosterCandidateView = {
@@ -710,6 +901,7 @@ export type RosterCandidateView = {
   phoneNumber: string;
   generationId: number;
   position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | null;
 };
 
 export type CurrentTeamResponse = {
@@ -808,6 +1000,24 @@ export type AdminAttendanceRow = {
   badgeVerifiedAt: string | null;
 };
 
+export type GenerationRosterListEntryResponse = {
+  rosterEntryId: number;
+  name: string;
+  /**
+   * E.164 형식
+   */
+  phoneNumber: string;
+  generationId: number;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | null;
+  status: 'AVAILABLE';
+};
+
+export type GenerationRosterListResponse = {
+  items: Array<GenerationRosterListEntryResponse>;
+  nextCursor: string | null;
+};
+
 export type AdminPostListItemResponse = {
   postId: number;
   title: string;
@@ -842,6 +1052,143 @@ export type AdminPostRecipientResponse = {
   read: boolean;
   readAt: string | null;
 };
+
+export type AdminAttendanceDeductionResponse = {
+  sessionId: number;
+  sessionName: string;
+  status: 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
+  /**
+   * 총점의 0점 하한과 무관한 사건 원 감점값
+   */
+  delta: number;
+  checkedInAt: string | null;
+  earlyLeaveAt: string | null;
+};
+
+export type AdminAttendanceStatisticsDetailResponse = {
+  membershipId: number;
+  name: string;
+  generationNumber: number;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  totalScore: number | null;
+  deductions: Array<AdminAttendanceDeductionResponse>;
+};
+
+export type AdminMemberItemResponse = {
+  memberId: number;
+  membershipId: number;
+  name: string;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'WITHDRAWN';
+  previousActivities: Array<AdminPreviousActivityResponse>;
+  attendanceScore: number | null;
+  signedUpDate: string;
+  teamName: string | null;
+};
+
+export type AdminMemberListResponse = {
+  items: Array<AdminMemberItemResponse>;
+  nextCursor: string | null;
+};
+
+export type AdminMemberTeamOptionResponse = {
+  teamId: number;
+  name: string;
+  playerMemberCount: number;
+};
+
+export type AdminAttendanceStatisticsItemResponse = {
+  membershipId: number;
+  name: string;
+  generationNumber: number;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  /**
+   * PLAYER 활동 이력이 없으면 null, 그 외에는 0점 하한을 적용한 마감 확정 점수
+   */
+  totalScore: number | null;
+  attendanceCount: number;
+  lateCount: number;
+  absentCount: number;
+  earlyLeaveCount: number;
+};
+
+export type AdminAttendanceStatisticsListResponse = {
+  items: Array<AdminAttendanceStatisticsItemResponse>;
+};
+
+export type RemoveData = {
+  body?: never;
+  path: {
+    installationId: string;
+  };
+  query?: never;
+  url: '/api/users/me/notification-devices/{installationId}';
+};
+
+export type RemoveErrors = {
+  /**
+   * INVALID_NOTIFICATION_DEVICE_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * Service Unavailable
+   */
+  503: ErrorResponse;
+};
+
+export type RemoveError = RemoveErrors[keyof RemoveErrors];
+
+export type RemoveResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type RemoveResponse = RemoveResponses[keyof RemoveResponses];
+
+export type RegisterData = {
+  body: RegisterNotificationDeviceRequest;
+  path: {
+    installationId: string;
+  };
+  query?: never;
+  url: '/api/users/me/notification-devices/{installationId}';
+};
+
+export type RegisterErrors = {
+  /**
+   * INVALID_NOTIFICATION_DEVICE_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * NOTIFICATION_DEVICE_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * Service Unavailable
+   */
+  503: ErrorResponse;
+};
+
+export type RegisterError = RegisterErrors[keyof RegisterErrors];
+
+export type RegisterResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type RegisterResponse = RegisterResponses[keyof RegisterResponses];
 
 export type AcknowledgeData = {
   body?: never;
@@ -1025,7 +1372,175 @@ export type ReplaceMembersResponses = {
 
 export type ReplaceMembersResponse = ReplaceMembersResponses[keyof ReplaceMembersResponses];
 
-export type RegisterData = {
+export type Delete1Data = {
+  body?: never;
+  path: {
+    generationId: number;
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/sessions/{sessionId}';
+};
+
+export type Delete1Errors = {
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SESSION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SESSION_DELETE_CONFLICT
+   */
+  409: ErrorResponse;
+};
+
+export type Delete1Error = Delete1Errors[keyof Delete1Errors];
+
+export type Delete1Responses = {
+  /**
+   * 삭제 성공
+   */
+  204: void;
+};
+
+export type Delete1Response = Delete1Responses[keyof Delete1Responses];
+
+export type Update1Data = {
+  body: CreateSessionRequest;
+  path: {
+    generationId: number;
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/sessions/{sessionId}';
+};
+
+export type Update1Errors = {
+  /**
+   * INVALID_SESSION_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SESSION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SESSION_UPDATE_CONFLICT|SESSION_DATE_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * SESSION_MANAGEMENT_DISABLED
+   */
+  503: ErrorResponse;
+};
+
+export type Update1Error = Update1Errors[keyof Update1Errors];
+
+export type Update1Responses = {
+  /**
+   * 수정 성공
+   */
+  204: void;
+};
+
+export type Update1Response = Update1Responses[keyof Update1Responses];
+
+export type DetailData = {
+  body?: never;
+  path: {
+    generationId: number;
+    memberId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/members/{memberId}';
+};
+
+export type DetailErrors = {
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND|MEMBER_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_INCONSISTENT
+   */
+  500: ErrorResponse;
+  /**
+   * MEMBER_DATA_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type DetailError = DetailErrors[keyof DetailErrors];
+
+export type DetailResponses = {
+  /**
+   * 조회 성공
+   */
+  200: AdminMemberDetailResponse;
+};
+
+export type DetailResponse = DetailResponses[keyof DetailResponses];
+
+export type CorrectData = {
+  body: AdminMemberUpdateRequest;
+  path: {
+    generationId: number;
+    memberId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/members/{memberId}';
+};
+
+export type CorrectErrors = {
+  /**
+   * INVALID_MEMBER_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND|MEMBER_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * MEMBER_UPDATE_CONFLICT|MEMBER_UPDATE_INELIGIBLE
+   */
+  409: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_INCONSISTENT
+   */
+  500: ErrorResponse;
+  /**
+   * MEMBER_DATA_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type CorrectError = CorrectErrors[keyof CorrectErrors];
+
+export type CorrectResponses = {
+  /**
+   * 수정 성공
+   */
+  200: AdminMemberDetailResponse;
+};
+
+export type CorrectResponse = CorrectResponses[keyof CorrectResponses];
+
+export type Register1Data = {
   /**
    * User 가입 정보. Web은 registrationToken 대신 HttpOnly cookie를 사용할 수 있다.
    */
@@ -1035,7 +1550,7 @@ export type RegisterData = {
   url: '/api/users';
 };
 
-export type RegisterErrors = {
+export type Register1Errors = {
   /**
    * INVALID_REQUEST. 이름·전화번호 오류는 fieldErrors(name/phoneNumber, REQUIRED/INVALID_FORMAT/TOO_LONG)에 포함
    */
@@ -1052,18 +1567,22 @@ export type RegisterErrors = {
    * USER_REGISTRATION_FAILED. 가입 또는 세션 저장·커밋 오류
    */
   500: ErrorResponse;
+  /**
+   * APPLE_REVOKE_PENDING 또는 APPLE_UNAVAILABLE. Apple 가입은 새 authorization 요청부터 다시 시작
+   */
+  503: ErrorResponse;
 };
 
-export type RegisterError = RegisterErrors[keyof RegisterErrors];
+export type Register1Error = Register1Errors[keyof Register1Errors];
 
-export type RegisterResponses = {
+export type Register1Responses = {
   /**
-   * User 생성 및 SIGNED_IN 세션 발급
+   * User 생성 및 SIGNED_IN 세션 발급. 명단 일치 시 자동 승인, 그 외 PENDING
    */
   200: AuthenticationResponse;
 };
 
-export type RegisterResponse = RegisterResponses[keyof RegisterResponses];
+export type Register1Response = Register1Responses[keyof Register1Responses];
 
 export type SubmitData = {
   body: SubmitTeamPhotoRequest;
@@ -1207,9 +1726,13 @@ export type ConsumeHandoffErrors = {
    */
   400: ErrorResponse;
   /**
-   * handoff code가 만료되었거나 이미 소비됨
+   * AUTHENTICATION_STATE_INVALID: handoff code 만료·재사용; AUTHENTICATION_FAILED: 이전 형식 Apple 인계 코드
    */
   401: ErrorResponse;
+  /**
+   * APPLE_REVOKE_PENDING 또는 APPLE_UNAVAILABLE. Apple browser 비활성화·계정 상태 확인 실패 시 새 authorization 요청부터 다시 시작
+   */
+  503: ErrorResponse;
 };
 
 export type ConsumeHandoffError = ConsumeHandoffErrors[keyof ConsumeHandoffErrors];
@@ -1289,6 +1812,37 @@ export type AuthenticateGoogleResponses = {
 export type AuthenticateGoogleResponse =
   AuthenticateGoogleResponses[keyof AuthenticateGoogleResponses];
 
+export type ReceiveData = {
+  body: AppleNotificationRequest;
+  path?: never;
+  query?: never;
+  url: '/api/auth/oidc/apple/notifications';
+};
+
+export type ReceiveErrors = {
+  /**
+   * JWS 또는 payload 검증 실패
+   */
+  400: ErrorResponse;
+  /**
+   * 알림 저장 실패
+   */
+  500: ErrorResponse;
+  /**
+   * Apple 공개키 일시 조회 실패
+   */
+  503: ErrorResponse;
+};
+
+export type ReceiveError = ReceiveErrors[keyof ReceiveErrors];
+
+export type ReceiveResponses = {
+  /**
+   * 새 알림 또는 중복·지난 알림 처리 완료
+   */
+  200: unknown;
+};
+
 export type AuthenticateAppleData = {
   /**
    * Apple Native OIDC credential
@@ -1308,6 +1862,10 @@ export type AuthenticateAppleErrors = {
    * ID Token/authorization code/nonce 검증 실패 또는 재사용된 credential
    */
   401: ErrorResponse;
+  /**
+   * APPLE_REVOKE_PENDING 또는 APPLE_UNAVAILABLE. 철회 대기 또는 Apple 계정 상태 확인 실패
+   */
+  503: ErrorResponse;
 };
 
 export type AuthenticateAppleError = AuthenticateAppleErrors[keyof AuthenticateAppleErrors];
@@ -1341,6 +1899,10 @@ export type CompleteAppleAuthorizationErrors = {
    * state가 만료·사용되었거나 code/token 검증 실패
    */
   401: ErrorResponse;
+  /**
+   * APPLE_REVOKE_PENDING 또는 APPLE_UNAVAILABLE. Apple browser 비활성화·계정 상태 확인 실패 시 새 authorization 요청부터 다시 시작
+   */
+  503: ErrorResponse;
 };
 
 export type CompleteAppleAuthorizationError =
@@ -1408,7 +1970,7 @@ export type Submit1Errors = {
    */
   404: ErrorResponse;
   /**
-   * ATTENDANCE_REPORT_UNAVAILABLE|ATTENDANCE_REPORT_SESSION_CONFLICT
+   * ATTENDANCE_REPORT_UNAVAILABLE|ATTENDANCE_REPORT_SESSION_CONFLICT|ATTENDANCE_REPORT_SESSION_CHANGED
    */
   409: ErrorResponse;
 };
@@ -1417,12 +1979,133 @@ export type Submit1Error = Submit1Errors[keyof Submit1Errors];
 
 export type Submit1Responses = {
   /**
-   * OK
+   * 보고 제출 성공
    */
   200: AttendanceReportResponse;
 };
 
 export type Submit1Response = Submit1Responses[keyof Submit1Responses];
+
+export type HistoryData = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * 이전 응답의 nextCursor
+     */
+    cursor?: string;
+  };
+  url: '/api/admin/notifications';
+};
+
+export type HistoryErrors = {
+  /**
+   * INVALID_NOTIFICATION_HISTORY_CURSOR
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * NOTIFICATION_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type HistoryError = HistoryErrors[keyof HistoryErrors];
+
+export type HistoryResponses = {
+  /**
+   * OK
+   */
+  200: NotificationHistoryPageResponse;
+};
+
+export type HistoryResponse = HistoryResponses[keyof HistoryResponses];
+
+export type CreateData = {
+  body: CreateNotificationRequest;
+  headers: {
+    'Idempotency-Key': string;
+  };
+  path?: never;
+  query?: never;
+  url: '/api/admin/notifications';
+};
+
+export type CreateErrors = {
+  /**
+   * INVALID_NOTIFICATION_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * NOTIFICATION_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * NOTIFICATION_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type CreateError = CreateErrors[keyof CreateErrors];
+
+export type CreateResponses = {
+  /**
+   * Accepted
+   */
+  202: CreatedNotificationResponse;
+};
+
+export type CreateResponse = CreateResponses[keyof CreateResponses];
+
+export type CancelData = {
+  body?: never;
+  path: {
+    notificationId: number;
+  };
+  query?: never;
+  url: '/api/admin/notifications/{notificationId}/cancel';
+};
+
+export type CancelErrors = {
+  /**
+   * Bad Request
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * NOTIFICATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * NOTIFICATION_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * Service Unavailable
+   */
+  503: ErrorResponse;
+};
+
+export type CancelError = CancelErrors[keyof CancelErrors];
+
+export type CancelResponses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type CancelResponse = CancelResponses[keyof CancelResponses];
 
 export type RejectData = {
   body: RejectMemberRequest;
@@ -1533,7 +2216,7 @@ export type FindAllResponses = {
 
 export type FindAllResponse = FindAllResponses[keyof FindAllResponses];
 
-export type CreateData = {
+export type Create1Data = {
   body: CreateTeamRequest;
   path: {
     generationId: number;
@@ -1542,7 +2225,7 @@ export type CreateData = {
   url: '/api/admin/generations/{generationId}/teams';
 };
 
-export type CreateErrors = {
+export type Create1Errors = {
   /**
    * INVALID_TEAM_REQUEST
    */
@@ -1561,16 +2244,16 @@ export type CreateErrors = {
   409: ErrorResponse;
 };
 
-export type CreateError = CreateErrors[keyof CreateErrors];
+export type Create1Error = Create1Errors[keyof Create1Errors];
 
-export type CreateResponses = {
+export type Create1Responses = {
   /**
    * 생성 성공
    */
   201: TeamResponse;
 };
 
-export type CreateResponse = CreateResponses[keyof CreateResponses];
+export type Create1Response = Create1Responses[keyof Create1Responses];
 
 export type Find1Data = {
   body?: never;
@@ -1612,7 +2295,7 @@ export type Find1Responses = {
 
 export type Find1Response = Find1Responses[keyof Find1Responses];
 
-export type Create1Data = {
+export type Create2Data = {
   body: CreateSessionRequest;
   path: {
     generationId: number;
@@ -1621,7 +2304,7 @@ export type Create1Data = {
   url: '/api/admin/generations/{generationId}/sessions';
 };
 
-export type Create1Errors = {
+export type Create2Errors = {
   /**
    * INVALID_SESSION_REQUEST
    */
@@ -1644,16 +2327,16 @@ export type Create1Errors = {
   503: ErrorResponse;
 };
 
-export type Create1Error = Create1Errors[keyof Create1Errors];
+export type Create2Error = Create2Errors[keyof Create2Errors];
 
-export type Create1Responses = {
+export type Create2Responses = {
   /**
    * 등록 성공
    */
   201: CreateSessionResponse;
 };
 
-export type Create1Response = Create1Responses[keyof Create1Responses];
+export type Create2Response = Create2Responses[keyof Create2Responses];
 
 export type DecideData = {
   body: DecideTeamPhotoRequest;
@@ -1730,7 +2413,7 @@ export type CloseResponses = {
   200: unknown;
 };
 
-export type CancelData = {
+export type Cancel1Data = {
   body?: never;
   path: {
     generationId: number;
@@ -1740,7 +2423,7 @@ export type CancelData = {
   url: '/api/admin/generations/{generationId}/sessions/{sessionId}/attendance/close/cancel';
 };
 
-export type CancelErrors = {
+export type Cancel1Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -1751,9 +2434,9 @@ export type CancelErrors = {
   404: ErrorResponse;
 };
 
-export type CancelError = CancelErrors[keyof CancelErrors];
+export type Cancel1Error = Cancel1Errors[keyof Cancel1Errors];
 
-export type CancelResponses = {
+export type Cancel1Responses = {
   /**
    * OK
    */
@@ -1864,6 +2547,53 @@ export type ReissueResponses = {
 
 export type ReissueResponse = ReissueResponses[keyof ReissueResponses];
 
+export type Register2Data = {
+  body: RegisterGenerationRosterRequest;
+  path: {
+    generationId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/roster-registrations';
+};
+
+export type Register2Errors = {
+  /**
+   * INVALID_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ROSTER_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * ROSTER_VALIDATION_FAILED
+   */
+  422: GenerationRosterRegistrationErrorResponse;
+  /**
+   * ROSTER_PERSISTENCE_FAILED
+   */
+  500: ErrorResponse;
+};
+
+export type Register2Error = Register2Errors[keyof Register2Errors];
+
+export type Register2Responses = {
+  /**
+   * 일괄 등록 성공
+   */
+  201: GenerationRosterRegistrationResult;
+};
+
+export type Register2Response = Register2Responses[keyof Register2Responses];
+
 export type ListData = {
   body?: never;
   path: {
@@ -1902,7 +2632,7 @@ export type ListResponses = {
 
 export type ListResponse = ListResponses[keyof ListResponses];
 
-export type Create2Data = {
+export type Create3Data = {
   body: CreateAdminPostRequest;
   headers: {
     'Idempotency-Key': string;
@@ -1914,7 +2644,7 @@ export type Create2Data = {
   url: '/api/admin/generations/{generationId}/posts';
 };
 
-export type Create2Errors = {
+export type Create3Errors = {
   /**
    * INVALID_POST_REQUEST|EMPTY_POST_AUDIENCE|INVALID_POST_IMAGE
    */
@@ -1937,16 +2667,16 @@ export type Create2Errors = {
   503: ErrorResponse;
 };
 
-export type Create2Error = Create2Errors[keyof Create2Errors];
+export type Create3Error = Create3Errors[keyof Create3Errors];
 
-export type Create2Responses = {
+export type Create3Responses = {
   /**
    * Created
    */
   201: CreatedPostResponse;
 };
 
-export type Create2Response = Create2Responses[keyof Create2Responses];
+export type Create3Response = Create3Responses[keyof Create3Responses];
 
 export type Presign1Data = {
   body: PresignPostImageRequest;
@@ -2082,7 +2812,7 @@ export type BadgeResponses = {
   200: unknown;
 };
 
-export type DetailData = {
+export type Delete2Data = {
   body?: never;
   path: {
     generationId: number;
@@ -2092,7 +2822,11 @@ export type DetailData = {
   url: '/api/admin/generations/{generationId}/posts/{postId}';
 };
 
-export type DetailErrors = {
+export type Delete2Errors = {
+  /**
+   * INVALID_POST_REQUEST
+   */
+  400: ErrorResponse;
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -2103,18 +2837,50 @@ export type DetailErrors = {
   404: ErrorResponse;
 };
 
-export type DetailError = DetailErrors[keyof DetailErrors];
+export type Delete2Error = Delete2Errors[keyof Delete2Errors];
 
-export type DetailResponses = {
+export type Delete2Responses = {
+  /**
+   * No Content
+   */
+  204: void;
+};
+
+export type Delete2Response = Delete2Responses[keyof Delete2Responses];
+
+export type Detail1Data = {
+  body?: never;
+  path: {
+    generationId: number;
+    postId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/posts/{postId}';
+};
+
+export type Detail1Errors = {
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND|POST_NOT_FOUND
+   */
+  404: ErrorResponse;
+};
+
+export type Detail1Error = Detail1Errors[keyof Detail1Errors];
+
+export type Detail1Responses = {
   /**
    * OK
    */
   200: AdminPostDetailResponse;
 };
 
-export type DetailResponse = DetailResponses[keyof DetailResponses];
+export type Detail1Response = Detail1Responses[keyof Detail1Responses];
 
-export type Update1Data = {
+export type Update2Data = {
   body: UpdateAdminPostRequest;
   path: {
     generationId: number;
@@ -2124,7 +2890,7 @@ export type Update1Data = {
   url: '/api/admin/generations/{generationId}/posts/{postId}';
 };
 
-export type Update1Errors = {
+export type Update2Errors = {
   /**
    * INVALID_POST_REQUEST|INVALID_POST_IMAGE
    */
@@ -2147,25 +2913,63 @@ export type Update1Errors = {
   503: ErrorResponse;
 };
 
-export type Update1Error = Update1Errors[keyof Update1Errors];
+export type Update2Error = Update2Errors[keyof Update2Errors];
 
-export type Update1Responses = {
+export type Update2Responses = {
   /**
    * OK
    */
   200: AdminPostDetailResponse;
 };
 
-export type Update1Response = Update1Responses[keyof Update1Responses];
+export type Update2Response = Update2Responses[keyof Update2Responses];
 
 export type Find2Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    /**
+     * 이전 응답의 nextCursor
+     */
+    cursor?: string;
+  };
+  url: '/api/users/me/notifications';
+};
+
+export type Find2Errors = {
+  /**
+   * INVALID_USER_NOTIFICATION_CURSOR
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * NOTIFICATION_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Find2Error = Find2Errors[keyof Find2Errors];
+
+export type Find2Responses = {
+  /**
+   * 조회 성공
+   */
+  200: UserNotificationListResponse;
+};
+
+export type Find2Response = Find2Responses[keyof Find2Responses];
+
+export type Find3Data = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/sessions/current-week';
 };
 
-export type Find2Errors = {
+export type Find3Errors = {
   /**
    * AUTHENTICATION_FAILED
    */
@@ -2180,16 +2984,16 @@ export type Find2Errors = {
   409: ErrorResponse;
 };
 
-export type Find2Error = Find2Errors[keyof Find2Errors];
+export type Find3Error = Find3Errors[keyof Find3Errors];
 
-export type Find2Responses = {
+export type Find3Responses = {
   /**
    * 조회 성공. 토요일 세션이 없으면 session은 null
    */
   200: CurrentWeekSessionResponse;
 };
 
-export type Find2Response = Find2Responses[keyof Find2Responses];
+export type Find3Response = Find3Responses[keyof Find3Responses];
 
 export type List1Data = {
   body?: never;
@@ -2226,7 +3030,7 @@ export type List1Responses = {
 
 export type List1Response = List1Responses[keyof List1Responses];
 
-export type Detail1Data = {
+export type Detail2Data = {
   body?: never;
   path: {
     /**
@@ -2238,7 +3042,7 @@ export type Detail1Data = {
   url: '/api/posts/{postId}';
 };
 
-export type Detail1Errors = {
+export type Detail2Errors = {
   /**
    * INVALID_POST_REQUEST
    */
@@ -2257,25 +3061,25 @@ export type Detail1Errors = {
   503: ErrorResponse;
 };
 
-export type Detail1Error = Detail1Errors[keyof Detail1Errors];
+export type Detail2Error = Detail2Errors[keyof Detail2Errors];
 
-export type Detail1Responses = {
+export type Detail2Responses = {
   /**
    * OK
    */
   200: UserPostDetailResponse;
 };
 
-export type Detail1Response = Detail1Responses[keyof Detail1Responses];
+export type Detail2Response = Detail2Responses[keyof Detail2Responses];
 
-export type Find3Data = {
+export type Find4Data = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/generations/current/sessions';
 };
 
-export type Find3Errors = {
+export type Find4Errors = {
   /**
    * AUTHENTICATION_FAILED
    */
@@ -2290,16 +3094,16 @@ export type Find3Errors = {
   409: ErrorResponse;
 };
 
-export type Find3Error = Find3Errors[keyof Find3Errors];
+export type Find4Error = Find4Errors[keyof Find4Errors];
 
-export type Find3Responses = {
+export type Find4Responses = {
   /**
    * 조회 성공
    */
   200: CurrentGenerationSessionsResponse;
 };
 
-export type Find3Response = Find3Responses[keyof Find3Responses];
+export type Find4Response = Find4Responses[keyof Find4Responses];
 
 export type CompleteKakaoAuthorizationData = {
   body?: never;
@@ -2424,6 +3228,10 @@ export type StartAppleAuthorizationErrors = {
    * OIDC 로그인이 비활성화됨
    */
   401: ErrorResponse;
+  /**
+   * APPLE_UNAVAILABLE. Apple browser 로그인이 비활성화됨
+   */
+  503: ErrorResponse;
 };
 
 export type StartAppleAuthorizationError =
@@ -2470,7 +3278,7 @@ export type MineResponses = {
 
 export type MineResponse = MineResponses[keyof MineResponses];
 
-export type Find4Data = {
+export type Find5Data = {
   body?: never;
   path?: never;
   query?: {
@@ -2479,7 +3287,7 @@ export type Find4Data = {
   url: '/api/attendance-history';
 };
 
-export type Find4Errors = {
+export type Find5Errors = {
   /**
    * INVALID_ATTENDANCE_HISTORY_CURSOR
    */
@@ -2494,18 +3302,18 @@ export type Find4Errors = {
   409: ErrorResponse;
 };
 
-export type Find4Error = Find4Errors[keyof Find4Errors];
+export type Find5Error = Find5Errors[keyof Find5Errors];
 
-export type Find4Responses = {
+export type Find5Responses = {
   /**
    * 조회 성공
    */
   200: AttendanceHistoryResponse;
 };
 
-export type Find4Response = Find4Responses[keyof Find4Responses];
+export type Find5Response = Find5Responses[keyof Find5Responses];
 
-export type Find5Data = {
+export type Find6Data = {
   body?: never;
   path: {
     userId: number;
@@ -2517,7 +3325,7 @@ export type Find5Data = {
   url: '/api/admin/users/{userId}/retained-history';
 };
 
-export type Find5Errors = {
+export type Find6Errors = {
   /**
    * INVALID_HISTORY_REQUEST
    */
@@ -2536,16 +3344,16 @@ export type Find5Errors = {
   503: ErrorResponse;
 };
 
-export type Find5Error = Find5Errors[keyof Find5Errors];
+export type Find6Error = Find6Errors[keyof Find6Errors];
 
-export type Find5Responses = {
+export type Find6Responses = {
   /**
    * 조회 성공; 이력이 없으면 빈 목록
    */
   200: RetainedHistoryPage;
 };
 
-export type Find5Response = Find5Responses[keyof Find5Responses];
+export type Find6Response = Find6Responses[keyof Find6Responses];
 
 export type FindPendingData = {
   body?: never;
@@ -2559,6 +3367,10 @@ export type FindPendingData = {
      * 이전 응답의 nextCursor
      */
     cursor?: string;
+    /**
+     * 심사 상태 필터. 생략 시 PENDING·REJECTED
+     */
+    reviewStatus?: 'PENDING' | 'REJECTED';
   };
   url: '/api/admin/membership-approvals';
 };
@@ -2572,6 +3384,10 @@ export type FindPendingErrors = {
    * STAFF_AUTHENTICATION_FAILED
    */
   401: ErrorResponse;
+  /**
+   * MEMBER_APPROVAL_UNAVAILABLE
+   */
+  500: ErrorResponse;
 };
 
 export type FindPendingError = FindPendingErrors[keyof FindPendingErrors];
@@ -2760,6 +3576,50 @@ export type List3Responses = {
 
 export type List3Response = List3Responses[keyof List3Responses];
 
+export type List4Data = {
+  body?: never;
+  path: {
+    generationId: number;
+  };
+  query?: {
+    /**
+     * 이전 응답의 nextCursor. 해당 기수에서만 유효하다.
+     */
+    cursor?: string;
+  };
+  url: '/api/admin/generations/{generationId}/roster-entries';
+};
+
+export type List4Errors = {
+  /**
+   * INVALID_ROSTER_LIST_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ROSTER_QUERY_FAILED
+   */
+  500: ErrorResponse;
+};
+
+export type List4Error = List4Errors[keyof List4Errors];
+
+export type List4Responses = {
+  /**
+   * 조회 성공
+   */
+  200: GenerationRosterListResponse;
+};
+
+export type List4Response = List4Responses[keyof List4Responses];
+
 export type RecipientsData = {
   body?: never;
   path: {
@@ -2798,6 +3658,177 @@ export type RecipientsResponses = {
 
 export type RecipientsResponse = RecipientsResponses[keyof RecipientsResponses];
 
+export type Detail3Data = {
+  body?: never;
+  path: {
+    generationId: number;
+    membershipId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/memberships/{membershipId}/attendance-statistics';
+};
+
+export type Detail3Errors = {
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND|MEMBERSHIP_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_INCONSISTENT
+   */
+  500: ErrorResponse;
+  /**
+   * ATTENDANCE_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Detail3Error = Detail3Errors[keyof Detail3Errors];
+
+export type Detail3Responses = {
+  /**
+   * 조회 성공
+   */
+  200: AdminAttendanceStatisticsDetailResponse;
+};
+
+export type Detail3Response = Detail3Responses[keyof Detail3Responses];
+
+export type List5Data = {
+  body?: never;
+  path: {
+    generationId: number;
+  };
+  query?: {
+    name?: string;
+    position?: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE';
+    teamId?: number;
+    cursor?: string;
+  };
+  url: '/api/admin/generations/{generationId}/members';
+};
+
+export type List5Errors = {
+  /**
+   * INVALID_MEMBER_REQUEST|INVALID_MEMBER_CURSOR
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_INCONSISTENT
+   */
+  500: ErrorResponse;
+  /**
+   * MEMBER_DATA_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type List5Error = List5Errors[keyof List5Errors];
+
+export type List5Responses = {
+  /**
+   * 조회 성공
+   */
+  200: AdminMemberListResponse;
+};
+
+export type List5Response = List5Responses[keyof List5Responses];
+
+export type TeamOptionsData = {
+  body?: never;
+  path: {
+    generationId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/member-team-options';
+};
+
+export type TeamOptionsErrors = {
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * MEMBER_DATA_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type TeamOptionsError = TeamOptionsErrors[keyof TeamOptionsErrors];
+
+export type TeamOptionsResponses = {
+  /**
+   * 조회 성공
+   */
+  200: Array<AdminMemberTeamOptionResponse>;
+};
+
+export type TeamOptionsResponse = TeamOptionsResponses[keyof TeamOptionsResponses];
+
+export type List6Data = {
+  body?: never;
+  path: {
+    generationId: number;
+  };
+  query?: {
+    /**
+     * 전체 조회 시 생략. PM, DESIGN, WEB, MOBILE, ANDROID, IOS, SERVER, AI_NATIVE 중 한 값
+     */
+    position?: 'PM' | 'DESIGN' | 'WEB' | 'MOBILE' | 'ANDROID' | 'IOS' | 'SERVER' | 'AI_NATIVE';
+  };
+  url: '/api/admin/generations/{generationId}/attendance-statistics';
+};
+
+export type List6Errors = {
+  /**
+   * INVALID_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ATTENDANCE_SCORE_INCONSISTENT
+   */
+  500: ErrorResponse;
+  /**
+   * ATTENDANCE_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type List6Error = List6Errors[keyof List6Errors];
+
+export type List6Responses = {
+  /**
+   * 조회 성공. 승인 회원이 없으면 items는 빈 배열
+   */
+  200: AdminAttendanceStatisticsListResponse;
+};
+
+export type List6Response = List6Responses[keyof List6Responses];
+
 export type WithdrawData = {
   body?: never;
   path?: never;
@@ -2829,7 +3860,7 @@ export type WithdrawResponse = WithdrawResponses[keyof WithdrawResponses];
 
 export type RevokeData = {
   /**
-   * Native refresh token. Web cookie 흐름에서는 body를 생략할 수 있다.
+   * Native refresh token. 해당 세션의 기기 등록을 해제하려면 전달해야 한다. Web cookie 흐름에서는 body를 생략할 수 있다.
    */
   body?: RenewSessionRequest;
   path?: never;
@@ -2854,42 +3885,6 @@ export type RevokeResponses = {
 };
 
 export type RevokeResponse = RevokeResponses[keyof RevokeResponses];
-
-export type Delete1Data = {
-  body?: never;
-  path: {
-    generationId: number;
-    sessionId: number;
-  };
-  query?: never;
-  url: '/api/admin/generations/{generationId}/sessions/{sessionId}';
-};
-
-export type Delete1Errors = {
-  /**
-   * STAFF_AUTHENTICATION_FAILED
-   */
-  401: ErrorResponse;
-  /**
-   * SESSION_NOT_FOUND
-   */
-  404: ErrorResponse;
-  /**
-   * SESSION_DELETE_CONFLICT
-   */
-  409: ErrorResponse;
-};
-
-export type Delete1Error = Delete1Errors[keyof Delete1Errors];
-
-export type Delete1Responses = {
-  /**
-   * 삭제 성공
-   */
-  204: void;
-};
-
-export type Delete1Response = Delete1Responses[keyof Delete1Responses];
 
 export type LogoutData = {
   body?: never;

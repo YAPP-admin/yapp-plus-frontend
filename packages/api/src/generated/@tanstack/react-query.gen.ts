@@ -16,35 +16,46 @@ import {
   authenticateKakao,
   badge,
   cancel,
+  cancel1,
   candidates,
   close,
   completeAppleAuthorization,
   completeGoogleAuthorization,
   completeKakaoAuthorization,
   consumeHandoff,
+  correct,
   create,
   create1,
   create2,
+  create3,
   decide,
   delete_,
   delete1,
+  delete2,
   detail,
   detail1,
+  detail2,
+  detail3,
   find,
   find1,
   find2,
   find3,
   find4,
   find5,
+  find6,
   findAll,
   findCandidates,
   findDetail,
   findPending,
   get,
+  history_,
   list,
   list1,
   list2,
   list3,
+  list4,
+  list5,
+  list6,
   login,
   logout,
   mine,
@@ -52,10 +63,14 @@ import {
   override,
   presign,
   presign1,
+  receive,
   recipients,
   register,
+  register1,
+  register2,
   reissue,
   reject,
+  remove,
   renew,
   replaceMembers,
   revoke,
@@ -65,8 +80,10 @@ import {
   startKakaoAuthorization,
   submit,
   submit1,
+  teamOptions,
   update,
   update1,
+  update2,
   verify,
   withdraw,
 } from '../sdk.gen';
@@ -88,8 +105,11 @@ import type {
   AuthenticateKakaoResponse,
   BadgeData,
   BadgeError,
+  Cancel1Data,
+  Cancel1Error,
   CancelData,
   CancelError,
+  CancelResponse,
   CandidatesData,
   CandidatesError,
   CandidatesResponse,
@@ -104,12 +124,18 @@ import type {
   ConsumeHandoffData,
   ConsumeHandoffError,
   ConsumeHandoffResponse,
+  CorrectData,
+  CorrectError,
+  CorrectResponse,
   Create1Data,
   Create1Error,
   Create1Response,
   Create2Data,
   Create2Error,
   Create2Response,
+  Create3Data,
+  Create3Error,
+  Create3Response,
   CreateData,
   CreateError,
   CreateResponse,
@@ -119,12 +145,21 @@ import type {
   Delete1Data,
   Delete1Error,
   Delete1Response,
+  Delete2Data,
+  Delete2Error,
+  Delete2Response,
   DeleteData,
   DeleteError,
   DeleteResponse,
   Detail1Data,
   Detail1Error,
   Detail1Response,
+  Detail2Data,
+  Detail2Error,
+  Detail2Response,
+  Detail3Data,
+  Detail3Error,
+  Detail3Response,
   DetailData,
   DetailError,
   DetailResponse,
@@ -143,6 +178,9 @@ import type {
   Find5Data,
   Find5Error,
   Find5Response,
+  Find6Data,
+  Find6Error,
+  Find6Response,
   FindAllData,
   FindAllError,
   FindAllResponse,
@@ -161,6 +199,9 @@ import type {
   GetData,
   GetError,
   GetResponse,
+  HistoryData,
+  HistoryError,
+  HistoryResponse,
   List1Data,
   List1Error,
   List1Response,
@@ -170,6 +211,15 @@ import type {
   List3Data,
   List3Error,
   List3Response,
+  List4Data,
+  List4Error,
+  List4Response,
+  List5Data,
+  List5Error,
+  List5Response,
+  List6Data,
+  List6Error,
+  List6Response,
   ListData,
   ListError,
   ListResponse,
@@ -190,9 +240,17 @@ import type {
   PresignData,
   PresignError,
   PresignResponse,
+  ReceiveData,
+  ReceiveError,
   RecipientsData,
   RecipientsError,
   RecipientsResponse,
+  Register1Data,
+  Register1Error,
+  Register1Response,
+  Register2Data,
+  Register2Error,
+  Register2Response,
   RegisterData,
   RegisterError,
   RegisterResponse,
@@ -202,6 +260,9 @@ import type {
   RejectData,
   RejectError,
   RejectResponse,
+  RemoveData,
+  RemoveError,
+  RemoveResponse,
   RenewData,
   RenewError,
   RenewResponse,
@@ -226,9 +287,15 @@ import type {
   SubmitData,
   SubmitError,
   SubmitResponse,
+  TeamOptionsData,
+  TeamOptionsError,
+  TeamOptionsResponse,
   Update1Data,
   Update1Error,
   Update1Response,
+  Update2Data,
+  Update2Error,
+  Update2Response,
   UpdateData,
   UpdateError,
   UpdateResponse,
@@ -239,6 +306,52 @@ import type {
   WithdrawError,
   WithdrawResponse,
 } from '../types.gen';
+
+/**
+ * 현재 세션 기기 등록 해제
+ *
+ * 없는 기기 또는 타인 소유 FID도 204로 응답한다.
+ */
+export const removeMutation = (
+  options?: Partial<Options<RemoveData>>,
+): UseMutationOptions<RemoveResponse, RemoveError, Options<RemoveData>> => {
+  const mutationOptions: UseMutationOptions<RemoveResponse, RemoveError, Options<RemoveData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await remove({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * 현재 세션 기기 등록·갱신
+ *
+ * installationId는 FID이며 전송 대상은 registrationToken이다. 토큰 원문은 응답하지 않는다.
+ */
+export const registerMutation = (
+  options?: Partial<Options<RegisterData>>,
+): UseMutationOptions<RegisterResponse, RegisterError, Options<RegisterData>> => {
+  const mutationOptions: UseMutationOptions<
+    RegisterResponse,
+    RegisterError,
+    Options<RegisterData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await register({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
 
 /**
  * 사용자 공지 읽음 처리
@@ -268,7 +381,7 @@ export const acknowledgeMutation = (
 /**
  * Team 삭제
  *
- * version 없이 Team을 soft delete하고 팀원을 미배정으로 만든다.
+ * version 없이 Team을 soft delete한다. 탈퇴하지 않은 팀원은 미배정으로 만들고 탈퇴 회원의 연결 이력은 보존한다.
  */
 export const deleteMutation = (
   options?: Partial<Options<DeleteData>>,
@@ -366,7 +479,7 @@ export const updateMutation = (
 /**
  * Team 팀원 전체 교체
  *
- * 선택한 팀원으로 전체 교체하며 다른 Team 소속자는 원자적으로 이동한다.
+ * 선택한 팀원으로 전체 교체하며 다른 Team 소속자는 원자적으로 이동한다. 탈퇴 회원의 기존 연결은 보존하며 새 배정은 거부한다.
  */
 export const replaceMembersMutation = (
   options?: Partial<Options<ReplaceMembersData>>,
@@ -389,20 +502,104 @@ export const replaceMembersMutation = (
 };
 
 /**
+ * 기수 세션 삭제
+ *
+ * 출석이 시작되지 않은 세션 한 건을 soft delete한다.
+ */
+export const delete1Mutation = (
+  options?: Partial<Options<Delete1Data>>,
+): UseMutationOptions<Delete1Response, Delete1Error, Options<Delete1Data>> => {
+  const mutationOptions: UseMutationOptions<Delete1Response, Delete1Error, Options<Delete1Data>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await delete1({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * 기수 세션 수정
+ *
+ * 생성과 동일한 본문으로 세션 정보를 전체 덮어쓴다. 연결된 출결 자료에 영향을 주는 시각·유형 변경은 제한한다.
+ */
+export const update1Mutation = (
+  options?: Partial<Options<Update1Data>>,
+): UseMutationOptions<Update1Response, Update1Error, Options<Update1Data>> => {
+  const mutationOptions: UseMutationOptions<Update1Response, Update1Error, Options<Update1Data>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await update1({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const detailQueryKey = (options: Options<DetailData>) => createQueryKey('detail', options);
+
+/**
+ * 기수 회원 상세
+ *
+ * 목록 정보, 전화번호, 수정 revision과 필드별 정정 이력을 조회한다.
+ */
+export const detailOptions = (options: Options<DetailData>) =>
+  queryOptions<DetailResponse, DetailError, DetailResponse, ReturnType<typeof detailQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await detail({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: detailQueryKey(options),
+  });
+
+/**
+ * 회원 상태·Position 정정
+ *
+ * 두 필드를 전체 대체한다. position은 null을 명시할 수 있다. WITHDRAWN은 정정할 수 없고, 변경된 필드만 감사 이력에 기록한다. no-op은 revision을 올리지 않는다.
+ */
+export const correctMutation = (
+  options?: Partial<Options<CorrectData>>,
+): UseMutationOptions<CorrectResponse, CorrectError, Options<CorrectData>> => {
+  const mutationOptions: UseMutationOptions<CorrectResponse, CorrectError, Options<CorrectData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await correct({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
  * User 가입 완료
  *
- * 가입 토큰 소비, User/Member 생성, 세션 저장을 한 트랜잭션으로 완료한다. 입력 오류·저장 충돌·세션 저장 실패로 롤백되면 만료 전 토큰으로 재시도할 수 있다. 커밋 후 응답이 유실되면 새 OIDC 로그인으로 기존 User 세션을 발급받는다.
+ * 가입 토큰 소비, User/Member 생성, 현재 활동 기수의 이름·정규화 전화번호 일치 AVAILABLE 명단 자동 승인 및 세션 저장을 한 트랜잭션으로 완료한다. 현재 기수나 일치 명단이 없으면 PENDING으로 가입한다. 입력 오류·저장 충돌·세션 저장 실패로 롤백되면 만료 전 토큰으로 재시도할 수 있다. 커밋 후 응답이 유실되면 새 OIDC 로그인으로 기존 User 세션을 발급받는다.
  */
-export const registerMutation = (
-  options?: Partial<Options<RegisterData>>,
-): UseMutationOptions<RegisterResponse, RegisterError, Options<RegisterData>> => {
+export const register1Mutation = (
+  options?: Partial<Options<Register1Data>>,
+): UseMutationOptions<Register1Response, Register1Error, Options<Register1Data>> => {
   const mutationOptions: UseMutationOptions<
-    RegisterResponse,
-    RegisterError,
-    Options<RegisterData>
+    Register1Response,
+    Register1Error,
+    Options<Register1Data>
   > = {
     mutationFn: async (fnOptions) => {
-      const { data } = await register({
+      const { data } = await register1({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -556,6 +753,27 @@ export const authenticateGoogleMutation = (
 };
 
 /**
+ * Apple 계정 변경 알림
+ *
+ * Apple JWS의 서명, 발급자, 대상과 발급 시각을 검증하고 계정 상태 및 YAPP 세션을 반영한다.
+ */
+export const receiveMutation = (
+  options?: Partial<Options<ReceiveData>>,
+): UseMutationOptions<unknown, ReceiveError, Options<ReceiveData>> => {
+  const mutationOptions: UseMutationOptions<unknown, ReceiveError, Options<ReceiveData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await receive({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
  * Apple Native OIDC 인증
  *
  * iOS가 Apple에서 받은 ID Token, authorization code와 원본 nonce를 검증한다.
@@ -651,6 +869,146 @@ export const submit1Mutation = (
   return mutationOptions;
 };
 
+export const historyQueryKey = (options?: Options<HistoryData>) =>
+  createQueryKey('history', options);
+
+/**
+ * 알림 발송 이력 조회
+ *
+ * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다.
+ */
+export const historyOptions = (options?: Options<HistoryData>) =>
+  queryOptions<HistoryResponse, HistoryError, HistoryResponse, ReturnType<typeof historyQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await history_({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: historyQueryKey(options),
+  });
+
+const createInfiniteParams = <
+  K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>,
+>(
+  queryKey: QueryKey<Options>,
+  page: K,
+) => {
+  const params = { ...queryKey[0] };
+  if (page.body) {
+    params.body = {
+      ...(queryKey[0].body as any),
+      ...(page.body as any),
+    };
+  }
+  if (page.headers) {
+    params.headers = {
+      ...queryKey[0].headers,
+      ...page.headers,
+    };
+  }
+  if (page.path) {
+    params.path = {
+      ...(queryKey[0].path as any),
+      ...(page.path as any),
+    };
+  }
+  if (page.query) {
+    params.query = {
+      ...(queryKey[0].query as any),
+      ...(page.query as any),
+    };
+  }
+  return params as unknown as typeof page;
+};
+
+export const historyInfiniteQueryKey = (
+  options?: Options<HistoryData>,
+): QueryKey<Options<HistoryData>> => createQueryKey('history', options, true);
+
+/**
+ * 알림 발송 이력 조회
+ *
+ * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다.
+ */
+export const historyInfiniteOptions = (options?: Options<HistoryData>) => {
+  const opts = infiniteQueryOptions<
+    HistoryResponse,
+    HistoryError,
+    InfiniteData<HistoryResponse>,
+    QueryKey<Options<HistoryData>>,
+    string | Pick<QueryKey<Options<HistoryData>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<HistoryData>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await history_({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: historyInfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
+/**
+ * 알림 즉시·예약 발송 접수
+ *
+ * Idempotency-Key가 필수다. 발송 기능이 비활성화된 환경에서는 503을 반환한다.
+ */
+export const createMutation = (
+  options?: Partial<Options<CreateData>>,
+): UseMutationOptions<CreateResponse, CreateError, Options<CreateData>> => {
+  const mutationOptions: UseMutationOptions<CreateResponse, CreateError, Options<CreateData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await create({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+/**
+ * 대기 예약 취소
+ */
+export const cancelMutation = (
+  options?: Partial<Options<CancelData>>,
+): UseMutationOptions<CancelResponse, CancelError, Options<CancelData>> => {
+  const mutationOptions: UseMutationOptions<CancelResponse, CancelError, Options<CancelData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await cancel({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 /**
  * 가입 대기 회원 거절
  */
@@ -714,14 +1072,14 @@ export const findAllOptions = (options: Options<FindAllData>) =>
 /**
  * Team 생성
  *
- * 같은 기수의 PLAYER Membership 하나 이상으로 Team을 생성한다.
+ * 같은 기수의 탈퇴하지 않은 Membership 하나 이상으로 Team을 생성한다.
  */
-export const createMutation = (
-  options?: Partial<Options<CreateData>>,
-): UseMutationOptions<CreateResponse, CreateError, Options<CreateData>> => {
-  const mutationOptions: UseMutationOptions<CreateResponse, CreateError, Options<CreateData>> = {
+export const create1Mutation = (
+  options?: Partial<Options<Create1Data>>,
+): UseMutationOptions<Create1Response, Create1Error, Options<Create1Data>> => {
+  const mutationOptions: UseMutationOptions<Create1Response, Create1Error, Options<Create1Data>> = {
     mutationFn: async (fnOptions) => {
-      const { data } = await create({
+      const { data } = await create1({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -758,12 +1116,12 @@ export const find1Options = (options: Options<Find1Data>) =>
  *
  * 한 기수에 세션 한 건을 등록한다.
  */
-export const create1Mutation = (
-  options?: Partial<Options<Create1Data>>,
-): UseMutationOptions<Create1Response, Create1Error, Options<Create1Data>> => {
-  const mutationOptions: UseMutationOptions<Create1Response, Create1Error, Options<Create1Data>> = {
+export const create2Mutation = (
+  options?: Partial<Options<Create2Data>>,
+): UseMutationOptions<Create2Response, Create2Error, Options<Create2Data>> => {
+  const mutationOptions: UseMutationOptions<Create2Response, Create2Error, Options<Create2Data>> = {
     mutationFn: async (fnOptions) => {
-      const { data } = await create1({
+      const { data } = await create2({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -809,12 +1167,12 @@ export const closeMutation = (
   return mutationOptions;
 };
 
-export const cancelMutation = (
-  options?: Partial<Options<CancelData>>,
-): UseMutationOptions<unknown, CancelError, Options<CancelData>> => {
-  const mutationOptions: UseMutationOptions<unknown, CancelError, Options<CancelData>> = {
+export const cancel1Mutation = (
+  options?: Partial<Options<Cancel1Data>>,
+): UseMutationOptions<unknown, Cancel1Error, Options<Cancel1Data>> => {
+  const mutationOptions: UseMutationOptions<unknown, Cancel1Error, Options<Cancel1Data>> = {
     mutationFn: async (fnOptions) => {
-      const { data } = await cancel({
+      const { data } = await cancel1({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -882,6 +1240,31 @@ export const reissueMutation = (
   return mutationOptions;
 };
 
+/**
+ * 기수 사전 명단 일괄 등록
+ *
+ * 1~1000개 행을 원자적으로 등록하고 기존 AVAILABLE 행을 정정한다. 가입 승인은 별도 API에서 수행한다.
+ */
+export const register2Mutation = (
+  options?: Partial<Options<Register2Data>>,
+): UseMutationOptions<Register2Response, Register2Error, Options<Register2Data>> => {
+  const mutationOptions: UseMutationOptions<
+    Register2Response,
+    Register2Error,
+    Options<Register2Data>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await register2({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
 export const listQueryKey = (options: Options<ListData>) => createQueryKey('list', options);
 
 /**
@@ -902,40 +1285,6 @@ export const listOptions = (options: Options<ListData>) =>
     },
     queryKey: listQueryKey(options),
   });
-
-const createInfiniteParams = <
-  K extends Pick<QueryKey<Options>[0], 'body' | 'headers' | 'path' | 'query'>,
->(
-  queryKey: QueryKey<Options>,
-  page: K,
-) => {
-  const params = { ...queryKey[0] };
-  if (page.body) {
-    params.body = {
-      ...(queryKey[0].body as any),
-      ...(page.body as any),
-    };
-  }
-  if (page.headers) {
-    params.headers = {
-      ...queryKey[0].headers,
-      ...page.headers,
-    };
-  }
-  if (page.path) {
-    params.path = {
-      ...(queryKey[0].path as any),
-      ...(page.path as any),
-    };
-  }
-  if (page.query) {
-    params.query = {
-      ...(queryKey[0].query as any),
-      ...(page.query as any),
-    };
-  }
-  return params as unknown as typeof page;
-};
 
 export const listInfiniteQueryKey = (options: Options<ListData>): QueryKey<Options<ListData>> =>
   createQueryKey('list', options, true);
@@ -983,14 +1332,14 @@ export const listInfiniteOptions = (options: Options<ListData>) => {
 /**
  * 공지 작성
  *
- * Idempotency-Key를 사용해 즉시 게시한다. ALL_USERS는 현재 승인·비탈퇴 회원을 대상으로 하고 발행 수신자 snapshot을 보존한다.
+ * Idempotency-Key로 즉시 게시하고 발행 당시 열람자의 공지 앱 푸시 작업을 원자적으로 저장한다. 201은 FCM 수락·단말 표시를 뜻하지 않는다. 푸시 data의 postId로 사용자 상세로 이동하며 일반 알림 목록에는 포함되지 않는다.
  */
-export const create2Mutation = (
-  options?: Partial<Options<Create2Data>>,
-): UseMutationOptions<Create2Response, Create2Error, Options<Create2Data>> => {
-  const mutationOptions: UseMutationOptions<Create2Response, Create2Error, Options<Create2Data>> = {
+export const create3Mutation = (
+  options?: Partial<Options<Create3Data>>,
+): UseMutationOptions<Create3Response, Create3Error, Options<Create3Data>> => {
+  const mutationOptions: UseMutationOptions<Create3Response, Create3Error, Options<Create3Data>> = {
     mutationFn: async (fnOptions) => {
-      const { data } = await create2({
+      const { data } = await create3({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -1079,17 +1428,39 @@ export const badgeMutation = (
   return mutationOptions;
 };
 
-export const detailQueryKey = (options: Options<DetailData>) => createQueryKey('detail', options);
+/**
+ * 공지 삭제
+ *
+ * 공지 열람과 아직 시작하지 않은 앱 푸시·실패 재시도를 중단한다. 이미 수락된 푸시는 유지하며 외부 호출과 삭제가 경합하면 삭제 후 수락될 수 있다. 204는 논리 삭제 완료를 뜻하며 S3 버전 정리는 재시도될 수 있다.
+ */
+export const delete2Mutation = (
+  options?: Partial<Options<Delete2Data>>,
+): UseMutationOptions<Delete2Response, Delete2Error, Options<Delete2Data>> => {
+  const mutationOptions: UseMutationOptions<Delete2Response, Delete2Error, Options<Delete2Data>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await delete2({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+  };
+  return mutationOptions;
+};
+
+export const detail1QueryKey = (options: Options<Detail1Data>) =>
+  createQueryKey('detail1', options);
 
 /**
  * 공지 일반 상세 조회
  *
  * 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
-export const detailOptions = (options: Options<DetailData>) =>
-  queryOptions<DetailResponse, DetailError, DetailResponse, ReturnType<typeof detailQueryKey>>({
+export const detail1Options = (options: Options<Detail1Data>) =>
+  queryOptions<Detail1Response, Detail1Error, Detail1Response, ReturnType<typeof detail1QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await detail({
+      const { data } = await detail1({
         ...options,
         ...queryKey[0],
         signal,
@@ -1097,18 +1468,20 @@ export const detailOptions = (options: Options<DetailData>) =>
       });
       return data;
     },
-    queryKey: detailQueryKey(options),
+    queryKey: detail1QueryKey(options),
   });
 
 /**
  * 공지 제목·본문·이미지 수정
+ *
+ * 수정 때 앱 푸시를 다시 보내지 않고 최초 발행 푸시 제목도 바꾸지 않는다.
  */
-export const update1Mutation = (
-  options?: Partial<Options<Update1Data>>,
-): UseMutationOptions<Update1Response, Update1Error, Options<Update1Data>> => {
-  const mutationOptions: UseMutationOptions<Update1Response, Update1Error, Options<Update1Data>> = {
+export const update2Mutation = (
+  options?: Partial<Options<Update2Data>>,
+): UseMutationOptions<Update2Response, Update2Error, Options<Update2Data>> => {
+  const mutationOptions: UseMutationOptions<Update2Response, Update2Error, Options<Update2Data>> = {
     mutationFn: async (fnOptions) => {
-      const { data } = await update1({
+      const { data } = await update2({
         ...options,
         ...fnOptions,
         throwOnError: true,
@@ -1122,9 +1495,9 @@ export const update1Mutation = (
 export const find2QueryKey = (options?: Options<Find2Data>) => createQueryKey('find2', options);
 
 /**
- * 이번 주 세션 조회
+ * 본인 알림 목록 조회
  *
- * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
+ * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
  */
 export const find2Options = (options?: Options<Find2Data>) =>
   queryOptions<Find2Response, Find2Error, Find2Response, ReturnType<typeof find2QueryKey>>({
@@ -1138,6 +1511,70 @@ export const find2Options = (options?: Options<Find2Data>) =>
       return data;
     },
     queryKey: find2QueryKey(options),
+  });
+
+export const find2InfiniteQueryKey = (options?: Options<Find2Data>): QueryKey<Options<Find2Data>> =>
+  createQueryKey('find2', options, true);
+
+/**
+ * 본인 알림 목록 조회
+ *
+ * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
+ */
+export const find2InfiniteOptions = (options?: Options<Find2Data>) => {
+  const opts = infiniteQueryOptions<
+    Find2Response,
+    Find2Error,
+    InfiniteData<Find2Response>,
+    QueryKey<Options<Find2Data>>,
+    string | Pick<QueryKey<Options<Find2Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Find2Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await find2({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: find2InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
+
+/**
+ * 이번 주 세션 조회
+ *
+ * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
+ */
+export const find3Options = (options?: Options<Find3Data>) =>
+  queryOptions<Find3Response, Find3Error, Find3Response, ReturnType<typeof find3QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find3({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find3QueryKey(options),
   });
 
 export const list1QueryKey = (options?: Options<List1Data>) => createQueryKey('list1', options);
@@ -1204,18 +1641,18 @@ export const list1InfiniteOptions = (options?: Options<List1Data>) => {
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
-export const detail1QueryKey = (options: Options<Detail1Data>) =>
-  createQueryKey('detail1', options);
+export const detail2QueryKey = (options: Options<Detail2Data>) =>
+  createQueryKey('detail2', options);
 
 /**
  * 사용자 공지 상세 조회
  *
  * 현재 열람 권한을 확인해 본문·과제 제출 정보·첨부 이미지를 반환한다. 조회는 읽음 상태를 변경하지 않는다. 이미 발급된 이미지 URL은 탈퇴 후에도 남은 유효 시간 동안 사용할 수 있다.
  */
-export const detail1Options = (options: Options<Detail1Data>) =>
-  queryOptions<Detail1Response, Detail1Error, Detail1Response, ReturnType<typeof detail1QueryKey>>({
+export const detail2Options = (options: Options<Detail2Data>) =>
+  queryOptions<Detail2Response, Detail2Error, Detail2Response, ReturnType<typeof detail2QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await detail1({
+      const { data } = await detail2({
         ...options,
         ...queryKey[0],
         signal,
@@ -1223,20 +1660,20 @@ export const detail1Options = (options: Options<Detail1Data>) =>
       });
       return data;
     },
-    queryKey: detail1QueryKey(options),
+    queryKey: detail2QueryKey(options),
   });
 
-export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
+export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('find4', options);
 
 /**
  * 현재 기수 전체 세션 일정 조회
  *
  * 로그인 사용자의 소속 기수와 무관하게 현재 활동 중인 기수의 세션 일정을 모두 조회한다.
  */
-export const find3Options = (options?: Options<Find3Data>) =>
-  queryOptions<Find3Response, Find3Error, Find3Response, ReturnType<typeof find3QueryKey>>({
+export const find4Options = (options?: Options<Find4Data>) =>
+  queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find3({
+      const { data } = await find4({
         ...options,
         ...queryKey[0],
         signal,
@@ -1244,7 +1681,7 @@ export const find3Options = (options?: Options<Find3Data>) =>
       });
       return data;
     },
-    queryKey: find3QueryKey(options),
+    queryKey: find4QueryKey(options),
   });
 
 export const completeKakaoAuthorizationQueryKey = (
@@ -1407,78 +1844,14 @@ export const mineOptions = (options?: Options<MineData>) =>
     queryKey: mineQueryKey(options),
   });
 
-export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('find4', options);
+export const find5QueryKey = (options?: Options<Find5Data>) => createQueryKey('find5', options);
 
 /**
  * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
  *
  * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find4Options = (options?: Options<Find4Data>) =>
-  queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find4({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: find4QueryKey(options),
-  });
-
-export const find4InfiniteQueryKey = (options?: Options<Find4Data>): QueryKey<Options<Find4Data>> =>
-  createQueryKey('find4', options, true);
-
-/**
- * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
- *
- * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
- */
-export const find4InfiniteOptions = (options?: Options<Find4Data>) => {
-  const opts = infiniteQueryOptions<
-    Find4Response,
-    Find4Error,
-    InfiniteData<Find4Response>,
-    QueryKey<Options<Find4Data>>,
-    string | Pick<QueryKey<Options<Find4Data>>[0], 'body' | 'headers' | 'path' | 'query'>
-  >(
-    // @ts-ignore
-    {
-      queryFn: async ({ pageParam, queryKey, signal }) => {
-        // @ts-ignore
-        const page: Pick<QueryKey<Options<Find4Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
-          typeof pageParam === 'object'
-            ? pageParam
-            : {
-                query: {
-                  cursor: pageParam,
-                },
-              };
-        const params = createInfiniteParams(queryKey, page);
-        const { data } = await find4({
-          ...options,
-          ...params,
-          signal,
-          throwOnError: true,
-        });
-        return data;
-      },
-      queryKey: find4InfiniteQueryKey(options),
-    },
-  );
-  return opts as Omit<typeof opts, 'initialData'>;
-};
-
-export const find5QueryKey = (options: Options<Find5Data>) => createQueryKey('find5', options);
-
-/**
- * 탈퇴 사용자 보존 사유 이력 조회
- *
- * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
- */
-export const find5Options = (options: Options<Find5Data>) =>
+export const find5Options = (options?: Options<Find5Data>) =>
   queryOptions<Find5Response, Find5Error, Find5Response, ReturnType<typeof find5QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await find5({
@@ -1492,15 +1865,15 @@ export const find5Options = (options: Options<Find5Data>) =>
     queryKey: find5QueryKey(options),
   });
 
-export const find5InfiniteQueryKey = (options: Options<Find5Data>): QueryKey<Options<Find5Data>> =>
+export const find5InfiniteQueryKey = (options?: Options<Find5Data>): QueryKey<Options<Find5Data>> =>
   createQueryKey('find5', options, true);
 
 /**
- * 탈퇴 사용자 보존 사유 이력 조회
+ * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
  *
- * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find5InfiniteOptions = (options: Options<Find5Data>) => {
+export const find5InfiniteOptions = (options?: Options<Find5Data>) => {
   const opts = infiniteQueryOptions<
     Find5Response,
     Find5Error,
@@ -1535,13 +1908,77 @@ export const find5InfiniteOptions = (options: Options<Find5Data>) => {
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
+export const find6QueryKey = (options: Options<Find6Data>) => createQueryKey('find6', options);
+
+/**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find6Options = (options: Options<Find6Data>) =>
+  queryOptions<Find6Response, Find6Error, Find6Response, ReturnType<typeof find6QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find6({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find6QueryKey(options),
+  });
+
+export const find6InfiniteQueryKey = (options: Options<Find6Data>): QueryKey<Options<Find6Data>> =>
+  createQueryKey('find6', options, true);
+
+/**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find6InfiniteOptions = (options: Options<Find6Data>) => {
+  const opts = infiniteQueryOptions<
+    Find6Response,
+    Find6Error,
+    InfiniteData<Find6Response>,
+    QueryKey<Options<Find6Data>>,
+    string | Pick<QueryKey<Options<Find6Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Find6Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await find6({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: find6InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
 export const findPendingQueryKey = (options?: Options<FindPendingData>) =>
   createQueryKey('findPending', options);
 
 /**
- * 가입 대기 회원 목록 조회
+ * 가입 심사 회원 목록 조회
  *
- * 검색 없이 PENDING 회원을 가입 시각 오름차순으로 조회한다.
+ * 삭제되지 않은 PENDING·REJECTED 회원을 가입 시각·회원 ID 오름차순으로 조회한다. 상태 필터를 생략하면 두 상태를 함께 조회한다.
  */
 export const findPendingOptions = (options?: Options<FindPendingData>) =>
   queryOptions<
@@ -1567,9 +2004,9 @@ export const findPendingInfiniteQueryKey = (
 ): QueryKey<Options<FindPendingData>> => createQueryKey('findPending', options, true);
 
 /**
- * 가입 대기 회원 목록 조회
+ * 가입 심사 회원 목록 조회
  *
- * 검색 없이 PENDING 회원을 가입 시각 오름차순으로 조회한다.
+ * 삭제되지 않은 PENDING·REJECTED 회원을 가입 시각·회원 ID 오름차순으로 조회한다. 상태 필터를 생략하면 두 상태를 함께 조회한다.
  */
 export const findPendingInfiniteOptions = (options?: Options<FindPendingData>) => {
   const opts = infiniteQueryOptions<
@@ -1667,7 +2104,7 @@ export const candidatesQueryKey = (options: Options<CandidatesData>) =>
 /**
  * Team member 후보 조회
  *
- * 해당 기수의 PLAYER Membership을 현재 소속 여부로 필터링한다.
+ * 해당 기수의 탈퇴하지 않은 Membership을 현재 소속 여부로 필터링한다.
  */
 export const candidatesOptions = (options: Options<CandidatesData>) =>
   queryOptions<
@@ -1767,6 +2204,70 @@ export const list3InfiniteOptions = (options: Options<List3Data>) => {
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
+export const list4QueryKey = (options: Options<List4Data>) => createQueryKey('list4', options);
+
+/**
+ * 기수의 사용 가능한 사전 명단 조회
+ *
+ * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
+ */
+export const list4Options = (options: Options<List4Data>) =>
+  queryOptions<List4Response, List4Error, List4Response, ReturnType<typeof list4QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list4({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list4QueryKey(options),
+  });
+
+export const list4InfiniteQueryKey = (options: Options<List4Data>): QueryKey<Options<List4Data>> =>
+  createQueryKey('list4', options, true);
+
+/**
+ * 기수의 사용 가능한 사전 명단 조회
+ *
+ * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
+ */
+export const list4InfiniteOptions = (options: Options<List4Data>) => {
+  const opts = infiniteQueryOptions<
+    List4Response,
+    List4Error,
+    InfiniteData<List4Response>,
+    QueryKey<Options<List4Data>>,
+    string | Pick<QueryKey<Options<List4Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<List4Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await list4({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: list4InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
 export const recipientsQueryKey = (options: Options<RecipientsData>) =>
   createQueryKey('recipients', options);
 
@@ -1841,6 +2342,140 @@ export const recipientsInfiniteOptions = (options: Options<RecipientsData>) => {
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
+export const detail3QueryKey = (options: Options<Detail3Data>) =>
+  createQueryKey('detail3', options);
+
+/**
+ * 회원별 확정 감점 사건 조회
+ *
+ * 한 기수 소속의 현재 확정 총점과 마감 세션별 지각·조퇴·결석 감점을 사건 단위로 조회한다.
+ */
+export const detail3Options = (options: Options<Detail3Data>) =>
+  queryOptions<Detail3Response, Detail3Error, Detail3Response, ReturnType<typeof detail3QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await detail3({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: detail3QueryKey(options),
+  });
+
+export const list5QueryKey = (options: Options<List5Data>) => createQueryKey('list5', options);
+
+/**
+ * 기수 회원 목록
+ *
+ * 승인되고 탈퇴하지 않은 회원. 이름은 완전 일치, 필터는 AND. 가입 시각·회원 ID 역순, 20개 커서 페이지. 출석 점수는 해당 기수 PLAYER 이력이 없으면 null.
+ */
+export const list5Options = (options: Options<List5Data>) =>
+  queryOptions<List5Response, List5Error, List5Response, ReturnType<typeof list5QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list5({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list5QueryKey(options),
+  });
+
+export const list5InfiniteQueryKey = (options: Options<List5Data>): QueryKey<Options<List5Data>> =>
+  createQueryKey('list5', options, true);
+
+/**
+ * 기수 회원 목록
+ *
+ * 승인되고 탈퇴하지 않은 회원. 이름은 완전 일치, 필터는 AND. 가입 시각·회원 ID 역순, 20개 커서 페이지. 출석 점수는 해당 기수 PLAYER 이력이 없으면 null.
+ */
+export const list5InfiniteOptions = (options: Options<List5Data>) => {
+  const opts = infiniteQueryOptions<
+    List5Response,
+    List5Error,
+    InfiniteData<List5Response>,
+    QueryKey<Options<List5Data>>,
+    string | Pick<QueryKey<Options<List5Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<List5Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await list5({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: list5InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const teamOptionsQueryKey = (options: Options<TeamOptionsData>) =>
+  createQueryKey('teamOptions', options);
+
+/**
+ * 회원 필터용 Team 목록
+ *
+ * 활성 Team별 현재 PLAYER 수를 조회한다. 0명 Team도 포함한다.
+ */
+export const teamOptionsOptions = (options: Options<TeamOptionsData>) =>
+  queryOptions<
+    TeamOptionsResponse,
+    TeamOptionsError,
+    TeamOptionsResponse,
+    ReturnType<typeof teamOptionsQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await teamOptions({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: teamOptionsQueryKey(options),
+  });
+
+export const list6QueryKey = (options: Options<List6Data>) => createQueryKey('list6', options);
+
+/**
+ * 기수별 출석 통계 조회
+ *
+ * 승인된 비탈퇴 회원 전체 또는 일치 Position을 페이지 없이 조회한다. 현재 저장된 마감 감점만 반영한다.
+ */
+export const list6Options = (options: Options<List6Data>) =>
+  queryOptions<List6Response, List6Error, List6Response, ReturnType<typeof list6QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list6({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list6QueryKey(options),
+  });
+
 /**
  * 계정·동아리 통합 탈퇴
  *
@@ -1869,7 +2504,7 @@ export const withdrawMutation = (
 /**
  * 현재 세션 로그아웃
  *
- * 전달된 refresh token을 폐기하고 Web refresh cookie가 있으면 만료시킨다. 토큰 없이 호출해도 204를 반환한다.
+ * 전달된 refresh token의 세션을 폐기하고 해당 세션의 FCM 기기 등록을 해제한다. Web refresh cookie가 있으면 만료시킨다. 토큰 없이 호출해도 204를 반환하지만 기기 등록은 해제되지 않는다. Native는 refresh token을 전달해야 한다.
  */
 export const revokeMutation = (
   options?: Partial<Options<RevokeData>>,
@@ -1877,27 +2512,6 @@ export const revokeMutation = (
   const mutationOptions: UseMutationOptions<RevokeResponse, RevokeError, Options<RevokeData>> = {
     mutationFn: async (fnOptions) => {
       const { data } = await revoke({
-        ...options,
-        ...fnOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-  };
-  return mutationOptions;
-};
-
-/**
- * 기수 세션 삭제
- *
- * 출석이 시작되지 않은 세션 한 건을 soft delete한다.
- */
-export const delete1Mutation = (
-  options?: Partial<Options<Delete1Data>>,
-): UseMutationOptions<Delete1Response, Delete1Error, Options<Delete1Data>> => {
-  const mutationOptions: UseMutationOptions<Delete1Response, Delete1Error, Options<Delete1Data>> = {
-    mutationFn: async (fnOptions) => {
-      const { data } = await delete1({
         ...options,
         ...fnOptions,
         throwOnError: true,

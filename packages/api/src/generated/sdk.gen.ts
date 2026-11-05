@@ -28,6 +28,9 @@ import type {
   BadgeData,
   BadgeErrors,
   BadgeResponses,
+  Cancel1Data,
+  Cancel1Errors,
+  Cancel1Responses,
   CancelData,
   CancelErrors,
   CancelResponses,
@@ -46,12 +49,18 @@ import type {
   ConsumeHandoffData,
   ConsumeHandoffErrors,
   ConsumeHandoffResponses,
+  CorrectData,
+  CorrectErrors,
+  CorrectResponses,
   Create1Data,
   Create1Errors,
   Create1Responses,
   Create2Data,
   Create2Errors,
   Create2Responses,
+  Create3Data,
+  Create3Errors,
+  Create3Responses,
   CreateData,
   CreateErrors,
   CreateResponses,
@@ -61,12 +70,21 @@ import type {
   Delete1Data,
   Delete1Errors,
   Delete1Responses,
+  Delete2Data,
+  Delete2Errors,
+  Delete2Responses,
   DeleteData,
   DeleteErrors,
   DeleteResponses,
   Detail1Data,
   Detail1Errors,
   Detail1Responses,
+  Detail2Data,
+  Detail2Errors,
+  Detail2Responses,
+  Detail3Data,
+  Detail3Errors,
+  Detail3Responses,
   DetailData,
   DetailErrors,
   DetailResponses,
@@ -85,6 +103,9 @@ import type {
   Find5Data,
   Find5Errors,
   Find5Responses,
+  Find6Data,
+  Find6Errors,
+  Find6Responses,
   FindAllData,
   FindAllErrors,
   FindAllResponses,
@@ -103,6 +124,9 @@ import type {
   GetData,
   GetErrors,
   GetResponses,
+  HistoryData,
+  HistoryErrors,
+  HistoryResponses,
   List1Data,
   List1Errors,
   List1Responses,
@@ -112,6 +136,15 @@ import type {
   List3Data,
   List3Errors,
   List3Responses,
+  List4Data,
+  List4Errors,
+  List4Responses,
+  List5Data,
+  List5Errors,
+  List5Responses,
+  List6Data,
+  List6Errors,
+  List6Responses,
   ListData,
   ListErrors,
   ListResponses,
@@ -133,9 +166,18 @@ import type {
   PresignData,
   PresignErrors,
   PresignResponses,
+  ReceiveData,
+  ReceiveErrors,
+  ReceiveResponses,
   RecipientsData,
   RecipientsErrors,
   RecipientsResponses,
+  Register1Data,
+  Register1Errors,
+  Register1Responses,
+  Register2Data,
+  Register2Errors,
+  Register2Responses,
   RegisterData,
   RegisterErrors,
   RegisterResponses,
@@ -145,6 +187,9 @@ import type {
   RejectData,
   RejectErrors,
   RejectResponses,
+  RemoveData,
+  RemoveErrors,
+  RemoveResponses,
   RenewData,
   RenewErrors,
   RenewResponses,
@@ -169,9 +214,15 @@ import type {
   SubmitData,
   SubmitErrors,
   SubmitResponses,
+  TeamOptionsData,
+  TeamOptionsErrors,
+  TeamOptionsResponses,
   Update1Data,
   Update1Errors,
   Update1Responses,
+  Update2Data,
+  Update2Errors,
+  Update2Responses,
   UpdateData,
   UpdateErrors,
   UpdateResponses,
@@ -202,6 +253,50 @@ export type Options<
 };
 
 /**
+ * 현재 세션 기기 등록 해제
+ *
+ * 없는 기기 또는 타인 소유 FID도 204로 응답한다.
+ */
+export const remove = <ThrowOnError extends boolean = false>(
+  options: Options<RemoveData, ThrowOnError>,
+): RequestResult<RemoveResponses, RemoveErrors, ThrowOnError> =>
+  (options.client ?? client).delete<RemoveResponses, RemoveErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/users/me/notification-devices/{installationId}',
+    ...options,
+  });
+
+/**
+ * 현재 세션 기기 등록·갱신
+ *
+ * installationId는 FID이며 전송 대상은 registrationToken이다. 토큰 원문은 응답하지 않는다.
+ */
+export const register = <ThrowOnError extends boolean = false>(
+  options: Options<RegisterData, ThrowOnError>,
+): RequestResult<RegisterResponses, RegisterErrors, ThrowOnError> =>
+  (options.client ?? client).put<RegisterResponses, RegisterErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/users/me/notification-devices/{installationId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
  * 사용자 공지 읽음 처리
  *
  * 현재 열람 권한이 있는 공지를 명시적으로 읽음 처리한다. 반복 요청도 성공하며 최초 읽은 시각은 변경하지 않는다.
@@ -224,7 +319,7 @@ export const acknowledge = <ThrowOnError extends boolean = false>(
 /**
  * Team 삭제
  *
- * version 없이 Team을 soft delete하고 팀원을 미배정으로 만든다.
+ * version 없이 Team을 soft delete한다. 탈퇴하지 않은 팀원은 미배정으로 만들고 탈퇴 회원의 연결 이력은 보존한다.
  */
 export const delete_ = <ThrowOnError extends boolean = false>(
   options: Options<DeleteData, ThrowOnError>,
@@ -284,7 +379,7 @@ export const update = <ThrowOnError extends boolean = false>(
 /**
  * Team 팀원 전체 교체
  *
- * 선택한 팀원으로 전체 교체하며 다른 Team 소속자는 원자적으로 이동한다.
+ * 선택한 팀원으로 전체 교체하며 다른 Team 소속자는 원자적으로 이동한다. 탈퇴 회원의 기존 연결은 보존하며 새 배정은 거부한다.
  */
 export const replaceMembers = <ThrowOnError extends boolean = false>(
   options: Options<ReplaceMembersData, ThrowOnError>,
@@ -306,14 +401,102 @@ export const replaceMembers = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 기수 세션 삭제
+ *
+ * 출석이 시작되지 않은 세션 한 건을 soft delete한다.
+ */
+export const delete1 = <ThrowOnError extends boolean = false>(
+  options: Options<Delete1Data, ThrowOnError>,
+): RequestResult<Delete1Responses, Delete1Errors, ThrowOnError> =>
+  (options.client ?? client).delete<Delete1Responses, Delete1Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/sessions/{sessionId}',
+    ...options,
+  });
+
+/**
+ * 기수 세션 수정
+ *
+ * 생성과 동일한 본문으로 세션 정보를 전체 덮어쓴다. 연결된 출결 자료에 영향을 주는 시각·유형 변경은 제한한다.
+ */
+export const update1 = <ThrowOnError extends boolean = false>(
+  options: Options<Update1Data, ThrowOnError>,
+): RequestResult<Update1Responses, Update1Errors, ThrowOnError> =>
+  (options.client ?? client).put<Update1Responses, Update1Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/sessions/{sessionId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * 기수 회원 상세
+ *
+ * 목록 정보, 전화번호, 수정 revision과 필드별 정정 이력을 조회한다.
+ */
+export const detail = <ThrowOnError extends boolean = false>(
+  options: Options<DetailData, ThrowOnError>,
+): RequestResult<DetailResponses, DetailErrors, ThrowOnError> =>
+  (options.client ?? client).get<DetailResponses, DetailErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/members/{memberId}',
+    ...options,
+  });
+
+/**
+ * 회원 상태·Position 정정
+ *
+ * 두 필드를 전체 대체한다. position은 null을 명시할 수 있다. WITHDRAWN은 정정할 수 없고, 변경된 필드만 감사 이력에 기록한다. no-op은 revision을 올리지 않는다.
+ */
+export const correct = <ThrowOnError extends boolean = false>(
+  options: Options<CorrectData, ThrowOnError>,
+): RequestResult<CorrectResponses, CorrectErrors, ThrowOnError> =>
+  (options.client ?? client).put<CorrectResponses, CorrectErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/members/{memberId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
  * User 가입 완료
  *
- * 가입 토큰 소비, User/Member 생성, 세션 저장을 한 트랜잭션으로 완료한다. 입력 오류·저장 충돌·세션 저장 실패로 롤백되면 만료 전 토큰으로 재시도할 수 있다. 커밋 후 응답이 유실되면 새 OIDC 로그인으로 기존 User 세션을 발급받는다.
+ * 가입 토큰 소비, User/Member 생성, 현재 활동 기수의 이름·정규화 전화번호 일치 AVAILABLE 명단 자동 승인 및 세션 저장을 한 트랜잭션으로 완료한다. 현재 기수나 일치 명단이 없으면 PENDING으로 가입한다. 입력 오류·저장 충돌·세션 저장 실패로 롤백되면 만료 전 토큰으로 재시도할 수 있다. 커밋 후 응답이 유실되면 새 OIDC 로그인으로 기존 User 세션을 발급받는다.
  */
-export const register = <ThrowOnError extends boolean = false>(
-  options: Options<RegisterData, ThrowOnError>,
-): RequestResult<RegisterResponses, RegisterErrors, ThrowOnError> =>
-  (options.client ?? client).post<RegisterResponses, RegisterErrors, ThrowOnError>({
+export const register1 = <ThrowOnError extends boolean = false>(
+  options: Options<Register1Data, ThrowOnError>,
+): RequestResult<Register1Responses, Register1Errors, ThrowOnError> =>
+  (options.client ?? client).post<Register1Responses, Register1Errors, ThrowOnError>({
     url: '/api/users',
     ...options,
     headers: {
@@ -443,6 +626,23 @@ export const authenticateGoogle = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * Apple 계정 변경 알림
+ *
+ * Apple JWS의 서명, 발급자, 대상과 발급 시각을 검증하고 계정 상태 및 YAPP 세션을 반영한다.
+ */
+export const receive = <ThrowOnError extends boolean = false>(
+  options: Options<ReceiveData, ThrowOnError>,
+): RequestResult<ReceiveResponses, ReceiveErrors, ThrowOnError> =>
+  (options.client ?? client).post<ReceiveResponses, ReceiveErrors, ThrowOnError>({
+    url: '/api/auth/oidc/apple/notifications',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
  * Apple Native OIDC 인증
  *
  * iOS가 Apple에서 받은 ID Token, authorization code와 원본 nonce를 검증한다.
@@ -526,6 +726,68 @@ export const submit1 = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 알림 발송 이력 조회
+ *
+ * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다.
+ */
+export const history_ = <ThrowOnError extends boolean = false>(
+  options?: Options<HistoryData, ThrowOnError>,
+): RequestResult<HistoryResponses, HistoryErrors, ThrowOnError> =>
+  (options?.client ?? client).get<HistoryResponses, HistoryErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/notifications',
+    ...options,
+  });
+
+/**
+ * 알림 즉시·예약 발송 접수
+ *
+ * Idempotency-Key가 필수다. 발송 기능이 비활성화된 환경에서는 503을 반환한다.
+ */
+export const create = <ThrowOnError extends boolean = false>(
+  options: Options<CreateData, ThrowOnError>,
+): RequestResult<CreateResponses, CreateErrors, ThrowOnError> =>
+  (options.client ?? client).post<CreateResponses, CreateErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/notifications',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * 대기 예약 취소
+ */
+export const cancel = <ThrowOnError extends boolean = false>(
+  options: Options<CancelData, ThrowOnError>,
+): RequestResult<CancelResponses, CancelErrors, ThrowOnError> =>
+  (options.client ?? client).post<CancelResponses, CancelErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/notifications/{notificationId}/cancel',
+    ...options,
+  });
+
+/**
  * 가입 대기 회원 거절
  */
 export const reject = <ThrowOnError extends boolean = false>(
@@ -592,12 +854,12 @@ export const findAll = <ThrowOnError extends boolean = false>(
 /**
  * Team 생성
  *
- * 같은 기수의 PLAYER Membership 하나 이상으로 Team을 생성한다.
+ * 같은 기수의 탈퇴하지 않은 Membership 하나 이상으로 Team을 생성한다.
  */
-export const create = <ThrowOnError extends boolean = false>(
-  options: Options<CreateData, ThrowOnError>,
-): RequestResult<CreateResponses, CreateErrors, ThrowOnError> =>
-  (options.client ?? client).post<CreateResponses, CreateErrors, ThrowOnError>({
+export const create1 = <ThrowOnError extends boolean = false>(
+  options: Options<Create1Data, ThrowOnError>,
+): RequestResult<Create1Responses, Create1Errors, ThrowOnError> =>
+  (options.client ?? client).post<Create1Responses, Create1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -638,10 +900,10 @@ export const find1 = <ThrowOnError extends boolean = false>(
  *
  * 한 기수에 세션 한 건을 등록한다.
  */
-export const create1 = <ThrowOnError extends boolean = false>(
-  options: Options<Create1Data, ThrowOnError>,
-): RequestResult<Create1Responses, Create1Errors, ThrowOnError> =>
-  (options.client ?? client).post<Create1Responses, Create1Errors, ThrowOnError>({
+export const create2 = <ThrowOnError extends boolean = false>(
+  options: Options<Create2Data, ThrowOnError>,
+): RequestResult<Create2Responses, Create2Errors, ThrowOnError> =>
+  (options.client ?? client).post<Create2Responses, Create2Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -694,10 +956,10 @@ export const close = <ThrowOnError extends boolean = false>(
     ...options,
   });
 
-export const cancel = <ThrowOnError extends boolean = false>(
-  options: Options<CancelData, ThrowOnError>,
-): RequestResult<CancelResponses, CancelErrors, ThrowOnError> =>
-  (options.client ?? client).post<CancelResponses, CancelErrors, ThrowOnError>({
+export const cancel1 = <ThrowOnError extends boolean = false>(
+  options: Options<Cancel1Data, ThrowOnError>,
+): RequestResult<Cancel1Responses, Cancel1Errors, ThrowOnError> =>
+  (options.client ?? client).post<Cancel1Responses, Cancel1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -764,6 +1026,30 @@ export const reissue = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 기수 사전 명단 일괄 등록
+ *
+ * 1~1000개 행을 원자적으로 등록하고 기존 AVAILABLE 행을 정정한다. 가입 승인은 별도 API에서 수행한다.
+ */
+export const register2 = <ThrowOnError extends boolean = false>(
+  options: Options<Register2Data, ThrowOnError>,
+): RequestResult<Register2Responses, Register2Errors, ThrowOnError> =>
+  (options.client ?? client).post<Register2Responses, Register2Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/roster-registrations',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
  * 공지 목록 조회
  *
  * 20개 고정 크기로 최신 공지를 cursor 조회한다. 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
@@ -786,12 +1072,12 @@ export const list = <ThrowOnError extends boolean = false>(
 /**
  * 공지 작성
  *
- * Idempotency-Key를 사용해 즉시 게시한다. ALL_USERS는 현재 승인·비탈퇴 회원을 대상으로 하고 발행 수신자 snapshot을 보존한다.
+ * Idempotency-Key로 즉시 게시하고 발행 당시 열람자의 공지 앱 푸시 작업을 원자적으로 저장한다. 201은 FCM 수락·단말 표시를 뜻하지 않는다. 푸시 data의 postId로 사용자 상세로 이동하며 일반 알림 목록에는 포함되지 않는다.
  */
-export const create2 = <ThrowOnError extends boolean = false>(
-  options: Options<Create2Data, ThrowOnError>,
-): RequestResult<Create2Responses, Create2Errors, ThrowOnError> =>
-  (options.client ?? client).post<Create2Responses, Create2Errors, ThrowOnError>({
+export const create3 = <ThrowOnError extends boolean = false>(
+  options: Options<Create3Data, ThrowOnError>,
+): RequestResult<Create3Responses, Create3Errors, ThrowOnError> =>
+  (options.client ?? client).post<Create3Responses, Create3Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -887,14 +1173,34 @@ export const badge = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 공지 삭제
+ *
+ * 공지 열람과 아직 시작하지 않은 앱 푸시·실패 재시도를 중단한다. 이미 수락된 푸시는 유지하며 외부 호출과 삭제가 경합하면 삭제 후 수락될 수 있다. 204는 논리 삭제 완료를 뜻하며 S3 버전 정리는 재시도될 수 있다.
+ */
+export const delete2 = <ThrowOnError extends boolean = false>(
+  options: Options<Delete2Data, ThrowOnError>,
+): RequestResult<Delete2Responses, Delete2Errors, ThrowOnError> =>
+  (options.client ?? client).delete<Delete2Responses, Delete2Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/posts/{postId}',
+    ...options,
+  });
+
+/**
  * 공지 일반 상세 조회
  *
  * 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
-export const detail = <ThrowOnError extends boolean = false>(
-  options: Options<DetailData, ThrowOnError>,
-): RequestResult<DetailResponses, DetailErrors, ThrowOnError> =>
-  (options.client ?? client).get<DetailResponses, DetailErrors, ThrowOnError>({
+export const detail1 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail1Data, ThrowOnError>,
+): RequestResult<Detail1Responses, Detail1Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail1Responses, Detail1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -908,11 +1214,13 @@ export const detail = <ThrowOnError extends boolean = false>(
 
 /**
  * 공지 제목·본문·이미지 수정
+ *
+ * 수정 때 앱 푸시를 다시 보내지 않고 최초 발행 푸시 제목도 바꾸지 않는다.
  */
-export const update1 = <ThrowOnError extends boolean = false>(
-  options: Options<Update1Data, ThrowOnError>,
-): RequestResult<Update1Responses, Update1Errors, ThrowOnError> =>
-  (options.client ?? client).patch<Update1Responses, Update1Errors, ThrowOnError>({
+export const update2 = <ThrowOnError extends boolean = false>(
+  options: Options<Update2Data, ThrowOnError>,
+): RequestResult<Update2Responses, Update2Errors, ThrowOnError> =>
+  (options.client ?? client).patch<Update2Responses, Update2Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -929,14 +1237,34 @@ export const update1 = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * 이번 주 세션 조회
+ * 본인 알림 목록 조회
  *
- * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
+ * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
  */
 export const find2 = <ThrowOnError extends boolean = false>(
   options?: Options<Find2Data, ThrowOnError>,
 ): RequestResult<Find2Responses, Find2Errors, ThrowOnError> =>
   (options?.client ?? client).get<Find2Responses, Find2Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/users/me/notifications',
+    ...options,
+  });
+
+/**
+ * 이번 주 세션 조회
+ *
+ * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
+ */
+export const find3 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find3Data, ThrowOnError>,
+): RequestResult<Find3Responses, Find3Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find3Responses, Find3Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -973,10 +1301,10 @@ export const list1 = <ThrowOnError extends boolean = false>(
  *
  * 현재 열람 권한을 확인해 본문·과제 제출 정보·첨부 이미지를 반환한다. 조회는 읽음 상태를 변경하지 않는다. 이미 발급된 이미지 URL은 탈퇴 후에도 남은 유효 시간 동안 사용할 수 있다.
  */
-export const detail1 = <ThrowOnError extends boolean = false>(
-  options: Options<Detail1Data, ThrowOnError>,
-): RequestResult<Detail1Responses, Detail1Errors, ThrowOnError> =>
-  (options.client ?? client).get<Detail1Responses, Detail1Errors, ThrowOnError>({
+export const detail2 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail2Data, ThrowOnError>,
+): RequestResult<Detail2Responses, Detail2Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail2Responses, Detail2Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -993,10 +1321,10 @@ export const detail1 = <ThrowOnError extends boolean = false>(
  *
  * 로그인 사용자의 소속 기수와 무관하게 현재 활동 중인 기수의 세션 일정을 모두 조회한다.
  */
-export const find3 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find3Data, ThrowOnError>,
-): RequestResult<Find3Responses, Find3Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find3Responses, Find3Errors, ThrowOnError>({
+export const find4 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find4Data, ThrowOnError>,
+): RequestResult<Find4Responses, Find4Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find4Responses, Find4Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1096,10 +1424,10 @@ export const mine = <ThrowOnError extends boolean = false>(
  *
  * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find4 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find4Data, ThrowOnError>,
-): RequestResult<Find4Responses, Find4Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find4Responses, Find4Errors, ThrowOnError>({
+export const find5 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find5Data, ThrowOnError>,
+): RequestResult<Find5Responses, Find5Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find5Responses, Find5Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1116,10 +1444,10 @@ export const find4 = <ThrowOnError extends boolean = false>(
  *
  * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
  */
-export const find5 = <ThrowOnError extends boolean = false>(
-  options: Options<Find5Data, ThrowOnError>,
-): RequestResult<Find5Responses, Find5Errors, ThrowOnError> =>
-  (options.client ?? client).get<Find5Responses, Find5Errors, ThrowOnError>({
+export const find6 = <ThrowOnError extends boolean = false>(
+  options: Options<Find6Data, ThrowOnError>,
+): RequestResult<Find6Responses, Find6Errors, ThrowOnError> =>
+  (options.client ?? client).get<Find6Responses, Find6Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1132,9 +1460,9 @@ export const find5 = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * 가입 대기 회원 목록 조회
+ * 가입 심사 회원 목록 조회
  *
- * 검색 없이 PENDING 회원을 가입 시각 오름차순으로 조회한다.
+ * 삭제되지 않은 PENDING·REJECTED 회원을 가입 시각·회원 ID 오름차순으로 조회한다. 상태 필터를 생략하면 두 상태를 함께 조회한다.
  */
 export const findPending = <ThrowOnError extends boolean = false>(
   options?: Options<FindPendingData, ThrowOnError>,
@@ -1192,7 +1520,7 @@ export const findCandidates = <ThrowOnError extends boolean = false>(
 /**
  * Team member 후보 조회
  *
- * 해당 기수의 PLAYER Membership을 현재 소속 여부로 필터링한다.
+ * 해당 기수의 탈퇴하지 않은 Membership을 현재 소속 여부로 필터링한다.
  */
 export const candidates = <ThrowOnError extends boolean = false>(
   options: Options<CandidatesData, ThrowOnError>,
@@ -1246,6 +1574,26 @@ export const list3 = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 기수의 사용 가능한 사전 명단 조회
+ *
+ * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
+ */
+export const list4 = <ThrowOnError extends boolean = false>(
+  options: Options<List4Data, ThrowOnError>,
+): RequestResult<List4Responses, List4Errors, ThrowOnError> =>
+  (options.client ?? client).get<List4Responses, List4Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/roster-entries',
+    ...options,
+  });
+
+/**
  * 공지 수신자·읽음 현황 조회
  *
  * 첫 페이지의 asOf는 읽음 시각만 고정한다. 현재 열람 가능한 회원을 읽은 시각 오름차순, userId 오름차순으로 조회한다. 자격이 변하면 첫 페이지부터 다시 조회한다. ALL_USERS의 이름·최신 기수·직군은 현재 값이며 무 Membership이면 기수·직군이 null이다.
@@ -1262,6 +1610,86 @@ export const recipients = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/admin/generations/{generationId}/posts/{postId}/recipients',
+    ...options,
+  });
+
+/**
+ * 회원별 확정 감점 사건 조회
+ *
+ * 한 기수 소속의 현재 확정 총점과 마감 세션별 지각·조퇴·결석 감점을 사건 단위로 조회한다.
+ */
+export const detail3 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail3Data, ThrowOnError>,
+): RequestResult<Detail3Responses, Detail3Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail3Responses, Detail3Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/memberships/{membershipId}/attendance-statistics',
+    ...options,
+  });
+
+/**
+ * 기수 회원 목록
+ *
+ * 승인되고 탈퇴하지 않은 회원. 이름은 완전 일치, 필터는 AND. 가입 시각·회원 ID 역순, 20개 커서 페이지. 출석 점수는 해당 기수 PLAYER 이력이 없으면 null.
+ */
+export const list5 = <ThrowOnError extends boolean = false>(
+  options: Options<List5Data, ThrowOnError>,
+): RequestResult<List5Responses, List5Errors, ThrowOnError> =>
+  (options.client ?? client).get<List5Responses, List5Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/members',
+    ...options,
+  });
+
+/**
+ * 회원 필터용 Team 목록
+ *
+ * 활성 Team별 현재 PLAYER 수를 조회한다. 0명 Team도 포함한다.
+ */
+export const teamOptions = <ThrowOnError extends boolean = false>(
+  options: Options<TeamOptionsData, ThrowOnError>,
+): RequestResult<TeamOptionsResponses, TeamOptionsErrors, ThrowOnError> =>
+  (options.client ?? client).get<TeamOptionsResponses, TeamOptionsErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/member-team-options',
+    ...options,
+  });
+
+/**
+ * 기수별 출석 통계 조회
+ *
+ * 승인된 비탈퇴 회원 전체 또는 일치 Position을 페이지 없이 조회한다. 현재 저장된 마감 감점만 반영한다.
+ */
+export const list6 = <ThrowOnError extends boolean = false>(
+  options: Options<List6Data, ThrowOnError>,
+): RequestResult<List6Responses, List6Errors, ThrowOnError> =>
+  (options.client ?? client).get<List6Responses, List6Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/attendance-statistics',
     ...options,
   });
 
@@ -1288,7 +1716,7 @@ export const withdraw = <ThrowOnError extends boolean = false>(
 /**
  * 현재 세션 로그아웃
  *
- * 전달된 refresh token을 폐기하고 Web refresh cookie가 있으면 만료시킨다. 토큰 없이 호출해도 204를 반환한다.
+ * 전달된 refresh token의 세션을 폐기하고 해당 세션의 FCM 기기 등록을 해제한다. Web refresh cookie가 있으면 만료시킨다. 토큰 없이 호출해도 204를 반환하지만 기기 등록은 해제되지 않는다. Native는 refresh token을 전달해야 한다.
  */
 export const revoke = <ThrowOnError extends boolean = false>(
   options?: Options<RevokeData, ThrowOnError>,
@@ -1300,26 +1728,6 @@ export const revoke = <ThrowOnError extends boolean = false>(
       'Content-Type': 'application/json',
       ...options?.headers,
     },
-  });
-
-/**
- * 기수 세션 삭제
- *
- * 출석이 시작되지 않은 세션 한 건을 soft delete한다.
- */
-export const delete1 = <ThrowOnError extends boolean = false>(
-  options: Options<Delete1Data, ThrowOnError>,
-): RequestResult<Delete1Responses, Delete1Errors, ThrowOnError> =>
-  (options.client ?? client).delete<Delete1Responses, Delete1Errors, ThrowOnError>({
-    security: [
-      {
-        key: 'staffBearerAuth',
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/admin/generations/{generationId}/sessions/{sessionId}',
-    ...options,
   });
 
 /**

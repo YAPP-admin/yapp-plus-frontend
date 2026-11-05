@@ -3,14 +3,14 @@
 import {
   authenticateApple,
   authenticateGoogle,
-  register,
+  register1,
   renew,
   revoke,
   withdraw,
   type Options,
   type AuthenticateAppleData,
   type AuthenticateGoogleData,
-  type RegisterData,
+  type Register1Data,
   type RenewData,
   type RevokeData,
   type WithdrawData,
@@ -39,8 +39,10 @@ export const nativeAuthApi = {
 
     return result;
   },
-  register: async (input: Options<RegisterData, false>): Promise<NativeAuthenticationApiResult> => {
-    const result = await register(input);
+  register: async (
+    input: Options<Register1Data, false>,
+  ): Promise<NativeAuthenticationApiResult> => {
+    const result = await register1(input);
 
     return result;
   },
