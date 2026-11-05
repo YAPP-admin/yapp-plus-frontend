@@ -5,27 +5,55 @@ import type { ExpoConfig } from 'expo/config';
 const mobileWebUrl = process.env.MOBILE_WEB_URL;
 const configuredWebUrl = typeof mobileWebUrl === 'string' ? mobileWebUrl.trim() : '';
 
+const isHttpsUrl = (value: string): boolean => {
+  try {
+    return new URL(value).protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+if (configuredWebUrl.length > 0 && !isHttpsUrl(configuredWebUrl)) {
+  throw new Error('MOBILE_WEB_URL은 HTTPS URL이어야 합니다.');
+}
+
 const config: ExpoConfig = {
-  name: 'YAPP Plus Mobile (Temporary)',
-  slug: 'yapp-plus-mobile-placeholder',
-  // 자체 빌드에서 Expo Router가 초기 URL을 만들 수 있도록 임시 앱 식별자와 맞춥니다.
-  scheme: 'com.yappplus.placeholder.mobile',
-  version: '0.0.1',
+  name: 'YAPP+',
+  slug: 'yapp-plus',
+  owner: 'yapp-plus-official',
+  // Expo Router의 앱 URL과 iOS Bundle ID를 같은 안정 식별자로 유지합니다.
+  scheme: 'org.yapp.yappplus',
+  version: '1.0.0',
+  icon: './assets/icon.png',
   orientation: 'portrait',
   userInterfaceStyle: 'automatic',
   ios: {
-    bundleIdentifier: 'com.yappplus.placeholder.mobile',
+    bundleIdentifier: 'org.yapp.yappplus',
     supportsTablet: false,
+    usesAppleSignIn: true,
+    config: {
+      usesNonExemptEncryption: false,
+    },
   },
-  android: {
-    package: 'com.yappplus.placeholder.mobile',
-  },
-  plugins: ['expo-router'],
+  plugins: [
+    'expo-router',
+    'expo-secure-store',
+    'expo-splash-screen',
+    [
+      'react-native-nitro-google-signin',
+      {
+        iosUrlScheme: 'com.googleusercontent.apps.47093355379-s1gkq650qpgjhvsb2bev9h4na5mlmnsi',
+      },
+    ],
+  ],
   experiments: {
     typedRoutes: true,
   },
   extra: {
     mobileWebUrl: configuredWebUrl.length > 0 ? configuredWebUrl : null,
+    eas: {
+      projectId: 'e34d595c-d553-4007-ac7c-8e85d6549e44',
+    },
   },
 };
 
