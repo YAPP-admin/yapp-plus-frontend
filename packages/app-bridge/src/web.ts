@@ -19,7 +19,7 @@ type SafeAreaStore = {
   subscribe: (listener: (state: Pick<AppBridgeState, 'safeAreaInsets'>) => void) => () => void;
 };
 
-const BRIDGE_READY_TIMEOUT_MS = 2_000;
+const BRIDGE_READY_TIMEOUT_MS = 180_000;
 const BRIDGE_READY_POLL_MS = 16;
 const noop: () => void = () => undefined;
 
@@ -80,6 +80,7 @@ const createLinkedBridge = () =>
     initialBridge: {
       safeAreaInsets: INITIAL_SAFE_AREA_INSETS,
     },
+    timeout: BRIDGE_READY_TIMEOUT_MS,
     throwOnError: ['getSafeAreaInsets'],
   });
 

@@ -1,6 +1,7 @@
 import {
   INITIAL_SAFE_AREA_INSETS,
   normalizeSafeAreaInsets,
+  type AuthResult,
   type AppBridgeState,
   type SafeAreaInsets,
 } from '@yapp-plus/app-bridge';
@@ -12,14 +13,29 @@ const initialSafeAreaInsets = normalizeSafeAreaInsets(
   initialWindowMetrics?.insets ?? INITIAL_SAFE_AREA_INSETS,
 );
 
+const unsupportedAuthOperation = (): Promise<AuthResult> =>
+  Promise.resolve({
+    status: 'ERROR',
+    code: 'UNSUPPORTED',
+    retryable: false,
+  });
+
 export const nativeAppBridge = bridge<AppBridgeState>(({ get }) => ({
   safeAreaInsets: initialSafeAreaInsets,
+  authRevision: 0,
   getSafeAreaInsets: () => Promise.resolve(get().safeAreaInsets),
+  signIn: unsupportedAuthOperation,
+  completeSignup: unsupportedAuthOperation,
+  getSession: unsupportedAuthOperation,
+  refreshSession: unsupportedAuthOperation,
+  signOut: unsupportedAuthOperation,
+  withdraw: unsupportedAuthOperation,
 }));
 
 export const { WebView: BridgeWebView } = createWebView({
   bridge: nativeAppBridge,
   debug: __DEV__,
+  responseTimeout: 180_000,
 });
 
 export const useSyncSafeAreaInsets = (insets: SafeAreaInsets): void => {

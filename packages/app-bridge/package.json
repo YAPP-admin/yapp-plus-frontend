@@ -22,7 +22,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@webview-bridge/web": "1.8.0"
+    "@webview-bridge/web": "1.8.0",
+    "zod": "catalog:"
   },
   "devDependencies": {
     "@yapp-plus/config": "workspace:*",
