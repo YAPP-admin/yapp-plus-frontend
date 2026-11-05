@@ -12,6 +12,7 @@
     "eas-build-pre-install": "npm install --global --force pnpm@12.3.4",
     "lint": "oxlint --deny-warnings .",
     "prebuild": "expo prebuild",
+    "test": "vitest run",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -48,6 +49,7 @@
     "@types/react": "catalog:expo",
     "@yapp-plus/config": "workspace:*",
     "expo-doctor": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vitest": "catalog:"
   }
 }
