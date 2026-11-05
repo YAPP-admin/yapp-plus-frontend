@@ -39,7 +39,7 @@ const toPhoneNumber = (phoneNumber: string): string => {
 export class AuthActions {
   private readonly runtime: NativeAuthRuntime;
   private registration: SignupRegistration | undefined;
-  private authenticating = false;
+  private authenticatingGeneration: number | undefined;
 
   public constructor(runtime: NativeAuthRuntime) {
     this.runtime = runtime;
@@ -47,14 +47,18 @@ export class AuthActions {
 
   /** 공급자 SDK와 생성 OpenAPI 인증 요청을 순서대로 실행합니다. */
   public async signIn(input: SignInInput): Promise<AuthResult> {
-    if (this.authenticating) {
+    if (this.isAuthenticating()) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.busy, retryable: true };
     }
 
     const generation = this.runtime.session.captureGeneration();
-    this.authenticating = true;
+    this.authenticatingGeneration = generation;
+    this.registration = undefined;
     try {
       const identity = await this.runtime.authenticateWithProvider(input.provider);
+      if (!this.runtime.session.isCurrent(generation)) {
+        return { status: AUTH_STATUS.cancelled };
+      }
       const result =
         identity.provider === 'apple'
           ? await this.runtime.authenticateApple({
@@ -70,14 +74,20 @@ export class AuthActions {
 
       return await this.acceptAuthenticationResult(result, generation);
     } catch (error) {
+      if (!this.runtime.session.isCurrent(generation)) {
+        return { status: AUTH_STATUS.cancelled };
+      }
       return this.toSignInError(error);
     } finally {
-      this.authenticating = false;
+      this.finishAuthentication(generation);
     }
   }
 
   /** 가입 대기 토큰을 소비해 프로필을 등록하고 세션을 시작합니다. */
   public async completeSignup(input: CompleteSignupInput): Promise<AuthResult> {
+    if (this.isAuthenticating()) {
+      return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.busy, retryable: true };
+    }
     if (!this.registration || this.registration.expiresAt <= Date.now()) {
       this.registration = undefined;
 
@@ -85,15 +95,24 @@ export class AuthActions {
     }
 
     const generation = this.runtime.session.captureGeneration();
-    const result = await this.runtime.register({
-      body: {
-        registrationToken: this.registration.token,
-        name: input.name,
-        phoneNumber: toPhoneNumber(input.phoneNumber),
-      },
-    });
-
-    return this.acceptCompletedSignup(result.data, generation);
+    this.authenticatingGeneration = generation;
+    try {
+      const result = await this.runtime.register({
+        body: {
+          registrationToken: this.registration.token,
+          name: input.name,
+          phoneNumber: toPhoneNumber(input.phoneNumber),
+        },
+      });
+      return await this.acceptCompletedSignup(result.data, generation);
+    } catch (error) {
+      if (!this.runtime.session.isCurrent(generation)) {
+        return { status: AUTH_STATUS.cancelled };
+      }
+      throw error;
+    } finally {
+      this.finishAuthentication(generation);
+    }
   }
 
   /** 저장된 refresh token으로 현재 세션을 복구하거나 갱신합니다. */
@@ -106,9 +125,12 @@ export class AuthActions {
     return this.runtime.session.refresh(input, (refreshToken) => this.renewSession(refreshToken));
   }
 
-  /** 서버 refresh token 폐기를 시도한 뒤 로컬 세션을 항상 제거합니다. */
+  /** 서버 응답을 기다리기 전에 로컬 세션을 무효화하고 삭제를 예약합니다. */
   public async signOut(): Promise<AuthResult> {
     const refreshToken = this.runtime.session.refreshToken;
+    this.registration = undefined;
+    const clearing = this.runtime.session.clear();
+    const generation = this.runtime.session.captureGeneration();
     if (refreshToken) {
       try {
         await this.runtime.revoke({ body: { refreshToken } });
@@ -117,7 +139,13 @@ export class AuthActions {
       }
     }
 
-    return this.runtime.session.clear();
+    const result = await clearing;
+    // 새 로그인 진행·가입 대기도 이전 로그아웃 응답으로 덮지 않습니다.
+    return this.runtime.session.isCurrent(generation) &&
+      !this.isAuthenticating() &&
+      !this.registration
+      ? result
+      : { status: AUTH_STATUS.cancelled };
   }
 
   /** 현재 access token으로 탈퇴를 완료한 뒤 로컬 자격을 제거합니다. */
@@ -144,6 +172,9 @@ export class AuthActions {
     result: NativeAuthenticationApiResult,
     generation: number,
   ): Promise<AuthResult> {
+    if (!this.runtime.session.isCurrent(generation)) {
+      return { status: AUTH_STATUS.cancelled };
+    }
     if (result.data === undefined) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.server, retryable: true };
     }
@@ -161,6 +192,9 @@ export class AuthActions {
     response: AuthenticationResponse | undefined,
     generation: number,
   ): Promise<AuthResult> {
+    if (!this.runtime.session.isCurrent(generation)) {
+      return { status: AUTH_STATUS.cancelled };
+    }
     const credentials = response ? this.toCredentials(response) : undefined;
     if (!credentials) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.invalidResponse, retryable: false };
@@ -169,6 +203,20 @@ export class AuthActions {
     this.registration = undefined;
 
     return this.runtime.session.establish(credentials, generation);
+  }
+
+  /** 무효화된 이전 세대의 인증은 새 인증을 막지 않습니다. */
+  private isAuthenticating(): boolean {
+    return (
+      this.authenticatingGeneration !== undefined &&
+      this.runtime.session.isCurrent(this.authenticatingGeneration)
+    );
+  }
+
+  private finishAuthentication(generation: number): void {
+    if (this.authenticatingGeneration === generation) {
+      this.authenticatingGeneration = undefined;
+    }
   }
 
   /** refresh API 응답을 SessionManager가 저장할 자격 정보로 변환합니다. */
