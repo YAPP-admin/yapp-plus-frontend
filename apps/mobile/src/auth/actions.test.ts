@@ -99,16 +99,45 @@ describe('AuthActions', () => {
 
   it('로그아웃은 서버 revoke 실패 여부와 관계없이 로컬 세션을 제거한다', async () => {
     const runtime = createRuntime();
-    await runtime.session.establish({
-      accessToken: 'access-1',
-      refreshToken: 'refresh-1',
-      expiresAt: Date.now() + 3_600_000,
-      userId: 7,
-    });
+    await runtime.session.establish(
+      {
+        accessToken: 'access-1',
+        refreshToken: 'refresh-1',
+        expiresAt: Date.now() + 3_600_000,
+        userId: 7,
+      },
+      runtime.session.captureGeneration(),
+    );
     vi.mocked(runtime.revoke).mockRejectedValue(new Error('network'));
     const actions = new AuthActions(runtime);
 
     await expect(actions.signOut()).resolves.toEqual({ status: 'SIGNED_OUT' });
     expect(storage.clearSession).toHaveBeenCalledOnce();
+  });
+
+  it.each(['login', 'signup'])('%s 요청 시작 세대를 세션 확정까지 전달한다', async (kind) => {
+    const runtime = createRuntime();
+    const actions = new AuthActions(runtime);
+    const response = Promise.withResolvers<{ data: AuthenticationResponse }>();
+    vi.mocked(runtime.authenticateWithProvider).mockResolvedValue(googleIdentity);
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValue({ data: signupRequiredResponse });
+    if (kind === 'signup') {
+      await actions.signIn({ provider: 'google' });
+    }
+    const started = Promise.withResolvers<void>();
+    const api = kind === 'signup' ? runtime.register : runtime.authenticateGoogle;
+    vi.mocked(api).mockImplementation(() => {
+      started.resolve();
+      return response.promise;
+    });
+    const request =
+      kind === 'signup'
+        ? actions.completeSignup({ name: '테스트 사용자', phoneNumber: '010-1234-5678' })
+        : actions.signIn({ provider: 'google' });
+    await started.promise;
+    await actions.signOut();
+    response.resolve({ data: signedInResponse(1) });
+    await expect(request).resolves.toEqual({ status: 'CANCELLED' });
+    expect(storage.setRefreshToken).not.toHaveBeenCalled();
   });
 });

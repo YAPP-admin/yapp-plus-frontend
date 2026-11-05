@@ -1,5 +1,63 @@
 # 1단계 검증 기록
 
+## #329 보완 0단계 — 2026-11-06
+
+- 이슈: [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329). 사용자 승인 초안대로 생성, 담당자 DongjaJ, 라벨·milestone 없음.
+- 현재 브랜치 `DongjaJ/oidc-ios-google`, 준비 시 HEAD와 fetch 후 origin/main `9186dc6b0883003f7a025cd3a6cd04899eddfb3a`. 시작 시 작업 트리 변경 없음.
+- 기존 Spec Kit 문서 8개에 R1–R6·mutex/세대 설계·오류 계약·T035–T058·회귀·롤백과 #328 연계를 추가했다. 초기 완료 이력과 실기기 대기는 보존한다.
+- setup-plan/setup-tasks는 `SPECIFY_FEATURE_DIRECTORY=specs/016-ios-oidc-auth`로 실행했고 기존 plan을 보존했다. `.specify/feature.json`은 gitignored다. 전후 hook 설정은 없다.
+- 기존 의존성만 `pnpm install --frozen-lockfile`로 복원했다. p-mutex 설치·제품 코드·manifest·lockfile 변경은 이 단계 대상이 아니다.
+- Conductor 링크 대상은 `hong-kong` / `DongjaJ/nsu85` / #328이다. 웹 인증 결과 적용·세대·캐시·화면 수명이 겹치며 그 작업 트리를 읽기만 했다.
+- #328의 테스트 통과는 상대 validation 기록에서 확인했으며 여기서 재실행하지 않았다. 상대 미커밋 코드를 가져오거나 통합하지 않았다.
+- 이번 단계는 결함 해결·실기기 인증·배포 완료가 아니다. 0단계 제출 후 리뷰와 보완 1단계 진행 승인을 기다린다.
+
+| 항목                  | 결과                                                                               |
+| --------------------- | ---------------------------------------------------------------------------------- |
+| Spec Kit 전제조건     | 신규 실행 성공, 기존 feature의 research·data-model·contracts·quickstart·tasks 인식 |
+| 문서 정합성           | 변경 문서 8개, 후속 작업 T035–T058(24개), R1–R6 대응·상대 링크·중복 ID 검사        |
+| node --run check      | exit 0. format 신규 실행, lint 7/7·typecheck 7/7·test 5/5는 전부 Turbo 캐시        |
+| build / expo:doctor   | 미실행. 문서만 변경하여 이번 단계 비대상                                           |
+| 실기기·서버·#328 통합 | 미실행. 구현 및 후속 검증 대상                                                     |
+| 변경량                | main 기준 문서 8개, 650줄 분리 검토 기준 미만. 제품·생성 코드·의존성 변경 없음     |
+
+commit·push·PR·배포는 실행하지 않았다. stage 0 이후에도 각 단계 승인 경계를 유지한다.
+
+## #329 보완 1A단계 — 2026-11-06
+
+- 0단계 리뷰 후 다음 단계 진행 승인을 받았다. 변경량을 제한하기 위해 1A 세션 기반과 1B AuthActions 연결을 별도 리뷰 단위로 나눴다.
+- p-mutex@1.0.0을 catalog/mobile에 추가했다. lockfile은 p-mutex와 yocto-queue@1.2.2만 추가했고 공급망 정책을 유지했다.
+- SessionManager의 저장소 접근을 직렬화하고, clear 시 세대·메모리를 즉시 무효화한다. 진행 중 쓰기는 완료돼도 공개하지 않으며 뒤따르는 삭제가 정리한다.
+- restore/refresh를 공유하고 이전 finally가 새 Promise를 지우지 않게 했다. 삭제 실패 후 같은 프로세스의 옛 자격 재복구를 차단하며 저장 오류를 STORAGE로 구분한다.
+- 회귀 테스트는 수정 전 6개 실패를 확인했다. 추가 검증을 포함한 최종 mobile 테스트는 2파일 15개를 새로 실행해 통과했다.
+
+| 항목             | 결과                                                                                                           |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| check            | 최종 exit 0. format·mobile lint/typecheck/test 신규 실행, 나머지 lint 6·typecheck 6·test 4개 작업은 Turbo 캐시 |
+| build            | exit 0. web 신규 실행, admin·Storybook 2개 작업은 Turbo 캐시. 루트 build에는 native 빌드가 없음                |
+| expo:doctor      | 신규 실행, 20/20 통과                                                                                          |
+| iOS Metro export | 신규 실행 성공, p-mutex 포함 Hermes .hbc 생성. 기기에서 Hermes 실행한 증거는 아님                              |
+| 미실행           | Xcode native 빌드·실기기·실제 서버·웹 #328 통합·배포                                                           |
+
+검증 로그와 Metro 산출물은 gitignored `.context/oidc-stage-1-*`에 보관했다.
+초기 check의 중괄호·mock 타입·await lint 오류는 수정 후 최종 check로 확인했다.
+최초 1A 제출 시 AuthActions는 요청 시작 세대를 전달하지 않고 revoke 뒤 clear를 호출했다. 아래 리뷰 수정에서 세대 전달을 연결했으며 서버 대기 중 logout 무효화 등은 1B에 남아 있다.
+현재 웹은 CANCELLED를 인증 query에 적용할 수 있으므로 #328/보완 5단계 연계 전 웹 복구 완료도 주장하지 않는다.
+삭제 실패 시 앱 재시작 이후까지 옛 자격의 부재를 보장하지 않는다. 새 로그인 성공 또는 삭제 재시도로 복구한다.
+현재 변경은 0단계 문서를 포함해 650줄 미만이며 commit·push·PR은 하지 않았다. 1A 리뷰 후 1B 진행 확인을 기다린다.
+
+### 1A 리뷰 수정 — 구조 단순화
+
+- establish의 generation 인자를 필수화하고, 로그인·가입 요청 시작 시 캡처한 값을 전달하도록 호출부를 수정했다.
+- commit의 작업 종류를 establish/refresh 판별 union으로 표현했다. refresh에만 previousToken이 필수여서 인자 유무로 작업 의도를 추정하지 않는다.
+- 복구 차단·삭제 실패 boolean 둘을 allowed/blocked/deletion-failed 상태 하나로 통합했다. 세대 전환과 진행 Promise 초기화는 advanceGeneration에 모았다.
+- 모바일 테스트 17개 통과: 기존 15개와 로그인·가입 세대 전달 2개를 신규 실행했다. check의 format·mobile lint/typecheck/test는 신규 실행, 나머지 작업은 Turbo 캐시다.
+- build는 3개 작업 모두 Turbo 캐시로 통과했다. iOS Metro export·Hermes 바이트코드 생성은 신규 실행했다. 실제 기기 실행·Xcode 빌드·서버 검증은 미실행이다.
+- 이번 리뷰에서는 설정·의존성을 바꾸지 않아 expo:doctor를 재실행하지 않았다. 앞선 1A의 20/20 결과와 구분한다.
+- 650줄 분리 검토 기준을 넘어 0단계 문서와 1A 코드·테스트 PR을 분리할 계획을 세웠다. 실제 Git 분리는 미실행이며 800줄 제한 안에서 리뷰를 요청한다.
+- 1B의 즉시 로그아웃 무효화·가입 대기 자격 정리·나머지 오래된 결과 처리는 진행하지 않았다.
+
+이 아래 기록은 기존 구현 시점의 결과이며 #329의 새 검증 결과와 구분한다.
+
 **날짜**: 2026-11-04
 
 **이슈**: [#313](https://github.com/YAPP-admin/yapp-plus-frontend/issues/313)

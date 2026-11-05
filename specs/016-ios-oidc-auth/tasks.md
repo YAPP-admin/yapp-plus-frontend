@@ -1,5 +1,7 @@
 # 작업 목록: iOS OIDC 인증
 
+> T001–T034는 기존 이력이다. #329 보완은 T035부터 시작하며 과거 체크를 현재 결함 해결의 증거로 사용하지 않는다.
+
 **입력**: [명세](spec.md), [계획](plan.md), [계약](contracts/auth.md), [상태 모델](data-model.md).
 
 **규칙**: 단계별 사용자 리뷰와 명시적 다음 단계 승인이 선행한다. 체크 표시는 구현·자동 검증 완료를 뜻하며, 실제 기기·외부 서비스 검증은 별도 대기 항목으로 유지한다.
@@ -70,3 +72,64 @@
 US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기존 회원 로그인이며 나머지 범위를 생략한 완료로 보고하지 않는다.
 단계 내 서로 다른 provider 조사·US별 테스트 설계는 독립적으로 가능하지만 제품 구현 단계와 리뷰 경계를 넘겨 병렬 실행하지 않는다.
 테스트는 명세가 요구한 실패 가능성을 가장 가까운 계층에서 확인하며 라이브러리 자체를 중복 검증하지 않는다.
+
+## #329 보완 0단계 — 명세와 연계
+
+- [x] T035 `specs/016-ios-oidc-auth/spec.md`, `plan.md`, `research.md`에 R1–R6·p-mutex·#328 연계와 이슈 #329를 기록한다.
+- [x] T036 `specs/016-ios-oidc-auth/data-model.md`, `contracts/auth.md`, `quickstart.md`, `tasks.md`에 상태·오류·회귀 검증·단계별 작업을 보완한다.
+- [x] T037 `specs/016-ios-oidc-auth/validation.md`에 문서 검사·check·변경량을 기록하고 0단계 결과를 제출한다.
+
+**중단점**: 리뷰 반영 및 다음 단계 승인 전 제품 코드·p-mutex 설치를 시작하지 않는다.
+
+## 보완 1단계 — R1 공통 네이티브 세션 기반
+
+독립 검증: US1 로그인·US2 가입·US3 복구를 각각 지연하고 logout 후 반환해 메모리·저장소 비복원을 확인한다.
+
+- [ ] T038 `apps/mobile/src/auth/session.test.ts`, `actions.test.ts`에 R1 지연·저장 실패·이전 finally 회귀를 먼저 추가해 수정 전 실패를 확인한다.
+- [x] T039 `pnpm-workspace.yaml`, `apps/mobile/package.json`, `pnpm-lock.yaml`에 p-mutex@1.0.0을 추가하고 `apps/mobile/src/auth/session.ts`의 저장·메모리 확정을 직렬화한다.
+- [ ] T040 `apps/mobile/src/auth/actions.ts`, `session.ts`에 작업 시작 세대·조건부 결과 반영·즉시 logout 무효화·삭제 예약·가입 자격 정리를 구현한다.
+- [x] T041 `apps/mobile/src/auth/session.ts`에 restore/refresh의 세대·대상별 single-flight와 identity-safe finally, 삭제 실패 후 복구 차단을 적용한다.
+- [ ] T042 `specs/016-ios-oidc-auth/validation.md`에 R1·check/build/expo:doctor·Metro 결과와 #328 웹 연계 미검증을 기록하고 리뷰받는다.
+
+1A에서 T039·T041과 T038의 session 회귀, T042의 기반 검증을 완료했다. T038의 actions 회귀·T040과 전체 R1 보고는 1B에 남긴다.
+1A 리뷰 수정에서 필수 세대 인자에 맞춰 로그인·가입의 세대 전달과 회귀 2건을 추가했다. 나머지 actions 무효화·로그아웃 순서·가입 자격 정리는 1B에 남긴다.
+**중단점**: 1A 리뷰와 1B 진행 확인 전 AuthActions 연결을 시작하지 않는다.
+
+## 보완 2단계 — R2 US3 갱신 오류
+
+- [ ] T043 [US3] `apps/mobile/src/auth/session.test.ts`, `actions.test.ts`에 renew 401·timeout·5xx·잘못된 200·저장 실패·구 세션 오류 사례를 추가한다.
+- [ ] T044 [US3] `apps/mobile/src/auth/auth-api.ts`, `actions.ts`, `session.ts`에서 HTTP status를 보존하고 대상 검사 후 자격 정리·보존과 오류를 분류한다.
+- [ ] T045 [US3] `specs/016-ios-oidc-auth/validation.md`에 R2 회귀·품질 게이트 결과를 기록하고 리뷰받는다.
+
+## 보완 3단계 — R3 US1 iOS 설정
+
+- [ ] T046 [US1] `apps/mobile/src/auth/providers.ts`에 명시적 iosClientId를 전달하고 `apps/mobile/app.config.ts`의 scheme 대응과 인접 설정 테스트를 확인한다.
+- [ ] T047 [US1] `.context/oidc-hardening-stage-3/`의 격리 출력에서 숨겨진 plist 없는 깨끗한 iOS 생성·빌드와 초기화를 확인하고 `specs/016-ios-oidc-auth/validation.md`에 실행 가능 범위·실기기 미확인을 기록한다.
+- [ ] T048 [US1] `specs/016-ios-oidc-auth/validation.md`에 check/build/expo:doctor와 설정 diff를 기록하고 리뷰받는다.
+
+## 보완 4단계 — R4 US1 silent nonce 조사
+
+- [ ] T049 [US1] `specs/016-ios-oidc-auth/research.md`에 고정 SDK의 signIn/restore/getTokens와 nonce 발급·재시도·로그아웃 후 재로그인 근거 및 안전한 대안을 정리한다.
+- [ ] T050 [US1] `specs/016-ios-oidc-auth/plan.md`, `tasks.md`, `validation.md`에 구현 가능 여부·추가 검증·제품 동작 변경 조건을 제출하고 사용자 리뷰로 후속 구현 범위를 확정한다. 조사만으로 R4를 완료 처리하지 않는다.
+
+## 보완 5단계 — R5 US3 웹 브리지 복구
+
+- [ ] T051 [US3] `specs/016-ios-oidc-auth/plan.md`에서 #328 통합 상태·공통 인증 적용 경로·복귀 이벤트 소유권을 재확인하고 적용 순서를 확정한다.
+- [ ] T052 [US3] `apps/web/src/features/auth/model/session.test.tsx`에 undefined/timeout→준비·unsupported·최소 간격 재시도·늦은 query 결과 회귀를 추가한다.
+- [ ] T053 [US3] `apps/web/src/features/auth/model/native-auth.ts`, `session.tsx`, `mutations.ts`에서 가용성·조회 오류·재조회를 #328 공통 적용 경로에 연결한다. 별도 웹 세대 관리자를 만들지 않는다.
+- [ ] T054 [US3] `apps/web/src/features/auth/`의 보호 경계·재시도 안내와 인접 화면 테스트를 갱신하고 `specs/016-ios-oidc-auth/validation.md`에 R1 웹 전파·R5·접근성·화면·check/build 결과를 기록해 리뷰받는다.
+
+## 보완 6단계 — R6 공지 상세 mock
+
+- [ ] T055 `apps/admin/src/mocks/api-contract.test.ts`의 기존 Vitest 환경에서 `@yapp-plus/api/mocks`를 사용하는 공지 상세 URL 회귀 테스트를 추가해 현재 실패를 확인한다.
+- [ ] T056 `packages/api/src/mocks/handlers.ts`에 detail1의 faker·생성 schema를 연결하고 기존 detail을 보존한다. `specs/016-ios-oidc-auth/validation.md`에 URL·응답 검증·check 결과를 기록해 리뷰받는다.
+
+## 보완 7단계 — 통합 검증
+
+- [ ] T057 `specs/016-ios-oidc-auth/quickstart.md`의 R1–R6 회귀와 check/build/expo:doctor·Metro/Hermes·가능한 iOS 검증을 실행하고 `validation.md`에 신규 실행·캐시·실패·미실행을 구분한다.
+- [ ] T058 `specs/016-ios-oidc-auth/validation.md`에 #328 연계·R4 미해결 여부·실기기 대기·롤백·실제 base 변경량을 기록하고 최종 리뷰를 받는다. TestFlight/EAS 배포는 별도 승인 대상이다.
+
+실행 순서는 보완 0→1→2→3→4(조사 리뷰)→5→6→7이다. 각 화살표에 사용자 리뷰와 다음 단계 승인이 필요하다.
+공통 기반 R1은 US1·US2·US3을 함께 검증한다. R3·R4는 US1, R2·R5는 US3, R6은 별도 mock 회귀다.
+가장 작은 독립 개선은 네이티브 R1이며 여섯 결함 전체 완료와 구분한다. US4 탈퇴 기능 확장은 하지 않는다.
+추가 작업은 24개(공통·검증 12, US1 5, US3 7)다. 같은 인증 파일을 건드리는 단계 간 병렬 구현은 하지 않는다.

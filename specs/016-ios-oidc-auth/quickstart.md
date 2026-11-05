@@ -1,5 +1,32 @@
 # 단계별 검증 안내
 
+> 초기 구현 검증 안내를 보존한다. #329 후속 검증은 아래 R1–R6 표를 사용하며 실행하지 않은 항목은 결과로 표시하지 않는다.
+
+## #329 보완 검증
+
+아래는 후속 단계의 실행 계획이다. 테스트의 deferred로 완료 순서를 제어하며 실제 token을 fixture·로그에 넣지 않는다.
+
+| 요구  | 제어할 상황                                                               | 기대 결과와 주 검증 위치                                             |
+| ----- | ------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| R1    | 로그인·가입 응답, SecureStore 읽기/쓰기를 각각 지연→logout→이전 작업 완료 | 메모리·저장소 비복원, mobile actions/session 테스트                  |
+| R1    | 동시 restore/refresh, logout 후 새 로그인, 이전 finally 완료              | 대상별 1회 갱신, 새 Promise 보존, mobile session 테스트              |
+| R1    | 저장/삭제 실패와 같은 프로세스의 재조회                                   | STORAGE, 성공 미공개·옛 자격 복구 차단, mobile session 테스트        |
+| R2    | renew 401 / network / timeout / 5xx / 잘못된 200                          | 401만 해당 자격 삭제, 일시 장애 보존·오류 구분, mobile API/세션 경계 |
+| R2    | A의 늦은 401 전에 B 로그인 완료                                           | B 자격 유지, mobile session 테스트                                   |
+| R3    | 수동 plist 없는 깨끗한 native 생성·빌드                                   | client ID·scheme 대응, Google 초기화; 실제 로그인과 별도 기록        |
+| R4    | 기존 사용자 cache, 두 번째 시도·재시도·logout 후 재로그인                 | 새 nonce에 맞는 token 발급 근거 확인; silent 경로 불명확 시 미해결   |
+| R5    | undefined/timeout→브리지 준비, 미지원 앱                                  | 로그아웃 확정 금지·복구 재조회, 미지원 RPC 반복 없음                 |
+| R5    | visible 타이머·foreground·online·수동 재시도 중첩                         | 실패 완료 뒤 최소 5초, 진행 요청 공유·성공/숨김/unmount 시 정리      |
+| R1·R5 | 지연 getSession·mutation 뒤 logout/다른 로그인                            | #328 공통 경로와 통합해 옛 상태·탐색 비복원, 웹 인증 경계 테스트     |
+| R6    | GET /api/admin/generations/{generationId}/posts/{postId}                  | 공통 mock의 200·detail1 schema 검증, 기존 admin Vitest               |
+
+고정 도구는 `mise exec --`로 사용한다. 해당 단계의 인접 테스트를 직접 실행해 수정 전 실패/수정 후 통과를 기록한다.
+기본 게이트는 `mise exec -- node --run check`, 앱·빌드 설정 변경은 `mise exec -- node --run build`,
+모바일 의존성·설정 변경은 `mise exec -- node --run expo:doctor`다. Turbo 캐시는 신규 실행과 구분한다.
+깨끗한 iOS 생성은 현재 사용자의 native 출력물을 지우지 않고 `.context/` 격리 디렉터리에서 수행한다.
+Metro bundle 성공·Hermes 실행·Xcode 빌드·Google 실제 로그인은 서로 다른 증거다. 미실행 단계는 그대로 남긴다.
+외부 서비스·실기기·TestFlight 설치·EAS Update는 자동 테스트 통과로 대체하지 않으며 배포하지 않는다.
+
 이 문서는 실행할 절차다. 실행 결과는 [validation.md](validation.md)에 따로 기록한다.
 모든 명령은 저장소 루트 기준이며 main 동기화와 해당 단계 승인 후 실행한다.
 

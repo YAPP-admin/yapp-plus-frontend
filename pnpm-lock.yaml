@@ -135,6 +135,9 @@ catalogs:
     oxc-transform-react:
       specifier: 0.145.0
       version: 0.145.0
+    p-mutex:
+      specifier: 1.0.0
+      version: 1.0.0
     papaparse:
       specifier: 5.7.0
       version: 5.7.0
@@ -388,6 +391,9 @@ importers:
       expo-updates:
         specifier: ~58.0.21
         version: 58.0.21(expo-dev-client@58.0.18(expo@58.0.23)(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)))(expo@58.0.23)(react-native@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(@react-native/metro-config@0.88.1(@babel/core@7.29.7(supports-color@8.1.1))(supports-color@8.1.1))(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1))(react@19.3.0)(supports-color@8.1.1)
+      p-mutex:
+        specifier: 'catalog:'
+        version: 1.0.0
       react:
         specifier: catalog:expo
         version: 19.3.0
@@ -6071,6 +6077,10 @@ packages:
     resolution: {integrity: sha512-LaNjtRWUBY++zB5nE/NwcaoMylSPk+S+ZHNB1TzdbMJMny6dynpAGt7X/tl/QYq3TIeE6nxHppbo2LGymrG5Pw==}
     engines: {node: '>=10'}
 
+  p-mutex@1.0.0:
+    resolution: {integrity: sha512-UlthGzEMsg2VnZAR58wkzL7muskxtNamoTR1Q6/VYBUKqPaMM+YtSncjWIvyjfUvVECKck1SYC/4XIWWJU3gBw==}
+    engines: {node: '>=20'}
+
   papaparse@5.7.0:
     resolution: {integrity: sha512-qBGxg/7Q3Kl9Wfhrz2Z74UnvnHTXLNG6jmKJFeBvP2+y4lV7So+7SR62+Zd47JvdrCkX+nDcnr0ObPzek/+6RA==}
 
@@ -7210,6 +7220,10 @@ packages:
   yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  yocto-queue@1.2.2:
+    resolution: {integrity: sha512-4LCcse/U2MHZ63HAJVE+v71o7yOdIe4cZ70Wpf8D/IyjDKYQLV5GD46B+hSTjJsvV5PztjvHoU580EftxjDZFQ==}
+    engines: {node: '>=12.20'}
 
   zod@4.5.4:
     resolution: {integrity: sha512-sC95tT5iHHH9gtpj6A81kh+NEaRAUFN+qlUPDUbRfOMvNf5QCBqsb3WgvnpVtK5Y+4UfA6KqufotuTvMGiTlsA==}
@@ -13196,6 +13210,10 @@ snapshots:
     dependencies:
       p-limit: 3.1.0
 
+  p-mutex@1.0.0:
+    dependencies:
+      yocto-queue: 1.2.2
+
   papaparse@5.7.0: {}
 
   parent-module@1.0.1:
@@ -14394,5 +14412,7 @@ snapshots:
       yargs-parser: 22.0.0
 
   yocto-queue@0.1.0: {}
+
+  yocto-queue@1.2.2: {}
 
   zod@4.5.4: {}

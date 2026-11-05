@@ -1,6 +1,7 @@
 /** refresh token 회전과 앱 프로세스 메모리 세션 수명을 관리하는 native 모듈입니다. */
 
 import type { AuthResult, AuthSession, RefreshSessionInput } from '@yapp-plus/app-bridge';
+import Mutex from 'p-mutex';
 
 import { authStorage } from './storage';
 
@@ -20,11 +21,18 @@ export type SessionCredentials = Readonly<{
 /** 생성 OpenAPI `renew` 호출을 주입하는 함수 형태입니다. */
 type Renew = (refreshToken: string) => Promise<SessionCredentials>;
 
+type CommitOperation = { kind: 'establish' } | { kind: 'refresh'; previousToken: string };
+
+type RestoreState = 'allowed' | 'blocked' | 'deletion-failed';
+
 /**
  * 앱 범위에서 하나만 만드는 native 세션 관리자입니다.
- * SecureStore는 AuthStorage로 직접 사용하고, refresh 동시성만 이 클래스가 소유합니다.
+ * 저장소 접근은 직렬화하고, 복구·갱신 요청은 세대별로 공유합니다.
  */
 export class SessionManager {
+  private readonly storageMutex = new Mutex();
+  private restoring: Promise<AuthResult> | undefined;
+  private restoreState: RestoreState = 'allowed';
   /**
    * WebView에 반환 가능한 현재 세션입니다.
    * 앱 종료 시 사라지며, access token과 refresh token을 함께 저장하지 않습니다.
@@ -53,26 +61,21 @@ export class SessionManager {
    * OIDC 로그인 또는 가입 완료 후 새 세션을 시작합니다.
    * refresh token 저장이 성공한 경우에만 access token을 WebView에 반환합니다.
    */
-  public async establish(credentials: SessionCredentials): Promise<AuthResult> {
-    const currentGeneration = ++this.generation;
-    try {
-      await authStorage.setRefreshToken(credentials.refreshToken);
-    } catch {
-      return { status: 'ERROR', code: 'STORAGE', retryable: true };
-    }
-    if (currentGeneration !== this.generation) {
-      return { status: 'SIGNED_OUT' };
-    }
+  public establish(
+    credentials: SessionCredentials,
+    currentGeneration: number,
+  ): Promise<AuthResult> {
+    return this.commit(credentials, currentGeneration, { kind: 'establish' });
+  }
 
-    this.currentRefreshToken = credentials.refreshToken;
-    this.currentSession = {
-      accessToken: credentials.accessToken,
-      expiresAt: credentials.expiresAt,
-      userId: credentials.userId,
-      sessionId: crypto.randomUUID(),
-      tokenVersion: 1,
-    };
-    return { status: 'SIGNED_IN', session: this.currentSession };
+  /** provider·API 호출 전에 기록하는 내부 세대입니다. */
+  public captureGeneration(): number {
+    return this.generation;
+  }
+
+  /** 작업 시작 이후 로그아웃·새 세션 확정을 판별합니다. */
+  public isCurrent(currentGeneration: number): boolean {
+    return currentGeneration === this.generation;
   }
 
   /**
@@ -83,12 +86,43 @@ export class SessionManager {
     if (this.currentSession && this.currentSession.expiresAt > Date.now() + REFRESH_EARLY_MS) {
       return { status: 'SIGNED_IN', session: this.currentSession };
     }
+    if (this.restoreState !== 'allowed') {
+      return this.restoreState === 'deletion-failed'
+        ? { status: 'ERROR', code: 'STORAGE', retryable: true }
+        : { status: 'SIGNED_OUT' };
+    }
+    if (!this.restoring) {
+      const restoring = this.restore(this.generation, renew).finally(() => {
+        if (this.restoring === restoring) {
+          this.restoring = undefined;
+        }
+      });
+      this.restoring = restoring;
+    }
+    return this.restoring;
+  }
+
+  private async restore(currentGeneration: number, renew: Renew): Promise<AuthResult> {
     if (!this.currentRefreshToken) {
       try {
-        this.currentRefreshToken = (await authStorage.getRefreshToken()) ?? undefined;
+        await this.storageMutex.withLock(async () => {
+          if (!this.isCurrent(currentGeneration) || this.currentRefreshToken) {
+            return;
+          }
+          const token = await authStorage.getRefreshToken();
+          if (this.isCurrent(currentGeneration)) {
+            this.currentRefreshToken = token ?? undefined;
+          }
+        });
       } catch {
+        if (!this.isCurrent(currentGeneration)) {
+          return { status: 'CANCELLED' };
+        }
         return { status: 'ERROR', code: 'STORAGE', retryable: true };
       }
+    }
+    if (!this.isCurrent(currentGeneration)) {
+      return { status: 'CANCELLED' };
     }
     return this.refresh(undefined, renew);
   }
@@ -112,11 +146,18 @@ export class SessionManager {
       return { status: 'SIGNED_OUT' };
     }
 
-    this.refreshing ??= this.refreshCurrentSession(
-      this.generation,
-      this.currentRefreshToken,
-      renew,
-    );
+    if (!this.refreshing) {
+      const refreshing = this.refreshCurrentSession(
+        this.generation,
+        this.currentRefreshToken,
+        renew,
+      ).finally(() => {
+        if (this.refreshing === refreshing) {
+          this.refreshing = undefined;
+        }
+      });
+      this.refreshing = refreshing;
+    }
     return this.refreshing;
   }
 
@@ -125,13 +166,18 @@ export class SessionManager {
    * generation을 먼저 증가시켜 이미 진행 중인 refresh가 토큰을 복구하지 못하게 합니다.
    */
   public async clear(): Promise<AuthResult> {
-    ++this.generation;
+    const currentGeneration = this.advanceGeneration();
     this.currentSession = undefined;
     this.currentRefreshToken = undefined;
+    this.restoreState = 'blocked';
     try {
-      await authStorage.clearSession();
-      return { status: 'SIGNED_OUT' };
+      await this.storageMutex.withLock(() => authStorage.clearSession());
+      return this.isCurrent(currentGeneration) ? { status: 'SIGNED_OUT' } : { status: 'CANCELLED' };
     } catch {
+      if (!this.isCurrent(currentGeneration)) {
+        return { status: 'CANCELLED' };
+      }
+      this.restoreState = 'deletion-failed';
       return { status: 'ERROR', code: 'STORAGE', retryable: true };
     }
   }
@@ -154,27 +200,62 @@ export class SessionManager {
   ): Promise<AuthResult> {
     try {
       const credentials = await renew(refreshToken);
-      if (currentGeneration !== this.generation) {
-        return { status: 'SIGNED_OUT' };
+      return await this.commit(credentials, currentGeneration, {
+        kind: 'refresh',
+        previousToken: refreshToken,
+      });
+    } catch {
+      if (!this.isCurrent(currentGeneration)) {
+        return { status: 'CANCELLED' };
       }
-      await authStorage.setRefreshToken(credentials.refreshToken);
-      if (currentGeneration !== this.generation) {
-        return { status: 'SIGNED_OUT' };
-      }
+      return { status: 'UNAVAILABLE', code: 'NETWORK', retryable: true };
+    }
+  }
 
+  /** 세션 경계가 바뀌면 이전 세대의 진행 작업을 함께 분리합니다. */
+  private advanceGeneration(): number {
+    this.refreshing = undefined;
+    this.restoring = undefined;
+    return ++this.generation;
+  }
+
+  /** 세대·대상 검사와 저장을 직렬화합니다. 네트워크는 lock 밖에서 기다립니다. */
+  private async commit(
+    credentials: SessionCredentials,
+    currentGeneration: number,
+    operation: CommitOperation,
+  ): Promise<AuthResult> {
+    return this.storageMutex.withLock(async (): Promise<AuthResult> => {
+      if (
+        !this.isCurrent(currentGeneration) ||
+        (operation.kind === 'refresh' && operation.previousToken !== this.currentRefreshToken)
+      ) {
+        return { status: 'CANCELLED' };
+      }
+      try {
+        await authStorage.setRefreshToken(credentials.refreshToken);
+      } catch {
+        return this.isCurrent(currentGeneration)
+          ? { status: 'ERROR', code: 'STORAGE', retryable: true }
+          : { status: 'CANCELLED' };
+      }
+      if (!this.isCurrent(currentGeneration)) {
+        return { status: 'CANCELLED' };
+      }
+      const previous = operation.kind === 'refresh' ? this.currentSession : undefined;
       this.currentRefreshToken = credentials.refreshToken;
       this.currentSession = {
         accessToken: credentials.accessToken,
         expiresAt: credentials.expiresAt,
         userId: credentials.userId,
-        sessionId: this.currentSession?.sessionId ?? crypto.randomUUID(),
-        tokenVersion: (this.currentSession?.tokenVersion ?? 0) + 1,
+        sessionId: previous?.sessionId ?? crypto.randomUUID(),
+        tokenVersion: (previous?.tokenVersion ?? 0) + 1,
       };
+      if (operation.kind === 'establish') {
+        this.advanceGeneration();
+      }
+      this.restoreState = 'allowed';
       return { status: 'SIGNED_IN', session: this.currentSession };
-    } catch {
-      return { status: 'UNAVAILABLE', code: 'NETWORK', retryable: true };
-    } finally {
-      this.refreshing = undefined;
-    }
+    });
   }
 }
