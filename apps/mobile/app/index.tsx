@@ -1,5 +1,6 @@
 import { YAPP_PLUS_WEBVIEW_USER_AGENT_TOKEN } from '@yapp-plus/app-bridge';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { useCallback } from 'react';
+import { ActivityIndicator, Linking, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BridgeWebView, useSyncSafeAreaInsets } from '../src/bridge';
@@ -7,6 +8,16 @@ import { useWebViewBackHandler } from '../src/use-webview-back-handler';
 import { resolveMobileWebUrl } from '../src/web-url';
 
 const webUrl = resolveMobileWebUrl();
+const trustedOrigin = new URL(webUrl).origin;
+
+/** 서비스 origin 밖의 탐색은 WebView에 남기지 않고 시스템 브라우저로 넘깁니다. */
+const shouldKeepNavigationInWebView = (url: string): boolean => {
+  try {
+    return new URL(url).origin === trustedOrigin;
+  } catch {
+    return false;
+  }
+};
 
 /**
  * safe-area bridge와 WebView history를 native 앱 셸에 연결하는 화면입니다.
@@ -17,12 +28,23 @@ export default function WebViewScreen() {
 
   useSyncSafeAreaInsets(safeAreaInsets);
 
+  const handleShouldStartLoadWithRequest = useCallback((request: { url: string }): boolean => {
+    if (shouldKeepNavigationInWebView(request.url)) {
+      return true;
+    }
+
+    void Linking.openURL(request.url);
+
+    return false;
+  }, []);
+
   return (
     <View style={styles.container}>
       <BridgeWebView
         automaticallyAdjustContentInsets={false}
         applicationNameForUserAgent={YAPP_PLUS_WEBVIEW_USER_AGENT_TOKEN}
         onNavigationStateChange={handleNavigationStateChange}
+        onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
         contentInsetAdjustmentBehavior="never"
         renderLoading={() => (
           <View style={styles.loading}>
