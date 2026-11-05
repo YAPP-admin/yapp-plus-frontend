@@ -85,15 +85,14 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 
 독립 검증: US1 로그인·US2 가입·US3 복구를 각각 지연하고 logout 후 반환해 메모리·저장소 비복원을 확인한다.
 
-- [ ] T038 `apps/mobile/src/auth/session.test.ts`, `actions.test.ts`에 R1 지연·저장 실패·이전 finally 회귀를 먼저 추가해 수정 전 실패를 확인한다.
+- [x] T038 `apps/mobile/src/auth/session.test.ts`, `actions.test.ts`에 R1 지연·저장 실패·이전 finally 회귀를 먼저 추가해 수정 전 실패를 확인한다.
 - [x] T039 `pnpm-workspace.yaml`, `apps/mobile/package.json`, `pnpm-lock.yaml`에 p-mutex@1.0.0을 추가하고 `apps/mobile/src/auth/session.ts`의 저장·메모리 확정을 직렬화한다.
-- [ ] T040 `apps/mobile/src/auth/actions.ts`, `session.ts`에 작업 시작 세대·조건부 결과 반영·즉시 logout 무효화·삭제 예약·가입 자격 정리를 구현한다.
+- [x] T040 `apps/mobile/src/auth/actions.ts`, `session.ts`에 작업 시작 세대·조건부 결과 반영·즉시 logout 무효화·삭제 예약·가입 자격 정리를 구현한다.
 - [x] T041 `apps/mobile/src/auth/session.ts`에 restore/refresh의 세대·대상별 single-flight와 identity-safe finally, 삭제 실패 후 복구 차단을 적용한다.
 - [ ] T042 `specs/016-ios-oidc-auth/validation.md`에 R1·check/build/expo:doctor·Metro 결과와 #328 웹 연계 미검증을 기록하고 리뷰받는다.
 
-1A에서 T039·T041과 T038의 session 회귀, T042의 기반 검증을 완료했다. T038의 actions 회귀·T040과 전체 R1 보고는 1B에 남긴다.
-1A 리뷰 수정에서 필수 세대 인자에 맞춰 로그인·가입의 세대 전달과 회귀 2건을 추가했다. 나머지 actions 무효화·로그아웃 순서·가입 자격 정리는 1B에 남긴다.
-**중단점**: 1A 리뷰와 1B 진행 확인 전 AuthActions 연결을 시작하지 않는다.
+1A·1B에서 T038–T041의 네이티브 구현·자동 검증을 완료했다. T042는 1B 결과를 제출한 뒤 사용자 리뷰를 기다린다. 웹 연계는 보완 5단계에 남아 있다.
+**중단점**: 1B 리뷰와 보완 2단계 진행 확인 전 renew 오류 분류를 시작하지 않는다.
 
 ## 보완 2단계 — R2 US3 갱신 오류
 
