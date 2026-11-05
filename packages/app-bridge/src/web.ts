@@ -84,7 +84,7 @@ const createLinkedBridge = () =>
     throwOnError: ['getSafeAreaInsets'],
   });
 
-type LinkedAppBridge = ReturnType<typeof createLinkedBridge>;
+export type LinkedAppBridge = ReturnType<typeof createLinkedBridge>;
 
 let linkedBridge: LinkedAppBridge | undefined;
 
@@ -92,6 +92,9 @@ const getLinkedBridge = (): LinkedAppBridge => {
   linkedBridge ??= createLinkedBridge();
   return linkedBridge;
 };
+
+/** WebView 전용 인증·safe-area RPC 호출에 사용할 연결된 브리지입니다. */
+export const getAppBridge = (): LinkedAppBridge => getLinkedBridge();
 
 const waitForNativeBridge = async (
   bridge: LinkedAppBridge,

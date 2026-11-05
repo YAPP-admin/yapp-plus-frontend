@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
@@ -16,13 +17,16 @@ afterEach(() => {
 
 function renderStack() {
   const { Stack } = createStackflowApp();
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
   return render(
-    <NavigationHistory>
-      <Suspense fallback={<div>로딩 중…</div>}>
-        <Stack />
-      </Suspense>
-    </NavigationHistory>,
+    <QueryClientProvider client={queryClient}>
+      <NavigationHistory>
+        <Suspense fallback={<div>로딩 중…</div>}>
+          <Stack />
+        </Suspense>
+      </NavigationHistory>
+    </QueryClientProvider>,
   );
 }
 
@@ -228,7 +232,7 @@ describe('Stackflow FSD 화면 연결', () => {
   it('가입 상태 직접 진입은 Login fallback과 가입 입력 흐름을 유지한다', async () => {
     const user = userEvent.setup();
     window.history.replaceState({}, '', '/signup/status');
-    renderStack();
+    const rendered = renderStack();
 
     const statusScreen = await waitForTopHeading('운영진 승인을 기다리고 있어요...');
     await user.click(statusScreen.getByRole('button', { name: '뒤로가기' }));
@@ -236,6 +240,11 @@ describe('Stackflow FSD 화면 연결', () => {
 
     const loginScreen = await waitForTopHeading(/당신의 작은 아이디어가/);
     await user.click(loginScreen.getByRole('button', { name: '애플로 계속하기' }));
+    expect(loginScreen.getByText(/YAPP\+ 앱에서 이용할 수 있어요/)).toBeInTheDocument();
+
+    rendered.unmount();
+    window.history.replaceState({}, '', '/signup');
+    renderStack();
     const signupScreen = await waitForTopHeading('이름을 입력해 주세요');
     await user.type(signupScreen.getByRole('textbox', { name: '이름을 입력해 주세요' }), '홍길동');
     await user.click(signupScreen.getByRole('button', { name: '다음' }));
@@ -259,10 +268,13 @@ describe('Stackflow FSD 화면 연결', () => {
 
     window.history.replaceState({}, '', '/');
     const { Stack } = createStackflowApp({ reducedMotion: true });
+    const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
     render(
-      <Suspense fallback={<div>로딩 중…</div>}>
-        <Stack initialContext={{ platform: 'ios', reducedMotion: true }} />
-      </Suspense>,
+      <QueryClientProvider client={queryClient}>
+        <Suspense fallback={<div>로딩 중…</div>}>
+          <Stack initialContext={{ platform: 'ios', reducedMotion: true }} />
+        </Suspense>
+      </QueryClientProvider>,
     );
     expect(await waitForTopHeading('홈')).toBeTruthy();
     expect(document.querySelector('[data-reduced-motion="true"]')).toBeInTheDocument();

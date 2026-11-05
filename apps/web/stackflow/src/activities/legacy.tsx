@@ -3,6 +3,7 @@ import { useActivity, useStep } from '@stackflow/react';
 import { useActivityParams } from '@stackflow/react/future';
 import { Activity, type ReactNode } from 'react';
 import { SnackbarProvider } from '@yapp-plus/ui';
+import { useNativeAuthSession } from '@/features/auth';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
@@ -31,6 +32,7 @@ import { TabsLayout } from '@/app/layouts/tabs-layout';
 import { useAppScreenOptions } from '../platform';
 import { isTabName, type TabName, type TabsState } from '@/app/navigation/tab';
 import { useTabsUrl } from '@/app/navigation/use-tabs-url';
+import { NativeAuthRedirect } from './native-auth-redirect';
 
 const TAB_TITLES: Record<TabName, string> = {
   home: '홈',
@@ -40,6 +42,7 @@ const TAB_TITLES: Record<TabName, string> = {
 };
 
 export function LegacyTabsActivity() {
+  const { isNative, phase } = useNativeAuthSession();
   const activityParams = useActivityParams<'Tabs'>();
   const step = useStep();
   const stepParams = readTabsParams(step?.params);
@@ -51,6 +54,19 @@ export function LegacyTabsActivity() {
     attendance: stepParams.attendance ?? initialParams.attendance,
   } satisfies TabsState;
   useTabsUrl(tabsState);
+
+  if (isNative && phase !== 'SIGNED_IN') {
+    return (
+      <LegacyScreen title="로그인">
+        <NativeAuthRedirect
+          target="LOGIN"
+          when="SIGNED_OUT"
+          unavailable={phase === 'UNAVAILABLE'}
+        />
+        <output>로그인 상태를 확인하고 있어요…</output>
+      </LegacyScreen>
+    );
+  }
 
   return (
     <LegacyScreen title={TAB_TITLES[activeTab]}>
@@ -180,8 +196,10 @@ export function LegacyTeamAttendanceCompleteActivity() {
 
 export function LegacyLoginActivity() {
   const { error } = useActivityParams<'Login'>();
+
   return (
     <LegacyScreen title="로그인" showBack={false} preventSwipeBack>
+      <NativeAuthRedirect target="TABS" when="SIGNED_IN" />
       <AuthLayout>
         <LoginPage initialError={error === 'true'} />
       </AuthLayout>

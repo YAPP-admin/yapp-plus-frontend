@@ -20,6 +20,12 @@ import { Image } from '@/app/navigation/image';
 import { useFlow } from '@stackflow/react/future';
 import { useState } from 'react';
 import {
+  useNativeAuthSession,
+  useNativeSignOutMutation,
+  useNativeWithdrawMutation,
+} from '@/features/auth';
+import { ActionButton, Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
+import {
   body,
   bottomSection,
   container,
@@ -60,14 +66,53 @@ const SETTINGS_LINKS = [
 
 export function SettingsPage() {
   const flow = useFlow();
+  const { isNative } = useNativeAuthSession();
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
+  const snackbar = useSnackbarAdapter();
+  const withdrawMutation = useNativeWithdrawMutation();
+  const signOutMutation = useNativeSignOutMutation();
+  const isAccountActionPending = withdrawMutation.isPending || signOutMutation.isPending;
+
+  const showAccountError = (message: string): void => {
+    snackbar.create({
+      render: () => <Snackbar variant="critical" message={message} />,
+    });
+  };
 
   const handleWithdraw = () => {
-    flow.push('Login', {});
+    if (!isNative) {
+      flow.push('Login', {});
+      return;
+    }
+
+    withdrawMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        if (result?.status === 'WITHDRAWN') {
+          flow.replace('Login', {});
+          return;
+        }
+        showAccountError('탈퇴 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.');
+      },
+      onError: () => showAccountError('탈퇴 처리 중 문제가 발생했어요. 다시 시도해 주세요.'),
+    });
   };
 
   const handleLogout = () => {
-    flow.push('Login', {});
+    if (!isNative) {
+      flow.push('Login', {});
+      return;
+    }
+
+    signOutMutation.mutate(undefined, {
+      onSuccess: (result) => {
+        if (result?.status === 'SIGNED_OUT') {
+          flow.replace('Login', {});
+          return;
+        }
+        showAccountError('로그아웃 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.');
+      },
+      onError: () => showAccountError('로그아웃 중 문제가 발생했어요. 다시 시도해 주세요.'),
+    });
   };
 
   return (
@@ -142,14 +187,26 @@ export function SettingsPage() {
                 </DialogHeader>
                 <div className={dialogFooter}>
                   <DialogAction asChild>
-                    <button type="button" className={dialogCancelButton}>
+                    <ActionButton
+                      type="button"
+                      size="medium"
+                      variant="neutralWeak"
+                      className={dialogCancelButton}
+                    >
                       취소
-                    </button>
+                    </ActionButton>
                   </DialogAction>
                   <DialogAction asChild>
-                    <button type="button" className={dialogConfirmButton} onClick={handleWithdraw}>
+                    <ActionButton
+                      type="button"
+                      size="medium"
+                      variant="brandSolid"
+                      className={dialogConfirmButton}
+                      disabled={isAccountActionPending}
+                      onClick={handleWithdraw}
+                    >
                       탈퇴하기
-                    </button>
+                    </ActionButton>
                   </DialogAction>
                 </div>
               </DialogContent>
@@ -173,14 +230,26 @@ export function SettingsPage() {
                 </DialogHeader>
                 <div className={dialogFooter}>
                   <DialogAction asChild>
-                    <button type="button" className={dialogCancelButton}>
+                    <ActionButton
+                      type="button"
+                      size="medium"
+                      variant="neutralWeak"
+                      className={dialogCancelButton}
+                    >
                       취소
-                    </button>
+                    </ActionButton>
                   </DialogAction>
                   <DialogAction asChild>
-                    <button type="button" className={dialogConfirmButton} onClick={handleLogout}>
+                    <ActionButton
+                      type="button"
+                      size="medium"
+                      variant="brandSolid"
+                      className={dialogConfirmButton}
+                      disabled={isAccountActionPending}
+                      onClick={handleLogout}
+                    >
                       로그아웃
-                    </button>
+                    </ActionButton>
                   </DialogAction>
                 </div>
               </DialogContent>
