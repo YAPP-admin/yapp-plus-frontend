@@ -1,3 +1,5 @@
+/** refresh token 회전과 앱 프로세스 메모리 세션 수명을 관리하는 native 모듈입니다. */
+
 import type { AuthResult, AuthSession, RefreshSessionInput } from '@yapp-plus/app-bridge';
 
 import { authStorage } from './storage';
