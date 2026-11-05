@@ -196,4 +196,12 @@
 - `node --run check`: exit 0. 모바일 lint·typecheck·test는 새로 실행했고, 다른 패키지 일부는 Turbo 캐시를 재사용했다.
 - `node --run build`: exit 0. 전체 빌드가 통과했으며 이번 실행에서는 Turbo 캐시를 재사용했다.
 - `node --run expo:doctor`: exit 0, 20/20 checks passed.
-- 기존 TestFlight build `14`에는 이번 `updates.url`·runtime·channel 설정이 포함되지 않았으므로, EAS Update를 사용하려면 이 설정을 포함한 새 네이티브 build를 먼저 생성해야 한다. 아직 새 build·submit·update 배포는 실행하지 않았다.
+- 기존 TestFlight build `14`에는 이번 `updates.url`·runtime·channel 설정이 포함되지 않았으므로, EAS Update를 사용하려면 이 설정을 포함한 새 네이티브 build를 먼저 생성해야 한다.
+
+## EAS Update 배포·TestFlight build 15 제출 — 2026-11-05
+
+- `testflight` 채널과 같은 이름의 EAS branch를 만들고, `runtimeVersion: 1.0.0` 업데이트 그룹 `1ca98848-73d1-4184-ad74-ca70304c43fa`를 배포했다. 공개 `MOBILE_WEB_URL`을 build 설정과 동일하게 전달했고, EAS 환경의 비밀값은 사용하지 않았다.
+- 이 update는 EAS Update 설정이 없는 build 14에는 전달되지 않는다. build 15 이상의 같은 channel·runtime 설치본에서만 수신 대상이 된다.
+- build `b146e688-7374-4428-bffe-5d495a974911`는 `testflight` 프로필로 성공했다. 앱 버전은 `1.0.0`, build number는 `15`, runtime version은 `1.0.0`, 포함 commit은 `04e085890684a97c9622f2609ded4a864589f035`다.
+- build 15를 EAS Submission `685997d3-b71c-4a80-836a-c080936956d7`로 App Store Connect App ID `6830536097`에 제출했다. Apple processing 완료는 사용자가 확인했다.
+- TestFlight 설치, 업데이트 수신, Apple·Google 실제 로그인, 가입·세션·로그아웃·탈퇴는 실기기 부재로 아직 실행하지 않았다. 실제 기기와 폐기 가능한 테스트 계정이 준비되면 T033·T034에서 결과를 기록한다.

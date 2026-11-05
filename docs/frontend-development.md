@@ -175,4 +175,6 @@ React 19를 사용하는 새 로컬 컴포넌트는 `ref`를 일반 prop으로 �
   Table과 관리자 셸 규칙
 - [웹 작업 가이드](./web-development.md): Vite·Stackflow, 회원 앱 레이아웃·WebView·safe-area
   규칙
+- [iOS WebView 셸과 EAS 빌드](../apps/mobile/README.md): Expo 설정, native OIDC, TestFlight와
+  EAS Update 운영 경계
 - [기능별 명세](../specs/): 제품 정책, 화면 계약, 단계별 검증과 미연결 범위
