@@ -5,6 +5,8 @@
   },
   "build": {
     "base": {
+      "node": "24.20.0",
+      "corepack": false,
       "env": {
         "MOBILE_WEB_URL": "https://yapp-plus-web.vercel.app"
       }
