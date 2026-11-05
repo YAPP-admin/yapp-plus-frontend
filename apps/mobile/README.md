@@ -59,8 +59,46 @@ mise exec -- pnpm dlx eas-cli@27.4.1 submit --platform ios --profile testflight
 ```
 
 `testflight`은 EAS remote build number를 자동 증가시킨다. 사용자에게 보이는 `version`은 새 출시
-주기를 시작할 때 `app.config.ts`에서 명시적으로 바꾼다. 실제 업로드·제출은 인증 구현과 실제
-기기 검증이 끝난 뒤 별도 승인으로 실행한다.
+주기를 시작할 때 `app.config.ts`에서 명시적으로 바꾼다. 실제 업로드·제출은 새 native build와
+TestFlight 배포가 필요한 경우 별도 승인으로 실행한다.
+
+## EAS Update
+
+`testflight` 프로필은 `testflight` 채널을 사용하고, runtime version은 앱의 `version`을 그대로
+쓴다. EAS Update는 같은 채널·runtime version을 가진 설치본에 JavaScript와 asset만 배포한다.
+
+```sh
+cd apps/mobile
+MOBILE_WEB_URL=https://yapp-plus-web.vercel.app \
+  mise exec -- pnpm dlx eas-cli@27.4.1 update \
+  --channel testflight \
+  --environment production \
+  --message "변경 내용을 설명하는 한국어 메시지"
+```
+
+`MOBILE_WEB_URL`은 EAS 환경 변수에 저장하지 않고 `eas.json`의 공개 build 환경 변수로 관리한다.
+따라서 update를 배포할 때도 같은 값을 명시해 build와 WebView 대상이 달라지지 않게 한다.
+
+다음 변경은 EAS Update로 배포하지 않고 새 TestFlight build를 만든다.
+
+- Expo·React Native·네이티브 모듈 의존성
+- `app.config.ts`, Expo config plugin, iOS capability, bundle identifier, URL scheme
+- 네이티브 세션·로그인 SDK처럼 JavaScript bundle만 바꿔서는 반영되지 않는 변경
+
+현재 runtime policy가 `appVersion`이므로 위와 같은 native 변경을 배포할 때는 build number만
+올리지 말고 `app.config.ts`의 `version`도 새 값으로 올린 뒤 새 build를 만든다. 같은 runtime에
+호환되지 않는 update가 전달되는 일을 막기 위한 기준이다.
+
+TestFlight 제출은 대상 build를 명시한다. `--latest`로 다른 build를 제출하지 않도록 build ID를
+확인한 뒤 실행한다.
+
+```sh
+mise exec -- pnpm dlx eas-cli@27.4.1 submit \
+  --platform ios \
+  --profile testflight \
+  --id <EAS_BUILD_ID> \
+  --non-interactive
+```
 
 ## Pretendard와 SDK 58
 
@@ -94,4 +132,5 @@ development build와 TestFlight에서 로그인, 세션 복원·갱신, 로그�
 
 - [Expo 앱 설정](https://docs.expo.dev/workflow/configuration/)
 - [EAS 빌드 프로필](https://docs.expo.dev/build/eas-json/)
+- [EAS Update runtime version](https://docs.expo.dev/eas-update/runtime-versions/)
 - [Expo App version 관리](https://docs.expo.dev/build-reference/app-versions/)
