@@ -9,6 +9,7 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "doctor": "expo-doctor",
+    "eas-build-pre-install": "npm install --global --force pnpm@12.3.4",
     "lint": "oxlint --deny-warnings .",
     "prebuild": "expo prebuild",
     "typecheck": "tsc --noEmit"
