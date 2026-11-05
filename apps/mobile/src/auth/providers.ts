@@ -1,3 +1,5 @@
+/** Apple·Google SDK에서 OIDC credential을 얻고 공급자 오류를 표준화하는 모듈입니다. */
+
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import {
@@ -11,6 +13,14 @@ import type { AuthProvider } from '@yapp-plus/app-bridge';
 // OAuth client ID는 공개 식별자이며, 검증은 백엔드가 ID token의 audience로 수행합니다.
 const GOOGLE_WEB_CLIENT_ID =
   '47093355379-bl1tgba0nj3sn5610bn01aeqc7mm4ljb.apps.googleusercontent.com';
+
+const NATIVE_AUTHENTICATION_MESSAGE = {
+  cancelled: '로그인을 취소했어요.',
+  appleCredentialMissing: 'Apple 로그인 정보를 받지 못했어요. 다시 시도해 주세요.',
+  appleFailed: 'Apple 로그인 중 문제가 발생했어요. 다시 시도해 주세요.',
+  googleCredentialMissing: 'Google 로그인 정보를 받지 못했어요. 다시 시도해 주세요.',
+  googleFailed: 'Google 로그인 중 문제가 발생했어요. 다시 시도해 주세요.',
+} as const;
 
 export type NativeIdentity =
   | Readonly<{
@@ -37,7 +47,7 @@ export class NativeAuthenticationError extends Error {
 
 export class NativeAuthenticationCancelledError extends NativeAuthenticationError {
   public constructor(cause?: unknown) {
-    super('CANCELLED', '로그인을 취소했어요.', cause);
+    super('CANCELLED', NATIVE_AUTHENTICATION_MESSAGE.cancelled, cause);
     this.name = 'NativeAuthenticationCancelledError';
   }
 }
@@ -72,7 +82,7 @@ const authenticateApple = async (): Promise<NativeIdentity> => {
     if (!credential.identityToken || !credential.authorizationCode) {
       throw new NativeAuthenticationError(
         'CREDENTIAL_MISSING',
-        'Apple 로그인 정보를 받지 못했어요. 다시 시도해 주세요.',
+        NATIVE_AUTHENTICATION_MESSAGE.appleCredentialMissing,
       );
     }
     return {
@@ -90,7 +100,7 @@ const authenticateApple = async (): Promise<NativeIdentity> => {
     }
     throw new NativeAuthenticationError(
       'PROVIDER_FAILURE',
-      'Apple 로그인 중 문제가 발생했어요. 다시 시도해 주세요.',
+      NATIVE_AUTHENTICATION_MESSAGE.appleFailed,
       error,
     );
   }
@@ -114,7 +124,7 @@ const authenticateGoogle = async (): Promise<NativeIdentity> => {
     if (!isSuccessResponse(response) || !response.data.idToken) {
       throw new NativeAuthenticationError(
         'CREDENTIAL_MISSING',
-        'Google 로그인 정보를 받지 못했어요. 다시 시도해 주세요.',
+        NATIVE_AUTHENTICATION_MESSAGE.googleCredentialMissing,
       );
     }
     return { provider: 'google', idToken: response.data.idToken, nonce: nonce.raw };
@@ -124,7 +134,7 @@ const authenticateGoogle = async (): Promise<NativeIdentity> => {
     }
     throw new NativeAuthenticationError(
       'PROVIDER_FAILURE',
-      'Google 로그인 중 문제가 발생했어요. 다시 시도해 주세요.',
+      NATIVE_AUTHENTICATION_MESSAGE.googleFailed,
       error,
     );
   }
