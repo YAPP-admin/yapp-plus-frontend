@@ -1,5 +1,7 @@
 # 상태와 데이터 수명
 
+> 최초 설계 기록을 보존한다. #329는 아래 보완 모델의 범위만 구현하며, 기존 auth revision 등 모든 설계 항목의 구현 완료를 주장하지 않는다.
+
 ## 저장 경계
 
 | 데이터                                         | 위치                                       | 삭제/변경 시점                                     |
@@ -54,3 +56,27 @@ provider token과 서비스 token을 혼동하지 않는다. web localStorage·U
 - 업무 요청의 401은 위 sessionId/tokenVersion 정책으로 처리한다. 인증·가입·갱신·탈퇴 요청에는 업무 요청 재시도 인터셉터를 적용하지 않는다.
 - 생성 Zod의 int64 bigint를 브리지 JSON으로 내보내지 않는다. 안전한 정수 범위를 확인해 number로 변환한다.
 - 사용자 identity는 검증된 AuthenticationResponse.user.id에서 얻으며 프로필/승인 상태 조회 API를 새로 가정하지 않는다.
+
+## #329 보완 모델
+
+- 작업 문맥은 시작 시점의 generation과 필요 시 sessionId/tokenVersion/refresh token을 내부에서 보관한다. token은 비교에만 사용하며 외부 식별자로 노출하지 않는다.
+- p-mutex는 저장 순서를 보장하고 generation은 오래된 결과의 유효성을 판별한다. 둘 중 하나만으로 로그아웃 경합을 해결했다고 보지 않는다.
+- logout은 즉시 generation을 올리고 메모리 세션·가입 자격을 무효화한다. 서버 revoke에는 캡처한 이전 token을 쓰고 로컬 삭제를 먼저 예약한다.
+- 새 로그인 결과의 공개는 검증→같은 세대 확인→저장→같은 세대 재확인→메모리 확정 순서다. 로그아웃 이후 오래된 SIGNUP_REQUIRED도 공개하지 않는다.
+- restore 읽기 뒤 세대가 바뀌면 읽은 자격을 메모리에 넣거나 renew에 사용하지 않는다. 저장이 이미 시작됐다면 뒤따르는 logout 삭제로 정리한다.
+- 오류 정리에도 같은 세대·대상 검사를 적용한다. 오래된 renew 401이 새 계정을 삭제하지 않는다.
+- 웹 작업 세대는 #328의 공통 경로를 사용한다. native generation을 공개 계약에 추가하지 않으며 두 세대가 동일한 값이라고 가정하지 않는다.
+
+```mermaid
+sequenceDiagram
+  participant A as 로그인 작업
+  participant S as 세션 관리자
+  participant D as SecureStore
+  A->>S: 시작 세대 7 캡처
+  Note over A: provider·서버 응답 대기 (lock 없음)
+  S->>S: 로그아웃: 세대 8, 메모리 무효화
+  S->>D: mutex로 삭제 예약·실행
+  A->>S: 이전 로그인 성공 (세대 7)
+  S->>S: 현재 세대와 불일치: 결과 폐기
+  Note over S,D: 저장·SIGNED_IN 공개 없음
+```

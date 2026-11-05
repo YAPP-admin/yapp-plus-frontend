@@ -51,6 +51,7 @@ export class AuthActions {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.busy, retryable: true };
     }
 
+    const generation = this.runtime.session.captureGeneration();
     this.authenticating = true;
     try {
       const identity = await this.runtime.authenticateWithProvider(input.provider);
@@ -67,7 +68,7 @@ export class AuthActions {
               body: { idToken: identity.idToken, nonce: identity.nonce },
             });
 
-      return await this.acceptAuthenticationResult(result);
+      return await this.acceptAuthenticationResult(result, generation);
     } catch (error) {
       return this.toSignInError(error);
     } finally {
@@ -83,6 +84,7 @@ export class AuthActions {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.signupExpired, retryable: false };
     }
 
+    const generation = this.runtime.session.captureGeneration();
     const result = await this.runtime.register({
       body: {
         registrationToken: this.registration.token,
@@ -91,7 +93,7 @@ export class AuthActions {
       },
     });
 
-    return this.acceptCompletedSignup(result.data);
+    return this.acceptCompletedSignup(result.data, generation);
   }
 
   /** 저장된 refresh token으로 현재 세션을 복구하거나 갱신합니다. */
@@ -140,6 +142,7 @@ export class AuthActions {
   /** 생성 API 인증 응답을 로그인 완료 또는 가입 대기 상태로 변환합니다. */
   private async acceptAuthenticationResult(
     result: NativeAuthenticationApiResult,
+    generation: number,
   ): Promise<AuthResult> {
     if (result.data === undefined) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.server, retryable: true };
@@ -147,7 +150,7 @@ export class AuthActions {
 
     const credentials = this.toCredentials(result.data);
     if (credentials) {
-      return this.runtime.session.establish(credentials);
+      return this.runtime.session.establish(credentials, generation);
     }
 
     return this.startSignup(result.data);
@@ -156,6 +159,7 @@ export class AuthActions {
   /** 가입 API의 성공 응답에는 반드시 세션 자격이 있어야 합니다. */
   private async acceptCompletedSignup(
     response: AuthenticationResponse | undefined,
+    generation: number,
   ): Promise<AuthResult> {
     const credentials = response ? this.toCredentials(response) : undefined;
     if (!credentials) {
@@ -164,7 +168,7 @@ export class AuthActions {
 
     this.registration = undefined;
 
-    return this.runtime.session.establish(credentials);
+    return this.runtime.session.establish(credentials, generation);
   }
 
   /** refresh API 응답을 SessionManager가 저장할 자격 정보로 변환합니다. */
