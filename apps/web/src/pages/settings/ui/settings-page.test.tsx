@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import type * as Auth from '@/features/auth';
 import { SettingsPage } from './settings-page';
 
 const navigation = vi.hoisted(() => ({
@@ -11,13 +12,23 @@ const navigation = vi.hoisted(() => ({
   canGoBack: true,
 }));
 
+const authSession = vi.hoisted(() => ({ isNative: false }));
+
 vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
 
 vi.mock('@/app/navigation/navigation-history', () => ({
   useCanGoBack: () => ({ current: navigation.canGoBack }),
 }));
 
-beforeEach(() => vi.clearAllMocks());
+vi.mock('@/features/auth', async (importOriginal) => ({
+  ...(await importOriginal<typeof Auth>()),
+  useNativeAuthSession: () => authSession,
+}));
+
+beforeEach(() => {
+  vi.clearAllMocks();
+  authSession.isNative = false;
+});
 
 function renderSettingsPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -39,6 +50,34 @@ describe('SettingsPage', () => {
     expect(screen.getByText('이용 약관')).toBeInTheDocument();
     expect(screen.getByText('회원 탈퇴')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument();
+  });
+
+  it('브라우저에서는 Android와 같은 약관 문서를 새 탭으로 연다', () => {
+    renderSettingsPage();
+
+    expect(screen.getByRole('link', { name: '개인정보 처리 방침' })).toHaveAttribute(
+      'href',
+      'https://app.notion.com/p/yapp-workspace/3db2106a0e8480899e28c3788ebeaa6f',
+    );
+    expect(screen.getByRole('link', { name: '이용 약관' })).toHaveAttribute(
+      'href',
+      'https://app.notion.com/p/yapp-workspace/3db2106a0e84806f91f8d6c4ac97af5f',
+    );
+
+    for (const link of screen.getAllByRole('link')) {
+      expect(link).toHaveAttribute('target', '_blank');
+      expect(link).toHaveAttribute('rel', 'noopener noreferrer');
+    }
+  });
+
+  it('iOS WebView에서는 외부 URL 처리를 위해 현재 창으로 약관 문서를 연다', () => {
+    authSession.isNative = true;
+    renderSettingsPage();
+
+    for (const link of screen.getAllByRole('link')) {
+      expect(link).toHaveAttribute('target', '_self');
+      expect(link).not.toHaveAttribute('rel');
+    }
   });
 
   it('회원 탈퇴 클릭 시 SEED 다이얼로그가 열리고 탈퇴하기 클릭 시 로그인으로 이동한다', () => {
