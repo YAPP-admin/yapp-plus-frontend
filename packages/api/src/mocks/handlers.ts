@@ -66,7 +66,10 @@ export function createApiMockHandlers(
           generatedFaker.fakeReplaceMembersResponse200,
           schemas.zReplaceMembersResponse,
         ),
-        register: fakerResponse(generatedFaker.fakeRegisterResponse200, schemas.zRegisterResponse),
+        register1: fakerResponse(
+          generatedFaker.fakeRegister1Response200,
+          schemas.zRegister1Response,
+        ),
         renew: fakerResponse(generatedFaker.fakeRenewResponse200, schemas.zRenewResponse),
         consumeHandoff: fakerResponse(
           generatedFaker.fakeConsumeHandoffResponse200,
@@ -89,34 +92,39 @@ export function createApiMockHandlers(
         reject: fakerResponse(generatedFaker.fakeRejectResponse200, schemas.zRejectResponse),
         approve: fakerResponse(generatedFaker.fakeApproveResponse200, schemas.zApproveResponse),
         findAll: fakerResponse(generatedFaker.fakeFindAllResponse200, schemas.zFindAllResponse),
-        create: fakerResponse(generatedFaker.fakeCreateResponse201, schemas.zCreateResponse, 201),
+        create1: fakerResponse(
+          generatedFaker.fakeCreate1Response201,
+          schemas.zCreate1Response,
+          201,
+        ),
         find1: fixedResponse(
           empty ? fixtures.emptySessions : fixtures.sessions,
           schemas.zSessionListResponse,
         ),
-        create1: fakerResponse(
-          generatedFaker.fakeCreate1Response201,
-          schemas.zCreate1Response,
+        create2: fakerResponse(
+          generatedFaker.fakeCreate2Response201,
+          schemas.zCreate2Response,
           201,
         ),
         get: fakerResponse(generatedFaker.fakeGetResponse200, schemas.zGetResponse),
         start: fakerResponse(generatedFaker.fakeStartResponse200, schemas.zStartResponse),
         reissue: fakerResponse(generatedFaker.fakeReissueResponse200, schemas.zReissueResponse),
         list: fakerResponse(generatedFaker.fakeListResponse200, schemas.zListResponse),
-        create2: fakerResponse(
-          generatedFaker.fakeCreate2Response201,
-          schemas.zCreate2Response,
+        create3: fakerResponse(
+          generatedFaker.fakeCreate3Response201,
+          schemas.zCreate3Response,
           201,
         ),
         presign1: fakerResponse(generatedFaker.fakePresign1Response200, schemas.zPresign1Response),
         login: fixedResponse(fixtures.staffLogin, schemas.zStaffLoginResponse),
         detail: fakerResponse(generatedFaker.fakeDetailResponse200, schemas.zDetailResponse),
-        update1: fakerResponse(generatedFaker.fakeUpdate1Response200, schemas.zUpdate1Response),
-        find2: fixedResponse(
+        update1: () => new HttpResponse(null, { status: 204 }),
+        update2: fakerResponse(generatedFaker.fakeUpdate2Response200, schemas.zUpdate2Response),
+        find3: fixedResponse(
           empty ? fixtures.emptyWeek : fixtures.currentWeek,
-          schemas.zCurrentWeekSessionResponse,
+          schemas.zFind3Response,
         ),
-        find3: fakerResponse(generatedFaker.fakeFind3Response200, schemas.zFind3Response),
+        find4: fakerResponse(generatedFaker.fakeFind4Response200, schemas.zFind4Response),
         findPending: fakerResponse(
           generatedFaker.fakeFindPendingResponse200,
           schemas.zFindPendingResponse,

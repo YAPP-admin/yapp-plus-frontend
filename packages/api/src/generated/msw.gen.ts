@@ -21,6 +21,7 @@ import type {
   AuthenticateKakaoResponses,
   BadgeData,
   BadgeResponses,
+  Cancel1Responses,
   CancelResponses,
   CandidatesResponses,
   ClientOptions,
@@ -28,32 +29,44 @@ import type {
   CompleteAppleAuthorizationData,
   ConsumeHandoffData,
   ConsumeHandoffResponses,
+  CorrectData,
+  CorrectResponses,
   Create1Data,
   Create1Responses,
   Create2Data,
   Create2Responses,
+  Create3Data,
+  Create3Responses,
   CreateData,
   CreateResponses,
   DecideData,
   DecideResponses,
   Delete1Responses,
+  Delete2Responses,
   DeleteResponses,
   Detail1Responses,
+  Detail2Responses,
+  Detail3Responses,
   DetailResponses,
   Find1Responses,
   Find2Responses,
   Find3Responses,
   Find4Responses,
   Find5Responses,
+  Find6Responses,
   FindAllResponses,
   FindCandidatesResponses,
   FindDetailResponses,
   FindPendingResponses,
   FindResponses,
   GetResponses,
+  HistoryResponses,
   List1Responses,
   List2Responses,
   List3Responses,
+  List4Responses,
+  List5Responses,
+  List6Responses,
   ListResponses,
   LoginData,
   LoginResponses,
@@ -65,12 +78,19 @@ import type {
   Presign1Responses,
   PresignData,
   PresignResponses,
+  ReceiveData,
+  ReceiveResponses,
   RecipientsResponses,
+  Register1Data,
+  Register1Responses,
+  Register2Data,
+  Register2Responses,
   RegisterData,
   RegisterResponses,
   ReissueResponses,
   RejectData,
   RejectResponses,
+  RemoveResponses,
   RenewData,
   RenewResponses,
   ReplaceMembersData,
@@ -82,8 +102,11 @@ import type {
   Submit1Responses,
   SubmitData,
   SubmitResponses,
+  TeamOptionsResponses,
   Update1Data,
   Update1Responses,
+  Update2Data,
+  Update2Responses,
   UpdateData,
   UpdateResponses,
   VerifyData,
@@ -95,6 +118,98 @@ export type RequestHandlerOptions = RequestHandlerOptions2 & {
   baseUrl?: ClientOptions['baseUrl'];
   responseFallback?: 'error' | 'passthrough';
 };
+
+export type HandleRemoveResponse = {
+  body: RemoveResponses[204];
+  status?: 204;
+};
+
+/**
+ * Handler for the `DELETE /api/users/me/notification-devices/{installationId}` operation.
+ */
+export function handleRemove(
+  response?:
+    | HandleRemoveResponse
+    | HttpResponseResolver<
+        {
+          installationId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.delete<
+    {
+      installationId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me/notification-devices/:installationId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 204 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleRegisterResponse = {
+  body: RegisterResponses[204];
+  status?: 204;
+};
+
+/**
+ * Handler for the `PUT /api/users/me/notification-devices/{installationId}` operation.
+ */
+export function handleRegister(
+  response?:
+    | HandleRegisterResponse
+    | HttpResponseResolver<
+        {
+          installationId: string;
+        },
+        RegisterData['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.put<
+    {
+      installationId: string;
+    },
+    RegisterData['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me/notification-devices/:installationId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 204 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
 
 export type HandleAcknowledgeResponse = {
   body: AcknowledgeResponses[204];
@@ -334,19 +449,211 @@ export function handleReplaceMembers(
   );
 }
 
-export type HandleRegisterResponse = {
-  body: RegisterResponses[200];
+export type HandleDelete1Response = {
+  body: Delete1Responses[204];
+  status?: 204;
+};
+
+/**
+ * Handler for the `DELETE /api/admin/generations/{generationId}/sessions/{sessionId}` operation.
+ */
+export function handleDelete1(
+  response?:
+    | HandleDelete1Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          sessionId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.delete<
+    {
+      generationId: string;
+      sessionId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/sessions/:sessionId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 204 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleUpdate1Response = {
+  body: Update1Responses[204];
+  status?: 204;
+};
+
+/**
+ * Handler for the `PUT /api/admin/generations/{generationId}/sessions/{sessionId}` operation.
+ */
+export function handleUpdate1(
+  response?:
+    | HandleUpdate1Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          sessionId: string;
+        },
+        Update1Data['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.put<
+    {
+      generationId: string;
+      sessionId: string;
+    },
+    Update1Data['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/sessions/:sessionId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 204 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleDetailResponse = {
+  body: DetailResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/members/{memberId}` operation.
+ */
+export function handleDetail(
+  response?:
+    | HandleDetailResponse
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          memberId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+      memberId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/members/:memberId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleCorrectResponse = {
+  body: CorrectResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `PUT /api/admin/generations/{generationId}/members/{memberId}` operation.
+ */
+export function handleCorrect(
+  response?:
+    | HandleCorrectResponse
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          memberId: string;
+        },
+        CorrectData['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.put<
+    {
+      generationId: string;
+      memberId: string;
+    },
+    CorrectData['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/members/:memberId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleRegister1Response = {
+  body: Register1Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `POST /api/users` operation.
  */
-export function handleRegister(
-  response?: HandleRegisterResponse | HttpResponseResolver<never, RegisterData['body']>,
+export function handleRegister1(
+  response?: HandleRegister1Response | HttpResponseResolver<never, Register1Data['body']>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
-  return http.post<never, RegisterData['body']>(
+  return http.post<never, Register1Data['body']>(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users`,
     (info) => {
       if (typeof response === 'function') {
@@ -600,6 +907,40 @@ export function handleAuthenticateGoogle(
   );
 }
 
+export type HandleReceiveResponse = {
+  body: ReceiveResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `POST /api/auth/oidc/apple/notifications` operation.
+ */
+export function handleReceive(
+  response?: HandleReceiveResponse | HttpResponseResolver<never, ReceiveData['body']>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.post<never, ReceiveData['body']>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/auth/oidc/apple/notifications`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleAuthenticateAppleResponse = {
   body: AuthenticateAppleResponses[200];
   status?: 200;
@@ -727,6 +1068,120 @@ export function handleSubmit1(
       const body = response?.body;
       if (body !== undefined) {
         return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleHistoryResponse = {
+  body: HistoryResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/notifications` operation.
+ */
+export function handleHistory(
+  response?: HandleHistoryResponse | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/notifications`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleCreateResponse = {
+  body: CreateResponses[202];
+  status?: 202;
+};
+
+/**
+ * Handler for the `POST /api/admin/notifications` operation.
+ */
+export function handleCreate(
+  response?: HandleCreateResponse | HttpResponseResolver<never, CreateData['body']>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.post<never, CreateData['body']>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/notifications`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 202 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleCancelResponse = {
+  body: CancelResponses[204];
+  status?: 204;
+};
+
+/**
+ * Handler for the `POST /api/admin/notifications/{notificationId}/cancel` operation.
+ */
+export function handleCancel(
+  response?:
+    | HandleCancelResponse
+    | HttpResponseResolver<
+        {
+          notificationId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.post<
+    {
+      notificationId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/notifications/:notificationId/cancel`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 204 });
       }
       if (options?.responseFallback === 'passthrough') {
         return;
@@ -878,22 +1333,22 @@ export function handleFindAll(
   );
 }
 
-export type HandleCreateResponse = {
-  body: CreateResponses[201];
+export type HandleCreate1Response = {
+  body: Create1Responses[201];
   status?: 201;
 };
 
 /**
  * Handler for the `POST /api/admin/generations/{generationId}/teams` operation.
  */
-export function handleCreate(
+export function handleCreate1(
   response?:
-    | HandleCreateResponse
+    | HandleCreate1Response
     | HttpResponseResolver<
         {
           generationId: string;
         },
-        CreateData['body']
+        Create1Data['body']
       >,
   options?: RequestHandlerOptions,
 ): HttpHandler {
@@ -901,7 +1356,7 @@ export function handleCreate(
     {
       generationId: string;
     },
-    CreateData['body']
+    Create1Data['body']
   >(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/teams`,
     (info) => {
@@ -970,22 +1425,22 @@ export function handleFind1(
   );
 }
 
-export type HandleCreate1Response = {
-  body: Create1Responses[201];
+export type HandleCreate2Response = {
+  body: Create2Responses[201];
   status?: 201;
 };
 
 /**
  * Handler for the `POST /api/admin/generations/{generationId}/sessions` operation.
  */
-export function handleCreate1(
+export function handleCreate2(
   response?:
-    | HandleCreate1Response
+    | HandleCreate2Response
     | HttpResponseResolver<
         {
           generationId: string;
         },
-        Create1Data['body']
+        Create2Data['body']
       >,
   options?: RequestHandlerOptions,
 ): HttpHandler {
@@ -993,7 +1448,7 @@ export function handleCreate1(
     {
       generationId: string;
     },
-    Create1Data['body']
+    Create2Data['body']
   >(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/sessions`,
     (info) => {
@@ -1114,17 +1569,17 @@ export function handleClose(
   );
 }
 
-export type HandleCancelResponse = {
-  body: CancelResponses[200];
+export type HandleCancel1Response = {
+  body: Cancel1Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `POST /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/close/cancel` operation.
  */
-export function handleCancel(
+export function handleCancel1(
   response?:
-    | HandleCancelResponse
+    | HandleCancel1Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -1306,6 +1761,52 @@ export function handleReissue(
   );
 }
 
+export type HandleRegister2Response = {
+  body: Register2Responses[201];
+  status?: 201;
+};
+
+/**
+ * Handler for the `POST /api/admin/generations/{generationId}/roster-registrations` operation.
+ */
+export function handleRegister2(
+  response?:
+    | HandleRegister2Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+        },
+        Register2Data['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.post<
+    {
+      generationId: string;
+    },
+    Register2Data['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/roster-registrations`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 201 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleListResponse = {
   body: ListResponses[200];
   status?: 200;
@@ -1352,22 +1853,22 @@ export function handleList(
   );
 }
 
-export type HandleCreate2Response = {
-  body: Create2Responses[201];
+export type HandleCreate3Response = {
+  body: Create3Responses[201];
   status?: 201;
 };
 
 /**
  * Handler for the `POST /api/admin/generations/{generationId}/posts` operation.
  */
-export function handleCreate2(
+export function handleCreate3(
   response?:
-    | HandleCreate2Response
+    | HandleCreate3Response
     | HttpResponseResolver<
         {
           generationId: string;
         },
-        Create2Data['body']
+        Create3Data['body']
       >,
   options?: RequestHandlerOptions,
 ): HttpHandler {
@@ -1375,7 +1876,7 @@ export function handleCreate2(
     {
       generationId: string;
     },
-    Create2Data['body']
+    Create3Data['body']
   >(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/posts`,
     (info) => {
@@ -1578,17 +2079,65 @@ export function handleBadge(
   );
 }
 
-export type HandleDetailResponse = {
-  body: DetailResponses[200];
+export type HandleDelete2Response = {
+  body: Delete2Responses[204];
+  status?: 204;
+};
+
+/**
+ * Handler for the `DELETE /api/admin/generations/{generationId}/posts/{postId}` operation.
+ */
+export function handleDelete2(
+  response?:
+    | HandleDelete2Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          postId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.delete<
+    {
+      generationId: string;
+      postId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/posts/:postId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 204 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleDetail1Response = {
+  body: Detail1Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/generations/{generationId}/posts/{postId}` operation.
  */
-export function handleDetail(
+export function handleDetail1(
   response?:
-    | HandleDetailResponse
+    | HandleDetail1Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -1626,23 +2175,23 @@ export function handleDetail(
   );
 }
 
-export type HandleUpdate1Response = {
-  body: Update1Responses[200];
+export type HandleUpdate2Response = {
+  body: Update2Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `PATCH /api/admin/generations/{generationId}/posts/{postId}` operation.
  */
-export function handleUpdate1(
+export function handleUpdate2(
   response?:
-    | HandleUpdate1Response
+    | HandleUpdate2Response
     | HttpResponseResolver<
         {
           generationId: string;
           postId: string;
         },
-        Update1Data['body']
+        Update2Data['body']
       >,
   options?: RequestHandlerOptions,
 ): HttpHandler {
@@ -1651,7 +2200,7 @@ export function handleUpdate1(
       generationId: string;
       postId: string;
     },
-    Update1Data['body']
+    Update2Data['body']
   >(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/posts/:postId`,
     (info) => {
@@ -1680,10 +2229,44 @@ export type HandleFind2Response = {
 };
 
 /**
- * Handler for the `GET /api/sessions/current-week` operation.
+ * Handler for the `GET /api/users/me/notifications` operation.
  */
 export function handleFind2(
   response?: HandleFind2Response | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me/notifications`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleFind3Response = {
+  body: Find3Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/sessions/current-week` operation.
+ */
+export function handleFind3(
+  response?: HandleFind3Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -1742,17 +2325,17 @@ export function handleList1(
   );
 }
 
-export type HandleDetail1Response = {
-  body: Detail1Responses[200];
+export type HandleDetail2Response = {
+  body: Detail2Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/posts/{postId}` operation.
  */
-export function handleDetail1(
+export function handleDetail2(
   response?:
-    | HandleDetail1Response
+    | HandleDetail2Response
     | HttpResponseResolver<
         {
           postId: string;
@@ -1788,16 +2371,16 @@ export function handleDetail1(
   );
 }
 
-export type HandleFind3Response = {
-  body: Find3Responses[200];
+export type HandleFind4Response = {
+  body: Find4Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/generations/current/sessions` operation.
  */
-export function handleFind3(
-  response?: HandleFind3Response | HttpResponseResolver<never, never>,
+export function handleFind4(
+  response?: HandleFind4Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2026,16 +2609,16 @@ export function handleMine(
   );
 }
 
-export type HandleFind4Response = {
-  body: Find4Responses[200];
+export type HandleFind5Response = {
+  body: Find5Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/attendance-history` operation.
  */
-export function handleFind4(
-  response?: HandleFind4Response | HttpResponseResolver<never, never>,
+export function handleFind5(
+  response?: HandleFind5Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2060,17 +2643,17 @@ export function handleFind4(
   );
 }
 
-export type HandleFind5Response = {
-  body: Find5Responses[200];
+export type HandleFind6Response = {
+  body: Find6Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/users/{userId}/retained-history` operation.
  */
-export function handleFind5(
+export function handleFind6(
   response?:
-    | HandleFind5Response
+    | HandleFind6Response
     | HttpResponseResolver<
         {
           userId: string;
@@ -2374,6 +2957,52 @@ export function handleList3(
   );
 }
 
+export type HandleList4Response = {
+  body: List4Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/roster-entries` operation.
+ */
+export function handleList4(
+  response?:
+    | HandleList4Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/roster-entries`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleRecipientsResponse = {
   body: RecipientsResponses[200];
   status?: 200;
@@ -2402,6 +3031,192 @@ export function handleRecipients(
     never
   >(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/posts/:postId/recipients`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleDetail3Response = {
+  body: Detail3Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/memberships/{membershipId}/attendance-statistics` operation.
+ */
+export function handleDetail3(
+  response?:
+    | HandleDetail3Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          membershipId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+      membershipId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/memberships/:membershipId/attendance-statistics`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleList5Response = {
+  body: List5Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/members` operation.
+ */
+export function handleList5(
+  response?:
+    | HandleList5Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/members`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleTeamOptionsResponse = {
+  body: TeamOptionsResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/member-team-options` operation.
+ */
+export function handleTeamOptions(
+  response?:
+    | HandleTeamOptionsResponse
+    | HttpResponseResolver<
+        {
+          generationId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/member-team-options`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleList6Response = {
+  body: List6Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/attendance-statistics` operation.
+ */
+export function handleList6(
+  response?:
+    | HandleList6Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/attendance-statistics`,
     (info) => {
       if (typeof response === 'function') {
         return response(info);
@@ -2490,54 +3305,6 @@ export function handleRevoke(
   );
 }
 
-export type HandleDelete1Response = {
-  body: Delete1Responses[204];
-  status?: 204;
-};
-
-/**
- * Handler for the `DELETE /api/admin/generations/{generationId}/sessions/{sessionId}` operation.
- */
-export function handleDelete1(
-  response?:
-    | HandleDelete1Response
-    | HttpResponseResolver<
-        {
-          generationId: string;
-          sessionId: string;
-        },
-        never
-      >,
-  options?: RequestHandlerOptions,
-): HttpHandler {
-  return http.delete<
-    {
-      generationId: string;
-      sessionId: string;
-    },
-    never
-  >(
-    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/sessions/:sessionId`,
-    (info) => {
-      if (typeof response === 'function') {
-        return response(info);
-      }
-      const body = response?.body;
-      if (body !== undefined) {
-        return new HttpResponse(body, { status: response?.status ?? 204 });
-      }
-      if (options?.responseFallback === 'passthrough') {
-        return;
-      }
-      return new Response('Not Implemented', {
-        status: 501,
-        statusText: 'Not Implemented',
-      });
-    },
-    options,
-  );
-}
-
 export type HandleLogoutResponse = {
   body: LogoutResponses[204];
   status?: 204;
@@ -2574,6 +3341,14 @@ export function handleLogout(
 
 export type MswHandlerFactories = {
   /**
+   * Handler for the `DELETE /api/users/me/notification-devices/{installationId}` operation.
+   */
+  remove: typeof handleRemove;
+  /**
+   * Handler for the `PUT /api/users/me/notification-devices/{installationId}` operation.
+   */
+  register: typeof handleRegister;
+  /**
    * Handler for the `PUT /api/posts/{postId}/read` operation.
    */
   acknowledge: typeof handleAcknowledge;
@@ -2594,9 +3369,25 @@ export type MswHandlerFactories = {
    */
   replaceMembers: typeof handleReplaceMembers;
   /**
+   * Handler for the `DELETE /api/admin/generations/{generationId}/sessions/{sessionId}` operation.
+   */
+  delete1: typeof handleDelete1;
+  /**
+   * Handler for the `PUT /api/admin/generations/{generationId}/sessions/{sessionId}` operation.
+   */
+  update1: typeof handleUpdate1;
+  /**
+   * Handler for the `GET /api/admin/generations/{generationId}/members/{memberId}` operation.
+   */
+  detail: typeof handleDetail;
+  /**
+   * Handler for the `PUT /api/admin/generations/{generationId}/members/{memberId}` operation.
+   */
+  correct: typeof handleCorrect;
+  /**
    * Handler for the `POST /api/users` operation.
    */
-  register: typeof handleRegister;
+  register1: typeof handleRegister1;
   /**
    * Handler for the `POST /api/sessions/{sessionId}/team-attendance-photos` operation.
    */
@@ -2622,6 +3413,10 @@ export type MswHandlerFactories = {
    */
   authenticateGoogle: typeof handleAuthenticateGoogle;
   /**
+   * Handler for the `POST /api/auth/oidc/apple/notifications` operation.
+   */
+  receive: typeof handleReceive;
+  /**
    * Handler for the `POST /api/auth/oidc/apple/native-authentications` operation.
    */
   authenticateApple: typeof handleAuthenticateApple;
@@ -2638,6 +3433,18 @@ export type MswHandlerFactories = {
    */
   submit1: typeof handleSubmit1;
   /**
+   * Handler for the `GET /api/admin/notifications` operation.
+   */
+  history: typeof handleHistory;
+  /**
+   * Handler for the `POST /api/admin/notifications` operation.
+   */
+  create: typeof handleCreate;
+  /**
+   * Handler for the `POST /api/admin/notifications/{notificationId}/cancel` operation.
+   */
+  cancel: typeof handleCancel;
+  /**
    * Handler for the `POST /api/admin/membership-approvals/{memberId}/reject` operation.
    */
   reject: typeof handleReject;
@@ -2652,7 +3459,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `POST /api/admin/generations/{generationId}/teams` operation.
    */
-  create: typeof handleCreate;
+  create1: typeof handleCreate1;
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/sessions` operation.
    */
@@ -2660,7 +3467,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `POST /api/admin/generations/{generationId}/sessions` operation.
    */
-  create1: typeof handleCreate1;
+  create2: typeof handleCreate2;
   /**
    * Handler for the `POST /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos/{photoId}/decision` operation.
    */
@@ -2672,7 +3479,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `POST /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/close/cancel` operation.
    */
-  cancel: typeof handleCancel;
+  cancel1: typeof handleCancel1;
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance-code` operation.
    */
@@ -2686,13 +3493,17 @@ export type MswHandlerFactories = {
    */
   reissue: typeof handleReissue;
   /**
+   * Handler for the `POST /api/admin/generations/{generationId}/roster-registrations` operation.
+   */
+  register2: typeof handleRegister2;
+  /**
    * Handler for the `GET /api/admin/generations/{generationId}/posts` operation.
    */
   list: typeof handleList;
   /**
    * Handler for the `POST /api/admin/generations/{generationId}/posts` operation.
    */
-  create2: typeof handleCreate2;
+  create3: typeof handleCreate3;
   /**
    * Handler for the `POST /api/admin/generations/{generationId}/post-images/presign` operation.
    */
@@ -2710,17 +3521,25 @@ export type MswHandlerFactories = {
    */
   badge: typeof handleBadge;
   /**
+   * Handler for the `DELETE /api/admin/generations/{generationId}/posts/{postId}` operation.
+   */
+  delete2: typeof handleDelete2;
+  /**
    * Handler for the `GET /api/admin/generations/{generationId}/posts/{postId}` operation.
    */
-  detail: typeof handleDetail;
+  detail1: typeof handleDetail1;
   /**
    * Handler for the `PATCH /api/admin/generations/{generationId}/posts/{postId}` operation.
    */
-  update1: typeof handleUpdate1;
+  update2: typeof handleUpdate2;
+  /**
+   * Handler for the `GET /api/users/me/notifications` operation.
+   */
+  find2: typeof handleFind2;
   /**
    * Handler for the `GET /api/sessions/current-week` operation.
    */
-  find2: typeof handleFind2;
+  find3: typeof handleFind3;
   /**
    * Handler for the `GET /api/posts` operation.
    */
@@ -2728,11 +3547,11 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/posts/{postId}` operation.
    */
-  detail1: typeof handleDetail1;
+  detail2: typeof handleDetail2;
   /**
    * Handler for the `GET /api/generations/current/sessions` operation.
    */
-  find3: typeof handleFind3;
+  find4: typeof handleFind4;
   /**
    * Handler for the `GET /api/auth/oidc/kakao/callback` operation.
    */
@@ -2760,11 +3579,11 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/attendance-history` operation.
    */
-  find4: typeof handleFind4;
+  find5: typeof handleFind5;
   /**
    * Handler for the `GET /api/admin/users/{userId}/retained-history` operation.
    */
-  find5: typeof handleFind5;
+  find6: typeof handleFind6;
   /**
    * Handler for the `GET /api/admin/membership-approvals` operation.
    */
@@ -2790,9 +3609,29 @@ export type MswHandlerFactories = {
    */
   list3: typeof handleList3;
   /**
+   * Handler for the `GET /api/admin/generations/{generationId}/roster-entries` operation.
+   */
+  list4: typeof handleList4;
+  /**
    * Handler for the `GET /api/admin/generations/{generationId}/posts/{postId}/recipients` operation.
    */
   recipients: typeof handleRecipients;
+  /**
+   * Handler for the `GET /api/admin/generations/{generationId}/memberships/{membershipId}/attendance-statistics` operation.
+   */
+  detail3: typeof handleDetail3;
+  /**
+   * Handler for the `GET /api/admin/generations/{generationId}/members` operation.
+   */
+  list5: typeof handleList5;
+  /**
+   * Handler for the `GET /api/admin/generations/{generationId}/member-team-options` operation.
+   */
+  teamOptions: typeof handleTeamOptions;
+  /**
+   * Handler for the `GET /api/admin/generations/{generationId}/attendance-statistics` operation.
+   */
+  list6: typeof handleList6;
   /**
    * Handler for the `DELETE /api/users/me` operation.
    */
@@ -2801,10 +3640,6 @@ export type MswHandlerFactories = {
    * Handler for the `DELETE /api/auth/sessions/current` operation.
    */
   revoke: typeof handleRevoke;
-  /**
-   * Handler for the `DELETE /api/admin/generations/{generationId}/sessions/{sessionId}` operation.
-   */
-  delete1: typeof handleDelete1;
   /**
    * Handler for the `DELETE /api/admin/auth/sessions/current` operation.
    */
@@ -2828,64 +3663,81 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     return (response, options) => handler(response, { ...config, ...options });
   }
   const pick: CreateMswHandlersResult['pick'] = {
+    remove: wrap(handleRemove),
+    register: wrap(handleRegister),
     acknowledge: wrap(handleAcknowledge),
     delete: wrap(handleDelete),
     find: wrap(handleFind),
     update: wrap(handleUpdate),
     replaceMembers: wrap(handleReplaceMembers),
-    register: wrap(handleRegister),
+    delete1: wrap(handleDelete1),
+    update1: wrap(handleUpdate1),
+    detail: wrap(handleDetail),
+    correct: wrap(handleCorrect),
+    register1: wrap(handleRegister1),
     submit: wrap(handleSubmit),
     presign: wrap(handlePresign),
     renew: wrap(handleRenew),
     consumeHandoff: wrap(handleConsumeHandoff),
     authenticateKakao: wrap(handleAuthenticateKakao),
     authenticateGoogle: wrap(handleAuthenticateGoogle),
+    receive: wrap(handleReceive),
     authenticateApple: wrap(handleAuthenticateApple),
     completeAppleAuthorization: wrap(handleCompleteAppleAuthorization),
     verify: wrap(handleVerify),
     submit1: wrap(handleSubmit1),
+    history: wrap(handleHistory),
+    create: wrap(handleCreate),
+    cancel: wrap(handleCancel),
     reject: wrap(handleReject),
     approve: wrap(handleApprove),
     findAll: wrap(handleFindAll),
-    create: wrap(handleCreate),
-    find1: wrap(handleFind1),
     create1: wrap(handleCreate1),
+    find1: wrap(handleFind1),
+    create2: wrap(handleCreate2),
     decide: wrap(handleDecide),
     close: wrap(handleClose),
-    cancel: wrap(handleCancel),
+    cancel1: wrap(handleCancel1),
     get: wrap(handleGet),
     start: wrap(handleStart),
     reissue: wrap(handleReissue),
+    register2: wrap(handleRegister2),
     list: wrap(handleList),
-    create2: wrap(handleCreate2),
+    create3: wrap(handleCreate3),
     presign1: wrap(handlePresign1),
     login: wrap(handleLogin),
     override: wrap(handleOverride),
     badge: wrap(handleBadge),
-    detail: wrap(handleDetail),
-    update1: wrap(handleUpdate1),
-    find2: wrap(handleFind2),
-    list1: wrap(handleList1),
+    delete2: wrap(handleDelete2),
     detail1: wrap(handleDetail1),
+    update2: wrap(handleUpdate2),
+    find2: wrap(handleFind2),
     find3: wrap(handleFind3),
+    list1: wrap(handleList1),
+    detail2: wrap(handleDetail2),
+    find4: wrap(handleFind4),
     completeKakaoAuthorization: wrap(handleCompleteKakaoAuthorization),
     startKakaoAuthorization: wrap(handleStartKakaoAuthorization),
     completeGoogleAuthorization: wrap(handleCompleteGoogleAuthorization),
     startGoogleAuthorization: wrap(handleStartGoogleAuthorization),
     startAppleAuthorization: wrap(handleStartAppleAuthorization),
     mine: wrap(handleMine),
-    find4: wrap(handleFind4),
     find5: wrap(handleFind5),
+    find6: wrap(handleFind6),
     findPending: wrap(handleFindPending),
     findDetail: wrap(handleFindDetail),
     findCandidates: wrap(handleFindCandidates),
     candidates: wrap(handleCandidates),
     list2: wrap(handleList2),
     list3: wrap(handleList3),
+    list4: wrap(handleList4),
     recipients: wrap(handleRecipients),
+    detail3: wrap(handleDetail3),
+    list5: wrap(handleList5),
+    teamOptions: wrap(handleTeamOptions),
+    list6: wrap(handleList6),
     withdraw: wrap(handleWithdraw),
     revoke: wrap(handleRevoke),
-    delete1: wrap(handleDelete1),
     logout: wrap(handleLogout),
   };
   const all: CreateMswHandlersResult['all'] = (options = {}) => {
@@ -2895,7 +3747,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     }
     const overrides = options.pick ?? {};
     return [
-      invoke(pick.cancel, overrides.cancel),
+      invoke(pick.cancel1, overrides.cancel1),
       invoke(pick.decide, overrides.decide),
       invoke(pick.badge, overrides.badge),
       invoke(pick.close, overrides.close),
@@ -2907,15 +3759,21 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.list2, overrides.list2),
       invoke(pick.list3, overrides.list3),
       invoke(pick.recipients, overrides.recipients),
+      invoke(pick.detail3, overrides.detail3),
       invoke(pick.presign1, overrides.presign1),
       invoke(pick.delete, overrides.delete),
       invoke(pick.find, overrides.find),
       invoke(pick.update, overrides.update),
-      invoke(pick.detail, overrides.detail),
-      invoke(pick.update1, overrides.update1),
       invoke(pick.delete1, overrides.delete1),
+      invoke(pick.update1, overrides.update1),
+      invoke(pick.detail, overrides.detail),
+      invoke(pick.correct, overrides.correct),
+      invoke(pick.delete2, overrides.delete2),
+      invoke(pick.detail1, overrides.detail1),
+      invoke(pick.update2, overrides.update2),
       invoke(pick.authenticateKakao, overrides.authenticateKakao),
       invoke(pick.authenticateGoogle, overrides.authenticateGoogle),
+      invoke(pick.receive, overrides.receive),
       invoke(pick.authenticateApple, overrides.authenticateApple),
       invoke(pick.completeAppleAuthorization, overrides.completeAppleAuthorization),
       invoke(pick.completeKakaoAuthorization, overrides.completeKakaoAuthorization),
@@ -2924,36 +3782,47 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.startGoogleAuthorization, overrides.startGoogleAuthorization),
       invoke(pick.startAppleAuthorization, overrides.startAppleAuthorization),
       invoke(pick.logout, overrides.logout),
+      invoke(pick.remove, overrides.remove),
+      invoke(pick.register, overrides.register),
+      invoke(pick.cancel, overrides.cancel),
       invoke(pick.reject, overrides.reject),
       invoke(pick.approve, overrides.approve),
       invoke(pick.findAll, overrides.findAll),
-      invoke(pick.create, overrides.create),
-      invoke(pick.find1, overrides.find1),
       invoke(pick.create1, overrides.create1),
-      invoke(pick.list, overrides.list),
+      invoke(pick.find1, overrides.find1),
       invoke(pick.create2, overrides.create2),
-      invoke(pick.find5, overrides.find5),
+      invoke(pick.register2, overrides.register2),
+      invoke(pick.list, overrides.list),
+      invoke(pick.create3, overrides.create3),
+      invoke(pick.find6, overrides.find6),
       invoke(pick.findCandidates, overrides.findCandidates),
       invoke(pick.candidates, overrides.candidates),
+      invoke(pick.list4, overrides.list4),
+      invoke(pick.list5, overrides.list5),
+      invoke(pick.teamOptions, overrides.teamOptions),
+      invoke(pick.list6, overrides.list6),
       invoke(pick.presign, overrides.presign),
       invoke(pick.consumeHandoff, overrides.consumeHandoff),
       invoke(pick.login, overrides.login),
-      invoke(pick.find3, overrides.find3),
+      invoke(pick.find2, overrides.find2),
+      invoke(pick.find4, overrides.find4),
       invoke(pick.revoke, overrides.revoke),
       invoke(pick.findDetail, overrides.findDetail),
       invoke(pick.acknowledge, overrides.acknowledge),
       invoke(pick.submit, overrides.submit),
       invoke(pick.renew, overrides.renew),
-      invoke(pick.find2, overrides.find2),
+      invoke(pick.history, overrides.history),
+      invoke(pick.create, overrides.create),
+      invoke(pick.find3, overrides.find3),
       invoke(pick.mine, overrides.mine),
       invoke(pick.findPending, overrides.findPending),
       invoke(pick.withdraw, overrides.withdraw),
-      invoke(pick.detail1, overrides.detail1),
-      invoke(pick.register, overrides.register),
+      invoke(pick.detail2, overrides.detail2),
+      invoke(pick.register1, overrides.register1),
       invoke(pick.verify, overrides.verify),
       invoke(pick.submit1, overrides.submit1),
       invoke(pick.list1, overrides.list1),
-      invoke(pick.find4, overrides.find4),
+      invoke(pick.find5, overrides.find5),
     ];
   };
   return { all, pick };
