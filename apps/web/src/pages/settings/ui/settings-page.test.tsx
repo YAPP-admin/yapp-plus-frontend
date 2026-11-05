@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { SettingsPage } from './settings-page';
@@ -18,9 +19,19 @@ vi.mock('@/app/navigation/navigation-history', () => ({
 
 beforeEach(() => vi.clearAllMocks());
 
+function renderSettingsPage() {
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+
+  return render(
+    <QueryClientProvider client={queryClient}>
+      <SettingsPage />
+    </QueryClientProvider>,
+  );
+}
+
 describe('SettingsPage', () => {
   it('설정 헤더와 모든 메뉴 항목을 정상적으로 렌더링한다', () => {
-    render(<SettingsPage />);
+    renderSettingsPage();
 
     expect(screen.getByRole('heading', { name: '설정' })).toBeInTheDocument();
     expect(screen.getByText('알림')).toBeInTheDocument();
@@ -31,7 +42,7 @@ describe('SettingsPage', () => {
   });
 
   it('회원 탈퇴 클릭 시 SEED 다이얼로그가 열리고 탈퇴하기 클릭 시 로그인으로 이동한다', () => {
-    render(<SettingsPage />);
+    renderSettingsPage();
 
     const withdrawBtn = screen.getByRole('button', { name: /회원 탈퇴/i });
     fireEvent.click(withdrawBtn);
@@ -46,7 +57,7 @@ describe('SettingsPage', () => {
   });
 
   it('로그아웃 클릭 시 SEED 다이얼로그가 열리고 로그아웃 확인 클릭 시 로그인으로 이동한다', () => {
-    render(<SettingsPage />);
+    renderSettingsPage();
 
     const logoutTrigger = screen.getByRole('button', { name: '로그아웃' });
     fireEvent.click(logoutTrigger);
@@ -65,7 +76,7 @@ describe('SettingsPage', () => {
   });
 
   it('뒤로가기 버튼이 렌더링된다', () => {
-    render(<SettingsPage />);
+    renderSettingsPage();
 
     expect(screen.getByRole('button', { name: '뒤로가기' })).toBeInTheDocument();
   });

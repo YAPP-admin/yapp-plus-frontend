@@ -61,3 +61,28 @@
 - 웹은 `+82` 접두어와 E.164 값을 노출하지 않으며, native가 completeSignup 직전에만 API body용 `+821077777777`로 변환한다.
 - 이 변경도 계약 보완이며 가입 구현이나 다음 단계 시작을 의미하지 않는다.
 - 보완 후 node --run check 통과: 포맷 새 실행, lint 7개·typecheck 7개·test 4개는 Turbo 캐시 재사용. 문서 간 계약·링크·공백 검사도 통과했다.
+
+## 4단계 웹 연결 검증
+
+- `apps/web/src/features/auth/`에 WebView 식별, native bridge 호출, React Query 세션 query를 추가했다.
+- 앱 전체 Suspense 경계 안에서 native `getSession`을 `useSuspenseQuery`로 초기화하고, 로그인·가입·로그아웃·탈퇴는 `useMutation`으로 실행한다.
+- 일반 브라우저에서는 소셜 로그인을 성공 처리하지 않고 YAPP+ 앱 안내를 표시한다.
+- native 세션 복구 전에는 Tabs 보호 화면을 노출하지 않으며, 복구 성공 시에만 회원 화면을 표시한다.
+- 로그인·가입·settings·Stackflow 대표 흐름을 갱신하고 웹 테스트 101개가 통과했다.
+- `mise exec -- node --run check`: exit 0. 이번 변경으로 웹/app-bridge lint·typecheck와 웹 101개 테스트를 새로 실행했고, 나머지 패키지는 Turbo 캐시를 사용했다.
+- `mise exec -- pnpm --filter @yapp-plus/web build`: exit 0. 웹 번들 생성까지 확인했다.
+
+### 아직 확인하지 못한 항목
+
+- 실기기에서 WebView user-agent 토큰, bridge handshake, Apple·Google SDK 호출은 확인하지 못했다.
+- native access token을 사용하는 실제 업무 API 요청과 401 갱신 경로는 현재 웹 소비 API가 없어 통합 확인을 보류했다.
+- 백엔드 CORS와 dev API의 실제 인증 응답은 기존 대기 항목이다.
+- 브라우저 화면 스크린샷과 TestFlight 설치 결과는 실기기·배포 검증 단계에서 추가한다.
+
+## 4단계 구조 보완 — mutation과 화면 전환 책임
+
+- `queryOptions`와 `mutationOptions`를 `apps/web/src/features/auth/model/`에 모아 세션 query와 인증 mutation의 계약을 한곳에서 관리한다.
+- mutation hook의 `onSuccess`는 성공한 `AuthResult`를 React Query 세션 cache에 반영하는 로직만 담당한다.
+- 각 화면의 `mutate` 호출부 `onSuccess`·`onError`는 Stackflow 전환, 입력 오류, Snackbar·Dialog 표시처럼 UI에 영향을 주는 동작만 담당한다.
+- 로그인·가입·로그아웃·탈퇴 mutation hook을 별도 파일로 분리해 화면에서 bridge 함수와 QueryClient를 직접 조합하지 않도록 한다.
+- 로그인·Tabs 간 native 상태 전환 effect는 `NativeAuthRedirect`로 통합했다. 회원가입 화면의 effect는 다음 입력 단계로 이동할 때 포커스를 주는 UI 동작만 남긴다.

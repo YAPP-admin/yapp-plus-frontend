@@ -7,6 +7,7 @@ import './styles.css';
 import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Providers } from '@/app/providers';
+import { NativeAuthSessionProvider } from '@/features/auth';
 import { createStackflowApp } from './stack';
 import { detectPlatform, getReducedMotionPreference } from './platform';
 
@@ -33,7 +34,9 @@ function App() {
           </>
         }
       >
-        <Stack initialContext={initialContext} />
+        <NativeAuthSessionProvider>
+          <Stack initialContext={initialContext} />
+        </NativeAuthSessionProvider>
       </Suspense>
     </Providers>
   );
