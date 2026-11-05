@@ -14,7 +14,7 @@ import { bridge, createWebView } from '@webview-bridge/react-native';
 import { useEffect } from 'react';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 
-import { authActions } from './auth/actions';
+import { authActions } from './auth/native-auth-runtime';
 
 const initialSafeAreaInsets = normalizeSafeAreaInsets(
   initialWindowMetrics?.insets ?? INITIAL_SAFE_AREA_INSETS,

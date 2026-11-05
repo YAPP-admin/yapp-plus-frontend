@@ -9,13 +9,13 @@ import {
   isSuccessResponse,
 } from 'react-native-nitro-google-signin';
 import type { AuthProvider } from '@yapp-plus/app-bridge';
+import { NativeAuthenticationCancelledError, NativeAuthenticationError } from './errors';
 
 // OAuth client ID는 공개 식별자이며, 검증은 백엔드가 ID token의 audience로 수행합니다.
 const GOOGLE_WEB_CLIENT_ID =
   '47093355379-bl1tgba0nj3sn5610bn01aeqc7mm4ljb.apps.googleusercontent.com';
 
 const NATIVE_AUTHENTICATION_MESSAGE = {
-  cancelled: '로그인을 취소했어요.',
   appleCredentialMissing: 'Apple 로그인 정보를 받지 못했어요. 다시 시도해 주세요.',
   appleFailed: 'Apple 로그인 중 문제가 발생했어요. 다시 시도해 주세요.',
   googleCredentialMissing: 'Google 로그인 정보를 받지 못했어요. 다시 시도해 주세요.',
@@ -30,27 +30,6 @@ export type NativeIdentity =
       nonce: string;
     }>
   | Readonly<{ provider: Extract<AuthProvider, 'google'>; idToken: string; nonce: string }>;
-
-export type NativeAuthenticationErrorCode = 'CANCELLED' | 'CREDENTIAL_MISSING' | 'PROVIDER_FAILURE';
-
-/** SDK 원본 오류를 보존하면서 브리지에 노출할 수 있는 인증 실패 종류를 구분합니다. */
-export class NativeAuthenticationError extends Error {
-  public constructor(
-    public readonly code: NativeAuthenticationErrorCode,
-    message: string,
-    cause?: unknown,
-  ) {
-    super(message, cause === undefined ? undefined : { cause });
-    this.name = 'NativeAuthenticationError';
-  }
-}
-
-export class NativeAuthenticationCancelledError extends NativeAuthenticationError {
-  public constructor(cause?: unknown) {
-    super('CANCELLED', NATIVE_AUTHENTICATION_MESSAGE.cancelled, cause);
-    this.name = 'NativeAuthenticationCancelledError';
-  }
-}
 
 const hasErrorCode = (error: unknown, code: string): boolean =>
   typeof error === 'object' &&
