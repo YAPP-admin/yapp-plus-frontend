@@ -8,25 +8,26 @@ import {
   type RefreshSessionInput,
   type SignInInput,
 } from '@yapp-plus/app-bridge';
-import {
-  authenticateApple,
-  authenticateGoogle,
-  register,
-  renew,
-  revoke,
-  withdraw,
-  type AuthenticationResponse,
-} from '@yapp-plus/api/generated';
+import type { AuthenticationResponse } from '@yapp-plus/api/generated';
 
-import {
-  NativeAuthenticationCancelledError,
-  NativeAuthenticationError,
-  authenticateWithProvider,
-} from './providers';
-import { SessionManager, type SessionCredentials } from './session';
+import type { nativeAuthApi, NativeAuthenticationApiResult } from './auth-api';
+import { NativeAuthenticationCancelledError, NativeAuthenticationError } from './errors';
+import type { authenticateWithProvider } from './providers';
+import type { SessionManager, SessionCredentials } from './session';
 
-type AuthenticationRequestResult = Awaited<ReturnType<typeof authenticateApple>>;
 type SignupRegistration = Readonly<{ token: string; expiresAt: number }>;
+
+/** AuthActions가 인증 흐름을 수행할 때 사용하는 외부 경계입니다. */
+export type NativeAuthRuntime = Readonly<{
+  session: SessionManager;
+  authenticateWithProvider: typeof authenticateWithProvider;
+  authenticateApple: typeof nativeAuthApi.authenticateApple;
+  authenticateGoogle: typeof nativeAuthApi.authenticateGoogle;
+  register: typeof nativeAuthApi.register;
+  renew: typeof nativeAuthApi.renew;
+  revoke: typeof nativeAuthApi.revoke;
+  withdraw: typeof nativeAuthApi.withdraw;
+}>;
 
 const toPhoneNumber = (phoneNumber: string): string => {
   const digits = phoneNumber.replaceAll(/[^0-9]/g, '');
@@ -36,9 +37,13 @@ const toPhoneNumber = (phoneNumber: string): string => {
 
 /** native 인증 상태를 한 인스턴스에 모아 브리지 메서드를 제공합니다. */
 export class AuthActions {
-  private readonly session = new SessionManager();
+  private readonly runtime: NativeAuthRuntime;
   private registration: SignupRegistration | undefined;
   private authenticating = false;
+
+  public constructor(runtime: NativeAuthRuntime) {
+    this.runtime = runtime;
+  }
 
   /** 공급자 SDK와 생성 OpenAPI 인증 요청을 순서대로 실행합니다. */
   public async signIn(input: SignInInput): Promise<AuthResult> {
@@ -48,17 +53,17 @@ export class AuthActions {
 
     this.authenticating = true;
     try {
-      const identity = await authenticateWithProvider(input.provider);
+      const identity = await this.runtime.authenticateWithProvider(input.provider);
       const result =
         identity.provider === 'apple'
-          ? await authenticateApple({
+          ? await this.runtime.authenticateApple({
               body: {
                 idToken: identity.identityToken,
                 authorizationCode: identity.authorizationCode,
                 nonce: identity.nonce,
               },
             })
-          : await authenticateGoogle({
+          : await this.runtime.authenticateGoogle({
               body: { idToken: identity.idToken, nonce: identity.nonce },
             });
 
@@ -78,7 +83,7 @@ export class AuthActions {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.signupExpired, retryable: false };
     }
 
-    const result = await register({
+    const result = await this.runtime.register({
       body: {
         registrationToken: this.registration.token,
         name: input.name,
@@ -91,48 +96,50 @@ export class AuthActions {
 
   /** 저장된 refresh token으로 현재 세션을 복구하거나 갱신합니다. */
   public getSession(): Promise<AuthResult> {
-    return this.session.get((refreshToken) => this.renewSession(refreshToken));
+    return this.runtime.session.get((refreshToken) => this.renewSession(refreshToken));
   }
 
   /** WebView의 401 대응 요청에 대해 최신 access token을 반환합니다. */
   public refreshSession(input: RefreshSessionInput): Promise<AuthResult> {
-    return this.session.refresh(input, (refreshToken) => this.renewSession(refreshToken));
+    return this.runtime.session.refresh(input, (refreshToken) => this.renewSession(refreshToken));
   }
 
   /** 서버 refresh token 폐기를 시도한 뒤 로컬 세션을 항상 제거합니다. */
   public async signOut(): Promise<AuthResult> {
-    const refreshToken = this.session.refreshToken;
+    const refreshToken = this.runtime.session.refreshToken;
     if (refreshToken) {
       try {
-        await revoke({ body: { refreshToken } });
+        await this.runtime.revoke({ body: { refreshToken } });
       } catch {
         // 서버 해제가 실패해도 기기에서 refresh token을 제거해 로그아웃을 완료합니다.
       }
     }
 
-    return this.session.clear();
+    return this.runtime.session.clear();
   }
 
   /** 현재 access token으로 탈퇴를 완료한 뒤 로컬 자격을 제거합니다. */
   public async withdraw(): Promise<AuthResult> {
-    const accessToken = this.session.accessToken;
+    const accessToken = this.runtime.session.accessToken;
     if (!accessToken) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.authRequired, retryable: false };
     }
 
-    const result = await withdraw({ headers: { Authorization: `Bearer ${accessToken}` } });
+    const result = await this.runtime.withdraw({
+      headers: { Authorization: `Bearer ${accessToken}` },
+    });
     if (result.error !== undefined) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.server, retryable: true };
     }
 
-    const cleared = await this.session.clear();
+    const cleared = await this.runtime.session.clear();
 
     return cleared.status === AUTH_STATUS.signedOut ? { status: AUTH_STATUS.withdrawn } : cleared;
   }
 
   /** 생성 API 인증 응답을 로그인 완료 또는 가입 대기 상태로 변환합니다. */
   private async acceptAuthenticationResult(
-    result: AuthenticationRequestResult,
+    result: NativeAuthenticationApiResult,
   ): Promise<AuthResult> {
     if (result.data === undefined) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.server, retryable: true };
@@ -140,7 +147,7 @@ export class AuthActions {
 
     const credentials = this.toCredentials(result.data);
     if (credentials) {
-      return this.session.establish(credentials);
+      return this.runtime.session.establish(credentials);
     }
 
     return this.startSignup(result.data);
@@ -157,12 +164,12 @@ export class AuthActions {
 
     this.registration = undefined;
 
-    return this.session.establish(credentials);
+    return this.runtime.session.establish(credentials);
   }
 
   /** refresh API 응답을 SessionManager가 저장할 자격 정보로 변환합니다. */
   private async renewSession(refreshToken: string): Promise<SessionCredentials> {
-    const result = await renew({ body: { refreshToken } });
+    const result = await this.runtime.renew({ body: { refreshToken } });
     const credentials = result.data ? this.toCredentials(result.data) : undefined;
     if (!credentials) {
       throw new Error('세션 갱신 응답이 올바르지 않아요.');
@@ -217,5 +224,3 @@ export class AuthActions {
     return { status: AUTH_STATUS.unavailable, code: AUTH_ERROR_CODE.network, retryable: true };
   }
 }
-
-export const authActions = new AuthActions();
