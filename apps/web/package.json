@@ -24,6 +24,7 @@
     "@stackflow/plugin-preload": "catalog:",
     "@stackflow/plugin-renderer-basic": "catalog:",
     "@stackflow/react": "catalog:",
+    "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
     "@vanilla-extract/css": "catalog:",
     "@yapp-plus/api": "workspace:*",

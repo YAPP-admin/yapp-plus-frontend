@@ -85,4 +85,12 @@
 - mutation hook의 `onSuccess`는 성공한 `AuthResult`를 React Query 세션 cache에 반영하는 로직만 담당한다.
 - 각 화면의 `mutate` 호출부 `onSuccess`·`onError`는 Stackflow 전환, 입력 오류, Snackbar·Dialog 표시처럼 UI에 영향을 주는 동작만 담당한다.
 - 로그인·가입·로그아웃·탈퇴 mutation hook을 별도 파일로 분리해 화면에서 bridge 함수와 QueryClient를 직접 조합하지 않도록 한다.
-- 로그인·Tabs 간 native 상태 전환 effect는 `NativeAuthRedirect`로 통합했다. 회원가입 화면의 effect는 다음 입력 단계로 이동할 때 포커스를 주는 UI 동작만 남긴다.
+- 로그인·Tabs 간 native 상태 전환 effect는 `NativeAuthRedirect`로 통합했다. 회원가입 화면의 전화번호 입력 포커스는 입력 필드 callback ref가 DOM 연결 시점에 처리한다.
+
+## 회원가입 폼 리팩터링
+
+- `apps/web/src/pages/signup/ui/signup-page.tsx`는 `@tanstack/react-form`의 `useForm`·`Field`·`Subscribe`로 이름·휴대폰 번호 상태와 단계별 필수값 검증을 관리한다.
+- 폼 제출은 TanStack Form의 `onSubmit`에서 기존 native 가입 mutation과 브라우저 승인 대기 화면으로 분기하며, 입력 컴포넌트는 SEED TextField 계약을 유지한다.
+- `apps/web/src/pages/signup/model/signup-form.ts`에서 `@yapp-plus/app-bridge`의 가입 입력 Zod 계약을 확장해 필수값·trim·필드 오류 메시지를 관리하고, TanStack Form Standard Schema validator가 이를 직접 사용한다. native 전송 시에는 `parse` 결과로 Zod 변환값을 사용한다.
+- 웹 앱에 `@tanstack/react-form`을 catalog 의존성으로 추가하고 lockfile을 갱신했다.
+- 단계 전환이 비동기 제출 검증 뒤 발생하므로 관련 테스트는 `waitFor`로 화면 전환 완료를 확인한다.

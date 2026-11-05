@@ -1,74 +1,81 @@
 'use client';
 
+/** 이름·휴대폰 번호를 단계별로 수집하고 native 가입 완료를 실행하는 화면입니다. */
+
 import { ActionButton, Text, TextField, TextFieldInput } from '@yapp-plus/ui';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFlow } from '@stackflow/react/future';
-import { useEffect, useId, useRef, useState, type FormEvent } from 'react';
+import { useId, useState, type FormEvent } from 'react';
 import { useNativeAuthSession, useNativeSignupMutation } from '@/features/auth';
 import { body, footer, screen } from '@/shared/ui/step-screen.css';
 import { fields, form } from './signup-page.css';
+import { signupFormSchema, signupNameSchema, signupPhoneNumberSchema } from '../model/signup-form';
 
 type Step = 'name' | 'phone';
+type SignupFormValues = Readonly<{ name: string; phoneNumber: string }>;
 
+/** 전화번호 입력 필드가 DOM에 연결되는 순간 자동으로 포커스를 줍니다. */
+const focusPhoneInput = (input: HTMLInputElement | null): void => {
+  input?.focus();
+};
+
+/** TanStack Form이 입력·검증을 관리하고 mutation 결과는 화면 전환으로 연결합니다. */
 export function SignupPage() {
   const flow = useFlow();
   const { isNative } = useNativeAuthSession();
   const titleId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState<Step>('name');
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
   const signupMutation = useNativeSignupMutation();
   const isSubmitting = signupMutation.isPending;
-  // 피그마 시안처럼 값이 비어 있으면 다음 버튼을 비활성화합니다. 형식 검증은 서버 계약에서 정합니다.
-  const canSubmit = (step === 'name' ? name : phone).trim().length > 0;
+  const signupForm = useForm({
+    defaultValues: { name: '', phoneNumber: '' } satisfies SignupFormValues,
+    validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
+    onSubmit: ({ value }) => {
+      if (step === 'name') {
+        setStep('phone');
+        return;
+      }
 
-  useEffect(() => {
-    if (step === 'phone') {
-      inputRef.current?.focus();
-    }
-  }, [step]);
+      if (!isNative) {
+        flow.push('SignupStatus', {});
+        return;
+      }
+
+      setErrorMessage('');
+      const normalizedValue = signupFormSchema.parse(value);
+      signupMutation.mutate(normalizedValue, {
+        onSuccess: (result) => {
+          if (!result) {
+            setErrorMessage('가입 브리지를 사용할 수 없어요. 앱을 다시 실행해 주세요.');
+            return;
+          }
+
+          if (result.status === 'SIGNED_IN') {
+            flow.replace('SignupComplete', {});
+            return;
+          }
+          if (result.status === 'ERROR' && result.fieldErrors?.length) {
+            setErrorMessage('입력한 정보를 다시 확인해 주세요.');
+            return;
+          }
+          setErrorMessage('가입 중 문제가 발생했어요. 다시 로그인해 주세요.');
+        },
+        onError: () => {
+          setErrorMessage('가입 결과를 확인하지 못했어요. 다시 로그인해 주세요.');
+        },
+      });
+    },
+  });
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!canSubmit) {
-      return;
-    }
-    if (step === 'name') {
-      setStep('phone');
+    if (signupMutation.isPending) {
       return;
     }
 
-    if (isNative) {
-      setErrorMessage('');
-      signupMutation.mutate(
-        { name, phoneNumber: phone },
-        {
-          onSuccess: (result) => {
-            if (!result) {
-              setErrorMessage('가입 브리지를 사용할 수 없어요. 앱을 다시 실행해 주세요.');
-              return;
-            }
-
-            if (result.status === 'SIGNED_IN') {
-              flow.replace('SignupComplete', {});
-              return;
-            }
-            if (result.status === 'ERROR' && result.fieldErrors?.length) {
-              setErrorMessage('입력한 정보를 다시 확인해 주세요.');
-              return;
-            }
-            setErrorMessage('가입 중 문제가 발생했어요. 다시 로그인해 주세요.');
-          },
-          onError: () => {
-            setErrorMessage('가입 결과를 확인하지 못했어요. 다시 로그인해 주세요.');
-          },
-        },
-      );
-      return;
-    }
-
-    flow.push('SignupStatus', {});
+    setErrorMessage('');
+    void signupForm.handleSubmit();
   }
 
   return (
@@ -79,27 +86,55 @@ export function SignupPage() {
             {step === 'name' ? '이름을 입력해 주세요' : '휴대폰 번호를 입력해 주세요'}
           </Text>
           {step === 'name' ? (
-            <TextField key="name" value={name} onValueChange={({ value }) => setName(value)}>
-              <TextFieldInput
-                aria-labelledby={titleId}
-                name="name"
-                autoComplete="name"
-                enterKeyHint="next"
-                placeholder="본인 이름을 입력해 주세요"
-              />
-            </TextField>
+            <signupForm.Field
+              name="name"
+              validators={{
+                onDynamic: signupNameSchema,
+              }}
+            >
+              {(field) => (
+                <TextField
+                  key="name"
+                  value={field.state.value}
+                  onValueChange={({ value }) => field.handleChange(value)}
+                >
+                  <TextFieldInput
+                    aria-labelledby={titleId}
+                    name="name"
+                    autoComplete="name"
+                    enterKeyHint="next"
+                    placeholder="본인 이름을 입력해 주세요"
+                    onBlur={field.handleBlur}
+                  />
+                </TextField>
+              )}
+            </signupForm.Field>
           ) : (
-            <TextField key="phone" value={phone} onValueChange={({ value }) => setPhone(value)}>
-              <TextFieldInput
-                ref={inputRef}
-                aria-labelledby={titleId}
-                name="phone"
-                type="tel"
-                autoComplete="tel-national"
-                enterKeyHint="done"
-                placeholder="휴대폰 번호를 입력해 주세요"
-              />
-            </TextField>
+            <signupForm.Field
+              name="phoneNumber"
+              validators={{
+                onDynamic: signupPhoneNumberSchema,
+              }}
+            >
+              {(field) => (
+                <TextField
+                  key="phone"
+                  value={field.state.value}
+                  onValueChange={({ value }) => field.handleChange(value)}
+                >
+                  <TextFieldInput
+                    ref={focusPhoneInput}
+                    aria-labelledby={titleId}
+                    name="phoneNumber"
+                    type="tel"
+                    autoComplete="tel-national"
+                    enterKeyHint="done"
+                    placeholder="휴대폰 번호를 입력해 주세요"
+                    onBlur={field.handleBlur}
+                  />
+                </TextField>
+              )}
+            </signupForm.Field>
           )}
           {errorMessage ? (
             <Text role="alert" color="fg.negative" textStyle="t4Regular">
@@ -109,14 +144,23 @@ export function SignupPage() {
         </div>
 
         <div className={footer}>
-          <ActionButton
-            type="submit"
-            size="large"
-            variant="brandSolid"
-            disabled={!canSubmit || isSubmitting}
+          <signupForm.Subscribe
+            selector={(state) => ({
+              canSubmit:
+                (step === 'name' ? state.values.name : state.values.phoneNumber).trim().length > 0,
+            })}
           >
-            다음
-          </ActionButton>
+            {({ canSubmit }) => (
+              <ActionButton
+                type="submit"
+                size="large"
+                variant="brandSolid"
+                disabled={!canSubmit || isSubmitting}
+              >
+                다음
+              </ActionButton>
+            )}
+          </signupForm.Subscribe>
         </div>
       </form>
     </main>
