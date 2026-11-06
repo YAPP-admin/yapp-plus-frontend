@@ -1,6 +1,6 @@
 # 구현 계획: iOS OIDC 인증과 TestFlight 준비
 
-> 최신 작업은 [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329)의 보완 1B단계다.
+> 최신 작업은 [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329)의 보완 2단계다.
 > 아래 최초 1–5단계는 이력으로 보존하며, 현재 실행 순서는 마지막의 보완 0–7단계를 따른다.
 
 **브랜치**: `DongjaJ/apple/google-oidc-plan`
@@ -146,6 +146,7 @@ CORS, 실제 계정 인증, 서명·TestFlight 설치·탈퇴는 별도 대기 �
 1A 리뷰에서 establish의 세대 인자를 필수화하며 로그인·가입 시작 세대 전달까지 연결했다. 1B에서 서버 revoke 이전 clear 호출, 가입 자격 정리와 늦은 결과·오류 차단을 구현했다. R1의 웹 전파는 보완 5단계까지 미검증이다.
 0단계 문서와 1A 구현은 승인 후 `8895f48`로 커밋했다(main 대비 680줄). 사용자 승인으로 이 커밋에서 `DongjaJ/oidc-auth-actions`를 생성·전환했다.
 1B의 종속 PR base는 `DongjaJ/oidc-ios-google`이다. 현재 PR 단위 변경량은 해당 base와 비교하며 main 누적 diff를 하나의 PR로 제출하지 않는다. push·PR 생성·다음 단계는 별도 승인 전 실행하지 않는다.
+1B는 리뷰 승인 후 `2813cfe`로 커밋했다. 2단계도 같은 종속 브랜치에서 진행하며 base 대비 전체 변경량을 합산한다. 갱신의 401 정리·오류 구분을 구현했고 3단계는 리뷰 대기다.
 0단계에서 제품 코드·의존성은 변경하지 않는다. 4단계 조사로 구현 조건을 확정하지 못하면 R4를 미해결로 남기고 사용자와 다음 범위를 결정한다.
 
 ### 동시성 설계

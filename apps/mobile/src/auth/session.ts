@@ -18,8 +18,19 @@ export type SessionCredentials = Readonly<{
   userId: number;
 }>;
 
-/** 생성 OpenAPI `renew` 호출을 주입하는 함수 형태입니다. */
-type Renew = (refreshToken: string) => Promise<SessionCredentials>;
+/** HTTP·SDK 예외를 세션 정책에서 분리하는 갱신 경계의 결과입니다. */
+export type RenewalResult =
+  | { kind: 'success'; credentials: SessionCredentials }
+  | { kind: 'invalid-session' }
+  | { kind: 'temporary-failure'; reason: 'NETWORK' | 'TIMEOUT' | 'SERVER' }
+  | { kind: 'invalid-response' }
+  | { kind: 'rejected' };
+
+type Renew = (refreshToken: string) => Promise<RenewalResult>;
+
+const unexpectedRenewalResult = (_result: never): never => {
+  throw new Error('알 수 없는 세션 갱신 결과예요.');
+};
 
 type CommitOperation = { kind: 'establish' } | { kind: 'refresh'; previousToken: string };
 
@@ -198,17 +209,27 @@ export class SessionManager {
     refreshToken: string,
     renew: Renew,
   ): Promise<AuthResult> {
-    try {
-      const credentials = await renew(refreshToken);
-      return await this.commit(credentials, currentGeneration, {
-        kind: 'refresh',
-        previousToken: refreshToken,
-      });
-    } catch {
-      if (!this.isCurrent(currentGeneration)) {
-        return { status: 'CANCELLED' };
-      }
-      return { status: 'UNAVAILABLE', code: 'NETWORK', retryable: true };
+    const result = await renew(refreshToken);
+    if (!this.isCurrent(currentGeneration) || refreshToken !== this.currentRefreshToken) {
+      return { status: 'CANCELLED' };
+    }
+    switch (result.kind) {
+      case 'success':
+        return this.commit(result.credentials, currentGeneration, {
+          kind: 'refresh',
+          previousToken: refreshToken,
+        });
+      case 'invalid-session':
+        // 대상 검사와 clear의 즉시 무효화 사이에는 await를 두지 않습니다.
+        return this.clear();
+      case 'temporary-failure':
+        return { status: 'UNAVAILABLE', code: result.reason, retryable: true };
+      case 'invalid-response':
+        return { status: 'UNAVAILABLE', code: 'INVALID_RESPONSE', retryable: false };
+      case 'rejected':
+        return { status: 'UNAVAILABLE', code: 'SERVER', retryable: false };
+      default:
+        return unexpectedRenewalResult(result);
     }
   }
 

@@ -1,6 +1,6 @@
 # 기능 명세: iOS 소셜 로그인과 세션 관리
 
-> 2026-11-06 보완: `DongjaJ/oidc-auth-actions`, [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329), 보완 1B단계 리뷰 대상.
+> 2026-11-06 보완: `DongjaJ/oidc-auth-actions`, [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329), 보완 2단계 리뷰 대상.
 > 아래 초기 명세·완료 기록은 당시 기준이다. 현재 보완 범위와 완료 판정은 문서 마지막의 R1–R6을 따른다.
 
 **브랜치**: `DongjaJ/apple/google-oidc-plan`

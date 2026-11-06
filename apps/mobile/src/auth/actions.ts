@@ -13,7 +13,8 @@ import type { AuthenticationResponse } from '@yapp-plus/api/generated';
 import type { nativeAuthApi, NativeAuthenticationApiResult } from './auth-api';
 import { NativeAuthenticationCancelledError, NativeAuthenticationError } from './errors';
 import type { authenticateWithProvider } from './providers';
-import type { SessionManager, SessionCredentials } from './session';
+import type { SessionManager } from './session';
+import { toCredentials } from './credentials';
 
 type SignupRegistration = Readonly<{ token: string; expiresAt: number }>;
 
@@ -117,12 +118,16 @@ export class AuthActions {
 
   /** 저장된 refresh token으로 현재 세션을 복구하거나 갱신합니다. */
   public getSession(): Promise<AuthResult> {
-    return this.runtime.session.get((refreshToken) => this.renewSession(refreshToken));
+    return this.runtime.session.get((refreshToken) =>
+      this.runtime.renew({ body: { refreshToken } }),
+    );
   }
 
   /** WebView의 401 대응 요청에 대해 최신 access token을 반환합니다. */
   public refreshSession(input: RefreshSessionInput): Promise<AuthResult> {
-    return this.runtime.session.refresh(input, (refreshToken) => this.renewSession(refreshToken));
+    return this.runtime.session.refresh(input, (refreshToken) =>
+      this.runtime.renew({ body: { refreshToken } }),
+    );
   }
 
   /** 서버 응답을 기다리기 전에 로컬 세션을 무효화하고 삭제를 예약합니다. */
@@ -179,7 +184,7 @@ export class AuthActions {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.server, retryable: true };
     }
 
-    const credentials = this.toCredentials(result.data);
+    const credentials = toCredentials(result.data);
     if (credentials) {
       return this.runtime.session.establish(credentials, generation);
     }
@@ -195,7 +200,7 @@ export class AuthActions {
     if (!this.runtime.session.isCurrent(generation)) {
       return { status: AUTH_STATUS.cancelled };
     }
-    const credentials = response ? this.toCredentials(response) : undefined;
+    const credentials = response ? toCredentials(response) : undefined;
     if (!credentials) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.invalidResponse, retryable: false };
     }
@@ -217,35 +222,6 @@ export class AuthActions {
     if (this.authenticatingGeneration === generation) {
       this.authenticatingGeneration = undefined;
     }
-  }
-
-  /** refresh API 응답을 SessionManager가 저장할 자격 정보로 변환합니다. */
-  private async renewSession(refreshToken: string): Promise<SessionCredentials> {
-    const result = await this.runtime.renew({ body: { refreshToken } });
-    const credentials = result.data ? this.toCredentials(result.data) : undefined;
-    if (!credentials) {
-      throw new Error('세션 갱신 응답이 올바르지 않아요.');
-    }
-
-    return credentials;
-  }
-
-  private toCredentials(response: AuthenticationResponse): SessionCredentials | undefined {
-    if (
-      response.result !== AUTH_STATUS.signedIn ||
-      !response.user ||
-      !response.session?.refreshToken ||
-      !Number.isFinite(response.session.expiresIn)
-    ) {
-      return undefined;
-    }
-
-    return {
-      accessToken: response.session.accessToken,
-      refreshToken: response.session.refreshToken,
-      expiresAt: Date.now() + response.session.expiresIn * 1_000,
-      userId: response.user.id,
-    };
   }
 
   private startSignup(response: AuthenticationResponse): AuthResult {
