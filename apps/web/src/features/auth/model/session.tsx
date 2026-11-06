@@ -9,6 +9,7 @@ import {
 } from '@tanstack/react-query';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { getNativeSession, isNativeWebView } from './native-auth';
+import { nativeAuthClientOptions } from './native-auth-client';
 import { nativeSessionQueryKey, readAuthSession } from './operations';
 
 export { nativeSessionQueryKey } from './operations';
@@ -24,6 +25,7 @@ type NativeAuthSessionContextValue = Readonly<{
   isNative: boolean;
   phase: NativeAuthSessionPhase;
   session?: AuthSession;
+  apiOptions: ReturnType<typeof nativeAuthClientOptions>;
   unsupported: boolean;
   canRetry: boolean;
   isRecovering: boolean;
@@ -33,6 +35,7 @@ type NativeAuthSessionContextValue = Readonly<{
 const browserContext: NativeAuthSessionContextValue = {
   isNative: false,
   phase: 'BROWSER',
+  apiOptions: nativeAuthClientOptions(),
   unsupported: false,
   canRetry: false,
   isRecovering: false,
@@ -66,7 +69,13 @@ export const nativeSessionQueryOptions = (isNative: boolean) =>
       canRecover(query.state.data) ? recoveryInterval : Number.POSITIVE_INFINITY,
     refetchInterval: (query) => (canRecover(query.state.data) ? recoveryInterval : false),
     refetchIntervalInBackground: false,
-    refetchOnWindowFocus: true,
+    refetchOnWindowFocus: (query) => {
+      const status = query.state.data?.status;
+      if (status === 'SIGNED_IN' || status === 'SIGNED_OUT' || status === 'WITHDRAWN') {
+        return 'always';
+      }
+      return canRecover(query.state.data);
+    },
     refetchOnReconnect: () => focusManager.isFocused(),
   });
 
@@ -114,6 +123,7 @@ export function NativeAuthSessionProvider({ children }: { children: ReactNode })
         isNative,
         phase: state.phase,
         session: state.session,
+        apiOptions: nativeAuthClientOptions(state.session, client),
         unsupported:
           (query.data.status === 'UNAVAILABLE' || query.data.status === 'ERROR') &&
           query.data.code === 'UNSUPPORTED',
