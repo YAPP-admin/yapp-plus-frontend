@@ -362,3 +362,57 @@ R2 네이티브 보완을 제출하며 웹 오류 화면·재로그인 전환의
 - SDK·네이티브 설정·의존성 변경이 없어 Xcode 빌드와 expo:doctor는 재실행하지 않았다. 앞선 3단계 네이티브 빌드를 이번 변경의 신규 실행으로 계산하지 않는다. 실제 기기에서 Google 인증 UI·token nonce·서버 성공·취소 후 재시도는 미검증이다.
 - 4단계 구현을 리뷰 제출하며 5단계를 시작하지 않는다. 추가 커밋·push·PR·배포는 수행하지 않았다. 실패 시 iOS 경로 변경을 되돌릴 수 있으나 캐시 nonce 문제도 돌아오므로 롤백을 결함 해결로 판단하지 않는다.
 - 사용자 리뷰 후 4단계 변경 커밋과 5단계 진행을 승인받았다. 실제 Google token·서버 종단 검증 대기는 유지한다.
+
+## 보완 5단계 설계 제출
+
+- 4단계는 사용자 승인 후 `01bdb0c`로 커밋했으며 format/lint/commitlint 훅 통과, push하지 않았다. 현재 Google PR은 예정 base 대비 383줄이다.
+- Spec Kit setup-plan으로 기존 016 문서를 유지하며 5A 결과 적용·계정 수명과 5B 브리지 복구를 구체화했다. extension hooks 설정은 없다. 다른 세션의 인증 구현은 사용하지 않는다.
+- 읽기 전용 조사에서 query cache 외에 페이지별 탐색 callback·Stackflow 인스턴스 수명·UNAVAILABLE 리다이렉트도 검토했다. SDK onReady를 hydration 완료로 사용하는 제안은 설치 소스 근거로 제외했다.
+- 문서만 변경했다. `node --run check` exit 0: format 검사는 새로 실행, lint 7개·typecheck 7개·test 5개는 모두 Turbo 캐시다. 웹 구현·새 회귀 테스트·화면 검증·build는 아직 실행하지 않았다.
+- 별도 종속 브랜치 `DongjaJ/oidc-web-auth`(base `DongjaJ/oidc-google-config`)에서 5A를 진행하도록 제안한다. 브랜치 생성·전환 승인 대기이며, 이번 설계 문서 변경도 그 브랜치로 가져간다. 실제 WebView·Google 로그인 미검증은 유지한다.
+
+### 5단계 착수 전 다른 세션 충돌 재확인
+
+- 상대 HEAD `7489fad`와 미커밋 9개 경로를 읽었다. 미커밋 인증 model 변경은 없지만 이미 커밋된 native-auth-client·session apiOptions·Provider retry 설정이 남아 있다. 현재 API 옵션 소비자는 일정과 미커밋 홈 카드다.
+- `git merge-tree --write-tree HEAD DongjaJ/nsu85` exit 0으로 현재 커밋 간 텍스트 충돌 없음. 생성 tree만 확인했으며 checkout·merge·상대 파일 변경은 없다. 미커밋 변경이나 미작성 5A 코드에 대한 병합 보장은 하지 않는다.
+- 5A의 직접 중첩은 session.tsx, 연계 중첩은 Provider/query 취소·Stackflow 화면 수명이다. apiOptions·기존 GET 401 갱신을 보존하고 해당 소비자 통합 테스트를 추가하는 계획으로 보완했다. 이 확인에서는 테스트·빌드를 새로 실행하지 않았다.
+
+## 보완 5A-1 — 웹 인증 결과·callback 경합
+
+- 사용자 승인 후 `DongjaJ/oidc-web-auth`를 생성했다. base는 `DongjaJ/oidc-google-config`(`01bdb0c`)다. 앞선 설계 문서를 함께 가져왔고 다른 워크스페이스 코드는 수정·복사하지 않았다.
+- operations 모듈이 QueryClient별 세대·같은 세션 tokenVersion 검사와 query 취소를 담당한다. mutation은 결과와 현재성 검사를 함께 반환하고 로그인·가입·설정 callback에서 재검사한다. logout 진행은 AUTHENTICATING/LOADING으로 표시하며 실패를 확정 SIGNED_OUT으로 바꾸지 않는다.
+- 수정 전 새 테스트 11개 실패·기존 웹 104개 통과. 수정 후에는 작업 도중 시작된 조회 1개와 로그인·가입 callback 2개를 추가해 웹 전체 118개 통과했다. AuthResult 대역을 실제 QueryClient/MutationObserver에 연결했으며 SDK 내부 동작을 재검증하지 않았다.
+- 최종 `node --run check` exit 0. 웹 lint·typecheck·118개 테스트는 새로 실행했고 다른 lint 6개·typecheck 6개·test 4개는 Turbo 캐시를 재사용했다. 작성 중 lint와 중복 CANCELLED 분기 타입 오류를 수정한 뒤 전체 검사 통과를 확인했다.
+- 브라우저 도구는 Chrome 탭 생성에서 timeoutMs 오류를 두 번 반환했다. 실제 브라우저/WebView·키보드·스크린리더·터치 검증은 실행하지 못했다. 인접 화면 테스트에서 늦은 결과의 탐색·오류 표시 차단을 확인했다. 새 UI 컴포넌트나 스타일은 추가하지 않았다.
+- 5A-2 계정 cache·Stackflow 화면 수명과 5B 브리지 준비/자동 복구는 미구현이다. 다른 세션의 apiOptions·GET 401 처리와 합친 검증도 아직 하지 않았다. 이번 단계를 리뷰받기 전에 다음 구현을 시작하지 않는다. 커밋·push·배포는 하지 않았다.
+- 최종 `node --run build` exit 0: 웹 빌드는 새로 실행했고 admin·Storybook 2개 작업은 캐시를 재사용했다. 최초 구현 시점의 예정 base 대비 5A-1은 추가 498줄·삭제 50줄, 합계 548줄(신규 파일 포함)로 별도 PR 제한 안에 있다.
+
+### 5A-1 리뷰 반영 — React Query lifecycle
+
+- 페이지의 operation.isCurrent 검사를 제거하고 onSignedIn/onSignupRequired/onSignedOut/onWithdrawn/onFailure callback으로 대체했다. onMutate 문맥, onSuccess/onError 반영, onSettled 알림을 사용한다. 새 의존성이나 RPC 변경은 없다.
+- RPC 시작 전 무효화, 응답 완료 후 callback 지연, 화면 unmount 뒤 응답, 중복 인증 및 로그아웃 경합을 회귀 테스트로 확인했다. mutateAsync는 RPC 예외를 reject하고 유효한 요청만 OUTCOME_UNKNOWN으로 cache·화면에 반영한다.
+- `node --run check` exit 0: 웹 lint·typecheck·119개 테스트를 새로 실행했다. 다른 패키지 lint·typecheck·테스트는 Turbo 캐시를 재사용했다.
+- `node --run build` exit 0: 웹을 새로 빌드했고 admin·Storybook은 캐시를 재사용했다. 로그는 `.context/oidc-stage-5a/refactor-check.log`, `refactor-build.log`다.
+- 브라우저 자동화 도구 오류로 실제 화면 확인은 여전히 미검증이다. 실기기·실제 인증 서버 검증도 수행하지 않았다. 5A-2와 5B는 진행하지 않았다.
+- 리뷰 반영으로 최초 548줄 집계는 현재 변경량이 아니다. 현재 전체 변경은 800줄 제한을 초과하므로 PR 생성 전에 인증 작업 기반과 화면 연결을 각각 검증 가능한 종속 PR로 분리해야 한다. 아직 commit·브랜치 분리·push·PR 생성은 하지 않았다.
+
+### 5A-1 리뷰 반영 — 화면 수명을 React Query에 위임
+
+- useEffect/useRef의 mounted 관리를 제거했다. 세션 반영·작업 해제는 mutation 옵션에 유지하고 화면 알림은 mutate/mutateAsync 호출별 onSettled로 옮겼다.
+- unmount 뒤에도 cache는 반영되지만 화면 알림은 생략하는 기존 테스트와, 로그아웃을 사이에 둔 연속 로그인에서 마지막 호출만 알리는 새 회귀 테스트가 통과했다.
+- `node --run check` 통과: 웹 lint·typecheck·120개 테스트를 새로 실행하고 다른 패키지는 캐시를 재사용했다. `node --run build` 통과: 웹은 새로 실행하고 admin·Storybook은 캐시를 재사용했다.
+- 로그: `.context/oidc-stage-5a/lifecycle-check.log`, `lifecycle-build.log`. 실제 브라우저·실기기·인증 서버 검증은 추가하지 않았다. commit·PR 분리·다음 단계는 진행하지 않았다.
+
+### 5A-1 리뷰 반영 — mutate만 제공
+
+- 실제 화면에는 mutateAsync 소비자가 없었고 unmount 회귀 테스트만 사용했다. hook의 mutateAsync를 제거하고 테스트는 mutate 후 진행 중 mutation이 없어지는 것을 기다리도록 변경했다. 앞선 검증 기록의 mutateAsync 설명은 당시 구현에 해당한다.
+- `node --run check`와 `node --run build` 통과. 웹 lint·typecheck·120개 테스트·빌드는 새로 실행했고 다른 패키지는 Turbo 캐시를 재사용했다. 로그는 `.context/oidc-stage-5a/mutate-only-check.log`, `mutate-only-build.log`다.
+- 실기기·실제 화면 검증은 추가하지 않았으며 commit·다음 단계도 진행하지 않았다.
+
+### 5A-1 커밋·PR 분리 준비
+
+- 사용자 리뷰 및 커밋·다음 단계 진행 승인을 받았다. 800줄 미만 PR 제한에 따라 현재 브랜치에는 operations.ts 기반·직접 회귀 테스트·설계 문서를 먼저 커밋한다. 화면 연결과 React Query 통합 테스트는 후속 종속 브랜치 대상으로 작업 트리에 보존한다.
+- 기존 operations.test.ts의 통합 테스트를 mutations.test.ts로 옮겼다. 낮은 tokenVersion 검사는 operations 직접 테스트로 이동했고, 이전 작업의 종료가 새 작업의 중복 인증 제한을 지우지 않는 회귀를 추가했다. 테스트를 크기 계산에서 제외하지 않았다.
+- 아래 브랜치 분리는 별도 승인 대기다. 현재 브랜치의 기반만으로 화면 보호가 활성화된다고 보장하지 않으며 React Query·화면 연결 변경이 함께 적용되어야 한다. 다음 5A-2는 그 연결 변경 위에서 계정 cache 제거·Stackflow 수명을 구현한다.
+
+- 분리 후 `node --run check` 통과: 웹 lint·typecheck·121개 테스트 신규 실행, 다른 패키지 캐시 재사용. 제품 코드 변경이 없는 테스트 분리이므로 빌드는 직전 mutate-only-build.log의 웹 신규 빌드 성공 결과를 사용했다. 현재 기반 commit의 예정 base 대비 변경량은 800줄 미만이며 후속 연결도 별도 집계한다.

@@ -65,7 +65,7 @@ provider token과 서비스 token을 혼동하지 않는다. web localStorage·U
 - 새 로그인 결과의 공개는 검증→같은 세대 확인→저장→같은 세대 재확인→메모리 확정 순서다. 로그아웃 이후 오래된 SIGNUP_REQUIRED도 공개하지 않는다.
 - restore 읽기 뒤 세대가 바뀌면 읽은 자격을 메모리에 넣거나 renew에 사용하지 않는다. 저장이 이미 시작됐다면 뒤따르는 logout 삭제로 정리한다.
 - 오류 정리에도 같은 세대·대상 검사를 적용한다. 오래된 renew 401이 새 계정을 삭제하지 않는다.
-- 웹 작업 세대는 #328의 공통 경로를 사용한다. native generation을 공개 계약에 추가하지 않으며 두 세대가 동일한 값이라고 가정하지 않는다.
+- 웹 작업 세대는 이 작업에서 마련할 QueryClient별 단일 결과 적용 경로를 사용한다. native generation을 공개 계약에 추가하지 않으며 두 세대가 동일한 값이라고 가정하지 않는다.
 - AuthActions는 진행 중인 인증의 세대를 기록해 같은 세대의 로그인·가입 중복을 거부한다. 이전 세대의 finally는 새 인증의 진행 표시를 지우지 않는다.
 - 로그아웃과 새 로그인 시작 시 이전 가입 자격을 제거한다. provider·인증 API·가입 API의 늦은 결과와 오류는 세대 검사 후 폐기한다.
 - revoke 대기 중 새 세션이 확정되거나 새 로그인·가입 대기가 시작되면, 이전 로그아웃의 결과도 CANCELLED로 반환해 새 흐름에 적용하지 않는다.
@@ -83,3 +83,15 @@ sequenceDiagram
   S->>S: 현재 세대와 불일치: 결과 폐기
   Note over S,D: 저장·SIGNED_IN 공개 없음
 ```
+
+## 보완 5단계 웹 내부 모델
+
+- 작업 세대: QueryClient 수명의 단조 증가 값. 인증 의도 변경으로 이전 query/mutation과 callback을 무효화한다. RPC에 전송하지 않는다.
+- 화면 세대: 계정/로그인 세션 경계 변경에만 증가한다. access token 회전과 분리하여 정상 갱신 때 폼이나 탐색을 초기화하지 않는다.
+- 적용 대상: 현재 sessionId 및 tokenVersion. 같은 세션의 낮은 버전 결과는 무시하고, 새 세션은 현재 작업의 결과일 때만 적용한다.
+- 조회 가용성: 일반 브라우저 / 연결 대기 / 미지원 / 실패 / 응답 확보. AuthResult와 별도로 판단하며 연결 대기·undefined·실패를 SIGNED_OUT으로 저장하지 않는다.
+- 복구 스케줄: 진행 Promise, 실패 완료 시각, visible 상태. 같은 요청을 공유하고 실패 후 최소 5초를 보장하며 숨김/unmount에서 예약을 정리한다.
+
+### 5A-1 실제 적용
+
+인증 의도 시작과 인증 결과 확정은 세대를 올린다. 중복 로그인·가입의 BUSY 응답은 기존 작업을 무효화하지 않는다. AuthOperation은 React Query mutation의 내부 문맥으로만 유지하는 generation과 result이며 RPC나 영구 저장소에 넣지 않는다. hook이 의미별 callback의 세대 유효성을 검사하고 React Query의 호출별 callback이 화면 수명을 관리한다. RPC 예외는 onError에서 처리하며 유효한 작업만 OUTCOME_UNKNOWN으로 반영한다. 계정 cache와 화면 세대 연결은 5A-2에 남아 있다.

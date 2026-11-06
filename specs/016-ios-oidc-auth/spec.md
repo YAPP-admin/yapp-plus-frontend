@@ -1,6 +1,6 @@
 # 기능 명세: iOS 소셜 로그인과 세션 관리
 
-> 2026-11-06 보완: `DongjaJ/oidc-google-config`, [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329), 보완 4단계 구현 리뷰 대상.
+> 2026-11-06 보완: `DongjaJ/oidc-web-auth`, [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329), 보완 5A-1 구현 리뷰 대상.
 > 아래 초기 명세·완료 기록은 당시 기준이다. 현재 보완 범위와 완료 판정은 문서 마지막의 R1–R6을 따른다.
 
 **브랜치**: `DongjaJ/apple/google-oidc-plan`
@@ -123,5 +123,5 @@
 R1의 직렬화에는 `p-mutex@1.0.0`을 사용한다. Android는 조건부 교체·직렬 저장·지연 테스트의 참고이며 수정하지 않는다.
 R4는 기존 nonce 재사용·캐시 token의 nonce 역추출·서버 검증 완화로 해결하지 않는다. YAPP refresh 기반 세션 복구는 유지한다.
 다른 세션의 인증 작업 중단에 따라 R1·R5의 웹 공통 결과 적용·계정 캐시·화면 수명은 이 작업의 보완 5단계에서 계획·구현한다.
-단일 결과 적용 경로를 유지하며, 업무 API의 일반 401 재시도 범위는 5단계 계획 리뷰에서 확정한다. 웹 검증 전에는 통합 해결을 선언하지 않는다.
+단일 결과 적용 경로를 유지하며, 업무 API의 일반 401 재시도는 이번 R1·R5 보완 구현에서 제외한다. 웹 검증 전에는 통합 해결을 선언하지 않는다.
 실제 iPhone·Google/Apple 서버·TestFlight 검증은 미확인이다. 기존 배포본의 실패를 단정하지 않는다.
