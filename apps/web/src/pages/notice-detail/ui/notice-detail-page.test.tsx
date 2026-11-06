@@ -5,12 +5,10 @@ import { NoticeDetailPage } from './notice-detail-page';
 const navigation = vi.hoisted(() => ({
   pop: vi.fn<() => void>(),
   replace: vi.fn<(activityName: string, params: object) => void>(),
-  canGoBack: vi.fn<() => boolean>(),
+  isRoot: true,
 }));
 vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
-vi.mock('@/app/navigation/navigation-history', () => ({
-  useCanGoBack: () => ({ current: navigation.canGoBack }),
-}));
+vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: navigation.isRoot }) }));
 beforeEach(() => vi.clearAllMocks());
 
 describe('NoticeDetailPage', () => {

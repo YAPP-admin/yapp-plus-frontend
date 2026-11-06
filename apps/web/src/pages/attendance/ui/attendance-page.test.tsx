@@ -5,14 +5,12 @@ import { AttendancePage } from './attendance-page';
 const navigation = vi.hoisted(() => ({
   back: vi.fn<() => void>(),
   replace: vi.fn<(url: string) => void>(),
-  canGoBack: vi.fn<() => boolean>(),
+  isRoot: true,
 }));
 
 vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
 
-vi.mock('@/app/navigation/navigation-history', () => ({
-  useCanGoBack: () => ({ current: navigation.canGoBack }),
-}));
+vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: navigation.isRoot }) }));
 
 beforeEach(() => vi.clearAllMocks());
 

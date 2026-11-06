@@ -7,7 +7,6 @@ import { lazy, stackflow as createStackflow } from '@stackflow/react/future';
 import { Primitive, seedPlugin } from '@seed-design/stackflow';
 import { type ReactNode } from 'react';
 import type { TabsState } from '@/app/navigation/tab';
-import { runPendingTabTransition } from '@/app/navigation/tab-transition';
 import type { StackflowInitialContext } from './platform';
 
 type TabsParams = ActivityBaseParams & TabsState;
@@ -299,15 +298,6 @@ function reducedMotionPlugin() {
   });
 }
 
-function tabTransitionPlugin(): StackflowPlugin {
-  return () => ({
-    key: 'tab-transition',
-    onPopped() {
-      queueMicrotask(runPendingTabTransition);
-    },
-  });
-}
-
 function canonicalHistoryPlugin(): StackflowPlugin {
   return () => ({
     key: 'canonical-history',
@@ -373,7 +363,6 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
             : 'cupertino',
       })),
       reducedMotionPlugin(),
-      tabTransitionPlugin(),
       canonicalHistoryPlugin(),
     ],
   });

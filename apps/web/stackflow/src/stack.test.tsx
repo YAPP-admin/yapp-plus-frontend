@@ -3,7 +3,6 @@ import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { NavigationHistory } from '@/app/navigation/navigation-history';
 import { createStackflowApp, stackflowConfig } from './stack';
 
 beforeEach(() => {
@@ -21,11 +20,9 @@ function renderStack() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <NavigationHistory>
-        <Suspense fallback={<div>로딩 중…</div>}>
-          <Stack />
-        </Suspense>
-      </NavigationHistory>
+      <Suspense fallback={<div>로딩 중…</div>}>
+        <Stack />
+      </Suspense>
     </QueryClientProvider>,
   );
 }
@@ -112,10 +109,12 @@ describe('Stackflow FSD 화면 연결', () => {
 
     await waitFor(() => expect(window.location.pathname).toBe('/notices/1'));
     expect(await waitForTopHeading('팀빌딩 소개서 작성')).toBeTruthy();
-    await user.click(screen.getByRole('button', { name: '뒤로가기' }));
+    window.history.back();
 
     const restored = await waitForTopHeading('게시판');
     expect(restored.getByRole('tab', { name: '과제' })).toHaveAttribute('aria-selected', 'true');
+    window.history.forward();
+    expect(await waitForTopHeading('팀빌딩 소개서 작성')).toBeTruthy();
   });
 
   it('Home 위에 Alerts를 push하고 뒤로가면 Home을 복원한다', async () => {

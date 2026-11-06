@@ -56,7 +56,7 @@ apps/web/
     ├── app/
     │   ├── providers.tsx
     │   ├── global.css.ts
-    │   ├── navigation/ # 내부 방문 이력과 뒤로가기
+    │   ├── navigation/ # Stackflow 링크·뒤로가기·URL 보정
     │   └── layouts/
     │       ├── page-shell.tsx
     │       ├── page-shell.css.ts
@@ -171,8 +171,13 @@ Next.js 호환 router를 만들지 않습니다.
 - URL로 복원해야 하는 조회 조건은 Activity params에 포함합니다. history-sync가 기록을 완료한 뒤
   canonical URL을 조정해야 할 때만 `src/app/navigation` 훅 또는 Stackflow plugin 안에서
   `window.history`를 직접 수정합니다.
-- 뒤로가기는 Stackflow stack을 우선 사용하고 직접 진입의 fallback은 route의 `defaultHistory`로
-  복원합니다. Native가 부모 Activity를 중복 생성하지 않도록 합니다.
+- 뒤로가기는 `useActivity().isRoot`로 판단해 부모가 있으면 `useFlow.pop`, root이면 명시적
+  fallback으로 `replace`합니다. 직접 진입의 부모 흐름은 route의 `defaultHistory`로 복원하고
+  별도 browser history 추적기를 두지 않습니다. Native가 부모 Activity를 중복 생성하지 않도록 합니다.
+- Alerts에서 Tabs로 복귀할 때는 `pop` 뒤 해당 Stack의 `useHistoryTick` 큐에서 `replaceStep`을
+  실행합니다. 전역 변수에 탐색 callback을 보관하지 않습니다.
+- history-sync 1.11.2는 같은 Activity에 대응하는 첫 route로 URL을 생성하므로, 다중 탭 경로의
+  `useTabsUrl` 보정은 유지합니다. 이 보정과 trailing slash 정규화 외에는 직접 history를 수정하지 않습니다.
 
 화면별 swipe 차단은 화면 정책, reduced motion, 플랫폼 정책의 OR 조건입니다. iOS 일반 화면만
 edge swipe를 허용하고 입력 손실 위험이 있는 화면, reduced motion, Android와 일반 web에서는

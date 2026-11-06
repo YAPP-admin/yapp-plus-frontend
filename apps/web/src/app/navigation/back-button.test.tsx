@@ -6,18 +6,16 @@ import { BackButton } from './back-button';
 const navigation = vi.hoisted(() => ({
   pop: vi.fn<() => void>(),
   replace: vi.fn<(activityName: string, activityParams: object) => void>(),
-  canGoBack: vi.fn<() => boolean>(),
+  isRoot: true,
 }));
 vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
-vi.mock('./navigation-history', () => ({
-  useCanGoBack: () => ({ current: navigation.canGoBack }),
-}));
+vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: navigation.isRoot }) }));
 beforeEach(() => vi.clearAllMocks());
 
 describe('BackButton', () => {
-  it('확인된 내부 이력이 있으면 실제 브라우저 뒤로가기를 사용한다', async () => {
+  it('부모 Activity가 있으면 Stackflow pop을 사용한다', async () => {
     const user = userEvent.setup();
-    navigation.canGoBack.mockReturnValue(true);
+    navigation.isRoot = false;
     render(
       <BackButton fallbackActivityName="Tabs" fallbackActivityParams={{ initialTab: 'my' }} />,
     );
@@ -31,10 +29,10 @@ describe('BackButton', () => {
     ['Attendance', {}],
     ['Tabs', { initialTab: 'notices' }],
   ] as const)(
-    '내부 이력이 없으면 %s Activity로 replace한다',
+    'root Activity이면 %s Activity로 replace한다',
     async (activityName, activityParams) => {
       const user = userEvent.setup();
-      navigation.canGoBack.mockReturnValue(false);
+      navigation.isRoot = true;
       render(
         <BackButton fallbackActivityName={activityName} fallbackActivityParams={activityParams} />,
       );
@@ -46,7 +44,7 @@ describe('BackButton', () => {
 
   it('아이콘 버튼도 같은 이름과 이동 규칙을 사용한다', async () => {
     const user = userEvent.setup();
-    navigation.canGoBack.mockReturnValue(false);
+    navigation.isRoot = true;
     render(<BackButton fallbackActivityName="Login" fallbackActivityParams={{}} iconOnly />);
     await user.click(screen.getByRole('button', { name: '뒤로가기' }));
     expect(navigation.replace).toHaveBeenCalledWith('Login', {});

@@ -122,6 +122,8 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 - [x] T051 [US3] `specs/016-ios-oidc-auth/plan.md`에서 다른 세션의 인증 작업 중단을 반영해 웹 공통 결과 적용·작업 무효화·계정 캐시·화면 수명·복귀 이벤트의 설계를 확정하고 필요시 5A/5B로 나눈다.
 - [x] T051a [US3] 별도 승인된 종속 브랜치에서 QueryClient별 공통 결과 적용·세대/tokenVersion·늦은 성공/오류 callback 차단과 회귀를 구현한다.
 - [x] T051a-review [US3] 5A-1 결과·callback 회귀와 check/build, 실제 브라우저 미검증을 제출하고 리뷰받는다.
+- [x] T051b-nav [US3] 기존 탐색의 별도 history 추적·전역 탭 전환 예약을 Stackflow 공개 API로 정리하고 회귀·check/build 결과를 제출한다. 계정 수명 초안은 보관한다.
+- [ ] T051b-nav-review [US3] 탐색 단순화 리뷰를 받고 계정 수명 연결의 다음 진행을 확인한다.
 - [ ] T051b [US3] 계정 경계 cache·Stackflow 화면 수명을 연결하고 check/build·화면 검증 후 5A 리뷰를 받는다. 650줄부터 하위 분리를 검토한다.
 
 아래 T052–T054는 5A 리뷰 뒤 진행하는 5B다.

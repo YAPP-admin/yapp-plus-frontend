@@ -4,7 +4,7 @@ import { IconChevronLeftLine } from '@karrotmarket/react-monochrome-icon';
 import type { InferActivityParams, RegisteredActivityName } from '@stackflow/config';
 import { useFlow } from '@stackflow/react/future';
 import { ActionButton, Icon } from '@yapp-plus/ui';
-import { useCanGoBack } from './navigation-history';
+import { useActivity } from '@stackflow/react';
 import { backButton, iconBackButton } from './back-button.css';
 
 export function BackButton<ActivityName extends RegisteredActivityName>({
@@ -17,13 +17,14 @@ export function BackButton<ActivityName extends RegisteredActivityName>({
   iconOnly?: boolean;
 }) {
   const flow = useFlow();
-  const canGoBack = useCanGoBack();
+  const { isRoot } = useActivity();
 
+  // 직접 접근의 부모 화면은 route.defaultHistory가 만들고, root에만 명시적 fallback을 씁니다.
   function handleClick() {
-    if (canGoBack.current()) {
-      flow.pop();
-    } else {
+    if (isRoot) {
       flow.replace(fallbackActivityName, fallbackActivityParams);
+    } else {
+      flow.pop();
     }
   }
 

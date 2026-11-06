@@ -9,16 +9,14 @@ const navigation = vi.hoisted(() => ({
   push: vi.fn<(activityName: string, params: object) => void>(),
   replace: vi.fn<(activityName: string, params: object) => void>(),
   pop: vi.fn<() => void>(),
-  canGoBack: true,
+  isRoot: false,
 }));
 
 const authSession = vi.hoisted(() => ({ isNative: false }));
 
 vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
 
-vi.mock('@/app/navigation/navigation-history', () => ({
-  useCanGoBack: () => ({ current: navigation.canGoBack }),
-}));
+vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: navigation.isRoot }) }));
 
 vi.mock('@/features/auth', async (importOriginal) => ({
   ...(await importOriginal<typeof Auth>()),

@@ -234,3 +234,14 @@ p-mutex는 기존 workspace에 없는 직렬 실행 책임만 맡기고 catalog/
 웹 mutation은 React Query의 onMutate 문맥에 세대를 보관하고 onSuccess/onError에서 결과를 반영한다. 작업 해제는 mutation 옵션의 onSettled에서 완료한다. 화면 알림은 mutate 호출별 onSettled에서 세대 유효성을 확인한 뒤 전달한다. React Query가 unmount 뒤 알림을 생략하며 연속 호출에서는 마지막 호출만 알린다. 페이지는 operation을 다루지 않는다. RPC 시작 전에도 세대를 검사한다. RPC 예외는 onError에서 처리하며 유효한 작업만 세션·화면에 OUTCOME_UNKNOWN으로 반영한다. 실제 NativeAuthResult wire 계약은 바꾸지 않는다.
 
 조회 undefined를 UNAVAILABLE로 유지하는 최소 경계 수정은 포함했으나 자동 복구·미지원 구분은 5B에 남는다. 5A-2의 계정 cache 삭제와 Stackflow 재생성은 아직 구현하지 않았다. 다른 세션의 apiOptions/401 코드와 실제 통합은 그 코드가 반영된 뒤 별도 검증한다.
+
+### 5A-2 탐색 단순화 선행 — 사용자 리뷰 반영
+
+사용자 승인으로 5A-2를 탐색 기반 정리와 계정 수명 연결의 두 리뷰 단위로 나눈다. 이전 초안은 `.context/oidc-stage-5a2/saved-draft/`에 파일 및 patch로 보존했다. 이번 변경은 기존 탐색을 Stackflow의 상태와 공개 API로 단순화하며, 계정 cache 정리와 계정 경계는 후속 리뷰에서 연결한다.
+
+- BackButton은 별도 browser history ledger 대신 useActivity의 isRoot와 useFlow.pop/replace를 사용한다. 직접 접근의 부모 흐름은 기존 route.defaultHistory가 담당한다.
+- Alerts→Tabs 전환은 공개 useHistoryTick 큐에서 pop 뒤 replaceStep을 실행한다. 전역 pendingTransition과 이를 실행하던 plugin은 제거한다.
+- 일반 ActivityLink는 공식 Link이므로 유지한다. 탭의 기존 경로·query·수정키 새 탭 이동·뒤로가기 동작을 보존한다.
+- 설치된 history-sync 1.11.2는 동일 Activity의 첫 route로 URL을 생성한다. encode/decode만으로 기존 다중 탭 경로와 미등록 경로의 NotFound를 동시에 보존할 수 없다면 useTabsUrl의 한정된 URL 보정은 유지하고 제약을 기록한다. SDK 업그레이드나 새 라우터는 추가하지 않는다.
+- 검증은 BackButton root/fallback, 직접 접근 defaultHistory, Alerts→탭 전환, 두 Stack 인스턴스의 독립성, query와 browser back 복원에 집중한다. 실패 시 해당 탐색 변경만 되돌리며 인증 계약·계정 데이터에는 변경이 없다.
+- 다른 세션 50dfa2d의 route 추가·홈 UI·apiOptions·retry:false는 보존 대상이다. 해당 작업 트리나 브랜치를 변경하지 않는다. 실제 통합은 별도 승인 전 수행하지 않는다.
