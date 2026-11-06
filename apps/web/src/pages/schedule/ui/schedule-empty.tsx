@@ -11,7 +11,7 @@ export function ScheduleEmpty() {
         height={74}
         className={emptyGraphic}
       />
-      <p className={emptyText}>일정을 준비중이에요</p>
+      <p className={emptyText}>등록된 세션 일정이 없어요</p>
     </output>
   );
 }
