@@ -1,8 +1,8 @@
-import { useActions, useActivity, useStack } from '@stackflow/react';
+import { useActivity, useStack } from '@stackflow/react';
 import { useFlow, useStepFlow } from '@stackflow/react/future';
 import { type MouseEvent, type ReactNode } from 'react';
 import { isTabName, tabUrl, type TabName, type TabsState } from './tab';
-import { requestTabTransitionAfterPop } from './tab-transition';
+import { useHistoryTick } from '@stackflow/plugin-history-sync';
 
 type TabLinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'onClick'> & {
   children: ReactNode;
@@ -13,7 +13,7 @@ type TabLinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' |
 
 /** 탭 history를 추가하지 않고 기존 Tabs Activity의 step만 교체합니다. */
 export function TabLink({ children, onClick, params, tab, ...props }: TabLinkProps) {
-  const actions = useActions();
+  const { requestHistoryTick } = useHistoryTick();
   const { name: currentActivityName } = useActivity();
   const flow = useFlow();
   const stack = useStack();
@@ -49,8 +49,12 @@ export function TabLink({ children, onClick, params, tab, ...props }: TabLinkPro
     }
 
     if (currentActivityName === 'Alerts' && tabsActivity) {
-      requestTabTransitionAfterPop(replaceTabStep);
-      actions.pop({ animate: false });
+      // pop이 예약한 history 이동 뒤에 같은 Stack의 step 교체를 실행합니다.
+      flow.pop({ animate: false });
+      requestHistoryTick((resolve) => {
+        replaceTabStep();
+        resolve();
+      });
       return;
     }
 

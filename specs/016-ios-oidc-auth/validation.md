@@ -416,3 +416,38 @@ R2 네이티브 보완을 제출하며 웹 오류 화면·재로그인 전환의
 - 아래 브랜치 분리는 별도 승인 대기다. 현재 브랜치의 기반만으로 화면 보호가 활성화된다고 보장하지 않으며 React Query·화면 연결 변경이 함께 적용되어야 한다. 다음 5A-2는 그 연결 변경 위에서 계정 cache 제거·Stackflow 수명을 구현한다.
 
 - 분리 후 `node --run check` 통과: 웹 lint·typecheck·121개 테스트 신규 실행, 다른 패키지 캐시 재사용. 제품 코드 변경이 없는 테스트 분리이므로 빌드는 직전 mutate-only-build.log의 웹 신규 빌드 성공 결과를 사용했다. 현재 기반 commit의 예정 base 대비 변경량은 800줄 미만이며 후속 연결도 별도 집계한다.
+
+## 5A-2 초안 검증과 탐색 구조 리뷰
+
+- 승인된 브랜치 생성·전환 후 화면 연결을 `6a479ca`에 커밋했다. 현재 `DongjaJ/oidc-account-lifecycle`의 base는 `DongjaJ/oidc-web-auth-ui`다. 기반 PR은 334줄, 화면 연결 PR은 712줄이다. push·PR 생성은 하지 않았다.
+- 초안은 계정(userId/sessionId) 경계에서 업무 query 취소·제거와 mutation cache 정리, 같은 세션 tokenVersion 갱신 시 유지, Stackflow 재생성과 이전 계정 history 차단을 구현했다. history-sync의 공개 history 옵션을 사용하기 위해 기존 전이 의존성 history@5.3.0을 직접 catalog 의존성으로 명시했다.
+- 최초 account 회귀 실행에는 테스트 helper의 작업 해제 누락도 있어 실패 전체를 제품 결함 재현으로 계산하지 않는다. helper 수정 후 계정 cache·늦은 조회·토큰 갱신 회귀 4개, history 경계 2개, 실제 Stackflow 폼 유지/계정 전환·가입 완료/로그아웃 2개가 통과했다.
+- `node --run check`와 `node --run build` 통과: 웹 lint·typecheck·129개 테스트·빌드는 신규 실행, 다른 패키지는 Turbo 캐시 재사용. `.context/oidc-stage-5a2/check-final.log`, `build.log`에 기록했다.
+- CUA로 브라우저 환경은 조회했지만 검증 탭 생성이 `Cannot read properties of undefined (reading 'timeoutMs')`로 실패했다. 실브라우저·키보드·스크린 리더·터치·실기기 검증은 미완료이며 테스트용 Vite 서버는 종료했다.
+- 사용자 지적으로 탐색 래퍼의 복잡도를 재검토 중이다. ActivityLink는 공식 API를 사용한다. browser-history의 별도 추적, useTabsUrl의 URL 보정, 전역 pendingTransition과 신규 account-history의 책임을 줄이는 대안을 검토한다. 초안은 미커밋이며 T051b를 완료 처리하지 않는다.
+
+### 다른 작업 세션 최신 재확인
+
+- hong-kong / DongjaJ/nsu85는 `50dfa2d`이며 작업 트리가 깨끗하다. `7489fad` 이후 홈 카드·시연 시트·Stackflow route와 인증 전환 조회 계약 테스트가 추가됐다.
+- 최신 HEAD끼리 `git merge-tree --write-tree HEAD DongjaJ/nsu85`를 실행하면 session.tsx에 내용 충돌이 있다. 다른 세션의 apiOptions 제공과 이쪽 세션 조회·계정 수명 필드를 모두 보존해야 한다. 실제 merge나 상대 작업 트리 수정은 하지 않았다.
+- 상대 테스트는 client.clear를 호출했다는 전제 아래 홈/일정의 늦은 401 갱신 응답 취소와 같은 세션의 새 토큰 cache 유지를 확인한다. 실제 account 경계 연결과 양쪽 전체 코드를 합친 검증은 아직 미실행이다. 상대의 홈·시연 시트·401 interceptor를 중복 구현하지 않는다.
+
+## 5A-2 선행 탐색 단순화 — T051b-nav
+
+- 사용자 승인으로 계정 수명 초안을 `.context/oidc-stage-5a2/saved-draft/`에 파일·patch로 보관했다. 신규 account-history, AccountStack, history 직접 의존성은 현재 제품 변경에서 제외했다. 계정 cache 정리도 초안에 보존되어 있으며 이번 탐색 변경만으로 계정 전환 보호가 완료된 것은 아니다.
+- BackButton은 useActivity.isRoot와 useFlow.pop/replace를 사용한다. browser-history.ts, NavigationHistory provider 및 그 구현 전용 테스트 9개를 제거했다. 직접 접근은 기존 defaultHistory로 검증한다.
+- Alerts→Tabs는 pop 뒤 useHistoryTick 큐에서 replaceStep을 실행한다. 전역 pendingTransition과 tabTransitionPlugin을 제거했다. 두 Stack의 예약 독립성과 수정키 링크의 기본 동작을 테스트했다.
+- 일반 ActivityLink는 공식 Link를 유지한다. 설치된 history-sync 1.11.2의 onBeforePush/onBeforeReplace는 정렬된 route 중 같은 Activity의 첫 항목으로 URL을 생성한다. encode/decode만으로 기존 다중 탭 URL과 NotFound를 함께 보존한다고 보장할 수 없어 useTabsUrl·trailing slash 보정은 유지했다. SDK 업그레이드·새 의존성·화면 URL 변경은 없다.
+- 수정 전 새 경계 테스트 2개가 실패했고 수정 후 통과했다. 기존 Stackflow 직접 접근/defaultHistory/탭 상태 회귀를 유지했고 공지 상세 테스트는 실제 window.history.back/forward를 사용해 필터와 상세 복원을 확인하도록 강화했다.
+- 최종 `node --run check` 통과: 웹 lint·typecheck·114개 테스트 신규 실행, 다른 패키지는 Turbo 캐시 재사용. 테스트 수 변화는 기반 121개에서 삭제한 이력 추적기의 구현 테스트 9개를 빼고 새 탭 계약 테스트 2개를 추가한 결과다. 테스트 파일은 실제 PR 크기에 포함한다.
+- 최종 `node --run build` 통과: 웹 신규 빌드, admin·Storybook 캐시 재사용. 로그는 `.context/oidc-navigation/check.log`, `build-final.log`다.
+- 실제 Chrome 앱 연결도 CUA가 30초 timeout으로 실패했다. 실브라우저 화면·키보드·스크린 리더·터치·실기기 검증은 미완료다. happy-dom의 동작 테스트를 실제 브라우저 검증으로 보고하지 않는다.
+- 다른 작업 세션은 여전히 50dfa2d이고 작업 트리가 깨끗하다. 변경 중인 파일을 임시 파일의 3-way merge로 비교하면 stack.tsx와 providers.tsx는 자동 병합 가능하다. stack.test.tsx는 상대 SnackbarProvider 추가와 이쪽 NavigationHistory 제거가 겹친다. 기존 session.tsx 충돌과 함께 통합 때 두 동작을 보존해야 한다. 실제 merge·상대 파일 수정은 하지 않았다.
+- 이번 단계는 미커밋이며 계정 수명 연결·5B 구현은 다음 리뷰 이후 진행한다. 롤백은 이 탐색 변경만 되돌리며 공개 인증 계약이나 데이터 마이그레이션에 영향이 없다.
+
+### 탐색 단순화 실브라우저 검증
+
+- Chrome에서 로컬 Vite 앱을 실제 조작했다. 홈·일정·게시판·MY 전환, 세션 필터→공지 상세→브라우저 뒤로/앞으로, 상세의 앱 뒤로가기를 확인했다. 알림→게시판은 기존 Tabs로 복귀했고, 홈으로 돌아오면 변경한 팀 세션 상태가 유지됐다. 상세 URL 직접 진입 후 기본 부모인 게시판으로 돌아오는 경로도 확인했다.
+- 초기 자동화는 주소·제목보다 본문 캡처가 늦게 갱신됐다. 사용자가 전면 Chrome에서 목록 복귀를 확인했고 후속 접근성 트리도 일치했다. 이를 제품의 본문 갱신 실패로 단정하지 않는다. DOM 자동화는 timeoutMs 오류로 사용할 수 없어 Chrome 앱의 접근성 조작과 화면 캡처를 사용했다. 전환 성능 수치는 측정하지 않았다.
+- 화면 근거: `.context/oidc-navigation/home-state-restored.png`. 실제 인증 서버·모바일 WebView·스크린 리더·터치 검증은 이번 브라우저 탐색 확인에 포함하지 않았다.
+- 재실행한 `node --run check`와 `node --run build` 모두 성공했다. 이번 재실행은 전체 Turbo 캐시를 재사용했다(`browser-check.log`, `browser-build.log`). 웹 114개 테스트와 웹 빌드의 신규 실행 결과는 위 `check.log`, `build-final.log` 기록이다. 브라우저 확인 중 제품 코드를 변경하지 않았다.

@@ -6,12 +6,10 @@ import { NoticeErrorPage } from './notice-error-page';
 const navigation = vi.hoisted(() => ({
   pop: vi.fn<() => void>(),
   replace: vi.fn<(activityName: string, params: object) => void>(),
-  canGoBack: vi.fn<() => boolean>(),
+  isRoot: true,
 }));
 vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
-vi.mock('@/app/navigation/navigation-history', () => ({
-  useCanGoBack: () => ({ current: navigation.canGoBack }),
-}));
+vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: navigation.isRoot }) }));
 beforeEach(() => vi.clearAllMocks());
 
 describe('NoticeErrorPage', () => {
@@ -26,7 +24,7 @@ describe('NoticeErrorPage', () => {
 
   it('뒤로가기 버튼 클릭 시 Notices 탭으로 이동한다', async () => {
     const user = userEvent.setup();
-    navigation.canGoBack.mockReturnValue(false);
+    navigation.isRoot = true;
     render(<NoticeErrorPage />);
 
     const backButton = screen.getByRole('button', { name: '뒤로가기' });
