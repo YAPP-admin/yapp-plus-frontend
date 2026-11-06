@@ -20,6 +20,7 @@
     "@stackflow/config": "catalog:",
     "@stackflow/core": "catalog:",
     "@stackflow/link": "catalog:",
+    "@stackflow/plugin-activity-guard": "catalog:",
     "@stackflow/plugin-history-sync": "catalog:",
     "@stackflow/plugin-renderer-basic": "catalog:",
     "@stackflow/react": "catalog:",

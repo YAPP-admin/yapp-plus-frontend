@@ -2,13 +2,14 @@ import { MutationObserver, QueryClient, QueryClientProvider } from '@tanstack/re
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { StrictMode, Suspense } from 'react';
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { AuthResult } from '@yapp-plus/app-bridge';
 import {
   NativeAuthSessionProvider,
   nativeSignInMutationOptions,
   nativeSignOutMutationOptions,
   nativeSignupMutationOptions,
+  nativeWithdrawMutationOptions,
 } from '@/features/auth';
 import { createStackflowApp } from './stack';
 
@@ -16,7 +17,25 @@ const bridge = vi.hoisted(() => ({
   result: { status: 'SIGNED_OUT' } as AuthResult,
   getSession: vi.fn<() => Promise<AuthResult | undefined>>(),
 }));
+const replaceDocument = vi.fn<(url: string | URL) => void>();
+const historyListeners: EventListenerOrEventListenerObject[] = [];
+const addListener = window.addEventListener.bind(window);
+beforeEach(() => {
+  vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
+    if (type === 'popstate' && listener) {
+      historyListeners.push(listener);
+    }
+    addListener(type, listener, options);
+  });
+  replaceDocument.mockClear();
+  vi.spyOn(window.location, 'replace').mockImplementation(replaceDocument);
+});
 afterEach(() => {
+  for (const listener of historyListeners.splice(0)) {
+    window.removeEventListener('popstate', listener);
+  }
+  document.documentElement.hidden = false;
+  vi.restoreAllMocks();
   bridge.getSession.mockReset();
   vi.useRealTimers();
 });
@@ -24,6 +43,7 @@ vi.mock('@/features/auth/model/native-auth', () => ({
   signInWithNative: () => Promise.resolve(bridge.result),
   completeNativeSignup: () => Promise.resolve(bridge.result),
   signOutNative: () => Promise.resolve(bridge.result),
+  withdrawNative: () => Promise.resolve(bridge.result),
   isNativeWebView: () => true,
   getNativeSession: () => bridge.getSession(),
 }));
@@ -41,9 +61,14 @@ const session = (userId: number, tokenVersion = 1): AuthResult => ({
 const apply = (
   client: QueryClient,
   result: AuthResult,
-  kind: 'authenticate' | 'signup' | 'logout' = 'authenticate',
+  kind: 'authenticate' | 'signup' | 'logout' | 'withdraw' = 'authenticate',
 ) => {
   bridge.result = result;
+  if (kind === 'withdraw') {
+    return new MutationObserver(client, nativeWithdrawMutationOptions(client)).mutate({
+      input: undefined,
+    });
+  }
   if (kind === 'logout') {
     return new MutationObserver(client, nativeSignOutMutationOptions(client)).mutate({
       input: undefined,
@@ -59,8 +84,8 @@ const apply = (
   });
 };
 const mount = (client: QueryClient) => {
-  const { Stack } = createStackflowApp({ reducedMotion: true });
-  return render(
+  const { Stack, actions } = createStackflowApp({ reducedMotion: true, queryClient: client });
+  const view = render(
     <StrictMode>
       <QueryClientProvider client={client}>
         <Suspense fallback="로딩 중">
@@ -71,6 +96,7 @@ const mount = (client: QueryClient) => {
       </QueryClientProvider>
     </StrictMode>,
   );
+  return { ...view, actions };
 };
 
 it('토큰 갱신은 폼을 유지하고 계정 변경은 이전 폼과 화면을 제거한다', async () => {
@@ -85,41 +111,42 @@ it('토큰 갱신은 폼을 유지하고 계정 변경은 이전 폼과 화면�
   expect(screen.getByRole('checkbox', { name: /강야뿌/ })).toBeChecked();
 
   await act(() => apply(client, session(2)));
-  await waitFor(() => expect(window.location.pathname).toBe('/'));
-  await waitFor(() =>
-    expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument(),
-  );
+  await waitFor(() => expect(screen.getByRole('checkbox', { name: /강야뿌/ })).not.toBeChecked());
+  expect(replaceDocument).not.toHaveBeenCalled();
 }, 15000);
 
-it('가입 확정은 가입 완료 화면으로 이동하고 로그아웃은 로그인으로 초기화한다', async () => {
+it.each(['logout', 'withdraw'] as const)(
+  '%s 확정은 reload 없이 보호 화면을 해제한다',
+  async (kind) => {
+    const client = new QueryClient();
+    await apply(client, session(1));
+    window.history.replaceState(null, '', '/team-attendance/upload');
+    mount(client);
+    await screen.findByRole('checkbox', { name: /강야뿌/ });
+    await act(() =>
+      apply(client, { status: kind === 'logout' ? 'SIGNED_OUT' : 'WITHDRAWN' }, kind),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument(),
+    );
+    expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+    expect(replaceDocument).not.toHaveBeenCalled();
+    expect(document.documentElement.hidden).toBe(false);
+  },
+);
+
+it('로그아웃과 B 로그인이 같은 반영에 묶여도 A의 선택값은 남지 않는다', async () => {
   const client = new QueryClient();
-  await apply(client, { status: 'SIGNED_OUT' }, 'logout');
-  window.history.replaceState(null, '', '/signup');
+  await apply(client, session(1));
+  window.history.replaceState(null, '', '/team-attendance/upload');
   mount(client);
-  await screen.findByRole('textbox', { name: '이름을 입력해 주세요' }, { timeout: 10000 });
-
-  await act(() => apply(client, session(1), 'signup'));
-  expect(
-    await screen.findByRole('heading', { name: '회원가입을 완료했어요!' }),
-  ).toBeInTheDocument();
-  await act(() => apply(client, { status: 'SIGNED_OUT' }, 'logout'));
-  await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
-  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
-  await traverseHistory('back');
-  await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
-  expect(screen.queryByRole('heading', { name: '회원가입을 완료했어요!' })).not.toBeInTheDocument();
+  await userEvent.click(await screen.findByRole('checkbox', { name: /강야뿌/ }));
+  await act(async () => {
+    await apply(client, { status: 'SIGNED_OUT' }, 'logout');
+    await apply(client, session(2));
+  });
+  await waitFor(() => expect(screen.getByRole('checkbox', { name: /강야뿌/ })).not.toBeChecked());
 });
-
-/** URL 검사가 popstate 이전에 통과하지 않도록 실제 이력 이동을 기다립니다. */
-async function traverseHistory(direction: 'back' | 'forward') {
-  await act(
-    () =>
-      new Promise<void>((resolve) => {
-        window.addEventListener('popstate', () => resolve(), { once: true });
-        window.history[direction]();
-      }),
-  );
-}
 
 it('로그아웃 상태로 보호 화면에 직접 접근하면 내용을 표시하지 않고 로그인으로 이동한다', async () => {
   const client = new QueryClient();
@@ -166,3 +193,35 @@ it('미지원 앱에서는 보호 내용을 숨기고 재시도 없이 업데이
   expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
   expect(window.location.pathname).toBe('/team-attendance/upload');
 });
+
+it('가려진 이전 계정 폼은 재로그인 뒤 back/forward에서도 선택값을 복원하지 않는다', async () => {
+  const client = new QueryClient();
+  await apply(client, session(1));
+  window.history.replaceState(null, '', '/team-attendance/upload');
+  const { actions } = mount(client);
+  await userEvent.click(await screen.findByRole('checkbox', { name: /강야뿌/ }));
+  act(() => {
+    actions.push('Alerts', {});
+  });
+  await waitFor(() => expect(window.location.pathname).toBe('/alerts'));
+  await act(() => apply(client, { status: 'SIGNED_OUT' }, 'logout'));
+  await waitFor(() =>
+    expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument(),
+  );
+  await act(() => apply(client, session(2)));
+  await waitFor(() => expect(window.location.pathname).toBe('/'));
+  await traverse('back');
+  expect(await screen.findByRole('checkbox', { name: /강야뿌/ })).not.toBeChecked();
+  await traverse('forward');
+  await traverse('back');
+  expect(await screen.findByRole('checkbox', { name: /강야뿌/ })).not.toBeChecked();
+});
+
+const traverse = (direction: 'back' | 'forward') =>
+  act(
+    () =>
+      new Promise<void>((resolve) => {
+        window.addEventListener('popstate', () => resolve(), { once: true });
+        window.history[direction]();
+      }),
+  );

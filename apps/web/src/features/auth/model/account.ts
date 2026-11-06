@@ -1,13 +1,7 @@
 import { queryOptions, type QueryClient } from '@tanstack/react-query';
 import type { AuthResult } from '@yapp-plus/app-bridge';
 
-export type AccountDestination = 'current' | 'home' | 'login' | 'signup-complete';
-type AccountScope = {
-  identity: string | null | undefined;
-  revision: number;
-  destination: AccountDestination;
-};
-const initialScope: AccountScope = { identity: undefined, revision: 0, destination: 'current' };
+const initialScope: { identity: string | null | undefined } = { identity: undefined };
 
 /** 확정한 계정 경계를 데이터 정리와 화면 수명이 함께 사용합니다. */
 export const accountScopeOptions = queryOptions({
@@ -19,11 +13,7 @@ export const accountScopeOptions = queryOptions({
 });
 
 /** 확정한 계정 경계에서 업무 cache를 정리합니다. 토큰 갱신·조회 실패는 경계가 아닙니다. */
-export function applyAccountBoundary(
-  client: QueryClient,
-  result: AuthResult,
-  signup = false,
-): void {
+export function applyAccountBoundary(client: QueryClient, result: AuthResult): void {
   if (
     result.status !== 'SIGNED_IN' &&
     result.status !== 'SIGNED_OUT' &&
@@ -58,18 +48,5 @@ export function applyAccountBoundary(
       mutations.remove(mutation);
     }
   }
-  const changed = previous.identity !== undefined;
-  let destination: AccountDestination = 'current';
-  if (changed) {
-    if (identity === null) {
-      destination = 'login';
-    } else {
-      destination = signup ? 'signup-complete' : 'home';
-    }
-  }
-  client.setQueryData(accountScopeOptions.queryKey, {
-    identity,
-    revision: previous.revision + Number(changed),
-    destination,
-  });
+  client.setQueryData(accountScopeOptions.queryKey, { identity });
 }

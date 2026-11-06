@@ -1,13 +1,14 @@
 import { defineConfig, type ActivityBaseParams } from '@stackflow/config';
 import type { StackflowPlugin } from '@stackflow/core';
 import { LinkUrlResolverProvider } from '@stackflow/link';
-import { historySyncPlugin } from '@stackflow/plugin-history-sync';
+import { historySyncPlugin, type Route } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { lazy, stackflow as createStackflow } from '@stackflow/react';
 import { Primitive, seedPlugin } from '@seed-design/stackflow';
 import { type ComponentProps, type ReactNode } from 'react';
 import type { TabsState } from '@/app/navigation/tab';
-import { accountBoundaryPlugin } from './account-boundary';
+import type { QueryClient } from '@tanstack/react-query';
+import { accountBoundaryPlugin, nativeEntryGuard } from './account-boundary';
 import type { StackflowInitialContext } from './platform';
 
 type TabsParams = ActivityBaseParams & TabsState;
@@ -157,6 +158,17 @@ const tabRoutes = [
   { path: '/my', decode: () => ({ initialTab: 'my' as const }) },
 ];
 
+/** 초기 부모 화면을 한 번에 구성해 가드가 차단한 뒤 추가 진입이 예약되지 않게 합니다. */
+function initialHistory(history: NonNullable<Route<never>['defaultHistory']>): typeof history {
+  return (...args) => {
+    const result = history(...args);
+    return {
+      entries: Array.isArray(result) ? result : result.entries,
+      skipDefaultHistorySetupTransition: true,
+    };
+  };
+}
+
 export const stackflowConfig = defineConfig({
   activities: [
     { name: 'Tabs', route: tabRoutes },
@@ -164,71 +176,85 @@ export const stackflowConfig = defineConfig({
       name: 'Alerts',
       route: {
         path: '/alerts',
-        defaultHistory: () => [
+        defaultHistory: initialHistory(() => [
           {
             activityName: 'Tabs',
             activityParams: { initialTab: 'home' },
           },
-        ],
+        ]),
       },
     },
     {
       name: 'NoticeDetail',
       route: {
         path: '/notices/:noticeId',
-        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'notices' } }],
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'notices' } },
+        ]),
       },
     },
     {
       name: 'Attendance',
       route: {
         path: '/my/attendance',
-        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'my' } }],
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'my' } },
+        ]),
       },
     },
     {
       name: 'AttendanceRules',
       route: {
         path: '/my/attendance/rules',
-        defaultHistory: () => [
+        defaultHistory: initialHistory(() => [
           { activityName: 'Tabs', activityParams: { initialTab: 'my' } },
           { activityName: 'Attendance', activityParams: {} },
-        ],
+        ]),
       },
     },
     {
       name: 'AttendanceComplete',
       route: {
         path: '/attendance/complete',
-        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
+        ]),
       },
     },
     {
       name: 'Settings',
       route: {
         path: '/settings',
-        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'my' } }],
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'my' } },
+        ]),
       },
     },
     {
       name: 'TeamAttendanceUpload',
       route: {
         path: '/team-attendance/upload',
-        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
+        ]),
       },
     },
     {
       name: 'TeamAttendanceError',
       route: {
         path: '/team-attendance/error',
-        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
+        ]),
       },
     },
     {
       name: 'TeamAttendanceComplete',
       route: {
         path: '/team-attendance/complete',
-        defaultHistory: () => [{ activityName: 'Tabs', activityParams: { initialTab: 'home' } }],
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
+        ]),
       },
     },
     { name: 'Login', route: '/login' },
@@ -236,28 +262,28 @@ export const stackflowConfig = defineConfig({
       name: 'LoginError',
       route: {
         path: '/login/error',
-        defaultHistory: () => [{ activityName: 'Login', activityParams: {} }],
+        defaultHistory: initialHistory(() => [{ activityName: 'Login', activityParams: {} }]),
       },
     },
     {
       name: 'Error',
       route: {
         path: '/error',
-        defaultHistory: () => [{ activityName: 'Login', activityParams: {} }],
+        defaultHistory: initialHistory(() => [{ activityName: 'Login', activityParams: {} }]),
       },
     },
     {
       name: 'Signup',
       route: {
         path: '/signup',
-        defaultHistory: () => [{ activityName: 'Login', activityParams: {} }],
+        defaultHistory: initialHistory(() => [{ activityName: 'Login', activityParams: {} }]),
       },
     },
     {
       name: 'SignupStatus',
       route: {
         path: '/signup/status',
-        defaultHistory: () => [{ activityName: 'Login', activityParams: {} }],
+        defaultHistory: initialHistory(() => [{ activityName: 'Login', activityParams: {} }]),
       },
     },
     { name: 'SignupComplete', route: '/signup/complete' },
@@ -302,6 +328,7 @@ function reducedMotionPlugin() {
 function canonicalHistoryPlugin(): StackflowPlugin {
   return () => ({
     key: 'canonical-history',
+    onInit: scheduleCanonicalPath,
     // history-sync 2는 전환이 끝난 Stack 변경에서 URL을 확정합니다.
     onChanged: scheduleCanonicalPath,
   });
@@ -340,7 +367,9 @@ function isStackflowInitialContext(context: unknown): context is StackflowInitia
   );
 }
 
-export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
+export function createStackflowApp(
+  options: { reducedMotion?: boolean; queryClient?: QueryClient } = {},
+) {
   const config = options.reducedMotion
     ? { ...stackflowConfig, transitionDuration: 0 }
     : stackflowConfig;
@@ -353,6 +382,7 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
       basicRendererPlugin(),
       accountBoundaryPlugin(),
       historySync,
+      ...(options.queryClient ? [nativeEntryGuard(options.queryClient, config.activities)] : []),
       seedPlugin(({ initialContext }) => ({
         theme:
           isStackflowInitialContext(initialContext) && initialContext.platform === 'android'

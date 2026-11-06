@@ -6,7 +6,7 @@ import '@yapp-plus/ui/styles';
 import './styles.css';
 import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
-import { Providers } from '@/app/providers';
+import { Providers, createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
 import { createStackflowApp } from './stack';
 import { detectPlatform, getReducedMotionPreference } from './platform';
@@ -21,11 +21,12 @@ const initialContext = {
   platform: detectPlatform(),
   reducedMotion: getReducedMotionPreference(),
 };
-const { Stack } = createStackflowApp({ reducedMotion: initialContext.reducedMotion });
+const queryClient = createAppQueryClient();
+const { Stack } = createStackflowApp({ reducedMotion: initialContext.reducedMotion, queryClient });
 
 function App() {
   return (
-    <Providers>
+    <Providers client={queryClient}>
       <Suspense
         fallback={
           <>

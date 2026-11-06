@@ -107,7 +107,7 @@ describe('SignupPage', () => {
     await waitFor(() => expect(flow.push).toHaveBeenCalledWith('SignupStatus', {}));
   });
 
-  it('native 가입 요청을 전달하고 성공 탐색은 계정 경계에 맡긴다', async () => {
+  it('native 가입 요청을 전달하고 성공하면 완료 화면으로 이동한다', async () => {
     auth.useNativeAuthSession.mockReturnValue({
       isNative: true,
       phase: 'SIGNED_OUT',
@@ -119,7 +119,7 @@ describe('SignupPage', () => {
     fireEvent.change(phone, { target: { value: '010-1234-5678' } });
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
-    expect(flow.replace).not.toHaveBeenCalled();
+    await waitFor(() => expect(flow.replace).toHaveBeenCalledWith('SignupComplete', {}));
     await waitFor(() =>
       expect(auth.signupMutate).toHaveBeenCalledWith({
         name: '김야뿌',
