@@ -1,6 +1,6 @@
 import type { NativeAuthCallbacks } from '@/features/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { LoginPage } from './login-page';
@@ -107,7 +107,7 @@ describe('LoginPage', () => {
     expect(screen.getByRole('link', { name: '제보하기' })).toBeInTheDocument();
   });
 
-  it('native 로그인 성공은 세션을 반영하고 홈으로 이동한다', async () => {
+  it('native 로그인 요청을 전달하고 성공 탐색은 계정 경계에 맡긴다', () => {
     auth.useNativeAuthSession.mockReturnValue({
       isNative: true,
       phase: 'SIGNED_OUT',
@@ -117,7 +117,7 @@ describe('LoginPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '구글로 계속하기' }));
 
-    await waitFor(() => expect(flow.replace).toHaveBeenCalledWith('Tabs', { initialTab: 'home' }));
+    expect(flow.replace).not.toHaveBeenCalled();
     expect(auth.signInMutate).toHaveBeenCalledWith('google');
   });
 });

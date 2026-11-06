@@ -7,6 +7,7 @@ import { lazy, stackflow as createStackflow } from '@stackflow/react/future';
 import { Primitive, seedPlugin } from '@seed-design/stackflow';
 import { type ReactNode } from 'react';
 import type { TabsState } from '@/app/navigation/tab';
+import { accountBoundaryPlugin } from './account-boundary';
 import type { StackflowInitialContext } from './platform';
 
 type TabsParams = ActivityBaseParams & TabsState;
@@ -46,98 +47,98 @@ type EmptyActivityParams = ActivityBaseParams;
 
 export const activityComponents = {
   Tabs: lazy<TabsParams>(() =>
-    import('./activities/legacy').then(({ LegacyTabsActivity }) => ({
-      default: LegacyTabsActivity,
+    import('./activities/activities').then(({ TabsActivity }) => ({
+      default: TabsActivity,
     })),
   ),
   Alerts: lazy<AlertsParams>(() =>
-    import('./activities/legacy').then(({ LegacyAlertsActivity }) => ({
-      default: LegacyAlertsActivity,
+    import('./activities/activities').then(({ AlertsActivity }) => ({
+      default: AlertsActivity,
     })),
   ),
   NoticeDetail: lazy<{ noticeId: string }>(() =>
-    import('./activities/legacy').then(({ LegacyNoticeDetailActivity }) => ({
-      default: LegacyNoticeDetailActivity,
+    import('./activities/activities').then(({ NoticeDetailActivity }) => ({
+      default: NoticeDetailActivity,
     })),
   ),
   NotFound: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacyNotFoundActivity }) => ({
-      default: LegacyNotFoundActivity,
+    import('./activities/activities').then(({ NotFoundActivity }) => ({
+      default: NotFoundActivity,
     })),
   ),
   Attendance: lazy<AttendanceParams>(() =>
-    import('./activities/legacy').then(({ LegacyAttendanceActivity }) => ({
-      default: LegacyAttendanceActivity,
+    import('./activities/activities').then(({ AttendanceActivity }) => ({
+      default: AttendanceActivity,
     })),
   ),
   AttendanceRules: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacyAttendanceRulesActivity }) => ({
-      default: LegacyAttendanceRulesActivity,
+    import('./activities/activities').then(({ AttendanceRulesActivity }) => ({
+      default: AttendanceRulesActivity,
     })),
   ),
   AttendanceComplete: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacyAttendanceCompleteActivity }) => ({
-      default: LegacyAttendanceCompleteActivity,
+    import('./activities/activities').then(({ AttendanceCompleteActivity }) => ({
+      default: AttendanceCompleteActivity,
     })),
   ),
   Settings: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacySettingsActivity }) => ({
-      default: LegacySettingsActivity,
+    import('./activities/activities').then(({ SettingsActivity }) => ({
+      default: SettingsActivity,
     })),
   ),
   TeamAttendanceUpload: lazy<BooleanQueryParams>(() =>
-    import('./activities/legacy').then(({ LegacyTeamAttendanceUploadActivity }) => ({
-      default: LegacyTeamAttendanceUploadActivity,
+    import('./activities/activities').then(({ TeamAttendanceUploadActivity }) => ({
+      default: TeamAttendanceUploadActivity,
     })),
   ),
   TeamAttendanceError: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacyTeamAttendanceErrorActivity }) => ({
-      default: LegacyTeamAttendanceErrorActivity,
+    import('./activities/activities').then(({ TeamAttendanceErrorActivity }) => ({
+      default: TeamAttendanceErrorActivity,
     })),
   ),
   TeamAttendanceComplete: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacyTeamAttendanceCompleteActivity }) => ({
-      default: LegacyTeamAttendanceCompleteActivity,
+    import('./activities/activities').then(({ TeamAttendanceCompleteActivity }) => ({
+      default: TeamAttendanceCompleteActivity,
     })),
   ),
   Login: lazy<BooleanQueryParams>(() =>
-    import('./activities/legacy').then(({ LegacyLoginActivity }) => ({
-      default: LegacyLoginActivity,
+    import('./activities/activities').then(({ LoginActivity }) => ({
+      default: LoginActivity,
     })),
   ),
   LoginError: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacyLoginErrorActivity }) => ({
-      default: LegacyLoginErrorActivity,
+    import('./activities/activities').then(({ LoginErrorActivity }) => ({
+      default: LoginErrorActivity,
     })),
   ),
   Error: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacyLoginErrorActivity }) => ({
-      default: LegacyLoginErrorActivity,
+    import('./activities/activities').then(({ LoginErrorActivity }) => ({
+      default: LoginErrorActivity,
     })),
   ),
   Signup: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacySignupActivity }) => ({
-      default: LegacySignupActivity,
+    import('./activities/activities').then(({ SignupActivity }) => ({
+      default: SignupActivity,
     })),
   ),
   SignupStatus: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacySignupStatusActivity }) => ({
-      default: LegacySignupStatusActivity,
+    import('./activities/activities').then(({ SignupStatusActivity }) => ({
+      default: SignupStatusActivity,
     })),
   ),
   SignupComplete: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacySignupCompleteActivity }) => ({
-      default: LegacySignupCompleteActivity,
+    import('./activities/activities').then(({ SignupCompleteActivity }) => ({
+      default: SignupCompleteActivity,
     })),
   ),
   SignupUnregistered: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacySignupUnregisteredActivity }) => ({
-      default: LegacySignupUnregisteredActivity,
+    import('./activities/activities').then(({ SignupUnregisteredActivity }) => ({
+      default: SignupUnregisteredActivity,
     })),
   ),
   DevRoutes: lazy<EmptyActivityParams>(() =>
-    import('./activities/legacy').then(({ LegacyDevRoutesActivity }) => ({
-      default: LegacyDevRoutesActivity,
+    import('./activities/activities').then(({ DevRoutesActivity }) => ({
+      default: DevRoutesActivity,
     })),
   ),
 };
@@ -351,6 +352,7 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
     config,
     plugins: [
       basicRendererPlugin(),
+      accountBoundaryPlugin(),
       historySyncPlugin({
         config,
         fallbackActivity: () => 'NotFound',

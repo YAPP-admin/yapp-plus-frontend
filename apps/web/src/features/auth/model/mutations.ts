@@ -130,7 +130,7 @@ export const nativeSignInMutationOptions = (
 export const nativeSignupMutationOptions = (
   client: QueryClient,
   callbacks: NativeAuthCallbacks = {},
-) => authMutationOptions(client, 'authenticate', completeNativeSignup, callbacks);
+) => authMutationOptions(client, 'signup', completeNativeSignup, callbacks);
 
 export const nativeSignOutMutationOptions = (
   client: QueryClient,
@@ -174,7 +174,7 @@ export const useNativeSignInMutation = (callbacks: NativeAuthCallbacks = {}) =>
 
 /** 가입 완료 결과를 현재 화면에 전달합니다. */
 export const useNativeSignupMutation = (callbacks: NativeAuthCallbacks = {}) =>
-  useAuthMutation('authenticate', completeNativeSignup, callbacks);
+  useAuthMutation('signup', completeNativeSignup, callbacks);
 
 /** 로그아웃 결과를 현재 화면에 전달합니다. */
 export const useNativeSignOutMutation = (callbacks: NativeAuthCallbacks = {}) =>
