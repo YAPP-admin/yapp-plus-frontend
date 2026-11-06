@@ -17,7 +17,7 @@
 | R4    | 기존 사용자 cache, 두 번째 시도·재시도·logout 후 재로그인                 | 새 nonce에 맞는 token 발급 근거 확인; silent 경로 불명확 시 미해결   |
 | R5    | undefined/timeout→브리지 준비, 미지원 앱                                  | 로그아웃 확정 금지·복구 재조회, 미지원 RPC 반복 없음                 |
 | R5    | visible 타이머·foreground·online·수동 재시도 중첩                         | 실패 완료 뒤 최소 5초, 진행 요청 공유·성공/숨김/unmount 시 정리      |
-| R1·R5 | 지연 getSession·mutation 뒤 logout/다른 로그인                            | #328 공통 경로와 통합해 옛 상태·탐색 비복원, 웹 인증 경계 테스트     |
+| R1·R5 | 지연 getSession·mutation 뒤 logout/다른 로그인                            | 단일 웹 인증 경로로 옛 상태·탐색 비복원, 웹 인증 경계 테스트         |
 | R6    | GET /api/admin/generations/{generationId}/posts/{postId}                  | 공통 mock의 200·detail1 schema 검증, 기존 admin Vitest               |
 
 고정 도구는 `mise exec --`로 사용한다. 해당 단계의 인접 테스트를 직접 실행해 수정 전 실패/수정 후 통과를 기록한다.

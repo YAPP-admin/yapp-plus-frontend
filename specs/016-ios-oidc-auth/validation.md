@@ -344,3 +344,21 @@ R2 네이티브 보완을 제출하며 웹 오류 화면·재로그인 전환의
 - CocoaPods 136개 설치 후 Xcode Debug 시뮬레이터 빌드가 exit 0 / `BUILD SUCCEEDED`로 완료됐다. 별도 DerivedData에서 arm64·x86_64 실행파일을 포함한 `YAPP.app`을 생성했고 NitroGoogleSignin 네이티브 컴파일도 포함됐다. 로그는 `pods-cached.log`, `xcode-debug.log`다.
 - 앱 산출물 Info.plist에서 Google callback scheme 일치를 확인했고, 앱 번들 전체에 `GoogleService-Info.plist`가 없음을 확인했다. 앞선 다운로드 중단에 따른 빌드 미완료 상태는 이번 결과로 해소됐다. 앱 설치·실행·실제 SDK 초기화·Google 로그인·Release 빌드는 미실행이므로 T047의 초기화 항목과 T048 사용자 리뷰는 완료 처리하지 않는다.
 - 사용자 리뷰 후 3단계 커밋과 4단계 조사 진행을 승인받았다. 실제 초기화·로그인의 미검증은 유지하며, 다른 세션의 인증 작업 중단에 따른 웹 단계 계획 수정은 4단계 문서 작업에 반영한다.
+
+## 보완 4단계 — 조사 제출
+
+- 3단계 리뷰 승인 후 `2148bb9`로 커밋했으며 훅 통과, push하지 않았다. 최신 origin/main은 `9186dc6`이다.
+- Nitro 2.3.1 설치 소스와 GoogleSignIn 10.1.0 헤더, Google 공식 문서를 대조하여 currentUser/restore/getTokens와 interactive 경로의 nonce 전달 차이를 research.md에 정리했다. 실제 로그인 실험이나 서버 거절 재현은 수행하지 않았다.
+- iOS의 사용자 Google 로그인에 presentExplicitSignIn을 사용하고 YAPP 자동 세션 복구·Android 경로는 유지하는 방안을 제출한다. Google 인증 화면이 다시 나타날 수 있으므로 T050 리뷰 전 구현하지 않는다. R4는 여전히 미해결이다.
+- 다른 세션의 인증 작업 중단을 반영해 명세·계약·계획·작업·검증 안내를 갱신했다. 웹 인증 작업은 이 작업의 5단계에서 통합 설계하며, 다른 작업 트리 코드는 가져오지 않았다.
+- 문서만 변경했다. `node --run check` exit 0: format 검사는 새로 실행했고 lint 7개·typecheck 7개·test 5개 Turbo 작업은 모두 캐시를 재사용했다. 빌드·expo:doctor·실기기 검증은 재실행하지 않았다.
+
+## 보완 4단계 — 승인된 iOS 명시적 로그인 구현
+
+- 사용자가 Android 구현 비교와 UX 차이를 확인하고 변경을 승인했다. `providers.ts`에서 iOS는 configure 후 presentExplicitSignIn을 직접 호출한다. Android는 기존 signIn → 필요시 createAccount → 필요시 explicit 순서를 유지한다. YAPP refresh 기반 세션 복구와 서버 계약은 변경하지 않았다.
+- 최초 회귀 테스트는 수정 전 iOS 경로 5개 실패·나머지 53개 통과로 캐시 경로 사용을 확인했다. 이후 실제 AuthActions와 연결한 서버 실패 후 재시도·logout 후 재로그인 2개도 추가했다. 테스트 작성 중 lint와 기존 네트워크 오류 계약의 기대값을 수정하고 최종 모바일 60개 테스트를 통과했다.
+- 검증 범위: 명시적 로그인 전 구성, 연속 시도의 서로 다른 nonce와 응답 연결, 공급자 오류 재시도, 사용자 취소, 자격 누락 시 캐시 fallback 금지, Android 기존 경로 3개, 서버 실패·logout 이후 새 raw nonce 전달. 네이티브 SDK·서버는 대역이며 실제 token claim의 일치를 증명하지 않는다.
+- `node --run check` exit 0. 모바일 lint·typecheck·test는 새로 실행했고 나머지 lint 6개·typecheck 6개·test 4개는 Turbo 캐시 재사용이다. `node --run build` exit 0은 3개 작업 모두 캐시 재사용이다. iOS Metro/Hermes export는 새로 실행해 성공했다.
+- SDK·네이티브 설정·의존성 변경이 없어 Xcode 빌드와 expo:doctor는 재실행하지 않았다. 앞선 3단계 네이티브 빌드를 이번 변경의 신규 실행으로 계산하지 않는다. 실제 기기에서 Google 인증 UI·token nonce·서버 성공·취소 후 재시도는 미검증이다.
+- 4단계 구현을 리뷰 제출하며 5단계를 시작하지 않는다. 추가 커밋·push·PR·배포는 수행하지 않았다. 실패 시 iOS 경로 변경을 되돌릴 수 있으나 캐시 nonce 문제도 돌아오므로 롤백을 결함 해결로 판단하지 않는다.
+- 사용자 리뷰 후 4단계 변경 커밋과 5단계 진행을 승인받았다. 실제 Google token·서버 종단 검증 대기는 유지한다.

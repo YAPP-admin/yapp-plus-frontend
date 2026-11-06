@@ -138,7 +138,7 @@ native auth-api는 생성 SDK의 HTTP status·통신 오류를 해석해 Renewal
 
 실패 조회 완료 후 visible 상태에서 최소 5초 간격으로 재조회한다. foreground·online·수동 재시도도 같은 진행 요청을 공유한다.
 성공하면 장애 복구 타이머를 중단하고 숨김·unmount 시 정리한다. 지원하지 않는 앱에 무한 재시도를 하지 않는다.
-query 결과도 #328의 작업 세대와 일관되게 적용해 취소된 오래된 조회가 로그아웃을 덮지 않게 한다.
+query 결과도 이 작업에서 마련할 단일 웹 인증 경로의 작업 세대와 일관되게 적용해 취소된 오래된 조회가 로그아웃을 덮지 않게 한다.
 Google은 iOS client ID와 webClientId를 각각 전달한다. raw nonce와 해시의 기존 서버 계약은 바꾸지 않는다.
 
 보완 2단계 구현: renew 경계에서 HTTP 상태를 해석하고 20초 timeout·자동 재시도 0회를 명시한다.

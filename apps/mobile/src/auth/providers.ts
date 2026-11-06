@@ -1,5 +1,6 @@
 /** Apple·Google SDK에서 OIDC credential을 얻고 공급자 오류를 표준화하는 모듈입니다. */
 
+import { Platform } from 'react-native';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import {
@@ -87,6 +88,20 @@ const authenticateApple = async (): Promise<NativeIdentity> => {
   }
 };
 
+/** iOS는 새 nonce를 실제 인증 요청에 전달하고 Android는 기존 fallback 순서를 유지합니다. */
+const requestGoogleSignIn = async () => {
+  if (Platform.OS === 'ios') {
+    return GoogleOneTapSignIn.presentExplicitSignIn();
+  }
+  const silentResponse = await GoogleOneTapSignIn.signIn();
+  const accountResponse = isNoSavedCredentialFoundResponse(silentResponse)
+    ? await GoogleOneTapSignIn.createAccount()
+    : silentResponse;
+  return isNoSavedCredentialFoundResponse(accountResponse)
+    ? GoogleOneTapSignIn.presentExplicitSignIn()
+    : accountResponse;
+};
+
 const authenticateGoogle = async (): Promise<NativeIdentity> => {
   const nonce = await createNonce();
   // configure의 nonce는 다음 Google ID token의 nonce claim에 들어갈 SHA-256 hex 값입니다.
@@ -96,13 +111,7 @@ const authenticateGoogle = async (): Promise<NativeIdentity> => {
       webClientId: GOOGLE_WEB_CLIENT_ID,
       nonce: nonce.hashed,
     });
-    const silentResponse = await GoogleOneTapSignIn.signIn();
-    const accountResponse = isNoSavedCredentialFoundResponse(silentResponse)
-      ? await GoogleOneTapSignIn.createAccount()
-      : silentResponse;
-    const response = isNoSavedCredentialFoundResponse(accountResponse)
-      ? await GoogleOneTapSignIn.presentExplicitSignIn()
-      : accountResponse;
+    const response = await requestGoogleSignIn();
     if (isCancelledResponse(response)) {
       throw new NativeAuthenticationCancelledError();
     }
