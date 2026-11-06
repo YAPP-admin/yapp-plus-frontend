@@ -1,12 +1,11 @@
 'use client';
 
 import { IconClockFill, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
+import { List } from '@seed-design/react';
 import {
   chip,
   dateText,
-  detailGroup,
   item,
-  itemLeft,
   itemPast,
   metaContainer,
   metaIcon,
@@ -33,28 +32,41 @@ export function ScheduleItem({
   isPast = false,
 }: ScheduleItemProps) {
   return (
-    <article className={`${item} ${isPast ? itemPast : ''}`} aria-label={`${date} ${title}`}>
-      <div className={itemLeft}>
-        <span className={dateText}>{date}</span>
-        <div className={detailGroup}>
-          <h2 className={titleText}>{title}</h2>
-          <div className={metaContainer}>
-            <div className={metaRow}>
-              <span className={metaIcon} aria-hidden="true">
-                <IconLocationpinFill width={12} height={12} />
-              </span>
-              <span className={metaText}>{location}</span>
+    <List.Item asChild alignItems="flex-start">
+      <article
+        className={`${item} ${isPast ? itemPast : ''}`}
+        aria-label={`${date} ${title}${isPast ? ' (종료)' : ''}`}
+      >
+        <List.Prefix pr="x4">
+          <span className={dateText}>{date}</span>
+        </List.Prefix>
+        <List.Content gap="x2">
+          <List.Title asChild>
+            <h2 className={titleText}>{title}</h2>
+          </List.Title>
+          <List.Detail asChild>
+            <div className={metaContainer}>
+              <div className={metaRow}>
+                <span className={metaIcon} aria-hidden="true">
+                  <IconLocationpinFill width={12} height={12} />
+                </span>
+                <span className={metaText}>{location}</span>
+              </div>
+              <div className={metaRow}>
+                <span className={metaIcon} aria-hidden="true">
+                  <IconClockFill width={12} height={12} />
+                </span>
+                <span className={metaText}>{time}</span>
+              </div>
             </div>
-            <div className={metaRow}>
-              <span className={metaIcon} aria-hidden="true">
-                <IconClockFill width={12} height={12} />
-              </span>
-              <span className={metaText}>{time}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-      {chipText ? <span className={chip}>{chipText}</span> : null}
-    </article>
+          </List.Detail>
+        </List.Content>
+        {chipText ? (
+          <List.Suffix>
+            <span className={chip}>{chipText}</span>
+          </List.Suffix>
+        ) : null}
+      </article>
+    </List.Item>
   );
 }

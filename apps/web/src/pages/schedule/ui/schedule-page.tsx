@@ -1,90 +1,95 @@
 'use client';
 
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { find4Options } from '@yapp-plus/api/generated';
+import { ActionButton } from '@yapp-plus/ui';
+import { Suspense } from 'react';
+import { List } from '@seed-design/react';
+import { useNativeAuthSession } from '@/features/auth';
+import { formatKoreanTime, koreanTimestamp } from '@/shared/lib/korean-date-time';
+import { scheduleSchema } from '../model/schedule-schema';
 import { container, content, list, srOnly } from './schedule-page.css';
 import { ScheduleEmpty } from './schedule-empty';
-import { ScheduleItem, type ScheduleItemProps } from './schedule-item';
+import { ScheduleItem } from './schedule-item';
+import { ScheduleErrorBoundary } from './schedule-error-boundary';
+import { ScheduleLoading } from './schedule-loading';
 
-export type Schedule = ScheduleItemProps & {
-  id: string;
+const dayLabels = {
+  MONDAY: '월',
+  TUESDAY: '화',
+  WEDNESDAY: '수',
+  THURSDAY: '목',
+  FRIDAY: '금',
+  SATURDAY: '토',
+  SUNDAY: '일',
 };
 
-export const DEFAULT_SCHEDULES: Schedule[] = [
-  {
-    id: 'session-1',
-    date: '9.12 (토)',
-    title: '팀 세션',
-    location: '디캠프 선릉 6층 이벤트홀',
-    time: '오후 1시 ~ 오후 6시',
-    isPast: true,
-  },
-  {
-    id: 'session-2',
-    date: '9.19 (토)',
-    title: '기획 세션',
-    location: 'ICT콤플렉스 6층 커뮤니티라운지',
-    time: '오후 12시 ~ 오후 6시',
-    chipText: '정규 세션',
-    isPast: false,
-  },
-  {
-    id: 'session-3',
-    date: '9.26 (토)',
-    title: '팀 세션',
-    location: '-',
-    time: '오후 1시 ~ 오후 6시',
-    isPast: false,
-  },
-  {
-    id: 'session-4',
-    date: '10.3 (토)',
-    title: '팀 세션',
-    location: '-',
-    time: '오후 1시 ~ 오후 6시',
-    isPast: false,
-  },
-  {
-    id: 'session-5',
-    date: '10.10 (토)',
-    title: '1차 UT 세션',
-    location: 'DMC 첨단산업센터 7층 세미나포럼장',
-    time: '오후 1시 ~ 오후 5시',
-    chipText: '정규 세션',
-    isPast: false,
-  },
-  {
-    id: 'session-6',
-    date: '10.19 (토)',
-    title: '팀 세션',
-    location: '-',
-    time: '오후 1시 ~ 오후 6시',
-    isPast: false,
-  },
-];
-
-export type SchedulePageProps = {
-  schedules?: Schedule[];
-};
-
-export function SchedulePage({ schedules = DEFAULT_SCHEDULES }: SchedulePageProps) {
-  const hasSchedules = schedules.length > 0;
-
+export function SchedulePage() {
+  const { phase } = useNativeAuthSession();
+  const canQuery =
+    phase === 'SIGNED_IN' ||
+    (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
   return (
     <main className={container}>
       <h1 className={srOnly}>일정</h1>
-
       <div className={content}>
-        {hasSchedules ? (
-          <ul className={list} aria-label="세션 일정 목록">
-            {schedules.map((schedule) => (
-              <li key={schedule.id}>
-                <ScheduleItem {...schedule} />
-              </li>
-            ))}
-          </ul>
+        {canQuery ? (
+          <ScheduleErrorBoundary>
+            <Suspense fallback={<ScheduleLoading />}>
+              <ScheduleList />
+            </Suspense>
+          </ScheduleErrorBoundary>
         ) : (
-          <ScheduleEmpty />
+          <output>일정은 YAPP+ 앱에 로그인한 후 확인할 수 있어요.</output>
         )}
       </div>
     </main>
+  );
+}
+
+function ScheduleList() {
+  const { apiOptions } = useNativeAuthSession();
+  const { data, dataUpdatedAt, error, refetch } = useSuspenseQuery({
+    ...find4Options({
+      ...apiOptions,
+      responseValidator: (response) => scheduleSchema.parseAsync(response),
+    }),
+  });
+
+  return (
+    <>
+      {error ? (
+        <div role="alert">
+          <p>일정을 새로 불러오지 못했어요. 이전 내용을 표시하고 있어요.</p>
+          <ActionButton
+            variant="neutralWeak"
+            size="medium"
+            onClick={() => {
+              void refetch({ cancelRefetch: false });
+            }}
+          >
+            다시 시도
+          </ActionButton>
+        </div>
+      ) : null}
+      {data.sessions.length ? (
+        <List.Root className={list} aria-label="세션 일정 목록">
+          {data.sessions.map((session) => (
+            <li key={String(session.sessionId)}>
+              <ScheduleItem
+                title={session.name}
+                date={`${Number(session.date.slice(5, 7))}.${Number(session.date.slice(8))} (${dayLabels[session.dayOfWeek]})`}
+                location={session.location ?? '-'}
+                time={`${formatKoreanTime(session.startTime)} ~ ${formatKoreanTime(session.endTime)}`}
+                chipText={session.type === 'REGULAR' ? '정규 세션' : undefined}
+                isPast={koreanTimestamp(session.date, session.endTime) <= dataUpdatedAt}
+              />
+            </li>
+          ))}
+        </List.Root>
+      ) : (
+        <ScheduleEmpty />
+      )}
+    </>
   );
 }
