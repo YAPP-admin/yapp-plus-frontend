@@ -115,3 +115,11 @@ Google 공식 [GIDGoogleUser 문서](https://developers.google.com/identity/sign
 Android develop `2b837e3cb21762c6a73f1db205be6a3ef2749a97`의 [GoogleCredentialManager.kt](https://github.com/YAPP-admin/yapp-plus-android/blob/2b837e3cb21762c6a73f1db205be6a3ef2749a97/feature/login/src/main/java/com/yapp/plus/feature/login/GoogleCredentialManager.kt)는 매 요청 새 nonce를 생성하고 SHA-256 값을 GetSignInWithGoogleOption.setNonce에 전달한다. LoginRoute의 재시도도 같은 요청을 새로 시작한다. Android 실기기 화면과 토큰은 독립 검증하지 않았다.
 
 사용자는 이 비교와 iOS 재로그인 시 Google UI가 다시 나타날 수 있음을 검토하고 구현을 승인했다. 위의 승인 대기 문단은 조사 당시 기록이다. 구현은 iOS의 SDK 캐시 반환 경로만 제거하며 자동 세션 복구·Android 제품 코드는 유지한다. 이는 다른 Android 저장소를 수정하거나 두 플랫폼의 실제 화면이 같다고 보장하는 작업이 아니다.
+
+## 보완 5단계 현행 코드 조사
+
+- 결정: QueryClient별 단일 결과 적용 경로에서 조회·mutation·페이지 callback을 함께 검사한다. 현재 session.tsx는 undefined를 로그아웃으로 캐시하고 mutations.ts는 모든 결과를 반영한다. 페이지별 onSuccess가 별도로 탐색하므로 cache 검사만 추가하는 대안은 충분하지 않다.
+- 결정: 계정 경계에서 Stackflow 앱 인스턴스를 다시 만든다. 현재 main.tsx의 모듈 전역 인스턴스는 이전 Activity/폼 제거를 보장하지 않는다. token 회전마다 remount하는 대안은 사용자 입력을 불필요하게 잃으므로 제외한다.
+- 결정: 브리지 준비 판정에 공개 상태·메서드 지원 검사를 사용한다. 고정 webview-bridge 1.8.0의 isWebViewBridgeAvailable은 함수 목록의 길이이며 initialBridge의 함수도 포함한다. 현재 packages/app-bridge의 initialBridge는 safeAreaInsets 데이터만 있어 초기 함수 목록은 비어 있다. 이 설정 전제를 회귀 테스트로 유지한다.
+- 제외: onReady를 hydration 구독으로 사용하는 제안. 설치된 dist/index.js 735행은 proxy 생성 직후 onReady를 호출하고 705행의 hydrate 처리는 별도이므로 준비 신호가 아니다. SDK 내부 전역이나 private 이벤트에 직접 의존하지 않는다.
+- 제외: 이번 범위에서 일반 업무 API 401 재전송 정책·추가 상태 라이브러리·새 RPC를 도입하지 않는다. 다른 세션의 미커밋 구현을 사용하지 않는다.

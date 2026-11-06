@@ -1,6 +1,6 @@
 # 구현 계획: iOS OIDC 인증과 TestFlight 준비
 
-> 최신 작업은 [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329)의 보완 4단계 구현 리뷰다.
+> 최신 작업은 [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329)의 보완 5A-1 구현 리뷰다.
 > 아래 최초 1–5단계는 이력으로 보존하며, 현재 실행 순서는 마지막의 보완 0–7단계를 따른다.
 
 **브랜치**: `DongjaJ/apple/google-oidc-plan`
@@ -185,3 +185,52 @@ p-mutex는 기존 workspace에 없는 직렬 실행 책임만 맡기고 catalog/
 실제 base 대비 문서·테스트·lockfile 포함 650줄부터 분리 검토, 800줄 미만으로 유지한다. 단계/PR 분리 시에도 각 리뷰 경계를 지킨다.
 배포는 승인 범위가 아니다. 실패 시 해당 변경을 되돌리고 이전 검증 버전으로 복구하며 native 설정/SDK 변경은 호환되는 수정 바이너리가 필요하다.
 세션 무효화 보완을 되돌리면 원래 경합 위험이 돌아오므로 복구 기록에 남긴다. 로그·증거에 실제 token을 보관하지 않는다.
+
+## 보완 5단계 상세 설계 — 다른 세션 의존성 제거
+
+기준 `01bdb0c`, 최신 origin/main `9186dc6`. Spec Kit setup-plan은 기존 016 문서를 유지했다. extension hook 설정은 없다. 루트·웹 AGENTS, 제품 맥락, 웹 개발 가이드와 헌법을 재확인했다. 인증 RPC·SecureStore·생성 코드·의존성은 변경하지 않으며 기존 React Query/Stackflow를 사용한다.
+
+### 5A — 웹 인증 결과와 계정 수명
+
+- `features/auth/model`에 QueryClient 수명의 단일 결과 적용 경로를 둔다. 별도 전역 인증 저장소나 상태 라이브러리를 추가하지 않는다. query key는 순환 import를 피하도록 이 경계에서 소유한다.
+- 로그인·가입·logout 등 인증 의도 시작은 앞선 작업을 무효화한다. 조회는 현재 세대를 캡처한다. 완료 시 세대, 같은 sessionId의 tokenVersion을 검사해 이전 결과·오류를 폐기한다. native generation과 웹 세대는 별개이며 wire 타입에 추가하지 않는다.
+- mutationFn 경계에서 결과를 검증하여 페이지의 onSuccess/onError에도 오래된 결과가 도달하지 않게 한다. cache 쓰기만 막고 탐색 callback을 그대로 실행하는 방식은 쓰지 않는다. 무효 작업은 기존 CANCELLED로 귀결하고 가입·설정에서도 조용히 무시한다.
+- logout 시작 시 보호 콘텐츠 노출을 차단하고 앞선 조회를 취소한다. 실제 SIGNED_OUT은 native 확인 뒤 확정한다. 실패 시 이전 로그인 상태를 추측 복원하지 않고 조회 불가 상태를 표시한다. 탈퇴는 실패만으로 계정 삭제를 확정하지 않는다.
+- 계정 경계 변경 때 이전 계정의 query를 취소·제거하고 mutation 데이터도 정리한다. 실행 중 Promise는 취소됐다고 가정하지 않고 세대로 차단한다. 인증 query 자체는 유지한다. 현재 웹 query 중 계정과 무관한 것의 명시적 보존 필요성을 구현 전 확인한다.
+- 로그인 세션 변경·logout·탈퇴 확정은 별도 화면 세대를 바꾼다. 앱 경계에서 Stackflow 인스턴스를 갱신해 이전 Activity/폼이 새 계정에 남지 않게 한다. 단순 tokenVersion 갱신은 화면 세대를 바꾸지 않는다. 일반 브라우저는 기존 동작을 유지한다.
+- 파일 범위: auth model/index, 로그인·가입·설정 callback, Stackflow main 또는 인접 수명 경계와 테스트. deferred로 늦은 query/성공/오류·logout과 새 login 교차·낮은 tokenVersion을 검증하고 화면 테스트로 계정 A의 폼/뒤로가기 상태가 B에게 남지 않는지 확인한다.
+
+### 5B — 브리지 조회 불가와 복구
+
+- native-auth 경계에서 브라우저·연결 대기·메서드 미지원·RPC 실패·실제 AuthResult를 구분한다. undefined는 SIGNED_OUT이 아니다. 기존 180초 RPC timeout은 native 작업 취소로 해석하지 않는다.
+- 준비 여부는 현재 공개 `isWebViewBridgeAvailable`와 메서드 지원 여부로 판별한다. 저장소 initialBridge에는 함수 fallback이 없다는 전제를 테스트로 고정한다. SDK의 onReady는 생성 직후 호출되므로 hydration 완료 신호로 사용하지 않는다. 새 readiness RPC나 패키지 API를 도입하지 않는다.
+- 초기 미준비는 visible일 때 재확인한다. 네이티브 메서드 목록이 확인됐는데 getSession이 없으면 미지원으로 표시하고 RPC를 반복하지 않는다. 정상 SIGNED_OUT 응답만 로그아웃으로 확정한다.
+- 조회는 5A의 세대와 진행 Promise를 공유한다. visible timer·foreground·online·수동 재시도를 하나의 경로로 모으고 실패 완료 후 최소 5초 간격을 적용한다. 성공/숨김/unmount 시 timer와 listener를 정리한다. 진행 중 요청이 있는데 추가 RPC를 만들지 않는다.
+- 보호 화면에서 UNAVAILABLE을 Login으로 강제 이동하지 않고 기존 UI 구성요소로 재시도 안내를 표시한다. 미지원은 앱 업데이트 안내로 구분하고 반복 시도 버튼을 노출하지 않는다. 확정 로그아웃과 일반 브라우저 탐색은 유지한다.
+- 파일 범위: native-auth/session, NativeAuthRedirect 및 보호 경계·재시도 UI/테스트, 필요시 bridge의 기존 설정 회귀 테스트. fake timer와 지연 응답으로 미준비→준비·timeout→복구·미지원·중복 이벤트·숨김 정리·오래된 결과 차단을 검증한다.
+
+### 검토·검증·복구
+
+5A와 5B는 각각 리뷰한다. 현재 Google PR은 base `DongjaJ/oidc-auth-actions` 대비 383줄이며 웹 구현·회귀를 합치면 800줄 제한을 넘길 가능성이 높다. 다음 구현은 `DongjaJ/oidc-web-auth` 종속 브랜치(base `DongjaJ/oidc-google-config`)를 제안하며 생성·전환 승인 전에는 제품 코드를 변경하지 않는다. 5A도 650줄 도달 시 결과 적용/화면 수명으로 분할 검토한다.
+
+일반 업무 API의 범용 401 재시도는 이번 R1/R5 수정에서 제외한다. native refresh 계약은 유지한다. UI 문구·기존 권한 정책을 바꾸는 추가 요구가 생기면 확인한다. 각 구현 단위에서 check/build, 인접 테스트와 브라우저 키보드·접근성 이름·터치 크기·보호 콘텐츠 미노출을 확인하고 신규 실행/캐시를 구분한다.
+
+롤백은 해당 웹 변경을 이전 검증 버전으로 되돌린다. 데이터 마이그레이션은 없지만 이전 세션 경합/브리지 복구 결함이 돌아오는 위험을 기록한다. 이미 종료한 native 작업을 웹 롤백으로 취소할 수 있다고 보장하지 않는다. 헌법 점검 결과: 앱 간 import/생성 코드 변경/신규 의존성 없음, public RPC 유지, 외부 입력 가용성 경계 검증, 단계별 테스트·리뷰 및 별도 PR 분리 계획으로 기준을 충족한다.
+
+### 다른 세션 재확인 — 2026-11-06
+
+`hong-kong` / `DongjaJ/nsu85` HEAD `7489fad`와 미커밋 변경을 읽기 전용으로 확인했다. 인증 상태 재설계는 #329로 위임했지만 `4d7730d`의 nativeAuthClientOptions·GET 401 갱신과 session.tsx의 apiOptions 제공은 이미 커밋되어 남아 있다. 홈 미커밋 current-week-card와 일정 화면은 이 계약을 소비한다.
+
+현재 커밋 `01bdb0c`와 해당 HEAD는 `git merge-tree --write-tree`에서 충돌 없이 병합 가능했다. 이는 미커밋 내용이나 앞으로의 5A 코드까지 무충돌이라는 의미가 아니다. 다른 작업 트리·브랜치는 수정하지 않았다.
+
+5A는 session.tsx 수정 시 기존 apiOptions 제공 계약을 보존하고, 인증 변경에 따른 취소·결과 적용을 기존 HTTP 갱신 경로와 통합 검증한다. 같은 401 interceptor를 새로 구현하지 않는다. 현재 미커밋 홈·일정·legacy.tsx는 수정 대상으로 삼지 않는다. Provider의 retry:false도 임의로 되돌리지 않는다. 계정 cache·화면 경계 테스트에는 홈/일정의 기존 생성 query 소비를 포함하고, 최신 main 반영 또는 별도 통합 승인 뒤 실제 통합 회귀를 실행한다. 인증 이관은 기존 API 인증 코드를 삭제한다는 의미가 아니다.
+
+### 5A-1 구현과 남은 경계
+
+사용자 승인으로 `01bdb0c`에서 `DongjaJ/oidc-web-auth`를 생성했다. 실제 PR base는 `DongjaJ/oidc-google-config`다. 5A는 5A-1 결과·callback 유효성, 5A-2 계정 cache·Stackflow 수명으로 나누어 각각 리뷰한다.
+
+5A-1은 QueryClient별 세대와 동일 세션 tokenVersion을 검사한다. 인증 의도 시작과 SIGNED_IN/SIGNED_OUT/WITHDRAWN 확정에서 세대가 바뀌어 작업 도중 시작된 조회도 무효화한다. 동일 세대의 중복 로그인·가입은 BUSY로 반환하고 원래 요청은 유지한다. query는 AbortSignal을 소비하며 native RPC 자체가 취소된다고 가정하지 않는다.
+
+웹 mutation은 React Query의 onMutate 문맥에 세대를 보관하고 onSuccess/onError에서 결과를 반영한다. 작업 해제는 mutation 옵션의 onSettled에서 완료한다. 화면 알림은 mutate 호출별 onSettled에서 세대 유효성을 확인한 뒤 전달한다. React Query가 unmount 뒤 알림을 생략하며 연속 호출에서는 마지막 호출만 알린다. 페이지는 operation을 다루지 않는다. RPC 시작 전에도 세대를 검사한다. RPC 예외는 onError에서 처리하며 유효한 작업만 세션·화면에 OUTCOME_UNKNOWN으로 반영한다. 실제 NativeAuthResult wire 계약은 바꾸지 않는다.
+
+조회 undefined를 UNAVAILABLE로 유지하는 최소 경계 수정은 포함했으나 자동 복구·미지원 구분은 5B에 남는다. 5A-2의 계정 cache 삭제와 Stackflow 재생성은 아직 구현하지 않았다. 다른 세션의 apiOptions/401 코드와 실제 통합은 그 코드가 반영된 뒤 별도 검증한다.

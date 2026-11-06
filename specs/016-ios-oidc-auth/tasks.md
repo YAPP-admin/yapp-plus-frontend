@@ -119,7 +119,13 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 
 ## 보완 5단계 — R5 US3 웹 브리지 복구
 
-- [ ] T051 [US3] `specs/016-ios-oidc-auth/plan.md`에서 다른 세션의 인증 작업 중단을 반영해 웹 공통 결과 적용·작업 무효화·계정 캐시·화면 수명·복귀 이벤트의 설계를 확정하고 필요시 5A/5B로 나눈다.
+- [x] T051 [US3] `specs/016-ios-oidc-auth/plan.md`에서 다른 세션의 인증 작업 중단을 반영해 웹 공통 결과 적용·작업 무효화·계정 캐시·화면 수명·복귀 이벤트의 설계를 확정하고 필요시 5A/5B로 나눈다.
+- [x] T051a [US3] 별도 승인된 종속 브랜치에서 QueryClient별 공통 결과 적용·세대/tokenVersion·늦은 성공/오류 callback 차단과 회귀를 구현한다.
+- [x] T051a-review [US3] 5A-1 결과·callback 회귀와 check/build, 실제 브라우저 미검증을 제출하고 리뷰받는다.
+- [ ] T051b [US3] 계정 경계 cache·Stackflow 화면 수명을 연결하고 check/build·화면 검증 후 5A 리뷰를 받는다. 650줄부터 하위 분리를 검토한다.
+
+아래 T052–T054는 5A 리뷰 뒤 진행하는 5B다.
+
 - [ ] T052 [US3] `apps/web/src/features/auth/model/session.test.tsx`에 undefined/timeout→준비·unsupported·최소 간격 재시도·늦은 query 결과 회귀를 추가한다.
 - [ ] T053 [US3] `apps/web/src/features/auth/model/native-auth.ts`, `session.tsx`, `mutations.ts`에서 가용성·조회 오류·재조회를 이 작업에서 마련한 단일 웹 인증 결과 적용 경로에 연결한다. query·mutation별 중복 세대 관리자를 만들지 않는다.
 - [ ] T054 [US3] `apps/web/src/features/auth/`의 보호 경계·재시도 안내와 인접 화면 테스트를 갱신하고 `specs/016-ios-oidc-auth/validation.md`에 R1 웹 전파·R5·접근성·화면·check/build 결과를 기록해 리뷰받는다.

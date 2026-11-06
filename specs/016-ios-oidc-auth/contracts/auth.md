@@ -150,3 +150,9 @@ timeout은 TIMEOUT, 응답 없는 통신 실패는 NETWORK, 비정상 성공 응
 RenewalResult는 success(credentials)·invalid-session·temporary-failure(reason)·invalid-response·rejected의 판별 union이다.
 API 어댑터는 예외를 포함한 통신 결과를 이 타입으로 정규화한다. 세션 관리자는 세대·대상 확인 후 결과 종류에 따라 저장·삭제·보존과 AuthResult 변환만 수행한다.
 로그인·가입·갱신의 공통 자격 검증은 native 내부 credentials.ts에서 공유한다. 공개 브리지 계약과 외부 의존성은 변경하지 않는다.
+
+## 보완 5단계 웹 적용 계약
+
+공개 AuthResult와 RPC signature는 유지한다. 웹 내부에서 현재 세대의 응답만 세션 cache·화면 callback에 전달하며 오래된 결과는 CANCELLED로 폐기하고 오래된 오류는 cache·화면에 반영하지 않는다. 웹 인증 hook은 mutate만 제공하고 실패는 callback으로 처리한다. 낮은 tokenVersion을 반영하지 않는다. logout 진행 중 보호 콘텐츠를 차단하되 응답 전에 SIGNED_OUT을 확정하지 않는다.
+
+브리지 미준비·undefined·timeout은 인증 조회 불가이며, 정상 SIGNED_OUT과 구분한다. 현재 initialBridge는 함수가 없는 상태 fallback만 가진다. 이 전제 아래 isWebViewBridgeAvailable=false는 연결 대기, true이고 getSession 미지원이면 미지원이다. onReady는 hydration 완료로 사용하지 않는다. 실패 후 5초 간격·진행 요청 공유 정책은 수동/자동 재시도에 공통 적용한다.

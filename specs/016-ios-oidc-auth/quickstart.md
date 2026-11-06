@@ -91,3 +91,10 @@ mise exec -- node --run expo:doctor
 - 폐기 가능한 계정으로 탈퇴·Apple 철회 지연·재가입을 확인한다.
 - 서명·업로드 승인 후 첫 셸 TestFlight 설치, 이후 인증 완성 빌드를 검증한다. 기기 미확보로 코드 구현을 중단하지 않는다.
 - TestFlight build number·앱 commit SHA·웹 배포 버전을 기록한다. 미실행은 실패/성공과 구분한다.
+
+## 보완 5A/5B 실행 순서
+
+- 5A: 지연 로그인·가입·조회 후 logout, 오래된 성공/오류 callback, 새 로그인보다 늦은 logout, 낮은 tokenVersion을 재현한다. 계정 A의 query/mutation cache와 Stackflow 폼/뒤로가기 상태가 B에게 남지 않고 token 회전에서는 유지되는지 확인한다.
+- 5B: 브리지 미준비→준비, timeout→정상, 준비 후 메서드 미지원, visible/online/수동 이벤트 중첩을 검증한다. 실패 완료 후 5초·한 번의 진행 RPC·숨김/unmount 정리를 fake timer로 확인한다.
+- UI: 조회 불가 중 보호 콘텐츠가 보이지 않고 강제 로그아웃으로 표시하지 않는지, 재시도 버튼의 키보드 동작·접근성 이름·터치 크기를 확인한다. 일반 브라우저 경로도 회귀 검증한다.
+- 각 단위는 인접 테스트와 check/build 후 리뷰한다. 웹 E2E 대역과 실제 WebView 검증 결과는 구분한다.
