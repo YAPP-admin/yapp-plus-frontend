@@ -103,9 +103,11 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 
 ## 보완 3단계 — R3 US1 iOS 설정
 
-- [ ] T046 [US1] `apps/mobile/src/auth/providers.ts`에 명시적 iosClientId를 전달하고 `apps/mobile/app.config.ts`의 scheme 대응과 인접 설정 테스트를 확인한다.
+- [x] T046 [US1] `apps/mobile/src/auth/providers.ts`에 명시적 iosClientId를 전달하고 `apps/mobile/app.config.ts`의 scheme 대응과 인접 설정 테스트를 확인한다.
 - [ ] T047 [US1] `.context/oidc-hardening-stage-3/`의 격리 출력에서 숨겨진 plist 없는 깨끗한 iOS 생성·빌드와 초기화를 확인하고 `specs/016-ios-oidc-auth/validation.md`에 실행 가능 범위·실기기 미확인을 기록한다.
-- [ ] T048 [US1] `specs/016-ios-oidc-auth/validation.md`에 check/build/expo:doctor와 설정 diff를 기록하고 리뷰받는다.
+      T047의 깨끗한 생성·Debug 시뮬레이터 빌드는 성공했다. 실제 SDK 초기화는 미실행이므로 체크하지 않는다.
+
+- [x] T048 [US1] `specs/016-ios-oidc-auth/validation.md`에 check/build/expo:doctor와 설정 diff를 기록하고 리뷰받는다.
 
 ## 보완 4단계 — R4 US1 silent nonce 조사
 

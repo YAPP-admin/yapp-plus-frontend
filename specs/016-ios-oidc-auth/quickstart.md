@@ -27,6 +27,13 @@
 Metro bundle 성공·Hermes 실행·Xcode 빌드·Google 실제 로그인은 서로 다른 증거다. 미실행 단계는 그대로 남긴다.
 외부 서비스·실기기·TestFlight 설치·EAS Update는 자동 테스트 통과로 대체하지 않으며 배포하지 않는다.
 
+### R3 네이티브 초기화와 실제 로그인 구분
+
+1. 격리 생성 프로젝트에서 `GoogleService-Info.plist` 부재와 생성 Info.plist의 callback scheme을 확인한다. `.env`나 기존 native 출력은 복사하지 않는다.
+2. 생성 프로젝트의 `ios` 디렉터리에서 `mise exec -- pod install`을 실행하고 완료까지 기다린다. 시뮬레이터 대상으로 별도 DerivedData를 사용해 Xcode 빌드를 실행하고 성공 여부를 기록한다. 번들 생성만으로 이 단계를 통과 처리하지 않는다.
+3. 테스트 전용 시뮬레이터 또는 기기에서 Google 로그인을 시작한다. 디버거로 `configure`가 오류 없이 반환하고 이후 로그인 호출로 진행하는지 확인한다. 토큰·계정 정보는 출력하거나 캡처하지 않는다. 계정 선택 화면 표시만으로 서버 인증 성공을 판정하지 않는다.
+4. 테스트 계정으로 공급자 인증과 서버 응답까지 확인하여 `SIGNED_IN` 또는 예상한 `SIGNUP_REQUIRED`를 기록한다. 재로그인의 nonce 일관성은 R4의 별도 검증으로 남긴다.
+
 이 문서는 실행할 절차다. 실행 결과는 [validation.md](validation.md)에 따로 기록한다.
 모든 명령은 저장소 루트 기준이며 main 동기화와 해당 단계 승인 후 실행한다.
 
