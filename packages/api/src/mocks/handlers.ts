@@ -117,7 +117,14 @@ export function createApiMockHandlers(
         ),
         presign1: fakerResponse(generatedFaker.fakePresign1Response200, schemas.zPresign1Response),
         login: fixedResponse(fixtures.staffLogin, schemas.zStaffLoginResponse),
-        detail: fakerResponse(generatedFaker.fakeDetailResponse200, schemas.zDetailResponse),
+        detail: fakerResponse(
+          (fakerOptions) => ({
+            ...generatedFaker.fakeDetailResponse200(fakerOptions),
+            // 생성 Faker는 이 필드의 int32 범위 없이 정수를 만들므로 대표 점수를 사용합니다.
+            attendanceScore: 0,
+          }),
+          schemas.zDetailResponse,
+        ),
         detail1: fakerResponse(generatedFaker.fakeDetail1Response200, schemas.zDetail1Response),
         update1: () => new HttpResponse(null, { status: 204 }),
         update2: fakerResponse(generatedFaker.fakeUpdate2Response200, schemas.zUpdate2Response),
