@@ -214,6 +214,23 @@ export const quickCard = style({
   },
 });
 
+// 버튼과 툴팁 닫기 스타일은 바깥 요소에 두고 카드의 배경과 이미지 잘림은 안쪽에서 처리합니다.
+export const reportCardButton = style({
+  selectors: {
+    '&&': {
+      display: 'block',
+      width: '100%',
+      height: 'auto',
+      minWidth: 0,
+      padding: 0,
+      margin: 0,
+      border: 'none',
+      borderRadius: vars.$radius.r3,
+      background: 'transparent',
+    },
+  },
+});
+
 export const quickCardContent = style({
   position: 'relative',
   zIndex: 1,
