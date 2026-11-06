@@ -1,6 +1,7 @@
 /** QueryClient 수명 안에서 인증 결과와 화면 callback의 유효성을 함께 관리합니다. */
 import { CancelledError, type QueryClient } from '@tanstack/react-query';
 import type { AuthResult } from '@yapp-plus/app-bridge';
+import { applyAccountBoundary } from './account';
 
 export const nativeSessionQueryKey = ['native-auth', 'session'] as const;
 export type AuthOperation = { generation: number; result?: AuthResult };
@@ -92,6 +93,7 @@ export const applyAuthResult = (
   }
 
   if (result && result.status !== 'CANCELLED') {
+    applyAccountBoundary(client, result);
     client.setQueryData(nativeSessionQueryKey, result);
   }
 
@@ -132,5 +134,6 @@ export const readAuthSession = async (
     return client.getQueryData<AuthResult>(nativeSessionQueryKey) ?? unavailable;
   }
 
+  applyAccountBoundary(client, result);
   return result;
 };

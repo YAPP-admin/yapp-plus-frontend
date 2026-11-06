@@ -245,3 +245,9 @@ p-mutex는 기존 workspace에 없는 직렬 실행 책임만 맡기고 catalog/
 - 설치된 history-sync 1.11.2는 동일 Activity의 첫 route로 URL을 생성한다. encode/decode만으로 기존 다중 탭 경로와 미등록 경로의 NotFound를 동시에 보존할 수 없다면 useTabsUrl의 한정된 URL 보정은 유지하고 제약을 기록한다. SDK 업그레이드나 새 라우터는 추가하지 않는다.
 - 검증은 BackButton root/fallback, 직접 접근 defaultHistory, Alerts→탭 전환, 두 Stack 인스턴스의 독립성, query와 browser back 복원에 집중한다. 실패 시 해당 탐색 변경만 되돌리며 인증 계약·계정 데이터에는 변경이 없다.
 - 다른 세션 50dfa2d의 route 추가·홈 UI·apiOptions·retry:false는 보존 대상이다. 해당 작업 트리나 브랜치를 변경하지 않는다. 실제 통합은 별도 승인 전 수행하지 않는다.
+
+### 5A-2 데이터 경계 리뷰 단위
+
+탐색 단순화 509줄 위에서 800줄 PR 제한을 지키도록 데이터 정리를 먼저 연결한다. 확정한 userId/sessionId를 QueryClient 수명에 보관하고, 동일 세션의 tokenVersion 변경·조회 불가는 계정 경계로 취급하지 않는다. 유효한 mutation 결과와 세션 복구 결과에만 적용하며 이전 작업의 늦은 결과는 기존 세대 검사에서 먼저 차단한다.
+
+계정 경계에서 native-auth 이외의 query를 취소·제거하고 이전 mutation cache를 제거한다. 진행 중인 인증 mutation은 자신의 lifecycle 완료를 위해 유지한다. mutation cache 제거는 서버 작업 취소나 callback 무효화를 뜻하지 않는다. 현재 업무 mutation 소비자는 없으며, 추가 시 계정 경계 검사도 필요하다. Stackflow 재생성과 화면 callback 수명 연결은 후속 리뷰 단위에 남기고 이번 변경만으로 이전 화면 노출 방지가 완성됐다고 선언하지 않는다. 실패 시 데이터 정리 모듈과 두 호출 지점만 되돌린다. 새 의존성·브리지 계약 변경은 없다.
