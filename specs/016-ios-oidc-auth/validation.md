@@ -497,3 +497,11 @@ reload 초안과 pagehide/pageshow 처리를 제거했다. 공식 가드, 보호
 ### 추가 계정·BFCache 검증 — 2026-11-06
 
 Chrome headless에서 브리지 대역을 통한 실제 로그아웃 확인창→다른 계정 로그인→back 후 폼 초기화·캐시 제거·reload 없음과 계정 경계 5개 시나리오를 확인했다. 모바일 테스트 60개도 새 실행 통과했다. 반면 별도 문서에서 native 대역을 로그아웃시킨 뒤 BFCache 복귀(`pageshow.persisted=true`)하면 SIGNED_IN cache와 보호 화면이 남는 결함을 재현했다. 수정 전이므로 인증 수명 검증 완료로 처리하지 않는다. 실물 기기는 없으며 시뮬레이터는 개발 앱 열기 확인창의 UI 제어 불가로 SDK/OAuth 검증이 막혔다. 재현 코드·로그·화면·검증 한계는 `.context/oidc-browser-lifecycle/report.md`에 기록했다.
+
+### 보완 6단계 — 공지 상세 mock 복구
+
+`DongjaJ/oidc-notice-mock`을 `133389a`에서 분리했다(PR base: `DongjaJ/oidc-stackflow-upgrade`). 생성 SDK에서 공지 상세 operation이 `detail1`인 것을 확인하고, 공통 handler에 `fakeDetail1Response200`과 `zDetail1Response`를 연결했다. 기존 회원 상세 `detail` 연결과 생성 코드는 변경하지 않았다. 실패 시 이 단계의 handler·회귀 테스트 변경만 되돌리면 된다.
+
+URL 기준 `GET /api/admin/generations/1/posts/1` 회귀는 수정 전 501로 실패했고, 수정 후 200과 생성 응답 스키마 검증을 통과했다. `node --run check` 통과: API·admin·web·mobile lint/typecheck와 admin·web·mobile 테스트는 새 실행, 나머지는 Turbo cache다. `node --run build`도 통과했으며 admin·web은 새 실행, Storybook은 cache다. 로그는 `.context/oidc-stage-6/`에 보관했다. 실제 서버나 UI 동작 검증은 이번 mock 수정 범위에 포함하지 않았다.
+
+추가 조사에서 `GET /api/admin/generations/1/members/1`도 수정 전후 501을 반환했다. 처음에 추가한 회원 상세 200 탐색 테스트는 실패했고, 공지 상세와 별개인 기존 문제라 최종 회귀 테스트에 포함하지 않았다. 이 문제를 수정하거나 전체 mock 정상화를 주장하지 않는다. BFCache 복귀 결함과 실제 OAuth 미검증도 그대로 남는다. 6단계 사용자 리뷰 전이며 커밋·push·PR은 수행하지 않았다.
