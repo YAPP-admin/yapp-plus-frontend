@@ -1,5 +1,5 @@
 import { fireEvent, render, screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomePage } from './home-page';
 
@@ -31,6 +31,10 @@ vi.mock('@/app/navigation/activity-link', () => ({
     </a>
   ),
 }));
+
+beforeEach(() => {
+  vi.stubEnv('VITE_API_MOCKING', 'true');
+});
 
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -86,7 +90,7 @@ describe('HomePage', () => {
     render(<HomePage />);
     expect(screen.getByText('세션 시작 전에 미리 보고해 주세요')).toBeInTheDocument();
     const navigation = within(screen.getByRole('navigation', { name: '홈 바로가기' }));
-    expect(navigation.getByRole('link', { name: '이번 달 전체 세션 확인하기' })).toHaveAttribute(
+    expect(navigation.getByRole('link', { name: '전체 세션 확인하기' })).toHaveAttribute(
       'href',
       '/schedule',
     );
@@ -98,8 +102,7 @@ describe('HomePage', () => {
     const attendanceBtn = screen.getByRole('button', { name: '출석하기' });
     fireEvent.click(attendanceBtn);
 
-    expect(screen.getByText('출석 코드를 입력해 주세요')).toBeInTheDocument();
-    expect(screen.getByText('코드를 입력하면 출석이 완료돼요')).toBeInTheDocument();
+    expect(mockPush).toHaveBeenCalledWith('AttendanceCode', {});
   });
 
   it('출결 보고 버튼 클릭 시 출결 보고 바텀시트가 열린다', () => {
@@ -107,8 +110,7 @@ describe('HomePage', () => {
     const reportBtn = screen.getByRole('button', { name: '출결 보고 미리하기' });
     fireEvent.click(reportBtn);
 
-    expect(screen.getByText('출결을 보고해 주세요')).toBeInTheDocument();
-    expect(screen.getByText('미리 알려주시면 점수 차감이 줄어들어요')).toBeInTheDocument();
+    expect(mockPush).toHaveBeenCalledWith('AttendanceReport', {});
   });
 
   it('이번 주 공지 목록을 제공한다', () => {

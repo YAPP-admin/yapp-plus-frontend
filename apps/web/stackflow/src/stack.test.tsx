@@ -1,6 +1,6 @@
 import { SnackbarProvider } from '@yapp-plus/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -344,4 +344,73 @@ describe('Stackflow FSD 화면 연결', () => {
       'NotFound',
     ]);
   });
+});
+
+it('출석 시트를 뒤로가기로 닫고 다시 열면 입력을 초기화한다', async () => {
+  window.history.replaceState({}, '', '/?session=team');
+  const user = userEvent.setup();
+  renderStack();
+  const home = await waitForTopHeading('홈');
+  await user.click(home.getByRole('button', { name: '정기 세션 화면으로 전환' }));
+  await user.click(home.getByRole('button', { name: '출석하기' }));
+  const input = await screen.findByRole('textbox', { name: '출석 코드 1번째 자리' });
+  fireEvent.change(input, { target: { value: '7' } });
+  await waitFor(() => expect(window.location.pathname).toBe('/attendance/code'));
+  await waitFor(() =>
+    expect(document.querySelector('[data-global-transition-state]')).toHaveAttribute(
+      'data-global-transition-state',
+      'enter-done',
+    ),
+  );
+  window.history.back();
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(window.location.pathname).toBe('/');
+  await user.click(home.getByRole('button', { name: '출석하기' }));
+  expect(await screen.findByRole('textbox', { name: '출석 코드 1번째 자리' })).toHaveValue('');
+  await user.keyboard('{Escape}');
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+  expect(window.location.pathname).toBe('/');
+}, 15000);
+
+it('팀 안내 시트를 업로드 화면으로 교체해서 뒤로가면 홈으로 돌아온다', async () => {
+  window.history.replaceState({}, '', '/?session=team');
+  const user = userEvent.setup();
+  renderStack();
+  const home = await waitForTopHeading('홈');
+  await user.click(home.getByRole('button', { name: '인증 사진 올리기' }));
+  await screen.findByRole('button', { name: '앨범에서 선택하기' });
+  await waitFor(() => expect(window.location.pathname).toBe('/team-attendance/guide'));
+  await waitFor(() =>
+    expect(document.querySelector('[data-global-transition-state]')).toHaveAttribute(
+      'data-global-transition-state',
+      'enter-done',
+    ),
+  );
+  fireEvent.click(screen.getByRole('button', { name: '앨범에서 선택하기' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/team-attendance/upload'));
+  await waitForTopHeading('팀 세션 인증');
+  window.history.back();
+  await waitFor(() => expect(window.location.pathname).toBe('/'));
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+}, 15000);
+
+it('출결 보고 시트에서 완료하면 홈으로 돌아가고 알림을 표시한다', async () => {
+  window.history.replaceState({}, '', '/attendance/report');
+  renderStack();
+  fireEvent.click(await screen.findByRole('radio', { name: '결석' }));
+  fireEvent.click(screen.getByTestId('report-step1-submit'));
+  fireEvent.change(screen.getByRole('textbox', { name: '결석 사유' }), {
+    target: { value: '개인 일정' },
+  });
+  fireEvent.click(screen.getByTestId('report-step2-submit'));
+  expect(await screen.findByText('출결 보고를 완료했어요')).toBeVisible();
+  await waitFor(() => expect(window.location.pathname).toBe('/'));
+});
+
+it('모의 API를 사용하지 않으면 시트 URL로 직접 진입해도 입력 폼을 제공하지 않는다', async () => {
+  vi.stubEnv('VITE_API_MOCKING', 'false');
+  window.history.replaceState({}, '', '/attendance/code');
+  renderStack();
+  await waitForTopHeading('페이지를 찾을 수 없어요');
+  expect(screen.queryByRole('textbox', { name: '출석 코드 1번째 자리' })).not.toBeInTheDocument();
 });
