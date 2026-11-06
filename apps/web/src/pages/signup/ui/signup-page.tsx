@@ -27,6 +27,7 @@ export function SignupPage() {
   const [step, setStep] = useState<Step>('name');
   const [errorMessage, setErrorMessage] = useState('');
   const signupMutation = useNativeSignupMutation({
+    onSignedIn: () => flow.replace('SignupComplete', {}),
     onFailure: (result) => {
       if (!result) {
         setErrorMessage('가입 브리지를 사용할 수 없어요. 앱을 다시 실행해 주세요.');

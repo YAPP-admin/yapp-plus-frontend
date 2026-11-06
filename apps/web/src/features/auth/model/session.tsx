@@ -4,15 +4,12 @@ import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
 import {
   focusManager,
   queryOptions,
-  useQuery,
   useQueryClient,
   useSuspenseQuery,
 } from '@tanstack/react-query';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { getNativeSession, isNativeWebView } from './native-auth';
 import { nativeSessionQueryKey, readAuthSession } from './operations';
-
-import { accountScopeOptions, type AccountDestination } from './account';
 
 export { nativeSessionQueryKey } from './operations';
 
@@ -27,8 +24,6 @@ type NativeAuthSessionContextValue = Readonly<{
   isNative: boolean;
   phase: NativeAuthSessionPhase;
   session?: AuthSession;
-  accountRevision: number;
-  accountDestination: AccountDestination;
   unsupported: boolean;
   canRetry: boolean;
   isRecovering: boolean;
@@ -38,8 +33,6 @@ type NativeAuthSessionContextValue = Readonly<{
 const browserContext: NativeAuthSessionContextValue = {
   isNative: false,
   phase: 'BROWSER',
-  accountRevision: 0,
-  accountDestination: 'current',
   unsupported: false,
   canRetry: false,
   isRecovering: false,
@@ -111,7 +104,6 @@ export function NativeAuthSessionProvider({ children }: { children: ReactNode })
   const client = useQueryClient();
   const [isNative] = useState(() => isNativeWebView());
   const query = useSuspenseQuery(nativeSessionQueryOptions(isNative));
-  const { data: scope } = useQuery(accountScopeOptions);
   const state = isNative
     ? (resultToState(query.data) ?? { phase: 'UNAVAILABLE' as const })
     : { phase: 'BROWSER' as const };
@@ -122,8 +114,6 @@ export function NativeAuthSessionProvider({ children }: { children: ReactNode })
         isNative,
         phase: state.phase,
         session: state.session,
-        accountRevision: scope.revision,
-        accountDestination: scope.destination,
         unsupported:
           (query.data.status === 'UNAVAILABLE' || query.data.status === 'ERROR') &&
           query.data.code === 'UNSUPPORTED',

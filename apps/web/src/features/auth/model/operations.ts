@@ -94,7 +94,7 @@ export const applyAuthResult = (
   }
 
   if (result && result.status !== 'CANCELLED') {
-    applyAccountBoundary(client, result, kind === 'signup');
+    applyAccountBoundary(client, result);
     client.setQueryData(nativeSessionQueryKey, result);
   }
 

@@ -1,9 +1,14 @@
-import type { StackflowReactPlugin } from '@stackflow/react';
-import { useFlow } from '@stackflow/react';
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { NativeSessionRecovery, useNativeAuthSession } from '@/features/auth';
+import { activityGuardPlugin, redirect } from '@stackflow/plugin-activity-guard';
+import { useFlow, type StackflowReactPlugin } from '@stackflow/react';
+import type { QueryClient } from '@tanstack/react-query';
+import { Fragment, useEffect, type ReactNode } from 'react';
+import {
+  isNativeWebView,
+  nativeSessionQueryOptions,
+  NativeSessionRecovery,
+  useNativeAuthSession,
+} from '@/features/auth';
 
-const RetiredActivities = createContext<ReadonlySet<string>>(new Set());
 const publicActivities = new Set([
   'Login',
   'LoginError',
@@ -14,79 +19,65 @@ const publicActivities = new Set([
   'NotFound',
 ]);
 
-/** 탐색과 이력은 Stackflow에 맡기고 계정이 바뀐 화면의 렌더링만 차단합니다. */
+/** 확정된 로그아웃의 새 진입은 화면을 만들기 전에 공식 가드가 로그인으로 바꿉니다. */
+export function nativeEntryGuard(client: QueryClient, activities: readonly { name: string }[]) {
+  return activityGuardPlugin({
+    guards: Object.fromEntries(
+      activities
+        .filter(({ name }) => !publicActivities.has(name))
+        .map(({ name }) => [
+          name,
+          () => {
+            const result = client.getQueryData(nativeSessionQueryOptions(true).queryKey);
+            const signedOut =
+              result?.status === 'SIGNED_OUT' ||
+              result?.status === 'WITHDRAWN' ||
+              result?.status === 'SIGNUP_REQUIRED';
+            return isNativeWebView() && signedOut ? redirect('Login', {}) : true;
+          },
+        ]),
+    ),
+  });
+}
+
+/** 공식 가드가 실행되지 않는 pop 복원과 조회 불가 상태에서도 보호 내용을 숨깁니다. */
 export function accountBoundaryPlugin(): StackflowReactPlugin {
   return () => ({
     key: 'account-boundary',
-    wrapStack: ({ stack }) => (
-      <AccountActivityBoundary activities={stack.activities}>
-        {stack.render()}
-      </AccountActivityBoundary>
-    ),
     wrapActivity: ({ activity }) => (
       <AccountScreen activity={activity}>{activity.render()}</AccountScreen>
     ),
   });
 }
 
-/** 이미 pop된 Activity도 기록해 browser forward로 복원될 때 이전 내용을 보여주지 않습니다. */
-function AccountActivityBoundary({
-  activities,
-  children,
-}: {
-  activities: readonly { id: string }[];
-  children: ReactNode;
-}) {
-  const { accountRevision } = useNativeAuthSession();
-  const [boundary, setBoundary] = useState(() => ({
-    revision: accountRevision,
-    retired: new Set<string>(),
-  }));
-  if (boundary.revision !== accountRevision) {
-    // 자식을 렌더하기 전에 변경을 반영하므로 이전 계정 화면이 한 프레임 노출되지 않습니다.
-    setBoundary({
-      revision: accountRevision,
-      retired: new Set([...boundary.retired, ...activities.map(({ id }) => id)]),
-    });
-    return null;
-  }
-  return <RetiredActivities value={boundary.retired}>{children}</RetiredActivities>;
-}
-
-/** 현재 Activity가 이전 계정에 속해 폐기됐는지 확인합니다. */
-function useIsRetiredActivity(activityId: string): boolean {
-  return useContext(RetiredActivities).has(activityId);
-}
-
-/** 숨겨진 화면은 내용을 해제하고, 실제 최상위 화면만 목적지로 교체합니다. */
 function AccountScreen({
   activity,
   children,
 }: {
-  activity: { id: string; name: string; isTop: boolean };
+  activity: { name: string; isTop: boolean };
   children: ReactNode;
 }) {
-  const { isNative, phase, accountDestination } = useNativeAuthSession();
-  const retired = useIsRetiredActivity(activity.id);
+  const { isNative, phase, session } = useNativeAuthSession();
   const protectedScreen = !publicActivities.has(activity.name);
-  const blocked = isNative && (retired || (protectedScreen && phase !== 'SIGNED_IN'));
+  const blocked = isNative && protectedScreen && phase !== 'SIGNED_IN';
   const flow = useFlow();
 
   useEffect(() => {
-    if (!blocked || !activity.isTop || phase === 'LOADING' || phase === 'UNAVAILABLE') {
-      return;
-    }
-    if (phase !== 'SIGNED_IN') {
+    if (blocked && activity.isTop && phase === 'SIGNED_OUT') {
       flow.replace('Login', {});
-    } else if (accountDestination === 'signup-complete') {
-      flow.replace('SignupComplete', {});
-    } else {
-      flow.replace('Tabs', { initialTab: 'home' });
     }
-  }, [blocked, activity.isTop, phase, accountDestination, flow]);
+  }, [blocked, activity.isTop, phase, flow]);
 
   if (isNative && phase === 'UNAVAILABLE' && (protectedScreen || activity.name === 'Login')) {
     return activity.isTop ? <NativeSessionRecovery /> : null;
   }
-  return blocked ? null : children;
+  if (blocked) {
+    return null;
+  }
+  // Stack은 유지하고 계정이 바뀐 보호 화면의 로컬 상태만 초기화합니다.
+  return protectedScreen ? (
+    <Fragment key={JSON.stringify([session?.userId, session?.sessionId])}>{children}</Fragment>
+  ) : (
+    children
+  );
 }

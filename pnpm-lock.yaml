@@ -33,6 +33,9 @@ catalogs:
     '@stackflow/link':
       specifier: 3.0.0
       version: 3.0.0
+    '@stackflow/plugin-activity-guard':
+      specifier: 1.0.0
+      version: 1.0.0
     '@stackflow/plugin-history-sync':
       specifier: 2.1.0
       version: 2.1.0
@@ -527,6 +530,9 @@ importers:
       '@stackflow/link':
         specifier: 'catalog:'
         version: 3.0.0(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
+      '@stackflow/plugin-activity-guard':
+        specifier: 'catalog:'
+        version: 1.0.0(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)
       '@stackflow/plugin-history-sync':
         specifier: 'catalog:'
         version: 2.1.0(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
@@ -3355,6 +3361,12 @@ packages:
       '@stackflow/react': ^2.0.0
       '@types/react': '>=16.8.0'
       react: '>=16.8.0'
+
+  '@stackflow/plugin-activity-guard@1.0.0':
+    resolution: {integrity: sha512-ELiQexMzhF7daYoaHAja0ruXLYeGJWoP500aHziDfciCQDFzau48qt2EcOnL4/4F3TtGY0MD8ba8G5uBTOVy7A==}
+    peerDependencies:
+      '@stackflow/config': ^2.0.0
+      '@stackflow/core': ^3.0.0
 
   '@stackflow/plugin-history-sync@2.1.0':
     resolution: {integrity: sha512-JwMBHU6EhJcSqGU5xrrLEw1hyLncBqsCikZGON59nyJbkD7FHUUL3to1R6l2ZpYM3xmB0gqOSngPTdNECLHozQ==}
@@ -10046,6 +10058,11 @@ snapshots:
       '@stackflow/react': 2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8)
       '@types/react': 19.2.18
       react: 19.2.8
+
+  '@stackflow/plugin-activity-guard@1.0.0(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)':
+    dependencies:
+      '@stackflow/config': 2.0.0
+      '@stackflow/core': 3.1.0
 
   '@stackflow/plugin-history-sync@2.1.0(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
     dependencies:

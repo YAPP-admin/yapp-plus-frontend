@@ -41,6 +41,7 @@ export function LoginPage({ initialError = false }: { initialError?: boolean }) 
     initialError ? '로그인 상태를 확인하지 못했어요. 다시 시도해 주세요.' : '',
   );
   const signInMutation = useNativeSignInMutation({
+    onSignedIn: () => flow.replace('Tabs', { initialTab: 'home' }),
     onSignupRequired: () => flow.replace('Signup', {}),
     onFailure: (result) => {
       setErrorMessage(
