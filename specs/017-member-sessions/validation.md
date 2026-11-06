@@ -2,14 +2,16 @@
 
 ## 현재 출시 점검 상태 — 2026-11-07
 
-- **출시 검증 미완료**. 사용자가 개발 API·테스트 계정 미준비로 실제 WebView 검증 보류를 명시했다. 기능·자동 테스트 완료를 실환경 통과로 대체하지 않는다.
-- 구현·자동 검증: 홈/일정 정상·빈 결과·오류·재시도, 401 갱신, 계정 경계·늦은 결과 차단, focus 복귀, 네트워크 복구, 키보드 재시도. 최신 web 테스트는 220개다.
-- 시각 근거: iOS 17.5 Safari의 일정 오류·정상 화면 및 실제 앱의 로그인 화면. 로그인 후 홈·일정의 실제 API 연동, 당김·스크롤 tone, VoiceOver/TalkBack·터치는 미완료다.
-- 최종 check 성공: format 신규 실행, lint 7/7·typecheck 7/7·test 5/5는 Turbo 캐시 재사용. 직전 offline-accessibility-check에서 web 220개 테스트를 신규 실행했다. 최종 build 성공: web 신규 실행, admin·Storybook 캐시 재사용. 로그 .context/session-release-{check,build}.log. 기존 web 번들 크기 경고는 남아 있다.
-- main #329의 업무 cache 제거·인증 제어 cache 유지와 동시 복귀 조회 정책을 spec·plan·contract에 일치시켰다. queryClient.clear() 전체 제거 또는 BFCache 이전 화면 비노출을 보장한다고 쓰지 않는다.
-- 롤백: 서버 명세·데이터·native 브리지 계약 변경은 없다. 배포 후 문제가 발생하면 마지막으로 검증된 main 배포 산출물로 웹을 복구한다. 현재 작업 브랜치 HEAD를 배포 기준으로 삼지 않는다. 인증 연동만 되돌릴 경우 계정 경계·기존 native 인증은 보존하고 HTTP 401 Provider 반영 변경 범위를 함께 검토한다.
-- PR 준비: origin/main bba7ca3 대비 약 4,260줄로 800줄 상한을 초과한다. 사용자 요청에 따라 현재 브랜치 작업을 유지했으며, PR 생성 전 독립 단위로 분리해야 한다. 이번 단계는 문서 정합성·최종 점검만 수행했고 commit·push·PR·배포는 하지 않았다.
-- 재개 조건: 테스트 API origin과 로그인 가능한 개발 앱·테스트 계정을 준비한 뒤 quickstart의 실제 WebView 시나리오를 실행한다. MSW를 끈 별도 검증 환경에서 실제 API 호출임을 확인하고, 자격 값은 기록하지 않는다.
+- **출시 검증 미완료, iOS 시뮬레이터 실제 인증·조회 검증은 일부 완료**. 개발 API·테스트 계정 미준비로 보류했던 상태에서 실제 API 검증을 재개했다. 아래 과거 단계 기록의 보류·미커밋·PR 미생성 표기는 당시 상태이며, 현재 상태는 이 요약과 마지막 검증 기록을 따른다.
+- 구현·자동 검증: 홈/일정 정상·빈 결과·오류·재시도, 401 갱신, 계정 경계·늦은 결과 차단, focus 복귀, 네트워크 복구, 키보드 재시도. 최종 웹 테스트는 220개다.
+- 실제 환경: iPhone 15 Pro / iOS 17.5의 YAPP+ 앱에 수정한 native JavaScript 번들을 적용하고, WebView는 localhost:3000·MSW false로 연결했다. Apple 로그인 후 재실행 복구와 Google 가입 후 홈 진입·재실행 복구를 확인했다. 서명된 바이너리 재빌드나 TestFlight 검증은 아니다.
+- 조회·화면: 실제 API 진단에서 이번 주 세션은 HTTP 200·session 없음, 전체 일정은 HTTP 200·빈 목록이었다. 홈 빈 카드와 출결 보고 카드의 배경·이미지 잘림·카드 내부 준비 중 표시를 시뮬레이터에서 확인했다. 데이터가 있는 실 API 일정 화면까지 검증한 것으로 보고하지 않는다.
+- 로컬 검증: 카드 수정 시 check의 웹 lint/typecheck/test(220개)와 웹 build를 새로 실행했고 다른 대상은 캐시를 재사용했다. PR 분리의 웹 중간 단계도 새로 검증했다. 최상단 최종 check/build는 성공 결과의 Turbo 캐시를 재사용했다. 로그: `.context/report-card-{check,build}.log`, `.context/pr-*-{check,build}.log`, `.context/pr-final-{check,build}.log`.
+- 인증 정책: main #329의 업무 cache 제거·인증 제어 cache 유지와 동시 복귀 조회 정책을 유지한다. queryClient.clear() 전체 제거 또는 BFCache 이전 화면 비노출을 보장한다고 쓰지 않는다.
+- PR 분리 완료: 독립 native [#341](https://github.com/YAPP-admin/yapp-plus-frontend/pull/341), 웹 [#342](https://github.com/YAPP-admin/yapp-plus-frontend/pull/342) → #349. 생성 당시 각 PR은 315~~773줄이며 일정 PNG 20,268 bytes는 별도다. 원래 전체 작업은 `DongjaJ/nsu85`의 `56d7069`에 보존했다. 이후 #341~~#349 모두 병합됐고 최신 origin/main `16b3ba23`에 native·웹 변경이 함께 포함됐다.
+- GitHub 재확인: #341~#349는 모두 MERGED다. 병합 전 Verify 성공을 확인했고, 최신 main `16b3ba23`의 CD 성공과 사용자의 웹 배포 완료를 확인했다. TestFlight 빌드·제출 및 EAS Update는 이번 작업에서 실행하지 않았다. 생성 직후 종속 PR의 CI 미실행 기록은 당시 상태다.
+- 남은 검증: 실기기 VoiceOver/TalkBack·터치·회전, Android 실제 인증, 실제 네트워크 단절·복구, 이전 계정 데이터/입력의 비노출, BFCache 복원, 수정본 WebView의 당김·스크롤 tone 왕복. 앱 종료·재실행 복구를 백그라운드 복귀나 BFCache 검증으로 대체하지 않는다.
+- 롤백: 웹은 마지막으로 검증된 main 배포 산출물로 복구한다. native 저장 형식 변경과 이전 바이너리 복귀 시 재로그인 필요 사항은 #341의 인증 검증 기록을 따른다. 현재 PR 브랜치를 프로덕션 배포 기준으로 삼지 않는다.
 
 ## 1단계 결과
 
@@ -207,3 +209,31 @@ T034·T035는 완료 처리하지 않는다. 실제 WebView·서버·접근성 �
 - iPhone 15 Pro / iOS 17.5 Safari에서 DEV+MSW 일정 오류·정상 목록을 육안 확인했다. 오류 그래픽·설명·다시 시도 버튼이 화면에 표시된다. 근거: .context/member-sessions-evidence/schedule-error-safari.png. 확인 후 정상 /schedule로 복원했다. 앱 WebView 증거로 사용하지 않는다.
 - check 통과: web lint·typecheck·220개 테스트 신규 실행, 다른 워크스페이스 캐시 재사용. 로그 .context/offline-accessibility-check.log. 테스트·문서 변경만 있어 build·expo:doctor는 재실행하지 않았다. git diff --check 통과.
 - T027의 시각 근거는 보완했지만 실기기 접근성은 남아 있다. T033·T034·T036의 실제 WebView·계정 전환·네트워크·터치·스크린 리더 검증도 미완료로 유지한다. 누적 변경 약 4,240줄, 브랜치 분리 보류·미커밋 상태다.
+
+## 실제 API·Google 가입·홈 UI·PR 분리 후 확인 — 2026-11-07
+
+- Google SDK 인증 후 서버의 HTTP 200 / SIGNUP_REQUIRED와 이름·전화번호 입력 화면 진입을 확인했다. 사용자가 가입 정보를 입력한 뒤 홈을 확인했고, 앱을 완전히 종료·재실행해 추가 로그인 없이 홈으로 복귀하는 것을 확인했다. 토큰·계정·입력값은 이 기록에 포함하지 않는다.
+- Apple 인증 후에도 저장된 세션 복구를 확인했다. 갱신 응답에 user가 없는 계약 및 RN 전역 crypto 부재 수정의 상세 근거는 독립 PR #341의 `specs/016-ios-oidc-auth/validation.md`에 있다.
+- 실제 API의 주간 세션 없음·전체 일정 빈 목록을 확인했으므로, 이번 실환경 확인은 빈 상태를 포함한다. 오류·로딩·데이터가 있는 목록은 기존 MSW/Safari 및 자동 테스트 근거와 구분한다.
+- 출결 보고는 SEED ActionButton을 유지하고 내부 요소에 카드 배경·높이·이미지 잘림을 적용했다. 실환경은 카드 안에 준비 중을 표시하고 바깥의 중복 안내 문구를 제거했다. 시연 환경의 보고 Activity 탐색은 유지한다. UI 수정 원본 커밋은 `56d7069`다.
+- 로컬 화면 근거: `.context/google-signup-result.png`, `.context/google-session-restored.png`, `.context/report-card-fixed.png`. 이 경로는 gitignored 작업 기록이며 GitHub에 첨부된 이미지나 저장소에서 내려받을 수 있는 산출물이 아니다.
+
+| PR                                                                | 목적                   | 생성 시 실제 base | 생성 시 추가+삭제 |
+| ----------------------------------------------------------------- | ---------------------- | ----------------- | ----------------- |
+| [#341](https://github.com/YAPP-admin/yapp-plus-frontend/pull/341) | native 갱신·세션 복구  | main              | 422               |
+| [#342](https://github.com/YAPP-admin/yapp-plus-frontend/pull/342) | 세션 명세·검증 기록    | main              | 773               |
+| [#343](https://github.com/YAPP-admin/yapp-plus-frontend/pull/343) | 웹 인증 갱신·복귀 처리 | #342 브랜치       | 397               |
+| [#344](https://github.com/YAPP-admin/yapp-plus-frontend/pull/344) | 응답 검증·목업         | #343 브랜치       | 315               |
+| [#345](https://github.com/YAPP-admin/yapp-plus-frontend/pull/345) | 일정 조회·상태 화면    | #344 브랜치       | 603 + PNG 1개     |
+| [#346](https://github.com/YAPP-admin/yapp-plus-frontend/pull/346) | 홈 카드·시트 컴포넌트  | #345 브랜치       | 639               |
+| [#347](https://github.com/YAPP-admin/yapp-plus-frontend/pull/347) | 시트 탐색·카드 UI      | #346 브랜치       | 664               |
+| [#348](https://github.com/YAPP-admin/yapp-plus-frontend/pull/348) | 홈 주간 조회 연결      | #347 브랜치       | 439               |
+| [#349](https://github.com/YAPP-admin/yapp-plus-frontend/pull/349) | 안전 영역·통합 검증    | #348 브랜치       | 451               |
+
+- 위 줄 수는 PR 생성 시점의 기록이다. 이후 문서 수정과 base 변경 때 실제 diff를 다시 계산한다. 분리 시 독립 native PR과 웹 최상단을 합친 파일 내용이 원본 전체 작업과 일치함을 확인했다.
+- 생성 당시 #341·#342의 CI는 성공했고 종속 PR은 base 필터 때문에 검사 표시가 없었다. 이번 문서 갱신 시 GitHub를 다시 조회해 9개 PR 모두 Verify 성공·Draft 해제를 확인했다. 이번 문서 작업에서 PR 상태·workflow·배포 설정을 변경하지 않았다.
+- 출시 검증 외 별도 후속 사항: 가입 폼 전화번호 검증·서버 fieldErrors 처리 보완, 로그인 없이 열리는 약관 공개 링크 확보. 이번 Google 가입 성공이 입력 오류 처리나 약관 공개 접근까지 검증한 것은 아니다.
+
+- 문서 현행화 검증: `node --run check` 통과. format은 새 실행, lint 7/7·typecheck 7/7·test 5/5는 Turbo 캐시 재사용이다. 로그는 `.context/docs-update-web-check.log`. 문서만 변경하여 build·expo:doctor는 재실행하지 않았다. 기존 PR 병합 후 최신 main을 기준으로 인증·세션 문서 3개를 `docs/session-validation-results`의 별도 후속 PR으로 묶었다.
+
+- 병합 후 후속 확인: origin/main `16b3ba23`에 user 없는 갱신 응답 처리, SecureStore 세션 레코드, expo-crypto UUID 수정과 웹 UI가 모두 포함돼 있다. 새 TestFlight 빌드는 이 main 기준으로 준비할 수 있으며 문서 PR 병합은 제품 코드의 빌드 선행 조건이 아니다.

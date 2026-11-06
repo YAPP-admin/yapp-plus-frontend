@@ -1,5 +1,12 @@
 # 1단계 검증 기록
 
+## 최신 인증 검증 상태 — 2026-11-07
+
+- Apple 로그인과 Google 가입 후 홈 진입·앱 종료/재실행 복구를 iOS 시뮬레이터에서 확인했다. 아래 과거 단계의 실제 OAuth 미검증·PR 미생성 표기는 당시 기록이며 이 요약과 마지막 추가 검증 기록이 현재 상태다.
+- 검증 환경은 수정 JavaScript 번들을 적용한 iPhone 15 Pro / iOS 17.5 앱, localhost:3000 WebView, MSW false와 실제 API다. 서명된 바이너리·TestFlight·Android 실기기를 검증한 것은 아니다.
+- 복구 수정은 독립 PR [#341](https://github.com/YAPP-admin/yapp-plus-frontend/pull/341)에 분리했다. Verify·Label PR·Validate PR title 성공 후 `c68ae8a8`로 main에 병합됐다. 최신 main `16b3ba23`에는 웹 PR #342~#349도 포함된다. TestFlight 제출·EAS Update는 이번 작업에서 실행하지 않았다.
+- 실제 만료 토큰 강제 재현, BFCache·이전 계정 데이터 비노출, 실기기 접근성·네트워크 복구 검증은 남아 있다. 가입 성공을 모든 인증 오류·취소·계정 전환 경로의 실환경 통과로 확대하지 않는다.
+
 ## #329 보완 0단계 — 2026-11-06
 
 - 이슈: [#329](https://github.com/YAPP-admin/yapp-plus-frontend/issues/329). 사용자 승인 초안대로 생성, 담당자 DongjaJ, 라벨·milestone 없음.
@@ -564,3 +571,14 @@ URL 회귀 5개와 최종 check 통과: admin 658·web 139·mobile 60개 테스�
 - 증거: .context/session-renewal-fixed-home.png. 토큰·사용자 정보·응답 본문을 저장하지 않았다. 임시 진단 코드·서버는 제거했다.
 - native 설정·의존성 변경 없음. expo:doctor 및 서명된 바이너리 재빌드·TestFlight·Android 실기기 검증은 이번 수정에서 실행하지 않았다.
 - 기존 토큰 단독 저장은 재로그인한다. 이전 바이너리로 롤백해도 재로그인이 필요하다. 커밋·push·배포는 하지 않았다.
+
+## Google 가입·재실행 복구 추가 검증 — 2026-11-07
+
+- MY → 설정 → 로그아웃 후 Google 인증을 진행했다. 실제 서버는 HTTP 200 / SIGNUP_REQUIRED를 반환했고 사용자는 이름·전화번호 입력 화면 진입을 확인했다.
+- 사용자가 가입 정보를 입력한 뒤 시뮬레이터 홈 화면을 확인했다. 임시 진단 코드가 없는 설치 번들과 일치함을 확인하고 앱을 완전히 종료·재실행했으며, 추가 로그인 없이 홈으로 복귀했다. Apple 세션 복구와 별개로 Google 가입 이후 저장·복구 흐름을 확인한 결과다.
+- 근거는 원래 hong-kong workspace의 `.context/google-signup-result.png`, `.context/google-session-restored.png`다. gitignored 로컬 기록이며 GitHub 첨부 파일은 아니다. 인증 토큰·이름·전화번호·응답 본문은 이 문서에 기록하지 않는다.
+- 임시 진단 번들과 서버를 정리했다. 이번 확인은 화면·서버 상태 기반 수동 검증이며 제품 코드 변경이나 새 자동 테스트 실행은 없다. 앞선 모바일 76개 테스트 신규 실행과 PR 분리 시 check/build 캐시 재사용 기록을 구분한다.
+- 원본 복구 수정 `912dbe1`을 PR #341로 분리해 push했다. 생성 시 main 대비 +351/-71(422줄)이었고, 후속 문서 변경은 별도로 합산한다. 웹 PR #342~#349와 독립적이며 이 PR만으로 웹 변경까지 포함하지 않는다.
+- 잔여 범위: Google 기존 가입 계정의 재로그인 분기, 가입 입력 검증·서버 fieldErrors, registrationToken 만료 안내, 실제 네트워크 단절·계정 전환·Android/TestFlight·VoiceOver/TalkBack. 기존 저장 형식과 롤백 시 재로그인 필요 조건은 앞선 기록을 유지한다.
+
+- 문서 현행화 검증: `node --run check` 통과. format은 새 실행, lint 7/7·typecheck 7/7·test 5/5는 Turbo 캐시 재사용이다. 원래 hong-kong workspace의 `.context/docs-update-native-check.log`에 기록했다. 문서만 변경하여 build·expo:doctor는 재실행하지 않았다. 기존 #341 병합 후 세션 문서와 함께 최신 main 기준 `docs/session-validation-results`의 별도 후속 PR으로 묶었다.
