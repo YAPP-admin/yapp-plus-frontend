@@ -50,7 +50,7 @@ T001~T006은 1단계 문서·이슈 연결 작업이다. 이 단계의 완료는
 - [x] T024 [US3] `apps/web/src/pages/schedule/ui/schedule-page.tsx`에서 DEFAULT_SCHEDULES 기본값을 제거하고 query와 조회 상태를 연결한다.
 - [x] T025 [US3] `apps/web/src/pages/schedule/ui/schedule-item.tsx`, `schedule-empty.tsx`에 확정 표기와 조회 시점의 종료 여부·접근성 안내를 반영한다.
 - [x] T026 [US3] `apps/web/stackflow/src/stack.test.tsx`에 일정 직접 진입·탭 복귀·비목업 브라우저 요청 차단을 검증한다.
-- [ ] T027 [US3] check/build·키보드·변경량과 iOS Safari 오류·정상 화면 근거를 기록했다. 실제 WebView·실기기 접근성 확인이 남아 있다.
+- [ ] T027 [US3] check/build·키보드·변경량과 iOS Safari 오류·정상 화면 근거를 기록했다. 실제 API의 HTTP 200·빈 목록도 확인했다. 데이터가 있는 실 API 목록과 실기기 접근성 확인은 남아 있다.
 
 ## 6단계 — US4 홈 세션 카드
 
@@ -61,18 +61,18 @@ T001~T006은 1단계 문서·이슈 연결 작업이다. 이 단계의 완료는
 - [x] T030 [US4] `apps/web/src/pages/home/ui/home-page.tsx`의 미연동 실행을 비활성화하고 준비 중 안내·유도 tooltip·바로가기 접근성 이름을 정리한다.
 - [x] T031 [US4] `apps/web/stackflow/src/activities/legacy.tsx`와 홈 소비 경계에서 모의 URL/초기 상태를 DEV+MSW에 제한한다.
 - [x] T032 [US4] `apps/web/src/pages/home/ui/home-page.test.tsx`와 `apps/web/stackflow/src/stack.test.tsx`에서 실서비스 차단·목업 시연·홈/일정 복귀를 검증한다.
-- [ ] T033 [US4] 자동 검증·check/build·변경량은 기록했다. 사용자가 화면 동작을 확인했다. 실기기 접근성 확인이 남아 있다.
+- [ ] T033 [US4] 자동 검증·check/build·변경량은 기록했다. 사용자가 화면 동작을 확인했고 실제 WebView의 홈 빈 카드·출결 보고 준비 중 카드와 로그인 후 홈 진입을 확인했다. 실기기 접근성 확인은 남아 있다.
 
 ## 7단계 — 통합 검증과 출시 준비
 
 main의 #329 구현을 병합했다. 실제 인증 mutation과 홈·일정 query의 계정 경계,
 401 갱신 결과의 Provider 반영과 focus 복귀 시 계정 전환을 자동 검증했다.
-T035의 조회 정책 검증은 완료했지만, 실제 WebView 복귀·BFCache 검증은 남아 있다. 상세 현황은 validation.md의 병합 후 기록을 따른다.
+T035의 조회 정책 검증과 iOS 시뮬레이터 Apple 로그인·Google 가입 후 종료/재실행 복구는 완료했다. 실제 WebView 백그라운드 복귀·BFCache 검증은 남아 있다. 상세 현황은 validation.md의 병합 후 기록을 따른다.
 
-- [ ] T034 인증 작업의 전체 캐시 초기화·늦은 결과 차단·복귀 확인을 두 조회와 통합 검증한다. 인증 상태 관리 구현은 여기서 추가하지 않는다.
+- [ ] T034 인증 전환 시 업무 cache 정리·늦은 결과 차단·복귀 계정 전환은 두 조회와 자동 통합 검증했다. 실제 WebView에서 이전 계정 데이터·입력·이력이 보이지 않는지 확인하는 작업은 남아 있다. 인증 상태 관리 구현은 여기서 추가하지 않는다.
 - [x] T035 사용자 리뷰로 동시 조회를 허용했다. 기본 mount/focus/reconnect 재조회와 정상 native 세션의 focus 재확인, 인증 진행·가입 대기·미지원 예외를 검증했다. 수동 복귀 Effect와 선행 조회 차단은 구현하지 않는다. BFCache 이전 화면 비노출은 별도 미완료다.
-- [ ] T036 `specs/017-member-sessions/quickstart.md`의 WebView·오프라인·계정 전환·키보드/스크린 리더/터치 시나리오를 실행하고 `validation.md`에 증거를 기록한다.
-- [x] T037 `specs/017-member-sessions/validation.md`에 최종 check/build·신규 실행/캐시·미실행·롤백 기준·base 대비 변경량을 기록했다. 실제 WebView 검증 보류와 PR 분리 필요를 명시했으며 출시 완료를 뜻하지 않는다.
+- [ ] T036 MSW false의 iOS 시뮬레이터에서 Apple·Google 인증/가입·홈 진입·재실행 복구와 실제 API 빈 결과를 확인했다. quickstart의 실제 오프라인 복구·계정 전환 후 이전 화면 비노출·스크린 리더/실기기 터치·BFCache 검증은 남아 있다.
+- [x] T037 `specs/017-member-sessions/validation.md`에 최종 check/build·신규 실행/캐시·미실행·롤백 기준·base 대비 변경량을 기록했다. 실제 WebView의 완료 범위와 남은 검증을 구분하고 PR #341~#349 분리·병합, GitHub Verify 성공과 웹 배포 완료를 기록했다. 출시 완료를 뜻하지 않는다.
 
 ## 의존성과 실행 전략
 
