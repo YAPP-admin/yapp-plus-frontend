@@ -69,8 +69,15 @@ export function SettingsPage() {
   const { isNative } = useNativeAuthSession();
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
   const snackbar = useSnackbarAdapter();
-  const withdrawMutation = useNativeWithdrawMutation();
-  const signOutMutation = useNativeSignOutMutation();
+  const withdrawMutation = useNativeWithdrawMutation({
+    onWithdrawn: () => flow.replace('Login', {}),
+    onFailure: () => showAccountError('탈퇴 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.'),
+  });
+  const signOutMutation = useNativeSignOutMutation({
+    onSignedOut: () => flow.replace('Login', {}),
+    onFailure: () =>
+      showAccountError('로그아웃 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.'),
+  });
   const isAccountActionPending = withdrawMutation.isPending || signOutMutation.isPending;
 
   const showAccountError = (message: string): void => {
@@ -85,16 +92,7 @@ export function SettingsPage() {
       return;
     }
 
-    withdrawMutation.mutate(undefined, {
-      onSuccess: (result) => {
-        if (result?.status === 'WITHDRAWN') {
-          flow.replace('Login', {});
-          return;
-        }
-        showAccountError('탈퇴 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.');
-      },
-      onError: () => showAccountError('탈퇴 처리 중 문제가 발생했어요. 다시 시도해 주세요.'),
-    });
+    withdrawMutation.mutate(undefined);
   };
 
   const handleLogout = () => {
@@ -103,16 +101,7 @@ export function SettingsPage() {
       return;
     }
 
-    signOutMutation.mutate(undefined, {
-      onSuccess: (result) => {
-        if (result?.status === 'SIGNED_OUT') {
-          flow.replace('Login', {});
-          return;
-        }
-        showAccountError('로그아웃 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.');
-      },
-      onError: () => showAccountError('로그아웃 중 문제가 발생했어요. 다시 시도해 주세요.'),
-    });
+    signOutMutation.mutate(undefined);
   };
 
   return (
