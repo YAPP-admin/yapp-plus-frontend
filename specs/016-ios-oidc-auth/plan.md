@@ -281,3 +281,9 @@ p-mutex는 기존 workspace에 없는 직렬 실행 책임만 맡기고 catalog/
 문서 재로드와 pagehide/pageshow 처리는 제거한다. 공식 가드가 새 보호 화면 진입을 제어하고, 렌더링 경계는 로그아웃·조회 불가 시 보호 내용을 unmount한다. 보호 화면 자식의 userId/sessionId key로 계정 변경을 반영하여 중간 로그아웃 렌더가 생략되어도 이전 로컬 상태를 재사용하지 않는다. 같은 세션 tokenVersion 변경은 key를 바꾸지 않는다. 기존 요청 취소·cache 제거·generation 검사는 유지한다.
 
 이전 Activity ID 목록과 account revision/destination은 제거하고 로그인·가입 성공은 페이지 callback으로 이동한다. Stack과 브라우저 이력은 유지하므로 이전 URL로 돌아갈 수 있으나 이전 계정의 cache·폼 상태는 복원하지 않는다. 검증 범위는 동일 문서의 back/forward·새 진입·계정 변경이며 실제 BFCache 문서 복원은 미확인으로 남긴다. 실패 시 현재 변경만 되돌려 ce4cb49의 경계를 복구한다.
+
+### 후속 정리와 다른 워크스페이스 통합
+
+사용자 승인 순서는 7단계 문서 정리·커밋 → 회원 상세 mock 501 보완 → PR 준비다. 실제 기기는 확보했으나 검증은 보류했다. BFCache는 알려진 제한으로 유지하며 실제 OAuth 완료를 주장하지 않는다. 회원 상세 보완도 생성 코드 직접 수정 없이 URL·응답 계약 회귀를 먼저 작성한다. 실패 시 해당 mock 보완만 되돌린다.
+
+Conductor 비교 대상은 기존에 확인한 `10f6a289-c126-4178-8393-331df06e2993`의 `hong-kong` / `DongjaJ/nsu85`다. 최신 `50dfa2d`와 현재 `f21851b`를 읽기 전용으로 비교했다. 회원 상세 mock과는 직접 겹치지 않지만 인증 Provider·홈·Stackflow 연결은 충돌한다. 구체적인 병합 시 유지할 계약은 validation의 비교 결과를 따른다. 실제 merge/rebase·다른 작업 트리 변경은 수행하지 않는다.
