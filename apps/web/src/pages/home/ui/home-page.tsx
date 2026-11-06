@@ -1,5 +1,7 @@
 'use client';
 
+import { CurrentWeekCard } from './current-week-card';
+
 import { IconChevronRightFill, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
 import {
   HelpBubbleAnchor,
@@ -112,6 +114,8 @@ export function HomePage({
   const flow = useFlow();
   const canPreview = import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true';
   const [internalSessionMode, setInternalSessionMode] = useState<'team' | 'offline' | null>(null);
+  const showDemo =
+    canPreview && Boolean(internalSessionMode ?? initialSession ?? initialAttendance);
   const isTeamSession =
     (internalSessionMode ?? (initialSession === 'team' ? 'team' : 'offline')) === 'team';
 
@@ -203,52 +207,70 @@ export function HomePage({
 
       <div className={content}>
         <section className={cardsSection} aria-label="세션 및 바로가기">
-          <div className={sessionCard}>
-            <div className={sessionHeader}>
-              <div className={sessionHeaderTop}>
-                <div className={locationRow}>
-                  <span className={locationPin} aria-hidden="true">
-                    <IconLocationpinFill width={14} height={14} />
-                  </span>
-                  <span className={locationText}>
-                    {isTeamSession ? '팀별 자율 장소' : 'DMC 첨단산업센터'}
-                  </span>
+          {showDemo ? (
+            <div className={sessionCard}>
+              <div className={sessionHeader}>
+                <div className={sessionHeaderTop}>
+                  <div className={locationRow}>
+                    <span className={locationPin} aria-hidden="true">
+                      <IconLocationpinFill width={14} height={14} />
+                    </span>
+                    <span className={locationText}>
+                      {isTeamSession ? '팀별 자율 장소' : 'DMC 첨단산업센터'}
+                    </span>
+                  </div>
+                  <ActionButton
+                    variant="ghost"
+                    size="small"
+                    type="button"
+                    className={sessionToggleChip}
+                    onClick={() => setInternalSessionMode(isTeamSession ? 'offline' : 'team')}
+                    aria-label={isTeamSession ? '정기 세션 화면으로 전환' : '팀 세션 화면으로 전환'}
+                  >
+                    {isTeamSession ? '정기 세션 보기' : '팀 세션 보기'}
+                  </ActionButton>
                 </div>
+                <h2 className={sessionTitle}>
+                  {isTeamSession
+                    ? '이번 주는 팀 세션이에요'
+                    : '이번 주는 유저 플로우 리뷰 세션이에요'}
+                </h2>
+              </div>
+
+              <div className={calendarWeek} aria-label="주간 일정">
+                {weekSchedule.map((item) => {
+                  const isAttended = item.isToday && attendanceState === 'attended';
+                  return (
+                    <div key={item.day} className={calendarDayItem}>
+                      <span className={calendarDayLabel}>{item.day}</span>
+                      <span className={item.isToday ? calendarDateBadgeActive : calendarDateBadge}>
+                        {item.date}
+                      </span>
+                      {isAttended && <span className={attendedBadge}>출석</span>}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {renderSessionActionButton()}
+            </div>
+          ) : (
+            <>
+              <CurrentWeekCard />
+              {canPreview ? (
                 <ActionButton
                   variant="ghost"
                   size="small"
                   type="button"
                   className={sessionToggleChip}
-                  onClick={() => setInternalSessionMode(isTeamSession ? 'offline' : 'team')}
-                  aria-label={isTeamSession ? '정기 세션 화면으로 전환' : '팀 세션 화면으로 전환'}
+                  onClick={() => setInternalSessionMode('team')}
+                  aria-label="팀 세션 화면으로 전환"
                 >
-                  {isTeamSession ? '정기 세션 보기' : '팀 세션 보기'}
+                  팀 세션 시연
                 </ActionButton>
-              </div>
-              <h2 className={sessionTitle}>
-                {isTeamSession
-                  ? '이번 주는 팀 세션이에요'
-                  : '이번 주는 유저 플로우 리뷰 세션이에요'}
-              </h2>
-            </div>
-
-            <div className={calendarWeek} aria-label="주간 일정">
-              {weekSchedule.map((item) => {
-                const isAttended = item.isToday && attendanceState === 'attended';
-                return (
-                  <div key={item.day} className={calendarDayItem}>
-                    <span className={calendarDayLabel}>{item.day}</span>
-                    <span className={item.isToday ? calendarDateBadgeActive : calendarDateBadge}>
-                      {item.date}
-                    </span>
-                    {isAttended && <span className={attendedBadge}>출석</span>}
-                  </div>
-                );
-              })}
-            </div>
-
-            {renderSessionActionButton()}
-          </div>
+              ) : null}
+            </>
+          )}
 
           <nav className={quickCardsGrid} aria-label="홈 바로가기">
             <div className={quickCardCol}>
