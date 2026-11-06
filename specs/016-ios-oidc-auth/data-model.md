@@ -7,8 +7,8 @@
 | 데이터                                         | 위치                                       | 삭제/변경 시점                                     |
 | ---------------------------------------------- | ------------------------------------------ | -------------------------------------------------- |
 | provider ID token·authorization code·raw nonce | native 인증 시도 메모리                    | 교환 완료·실패·취소 후 제거                        |
-| service refresh token                          | SecureStore                                | 갱신 때 교체, 확정 무효·로그아웃·탈퇴 성공 때 삭제 |
-| service access token·만료시각·userId           | native 메모리; 검증된 RPC 결과로 웹 메모리 | 갱신·로그아웃·계정 변경                            |
+| service refresh token·userId                   | SecureStore                                | 갱신 때 교체, 확정 무효·로그아웃·탈퇴 성공 때 삭제 |
+| service access token·만료시각                  | native 메모리; 검증된 RPC 결과로 웹 메모리 | 갱신·로그아웃·계정 변경                            |
 | registration token·만료시각                    | native 메모리만                            | 가입 완료·만료·새 로그인·앱 종료                   |
 | 이름·전화번호 입력                             | 가입 화면 메모리                           | 화면 종료·가입 완료; 웹 영구 저장 없음             |
 | auth revision                                  | native bridge의 비민감 공유 상태           | 권한 상태·작업 결과 변경 때 증가                   |
@@ -95,3 +95,10 @@ sequenceDiagram
 ### 5A-1 실제 적용
 
 인증 의도 시작과 인증 결과 확정은 세대를 올린다. 중복 로그인·가입의 BUSY 응답은 기존 작업을 무효화하지 않는다. AuthOperation은 React Query mutation의 내부 문맥으로만 유지하는 generation과 result이며 RPC나 영구 저장소에 넣지 않는다. hook이 의미별 callback의 세대 유효성을 검사하고 React Query의 호출별 callback이 화면 수명을 관리한다. RPC 예외는 onError에서 처리하며 유효한 작업만 OUTCOME_UNKNOWN으로 반영한다. 계정 cache와 화면 세대 연결은 5A-2에 남아 있다.
+
+## 저장 세션 보완 — 2026-11-07
+
+SecureStore의 org.yapp.yappplus.auth.session에는 {version: 1, refreshToken, userId}를 저장한다.
+userId는 로그인 응답에서 검증한 안전한 정수이며 갱신 응답에서 다시 얻지 않는다. access token과 만료 시간은 메모리에만 둔다.
+키 org.yapp.yappplus.auth.refresh-token의 이전 토큰은 폐기한다. 새 저장 값이 없거나 손상된 경우 SIGNED_OUT,
+읽기·쓰기·삭제 실패는 STORAGE다. 새 토큰과 userId 저장이 완료된 뒤에만 SIGNED_IN을 공개한다.

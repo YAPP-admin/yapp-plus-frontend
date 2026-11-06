@@ -123,3 +123,15 @@ Android develop `2b837e3cb21762c6a73f1db205be6a3ef2749a97`의 [GoogleCredentialM
 - 결정: 브리지 준비 판정에 공개 상태·메서드 지원 검사를 사용한다. 고정 webview-bridge 1.8.0의 isWebViewBridgeAvailable은 함수 목록의 길이이며 initialBridge의 함수도 포함한다. 현재 packages/app-bridge의 initialBridge는 safeAreaInsets 데이터만 있어 초기 함수 목록은 비어 있다. 이 설정 전제를 회귀 테스트로 유지한다.
 - 제외: onReady를 hydration 구독으로 사용하는 제안. 설치된 dist/index.js 735행은 proxy 생성 직후 onReady를 호출하고 705행의 hydrate 처리는 별도이므로 준비 신호가 아니다. SDK 내부 전역이나 private 이벤트에 직접 의존하지 않는다.
 - 제외: 이번 범위에서 일반 업무 API 401 재전송 정책·추가 상태 라이브러리·새 RPC를 도입하지 않는다. 다른 세션의 미커밋 구현을 사용하지 않는다.
+
+## 실제 갱신 응답 확인 — 2026-11-07
+
+- 결정: 로그인에만 user.id를 요구하고 갱신은 session 자격만 검증한다.
+- 근거: 시뮬레이터의 갱신 200 응답에 user가 없으며 OpenAPI도 user를 nullable로 정의한다.
+- 계정 식별자는 로그인 때 검증한 userId를 refresh token과 함께 저장한다. 메모리에만 두면 재실행 복구가 불가능하다.
+- 대안: Android의 storageKey 기반 식별로 바꾸면 브리지·웹 캐시 계약까지 바뀌므로 이번 수정에서는 제외한다.
+- 기존 키와 다른 키를 사용해 구버전이 새 JSON을 토큰으로 전송하지 않도록 한다.
+
+추가 재현: 토큰 저장 뒤 세션 ID를 만들 때 전역 crypto.randomUUID가 실패했다.
+시뮬레이터에서 typeof globalThis.crypto 및 randomUUID가 undefined임을 확인했다.
+Node의 전역 crypto 때문에 단위 테스트가 놓쳤으며, expo-crypto와 전역 crypto 부재 회귀로 보완했다.

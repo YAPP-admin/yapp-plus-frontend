@@ -5,10 +5,17 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SessionManager, type SessionCredentials, type RenewalResult } from './session';
 
+import type { StoredSession } from './storage';
+
+vi.mock('expo-crypto', async () => {
+  const { randomUUID } = await import('node:crypto');
+  return { randomUUID };
+});
+
 const storage = vi.hoisted(() => ({
   clearSession: vi.fn<() => Promise<void>>(),
-  getRefreshToken: vi.fn<() => Promise<string | null>>(),
-  setRefreshToken: vi.fn<(token: string) => Promise<void>>(),
+  getSession: vi.fn<() => Promise<StoredSession | null>>(),
+  setSession: vi.fn<(session: StoredSession) => Promise<void>>(),
 }));
 
 vi.mock('./storage', () => ({ authStorage: storage }));
@@ -22,7 +29,7 @@ const credentials = (version: number): SessionCredentials => ({
 
 const renewed = (version: number): RenewalResult => ({
   kind: 'success',
-  credentials: credentials(version),
+  tokens: credentials(version),
 });
 
 const signedInSession = async (manager: SessionManager): Promise<AuthSession> => {
@@ -37,8 +44,22 @@ const signedInSession = async (manager: SessionManager): Promise<AuthSession> =>
 describe('SessionManager', () => {
   beforeEach(() => {
     storage.clearSession.mockReset().mockResolvedValue(undefined);
-    storage.getRefreshToken.mockReset().mockResolvedValue(null);
-    storage.setRefreshToken.mockReset().mockResolvedValue(undefined);
+    storage.getSession.mockReset().mockResolvedValue(null);
+    storage.setSession.mockReset().mockResolvedValue(undefined);
+  });
+
+  it('전역 crypto가 없는 native 환경에서도 세션 ID를 발급한다', async () => {
+    vi.stubGlobal('crypto', undefined);
+    try {
+      const manager = new SessionManager();
+      const result = await manager.establish(credentials(1), manager.captureGeneration());
+      expect(result).toMatchObject({
+        status: 'SIGNED_IN',
+        session: { sessionId: expect.any(String) },
+      });
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 
   it('동시에 들어온 refresh 요청을 하나의 네트워크 호출로 합친다', async () => {
@@ -105,14 +126,14 @@ describe('SessionManager', () => {
     resolveRenew?.(renewed(2));
 
     await expect(refreshing).resolves.toEqual({ status: 'CANCELLED' });
-    expect(storage.setRefreshToken).toHaveBeenCalledTimes(1);
+    expect(storage.setSession).toHaveBeenCalledTimes(1);
   });
 
   it('로그아웃이 시작된 뒤 완료된 저장소 읽기를 복구에 사용하지 않는다', async () => {
     const manager = new SessionManager();
-    const read = Promise.withResolvers<string | null>();
+    const read = Promise.withResolvers<StoredSession | null>();
     const started = Promise.withResolvers<void>();
-    storage.getRefreshToken.mockImplementation(() => {
+    storage.getSession.mockImplementation(() => {
       started.resolve();
       return read.promise;
     });
@@ -120,7 +141,7 @@ describe('SessionManager', () => {
     const restoring = manager.get(renew);
     await started.promise;
     const clearing = manager.clear();
-    read.resolve('old-refresh');
+    read.resolve({ refreshToken: 'old-refresh', userId: 1 });
     await Promise.all([restoring, clearing]);
     expect(renew).not.toHaveBeenCalled();
     expect(manager.refreshToken).toBeUndefined();
@@ -132,8 +153,8 @@ describe('SessionManager', () => {
     const session = await signedInSession(manager);
     const write = Promise.withResolvers<void>();
     const started = Promise.withResolvers<void>();
-    let persisted: string | null = 'refresh-1';
-    storage.setRefreshToken.mockImplementation(async (token) => {
+    let persisted: StoredSession | null = { refreshToken: 'refresh-1', userId: 1 };
+    storage.setSession.mockImplementation(async (token) => {
       started.resolve();
       await write.promise;
       persisted = token;
@@ -159,11 +180,11 @@ describe('SessionManager', () => {
     const manager = new SessionManager();
     await signedInSession(manager);
     storage.clearSession.mockRejectedValueOnce(new Error('storage'));
-    storage.getRefreshToken.mockResolvedValue('refresh-1');
+    storage.getSession.mockResolvedValue({ refreshToken: 'refresh-1', userId: 1 });
     const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
     await expect(manager.clear()).resolves.toMatchObject({ code: 'STORAGE' });
     await expect(manager.get(renew)).resolves.toMatchObject({ code: 'STORAGE' });
-    expect(storage.getRefreshToken).not.toHaveBeenCalled();
+    expect(storage.getSession).not.toHaveBeenCalled();
     expect(renew).not.toHaveBeenCalled();
     await expect(
       manager.establish(credentials(3), manager.captureGeneration()),
@@ -202,11 +223,11 @@ describe('SessionManager', () => {
 
   it('동시 복구는 저장소 읽기와 갱신을 공유한다', async () => {
     const manager = new SessionManager();
-    storage.getRefreshToken.mockResolvedValue('refresh-1');
+    storage.getSession.mockResolvedValue({ refreshToken: 'refresh-1', userId: 1 });
     const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
     const results = await Promise.all([manager.get(renew), manager.get(renew)]);
     expect(results[0]).toEqual(results[1]);
-    expect(storage.getRefreshToken).toHaveBeenCalledTimes(1);
+    expect(storage.getSession).toHaveBeenCalledTimes(1);
     expect(renew).toHaveBeenCalledTimes(1);
   });
 
@@ -217,13 +238,13 @@ describe('SessionManager', () => {
     await expect(manager.establish(credentials(1), generation)).resolves.toEqual({
       status: 'CANCELLED',
     });
-    expect(storage.setRefreshToken).not.toHaveBeenCalled();
+    expect(storage.setSession).not.toHaveBeenCalled();
   });
 
   it('갱신 저장 실패를 네트워크 오류로 숨기지 않고 다음 저장을 허용한다', async () => {
     const manager = new SessionManager();
     const session = await signedInSession(manager);
-    storage.setRefreshToken.mockRejectedValueOnce(new Error('storage'));
+    storage.setSession.mockRejectedValueOnce(new Error('storage'));
     const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
     await expect(manager.refresh(session, renew)).resolves.toMatchObject({ code: 'STORAGE' });
     expect(manager.refreshToken).toBe('refresh-1');

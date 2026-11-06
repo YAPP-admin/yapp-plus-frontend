@@ -287,3 +287,22 @@ p-mutex는 기존 workspace에 없는 직렬 실행 책임만 맡기고 catalog/
 사용자 승인 순서는 7단계 문서 정리·커밋 → 회원 상세 mock 501 보완 → PR 준비다. 실제 기기는 확보했으나 검증은 보류했다. BFCache는 알려진 제한으로 유지하며 실제 OAuth 완료를 주장하지 않는다. 회원 상세 보완도 생성 코드 직접 수정 없이 URL·응답 계약 회귀를 먼저 작성한다. 실패 시 해당 mock 보완만 되돌린다.
 
 Conductor 비교 대상은 기존에 확인한 `10f6a289-c126-4178-8393-331df06e2993`의 `hong-kong` / `DongjaJ/nsu85`다. 최신 `50dfa2d`와 현재 `f21851b`를 읽기 전용으로 비교했다. 회원 상세 mock과는 직접 겹치지 않지만 인증 Provider·홈·Stackflow 연결은 충돌한다. 구체적인 병합 시 유지할 계약은 validation의 비교 결과를 따른다. 실제 merge/rebase·다른 작업 트리 변경은 수행하지 않는다.
+
+## 승인된 갱신 오류 수정 — 2026-11-07
+
+사용자가 로그인·갱신 검증 분리와 userId 동시 저장, 이전 형식 재로그인을 승인했다.
+현재 작업 브랜치는 DongjaJ/nsu85, 기준 origin/main은 bba7ca3이다. 기존 인증 연동 작업의 버그 수정이며 새 의존성·공개 계약 변경은 없다.
+
+- 토큰 검증과 로그인 자격 검증을 분리한다. 갱신 결과에는 토큰만 전달하고 SessionManager가 기존 userId를 결합한다.
+- SecureStore의 새 auth.session 키에 version 1, refreshToken, userId를 한 번에 저장한다. 이전 auth.refresh-token 키는 읽기·쓰기·삭제 시 정리한다.
+- 기존 저장 직렬화·세대 검사·single-flight를 유지한다. 손상 값은 재로그인, 저장소 접근 실패는 STORAGE로 구분한다.
+- 회귀: user 없는 200 갱신, 재시작 복구, 토큰 단독 데이터, 손상 값, 로그아웃·계정 변경 경쟁. check/build와 iOS 번들 export를 확인한다.
+- 롤백: 이전 바이너리로 복원하면 새 키를 읽지 않아 재로그인이 필요하다. 새 키를 이전 키로 복사하거나 JSON을 토큰으로 해석하지 않는다. 이미 무효화된 테스트 토큰도 재로그인한다.
+
+Android develop도 AuthRenewalResponse를 분리해 user 없는 갱신을 처리한다. 저장 식별자는 storageKey이며
+이 앱의 기존 userId 브리지 계약과 다르다. 플랫폼 차이가 아닌 현재 소비자 계약 차이를 유지한다.
+Spec Kit setup-plan으로 기존 산출물을 확인했다. 전후 extension hook은 없다. 위 승인안에 따른 단일 수정·검증 단위로 진행한다.
+
+실기기 재현 중 추가로 SessionManager의 전역 crypto.randomUUID 호출 실패를 확인했다.
+React Native 런타임의 global crypto는 undefined였다. 기존 expo-crypto.randomUUID로 바꾸고
+전역 crypto가 없는 환경의 회귀를 추가한다. 새 패키지는 추가하지 않는다.
