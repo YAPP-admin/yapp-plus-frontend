@@ -39,7 +39,17 @@ export const completeNativeSignup = async (
 export const getNativeSession = async (): Promise<AuthResult | undefined> => {
   const bridge = getNativeBridge();
 
-  return bridge ? bridge.getSession() : undefined;
+  if (!bridge) {
+    return undefined;
+  }
+  // 메서드 목록은 hydration 후 도착합니다. onReady는 준비 완료 알림이 아닙니다.
+  if (!bridge.isWebViewBridgeAvailable) {
+    return { status: 'UNAVAILABLE', code: 'OUTCOME_UNKNOWN', retryable: true };
+  }
+  if (!bridge.isNativeMethodAvailable('getSession')) {
+    return { status: 'UNAVAILABLE', code: 'UNSUPPORTED', retryable: false };
+  }
+  return bridge.getSession();
 };
 
 /** native 세션 관리자에 요청 당시 세션 버전을 전달해 access token을 갱신합니다. */

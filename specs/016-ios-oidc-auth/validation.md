@@ -459,3 +459,17 @@ R2 네이티브 보완을 제출하며 웹 오류 화면·재로그인 전환의
 - `node --run check` 통과: 웹 lint·typecheck·124개 테스트 신규 실행, 다른 패키지 Turbo 캐시 재사용. `node --run build` 통과: 웹 신규 빌드, admin·Storybook 캐시 재사용. 이후 변경은 테스트·문서뿐이다. 로그는 `.context/oidc-account-cache/check-final.log`, `build.log`, 수정 전 결과는 `red.log`다.
 - 다른 세션은 50dfa2d이며 작업 트리가 깨끗하다. 해당 HTTP 인증 훅은 갱신 전후 AbortSignal을 확인하므로 취소 계약과 부합한다. 실제 merge·통합 실행은 미실행이다. 이번 단계는 cache 계층 검증이며 실제 브라우저의 native 로그인·실기기 검증은 수행하지 않았다.
 - Stackflow 화면/폼 초기화와 뒤로가기 차단은 다음 리뷰 단위다. cache 제거만으로 기존 observer·화면 상태의 제거 또는 서버 mutation 취소를 보장하지 않는다. 현재 업무 mutation 소비자는 없으며 추가 시 늦은 callback의 계정 유효성 검사도 필요하다. 이번 단계는 미커밋이고 다음 구현은 리뷰 후 진행한다.
+
+## 5B — 브리지 복구 구현 검증
+
+- 기반: fbf14c4 / DongjaJ/oidc-account-stack. 작업 브랜치: DongjaJ/oidc-bridge-recovery. 커밋·push·PR 생성은 하지 않았다.
+- 구현 전 신규 회귀 6개 중 4개가 실패했다. 미준비와 미지원 구분, undefined/예외 후 자동 복구, 복귀 시 재조회 결함을 확인했다.
+- 구현 후 웹 136개 테스트가 새로 통과했다. 브리지 경계 2개, 복구 query 5개, 실제 Stack 화면 복구 2개를 추가했다. 기존 늦은 query/인증 결과·tokenVersion·로그아웃 경합 테스트도 통과했다.
+- 복구 query는 실패 완료 후 5초, hidden 중 호출 억제, focus/online/manual 중복 요청, 진행 중 RPC 중복 방지, 성공·미지원·unmount 후 자동 호출 중단을 검증했다.
+- Stack 회귀에서 조회 불가 동안 보호 콘텐츠 미노출·URL 유지, 수동 복구 뒤 원래 콘텐츠 표시, 미지원 안내와 재시도 버튼 부재를 확인했다. 기존 가입·로그아웃 회귀도 통과했다.
+- 공용 브리지의 initialBridge에 인증 함수 fallback이 없고 기존 timeout 설정을 유지하는 회귀를 추가했다. app-bridge 19개 테스트를 이번 작업 중 새로 실행해 통과했다.
+- `node --run check` 통과. 최종 실행에서 웹 lint/typecheck/test는 새로 실행했고 다른 패키지는 Turbo 캐시를 재사용했다. format 검사와 diff 공백 검사를 통과했다.
+- Chrome의 로컬 브리지 대역에서 보호 URL의 복구 안내·재시도 버튼과 보호 내용 미노출을 접근성 트리 및 스크린샷으로 확인했다. `.context/oidc-bridge-recovery/waiting.png`에 저장했다. 이후 본문 트리가 비거나 캡처가 검게 나오는 문제가 반복되어 실제 브라우저의 복구 완료·미지원·키보드 조작 완료는 확인하지 못했다. DOM 기반 자동화도 timeoutMs 내부 오류로 사용할 수 없었다.
+- 브리지 대역/검증 서버는 `.context/oidc-bridge-recovery/`에만 있으며 제품 변경에 포함하지 않는다. 실제 WebView hydration, 네이티브 왕복, iPhone, VoiceOver·터치 조작, Google/Apple 서버, 다른 작업 브랜치와의 통합은 미검증이다.
+- `node --run build` 통과. 웹 빌드는 새로 실행했고 admin·Storybook 빌드는 Turbo 캐시를 재사용했다.
+- T054의 전체 화면 검증과 사용자 리뷰는 대기 상태이며, 다음 6단계는 시작하지 않는다.

@@ -1,7 +1,13 @@
 /** WebView의 native 세션을 초기화하고 화면별 인증 결과를 공유하는 provider입니다. */
 
 import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
-import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query';
+import {
+  focusManager,
+  queryOptions,
+  useQuery,
+  useQueryClient,
+  useSuspenseQuery,
+} from '@tanstack/react-query';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { getNativeSession, isNativeWebView } from './native-auth';
 import { nativeSessionQueryKey, readAuthSession } from './operations';
@@ -23,6 +29,10 @@ type NativeAuthSessionContextValue = Readonly<{
   session?: AuthSession;
   accountRevision: number;
   accountDestination: AccountDestination;
+  unsupported: boolean;
+  canRetry: boolean;
+  isRecovering: boolean;
+  retry: () => void;
 }>;
 
 const browserContext: NativeAuthSessionContextValue = {
@@ -30,11 +40,23 @@ const browserContext: NativeAuthSessionContextValue = {
   phase: 'BROWSER',
   accountRevision: 0,
   accountDestination: 'current',
+  unsupported: false,
+  canRetry: false,
+  isRecovering: false,
+  retry: () => {},
 };
 
 const NativeAuthSessionContext = createContext<NativeAuthSessionContextValue>(browserContext);
 
-/** native 세션을 복구하는 query 계약입니다. */
+const recoveryInterval = 5000;
+
+/** 로그인·가입 대기와 미지원에는 자동 조회를 시작하지 않습니다. */
+const canRecover = (result: AuthResult | undefined): boolean =>
+  (result?.status === 'UNAVAILABLE' || result?.status === 'ERROR') &&
+  result.code !== 'UNSUPPORTED' &&
+  result.retryable;
+
+/** 자동·복귀·수동 재조회가 같은 cache와 진행 중 Promise를 사용합니다. */
 export const nativeSessionQueryOptions = (isNative: boolean) =>
   queryOptions<AuthResult>({
     queryKey: nativeSessionQueryKey,
@@ -45,7 +67,14 @@ export const nativeSessionQueryOptions = (isNative: boolean) =>
 
       return readAuthSession(client, signal, getNativeSession);
     },
-    staleTime: Number.POSITIVE_INFINITY,
+    retry: false,
+    networkMode: 'always',
+    staleTime: (query) =>
+      canRecover(query.state.data) ? recoveryInterval : Number.POSITIVE_INFINITY,
+    refetchInterval: (query) => (canRecover(query.state.data) ? recoveryInterval : false),
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: true,
+    refetchOnReconnect: () => focusManager.isFocused(),
   });
 
 const resultToState = (
@@ -58,6 +87,7 @@ const resultToState = (
   switch (result.status) {
     case 'SIGNED_IN':
       return { phase: 'SIGNED_IN', session: result.session };
+    case 'SIGNUP_REQUIRED':
     case 'SIGNED_OUT':
     case 'WITHDRAWN':
       return { phase: 'SIGNED_OUT' };
@@ -67,7 +97,6 @@ const resultToState = (
     case 'AUTHENTICATING':
       return { phase: 'LOADING' };
     case 'CANCELLED':
-    case 'SIGNUP_REQUIRED':
       return undefined;
   }
 
@@ -79,6 +108,7 @@ const resultToState = (
  * 브리지 timeout은 인증 불가 상태로 변환해 오류를 화면 정책으로 전달합니다.
  */
 export function NativeAuthSessionProvider({ children }: { children: ReactNode }) {
+  const client = useQueryClient();
   const [isNative] = useState(() => isNativeWebView());
   const query = useSuspenseQuery(nativeSessionQueryOptions(isNative));
   const { data: scope } = useQuery(accountScopeOptions);
@@ -94,6 +124,19 @@ export function NativeAuthSessionProvider({ children }: { children: ReactNode })
         session: state.session,
         accountRevision: scope.revision,
         accountDestination: scope.destination,
+        unsupported:
+          (query.data.status === 'UNAVAILABLE' || query.data.status === 'ERROR') &&
+          query.data.code === 'UNSUPPORTED',
+        canRetry: isNative && canRecover(query.data),
+        isRecovering: query.isFetching,
+        // refetch()는 staleTime을 무시합니다. fetchQuery로 최소 간격과 진행 요청을 공유합니다.
+        retry: () => {
+          if (isNative && canRecover(query.data)) {
+            void client.fetchQuery(nativeSessionQueryOptions(true)).catch(() => {
+              // 인증 작업이 조회를 취소한 경우 해당 작업의 결과를 기다립니다.
+            });
+          }
+        },
       }}
     >
       {children}

@@ -1,0 +1,121 @@
+import { QueryClient, QueryObserver, focusManager, onlineManager } from '@tanstack/react-query';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import type { AuthResult } from '@yapp-plus/app-bridge';
+import { nativeSessionQueryKey, nativeSessionQueryOptions } from './session';
+
+const bridge = vi.hoisted(() => ({
+  getNativeSession: vi.fn<() => Promise<AuthResult | undefined>>(),
+}));
+vi.mock('./native-auth', () => bridge);
+let client: QueryClient;
+let unsubscribe: () => void;
+beforeEach(() => {
+  vi.useFakeTimers();
+  client = new QueryClient();
+  client.mount();
+  focusManager.setFocused(true);
+  onlineManager.setOnline(true);
+  bridge.getNativeSession.mockReset();
+});
+afterEach(() => {
+  unsubscribe?.();
+  client.unmount();
+  client.clear();
+  focusManager.setFocused(undefined);
+  onlineManager.setOnline(true);
+  vi.useRealTimers();
+});
+const observe = () => {
+  unsubscribe = new QueryObserver(client, nativeSessionQueryOptions(true)).subscribe(() => {});
+  return vi.advanceTimersByTimeAsync(0);
+};
+
+it.each(['undefined', 'timeout'])(
+  '%s 뒤 5초 간격으로 복구하고 성공 뒤 재조회를 멈춘다',
+  async (failure) => {
+    if (failure === 'timeout') {
+      bridge.getNativeSession.mockRejectedValueOnce(new Error('timeout'));
+    } else {
+      bridge.getNativeSession.mockResolvedValueOnce(undefined);
+    }
+    bridge.getNativeSession.mockResolvedValue({ status: 'SIGNED_OUT' });
+    await observe();
+    expect(client.getQueryData(nativeSessionQueryKey)).toMatchObject({ status: 'UNAVAILABLE' });
+    await vi.advanceTimersByTimeAsync(4999);
+    await client.fetchQuery(nativeSessionQueryOptions(true));
+    expect(bridge.getNativeSession).toHaveBeenCalledTimes(1);
+    await vi.advanceTimersByTimeAsync(1);
+    expect(client.getQueryData(nativeSessionQueryKey)).toEqual({ status: 'SIGNED_OUT' });
+    await vi.advanceTimersByTimeAsync(20000);
+    expect(bridge.getNativeSession).toHaveBeenCalledTimes(2);
+  },
+);
+
+it('미지원은 자동·복귀·수동 재조회로 반복 호출하지 않는다', async () => {
+  bridge.getNativeSession.mockResolvedValue({
+    status: 'UNAVAILABLE',
+    code: 'UNSUPPORTED',
+    retryable: false,
+  });
+  await observe();
+  await vi.advanceTimersByTimeAsync(10000);
+  focusManager.setFocused(false);
+  focusManager.setFocused(true);
+  onlineManager.setOnline(false);
+  onlineManager.setOnline(true);
+  await client.fetchQuery(nativeSessionQueryOptions(true));
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(1);
+});
+
+it('숨김 중 재조회하지 않고 복귀·온라인·수동 요청을 하나의 진행 요청으로 모은다', async () => {
+  bridge.getNativeSession.mockResolvedValueOnce(undefined);
+  await observe();
+  focusManager.setFocused(false);
+  onlineManager.setOnline(false);
+  onlineManager.setOnline(true);
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(1);
+  let resolve!: (value: AuthResult) => void;
+  bridge.getNativeSession.mockImplementation(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  focusManager.setFocused(true);
+  onlineManager.setOnline(false);
+  onlineManager.setOnline(true);
+  const manual = client.fetchQuery(nativeSessionQueryOptions(true));
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(2);
+  resolve({ status: 'SIGNED_OUT' });
+  await manual;
+  unsubscribe();
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(2);
+});
+
+it('진행 요청의 실패 완료부터 다시 5초를 기다리고 unmount 후 자동 조회를 멈춘다', async () => {
+  let resolve!: (value: undefined) => void;
+  bridge.getNativeSession.mockImplementationOnce(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  await observe();
+  await vi.advanceTimersByTimeAsync(12000);
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(1);
+  resolve(undefined);
+  await vi.advanceTimersByTimeAsync(0);
+  await vi.advanceTimersByTimeAsync(4999);
+  focusManager.setFocused(false);
+  focusManager.setFocused(true);
+  await client.fetchQuery(nativeSessionQueryOptions(true));
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(1);
+  await vi.advanceTimersByTimeAsync(1);
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(2);
+  unsubscribe();
+  await vi.advanceTimersByTimeAsync(10000);
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(2);
+});

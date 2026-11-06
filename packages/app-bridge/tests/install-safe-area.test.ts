@@ -45,6 +45,16 @@ describe('installSafeAreaBridge', () => {
     vi.unstubAllGlobals();
   });
 
+  it('연결 초기값에 인증 메서드 fallback을 넣지 않아 준비 여부를 구분할 수 있다', async () => {
+    const { getAppBridge } = await import('../src/web');
+    getAppBridge();
+    expect(linkBridgeMock).toHaveBeenCalledWith({
+      initialBridge: { safeAreaInsets: INITIAL_SAFE_AREA_INSETS },
+      timeout: 180_000,
+      throwOnError: ['getSafeAreaInsets'],
+    });
+  });
+
   it('일반 브라우저에서는 CSS 변수를 덮어쓰지 않는다', async () => {
     const setProperty = vi.fn<(property: string, value: string) => void>();
     vi.stubGlobal('document', { documentElement: { style: { setProperty } } });
