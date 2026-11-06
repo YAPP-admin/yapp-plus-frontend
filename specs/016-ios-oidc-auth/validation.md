@@ -451,3 +451,11 @@ R2 네이티브 보완을 제출하며 웹 오류 화면·재로그인 전환의
 - 초기 자동화는 주소·제목보다 본문 캡처가 늦게 갱신됐다. 사용자가 전면 Chrome에서 목록 복귀를 확인했고 후속 접근성 트리도 일치했다. 이를 제품의 본문 갱신 실패로 단정하지 않는다. DOM 자동화는 timeoutMs 오류로 사용할 수 없어 Chrome 앱의 접근성 조작과 화면 캡처를 사용했다. 전환 성능 수치는 측정하지 않았다.
 - 화면 근거: `.context/oidc-navigation/home-state-restored.png`. 실제 인증 서버·모바일 WebView·스크린 리더·터치 검증은 이번 브라우저 탐색 확인에 포함하지 않았다.
 - 재실행한 `node --run check`와 `node --run build` 모두 성공했다. 이번 재실행은 전체 Turbo 캐시를 재사용했다(`browser-check.log`, `browser-build.log`). 웹 114개 테스트와 웹 빌드의 신규 실행 결과는 위 `check.log`, `build-final.log` 기록이다. 브라우저 확인 중 제품 코드를 변경하지 않았다.
+
+### 5A-2 데이터 경계 — T051b-cache
+
+- `9eb2fac` 위에서 유효한 인증 결과·복구 결과에 계정 데이터 정리를 연결했다. userId/sessionId 변경과 SIGNED_OUT/WITHDRAWN 확정 시 업무 query를 취소·제거하고 이전 mutation cache를 정리한다. 같은 세션 tokenVersion 갱신·조회 실패·로그아웃 응답 유실에는 유지한다. 진행 중 인증 mutation은 자신의 lifecycle을 마친다.
+- 최초 회귀 4개 중 계정 변경·늦은 조회·복구 3개가 수정 전 실패했다. 최종 데이터 경계 10개를 포함해 웹 전체 124개 테스트가 통과했다. 취소 신호 전파, 같은 사용자 새 sessionId, QueryClient 격리, 늦은 인증/복구 결과 차단도 검증했다. 테스트 작성 중 lint·readonly 타입 오류를 수정한 뒤 전체 검사를 통과했다.
+- `node --run check` 통과: 웹 lint·typecheck·124개 테스트 신규 실행, 다른 패키지 Turbo 캐시 재사용. `node --run build` 통과: 웹 신규 빌드, admin·Storybook 캐시 재사용. 이후 변경은 테스트·문서뿐이다. 로그는 `.context/oidc-account-cache/check-final.log`, `build.log`, 수정 전 결과는 `red.log`다.
+- 다른 세션은 50dfa2d이며 작업 트리가 깨끗하다. 해당 HTTP 인증 훅은 갱신 전후 AbortSignal을 확인하므로 취소 계약과 부합한다. 실제 merge·통합 실행은 미실행이다. 이번 단계는 cache 계층 검증이며 실제 브라우저의 native 로그인·실기기 검증은 수행하지 않았다.
+- Stackflow 화면/폼 초기화와 뒤로가기 차단은 다음 리뷰 단위다. cache 제거만으로 기존 observer·화면 상태의 제거 또는 서버 mutation 취소를 보장하지 않는다. 현재 업무 mutation 소비자는 없으며 추가 시 늦은 callback의 계정 유효성 검사도 필요하다. 이번 단계는 미커밋이고 다음 구현은 리뷰 후 진행한다.

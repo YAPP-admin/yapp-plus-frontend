@@ -123,7 +123,9 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 - [x] T051a [US3] 별도 승인된 종속 브랜치에서 QueryClient별 공통 결과 적용·세대/tokenVersion·늦은 성공/오류 callback 차단과 회귀를 구현한다.
 - [x] T051a-review [US3] 5A-1 결과·callback 회귀와 check/build, 실제 브라우저 미검증을 제출하고 리뷰받는다.
 - [x] T051b-nav [US3] 기존 탐색의 별도 history 추적·전역 탭 전환 예약을 Stackflow 공개 API로 정리하고 회귀·check/build 결과를 제출한다. 계정 수명 초안은 보관한다.
-- [ ] T051b-nav-review [US3] 탐색 단순화 리뷰를 받고 계정 수명 연결의 다음 진행을 확인한다.
+- [x] T051b-nav-review [US3] 탐색 단순화 리뷰를 받고 계정 수명 연결의 다음 진행을 확인한다.
+- [x] T051b-cache [US3] 계정 경계의 query 취소·cache 제거를 결과 반영/복구에 연결하고 회귀 및 check/build 결과를 제출한다.
+- [x] T051b-cache-review [US3] 데이터 경계 리뷰 후 화면 수명 연결을 진행한다.
 - [ ] T051b [US3] 계정 경계 cache·Stackflow 화면 수명을 연결하고 check/build·화면 검증 후 5A 리뷰를 받는다. 650줄부터 하위 분리를 검토한다.
 
 아래 T052–T054는 5A 리뷰 뒤 진행하는 5B다.
