@@ -32,7 +32,7 @@ const auth = vi.hoisted(() => {
     })),
   };
 });
-vi.mock('@stackflow/react/future', () => ({ useFlow: () => flow }));
+vi.mock('@stackflow/react', () => ({ useFlow: () => flow }));
 vi.mock('@/features/auth', () => auth);
 beforeEach(() => vi.clearAllMocks());
 

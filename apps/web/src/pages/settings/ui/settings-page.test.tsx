@@ -14,9 +14,10 @@ const navigation = vi.hoisted(() => ({
 
 const authSession = vi.hoisted(() => ({ isNative: false }));
 
-vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
-
-vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: navigation.isRoot }) }));
+vi.mock('@stackflow/react', () => ({
+  useFlow: () => navigation,
+  useActivity: () => ({ isRoot: navigation.isRoot }),
+}));
 
 vi.mock('@/features/auth', async (importOriginal) => ({
   ...(await importOriginal<typeof Auth>()),

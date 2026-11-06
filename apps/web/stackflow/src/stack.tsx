@@ -1,11 +1,11 @@
 import { defineConfig, type ActivityBaseParams } from '@stackflow/config';
 import type { StackflowPlugin } from '@stackflow/core';
+import { LinkUrlResolverProvider } from '@stackflow/link';
 import { historySyncPlugin } from '@stackflow/plugin-history-sync';
-import { preloadPlugin } from '@stackflow/plugin-preload';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
-import { lazy, stackflow as createStackflow } from '@stackflow/react/future';
+import { lazy, stackflow as createStackflow } from '@stackflow/react';
 import { Primitive, seedPlugin } from '@seed-design/stackflow';
-import { type ReactNode } from 'react';
+import { type ComponentProps, type ReactNode } from 'react';
 import type { TabsState } from '@/app/navigation/tab';
 import { accountBoundaryPlugin } from './account-boundary';
 import type { StackflowInitialContext } from './platform';
@@ -302,10 +302,8 @@ function reducedMotionPlugin() {
 function canonicalHistoryPlugin(): StackflowPlugin {
   return () => ({
     key: 'canonical-history',
-    onPushed: scheduleCanonicalPath,
-    onReplaced: scheduleCanonicalPath,
-    onStepPushed: scheduleCanonicalPath,
-    onStepReplaced: scheduleCanonicalPath,
+    // history-sync 2는 전환이 끝난 Stack 변경에서 URL을 확정합니다.
+    onChanged: scheduleCanonicalPath,
   });
 }
 
@@ -347,17 +345,14 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
     ? { ...stackflowConfig, transitionDuration: 0 }
     : stackflowConfig;
 
-  return createStackflow({
+  const historySync = historySyncPlugin({ config, fallbackActivity: () => 'NotFound' });
+  const app = createStackflow({
     components: activityComponents,
     config,
     plugins: [
       basicRendererPlugin(),
       accountBoundaryPlugin(),
-      historySyncPlugin({
-        config,
-        fallbackActivity: () => 'NotFound',
-      }),
-      preloadPlugin<typeof activityComponents>({ loaders: {} }),
+      historySync,
       seedPlugin(({ initialContext }) => ({
         theme:
           isStackflowInitialContext(initialContext) && initialContext.platform === 'android'
@@ -368,4 +363,13 @@ export function createStackflowApp(options: { reducedMotion?: boolean } = {}) {
       canonicalHistoryPlugin(),
     ],
   });
+  // Link 3은 탐색 플러그인의 URL resolver를 명시적으로 전달받습니다.
+  return {
+    ...app,
+    Stack: (props: ComponentProps<typeof app.Stack>) => (
+      <LinkUrlResolverProvider resolver={historySync.urlResolver}>
+        <app.Stack {...props} />
+      </LinkUrlResolverProvider>
+    ),
+  };
 }

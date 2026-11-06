@@ -10,7 +10,7 @@
 import { IconChevronLeftLine, IconXmarkLine } from '@karrotmarket/react-monochrome-icon'; // "@daangn/react-monochrome-icon"과 동일합니다.
 import { VStack } from '@seed-design/react';
 import { AppBar as SeedAppBar } from '@seed-design/stackflow';
-import { useActions, useActivity } from '@stackflow/react';
+import { useFlow, useActivity } from '@stackflow/react';
 import * as React from 'react';
 
 export type AppBarProps = {} & SeedAppBar.RootProps;
@@ -81,7 +81,7 @@ export const AppBarBackButton = ({
   ...otherProps
 }: AppBarIconButtonProps) => {
   const activity = useActivity();
-  const actions = useActions();
+  const actions = useFlow();
 
   const handleOnClick = (e: React.MouseEvent<HTMLButtonElement>) => {
     onClick?.(e);

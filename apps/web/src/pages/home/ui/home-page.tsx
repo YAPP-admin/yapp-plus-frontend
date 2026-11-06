@@ -24,7 +24,7 @@ import {
   TextFieldTextarea,
   useSnackbarAdapter,
 } from '@yapp-plus/ui';
-import { useFlow } from '@stackflow/react/future';
+import { useFlow } from '@stackflow/react';
 import { ActivityLink } from '@/app/navigation/activity-link';
 import { Image } from '@/app/navigation/image';
 import { TabLink } from '@/app/navigation/tab-link';

@@ -17,7 +17,7 @@ import {
   SwitchThumb,
 } from '@seed-design/react';
 import { Image } from '@/app/navigation/image';
-import { useFlow } from '@stackflow/react/future';
+import { useFlow } from '@stackflow/react';
 import { useState } from 'react';
 import {
   useNativeAuthSession,

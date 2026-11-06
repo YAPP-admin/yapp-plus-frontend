@@ -4,7 +4,7 @@ import { BackButton } from '@/app/navigation/back-button';
 import { IconCameraLine, IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import { Image } from '@/app/navigation/image';
-import { useFlow } from '@stackflow/react/future';
+import { useFlow } from '@stackflow/react';
 import { useRef, useState } from 'react';
 import {
   body,

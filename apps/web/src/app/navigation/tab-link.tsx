@@ -1,5 +1,4 @@
-import { useActivity, useStack } from '@stackflow/react';
-import { useFlow, useStepFlow } from '@stackflow/react/future';
+import { useActivity, useStack, useFlow, useStepFlow } from '@stackflow/react';
 import { type MouseEvent, type ReactNode } from 'react';
 import { isTabName, tabUrl, type TabName, type TabsState } from './tab';
 import { useHistoryTick } from '@stackflow/plugin-history-sync';

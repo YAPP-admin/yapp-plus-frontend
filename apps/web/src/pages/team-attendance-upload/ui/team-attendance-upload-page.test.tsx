@@ -5,9 +5,8 @@ import { TeamAttendanceUploadPage } from './team-attendance-upload-page';
 const mockPush = vi.fn<(activityName: string, params: object) => void>();
 const mockPop = vi.fn<() => void>();
 
-vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: true }) }));
-
-vi.mock('@stackflow/react/future', () => ({
+vi.mock('@stackflow/react', () => ({
+  useActivity: () => ({ isRoot: true }),
   useFlow: () => ({
     push: mockPush,
     pop: mockPop,

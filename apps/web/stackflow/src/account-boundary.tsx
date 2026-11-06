@@ -1,5 +1,5 @@
 import type { StackflowReactPlugin } from '@stackflow/react';
-import { useFlow } from '@stackflow/react/future';
+import { useFlow } from '@stackflow/react';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
 import { NativeSessionRecovery, useNativeAuthSession } from '@/features/auth';
 

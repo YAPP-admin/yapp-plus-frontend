@@ -10,18 +10,12 @@ const state = vi.hoisted(() => ({
   replace: vi.fn<(scope: string, params: unknown) => void>(),
 }));
 vi.mock('@stackflow/react', () => ({
-  useActions: () => {
+  useFlow: () => {
     const scope = state.scope;
     return { pop: () => state.pop(scope) };
   },
   useActivity: () => ({ name: 'Alerts' }),
   useStack: () => ({ activities: [{ id: state.scope, name: 'Tabs', params: {}, steps: [] }] }),
-}));
-vi.mock('@stackflow/react/future', () => ({
-  useFlow: () => {
-    const scope = state.scope;
-    return { pop: () => state.pop(scope) };
-  },
   useStepFlow: () => {
     const scope = state.scope;
     return { replaceStep: (params: unknown) => state.replace(scope, params) };

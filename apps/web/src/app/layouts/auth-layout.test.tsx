@@ -2,9 +2,8 @@ import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { AuthLayout } from './auth-layout';
 
-vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: true }) }));
-
-vi.mock('@stackflow/react/future', () => ({
+vi.mock('@stackflow/react', () => ({
+  useActivity: () => ({ isRoot: true }),
   useFlow: () => ({
     pop: vi.fn<() => void>(),
     replace: vi.fn<(activityName: string, params: object) => void>(),

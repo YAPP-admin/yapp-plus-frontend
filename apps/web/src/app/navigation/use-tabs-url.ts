@@ -1,13 +1,18 @@
 import { useHistoryTick } from '@stackflow/plugin-history-sync';
-import { useEnterDoneEffect } from '@stackflow/react';
+import { useActivity } from '@stackflow/react';
+import { useEffect } from 'react';
 import { tabNames, tabPath, tabUrl, type TabsState } from './tab';
 
 /** history-sync가 다중 Tabs route를 기록한 뒤 활성 탭의 canonical URL로 정규화합니다. */
 export function useTabsUrl(params: TabsState) {
+  const { isTop, transitionState } = useActivity();
   const { requestHistoryTick } = useHistoryTick();
   const { initialTab, session, attendance } = params;
 
-  useEnterDoneEffect(() => {
+  useEffect(() => {
+    if (!isTop || transitionState !== 'enter-done') {
+      return () => {};
+    }
     let active = true;
     requestHistoryTick((resolve) => {
       // 예약 뒤 최상위에서 내려가거나 해제된 Tabs는 현재 화면의 URL을 덮지 않습니다.
@@ -26,5 +31,5 @@ export function useTabsUrl(params: TabsState) {
     return () => {
       active = false;
     };
-  }, [attendance, initialTab, requestHistoryTick, session]);
+  }, [attendance, initialTab, requestHistoryTick, session, isTop, transitionState]);
 }

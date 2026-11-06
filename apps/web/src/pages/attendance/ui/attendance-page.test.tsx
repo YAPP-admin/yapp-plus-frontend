@@ -8,9 +8,10 @@ const navigation = vi.hoisted(() => ({
   isRoot: true,
 }));
 
-vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
-
-vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: navigation.isRoot }) }));
+vi.mock('@stackflow/react', () => ({
+  useFlow: () => navigation,
+  useActivity: () => ({ isRoot: navigation.isRoot }),
+}));
 
 beforeEach(() => vi.clearAllMocks());
 

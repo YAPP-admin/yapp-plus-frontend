@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from '@seed-design/react';
 import { ActionButton, PrefixIcon, Text } from '@yapp-plus/ui';
-import { useFlow } from '@stackflow/react/future';
+import { useFlow } from '@stackflow/react';
 import { useState } from 'react';
 import { useNativeAuthSession, useNativeSignInMutation } from '@/features/auth';
 import {

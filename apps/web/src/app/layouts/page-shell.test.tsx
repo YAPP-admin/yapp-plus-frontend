@@ -3,7 +3,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { HomePage } from '../../pages/home';
 import { PageShell } from './page-shell';
 
-vi.mock('@stackflow/react/future', () => ({
+vi.mock('@stackflow/react', () => ({
   useFlow: () => ({ push: vi.fn<(activityName: string, params: object) => void>() }),
 }));
 vi.mock('@/app/navigation/tab-link', () => ({
