@@ -1,26 +1,28 @@
 /** refresh token 회전과 앱 프로세스 메모리 세션 수명을 관리하는 native 모듈입니다. */
 
 import type { AuthResult, AuthSession, RefreshSessionInput } from '@yapp-plus/app-bridge';
+import { randomUUID } from 'expo-crypto';
 import Mutex from 'p-mutex';
 
-import { authStorage } from './storage';
+import { authStorage, type StoredSession } from './storage';
 
 const REFRESH_EARLY_MS = 30_000;
 
-export type SessionCredentials = Readonly<{
+export type SessionTokens = Readonly<{
   /** WebView에 일시적으로만 공개할 API 접근 토큰입니다. */
   accessToken: string;
   /** Keychain에만 저장할 세션 갱신 토큰입니다. */
   refreshToken: string;
   /** Unix epoch 밀리초 기준 access token 만료 시각입니다. */
   expiresAt: number;
-  /** 백엔드가 인증한 사용자 식별자입니다. */
-  userId: number;
 }>;
+
+/** 로그인에서 검증한 계정 ID를 토큰과 결합합니다. */
+export type SessionCredentials = SessionTokens & Readonly<{ userId: number }>;
 
 /** HTTP·SDK 예외를 세션 정책에서 분리하는 갱신 경계의 결과입니다. */
 export type RenewalResult =
-  | { kind: 'success'; credentials: SessionCredentials }
+  | { kind: 'success'; tokens: SessionTokens }
   | { kind: 'invalid-session' }
   | { kind: 'temporary-failure'; reason: 'NETWORK' | 'TIMEOUT' | 'SERVER' }
   | { kind: 'invalid-response' }
@@ -51,10 +53,10 @@ export class SessionManager {
   private currentSession: AuthSession | undefined;
 
   /**
-   * 현재 앱 프로세스가 사용 중인 refresh token입니다.
+   * 현재 앱 프로세스가 사용하는 갱신 토큰과 계정 ID입니다.
    * 앱 재시작 후에는 get()이 AuthStorage에서 다시 읽어 옵니다.
    */
-  private currentRefreshToken: string | undefined;
+  private storedSession: StoredSession | undefined;
 
   /**
    * 진행 중인 refresh Promise입니다.
@@ -114,15 +116,15 @@ export class SessionManager {
   }
 
   private async restore(currentGeneration: number, renew: Renew): Promise<AuthResult> {
-    if (!this.currentRefreshToken) {
+    if (!this.storedSession) {
       try {
         await this.storageMutex.withLock(async () => {
-          if (!this.isCurrent(currentGeneration) || this.currentRefreshToken) {
+          if (!this.isCurrent(currentGeneration) || this.storedSession) {
             return;
           }
-          const token = await authStorage.getRefreshToken();
+          const session = await authStorage.getSession();
           if (this.isCurrent(currentGeneration)) {
-            this.currentRefreshToken = token ?? undefined;
+            this.storedSession = session ?? undefined;
           }
         });
       } catch {
@@ -153,14 +155,14 @@ export class SessionManager {
         ? { status: 'SIGNED_IN', session: this.currentSession }
         : { status: 'SIGNED_OUT' };
     }
-    if (!this.currentRefreshToken) {
+    if (!this.storedSession) {
       return { status: 'SIGNED_OUT' };
     }
 
     if (!this.refreshing) {
       const refreshing = this.refreshCurrentSession(
         this.generation,
-        this.currentRefreshToken,
+        this.storedSession,
         renew,
       ).finally(() => {
         if (this.refreshing === refreshing) {
@@ -179,7 +181,7 @@ export class SessionManager {
   public async clear(): Promise<AuthResult> {
     const currentGeneration = this.advanceGeneration();
     this.currentSession = undefined;
-    this.currentRefreshToken = undefined;
+    this.storedSession = undefined;
     this.restoreState = 'blocked';
     try {
       await this.storageMutex.withLock(() => authStorage.clearSession());
@@ -200,22 +202,23 @@ export class SessionManager {
 
   /** 서버 로그아웃 요청에만 사용할 refresh token입니다. WebView에는 노출하지 않습니다. */
   public get refreshToken(): string | undefined {
-    return this.currentRefreshToken;
+    return this.storedSession?.refreshToken;
   }
 
   /** refresh token 회전 결과를 현재 generation에만 저장하고 새 공개 세션을 만듭니다. */
   private async refreshCurrentSession(
     currentGeneration: number,
-    refreshToken: string,
+    storedSession: StoredSession,
     renew: Renew,
   ): Promise<AuthResult> {
+    const { refreshToken, userId } = storedSession;
     const result = await renew(refreshToken);
-    if (!this.isCurrent(currentGeneration) || refreshToken !== this.currentRefreshToken) {
+    if (!this.isCurrent(currentGeneration) || refreshToken !== this.storedSession?.refreshToken) {
       return { status: 'CANCELLED' };
     }
     switch (result.kind) {
       case 'success':
-        return this.commit(result.credentials, currentGeneration, {
+        return this.commit({ ...result.tokens, userId }, currentGeneration, {
           kind: 'refresh',
           previousToken: refreshToken,
         });
@@ -249,12 +252,16 @@ export class SessionManager {
     return this.storageMutex.withLock(async (): Promise<AuthResult> => {
       if (
         !this.isCurrent(currentGeneration) ||
-        (operation.kind === 'refresh' && operation.previousToken !== this.currentRefreshToken)
+        (operation.kind === 'refresh' &&
+          operation.previousToken !== this.storedSession?.refreshToken)
       ) {
         return { status: 'CANCELLED' };
       }
       try {
-        await authStorage.setRefreshToken(credentials.refreshToken);
+        await authStorage.setSession({
+          refreshToken: credentials.refreshToken,
+          userId: credentials.userId,
+        });
       } catch {
         return this.isCurrent(currentGeneration)
           ? { status: 'ERROR', code: 'STORAGE', retryable: true }
@@ -264,12 +271,12 @@ export class SessionManager {
         return { status: 'CANCELLED' };
       }
       const previous = operation.kind === 'refresh' ? this.currentSession : undefined;
-      this.currentRefreshToken = credentials.refreshToken;
+      this.storedSession = { refreshToken: credentials.refreshToken, userId: credentials.userId };
       this.currentSession = {
         accessToken: credentials.accessToken,
         expiresAt: credentials.expiresAt,
         userId: credentials.userId,
-        sessionId: previous?.sessionId ?? crypto.randomUUID(),
+        sessionId: previous?.sessionId ?? randomUUID(),
         tokenVersion: (previous?.tokenVersion ?? 0) + 1,
       };
       if (operation.kind === 'establish') {

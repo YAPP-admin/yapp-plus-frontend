@@ -552,3 +552,15 @@ URL 기준 `GET /api/admin/generations/1/posts/1` 회귀는 수정 전 501로 �
 URL 회귀 5개와 최종 check 통과: admin 658·web 139·mobile 60개 테스트 및 API/앱 lint·typecheck는 새 실행, 나머지는 Turbo cache다. 첫 check는 새 콜백 인자 options의 shadow 경고로 중단됐고 fakerOptions로 수정한 뒤 통과했다. build는 admin·web 새 실행, Storybook cache로 통과했다(인자 이름만 바꾸기 전 실행이며 제품 동작은 동일하다). 로그는 `.context/oidc-member-mock/`에 있다.
 
 이 기록이 회원 상세 501 미해결이라는 앞 단계 기록을 대체한다. 실제 서버·화면 전체 흐름은 검증하지 않았으며 BFCache·실제 OAuth 제한은 그대로다. 현재 변경은 미커밋으로 리뷰를 기다린다. 종속 base `DongjaJ/oidc-stackflow-upgrade`의 PR 초안은 `.context/oidc-followup/pr-draft.md`에만 작성했고 push·PR 생성·상대 브랜치 merge/rebase는 하지 않았다.
+
+## 갱신 응답·저장·native UUID 수정 — 2026-11-07
+
+- 실제 Apple 로그인 API는 user가 있는 200, 갱신은 user가 없는 200이었다. 기존 갱신 검증은 새 토큰을 거부하고 다음 시도에서 401을 받았다.
+- 추가로 native 전역 crypto가 undefined여서 세션 ID 발급에 실패했다. 기존 expo-crypto.randomUUID로 교체했다.
+- user 없는 갱신 회귀 및 전역 crypto가 없는 회귀 모두 수정 전 실패를 확인했다.
+- 최종 check 통과: mobile lint/typecheck/test는 새 실행, 나머지 Turbo 대상은 캐시. mobile 4개 파일 76개 테스트 통과.
+- root build 통과: web/admin/storybook 3개 모두 Turbo 캐시. iOS expo export는 최종 소스로 새 실행해 성공했다.
+- iPhone 15 Pro iOS 17.5의 기존 앱에 수정 JavaScript 번들을 적용했다. 로컬 웹 localhost:3000, MSW false를 유지한다. 앱을 두 번 종료·재실행해 새 갱신 토큰으로 홈 복귀를 확인했다.
+- 증거: .context/session-renewal-fixed-home.png. 토큰·사용자 정보·응답 본문을 저장하지 않았다. 임시 진단 코드·서버는 제거했다.
+- native 설정·의존성 변경 없음. expo:doctor 및 서명된 바이너리 재빌드·TestFlight·Android 실기기 검증은 이번 수정에서 실행하지 않았다.
+- 기존 토큰 단독 저장은 재로그인한다. 이전 바이너리로 롤백해도 재로그인이 필요하다. 커밋·push·배포는 하지 않았다.

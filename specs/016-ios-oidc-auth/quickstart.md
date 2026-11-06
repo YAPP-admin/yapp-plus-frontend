@@ -98,3 +98,10 @@ mise exec -- node --run expo:doctor
 - 5B: 브리지 미준비→준비, timeout→정상, 준비 후 메서드 미지원, visible/online/수동 이벤트 중첩을 검증한다. 실패 완료 후 5초·한 번의 진행 RPC·숨김/unmount 정리를 fake timer로 확인한다.
 - UI: 조회 불가 중 보호 콘텐츠가 보이지 않고 강제 로그아웃으로 표시하지 않는지, 재시도 버튼의 키보드 동작·접근성 이름·터치 크기를 확인한다. 일반 브라우저 경로도 회귀 검증한다.
 - 각 단위는 인접 테스트와 check/build 후 리뷰한다. 웹 E2E 대역과 실제 WebView 검증 결과는 구분한다.
+
+## user 없는 갱신 회귀
+
+1. mobile의 auth/actions.test.ts, session.test.ts, storage.test.ts를 실행한다.
+2. 로그인에서 userId를 저장하고 user 없는 갱신 뒤에도 같은 userId와 새 refresh token이 남는지 확인한다.
+3. 앱 재실행 시 저장된 userId로 복구하고 이전 토큰 단독 저장에서는 로그인 화면으로 이동하는지 확인한다.
+4. 실제 시뮬레이터는 로컬 웹·MSW false·수정 native 번들임을 확인한 뒤 Apple 로그인과 재실행 복구를 확인한다. 인증 정보는 기록하지 않는다.

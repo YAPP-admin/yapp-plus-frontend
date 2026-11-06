@@ -17,7 +17,7 @@ import {
   type AuthenticationResponse,
 } from '@yapp-plus/api/generated';
 
-import { toCredentials } from './credentials';
+import { toSessionTokens } from './credentials';
 import type { RenewalResult } from './session';
 
 export type NativeAuthenticationApiResult = Readonly<{
@@ -51,8 +51,8 @@ const interpretRenewalResponse = (
   if (result.error !== undefined || status !== 200) {
     return { kind: 'invalid-response' };
   }
-  const credentials = result.data ? toCredentials(result.data) : undefined;
-  return credentials ? { kind: 'success', credentials } : { kind: 'invalid-response' };
+  const tokens = result.data ? toSessionTokens(result.data) : undefined;
+  return tokens ? { kind: 'success', tokens } : { kind: 'invalid-response' };
 };
 
 export const nativeAuthApi = {

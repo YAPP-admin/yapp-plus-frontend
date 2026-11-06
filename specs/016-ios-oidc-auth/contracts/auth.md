@@ -62,7 +62,7 @@ main SDK 함수는 authenticateApple/authenticateGoogle/register/renew/revoke/wi
 - 가입 화면은 Figma대로 `010-7777-7777` 형식으로 입력·표시한다. `completeSignup` 직전에 native가 공백·하이픈을 제거한 국내 휴대전화번호 `010`과 뒤 8자리를 검증하고, API body에만 `+8210`과 뒤 8자리 E.164 값으로 변환한다.
 - 웹에는 E.164 값이나 `+82` 접두어를 표시·입력시키지 않는다. 이미 E.164 값을 받아들이는 별도 UI는 이번 범위에 없다.
 - native에서 다시 검증한다. 이메일·다른 번호로 identity를 임의 병합하지 않는다.
-- getSession은 memory 상태를 우선 조회하고, 필요한 경우 SecureStore refresh token으로 복구한다. 복구와 명시적 갱신은 같은 native single-flight 경로를 사용한다.
+- getSession은 memory 상태를 우선 조회하고, 필요한 경우 SecureStore의 refresh token·userId로 복구한다. 복구와 명시적 갱신은 같은 native single-flight 경로를 사용한다.
 - refreshSession은 요청 당시 sessionId/tokenVersion을 검증·비교한다. 세션이 바뀌면 현재 상태만 반환하고, token만 교체됐으면 새 token을 반환하며 추가 갱신하지 않는다. 자세한 원자적 비교·재시도 규칙은 상태 모델을 따른다.
 - signIn 중 getSession은 AUTHENTICATING을 반환한다. timeout 뒤 새로운 인증을 병렬 시작하지 않는다.
 - 비민감 auth revision 변경을 구독해 지연 완료 후 getSession을 다시 읽는다. 화면 이탈한 로그인 callback은 탐색하지 않는다.
@@ -145,7 +145,7 @@ Google은 iOS client ID와 webClientId를 각각 전달한다. raw nonce와 해�
 401은 현재 세대·대상 refresh token 확인 직후 clear를 호출한다. 이전 세션의 응답은 CANCELLED이며 새 세션을 지우지 않는다.
 400·403 등 나머지 4xx는 SERVER/retryable=false, 5xx는 SERVER/retryable=true로 반환하고 자격을 유지한다.
 timeout은 TIMEOUT, 응답 없는 통신 실패는 NETWORK, 비정상 성공 응답은 INVALID_RESPONSE로 구분한다.
-공통 자격 변환에서 빈 access/refresh token·안전한 정수가 아닌 userId·양의 정수가 아닌 expiresIn·범위를 벗어난 expiresAt을 거부한다.
+로그인·가입에서는 userId를 안전한 정수로 검증한다. 로그인과 갱신 모두 빈 access/refresh token·양의 정수가 아닌 expiresIn·범위를 벗어난 expiresAt을 거부한다. 갱신에는 user를 요구하지 않고 저장된 userId를 유지한다.
 
 RenewalResult는 success(credentials)·invalid-session·temporary-failure(reason)·invalid-response·rejected의 판별 union이다.
 API 어댑터는 예외를 포함한 통신 결과를 이 타입으로 정규화한다. 세션 관리자는 세대·대상 확인 후 결과 종류에 따라 저장·삭제·보존과 AuthResult 변환만 수행한다.

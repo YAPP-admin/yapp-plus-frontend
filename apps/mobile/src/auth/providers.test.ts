@@ -1,5 +1,5 @@
 /** 앱의 Google 초기화 설정과 플랫폼별 인증 경로를 검증합니다. */
-import { createHash } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { beforeEach, expect, it, vi } from 'vitest';
 import config from '../../app.config';
 import { AuthActions, type NativeAuthRuntime } from './actions';
@@ -25,14 +25,15 @@ const success = (idToken: string): GoogleResponse => ({ type: 'success', data: {
 const noSaved: GoogleResponse = { type: 'noSavedCredentialFound' };
 vi.mock('./storage', () => ({
   authStorage: {
-    getRefreshToken: () => Promise.resolve(null),
-    setRefreshToken: () => Promise.resolve(),
+    getSession: () => Promise.resolve(null),
+    setSession: () => Promise.resolve(),
     clearSession: () => Promise.resolve(),
   },
 }));
 vi.mock('react-native', () => ({ Platform: mocks.platform }));
 vi.mock('expo-apple-authentication', () => ({}));
 vi.mock('expo-crypto', () => ({
+  randomUUID,
   getRandomBytesAsync: mocks.random,
   digestStringAsync: (_algorithm: string, raw: string) =>
     Promise.resolve(createHash('sha256').update(raw).digest('hex')),

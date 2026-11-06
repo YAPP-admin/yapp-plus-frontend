@@ -8,10 +8,17 @@ import { nativeAuthApi } from './auth-api';
 import type { NativeIdentity } from './providers';
 import { SessionManager } from './session';
 
+import type { StoredSession } from './storage';
+
+vi.mock('expo-crypto', async () => {
+  const { randomUUID } = await import('node:crypto');
+  return { randomUUID };
+});
+
 const storage = vi.hoisted(() => ({
   clearSession: vi.fn<() => Promise<void>>(),
-  getRefreshToken: vi.fn<() => Promise<string | null>>(),
-  setRefreshToken: vi.fn<(token: string) => Promise<void>>(),
+  getSession: vi.fn<() => Promise<StoredSession | null>>(),
+  setSession: vi.fn<(session: StoredSession) => Promise<void>>(),
 }));
 
 vi.mock('./storage', () => ({ authStorage: storage }));
@@ -82,8 +89,8 @@ const renewalActions = async () => {
 describe('AuthActions', () => {
   beforeEach(() => {
     storage.clearSession.mockReset().mockResolvedValue(undefined);
-    storage.getRefreshToken.mockReset().mockResolvedValue(null);
-    storage.setRefreshToken.mockReset().mockResolvedValue(undefined);
+    storage.getSession.mockReset().mockResolvedValue(null);
+    storage.setSession.mockReset().mockResolvedValue(undefined);
   });
 
   it('공급자 credential을 생성 API에 전달하고 세션을 시작한다', async () => {
@@ -98,7 +105,7 @@ describe('AuthActions', () => {
     expect(runtime.authenticateGoogle).toHaveBeenCalledWith({
       body: { idToken: 'google-id-token', nonce: 'raw-nonce' },
     });
-    expect(storage.setRefreshToken).toHaveBeenCalledWith('refresh-1');
+    expect(storage.setSession).toHaveBeenCalledWith({ refreshToken: 'refresh-1', userId: 7 });
   });
 
   it('가입 필요 응답을 보관하고 전화번호를 서버 전송 직전에 E.164로 변환한다', async () => {
@@ -165,7 +172,7 @@ describe('AuthActions', () => {
     await actions.signOut();
     response.resolve({ data: signedInResponse(1) });
     await expect(request).resolves.toEqual({ status: 'CANCELLED' });
-    expect(storage.setRefreshToken).not.toHaveBeenCalled();
+    expect(storage.setSession).not.toHaveBeenCalled();
   });
 
   it.each(['resolve', 'reject'])(
@@ -400,7 +407,7 @@ describe('AuthActions', () => {
     },
   );
 
-  it.each(['accessToken', 'refreshToken', 'expiresIn', 'expiresAt', 'userId'])(
+  it.each(['accessToken', 'refreshToken', 'expiresIn', 'expiresAt'])(
     'renew 200의 잘못된 %s를 저장하지 않는다',
     async (field) => {
       const { actions, runtime, http, session } = await renewalActions();
@@ -413,7 +420,6 @@ describe('AuthActions', () => {
       }
       const data = {
         ...valid,
-        user: { ...valid.user, id: field === 'userId' ? 1.5 : 7 },
         session: {
           ...valid.session,
           accessToken: field === 'accessToken' ? '' : 'access-2',
@@ -426,9 +432,57 @@ describe('AuthActions', () => {
         code: 'INVALID_RESPONSE',
       });
       expect(runtime.session.refreshToken).toBe('refresh-1');
-      expect(storage.setRefreshToken).toHaveBeenCalledTimes(1);
+      expect(storage.setSession).toHaveBeenCalledTimes(1);
     },
   );
+
+  it('user 없는 갱신 응답도 로그인 계정과 새 토큰을 유지한다', async () => {
+    const { actions, http, session } = await renewalActions();
+    http.mockResolvedValueOnce(Response.json({ ...signedInResponse(2), user: null }));
+    await expect(actions.refreshSession(session)).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      session: { userId: 7, accessToken: 'access-2', tokenVersion: 2 },
+    });
+  });
+
+  it('재실행 뒤 user 없는 갱신 응답으로 같은 계정을 복구하고 새 토큰을 저장한다', async () => {
+    const { actions, http, session } = await renewalActions();
+    let persisted: StoredSession | null = { refreshToken: 'refresh-1', userId: 7 };
+    storage.setSession.mockImplementation((value) => {
+      persisted = value;
+      return Promise.resolve();
+    });
+    storage.getSession.mockImplementation(() => Promise.resolve(persisted));
+    http.mockResolvedValueOnce(Response.json({ ...signedInResponse(2), user: null }));
+    await actions.refreshSession(session);
+    const runtime = createRuntime();
+    vi.mocked(runtime.renew).mockImplementation((input) =>
+      nativeAuthApi.renew({
+        ...input,
+        baseUrl: 'https://api.test',
+        kyOptions: { fetch: http },
+      }),
+    );
+    http.mockResolvedValueOnce(Response.json({ ...signedInResponse(3), user: null }));
+    const restarted = new AuthActions(runtime);
+    await expect(restarted.getSession()).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      session: { userId: 7, accessToken: 'access-3' },
+    });
+    expect(runtime.renew).toHaveBeenCalledWith({ body: { refreshToken: 'refresh-2' } });
+    expect(persisted).toEqual({ refreshToken: 'refresh-3', userId: 7 });
+  });
+
+  it('로그인은 사용자 정보가 없으면 토큰을 저장하지 않는다', async () => {
+    const { runtime, actions } = googleActions();
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValue({
+      data: { ...signedInResponse(1), user: null },
+    });
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      code: 'INVALID_RESPONSE',
+    });
+    expect(storage.setSession).not.toHaveBeenCalled();
+  });
 
   it('renew 네트워크 실패 뒤 자격을 보존하고 다음 시도에서 회전한다', async () => {
     const { actions, runtime, http, session } = await renewalActions();
