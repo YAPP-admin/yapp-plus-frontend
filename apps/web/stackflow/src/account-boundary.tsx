@@ -1,7 +1,7 @@
 import type { StackflowReactPlugin } from '@stackflow/react';
 import { useFlow } from '@stackflow/react/future';
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { useNativeAuthSession } from '@/features/auth';
+import { NativeSessionRecovery, useNativeAuthSession } from '@/features/auth';
 
 const RetiredActivities = createContext<ReadonlySet<string>>(new Set());
 const publicActivities = new Set([
@@ -73,11 +73,11 @@ function AccountScreen({
   const flow = useFlow();
 
   useEffect(() => {
-    if (!blocked || !activity.isTop || phase === 'LOADING') {
+    if (!blocked || !activity.isTop || phase === 'LOADING' || phase === 'UNAVAILABLE') {
       return;
     }
     if (phase !== 'SIGNED_IN') {
-      flow.replace('Login', phase === 'UNAVAILABLE' ? { error: 'true' } : {});
+      flow.replace('Login', {});
     } else if (accountDestination === 'signup-complete') {
       flow.replace('SignupComplete', {});
     } else {
@@ -85,5 +85,8 @@ function AccountScreen({
     }
   }, [blocked, activity.isTop, phase, accountDestination, flow]);
 
+  if (isNative && phase === 'UNAVAILABLE' && (protectedScreen || activity.name === 'Login')) {
+    return activity.isTop ? <NativeSessionRecovery /> : null;
+  }
   return blocked ? null : children;
 }

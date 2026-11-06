@@ -128,10 +128,12 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 - [x] T051b-cache-review [US3] 데이터 경계 리뷰 후 화면 수명 연결을 진행한다.
 - [ ] T051b [US3] 계정 경계 cache·Stackflow 화면 수명을 연결하고 check/build·화면 검증 후 5A 리뷰를 받는다. 650줄부터 하위 분리를 검토한다.
 
-아래 T052–T054는 5A 리뷰 뒤 진행하는 5B다.
+5A 화면 경계는 사용자 리뷰 후 fbf14c4로 커밋했다. 실제 브라우저의 계정 변경·back/forward 전체 검증은 남아 있어 T051b는 미완료로 유지한다. 사용자가 다음 5B 진행과 종속 브랜치 생성을 승인했다.
 
-- [ ] T052 [US3] `apps/web/src/features/auth/model/session.test.tsx`에 undefined/timeout→준비·unsupported·최소 간격 재시도·늦은 query 결과 회귀를 추가한다.
-- [ ] T053 [US3] `apps/web/src/features/auth/model/native-auth.ts`, `session.tsx`, `mutations.ts`에서 가용성·조회 오류·재조회를 이 작업에서 마련한 단일 웹 인증 결과 적용 경로에 연결한다. query·mutation별 중복 세대 관리자를 만들지 않는다.
+아래 T052–T054는 5B다. T054는 구현·자동 검증 결과를 제출하되 브라우저 전체 흐름과 사용자 리뷰가 남아 있다.
+
+- [x] T052 [US3] `apps/web/src/features/auth/model/session.test.tsx`에 undefined/timeout→준비·unsupported·최소 간격 재시도·늦은 query 결과 회귀를 추가한다.
+- [x] T053 [US3] `apps/web/src/features/auth/model/native-auth.ts`, `session.tsx`, `mutations.ts`에서 가용성·조회 오류·재조회를 이 작업에서 마련한 단일 웹 인증 결과 적용 경로에 연결한다. query·mutation별 중복 세대 관리자를 만들지 않는다.
 - [ ] T054 [US3] `apps/web/src/features/auth/`의 보호 경계·재시도 안내와 인접 화면 테스트를 갱신하고 `specs/016-ios-oidc-auth/validation.md`에 R1 웹 전파·R5·접근성·화면·check/build 결과를 기록해 리뷰받는다.
 
 ## 보완 6단계 — R6 공지 상세 mock

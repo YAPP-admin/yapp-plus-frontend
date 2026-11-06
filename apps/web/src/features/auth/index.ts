@@ -26,3 +26,5 @@ export {
   useNativeAuthSession,
   type NativeAuthSessionPhase,
 } from './model/session';
+
+export { NativeSessionRecovery } from './ui/native-session-recovery';

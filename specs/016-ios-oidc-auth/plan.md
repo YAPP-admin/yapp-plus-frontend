@@ -259,3 +259,13 @@ p-mutex는 기존 workspace에 없는 직렬 실행 책임만 맡기고 catalog/
 계정 식별 기록을 native-auth query로 공유한다. 동일 세션의 토큰 갱신은 폼을 유지하고, 계정 변경은 이전 폼을 제거한다. 페이지 성공 callback의 중복 탐색과 Tabs에만 있던 인증 검사를 공통 경계로 모은다. Stack 재생성, 직접 history 의존성, custom history 구현은 추가하지 않는다.
 
 검증은 동일 계정 폼 유지·계정 변경 폼 제거·가입 완료·로그아웃 뒤 back/forward·보호 화면 직접 접근에 집중한다. 실패 시 현재 브랜치 변경만 되돌리고 775d855 데이터 경계는 유지한다. 실기기 인증과 다른 작업 브랜치의 실제 통합은 별도 검증 대상이다.
+
+### 5B 구현 및 검토 범위
+
+`fbf14c4`에서 승인된 `DongjaJ/oidc-bridge-recovery`를 생성했다. PR base는 `DongjaJ/oidc-account-stack`이다. 기존 5A의 단일 Stack·렌더링 경계를 유지하고 브리지 복구만 추가한다.
+
+- `getNativeSession`은 공개 준비 여부와 getSession 지원 여부를 확인한다. 미준비는 재시도 가능한 UNAVAILABLE, 미지원은 UNSUPPORTED로 반환하며 RPC를 호출하지 않는다. 기존 180초 timeout과 공개 브리지 계약은 유지한다.
+- React Query의 동적 staleTime/refetchInterval과 focus/online 복귀를 사용한다. 재시도 가능한 실패만 5초 뒤 조회하고 숨김 중에는 자동 RPC를 보내지 않는다. 수동 재시도는 refetch 대신 fetchQuery로 최소 간격과 진행 Promise를 공유한다. 성공·미지원 뒤 polling을 멈추며 관찰 해제 시 Query가 타이머를 정리한다. 별도 timer/event listener 관리자는 추가하지 않는다.
+- 보호 화면과 로그인 화면에서 조회 불가를 안내한다. 보호 URL은 유지하며 미지원에는 업데이트 안내만 제공한다. 가입 대기는 조회 불가와 구분해 기존 가입 입력 흐름을 유지한다.
+- 복구로 Tabs가 다시 렌더되는 동안 예약된 URL 보정이 상세 URL을 덮는 회귀를 발견했다. 보정은 살아 있는 예약과 탭 경로에만 적용한다. history state는 해석하거나 직접 재구성하지 않는다.
+- 롤백은 이 브랜치의 복구 옵션·안내·URL 보정 변경을 되돌린다. 이미 확정한 native 자격·저장소와 5A의 세대·계정 경계는 변경하지 않는다.
