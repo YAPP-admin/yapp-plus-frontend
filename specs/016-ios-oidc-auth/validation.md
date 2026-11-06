@@ -322,3 +322,25 @@ R2 네이티브 보완을 제출하며 웹 오류 화면·재로그인 전환의
 - `auth-api.ts`의 `interpretRenewalResponse`로 응답 해석을 분리했다. `renew`는 요청 실행과 통신 예외 처리를 담당하며 기존 분류 동작은 유지한다.
 - `node --run check` 통과: 모바일 lint·typecheck·테스트 50개는 새로 실행했고 나머지 Turbo 작업은 캐시를 재사용했다. 이번 함수 분리에서는 빌드·실기기 검증을 재실행하지 않았다.
 - 사용자 리뷰와 3단계 진행 승인을 받았다. 3단계는 Google iOS 설정이라는 별도 검토 목적이므로 종속 브랜치 분리를 준비한다.
+
+## 보완 3단계 — Google iOS client ID 명시
+
+- 사용자 승인으로 `ba6fa43`에서 `DongjaJ/oidc-google-config`를 생성했다. 예정 종속 PR base는 `DongjaJ/oidc-auth-actions`이며, push·PR·배포는 수행하지 않는다.
+- `providers.ts`에서 기존 callback scheme에 대응하는 공개 iOS client ID를 `configure`에 명시했다. web client ID·nonce·silent 로그인 흐름은 유지한다. 실패 시 이 설정 변경을 되돌릴 수 있지만 누락 문제도 돌아오므로 배포 전 검증이 필요하며, 저장 데이터 마이그레이션은 없다.
+- 설치된 `react-native-nitro-google-signin@2.3.1`의 `HybridNitroGoogleSignin.swift` 69–82행에서 명시적 iosClientId를 plist보다 먼저 사용해 `GIDConfiguration`을 생성하는 것을 확인했다. Google Console에서 해당 ID와 앱 등록의 현재 유효성은 확인하지 않았다.
+- `providers.test.ts`는 실제 공급자 함수를 호출하되 네이티브 SDK를 mock하여 configure 인자·기존 web audience·nonce와 app.config URL scheme 대응을 검증한다. 수정 전 iosClientId 누락으로 1개 실패(기존 50개 통과), 수정 후 전체 51개 통과했다. 이 테스트는 실제 SDK 초기화·Google 로그인 성공을 증명하지 않는다.
+- `node --run check` 통과: 모바일 lint·typecheck·51개 테스트는 새로 실행했고, 다른 lint 6개·typecheck 6개·test 4개 작업은 Turbo 캐시를 재사용했다. 테스트 작성 중 lint 오류를 수정한 뒤 전체 게이트를 다시 통과했다.
+- `node --run build` 통과: 3개 작업 모두 Turbo 캐시 재사용이며 네이티브 빌드가 아니다. `node --run expo:doctor`는 새로 실행해 20/20 통과했다. iOS Metro/Hermes export도 새로 실행해 성공했다.
+- `.context/oidc-hardening-stage-3/project/`에 앱 소스·설정·assets만 복사하고 설치된 node_modules를 연결했다. 환경 파일·기존 ios 디렉터리·GoogleService-Info.plist를 복사하지 않았다. `expo prebuild --platform ios --no-install` 성공 후 생성 Info.plist의 callback scheme 일치와 GoogleService-Info.plist 부재를 확인했다.
+- 검증 로그와 생성 출력은 `.context/oidc-hardening-stage-3/`에만 저장했다. 실제 iPhone·Google 서버 로그인·TestFlight 검증은 미실행이며 nonce/캐시 문제(R4)는 다음 단계 조사 대상으로 남긴다.
+- Xcode 27.2와 CocoaPods로 깨끗한 빌드를 준비했으나 `pod install`의 Hermes 다운로드가 수분 동안 수 MB 수준으로 진행되어 중단했다. 최초 루트에서 실행한 pod 명령은 모듈 경로 오류가 났고, 생성 ios 디렉터리에서 재실행하여 의존성 다운로드까지 진행했다. CocoaPods 설치 미완료로 Xcode 컴파일·실제 네이티브 초기화는 실행하지 못했다. T047은 미완료로 유지한다.
+- 후속 검증은 생성 프로젝트의 ios 디렉터리에서 `mise exec -- pod install`을 완료한 뒤 Xcode 시뮬레이터 빌드와 SDK 초기화를 확인하는 순서다. 의존성·생성 파일은 제품 소스에 반영하지 않았다. 3단계 리뷰 및 미완료 검증 처리 확인 전 4단계를 시작하지 않는다.
+
+### 3단계 병렬 재검증
+
+- 사용자 요청으로 CocoaPods 설치와 네이티브 빌드 검증을 별도 에이전트에서 재개했다. 동시에 configure가 signIn보다 먼저 호출되는지 테스트를 보완하고, quickstart에 초기화와 실제 로그인 검증 절차를 구분해 기록했다.
+- 호출 순서 검증을 포함한 모바일 테스트 51개와 `node --run check`가 통과했다. 모바일 lint·typecheck·test는 새로 실행했고 나머지 Turbo 작업은 캐시를 재사용했다.
+- 재검증에서 Hermes Debug 캐시와 원래 다운로드 URL의 SHA1 일치(`d98ab1b5e1ee4564d9d692edecd00b3994cd43a1`)를 확인하고, 공식 `HERMES_ENGINE_TARBALL_PATH`를 해당 설치 명령에만 지정해 `pod install`을 완료했다. 다른 버전 대체나 전역 설정 변경은 없다. Debug 시뮬레이터 검증으로 한정하며 Release는 검증하지 않는다.
+- CocoaPods 136개 설치 후 Xcode Debug 시뮬레이터 빌드가 exit 0 / `BUILD SUCCEEDED`로 완료됐다. 별도 DerivedData에서 arm64·x86_64 실행파일을 포함한 `YAPP.app`을 생성했고 NitroGoogleSignin 네이티브 컴파일도 포함됐다. 로그는 `pods-cached.log`, `xcode-debug.log`다.
+- 앱 산출물 Info.plist에서 Google callback scheme 일치를 확인했고, 앱 번들 전체에 `GoogleService-Info.plist`가 없음을 확인했다. 앞선 다운로드 중단에 따른 빌드 미완료 상태는 이번 결과로 해소됐다. 앱 설치·실행·실제 SDK 초기화·Google 로그인·Release 빌드는 미실행이므로 T047의 초기화 항목과 T048 사용자 리뷰는 완료 처리하지 않는다.
+- 사용자 리뷰 후 3단계 커밋과 4단계 조사 진행을 승인받았다. 실제 초기화·로그인의 미검증은 유지하며, 다른 세션의 인증 작업 중단에 따른 웹 단계 계획 수정은 4단계 문서 작업에 반영한다.

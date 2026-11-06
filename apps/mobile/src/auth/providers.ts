@@ -12,6 +12,8 @@ import type { AuthProvider } from '@yapp-plus/app-bridge';
 import { NativeAuthenticationCancelledError, NativeAuthenticationError } from './errors';
 
 // OAuth client ID는 공개 식별자이며, 검증은 백엔드가 ID token의 audience로 수행합니다.
+const GOOGLE_IOS_CLIENT_ID =
+  '47093355379-s1gkq650qpgjhvsb2bev9h4na5mlmnsi.apps.googleusercontent.com';
 const GOOGLE_WEB_CLIENT_ID =
   '47093355379-bl1tgba0nj3sn5610bn01aeqc7mm4ljb.apps.googleusercontent.com';
 
@@ -89,7 +91,11 @@ const authenticateGoogle = async (): Promise<NativeIdentity> => {
   const nonce = await createNonce();
   // configure의 nonce는 다음 Google ID token의 nonce claim에 들어갈 SHA-256 hex 값입니다.
   try {
-    GoogleOneTapSignIn.configure({ webClientId: GOOGLE_WEB_CLIENT_ID, nonce: nonce.hashed });
+    GoogleOneTapSignIn.configure({
+      iosClientId: GOOGLE_IOS_CLIENT_ID,
+      webClientId: GOOGLE_WEB_CLIENT_ID,
+      nonce: nonce.hashed,
+    });
     const silentResponse = await GoogleOneTapSignIn.signIn();
     const accountResponse = isNoSavedCredentialFoundResponse(silentResponse)
       ? await GoogleOneTapSignIn.createAccount()
