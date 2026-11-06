@@ -4,7 +4,7 @@
 
 import { ActionButton, Text, TextField, TextFieldInput } from '@yapp-plus/ui';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { useFlow } from '@stackflow/react/future';
+import { useFlow } from '@stackflow/react';
 import { useId, useState, type FormEvent } from 'react';
 import { useNativeAuthSession, useNativeSignupMutation } from '@/features/auth';
 import { body, footer, screen } from '@/shared/ui/step-screen.css';

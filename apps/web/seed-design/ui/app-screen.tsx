@@ -7,7 +7,7 @@
 
 import { PullToRefreshRoot, PullToRefreshContent, PullToRefreshIndicator } from './pull-to-refresh';
 import { AppScreen as SeedAppScreen } from '@seed-design/stackflow';
-import { useActions, useActivity } from '@stackflow/react';
+import { useFlow, useActivity } from '@stackflow/react';
 import { useEffect, useRef } from 'react';
 import type { Ref } from 'react';
 
@@ -23,7 +23,7 @@ export const AppScreen = ({
   ref,
   ...otherProps
 }: AppScreenProps) => {
-  const actions = useActions();
+  const actions = useFlow();
   const { isRoot } = useActivity();
   const shouldSwipeBack = !isRoot && !preventSwipeBack;
 

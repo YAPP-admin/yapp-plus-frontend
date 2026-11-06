@@ -25,26 +25,23 @@ catalogs:
       specifier: 2.1.1
       version: 2.1.1
     '@stackflow/config':
-      specifier: 1.2.2
-      version: 1.2.2
+      specifier: 2.0.0
+      version: 2.0.0
     '@stackflow/core':
-      specifier: 1.3.2
-      version: 1.3.2
+      specifier: 3.1.0
+      version: 3.1.0
     '@stackflow/link':
-      specifier: 1.6.1
-      version: 1.6.1
+      specifier: 3.0.0
+      version: 3.0.0
     '@stackflow/plugin-history-sync':
-      specifier: 1.11.2
-      version: 1.11.2
-    '@stackflow/plugin-preload':
-      specifier: 1.4.4
-      version: 1.4.4
+      specifier: 2.1.0
+      version: 2.1.0
     '@stackflow/plugin-renderer-basic':
-      specifier: 1.1.13
-      version: 1.1.13
+      specifier: 1.1.16
+      version: 1.1.16
     '@stackflow/react':
-      specifier: 1.12.0
-      version: 1.12.0
+      specifier: 2.1.4
+      version: 2.1.4
     '@storybook/addon-a11y':
       specifier: 10.6.0
       version: 10.6.0
@@ -520,28 +517,25 @@ importers:
         version: 3.1.0(@seed-design/css@3.1.0)(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(embla-carousel@8.6.0)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@seed-design/stackflow':
         specifier: 'catalog:'
-        version: 2.1.0(@seed-design/css@3.1.0)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
+        version: 2.1.0(@seed-design/css@3.1.0)(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@stackflow/config':
         specifier: 'catalog:'
-        version: 1.2.2
+        version: 2.0.0
       '@stackflow/core':
         specifier: 'catalog:'
-        version: 1.3.2
+        version: 3.1.0
       '@stackflow/link':
         specifier: 'catalog:'
-        version: 1.6.1(@stackflow/core@1.3.2)(@stackflow/plugin-history-sync@1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/plugin-preload@1.4.4(@stackflow/core@1.3.2)(@stackflow/plugin-history-sync@1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
+        version: 3.0.0(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
       '@stackflow/plugin-history-sync':
         specifier: 'catalog:'
-        version: 1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
-      '@stackflow/plugin-preload':
-        specifier: 'catalog:'
-        version: 1.4.4(@stackflow/core@1.3.2)(@stackflow/plugin-history-sync@1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
+        version: 2.1.0(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
       '@stackflow/plugin-renderer-basic':
         specifier: 'catalog:'
-        version: 1.1.13(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
+        version: 1.1.16(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
       '@stackflow/react':
         specifier: 'catalog:'
-        version: 1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8)
+        version: 2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8)
       '@tanstack/react-form':
         specifier: 'catalog:'
         version: 1.33.5(@tanstack/react-start@1.168.50(crossws@0.4.12(srvx@1.0.3))(esbuild@0.28.2)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)(rolldown@1.2.7)(supports-color@8.1.1)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.0))(webpack@5.110.3(@swc/core@1.16.2)(esbuild@0.28.2)(lightningcss@1.33.0)(postcss@8.5.28)(sharp@0.35.4(@types/node@24.13.3))))(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -3348,45 +3342,34 @@ packages:
   '@sinclair/typebox@0.27.12':
     resolution: {integrity: sha512-hhyNJ+nbR6ZR7pToHvllEFun9TL0sbL+tk/ON75lo+Xas054uez98qRbsuNt7MBCyZKK4+8Yli/OAGZhmfBZ/g==}
 
-  '@stackflow/config@1.2.2':
-    resolution: {integrity: sha512-q6d02TpLXARCV/ah8ORZixxfszTjWe82CWOP0v+s5xoFQRk0vL2FSqzH9toSF3UaX2x9Gvpgm1TdNxAoESbLuQ==}
+  '@stackflow/config@2.0.0':
+    resolution: {integrity: sha512-EmRyxf124SCuRxx1WhL0leq6WwV7yloejr8WbLq+QhoGFWWRfRY5SyMnvk2zWOuLsUDIDaQWbmFhO+D+xbQorA==}
 
-  '@stackflow/core@1.3.2':
-    resolution: {integrity: sha512-4njVq/1Jm70vpEr9xdNl2hrtGuDq7m6hSHO4nuhVRz92ewbatkAsLCVaOM3OhTMTuCHY6ZmJapkrtlR0V0LZLA==}
+  '@stackflow/core@3.1.0':
+    resolution: {integrity: sha512-KnpBrzmUHQQK20oD99eswspAtLxgGK0iu5LLeLJ5RJrWkzv2X77i0OymaT5Fr4Lt8CBYfYWGq5VUFJLo3idHKw==}
 
-  '@stackflow/link@1.6.1':
-    resolution: {integrity: sha512-M8Vu/rNn1MzFhBMJDzfCQuFU8zKTRVY1W4PoqIXVDIn9mZS1Kr8+Iaak3yODM/lPts8EZkIuRKrbf+8O3jxXaQ==}
+  '@stackflow/link@3.0.0':
+    resolution: {integrity: sha512-CRU34XF4Wun3wlTLwkfE0R3vQp8bWGLP/XK6TVhClzjmU134fohz1/pK7JnLTV6bFdHotPUmE5emotGcXKSJRg==}
     peerDependencies:
-      '@stackflow/core': ^1.1.0-canary.0
-      '@stackflow/plugin-history-sync': ^1.6.4-canary.0
-      '@stackflow/plugin-preload': ^1.4.3-canary.0
-      '@stackflow/react': ^1.3.2-canary.0
+      '@stackflow/core': ^2.0.0 || ^3.0.0
+      '@stackflow/react': ^2.0.0
       '@types/react': '>=16.8.0'
       react: '>=16.8.0'
 
-  '@stackflow/plugin-history-sync@1.11.2':
-    resolution: {integrity: sha512-xpVtKSgj3wWPFIEwPPKBqGyPaNAzlWvcFrqjrItXjX96J/VRW+XAQ1W7gb+V0xF3bHC/+GecpIDCdRnRSn0yJg==}
+  '@stackflow/plugin-history-sync@2.1.0':
+    resolution: {integrity: sha512-JwMBHU6EhJcSqGU5xrrLEw1hyLncBqsCikZGON59nyJbkD7FHUUL3to1R6l2ZpYM3xmB0gqOSngPTdNECLHozQ==}
     peerDependencies:
       '@stackflow/config': ^1.1.0 || ^2.0.0
-      '@stackflow/core': ^1.0.0 || ^2.0.0
+      '@stackflow/core': ^3.0.0
       '@stackflow/react': ^1.0.0 || ^2.0.0
       '@types/react': '>=16.8.0'
       react: '>=16.8.0'
 
-  '@stackflow/plugin-preload@1.4.4':
-    resolution: {integrity: sha512-KRXQs0+pS43zG/HCx0JAoH0RibLNSKFu9Hm3qqyYuiXzzNHOOIr27XCJSHtfKFsXIHCdey5/5YzKccmFx1wTvQ==}
+  '@stackflow/plugin-renderer-basic@1.1.16':
+    resolution: {integrity: sha512-OiDuHANNWZi4xJ8Jz7MDOAppuE2LX0/esaPdJgEE3RpglY7P8edmZWgcbni9yp+MF77z2bImp7aDqnhJWyO7GA==}
     peerDependencies:
-      '@stackflow/core': ^1.1.0-canary.0
-      '@stackflow/plugin-history-sync': ^1.6.4-canary.0
-      '@stackflow/react': ^1.3.2-canary.0
-      '@types/react': '>=16.8.0'
-      react: '>=16.8.0'
-
-  '@stackflow/plugin-renderer-basic@1.1.13':
-    resolution: {integrity: sha512-8C5QwFagDycFuBLfQ9ynVfpDeO9qeIeGYS3GkZ1Drv3nlc7lE0q1DAGJHLXGLTdra9mzsHCirrGR6sgYa1OA0w==}
-    peerDependencies:
-      '@stackflow/core': ^1.1.0-canary.0
-      '@stackflow/react': ^1.3.2-canary.0
+      '@stackflow/core': ^2.0.0 || ^3.0.0
+      '@stackflow/react': ^2.0.0
       '@types/react': '>=16.8.0'
       react: '>=16.8.0'
 
@@ -3398,11 +3381,11 @@ packages:
       '@types/react': '>=16.8.0'
       react: '>=16.8.0'
 
-  '@stackflow/react@1.12.0':
-    resolution: {integrity: sha512-ZjlZqrGlVan3wKuxhR4GIjvCGeksu63/WJU33SfCcDZZLYH0QCmuH3s01aOmLK7kdHttkqcxsYsiiXbx7fL/WQ==}
+  '@stackflow/react@2.1.4':
+    resolution: {integrity: sha512-vp1ap4bcGnQShY4RdNKOP98eglQhUJL2XvW+vr9s7ACe6J2G3e8eUfR5OMbJRMcXcN/KD6npiGV2R1y2P99DCg==}
     peerDependencies:
-      '@stackflow/config': ^1.0.1-canary.0
-      '@stackflow/core': ^1.1.0-canary.0
+      '@stackflow/config': ^2.0.0
+      '@stackflow/core': ^3.1.0
       '@types/react': '>=16.8.0'
       react: '>=16.8.0'
 
@@ -10019,7 +10002,7 @@ snapshots:
       - '@types/react-dom'
       - embla-carousel
 
-  '@seed-design/stackflow@2.1.0(@seed-design/css@3.1.0)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
+  '@seed-design/stackflow@2.1.0(@seed-design/css@3.1.0)(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)':
     dependencies:
       '@radix-ui/react-compose-refs': 1.1.5(@types/react@19.2.18)(react@19.2.8)
       '@radix-ui/react-focus-scope': 1.1.16(@types/react-dom@19.2.7(@types/react@19.2.18))(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -10028,9 +10011,9 @@ snapshots:
       '@seed-design/css': 3.1.0
       '@seed-design/dom-utils': 2.1.0(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
       '@seed-design/react-primitive': 2.0.2(@types/react@19.2.18)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
-      '@stackflow/core': 1.3.2
-      '@stackflow/react': 1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8)
-      '@stackflow/react-ui-core': 1.3.8(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
+      '@stackflow/core': 3.1.0
+      '@stackflow/react': 2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8)
+      '@stackflow/react-ui-core': 1.3.8(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
       clsx: 2.1.1
       react: 19.2.8
       react-dom: 19.2.8(react@19.2.8)
@@ -10051,26 +10034,24 @@ snapshots:
 
   '@sinclair/typebox@0.27.12': {}
 
-  '@stackflow/config@1.2.2': {}
+  '@stackflow/config@2.0.0': {}
 
-  '@stackflow/core@1.3.2':
+  '@stackflow/core@3.1.0':
     dependencies:
       react-fast-compare: 3.2.2
 
-  '@stackflow/link@1.6.1(@stackflow/core@1.3.2)(@stackflow/plugin-history-sync@1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/plugin-preload@1.4.4(@stackflow/core@1.3.2)(@stackflow/plugin-history-sync@1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
+  '@stackflow/link@3.0.0(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
     dependencies:
-      '@stackflow/core': 1.3.2
-      '@stackflow/plugin-history-sync': 1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
-      '@stackflow/plugin-preload': 1.4.4(@stackflow/core@1.3.2)(@stackflow/plugin-history-sync@1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
-      '@stackflow/react': 1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8)
+      '@stackflow/core': 3.1.0
+      '@stackflow/react': 2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8)
       '@types/react': 19.2.18
       react: 19.2.8
 
-  '@stackflow/plugin-history-sync@1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
+  '@stackflow/plugin-history-sync@2.1.0(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
     dependencies:
-      '@stackflow/config': 1.2.2
-      '@stackflow/core': 1.3.2
-      '@stackflow/react': 1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8)
+      '@stackflow/config': 2.0.0
+      '@stackflow/core': 3.1.0
+      '@stackflow/react': 2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8)
       '@types/react': 19.2.18
       flatted: 3.4.4
       history: 5.3.0
@@ -10078,32 +10059,24 @@ snapshots:
       react18-use: 0.4.1(react@19.2.8)
       url-pattern: 1.0.3
 
-  '@stackflow/plugin-preload@1.4.4(@stackflow/core@1.3.2)(@stackflow/plugin-history-sync@1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8))(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
+  '@stackflow/plugin-renderer-basic@1.1.16(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
     dependencies:
-      '@stackflow/core': 1.3.2
-      '@stackflow/plugin-history-sync': 1.11.2(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)
-      '@stackflow/react': 1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8)
+      '@stackflow/core': 3.1.0
+      '@stackflow/react': 2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8)
       '@types/react': 19.2.18
       react: 19.2.8
 
-  '@stackflow/plugin-renderer-basic@1.1.13(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
+  '@stackflow/react-ui-core@1.3.8(@stackflow/core@3.1.0)(@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
     dependencies:
-      '@stackflow/core': 1.3.2
-      '@stackflow/react': 1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8)
+      '@stackflow/core': 3.1.0
+      '@stackflow/react': 2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8)
       '@types/react': 19.2.18
       react: 19.2.8
 
-  '@stackflow/react-ui-core@1.3.8(@stackflow/core@1.3.2)(@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8))(@types/react@19.2.18)(react@19.2.8)':
+  '@stackflow/react@2.1.4(@stackflow/config@2.0.0)(@stackflow/core@3.1.0)(@types/react@19.2.18)(react@19.2.8)':
     dependencies:
-      '@stackflow/core': 1.3.2
-      '@stackflow/react': 1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8)
-      '@types/react': 19.2.18
-      react: 19.2.8
-
-  '@stackflow/react@1.12.0(@stackflow/config@1.2.2)(@stackflow/core@1.3.2)(@types/react@19.2.18)(react@19.2.8)':
-    dependencies:
-      '@stackflow/config': 1.2.2
-      '@stackflow/core': 1.3.2
+      '@stackflow/config': 2.0.0
+      '@stackflow/core': 3.1.0
       '@types/react': 19.2.18
       react: 19.2.8
       react-fast-compare: 3.2.2

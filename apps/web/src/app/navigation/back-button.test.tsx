@@ -8,8 +8,11 @@ const navigation = vi.hoisted(() => ({
   replace: vi.fn<(activityName: string, activityParams: object) => void>(),
   isRoot: true,
 }));
-vi.mock('@stackflow/react/future', () => ({ useFlow: () => navigation }));
-vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isRoot: navigation.isRoot }) }));
+vi.mock('@stackflow/react', () => ({
+  useFlow: () => navigation,
+  useActivity: () => ({ isRoot: navigation.isRoot }),
+}));
+
 beforeEach(() => vi.clearAllMocks());
 
 describe('BackButton', () => {

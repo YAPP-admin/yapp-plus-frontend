@@ -473,3 +473,13 @@ R2 네이티브 보완을 제출하며 웹 오류 화면·재로그인 전환의
 - 브리지 대역/검증 서버는 `.context/oidc-bridge-recovery/`에만 있으며 제품 변경에 포함하지 않는다. 실제 WebView hydration, 네이티브 왕복, iPhone, VoiceOver·터치 조작, Google/Apple 서버, 다른 작업 브랜치와의 통합은 미검증이다.
 - `node --run build` 통과. 웹 빌드는 새로 실행했고 admin·Storybook 빌드는 Turbo 캐시를 재사용했다.
 - T054의 전체 화면 검증과 사용자 리뷰는 대기 상태이며, 다음 6단계는 시작하지 않는다.
+
+### Stackflow 2 호환 업그레이드 — 2026-11-06
+
+- config 2.0.0, core 3.1.0, react 2.1.4, link 3.0.0, history-sync 2.1.0, renderer-basic 1.1.16로 전환했다. SEED stackflow 2.1.0과 react/css 3.1.0은 유지한다. 설치 시 peer 충돌은 없었으며 CLI 1.7.3 compat는 설치 스니펫을 통과했다.
+- future import·useActions·useStep·useEnterDoneEffect를 공식 v2 사용법으로 옮겼다. 빈 preload 플러그인은 제거하고 Link URL resolver를 연결했다. history-sync가 전환 완료 후 URL을 기록하므로 canonical 정규화는 onChanged에서 실행한다.
+- 웹 33개 파일/136개 테스트를 새로 실행해 통과했다. 기존 테스트는 SEED의 enter-done까지 기다리고, 테스트 간 새 문서 수명을 흉내 내도록 이전 timer·popstate 구독을 정리한다. 제품에 테스트용 이벤트 정리나 timer 우회는 추가하지 않았다.
+- 실제 Chrome·iPhone에서 이번 업그레이드의 탐색/스와이프는 아직 검증하지 않았다. 공식 가드와 계정 화면 초기화는 아직 적용하지 않았다. React key 변경만으로 Stackflow store와 browser history가 초기화된다고 가정하지 않는다.
+- 근거: https://github.com/daangn/stackflow/blob/main/docs/pages/docs/migration-v2.ko.mdx 및 설치한 @stackflow/link README. 실행 로그는 .context/oidc-stackflow-upgrade/에 보관한다.
+
+- 최종 check 통과: 웹 lint·typecheck·136개 테스트는 새 실행이며 다른 워크스페이스 작업은 Turbo cache를 사용했다. build 통과: 웹은 새 실행, admin·Storybook은 cache 재사용이다.

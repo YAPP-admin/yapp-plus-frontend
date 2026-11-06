@@ -1,6 +1,5 @@
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
-import { useActivity, useStep } from '@stackflow/react';
-import { useActivityParams } from '@stackflow/react/future';
+import { useActivity, useActivityParams } from '@stackflow/react';
 import { Activity, type ReactNode } from 'react';
 import { SnackbarProvider } from '@yapp-plus/ui';
 import { AlertsPage } from '@/pages/alerts';
@@ -42,7 +41,8 @@ const TAB_TITLES: Record<TabName, string> = {
 
 export function TabsActivity() {
   const activityParams = useActivityParams<'Tabs'>();
-  const step = useStep();
+  const activity = useActivity();
+  const step = activity.steps.filter((item) => item.id !== activity.id).at(-1);
   const stepParams = readTabsParams(step?.params);
   const initialParams = readTabsParams(activityParams);
   const activeTab = normalizeTab(stepParams.initialTab ?? initialParams.initialTab);

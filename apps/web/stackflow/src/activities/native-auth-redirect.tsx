@@ -1,6 +1,6 @@
 /** native 인증 상태에 따라 Stackflow 활동을 한 번 전환하는 공통 경계입니다. */
 
-import { useFlow } from '@stackflow/react/future';
+import { useFlow } from '@stackflow/react';
 import { useEffect } from 'react';
 import { useNativeAuthSession } from '@/features/auth';
 

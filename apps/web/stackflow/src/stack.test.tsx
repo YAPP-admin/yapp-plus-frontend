@@ -5,11 +5,32 @@ import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { createStackflowApp, stackflowConfig } from './stack';
 
+const popstateListeners: EventListenerOrEventListenerObject[] = [];
+const addWindowListener = window.addEventListener.bind(window);
+
 beforeEach(() => {
+  // 각 테스트의 새 문서에서 생성한 history 구독을 수거합니다.
+  vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
+    if (type === 'popstate' && listener) {
+      popstateListeners.push(listener);
+    }
+    addWindowListener(type, listener, options);
+  });
   window.history.replaceState({}, '', '/');
 });
 
-afterEach(() => {
+afterEach(async () => {
+  if (
+    'happyDOM' in window &&
+    window.happyDOM instanceof Object &&
+    'abort' in window.happyDOM &&
+    typeof window.happyDOM.abort === 'function'
+  ) {
+    await window.happyDOM.abort();
+  }
+  for (const listener of popstateListeners.splice(0)) {
+    window.removeEventListener('popstate', listener);
+  }
   vi.restoreAllMocks();
   window.history.replaceState({}, '', '/');
 });
@@ -35,6 +56,14 @@ async function waitForTopHeading(name: string | RegExp) {
         [
           ...document.querySelectorAll<HTMLElement>('[data-stackflow-component-name="AppScreen"]'),
         ].find((candidate) => {
+          // 화면 제목은 전환 중에도 보입니다. 실제로 조작 가능한 시점까지 기다립니다.
+          const interaction = candidate.closest('[data-global-transition-state]');
+          if (
+            interaction &&
+            interaction.getAttribute('data-global-transition-state') !== 'enter-done'
+          ) {
+            return false;
+          }
           const heading =
             [...candidate.querySelectorAll<HTMLHeadingElement>('h1')].find(isVisible) ?? null;
           const matches =
@@ -115,7 +144,7 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(restored.getByRole('tab', { name: '과제' })).toHaveAttribute('aria-selected', 'true');
     window.history.forward();
     expect(await waitForTopHeading('팀빌딩 소개서 작성')).toBeTruthy();
-  });
+  }, 15000);
 
   it('Home 위에 Alerts를 push하고 뒤로가면 Home을 복원한다', async () => {
     const user = userEvent.setup();

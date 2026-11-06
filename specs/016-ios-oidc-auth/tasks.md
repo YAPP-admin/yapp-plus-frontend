@@ -136,6 +136,11 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 - [x] T053 [US3] `apps/web/src/features/auth/model/native-auth.ts`, `session.tsx`, `mutations.ts`에서 가용성·조회 오류·재조회를 이 작업에서 마련한 단일 웹 인증 결과 적용 경로에 연결한다. query·mutation별 중복 세대 관리자를 만들지 않는다.
 - [ ] T054 [US3] `apps/web/src/features/auth/`의 보호 경계·재시도 안내와 인접 화면 테스트를 갱신하고 `specs/016-ios-oidc-auth/validation.md`에 R1 웹 전파·R5·접근성·화면·check/build 결과를 기록해 리뷰받는다.
 
+### 공식 가드 도입을 위한 추가 리뷰 단위
+
+- [x] T054a Stackflow 2 호환 버전·공식 Link resolver·내장 Loader 전환 및 기존 탐색/인증 회귀 검증
+- [ ] T054b 업그레이드 리뷰 후 공식 activity-guard와 계정 화면 초기화를 연결하고 back/forward·snapshot 복원을 검증
+
 ## 보완 6단계 — R6 공지 상세 mock
 
 - [ ] T055 `apps/admin/src/mocks/api-contract.test.ts`의 기존 Vitest 환경에서 `@yapp-plus/api/mocks`를 사용하는 공지 상세 URL 회귀 테스트를 추가해 현재 실패를 확인한다.

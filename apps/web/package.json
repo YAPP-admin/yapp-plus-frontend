@@ -21,7 +21,6 @@
     "@stackflow/core": "catalog:",
     "@stackflow/link": "catalog:",
     "@stackflow/plugin-history-sync": "catalog:",
-    "@stackflow/plugin-preload": "catalog:",
     "@stackflow/plugin-renderer-basic": "catalog:",
     "@stackflow/react": "catalog:",
     "@tanstack/react-form": "catalog:",

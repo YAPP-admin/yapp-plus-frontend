@@ -2,9 +2,8 @@
 
 import { IconChevronLeftLine } from '@karrotmarket/react-monochrome-icon';
 import type { InferActivityParams, RegisteredActivityName } from '@stackflow/config';
-import { useFlow } from '@stackflow/react/future';
+import { useFlow, useActivity } from '@stackflow/react';
 import { ActionButton, Icon } from '@yapp-plus/ui';
-import { useActivity } from '@stackflow/react';
 import { backButton, iconBackButton } from './back-button.css';
 
 export function BackButton<ActivityName extends RegisteredActivityName>({

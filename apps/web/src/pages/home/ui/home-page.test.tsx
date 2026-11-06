@@ -4,7 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { HomePage } from './home-page';
 
 const mockPush = vi.fn<(activityName: string, params: object) => void>();
-vi.mock('@stackflow/react/future', () => ({ useFlow: () => ({ push: mockPush }) }));
+vi.mock('@stackflow/react', () => ({ useFlow: () => ({ push: mockPush }) }));
 vi.mock('@/app/navigation/tab-link', () => ({
   TabLink: ({
     tab,
