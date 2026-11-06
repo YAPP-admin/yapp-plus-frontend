@@ -483,3 +483,17 @@ R2 네이티브 보완을 제출하며 웹 오류 화면·재로그인 전환의
 - 근거: https://github.com/daangn/stackflow/blob/main/docs/pages/docs/migration-v2.ko.mdx 및 설치한 @stackflow/link README. 실행 로그는 .context/oidc-stackflow-upgrade/에 보관한다.
 
 - 최종 check 통과: 웹 lint·typecheck·136개 테스트는 새 실행이며 다른 워크스페이스 작업은 Turbo cache를 사용했다. build 통과: 웹은 새 실행, admin·Storybook은 cache 재사용이다.
+
+### CSR 인증 화면 단순화 — 2026-11-06
+
+reload 초안과 pagehide/pageshow 처리를 제거했다. 공식 가드, 보호 내용 unmount, userId/sessionId key로 세션별 로컬 상태를 관리한다. RetiredActivities·revision/destination은 제거했으며 기존 cache 정리와 generation 검사는 유지한다. 초기 부모 이력은 history-sync의 skipDefaultHistorySetupTransition으로 한 번에 구성해 가드 후 중복 Login 진입을 방지한다.
+
+최종 check 통과: 웹 lint·typecheck·139개 테스트는 새 실행, 나머지는 Turbo cache다. build는 웹 새 실행, admin·Storybook cache로 통과했다. 동일 세션 폼 유지·로그아웃/탈퇴·묶인 로그아웃/재로그인·가려진 폼의 back/forward·조회 실패/미지원을 검증했다. 실제 Chrome/iPhone 및 문서를 넘나드는 BFCache 복원은 미확인이다. 로그는 .context/oidc-auth-navigation/에 보관한다.
+
+### Chrome CSR 추가 검증 — 2026-11-06
+
+설치된 Chrome을 Playwright headless(390×844)로 새 실행했다. 로컬 브리지 대역으로 연결 불가 안내 → 준비 → 재시도 → 원래 `/team-attendance/upload` 복귀, 브라우저 back/forward 후 화면 표시, unsupported의 업데이트 안내·재시도 버튼 부재를 확인했다. 증거는 `.context/oidc-auth-navigation/browser/`에 있다. Chrome 확장 자동화는 탭 생성 실패로 사용하지 못했다. 검증 대역의 Vite import 치환을 수정했으며 제품 코드 변경은 없다. 초기 홈 경로 검증은 로딩에 머물러 성공으로 계산하지 않았다. 계정 전환 전체 흐름·실기기·실제 native·BFCache는 미검증이다.
+
+### 추가 계정·BFCache 검증 — 2026-11-06
+
+Chrome headless에서 브리지 대역을 통한 실제 로그아웃 확인창→다른 계정 로그인→back 후 폼 초기화·캐시 제거·reload 없음과 계정 경계 5개 시나리오를 확인했다. 모바일 테스트 60개도 새 실행 통과했다. 반면 별도 문서에서 native 대역을 로그아웃시킨 뒤 BFCache 복귀(`pageshow.persisted=true`)하면 SIGNED_IN cache와 보호 화면이 남는 결함을 재현했다. 수정 전이므로 인증 수명 검증 완료로 처리하지 않는다. 실물 기기는 없으며 시뮬레이터는 개발 앱 열기 확인창의 UI 제어 불가로 SDK/OAuth 검증이 막혔다. 재현 코드·로그·화면·검증 한계는 `.context/oidc-browser-lifecycle/report.md`에 기록했다.

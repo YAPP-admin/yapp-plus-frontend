@@ -275,3 +275,9 @@ p-mutex는 기존 workspace에 없는 직렬 실행 책임만 맡기고 catalog/
 사용자 요청으로 기존 5B 위에서 공식 가드 도입을 준비한다. 첫 리뷰 단위는 Stackflow config 2.0.0, core 3.1.0, react 2.1.4 및 호환 Link·history·renderer 전환이다. SEED stackflow 2.1.0은 해당 peer 범위를 허용하므로 UI 패키지는 유지한다. 빈 preload 설정은 내장 Loader로 대체되므로 제거하고 future import·삭제된 훅을 공식 마이그레이션에 맞춘다. 기존 세대·계정 경계·복구 정책은 이 리뷰 단위에서 유지한다.
 
 다음 리뷰 단위에서 공식 activity-guard로 진입 정책을 옮기고 계정 전환 시 화면 트리 초기화를 검증한다. 브라우저 back/forward와 snapshot 복원에서 이전 계정 내용이 노출되지 않는 증거 없이 RetiredActivities를 제거하지 않는다. 초기화는 동일 세션 토큰 갱신·일시적 조회 실패에는 적용하지 않는다. 검증은 기존 탐색·인증 회귀 테스트, check, build와 SEED 스니펫 호환을 포함한다. 실패 시 업그레이드 변경만 되돌리고 이전 5B 작업은 보존한다. PR 전체 크기가 800줄 이상이면 분리 전 후속 구현을 진행하지 않는다.
+
+### CSR 계정 경계 단순화 — reload 초안 대체
+
+문서 재로드와 pagehide/pageshow 처리는 제거한다. 공식 가드가 새 보호 화면 진입을 제어하고, 렌더링 경계는 로그아웃·조회 불가 시 보호 내용을 unmount한다. 보호 화면 자식의 userId/sessionId key로 계정 변경을 반영하여 중간 로그아웃 렌더가 생략되어도 이전 로컬 상태를 재사용하지 않는다. 같은 세션 tokenVersion 변경은 key를 바꾸지 않는다. 기존 요청 취소·cache 제거·generation 검사는 유지한다.
+
+이전 Activity ID 목록과 account revision/destination은 제거하고 로그인·가입 성공은 페이지 callback으로 이동한다. Stack과 브라우저 이력은 유지하므로 이전 URL로 돌아갈 수 있으나 이전 계정의 cache·폼 상태는 복원하지 않는다. 검증 범위는 동일 문서의 back/forward·새 진입·계정 변경이며 실제 BFCache 문서 복원은 미확인으로 남긴다. 실패 시 현재 변경만 되돌려 ce4cb49의 경계를 복구한다.

@@ -139,7 +139,7 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 ### 공식 가드 도입을 위한 추가 리뷰 단위
 
 - [x] T054a Stackflow 2 호환 버전·공식 Link resolver·내장 Loader 전환 및 기존 탐색/인증 회귀 검증
-- [ ] T054b 업그레이드 리뷰 후 공식 activity-guard와 계정 화면 초기화를 연결하고 back/forward·snapshot 복원을 검증
+- [x] T054b 공식 activity-guard와 CSR 보호 화면 key·unmount를 연결하고 동일 문서 back/forward·계정 변경을 자동 검증한다. 실제 브라우저/BFCache와 사용자 리뷰는 남는다.
 
 ## 보완 6단계 — R6 공지 상세 mock
 
