@@ -139,18 +139,20 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 ### 공식 가드 도입을 위한 추가 리뷰 단위
 
 - [x] T054a Stackflow 2 호환 버전·공식 Link resolver·내장 Loader 전환 및 기존 탐색/인증 회귀 검증
-- [x] T054b 공식 activity-guard와 CSR 보호 화면 key·unmount를 연결하고 동일 문서 back/forward·계정 변경을 자동 검증한다. 실제 브라우저/BFCache와 사용자 리뷰는 남는다.
+- [x] T054b 공식 activity-guard와 CSR 보호 화면 key·unmount를 연결하고 동일 문서 back/forward·계정 변경을 자동 검증한다. Chrome 브리지 대역 검증과 사용자 리뷰를 완료했다. BFCache 결함과 실제 native 검증은 남는다.
 
 ## 보완 6단계 — R6 공지 상세 mock
 
 - [x] T055 `apps/admin/src/mocks/api-contract.test.ts`의 기존 Vitest 환경에서 `@yapp-plus/api/mocks`를 사용하는 공지 상세 URL 회귀 테스트를 추가해 현재 실패를 확인한다.
 - [x] T056 `packages/api/src/mocks/handlers.ts`에 detail1의 faker·생성 schema를 연결하고 기존 detail을 보존한다. `specs/016-ios-oidc-auth/validation.md`에 URL·응답 검증·check 결과를 기록해 리뷰받는다.
 
-6단계 구현과 자동 검증을 완료했다. 사용자 리뷰와 다음 단계 승인은 대기 중이다. 회원 상세 mock의 기존 501은 별도 발견 사항으로 기록했다.
+6단계 사용자 리뷰·커밋·7단계 진행 승인을 받았고 `f21851b`로 커밋했다. 회원 상세 mock의 기존 501은 별도 발견 사항으로 기록했다.
 
 ## 보완 7단계 — 통합 검증
 
-- [ ] T057 `specs/016-ios-oidc-auth/quickstart.md`의 R1–R6 회귀와 check/build/expo:doctor·Metro/Hermes·가능한 iOS 검증을 실행하고 `validation.md`에 신규 실행·캐시·실패·미실행을 구분한다.
+실행 가능한 검증을 완료했다. T057의 실기기·SDK 종단 검증은 환경 제약으로 미실행이며 아래 완료 표시는 검증 수행·한계 기록을 뜻한다. R3·R4 종단 검증과 BFCache 결함 해결을 뜻하지 않는다. T058 최종 리뷰는 대기한다.
+
+- [x] T057 `specs/016-ios-oidc-auth/quickstart.md`의 R1–R6 회귀와 check/build/expo:doctor·Metro/Hermes·가능한 iOS 검증을 실행하고 `validation.md`에 신규 실행·캐시·실패·미실행을 구분한다.
 - [ ] T058 `specs/016-ios-oidc-auth/validation.md`에 웹 공통 경로 통합·R4 미해결 여부·실기기 대기·롤백·실제 base 변경량을 기록하고 최종 리뷰를 받는다. TestFlight/EAS 배포는 별도 승인 대상이다.
 
 실행 순서는 보완 0→1→2→3→4(조사 리뷰)→5→6→7이다. 각 화살표에 사용자 리뷰와 다음 단계 승인이 필요하다.

@@ -505,3 +505,42 @@ Chrome headless에서 브리지 대역을 통한 실제 로그아웃 확인창�
 URL 기준 `GET /api/admin/generations/1/posts/1` 회귀는 수정 전 501로 실패했고, 수정 후 200과 생성 응답 스키마 검증을 통과했다. `node --run check` 통과: API·admin·web·mobile lint/typecheck와 admin·web·mobile 테스트는 새 실행, 나머지는 Turbo cache다. `node --run build`도 통과했으며 admin·web은 새 실행, Storybook은 cache다. 로그는 `.context/oidc-stage-6/`에 보관했다. 실제 서버나 UI 동작 검증은 이번 mock 수정 범위에 포함하지 않았다.
 
 추가 조사에서 `GET /api/admin/generations/1/members/1`도 수정 전후 501을 반환했다. 처음에 추가한 회원 상세 200 탐색 테스트는 실패했고, 공지 상세와 별개인 기존 문제라 최종 회귀 테스트에 포함하지 않았다. 이 문제를 수정하거나 전체 mock 정상화를 주장하지 않는다. BFCache 복귀 결함과 실제 OAuth 미검증도 그대로 남는다. 6단계 사용자 리뷰 전이며 커밋·push·PR은 수행하지 않았다.
+
+### 보완 7단계 — 통합 검증 제출
+
+기준 코드는 `f21851b`이며 6단계 이후 제품 코드 변경은 없다. 6단계 사용자 리뷰·커밋 및 7단계 진행 승인을 받았다. 현재 브랜치는 `DongjaJ/oidc-notice-mock`, PR base는 `DongjaJ/oidc-stackflow-upgrade` (`133389a`)다. 커밋된 변경은 추가 20·삭제 3줄이며 이 검증 문서 변경은 별도 미커밋이다.
+
+| 요구           | 통합 판단                                      | 증거와 남은 한계                                                                                                                              |
+| -------------- | ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| R1 세션 수명   | 자동 회귀 통과                                 | mobile 지연 로그인/가입/복구/갱신·저장 경합, web 작업 세대·계정 캐시·일반 back 복귀를 검증했다. 별도 문서 BFCache 복귀는 결함이 남는다.       |
+| R2 갱신 오류   | 자동 회귀 통과                                 | 401 자격 제거, network/timeout 보존, 이전 계정의 늦은 401 차단을 검증했다.                                                                    |
+| R3 iOS 설정    | 구현·생성/빌드 근거 있음, 종단 미완료          | 앞 단계의 깨끗한 iOS 생성·시뮬레이터 빌드 성공 기록을 재사용한다. 이번에는 빌드를 반복하지 않았으며 SDK 초기화·실기기 인증은 확인하지 못했다. |
+| R4 nonce       | 명시적 로그인 구현·대역 회귀 통과, 종단 미완료 | 연속 시도·실패 재시도·취소를 검증했다. 실제 공급자 토큰 nonce와 서버 수락은 확인하지 못했다.                                                  |
+| R5 브리지 복구 | 자동·브라우저 대역 회귀 통과                   | 미준비·미지원·5초 간격·진행 요청 공유 및 실제 Chrome의 복구 UI를 검증했다. 실제 native 연결 및 BFCache 복귀의 세션 재확인은 완료가 아니다.    |
+| R6 공지 mock   | 수정 전 실패·수정 후 통과                      | 공지 상세 URL의 501→200과 생성 스키마 검증. 회원 상세 mock의 기존 501은 별도 미해결이다.                                                      |
+
+새 실행: `node --run expo:doctor` 20/20 통과, `pnpm --filter @yapp-plus/mobile exec expo export --platform ios --output-dir ../../.context/oidc-stage-7/ios-export` 성공(3.9MB `.hbc`). Metro/Hermes 바이트코드 생성이며 Hermes 런타임·OAuth 실행 증거가 아니다. 로그는 `.context/oidc-stage-7/doctor.log`, `metro.log`다.
+
+바로 앞 6단계의 동일 제품 코드 검증 결과를 재사용하고 중복 실행하지 않았다. `check`는 admin 657·web 139·mobile 60개 테스트 및 API/앱 lint·typecheck 새 실행 통과, app-bridge 19·UI 10개 테스트와 나머지 lint/typecheck는 Turbo cache였다. `build`는 admin·web 새 실행 통과, Storybook cache였다. 이번 단계에서 새로 실행했다고 계산하지 않는다.
+
+실물 기기 없음은 기기 목록으로 재확인했다. 기존 시뮬레이터 개발 앱 열기 확인창의 UI 자동화 제약은 해소되지 않았다. 실제 Google/Apple 계정·서버 인증, CORS, TestFlight/EAS Update, 실제 iOS BFCache 복귀는 미검증이다. 배포·push·PR 생성은 수행하지 않았다. 최종 출시 검증 완료를 선언하지 않는다.
+
+복구 원칙: 각 단계의 문제는 해당 단계 커밋만 되돌리는 후속 변경으로 처리한다. 6단계 mock 수정은 `f21851b`의 handler·테스트를 되돌리면 이전 501 동작으로 복구된다. CSR 화면 변경은 `cd17f25`를 되돌려 이전 화면 경계로 돌아갈 수 있으나 이를 BFCache 결함 해결로 간주하지 않는다. 실제 배포 롤백이나 Git 이력 변경은 실행하지 않았다. 최종 리뷰 후 BFCache의 제한된 복귀 처리와 회원 상세 mock 보완 여부를 별도 결정한다.
+
+### 문서 현행화와 hong-kong 비교
+
+사용자가 실기기를 확보했으나 검증을 보류했다. 앞 기록의 기기 미확보·미연결은 당시 환경 관찰이며 영구적인 제약이 아니다. T054b의 Chrome 대역 검증·리뷰 상태를 갱신했으며 실제 OAuth와 BFCache 결함은 계속 미완료다.
+
+`hong-kong`의 `DongjaJ/nsu85` HEAD는 `50dfa2d`, 작업 트리는 깨끗하다. 이번 브랜치 `f21851b`와 `git merge-tree --write-tree`로 병합 결과를 계산했고 checkout·index·상대 작업 트리는 변경하지 않았다. 결과는 `.context/oidc-followup/merge-tree.txt`에 있다.
+
+| 비교 지점              | 결과와 통합 시 유지할 계약                                                                                                                                                                  |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| providers.tsx          | 내용 충돌. 이쪽의 공유 QueryClient 주입과 상대의 조회 기본 정책을 함께 검토해야 한다.                                                                                                       |
+| auth/model/session.tsx | 내용 충돌. 이쪽의 readAuthSession·generation·재시도·가용성 처리를 유지하면서 상대 홈/일정이 요구하는 apiOptions를 연결해야 한다. 상대의 undefined→SIGNED_OUT 처리를 복원하면 R5가 회귀한다. |
+| home-page.tsx          | 내용 충돌. 상대 CurrentWeekCard·시연 화면 이동과 이쪽 Stackflow 탐색 계약을 함께 유지해야 한다.                                                                                             |
+| stack.test.tsx         | 내용 충돌. 상대의 새 화면 회귀와 이쪽 탐색·렌더링 검증을 모두 보존해야 한다.                                                                                                                |
+| stack.tsx              | 텍스트 자동 병합은 가능하지만 새 AttendanceCode/AttendanceReport/TeamAttendanceGuide의 defaultHistory는 initialHistory 처리가 빠져 있다. 가드와 초기 부모 이력의 통합 검증이 필요하다.      |
+| native-auth-client.ts  | 상대의 GET 401 갱신은 원래 session을 캡처한다. signal 취소·계정 검사 테스트를 유지하고, 갱신 결과가 이쪽 단일 인증 결과 적용 경로·tokenVersion과 일관되게 연결되는지 확인해야 한다.         |
+| 공통 API mock          | 상대 브랜치 변경 없음. 공지·회원 상세 mock 작업과 직접 충돌하지 않는다.                                                                                                                     |
+
+상대 작업은 주로 홈·일정 조회지만 인증 소비 계약도 포함한다. 파일 충돌만 해소하면 안전하다고 판단하지 않는다. 실제 병합·병합본 typecheck/build/인증 회귀는 이번 비교에 포함하지 않았다. PR은 종속 base 기준으로 준비하며 회원 상세 보완 결과 제출 후 사용자 리뷰를 받는다.
