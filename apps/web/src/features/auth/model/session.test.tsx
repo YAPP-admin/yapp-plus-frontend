@@ -119,3 +119,50 @@ it('진행 요청의 실패 완료부터 다시 5초를 기다리고 unmount 후
   await vi.advanceTimersByTimeAsync(10000);
   expect(bridge.getNativeSession).toHaveBeenCalledTimes(2);
 });
+
+it('정상 세션도 focus 복귀 시 확인하고 진행 요청은 공유한다', async () => {
+  const signedIn: AuthResult = {
+    status: 'SIGNED_IN',
+    session: {
+      userId: 1,
+      sessionId: 'session-1',
+      tokenVersion: 1,
+      accessToken: 'test',
+      expiresAt: 9999999999,
+    },
+  };
+  bridge.getNativeSession.mockResolvedValueOnce(signedIn);
+  await observe();
+  let resolve!: (result: AuthResult) => void;
+  bridge.getNativeSession.mockImplementation(
+    () =>
+      new Promise((done) => {
+        resolve = done;
+      }),
+  );
+  focusManager.setFocused(false);
+  focusManager.setFocused(true);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(2);
+  onlineManager.setOnline(false);
+  onlineManager.setOnline(true);
+  await vi.advanceTimersByTimeAsync(0);
+  expect(bridge.getNativeSession).toHaveBeenCalledTimes(2);
+  resolve({ status: 'SIGNED_OUT' });
+  await vi.advanceTimersByTimeAsync(0);
+  expect(client.getQueryData(nativeSessionQueryKey)).toEqual({ status: 'SIGNED_OUT' });
+});
+
+it.each(['AUTHENTICATING', 'SIGNUP_REQUIRED'] as const)(
+  '%s에서는 focus가 인증 흐름을 덮어쓰는 조회를 시작하지 않는다',
+  async (status) => {
+    const result: AuthResult =
+      status === 'AUTHENTICATING' ? { status } : { status, expiresAt: 9999999999 };
+    client.setQueryData(nativeSessionQueryKey, result);
+    await observe();
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+    await vi.advanceTimersByTimeAsync(0);
+    expect(bridge.getNativeSession).not.toHaveBeenCalled();
+  },
+);

@@ -150,6 +150,9 @@ catalogs:
     react-dom:
       specifier: 19.2.8
       version: 19.2.8
+    react-error-boundary:
+      specifier: 6.1.6
+      version: 6.1.6
     react-kakao-maps-sdk:
       specifier: 1.2.2
       version: 1.2.2
@@ -560,12 +563,18 @@ importers:
       '@yapp-plus/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      ky:
+        specifier: 'catalog:'
+        version: 2.1.0
       react:
         specifier: 'catalog:'
         version: 19.2.8
       react-dom:
         specifier: 'catalog:'
         version: 19.2.8(react@19.2.8)
+      react-error-boundary:
+        specifier: 'catalog:'
+        version: 6.1.6(@types/react@19.2.18)(react@19.2.8)
     devDependencies:
       '@seed-design/vite-plugin':
         specifier: 'catalog:'
@@ -6265,6 +6274,15 @@ packages:
     resolution: {integrity: sha512-JDk8dgif51OjFoDE70+OT9ICyYr+69HlmihNwp1+Nsfbna3t5sIiCa9ZJktDmQ4/1b/rn26hIAR2uYXDMr5r0Q==}
     peerDependencies:
       react: ^19.3.0
+
+  react-error-boundary@6.1.6:
+    resolution: {integrity: sha512-CDXPnXDGyFIbkwaaJ6u+xgsRmJhSi6YdgUDW1vnyKHfXp1a9pfAlM+ZET2CDu80/A+8iRcmXN0NSY9BCCoWP5A==}
+    peerDependencies:
+      '@types/react': ^18.0.0 || ^19.0.0
+      react: ^18.0.0 || ^19.0.0
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
 
   react-fast-compare@3.2.2:
     resolution: {integrity: sha512-nsO+KSNgo1SbJqJEYRE9ERzo7YtYbou/OqjSQKxV7jcKox7+usiUVZOAC+XnDOABXggQTno0Y1CpVnuWEc1boQ==}
@@ -13431,6 +13449,12 @@ snapshots:
     dependencies:
       react: 19.3.0
       scheduler: 0.28.0
+
+  react-error-boundary@6.1.6(@types/react@19.2.18)(react@19.2.8):
+    dependencies:
+      react: 19.2.8
+    optionalDependencies:
+      '@types/react': 19.2.18
 
   react-fast-compare@3.2.2: {}
 

@@ -9,7 +9,7 @@ import { MockApiBoundary } from '../mocks/mock-api-boundary';
 /** 앱과 Stackflow 가드가 동일한 인증 cache를 읽도록 client를 공유합니다. */
 export const createAppQueryClient = () =>
   new QueryClient({
-    defaultOptions: { queries: { staleTime: 30_000 } },
+    defaultOptions: { queries: { staleTime: 30_000, retry: false } },
   });
 
 export function Providers({ children, client }: { children: ReactNode; client?: QueryClient }) {

@@ -30,8 +30,10 @@
     "@yapp-plus/api": "workspace:*",
     "@yapp-plus/app-bridge": "workspace:*",
     "@yapp-plus/ui": "workspace:*",
+    "ky": "catalog:",
     "react": "catalog:",
-    "react-dom": "catalog:"
+    "react-dom": "catalog:",
+    "react-error-boundary": "catalog:"
   },
   "devDependencies": {
     "@seed-design/vite-plugin": "catalog:",
