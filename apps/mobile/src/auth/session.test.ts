@@ -3,7 +3,7 @@
 import type { AuthSession } from '@yapp-plus/app-bridge';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
-import { SessionManager, type SessionCredentials } from './session';
+import { SessionManager, type SessionCredentials, type RenewalResult } from './session';
 
 const storage = vi.hoisted(() => ({
   clearSession: vi.fn<() => Promise<void>>(),
@@ -18,6 +18,11 @@ const credentials = (version: number): SessionCredentials => ({
   refreshToken: `refresh-${version}`,
   expiresAt: Date.now() + 3_600_000,
   userId: 1,
+});
+
+const renewed = (version: number): RenewalResult => ({
+  kind: 'success',
+  credentials: credentials(version),
 });
 
 const signedInSession = async (manager: SessionManager): Promise<AuthSession> => {
@@ -39,10 +44,10 @@ describe('SessionManager', () => {
   it('동시에 들어온 refresh 요청을 하나의 네트워크 호출로 합친다', async () => {
     const manager = new SessionManager();
     const session = await signedInSession(manager);
-    let resolveRenew: ((value: SessionCredentials) => void) | undefined;
-    const renew = vi.fn<() => Promise<SessionCredentials>>(
+    let resolveRenew: ((value: RenewalResult) => void) | undefined;
+    const renew = vi.fn<() => Promise<RenewalResult>>(
       () =>
-        new Promise<SessionCredentials>((resolve) => {
+        new Promise<RenewalResult>((resolve) => {
           resolveRenew = resolve;
         }),
     );
@@ -51,7 +56,7 @@ describe('SessionManager', () => {
     const second = manager.refresh(session, renew);
 
     expect(renew).toHaveBeenCalledTimes(1);
-    resolveRenew?.(credentials(2));
+    resolveRenew?.(renewed(2));
 
     await expect(first).resolves.toMatchObject({ status: 'SIGNED_IN' });
     await expect(second).resolves.toMatchObject({ status: 'SIGNED_IN' });
@@ -61,9 +66,9 @@ describe('SessionManager', () => {
     const manager = new SessionManager();
     const session = await signedInSession(manager);
     const renew = vi
-      .fn<() => Promise<SessionCredentials>>()
-      .mockRejectedValueOnce(new Error('network'))
-      .mockResolvedValueOnce(credentials(2));
+      .fn<() => Promise<RenewalResult>>()
+      .mockResolvedValueOnce({ kind: 'temporary-failure', reason: 'NETWORK' })
+      .mockResolvedValueOnce(renewed(2));
 
     await expect(manager.refresh(session, renew)).resolves.toMatchObject({ status: 'UNAVAILABLE' });
     await expect(manager.refresh(session, renew)).resolves.toMatchObject({ status: 'SIGNED_IN' });
@@ -74,7 +79,7 @@ describe('SessionManager', () => {
   it('이미 새 token이 있으면 오래된 401으로 다시 갱신하지 않는다', async () => {
     const manager = new SessionManager();
     const oldSession = await signedInSession(manager);
-    const renew = vi.fn<() => Promise<SessionCredentials>>().mockResolvedValue(credentials(2));
+    const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
 
     const refreshed = await manager.refresh(oldSession, renew);
     const lateResult = await manager.refresh(oldSession, renew);
@@ -87,17 +92,17 @@ describe('SessionManager', () => {
   it('로그아웃 중 늦게 완료된 refresh가 세션을 되살리지 못하게 한다', async () => {
     const manager = new SessionManager();
     const session = await signedInSession(manager);
-    let resolveRenew: ((value: SessionCredentials) => void) | undefined;
-    const renew = vi.fn<() => Promise<SessionCredentials>>(
+    let resolveRenew: ((value: RenewalResult) => void) | undefined;
+    const renew = vi.fn<() => Promise<RenewalResult>>(
       () =>
-        new Promise<SessionCredentials>((resolve) => {
+        new Promise<RenewalResult>((resolve) => {
           resolveRenew = resolve;
         }),
     );
 
     const refreshing = manager.refresh(session, renew);
     await manager.clear();
-    resolveRenew?.(credentials(2));
+    resolveRenew?.(renewed(2));
 
     await expect(refreshing).resolves.toEqual({ status: 'CANCELLED' });
     expect(storage.setRefreshToken).toHaveBeenCalledTimes(1);
@@ -111,7 +116,7 @@ describe('SessionManager', () => {
       started.resolve();
       return read.promise;
     });
-    const renew = vi.fn<() => Promise<SessionCredentials>>().mockResolvedValue(credentials(2));
+    const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
     const restoring = manager.get(renew);
     await started.promise;
     const clearing = manager.clear();
@@ -140,7 +145,7 @@ describe('SessionManager', () => {
     const saving =
       kind === 'login'
         ? manager.establish(credentials(2), manager.captureGeneration())
-        : manager.refresh(session, () => Promise.resolve(credentials(2)));
+        : manager.refresh(session, () => Promise.resolve(renewed(2)));
     await started.promise;
     const clearing = manager.clear();
     write.resolve();
@@ -155,7 +160,7 @@ describe('SessionManager', () => {
     await signedInSession(manager);
     storage.clearSession.mockRejectedValueOnce(new Error('storage'));
     storage.getRefreshToken.mockResolvedValue('refresh-1');
-    const renew = vi.fn<() => Promise<SessionCredentials>>().mockResolvedValue(credentials(2));
+    const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
     await expect(manager.clear()).resolves.toMatchObject({ code: 'STORAGE' });
     await expect(manager.get(renew)).resolves.toMatchObject({ code: 'STORAGE' });
     expect(storage.getRefreshToken).not.toHaveBeenCalled();
@@ -168,18 +173,18 @@ describe('SessionManager', () => {
   it('이전 갱신의 finally가 새 세션의 진행 갱신을 해제하지 않는다', async () => {
     const manager = new SessionManager();
     const first = await signedInSession(manager);
-    const old = Promise.withResolvers<SessionCredentials>();
+    const old = Promise.withResolvers<RenewalResult>();
     const oldRequest = manager.refresh(first, () => old.promise);
     await manager.clear();
     const next = await signedInSession(manager);
-    const pending = Promise.withResolvers<SessionCredentials>();
-    const renew = vi.fn<() => Promise<SessionCredentials>>(() => pending.promise);
+    const pending = Promise.withResolvers<RenewalResult>();
+    const renew = vi.fn<() => Promise<RenewalResult>>(() => pending.promise);
     const newRequest = manager.refresh(next, renew);
     expect(renew).toHaveBeenCalledTimes(1);
-    old.resolve(credentials(2));
+    old.resolve(renewed(2));
     await oldRequest;
     const duplicate = manager.refresh(next, renew);
-    pending.resolve(credentials(3));
+    pending.resolve(renewed(3));
     const results = await Promise.all([newRequest, duplicate]);
     expect(results).toEqual([
       expect.objectContaining({
@@ -198,7 +203,7 @@ describe('SessionManager', () => {
   it('동시 복구는 저장소 읽기와 갱신을 공유한다', async () => {
     const manager = new SessionManager();
     storage.getRefreshToken.mockResolvedValue('refresh-1');
-    const renew = vi.fn<() => Promise<SessionCredentials>>().mockResolvedValue(credentials(2));
+    const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
     const results = await Promise.all([manager.get(renew), manager.get(renew)]);
     expect(results[0]).toEqual(results[1]);
     expect(storage.getRefreshToken).toHaveBeenCalledTimes(1);
@@ -219,7 +224,7 @@ describe('SessionManager', () => {
     const manager = new SessionManager();
     const session = await signedInSession(manager);
     storage.setRefreshToken.mockRejectedValueOnce(new Error('storage'));
-    const renew = vi.fn<() => Promise<SessionCredentials>>().mockResolvedValue(credentials(2));
+    const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
     await expect(manager.refresh(session, renew)).resolves.toMatchObject({ code: 'STORAGE' });
     expect(manager.refreshToken).toBe('refresh-1');
     await expect(manager.refresh(session, renew)).resolves.toMatchObject({ status: 'SIGNED_IN' });

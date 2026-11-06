@@ -89,16 +89,17 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 - [x] T039 `pnpm-workspace.yaml`, `apps/mobile/package.json`, `pnpm-lock.yaml`에 p-mutex@1.0.0을 추가하고 `apps/mobile/src/auth/session.ts`의 저장·메모리 확정을 직렬화한다.
 - [x] T040 `apps/mobile/src/auth/actions.ts`, `session.ts`에 작업 시작 세대·조건부 결과 반영·즉시 logout 무효화·삭제 예약·가입 자격 정리를 구현한다.
 - [x] T041 `apps/mobile/src/auth/session.ts`에 restore/refresh의 세대·대상별 single-flight와 identity-safe finally, 삭제 실패 후 복구 차단을 적용한다.
-- [ ] T042 `specs/016-ios-oidc-auth/validation.md`에 R1·check/build/expo:doctor·Metro 결과와 #328 웹 연계 미검증을 기록하고 리뷰받는다.
+- [x] T042 `specs/016-ios-oidc-auth/validation.md`에 R1·check/build/expo:doctor·Metro 결과와 #328 웹 연계 미검증을 기록하고 리뷰받는다.
 
-1A·1B에서 T038–T041의 네이티브 구현·자동 검증을 완료했다. T042는 1B 결과를 제출한 뒤 사용자 리뷰를 기다린다. 웹 연계는 보완 5단계에 남아 있다.
-**중단점**: 1B 리뷰와 보완 2단계 진행 확인 전 renew 오류 분류를 시작하지 않는다.
+1A·1B의 네이티브 구현·자동 검증과 사용자 리뷰를 완료했다. 웹 연계는 보완 5단계에 남아 있다.
 
 ## 보완 2단계 — R2 US3 갱신 오류
 
-- [ ] T043 [US3] `apps/mobile/src/auth/session.test.ts`, `actions.test.ts`에 renew 401·timeout·5xx·잘못된 200·저장 실패·구 세션 오류 사례를 추가한다.
-- [ ] T044 [US3] `apps/mobile/src/auth/auth-api.ts`, `actions.ts`, `session.ts`에서 HTTP status를 보존하고 대상 검사 후 자격 정리·보존과 오류를 분류한다.
-- [ ] T045 [US3] `specs/016-ios-oidc-auth/validation.md`에 R2 회귀·품질 게이트 결과를 기록하고 리뷰받는다.
+- [x] T043 [US3] `apps/mobile/src/auth/session.test.ts`, `actions.test.ts`에 renew 401·timeout·5xx·잘못된 200·저장 실패·구 세션 오류 사례를 추가한다.
+- [x] T044 [US3] `apps/mobile/src/auth/auth-api.ts`, `actions.ts`, `session.ts`에서 HTTP status를 보존하고 대상 검사 후 자격 정리·보존과 오류를 분류한다.
+- [x] T045 [US3] `specs/016-ios-oidc-auth/validation.md`에 R2 회귀·품질 게이트 결과를 기록하고 리뷰받는다.
+
+2단계 리뷰 수정과 사용자 승인을 완료했다. 보완 3단계 진행을 승인받았으며, PR 크기를 고려해 별도 브랜치 분리를 준비한다.
 
 ## 보완 3단계 — R3 US1 iOS 설정
 

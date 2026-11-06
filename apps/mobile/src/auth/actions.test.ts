@@ -4,6 +4,7 @@ import type { AuthenticationResponse } from '@yapp-plus/api/generated';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { AuthActions, type NativeAuthRuntime } from './actions';
+import { nativeAuthApi } from './auth-api';
 import type { NativeIdentity } from './providers';
 import { SessionManager } from './session';
 
@@ -59,6 +60,23 @@ const googleActions = () => {
   vi.mocked(runtime.authenticateWithProvider).mockResolvedValue(googleIdentity);
   vi.mocked(runtime.authenticateGoogle).mockResolvedValue({ data: signedInResponse(1) });
   return { runtime, actions: new AuthActions(runtime) };
+};
+
+const renewalActions = async () => {
+  const { runtime, actions } = googleActions();
+  const result = await actions.signIn({ provider: 'google' });
+  if (result.status !== 'SIGNED_IN') {
+    throw new Error('테스트 로그인 실패');
+  }
+  const http = vi.fn<typeof fetch>();
+  vi.mocked(runtime.renew).mockImplementation((input) =>
+    nativeAuthApi.renew({
+      ...input,
+      baseUrl: 'https://api.test',
+      kyOptions: { fetch: http },
+    }),
+  );
+  return { runtime, actions, http, session: result.session };
 };
 
 describe('AuthActions', () => {
@@ -345,4 +363,129 @@ describe('AuthActions', () => {
       });
     },
   );
+
+  it('renew 401이면 현재 자격을 삭제하고 이후 같은 토큰으로 갱신하지 않는다', async () => {
+    const { actions, runtime, http, session } = await renewalActions();
+    http.mockResolvedValue(new Response('{}', { status: 401 }));
+    await expect(actions.refreshSession(session)).resolves.toEqual({ status: 'SIGNED_OUT' });
+    expect(runtime.session.refreshToken).toBeUndefined();
+    expect(storage.clearSession).toHaveBeenCalledOnce();
+    await expect(actions.getSession()).resolves.toEqual({ status: 'SIGNED_OUT' });
+    expect(http).toHaveBeenCalledTimes(1);
+  });
+
+  it.each([
+    [400, '{}', 'SERVER', false],
+    [403, '{}', 'SERVER', false],
+    [500, '{}', 'SERVER', true],
+    [503, '{}', 'SERVER', true],
+    [200, '{}', 'INVALID_RESPONSE', false],
+    [200, 'invalid-json', 'INVALID_RESPONSE', false],
+    [204, null, 'INVALID_RESPONSE', false],
+  ] as const)(
+    'renew %i 응답(%s)을 %s로 구분하고 자격을 보존한다',
+    async (status, body, code, retryable) => {
+      const { actions, runtime, http, session } = await renewalActions();
+      http.mockResolvedValue(
+        new Response(body, { status, headers: { 'Content-Type': 'application/json' } }),
+      );
+      await expect(actions.refreshSession(session)).resolves.toEqual({
+        status: 'UNAVAILABLE',
+        code,
+        retryable,
+      });
+      expect(runtime.session.refreshToken).toBe('refresh-1');
+      expect(storage.clearSession).not.toHaveBeenCalled();
+      expect(http).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it.each(['accessToken', 'refreshToken', 'expiresIn', 'expiresAt', 'userId'])(
+    'renew 200의 잘못된 %s를 저장하지 않는다',
+    async (field) => {
+      const { actions, runtime, http, session } = await renewalActions();
+      const valid = signedInResponse(2);
+      let expiresIn = 3600;
+      if (field === 'expiresIn') {
+        expiresIn = -1;
+      } else if (field === 'expiresAt') {
+        expiresIn = Number.MAX_SAFE_INTEGER;
+      }
+      const data = {
+        ...valid,
+        user: { ...valid.user, id: field === 'userId' ? 1.5 : 7 },
+        session: {
+          ...valid.session,
+          accessToken: field === 'accessToken' ? '' : 'access-2',
+          refreshToken: field === 'refreshToken' ? ' ' : 'refresh-2',
+          expiresIn,
+        },
+      };
+      http.mockResolvedValue(Response.json(data));
+      await expect(actions.refreshSession(session)).resolves.toMatchObject({
+        code: 'INVALID_RESPONSE',
+      });
+      expect(runtime.session.refreshToken).toBe('refresh-1');
+      expect(storage.setRefreshToken).toHaveBeenCalledTimes(1);
+    },
+  );
+
+  it('renew 네트워크 실패 뒤 자격을 보존하고 다음 시도에서 회전한다', async () => {
+    const { actions, runtime, http, session } = await renewalActions();
+    http.mockRejectedValueOnce(new TypeError('network'));
+    await expect(actions.refreshSession(session)).resolves.toMatchObject({
+      code: 'NETWORK',
+      retryable: true,
+    });
+    expect(runtime.session.refreshToken).toBe('refresh-1');
+    http.mockResolvedValueOnce(Response.json(signedInResponse(2)));
+    await expect(actions.refreshSession(session)).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      session: { tokenVersion: 2 },
+    });
+    expect(runtime.session.refreshToken).toBe('refresh-2');
+    expect(http).toHaveBeenCalledTimes(2);
+  });
+
+  it('renew의 20초 timeout을 구분하고 자격을 보존한다', async () => {
+    const { actions, runtime, http, session } = await renewalActions();
+    vi.useFakeTimers();
+    try {
+      http.mockImplementation(() => new Promise<Response>(() => {}));
+      const refreshing = actions.refreshSession(session);
+      await vi.advanceTimersByTimeAsync(20_001);
+      await expect(refreshing).resolves.toMatchObject({ code: 'TIMEOUT', retryable: true });
+      expect(runtime.session.refreshToken).toBe('refresh-1');
+      expect(http).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('새 로그인 뒤 도착한 renew 401은 새 자격을 지우지 않는다', async () => {
+    const { actions, runtime, http, session } = await renewalActions();
+    const response = Promise.withResolvers<Response>();
+    const started = Promise.withResolvers<void>();
+    http.mockImplementation(() => {
+      started.resolve();
+      return response.promise;
+    });
+    const refreshing = actions.refreshSession(session);
+    await started.promise;
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValue({ data: signedInResponse(2) });
+    await actions.signIn({ provider: 'google' });
+    response.resolve(new Response('{}', { status: 401 }));
+    await expect(refreshing).resolves.toEqual({ status: 'CANCELLED' });
+    expect(runtime.session.refreshToken).toBe('refresh-2');
+    expect(storage.clearSession).not.toHaveBeenCalled();
+  });
+
+  it('renew 401의 삭제 실패를 STORAGE로 보고하고 재복구를 차단한다', async () => {
+    const { actions, http, session } = await renewalActions();
+    http.mockResolvedValue(new Response('{}', { status: 401 }));
+    storage.clearSession.mockRejectedValue(new Error('storage'));
+    await expect(actions.refreshSession(session)).resolves.toMatchObject({ code: 'STORAGE' });
+    await expect(actions.getSession()).resolves.toMatchObject({ code: 'STORAGE' });
+    expect(http).toHaveBeenCalledTimes(1);
+  });
 });
