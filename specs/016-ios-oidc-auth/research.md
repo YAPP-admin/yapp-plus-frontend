@@ -81,3 +81,37 @@
 - #328의 `hong-kong` 작업 트리를 읽어 웹 인증 세대·query/mutation cache clear·화면 수명 구현을 확인했다. 아직 미커밋이며 main 반영 근거가 아니다.
 - 공통 결과 적용 경로를 재사용하는 것으로 계획한다. 현재 그쪽 query의 undefined→SIGNED_OUT과 staleTime Infinity는 남아 있어 R5 완료 증거가 아니다.
 - 그쪽 계획의 업무 API 401 재요청·앱 복귀 확인과 이쪽의 브리지 재조회는 연계가 필요하다. 실제 적용 순서는 보완 5단계 전에 다시 확인한다.
+
+## 보완 4단계 — Google nonce 조사 결과와 제안
+
+2026-11-06: 설치된 Nitro SDK 2.3.1의 `ios/HybridNitroGoogleSignin.swift`를 확인했다. 3단계 격리 Podfile.lock의 GoogleSignIn은 10.1.0이다. 아래는 고정 소스 분석이며 실제 계정 로그인 실험 결과가 아니다.
+
+| 경로                                  | 고정 소스 근거                                                                                                  | 새 nonce 보장 판단                                                          |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| configure → signIn                    | 69–77행은 nonce를 필드에 저장하고 102–112행은 currentUser의 token을 그대로 반환한다                             | 기존 token이 새 nonce에 맞춰 바뀌지 않는다                                  |
+| restorePreviousSignIn                 | 203–223행은 nonce 인자 없이 저장 사용자를 복원한다                                                              | 이번 시도의 nonce를 전달하지 않는다                                         |
+| getTokens                             | 374행 이후는 OIDAuthState.performAction 또는 refreshTokensIfNeeded를 사용한다                                   | configuredNonce를 사용하지 않으므로 새 token 여부만으로 해결되지 않는다     |
+| clearCachedAccessToken                | 349행 이후는 기존 AuthState에 token 갱신 필요 표시만 한다                                                       | 새 nonce의 인증 요청이 아니다                                               |
+| createAccount / presentExplicitSignIn | 115–126행은 같은 interactiveSignIn을 호출하고 235–242, 579–601행에서 configuredNonce를 Google signIn에 전달한다 | 새 nonce를 전달할 수 있는 확인된 경로이며 실제 token claim은 기기 검증 필요 |
+
+Google 공식 [GIDGoogleUser 문서](https://developers.google.com/identity/sign-in/ios/reference/Classes/GIDGoogleUser)는 refreshTokensIfNeeded가 만료됐거나 만료가 가까운 토큰을 갱신한다고 설명한다. [GIDSignIn 문서](https://developers.google.com/identity/sign-in/ios/reference/Classes/GIDSignIn)는 저장 사용자 복원과 interactive sign-in을 구분한다. 이 API의 존재만으로 silent 로그인에서 새 nonce가 적용된다고 추론하지 않는다. 설치된 GoogleSignIn 10.1.0 헤더에도 nonce를 받는 interactive sign-in 선언이 있다.
+
+### 권장 후속 구현 — 리뷰 승인 필요
+
+- iOS에서 사용자가 Google 로그인 버튼을 누르면 새 nonce를 만들고 configure 후 presentExplicitSignIn을 직접 호출한다. iOS currentUser/restore의 캐시 token을 서버 인증에 사용하지 않는다. Android 경로는 유지한다.
+- 앱 시작·복귀 시 이미 확보한 YAPP refresh token으로 세션을 복구하는 흐름은 유지한다. 매 앱 실행마다 Google 화면을 띄우자는 제안이 아니다.
+- Google SDK signOut 추가만으로 해결하지 않는다. 앱 logout은 YAPP 세션을 정리하며, 로그인 실패 후 재시도에는 SDK 사용자 상태가 남을 수 있다. 매 로그인 전 SDK signOut은 전역 사용자 상태 변경도 추가한다.
+- nonce 재사용·token에서 nonce 역추출·서버 검증 완화는 제외한다. SDK 교체나 fork도 현 단계에서 추가하지 않는다. silent 유지가 필수라면 새 nonce를 포함한 무상호작용 인증을 지원하는 근거부터 별도로 확보해야 한다.
+- 사용자 영향: Google 인증 UI가 재로그인 시 다시 나타날 수 있다. 매번 비밀번호 입력 또는 계정 선택을 요구한다고 단정하지 않는다. 이 UX 변경은 리뷰 승인 후 구현한다.
+
+후속 회귀는 iOS의 두 번 연속 시도·서버 실패 후 재시도·앱 logout 후 재로그인·사용자 취소를 검증한다. 각 인증 요청의 nonce와 SDK 구성 nonce 대응, 캐시 경로 미호출, Android 기존 경로 보존을 확인한다. 실기기에서는 실제 token nonce와 서버 검증 성공을 확인하되 token/계정 정보를 기록하지 않는다. 롤백 시 기존 캐시 token 위험이 돌아오므로 수정 제거를 해결로 표시하지 않는다.
+
+### 웹 인증 작업 소유권 변경
+
+사용자가 다른 세션에서 인증 작업을 중단하기로 했다. 앞선 #328 재사용 계획은 과거 조사 기록이며 앞으로의 구현 의존성이 아니다. 현재 브랜치의 session.tsx는 undefined를 SIGNED_OUT으로 변환하고, mutations.ts는 결과를 그대로 query cache에 적용한다. 보완 5단계에서 이 저장소의 단일 웹 인증 결과 적용 경로·작업 무효화·계정 캐시/화면 수명·복귀 재조회 소유권을 설계한다. 다른 작업 트리의 미커밋 코드를 가져오지 않는다. 업무 API의 일반 401 재요청까지 자동 확장하지 않고 필요한 범위를 5단계 계획 리뷰에서 확정한다.
+
+### 4단계 구현 승인과 Android 비교
+
+Android develop `2b837e3cb21762c6a73f1db205be6a3ef2749a97`의 [GoogleCredentialManager.kt](https://github.com/YAPP-admin/yapp-plus-android/blob/2b837e3cb21762c6a73f1db205be6a3ef2749a97/feature/login/src/main/java/com/yapp/plus/feature/login/GoogleCredentialManager.kt)는 매 요청 새 nonce를 생성하고 SHA-256 값을 GetSignInWithGoogleOption.setNonce에 전달한다. LoginRoute의 재시도도 같은 요청을 새로 시작한다. Android 실기기 화면과 토큰은 독립 검증하지 않았다.
+
+사용자는 이 비교와 iOS 재로그인 시 Google UI가 다시 나타날 수 있음을 검토하고 구현을 승인했다. 위의 승인 대기 문단은 조사 당시 기록이다. 구현은 iOS의 SDK 캐시 반환 경로만 제거하며 자동 세션 복구·Android 제품 코드는 유지한다. 이는 다른 Android 저장소를 수정하거나 두 플랫폼의 실제 화면이 같다고 보장하는 작업이 아니다.

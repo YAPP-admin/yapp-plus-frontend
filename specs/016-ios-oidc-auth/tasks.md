@@ -111,14 +111,17 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 
 ## 보완 4단계 — R4 US1 silent nonce 조사
 
-- [ ] T049 [US1] `specs/016-ios-oidc-auth/research.md`에 고정 SDK의 signIn/restore/getTokens와 nonce 발급·재시도·로그아웃 후 재로그인 근거 및 안전한 대안을 정리한다.
-- [ ] T050 [US1] `specs/016-ios-oidc-auth/plan.md`, `tasks.md`, `validation.md`에 구현 가능 여부·추가 검증·제품 동작 변경 조건을 제출하고 사용자 리뷰로 후속 구현 범위를 확정한다. 조사만으로 R4를 완료 처리하지 않는다.
+- [x] T049 [US1] `specs/016-ios-oidc-auth/research.md`에 고정 SDK의 signIn/restore/getTokens와 nonce 발급·재시도·로그아웃 후 재로그인 근거 및 안전한 대안을 정리한다.
+- [x] T050 [US1] `specs/016-ios-oidc-auth/plan.md`, `tasks.md`, `validation.md`에 구현 가능 여부·추가 검증·제품 동작 변경 조건을 제출하고 사용자 리뷰로 후속 구현 범위를 확정한다. 조사만으로 R4를 완료 처리하지 않는다.
+
+- [x] T050a [US1] 승인된 iOS 명시적 로그인 경로를 구현하고 새 nonce·재시도·logout 후 재로그인·취소와 Android 기존 경로를 회귀 검증한다.
+- [x] T050b [US1] 자동 검증·번들 결과와 실제 Google token/서버 미검증을 제출하고 리뷰받는다. 실제 nonce 일치와 서버 인증 성공을 확인하기 전 R4의 종단 검증 완료를 선언하지 않는다.
 
 ## 보완 5단계 — R5 US3 웹 브리지 복구
 
-- [ ] T051 [US3] `specs/016-ios-oidc-auth/plan.md`에서 #328 통합 상태·공통 인증 적용 경로·복귀 이벤트 소유권을 재확인하고 적용 순서를 확정한다.
+- [ ] T051 [US3] `specs/016-ios-oidc-auth/plan.md`에서 다른 세션의 인증 작업 중단을 반영해 웹 공통 결과 적용·작업 무효화·계정 캐시·화면 수명·복귀 이벤트의 설계를 확정하고 필요시 5A/5B로 나눈다.
 - [ ] T052 [US3] `apps/web/src/features/auth/model/session.test.tsx`에 undefined/timeout→준비·unsupported·최소 간격 재시도·늦은 query 결과 회귀를 추가한다.
-- [ ] T053 [US3] `apps/web/src/features/auth/model/native-auth.ts`, `session.tsx`, `mutations.ts`에서 가용성·조회 오류·재조회를 #328 공통 적용 경로에 연결한다. 별도 웹 세대 관리자를 만들지 않는다.
+- [ ] T053 [US3] `apps/web/src/features/auth/model/native-auth.ts`, `session.tsx`, `mutations.ts`에서 가용성·조회 오류·재조회를 이 작업에서 마련한 단일 웹 인증 결과 적용 경로에 연결한다. query·mutation별 중복 세대 관리자를 만들지 않는다.
 - [ ] T054 [US3] `apps/web/src/features/auth/`의 보호 경계·재시도 안내와 인접 화면 테스트를 갱신하고 `specs/016-ios-oidc-auth/validation.md`에 R1 웹 전파·R5·접근성·화면·check/build 결과를 기록해 리뷰받는다.
 
 ## 보완 6단계 — R6 공지 상세 mock
@@ -129,7 +132,7 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 ## 보완 7단계 — 통합 검증
 
 - [ ] T057 `specs/016-ios-oidc-auth/quickstart.md`의 R1–R6 회귀와 check/build/expo:doctor·Metro/Hermes·가능한 iOS 검증을 실행하고 `validation.md`에 신규 실행·캐시·실패·미실행을 구분한다.
-- [ ] T058 `specs/016-ios-oidc-auth/validation.md`에 #328 연계·R4 미해결 여부·실기기 대기·롤백·실제 base 변경량을 기록하고 최종 리뷰를 받는다. TestFlight/EAS 배포는 별도 승인 대상이다.
+- [ ] T058 `specs/016-ios-oidc-auth/validation.md`에 웹 공통 경로 통합·R4 미해결 여부·실기기 대기·롤백·실제 base 변경량을 기록하고 최종 리뷰를 받는다. TestFlight/EAS 배포는 별도 승인 대상이다.
 
 실행 순서는 보완 0→1→2→3→4(조사 리뷰)→5→6→7이다. 각 화살표에 사용자 리뷰와 다음 단계 승인이 필요하다.
 공통 기반 R1은 US1·US2·US3을 함께 검증한다. R3·R4는 US1, R2·R5는 US3, R6은 별도 mock 회귀다.
