@@ -2,6 +2,7 @@
 import { expect, it } from 'vitest';
 import {
   zDetail1Response,
+  zDetailResponse,
   zList3Response,
   zPresign1Response,
   zSubmit1Response,
@@ -13,6 +14,7 @@ it.each([
   ['POST', '/api/admin/generations/1/post-images/presign', zPresign1Response],
   ['GET', '/api/admin/generations/1/sessions/1/attendance', zList3Response],
   ['GET', '/api/admin/generations/1/posts/1', zDetail1Response],
+  ['GET', '/api/admin/generations/1/members/1', zDetailResponse],
 ])('기존 %s %s 모킹을 같은 응답 계약으로 유지한다', async (method, path, schema) => {
   const response = await fetch(`${apiBaseUrl}${path}`, { method });
   expect(response.status).toBe(200);

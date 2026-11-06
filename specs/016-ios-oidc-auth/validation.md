@@ -544,3 +544,11 @@ URL 기준 `GET /api/admin/generations/1/posts/1` 회귀는 수정 전 501로 �
 | 공통 API mock          | 상대 브랜치 변경 없음. 공지·회원 상세 mock 작업과 직접 충돌하지 않는다.                                                                                                                     |
 
 상대 작업은 주로 홈·일정 조회지만 인증 소비 계약도 포함한다. 파일 충돌만 해소하면 안전하다고 판단하지 않는다. 실제 병합·병합본 typecheck/build/인증 회귀는 이번 비교에 포함하지 않았다. PR은 종속 base 기준으로 준비하며 회원 상세 보완 결과 제출 후 사용자 리뷰를 받는다.
+
+### 회원 상세 mock 후속 보완
+
+7단계 문서 현행화와 워크스페이스 비교는 `656e706`으로 커밋했다. 이어 회원 상세 `GET /api/admin/generations/1/members/1` 테스트가 501로 실패하는 것을 다시 확인했다. 생성 Faker의 attendanceScore는 범위 없는 정수지만 생성 schema는 int32를 요구한다. 공통 detail handler에서 해당 필드만 대표값 0으로 덮어 쓰고 나머지 생성 응답·스키마 검증은 유지했다. 이는 개발 mock의 대표값이며 실제 출석 점수 정책을 바꾸지 않는다. 생성 코드·다른 워크스페이스는 수정하지 않았다.
+
+URL 회귀 5개와 최종 check 통과: admin 658·web 139·mobile 60개 테스트 및 API/앱 lint·typecheck는 새 실행, 나머지는 Turbo cache다. 첫 check는 새 콜백 인자 options의 shadow 경고로 중단됐고 fakerOptions로 수정한 뒤 통과했다. build는 admin·web 새 실행, Storybook cache로 통과했다(인자 이름만 바꾸기 전 실행이며 제품 동작은 동일하다). 로그는 `.context/oidc-member-mock/`에 있다.
+
+이 기록이 회원 상세 501 미해결이라는 앞 단계 기록을 대체한다. 실제 서버·화면 전체 흐름은 검증하지 않았으며 BFCache·실제 OAuth 제한은 그대로다. 현재 변경은 미커밋으로 리뷰를 기다린다. 종속 base `DongjaJ/oidc-stackflow-upgrade`의 PR 초안은 `.context/oidc-followup/pr-draft.md`에만 작성했고 push·PR 생성·상대 브랜치 merge/rebase는 하지 않았다.
