@@ -3,7 +3,6 @@ import { useActivity, useStep } from '@stackflow/react';
 import { useActivityParams } from '@stackflow/react/future';
 import { Activity, type ReactNode } from 'react';
 import { SnackbarProvider } from '@yapp-plus/ui';
-import { useNativeAuthSession } from '@/features/auth';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
@@ -41,8 +40,7 @@ const TAB_TITLES: Record<TabName, string> = {
   my: '마이페이지',
 };
 
-export function LegacyTabsActivity() {
-  const { isNative, phase } = useNativeAuthSession();
+export function TabsActivity() {
   const activityParams = useActivityParams<'Tabs'>();
   const step = useStep();
   const stepParams = readTabsParams(step?.params);
@@ -55,21 +53,8 @@ export function LegacyTabsActivity() {
   } satisfies TabsState;
   useTabsUrl(tabsState);
 
-  if (isNative && phase !== 'SIGNED_IN') {
-    return (
-      <LegacyScreen title="로그인">
-        <NativeAuthRedirect
-          target="LOGIN"
-          when="SIGNED_OUT"
-          unavailable={phase === 'UNAVAILABLE'}
-        />
-        <output>로그인 상태를 확인하고 있어요…</output>
-      </LegacyScreen>
-    );
-  }
-
   return (
-    <LegacyScreen title={TAB_TITLES[activeTab]}>
+    <ActivityScreen title={TAB_TITLES[activeTab]}>
       <TabsLayout activeTab={activeTab}>
         <Activity mode={activeTab === 'home' ? 'visible' : 'hidden'} name="HomeTab">
           <HomePage initialSession={tabsState.session} initialAttendance={tabsState.attendance} />
@@ -84,7 +69,7 @@ export function LegacyTabsActivity() {
           <MyPage />
         </Activity>
       </TabsLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
@@ -106,178 +91,178 @@ function readTabsParams(params: unknown): TabsState {
   };
 }
 
-export function LegacyAlertsActivity() {
+export function AlertsActivity() {
   const { empty } = useActivityParams<'Alerts'>();
   return (
-    <LegacyScreen title="알림">
+    <ActivityScreen title="알림">
       <TabsLayout activeTab={null}>
         <AlertsPage showEmpty={empty === 'true'} />
       </TabsLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyNoticeDetailActivity() {
+export function NoticeDetailActivity() {
   const { noticeId } = useActivityParams<'NoticeDetail'>();
   return (
-    <LegacyScreen title="게시판 상세">
+    <ActivityScreen title="게시판 상세">
       <PageShell header={null}>
         <NoticeDetailPage noticeId={noticeId} />
       </PageShell>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyAttendanceActivity() {
+export function AttendanceActivity() {
   const { mode } = useActivityParams<'Attendance'>();
   return (
-    <LegacyScreen title="출석 내역" preventSwipeBack>
+    <ActivityScreen title="출석 내역" preventSwipeBack>
       <PageShell header={null} plain>
         <AttendancePage initialMode={mode} />
       </PageShell>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyAttendanceRulesActivity() {
+export function AttendanceRulesActivity() {
   return (
-    <LegacyScreen title="출석 규칙" preventSwipeBack>
+    <ActivityScreen title="출석 규칙" preventSwipeBack>
       <DetailLayout>
         <AttendanceRulesPage />
       </DetailLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyAttendanceCompleteActivity() {
+export function AttendanceCompleteActivity() {
   return (
-    <LegacyScreen title="출석 완료" showBack={false} preventSwipeBack>
+    <ActivityScreen title="출석 완료" showBack={false} preventSwipeBack>
       <PageShell header={null} plain>
         <AttendanceCompletePage />
       </PageShell>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacySettingsActivity() {
+export function SettingsActivity() {
   return (
-    <LegacyScreen title="설정" preventSwipeBack>
+    <ActivityScreen title="설정" preventSwipeBack>
       <PageShell header={null} plain>
         <SettingsPage />
       </PageShell>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyTeamAttendanceUploadActivity() {
+export function TeamAttendanceUploadActivity() {
   const { error } = useActivityParams<'TeamAttendanceUpload'>();
   return (
-    <LegacyScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
+    <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
       <TeamAttendanceUploadPage simulateError={error === 'true'} />
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyTeamAttendanceErrorActivity() {
+export function TeamAttendanceErrorActivity() {
   return (
-    <LegacyScreen title="팀 세션 인증 오류">
+    <ActivityScreen title="팀 세션 인증 오류">
       <TeamAttendanceErrorPage />
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyTeamAttendanceCompleteActivity() {
+export function TeamAttendanceCompleteActivity() {
   return (
-    <LegacyScreen title="팀 세션 인증 완료" showBack={false} preventSwipeBack>
+    <ActivityScreen title="팀 세션 인증 완료" showBack={false} preventSwipeBack>
       <TeamAttendanceCompletePage />
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyLoginActivity() {
+export function LoginActivity() {
   const { error } = useActivityParams<'Login'>();
 
   return (
-    <LegacyScreen title="로그인" showBack={false} preventSwipeBack>
+    <ActivityScreen title="로그인" showBack={false} preventSwipeBack>
       <NativeAuthRedirect target="TABS" when="SIGNED_IN" />
       <AuthLayout>
         <LoginPage initialError={error === 'true'} />
       </AuthLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyLoginErrorActivity() {
+export function LoginErrorActivity() {
   return (
-    <LegacyScreen title="오류 안내">
+    <ActivityScreen title="오류 안내">
       <AuthLayout>
         <LoginErrorPage />
       </AuthLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacySignupActivity() {
+export function SignupActivity() {
   return (
-    <LegacyScreen title="회원가입" preventSwipeBack>
+    <ActivityScreen title="회원가입" preventSwipeBack>
       <AuthLayout showBack>
         <SignupPage />
       </AuthLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacySignupStatusActivity() {
+export function SignupStatusActivity() {
   return (
-    <LegacyScreen title="가입 승인 상태" preventSwipeBack>
+    <ActivityScreen title="가입 승인 상태" preventSwipeBack>
       <AuthLayout showBack>
         <SignupStatusPage />
       </AuthLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacySignupCompleteActivity() {
+export function SignupCompleteActivity() {
   return (
-    <LegacyScreen title="가입 완료" showBack={false} preventSwipeBack>
+    <ActivityScreen title="가입 완료" showBack={false} preventSwipeBack>
       <AuthLayout>
         <SignupCompletePage />
       </AuthLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacySignupUnregisteredActivity() {
+export function SignupUnregisteredActivity() {
   return (
-    <LegacyScreen title="미등록 회원 안내" showBack={false} preventSwipeBack>
+    <ActivityScreen title="미등록 회원 안내" showBack={false} preventSwipeBack>
       <AuthLayout>
         <SignupUnregisteredPage />
       </AuthLayout>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyDevRoutesActivity() {
+export function DevRoutesActivity() {
   return (
-    <LegacyScreen title="개발 경로">
+    <ActivityScreen title="개발 경로">
       <PageShell>
         <DevRoutesPage />
       </PageShell>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-export function LegacyNotFoundActivity() {
+export function NotFoundActivity() {
   return (
-    <LegacyScreen title="페이지를 찾을 수 없어요">
+    <ActivityScreen title="페이지를 찾을 수 없어요">
       <PageShell>
         <NotFoundPage />
       </PageShell>
-    </LegacyScreen>
+    </ActivityScreen>
   );
 }
 
-function LegacyScreen({
+function ActivityScreen({
   children,
   preventSwipeBack,
   showBack: _showBack = true,

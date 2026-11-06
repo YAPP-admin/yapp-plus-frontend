@@ -1,10 +1,12 @@
 /** WebView의 native 세션을 초기화하고 화면별 인증 결과를 공유하는 provider입니다. */
 
 import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
-import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
+import { queryOptions, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { getNativeSession, isNativeWebView } from './native-auth';
 import { nativeSessionQueryKey, readAuthSession } from './operations';
+
+import { accountScopeOptions, type AccountDestination } from './account';
 
 export { nativeSessionQueryKey } from './operations';
 
@@ -19,11 +21,15 @@ type NativeAuthSessionContextValue = Readonly<{
   isNative: boolean;
   phase: NativeAuthSessionPhase;
   session?: AuthSession;
+  accountRevision: number;
+  accountDestination: AccountDestination;
 }>;
 
 const browserContext: NativeAuthSessionContextValue = {
   isNative: false,
   phase: 'BROWSER',
+  accountRevision: 0,
+  accountDestination: 'current',
 };
 
 const NativeAuthSessionContext = createContext<NativeAuthSessionContextValue>(browserContext);
@@ -75,12 +81,21 @@ const resultToState = (
 export function NativeAuthSessionProvider({ children }: { children: ReactNode }) {
   const [isNative] = useState(() => isNativeWebView());
   const query = useSuspenseQuery(nativeSessionQueryOptions(isNative));
+  const { data: scope } = useQuery(accountScopeOptions);
   const state = isNative
     ? (resultToState(query.data) ?? { phase: 'UNAVAILABLE' as const })
     : { phase: 'BROWSER' as const };
 
   return (
-    <NativeAuthSessionContext value={{ isNative, phase: state.phase, session: state.session }}>
+    <NativeAuthSessionContext
+      value={{
+        isNative,
+        phase: state.phase,
+        session: state.session,
+        accountRevision: scope.revision,
+        accountDestination: scope.destination,
+      }}
+    >
       {children}
     </NativeAuthSessionContext>
   );

@@ -5,7 +5,7 @@ import { applyAccountBoundary } from './account';
 
 export const nativeSessionQueryKey = ['native-auth', 'session'] as const;
 export type AuthOperation = { generation: number; result?: AuthResult };
-export type AuthOperationKind = 'authenticate' | 'logout' | 'withdraw';
+export type AuthOperationKind = 'authenticate' | 'signup' | 'logout' | 'withdraw';
 
 type OperationState = { generation: number; authenticating?: AuthOperation };
 
@@ -44,12 +44,13 @@ const isOlderSession = (client: QueryClient, result: AuthResult | undefined): bo
 /** 새 인증 의도로 이전 작업과 조회를 무효화합니다. 중복 로그인·가입은 기존 작업을 유지합니다. */
 export const beginAuthOperation = (client: QueryClient, kind: AuthOperationKind): AuthOperation => {
   const state = stateFor(client);
-  if (kind === 'authenticate' && state.authenticating?.generation === state.generation) {
+  const authenticating = kind === 'authenticate' || kind === 'signup';
+  if (authenticating && state.authenticating?.generation === state.generation) {
     throw new AuthBusyError(state.generation);
   }
 
   const operation = { generation: ++state.generation };
-  if (kind === 'authenticate') {
+  if (authenticating) {
     state.authenticating = operation;
   }
 
@@ -93,7 +94,7 @@ export const applyAuthResult = (
   }
 
   if (result && result.status !== 'CANCELLED') {
-    applyAccountBoundary(client, result);
+    applyAccountBoundary(client, result, kind === 'signup');
     client.setQueryData(nativeSessionQueryKey, result);
   }
 

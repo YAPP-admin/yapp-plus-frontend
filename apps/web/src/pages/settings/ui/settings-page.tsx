@@ -70,11 +70,9 @@ export function SettingsPage() {
   const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
   const snackbar = useSnackbarAdapter();
   const withdrawMutation = useNativeWithdrawMutation({
-    onWithdrawn: () => flow.replace('Login', {}),
     onFailure: () => showAccountError('탈퇴 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.'),
   });
   const signOutMutation = useNativeSignOutMutation({
-    onSignedOut: () => flow.replace('Login', {}),
     onFailure: () =>
       showAccountError('로그아웃 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.'),
   });

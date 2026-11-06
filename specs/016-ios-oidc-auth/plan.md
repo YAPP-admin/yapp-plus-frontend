@@ -251,3 +251,11 @@ p-mutex는 기존 workspace에 없는 직렬 실행 책임만 맡기고 catalog/
 탐색 단순화 509줄 위에서 800줄 PR 제한을 지키도록 데이터 정리를 먼저 연결한다. 확정한 userId/sessionId를 QueryClient 수명에 보관하고, 동일 세션의 tokenVersion 변경·조회 불가는 계정 경계로 취급하지 않는다. 유효한 mutation 결과와 세션 복구 결과에만 적용하며 이전 작업의 늦은 결과는 기존 세대 검사에서 먼저 차단한다.
 
 계정 경계에서 native-auth 이외의 query를 취소·제거하고 이전 mutation cache를 제거한다. 진행 중인 인증 mutation은 자신의 lifecycle 완료를 위해 유지한다. mutation cache 제거는 서버 작업 취소나 callback 무효화를 뜻하지 않는다. 현재 업무 mutation 소비자는 없으며, 추가 시 계정 경계 검사도 필요하다. Stackflow 재생성과 화면 callback 수명 연결은 후속 리뷰 단위에 남기고 이번 변경만으로 이전 화면 노출 방지가 완성됐다고 선언하지 않는다. 실패 시 데이터 정리 모듈과 두 호출 지점만 되돌린다. 새 의존성·브리지 계약 변경은 없다.
+
+### 5A-2 화면 수명 연결
+
+단일 Stack과 기본 historySyncPlugin을 유지한다. 공식 wrapStack/wrapActivity 확장 지점에서 계정 revision이 바뀔 때 기존 Activity ID를 기록하고 내용을 해제한다. 기존 ID가 back/forward로 복원돼도 렌더링하지 않으며 최상위 화면만 공식 useFlow.replace로 로그인·홈·가입 완료 화면으로 교체한다. 브라우저 이력 자체를 삭제한다는 보장은 하지 않는다.
+
+계정 식별 기록을 native-auth query로 공유한다. 동일 세션의 토큰 갱신은 폼을 유지하고, 계정 변경은 이전 폼을 제거한다. 페이지 성공 callback의 중복 탐색과 Tabs에만 있던 인증 검사를 공통 경계로 모은다. Stack 재생성, 직접 history 의존성, custom history 구현은 추가하지 않는다.
+
+검증은 동일 계정 폼 유지·계정 변경 폼 제거·가입 완료·로그아웃 뒤 back/forward·보호 화면 직접 접근에 집중한다. 실패 시 현재 브랜치 변경만 되돌리고 775d855 데이터 경계는 유지한다. 실기기 인증과 다른 작업 브랜치의 실제 통합은 별도 검증 대상이다.
