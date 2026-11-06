@@ -118,6 +118,7 @@ export function createApiMockHandlers(
         presign1: fakerResponse(generatedFaker.fakePresign1Response200, schemas.zPresign1Response),
         login: fixedResponse(fixtures.staffLogin, schemas.zStaffLoginResponse),
         detail: fakerResponse(generatedFaker.fakeDetailResponse200, schemas.zDetailResponse),
+        detail1: fakerResponse(generatedFaker.fakeDetail1Response200, schemas.zDetail1Response),
         update1: () => new HttpResponse(null, { status: 204 }),
         update2: fakerResponse(generatedFaker.fakeUpdate2Response200, schemas.zUpdate2Response),
         find3: fixedResponse(

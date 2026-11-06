@@ -143,8 +143,10 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 
 ## 보완 6단계 — R6 공지 상세 mock
 
-- [ ] T055 `apps/admin/src/mocks/api-contract.test.ts`의 기존 Vitest 환경에서 `@yapp-plus/api/mocks`를 사용하는 공지 상세 URL 회귀 테스트를 추가해 현재 실패를 확인한다.
-- [ ] T056 `packages/api/src/mocks/handlers.ts`에 detail1의 faker·생성 schema를 연결하고 기존 detail을 보존한다. `specs/016-ios-oidc-auth/validation.md`에 URL·응답 검증·check 결과를 기록해 리뷰받는다.
+- [x] T055 `apps/admin/src/mocks/api-contract.test.ts`의 기존 Vitest 환경에서 `@yapp-plus/api/mocks`를 사용하는 공지 상세 URL 회귀 테스트를 추가해 현재 실패를 확인한다.
+- [x] T056 `packages/api/src/mocks/handlers.ts`에 detail1의 faker·생성 schema를 연결하고 기존 detail을 보존한다. `specs/016-ios-oidc-auth/validation.md`에 URL·응답 검증·check 결과를 기록해 리뷰받는다.
+
+6단계 구현과 자동 검증을 완료했다. 사용자 리뷰와 다음 단계 승인은 대기 중이다. 회원 상세 mock의 기존 501은 별도 발견 사항으로 기록했다.
 
 ## 보완 7단계 — 통합 검증
 
