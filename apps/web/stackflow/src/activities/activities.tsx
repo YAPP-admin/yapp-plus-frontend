@@ -1,7 +1,6 @@
-import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
+import { ActivityScreen } from './activity-screen';
 import { useActivity, useActivityParams } from '@stackflow/react';
-import { Activity, type ReactNode } from 'react';
-import { SnackbarProvider } from '@yapp-plus/ui';
+import { Activity } from 'react';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
@@ -27,7 +26,6 @@ import { AuthLayout } from '@/app/layouts/auth-layout';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabsLayout } from '@/app/layouts/tabs-layout';
-import { useAppScreenOptions } from '../platform';
 import { isTabName, type TabName, type TabsState } from '@/app/navigation/tab';
 import { useTabsUrl } from '@/app/navigation/use-tabs-url';
 import { NativeAuthRedirect } from './native-auth-redirect';
@@ -54,10 +52,24 @@ export function TabsActivity() {
   useTabsUrl(tabsState);
 
   return (
-    <ActivityScreen title={TAB_TITLES[activeTab]}>
+    <ActivityScreen
+      title={TAB_TITLES[activeTab]}
+      background={activeTab === 'home' ? 'layerBasement' : 'layerDefault'}
+    >
       <TabsLayout activeTab={activeTab}>
         <Activity mode={activeTab === 'home' ? 'visible' : 'hidden'} name="HomeTab">
-          <HomePage initialSession={tabsState.session} initialAttendance={tabsState.attendance} />
+          <HomePage
+            initialSession={
+              import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true'
+                ? tabsState.session
+                : undefined
+            }
+            initialAttendance={
+              import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true'
+                ? tabsState.attendance
+                : undefined
+            }
+          />
         </Activity>
         <Activity mode={activeTab === 'schedule' ? 'visible' : 'hidden'} name="ScheduleTab">
           <SchedulePage />
@@ -259,31 +271,5 @@ export function NotFoundActivity() {
         <NotFoundPage />
       </PageShell>
     </ActivityScreen>
-  );
-}
-
-function ActivityScreen({
-  children,
-  preventSwipeBack,
-  showBack: _showBack = true,
-  title,
-}: {
-  children: ReactNode;
-  preventSwipeBack?: boolean;
-  showBack?: boolean;
-  title: string;
-}) {
-  const appScreenOptions = useAppScreenOptions(preventSwipeBack);
-  const { isTop } = useActivity();
-
-  return (
-    <>
-      {isTop ? <title>{`${title} | YAPP+`}</title> : null}
-      <SnackbarProvider>
-        <AppScreen {...appScreenOptions} layerOffsetTop="none">
-          <AppScreenContent>{children}</AppScreenContent>
-        </AppScreen>
-      </SnackbarProvider>
-    </>
   );
 }

@@ -36,6 +36,7 @@ afterEach(() => {
   }
   document.documentElement.hidden = false;
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   bridge.getSession.mockReset();
   vi.useRealTimers();
 });
@@ -225,3 +226,17 @@ const traverse = (direction: 'back' | 'forward') =>
         window.history[direction]();
       }),
   );
+
+it.each(['/attendance/code', '/attendance/report', '/team-attendance/guide'])(
+  '로그아웃 상태에서 %s 직접 진입은 시트 없이 로그인으로 이동한다',
+  async (path) => {
+    vi.stubEnv('VITE_API_MOCKING', 'true');
+    const client = new QueryClient();
+    await apply(client, { status: 'SIGNED_OUT' }, 'logout');
+    window.history.replaceState(null, '', path);
+    mount(client);
+    expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+  },
+);
