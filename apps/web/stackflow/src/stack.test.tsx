@@ -1,3 +1,4 @@
+import { SnackbarProvider } from '@yapp-plus/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -9,6 +10,7 @@ const popstateListeners: EventListenerOrEventListenerObject[] = [];
 const addWindowListener = window.addEventListener.bind(window);
 
 beforeEach(() => {
+  vi.stubEnv('VITE_API_MOCKING', 'true');
   // 각 테스트의 새 문서에서 생성한 history 구독을 수거합니다.
   vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
     if (type === 'popstate' && listener) {
@@ -32,6 +34,7 @@ afterEach(async () => {
     window.removeEventListener('popstate', listener);
   }
   vi.restoreAllMocks();
+  vi.unstubAllEnvs();
   window.history.replaceState({}, '', '/');
 });
 
@@ -41,9 +44,11 @@ function renderStack() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <Suspense fallback={<div>로딩 중…</div>}>
-        <Stack />
-      </Suspense>
+      <SnackbarProvider>
+        <Suspense fallback={<div>로딩 중…</div>}>
+          <Stack />
+        </Suspense>
+      </SnackbarProvider>
     </QueryClientProvider>,
   );
 }
@@ -104,7 +109,7 @@ describe('Stackflow FSD 화면 연결', () => {
 
     expect(await waitForTopHeading('알림')).toBeTruthy();
     expect(document.querySelector('[data-part="edge"]')).not.toBeInTheDocument();
-  });
+  }, 15000);
 
   it('탭 전환은 history를 늘리지 않고 실행 중인 탭 상태를 보존한다', async () => {
     const user = userEvent.setup();
@@ -297,9 +302,28 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(document.querySelector('[data-reduced-motion="true"]')).toBeInTheDocument();
   }, 15000);
 
+  it('일정 직접 진입과 탭 복귀에서 실제 조회 목록을 유지한다', async () => {
+    vi.stubEnv('VITE_API_MOCKING', 'true');
+    window.history.replaceState({}, '', '/schedule');
+    const user = userEvent.setup();
+    renderStack();
+    const schedule = await waitForTopHeading('일정');
+    expect(await schedule.findByRole('list', { name: '세션 일정 목록' })).toBeVisible();
+    const titles = schedule.getAllByRole('article').map((article) => article.textContent);
+    await user.click(screen.getByRole('link', { name: /^홈$/ }));
+    await waitForTopHeading('홈');
+    await user.click(screen.getByRole('link', { name: /^일정$/ }));
+    const restored = await waitForTopHeading('일정');
+    expect(restored.getAllByRole('article').map((article) => article.textContent)).toEqual(titles);
+    expect(window.location.pathname).toBe('/schedule');
+  });
+
   it('전체 Stackflow Activity route를 등록한다', () => {
     expect(stackflowConfig.activities.map((activity) => activity.name)).toEqual([
       'Tabs',
+      'AttendanceCode',
+      'AttendanceReport',
+      'TeamAttendanceGuide',
       'Alerts',
       'NoticeDetail',
       'Attendance',

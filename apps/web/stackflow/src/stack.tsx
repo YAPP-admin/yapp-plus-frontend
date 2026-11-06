@@ -28,6 +28,9 @@ declare module '@stackflow/config' {
     NotFound: EmptyActivityParams;
     Attendance: AttendanceParams;
     AttendanceRules: EmptyActivityParams;
+    AttendanceCode: EmptyActivityParams;
+    AttendanceReport: EmptyActivityParams;
+    TeamAttendanceGuide: EmptyActivityParams;
     AttendanceComplete: EmptyActivityParams;
     Settings: EmptyActivityParams;
     TeamAttendanceUpload: BooleanQueryParams;
@@ -75,6 +78,21 @@ export const activityComponents = {
   AttendanceRules: lazy<EmptyActivityParams>(() =>
     import('./activities/activities').then(({ AttendanceRulesActivity }) => ({
       default: AttendanceRulesActivity,
+    })),
+  ),
+  AttendanceCode: lazy<EmptyActivityParams>(() =>
+    import('./activities/home-sheets').then((module) => ({
+      default: module.AttendanceCodeActivity,
+    })),
+  ),
+  AttendanceReport: lazy<EmptyActivityParams>(() =>
+    import('./activities/home-sheets').then((module) => ({
+      default: module.AttendanceReportActivity,
+    })),
+  ),
+  TeamAttendanceGuide: lazy<EmptyActivityParams>(() =>
+    import('./activities/home-sheets').then((module) => ({
+      default: module.TeamAttendanceGuideActivity,
     })),
   ),
   AttendanceComplete: lazy<EmptyActivityParams>(() =>
@@ -172,6 +190,33 @@ function initialHistory(history: NonNullable<Route<never>['defaultHistory']>): t
 export const stackflowConfig = defineConfig({
   activities: [
     { name: 'Tabs', route: tabRoutes },
+    {
+      name: 'AttendanceCode',
+      route: {
+        path: '/attendance/code',
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
+        ]),
+      },
+    },
+    {
+      name: 'AttendanceReport',
+      route: {
+        path: '/attendance/report',
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
+        ]),
+      },
+    },
+    {
+      name: 'TeamAttendanceGuide',
+      route: {
+        path: '/team-attendance/guide',
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
+        ]),
+      },
+    },
     {
       name: 'Alerts',
       route: {

@@ -790,3 +790,8 @@ export const sheetSecondaryButton = style({
   fontSize: '16px !important',
   fontWeight: '700 !important',
 });
+
+export const calendarDateToday = style({
+  textDecoration: 'underline',
+  textUnderlineOffset: '4px',
+});
