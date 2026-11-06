@@ -1,4 +1,5 @@
-import type { AuthResult, CompleteSignupInput } from '@yapp-plus/app-bridge';
+import type { NativeAuthCallbacks } from '@/features/auth';
+import type { CompleteSignupInput } from '@yapp-plus/app-bridge';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,20 +15,18 @@ const auth = vi.hoisted(() => {
     isNative: boolean;
     phase: 'BROWSER' | 'LOADING' | 'SIGNED_OUT' | 'SIGNED_IN' | 'UNAVAILABLE';
   };
-  type MutationOptions = {
-    onSuccess?: (result: AuthResult | undefined) => void;
-    onError?: (error: unknown) => void;
-  };
-  const signupMutate = vi.fn<(input: CompleteSignupInput, options?: MutationOptions) => void>();
+  const state: { callbacks: NativeAuthCallbacks } = { callbacks: {} };
+  const signupMutate = vi.fn<(input: CompleteSignupInput) => void>();
   type TestMutation = { isPending: boolean; mutate: typeof signupMutate };
-
   return {
-    completeNativeSignup: vi.fn<(input: CompleteSignupInput) => Promise<AuthResult | undefined>>(),
+    state,
     signupMutate,
-    useNativeSignupMutation: vi.fn<() => TestMutation>(() => ({
-      isPending: false,
-      mutate: signupMutate,
-    })),
+    useNativeSignupMutation: vi.fn<(callbacks?: NativeAuthCallbacks) => TestMutation>(
+      (callbacks = {}) => {
+        state.callbacks = callbacks;
+        return { isPending: false, mutate: signupMutate };
+      },
+    ),
     useNativeAuthSession: vi.fn<() => TestSession>(() => ({
       isNative: false,
       phase: 'BROWSER' as const,
@@ -113,22 +112,7 @@ describe('SignupPage', () => {
       isNative: true,
       phase: 'SIGNED_OUT',
     });
-    auth.completeNativeSignup.mockResolvedValue({
-      status: 'SIGNED_IN',
-      session: {
-        accessToken: 'access-token',
-        expiresAt: Date.now() + 60_000,
-        userId: 1,
-        sessionId: 'session-id',
-        tokenVersion: 1,
-      },
-    });
-    auth.signupMutate.mockImplementation((input, options) => {
-      void auth.completeNativeSignup(input).then(
-        (result) => options?.onSuccess?.(result),
-        (error: unknown) => options?.onError?.(error),
-      );
-    });
+    auth.signupMutate.mockImplementation(() => auth.state.callbacks.onSignedIn?.());
     renderSignupPage();
     const phone = await goToPhoneStep();
 
@@ -136,11 +120,7 @@ describe('SignupPage', () => {
     fireEvent.click(screen.getByRole('button', { name: '다음' }));
 
     await waitFor(() => expect(flow.replace).toHaveBeenCalledWith('SignupComplete', {}));
-    expect(auth.signupMutate).toHaveBeenCalledWith(
-      { name: '김야뿌', phoneNumber: '010-1234-5678' },
-      expect.any(Object),
-    );
-    expect(auth.completeNativeSignup.mock.calls[0]?.[0]).toEqual({
+    expect(auth.signupMutate).toHaveBeenCalledWith({
       name: '김야뿌',
       phoneNumber: '010-1234-5678',
     });

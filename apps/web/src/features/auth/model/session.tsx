@@ -4,6 +4,9 @@ import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
 import { queryOptions, useSuspenseQuery } from '@tanstack/react-query';
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { getNativeSession, isNativeWebView } from './native-auth';
+import { nativeSessionQueryKey, readAuthSession } from './operations';
+
+export { nativeSessionQueryKey } from './operations';
 
 export type NativeAuthSessionPhase =
   | 'BROWSER'
@@ -25,26 +28,16 @@ const browserContext: NativeAuthSessionContextValue = {
 
 const NativeAuthSessionContext = createContext<NativeAuthSessionContextValue>(browserContext);
 
-export const nativeSessionQueryKey = ['native-auth', 'session'] as const;
-
 /** native 세션을 복구하는 query 계약입니다. */
 export const nativeSessionQueryOptions = (isNative: boolean) =>
   queryOptions<AuthResult>({
     queryKey: nativeSessionQueryKey,
-    queryFn: async () => {
+    queryFn: async ({ client, signal }) => {
       if (!isNative) {
         return { status: 'SIGNED_OUT' } satisfies AuthResult;
       }
 
-      try {
-        return (await getNativeSession()) ?? ({ status: 'SIGNED_OUT' } satisfies AuthResult);
-      } catch {
-        return {
-          status: 'UNAVAILABLE',
-          code: 'TIMEOUT',
-          retryable: true,
-        } satisfies AuthResult;
-      }
+      return readAuthSession(client, signal, getNativeSession);
     },
     staleTime: Number.POSITIVE_INFINITY,
   });
@@ -66,6 +59,7 @@ const resultToState = (
     case 'UNAVAILABLE':
       return { phase: 'UNAVAILABLE' };
     case 'AUTHENTICATING':
+      return { phase: 'LOADING' };
     case 'CANCELLED':
     case 'SIGNUP_REQUIRED':
       return undefined;

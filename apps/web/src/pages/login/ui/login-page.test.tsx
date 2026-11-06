@@ -1,4 +1,4 @@
-import type { AuthResult } from '@yapp-plus/app-bridge';
+import type { NativeAuthCallbacks } from '@/features/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
@@ -14,20 +14,18 @@ const auth = vi.hoisted(() => {
     isNative: boolean;
     phase: 'BROWSER' | 'LOADING' | 'SIGNED_OUT' | 'SIGNED_IN' | 'UNAVAILABLE';
   };
-  type MutationOptions = {
-    onSuccess?: (result: AuthResult | undefined) => void;
-    onError?: (error: unknown) => void;
-  };
-  const signInMutate = vi.fn<(provider: 'apple' | 'google', options?: MutationOptions) => void>();
+  const state: { callbacks: NativeAuthCallbacks } = { callbacks: {} };
+  const signInMutate = vi.fn<(input: 'apple' | 'google') => void>();
   type TestMutation = { isPending: boolean; mutate: typeof signInMutate };
-
   return {
-    signInWithNative: vi.fn<(provider: 'apple' | 'google') => Promise<AuthResult | undefined>>(),
+    state,
     signInMutate,
-    useNativeSignInMutation: vi.fn<() => TestMutation>(() => ({
-      isPending: false,
-      mutate: signInMutate,
-    })),
+    useNativeSignInMutation: vi.fn<(callbacks?: NativeAuthCallbacks) => TestMutation>(
+      (callbacks = {}) => {
+        state.callbacks = callbacks;
+        return { isPending: false, mutate: signInMutate };
+      },
+    ),
     useNativeAuthSession: vi.fn<() => TestSession>(() => ({
       isNative: false,
       phase: 'BROWSER' as const,
@@ -114,27 +112,12 @@ describe('LoginPage', () => {
       isNative: true,
       phase: 'SIGNED_OUT',
     });
-    auth.signInWithNative.mockResolvedValue({
-      status: 'SIGNED_IN',
-      session: {
-        accessToken: 'access-token',
-        expiresAt: Date.now() + 60_000,
-        userId: 1,
-        sessionId: 'session-id',
-        tokenVersion: 1,
-      },
-    });
-    auth.signInMutate.mockImplementation((provider, options) => {
-      void auth.signInWithNative(provider).then(
-        (result) => options?.onSuccess?.(result),
-        (error: unknown) => options?.onError?.(error),
-      );
-    });
+    auth.signInMutate.mockImplementation(() => auth.state.callbacks.onSignedIn?.());
     renderLoginPage();
 
     fireEvent.click(screen.getByRole('button', { name: '구글로 계속하기' }));
 
     await waitFor(() => expect(flow.replace).toHaveBeenCalledWith('Tabs', { initialTab: 'home' }));
-    expect(auth.signInMutate).toHaveBeenCalledWith('google', expect.any(Object));
+    expect(auth.signInMutate).toHaveBeenCalledWith('google');
   });
 });

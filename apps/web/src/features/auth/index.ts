@@ -10,6 +10,7 @@ export {
   withdrawNative,
 } from './model/native-auth';
 export {
+  type NativeAuthCallbacks,
   nativeSignInMutationOptions,
   nativeSignOutMutationOptions,
   nativeSignupMutationOptions,

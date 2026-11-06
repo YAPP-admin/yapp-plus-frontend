@@ -40,7 +40,18 @@ export function LoginPage({ initialError = false }: { initialError?: boolean }) 
   const [errorMessage, setErrorMessage] = useState(
     initialError ? '로그인 상태를 확인하지 못했어요. 다시 시도해 주세요.' : '',
   );
-  const signInMutation = useNativeSignInMutation();
+  const signInMutation = useNativeSignInMutation({
+    onSignedIn: () => flow.replace('Tabs', { initialTab: 'home' }),
+    onSignupRequired: () => flow.replace('Signup', {}),
+    onFailure: (result) => {
+      setErrorMessage(
+        result
+          ? '로그인 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.'
+          : '로그인 브리지를 사용할 수 없어요. 앱을 다시 실행해 주세요.',
+      );
+      setIsErrorOpen(true);
+    },
+  });
   const isAuthenticating = signInMutation.isPending;
 
   function handleLogin(provider: 'apple' | 'google') {
@@ -53,34 +64,7 @@ export function LoginPage({ initialError = false }: { initialError?: boolean }) 
       return;
     }
 
-    signInMutation.mutate(provider, {
-      onSuccess: (result) => {
-        if (!result) {
-          setErrorMessage('로그인 브리지를 사용할 수 없어요. 앱을 다시 실행해 주세요.');
-          setIsErrorOpen(true);
-          return;
-        }
-
-        if (result.status === 'SIGNED_IN') {
-          flow.replace('Tabs', { initialTab: 'home' });
-          return;
-        }
-        if (result.status === 'SIGNUP_REQUIRED') {
-          flow.replace('Signup', {});
-          return;
-        }
-        if (result.status === 'CANCELLED') {
-          return;
-        }
-
-        setErrorMessage('로그인 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.');
-        setIsErrorOpen(true);
-      },
-      onError: () => {
-        setErrorMessage('로그인 중 문제가 발생했어요. 잠시 후 다시 시도해 주세요.');
-        setIsErrorOpen(true);
-      },
-    });
+    signInMutation.mutate(provider);
   }
 
   return (

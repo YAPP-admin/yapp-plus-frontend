@@ -26,7 +26,20 @@ export function SignupPage() {
   const titleId = useId();
   const [step, setStep] = useState<Step>('name');
   const [errorMessage, setErrorMessage] = useState('');
-  const signupMutation = useNativeSignupMutation();
+  const signupMutation = useNativeSignupMutation({
+    onSignedIn: () => flow.replace('SignupComplete', {}),
+    onFailure: (result) => {
+      if (!result) {
+        setErrorMessage('가입 브리지를 사용할 수 없어요. 앱을 다시 실행해 주세요.');
+        return;
+      }
+      setErrorMessage(
+        result.status === 'ERROR' && result.fieldErrors?.length
+          ? '입력한 정보를 다시 확인해 주세요.'
+          : '가입 중 문제가 발생했어요. 다시 로그인해 주세요.',
+      );
+    },
+  });
   const isSubmitting = signupMutation.isPending;
   const signupForm = useForm({
     defaultValues: { name: '', phoneNumber: '' } satisfies SignupFormValues,
@@ -44,27 +57,7 @@ export function SignupPage() {
 
       setErrorMessage('');
       const normalizedValue = signupFormSchema.parse(value);
-      signupMutation.mutate(normalizedValue, {
-        onSuccess: (result) => {
-          if (!result) {
-            setErrorMessage('가입 브리지를 사용할 수 없어요. 앱을 다시 실행해 주세요.');
-            return;
-          }
-
-          if (result.status === 'SIGNED_IN') {
-            flow.replace('SignupComplete', {});
-            return;
-          }
-          if (result.status === 'ERROR' && result.fieldErrors?.length) {
-            setErrorMessage('입력한 정보를 다시 확인해 주세요.');
-            return;
-          }
-          setErrorMessage('가입 중 문제가 발생했어요. 다시 로그인해 주세요.');
-        },
-        onError: () => {
-          setErrorMessage('가입 결과를 확인하지 못했어요. 다시 로그인해 주세요.');
-        },
-      });
+      signupMutation.mutate(normalizedValue);
     },
   });
 
