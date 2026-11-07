@@ -1,6 +1,7 @@
+import { sessionNameSchema } from '@yapp-plus/app-bridge';
 import * as SecureStore from 'expo-secure-store';
 
-export type StoredSession = Readonly<{ refreshToken: string; userId: number }>;
+export type StoredSession = Readonly<{ refreshToken: string; userId: number; name?: string }>;
 
 const sessionKey = 'org.yapp.yappplus.auth.session';
 const legacyTokenKey = 'org.yapp.yappplus.auth.refresh-token';
@@ -26,7 +27,11 @@ const parseSession = (value: string): StoredSession | null => {
   ) {
     return null;
   }
-  return { refreshToken: parsed.refreshToken, userId: parsed.userId };
+  return {
+    refreshToken: parsed.refreshToken,
+    userId: parsed.userId,
+    name: sessionNameSchema.parse('name' in parsed ? parsed.name : undefined),
+  };
 };
 
 /** 갱신 자격과 인증된 계정 ID를 한 값으로 저장합니다. access token은 저장하지 않습니다. */
@@ -53,6 +58,7 @@ export class AuthStorage {
         version: 1,
         refreshToken: session.refreshToken,
         userId: session.userId,
+        name: session.name,
       }),
     );
   }

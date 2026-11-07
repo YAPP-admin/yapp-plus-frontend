@@ -29,12 +29,15 @@ beforeEach(() => {
   });
 });
 
-it('토큰과 계정 ID만 한 값으로 저장하고 새 인스턴스에서 복원한다', async () => {
-  const session = { refreshToken: 'refresh-test', userId: 7 };
-  await storage.setSession(session);
-  expect(JSON.parse(values.get(sessionKey) ?? '')).toEqual({ version: 1, ...session });
-  await expect(new AuthStorage().getSession()).resolves.toEqual(session);
-});
+it.each([undefined, '테스트 사용자'])(
+  '이름 유무와 관계없이 같은 계정을 복원한다 (%s)',
+  async (name) => {
+    const session = { refreshToken: 'refresh-test', userId: 7, name };
+    await storage.setSession(session);
+    expect(JSON.parse(values.get(sessionKey) ?? '')).toEqual({ version: 1, ...session });
+    await expect(new AuthStorage().getSession()).resolves.toEqual(session);
+  },
+);
 
 it('이전 토큰 단독 저장은 삭제하고 재로그인으로 전환한다', async () => {
   values.set(legacyKey, 'legacy-refresh');
@@ -70,4 +73,10 @@ it('새 로그인은 구 형식을 지우고 로그아웃은 두 형식을 모�
   values.set(legacyKey, 'legacy-refresh');
   await storage.clearSession();
   expect(values.size).toBe(0);
+});
+
+it.each([null, 7, '  '])('잘못된 이름만 무시하고 로그인 자격은 유지한다 (%s)', async (name) => {
+  values.set(sessionKey, JSON.stringify({ version: 1, refreshToken: 'test', userId: 7, name }));
+  await expect(storage.getSession()).resolves.toEqual({ refreshToken: 'test', userId: 7 });
+  expect(values.has(sessionKey)).toBe(true);
 });

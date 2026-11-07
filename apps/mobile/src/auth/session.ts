@@ -18,7 +18,7 @@ export type SessionTokens = Readonly<{
 }>;
 
 /** 로그인에서 검증한 계정 ID를 토큰과 결합합니다. */
-export type SessionCredentials = SessionTokens & Readonly<{ userId: number }>;
+export type SessionCredentials = SessionTokens & Readonly<{ userId: number; name?: string }>;
 
 /** HTTP·SDK 예외를 세션 정책에서 분리하는 갱신 경계의 결과입니다. */
 export type RenewalResult =
@@ -211,14 +211,14 @@ export class SessionManager {
     storedSession: StoredSession,
     renew: Renew,
   ): Promise<AuthResult> {
-    const { refreshToken, userId } = storedSession;
+    const { refreshToken, userId, name } = storedSession;
     const result = await renew(refreshToken);
     if (!this.isCurrent(currentGeneration) || refreshToken !== this.storedSession?.refreshToken) {
       return { status: 'CANCELLED' };
     }
     switch (result.kind) {
       case 'success':
-        return this.commit({ ...result.tokens, userId }, currentGeneration, {
+        return this.commit({ ...result.tokens, userId, name }, currentGeneration, {
           kind: 'refresh',
           previousToken: refreshToken,
         });
@@ -261,6 +261,7 @@ export class SessionManager {
         await authStorage.setSession({
           refreshToken: credentials.refreshToken,
           userId: credentials.userId,
+          name: credentials.name,
         });
       } catch {
         return this.isCurrent(currentGeneration)
@@ -271,11 +272,16 @@ export class SessionManager {
         return { status: 'CANCELLED' };
       }
       const previous = operation.kind === 'refresh' ? this.currentSession : undefined;
-      this.storedSession = { refreshToken: credentials.refreshToken, userId: credentials.userId };
+      this.storedSession = {
+        refreshToken: credentials.refreshToken,
+        userId: credentials.userId,
+        name: credentials.name,
+      };
       this.currentSession = {
         accessToken: credentials.accessToken,
         expiresAt: credentials.expiresAt,
         userId: credentials.userId,
+        name: credentials.name,
         sessionId: previous?.sessionId ?? randomUUID(),
         tokenVersion: (previous?.tokenVersion ?? 0) + 1,
       };
