@@ -40,6 +40,7 @@ export const profileInfo = style({
   display: 'flex',
   flexDirection: 'column',
   gap: vars.$dimension.x1,
+  minWidth: 0,
 });
 
 export const nameRow = style({
@@ -49,6 +50,8 @@ export const nameRow = style({
 });
 
 export const name = style({
+  minWidth: 0,
+  overflowWrap: 'anywhere',
   fontSize: vars.$fontSize.t7,
   lineHeight: vars.$lineHeight.t7,
   fontWeight: vars.$fontWeight.bold,
@@ -88,24 +91,19 @@ export const subDivider = style({
 });
 
 export const attendanceCard = style({
-  display: 'flex',
-  flexDirection: 'column',
+  display: 'grid',
+  gridTemplateColumns: 'minmax(0, 1fr) auto',
   border: '1px solid rgba(0, 0, 0, 0.05)',
   borderRadius: vars.$radius.r2,
   overflow: 'hidden',
   background: vars.$color.bg.layerDefault,
 });
 
-export const cardHeader = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+export const cardTitleGroup = style({
+  gridColumn: 1,
+  gridRow: 1,
   padding: `${vars.$dimension.x2} ${vars.$dimension.x4}`,
   background: vars.$color.bg.neutralMuted,
-  borderRadius: `${vars.$radius.r2} ${vars.$radius.r2} 0 0`,
-});
-
-export const cardTitleGroup = style({
   display: 'flex',
   alignItems: 'center',
   gap: vars.$dimension.x1,
@@ -139,6 +137,10 @@ export const questionButton = style({
 });
 
 export const scoreGroup = style({
+  gridColumn: 2,
+  gridRow: 1,
+  padding: `${vars.$dimension.x2} ${vars.$dimension.x4} ${vars.$dimension.x2} 0`,
+  background: vars.$color.bg.neutralMuted,
   display: 'flex',
   alignItems: 'center',
   gap: '6px',
@@ -159,6 +161,7 @@ export const scoreValue = style({
 });
 
 export const cardStats = style({
+  gridColumn: '1 / -1',
   display: 'flex',
   alignItems: 'center',
   padding: '4px',
@@ -230,4 +233,16 @@ export const menuChevron = style({
   width: vars.$dimension.x6,
   height: vars.$dimension.x6,
   flexShrink: 0,
+});
+
+export const queryNotice = style({
+  gridColumn: '1 / -1',
+  display: 'flex',
+  flexDirection: 'column',
+  alignItems: 'flex-start',
+  gap: vars.$dimension.x2,
+  padding: vars.$dimension.x4,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  color: vars.$color.fg.neutralSubtle,
 });
