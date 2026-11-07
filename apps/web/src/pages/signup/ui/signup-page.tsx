@@ -2,20 +2,20 @@
 
 /** 이름·휴대폰 번호를 단계별로 수집하고 native 가입 완료를 실행하는 화면입니다. */
 
+import { VStack } from '@seed-design/react';
+import type { AuthFieldError } from '@yapp-plus/app-bridge';
 import { ActionButton, Text, TextField, TextFieldInput } from '@yapp-plus/ui';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFlow } from '@stackflow/react';
 import { useId, useState, type FormEvent } from 'react';
 import { useNativeAuthSession, useNativeSignupMutation } from '@/features/auth';
-import { body, footer, screen } from '@/shared/ui/step-screen.css';
-import { fields, form } from './signup-page.css';
 import { signupFormSchema, signupNameSchema, signupPhoneNumberSchema } from '../model/signup-form';
 
 type Step = 'name' | 'phone';
 type SignupFormValues = Readonly<{ name: string; phoneNumber: string }>;
 
-/** 전화번호 입력 필드가 DOM에 연결되는 순간 자동으로 포커스를 줍니다. */
-const focusPhoneInput = (input: HTMLInputElement | null): void => {
+/** 다음 단계 또는 서버 오류로 돌아온 입력칸을 사용자가 바로 수정할 수 있게 합니다. */
+const focusInput = (input: HTMLInputElement | null): void => {
   input?.focus();
 };
 
@@ -26,6 +26,7 @@ export function SignupPage() {
   const titleId = useId();
   const [step, setStep] = useState<Step>('name');
   const [errorMessage, setErrorMessage] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<readonly AuthFieldError[]>([]);
   const signupMutation = useNativeSignupMutation({
     onSignedIn: () => flow.replace('SignupComplete', {}),
     onFailure: (result) => {
@@ -33,11 +34,17 @@ export function SignupPage() {
         setErrorMessage('가입 브리지를 사용할 수 없어요. 앱을 다시 실행해 주세요.');
         return;
       }
-      setErrorMessage(
-        result.status === 'ERROR' && result.fieldErrors?.length
-          ? '입력한 정보를 다시 확인해 주세요.'
-          : '가입 중 문제가 발생했어요. 다시 로그인해 주세요.',
-      );
+      if (result.status === 'ERROR' && result.fieldErrors?.length) {
+        setFieldErrors(result.fieldErrors);
+        setErrorMessage('');
+        setStep(
+          result.fieldErrors.some(({ field: errorField }) => errorField === 'name')
+            ? 'name'
+            : 'phone',
+        );
+        return;
+      }
+      setErrorMessage('가입 중 문제가 발생했어요. 다시 로그인해 주세요.');
     },
   });
   const isSubmitting = signupMutation.isPending;
@@ -56,12 +63,13 @@ export function SignupPage() {
       }
 
       setErrorMessage('');
+      setFieldErrors([]);
       const normalizedValue = signupFormSchema.parse(value);
       signupMutation.mutate(normalizedValue);
     },
   });
 
-  function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  function handleSubmit(event: FormEvent) {
     event.preventDefault();
     if (signupMutation.isPending) {
       return;
@@ -72,9 +80,9 @@ export function SignupPage() {
   }
 
   return (
-    <main className={screen}>
-      <form className={form} onSubmit={handleSubmit}>
-        <div className={`${body} ${fields}`}>
+    <VStack as="main" width="full" maxWidth="480px" mx="auto">
+      <VStack as="form" style={{ flexGrow: 1 }} onSubmit={handleSubmit}>
+        <VStack style={{ flexGrow: 1 }} pt="x5" px="x5" gap="x10">
           <Text as="h1" id={titleId} textStyle="t10Bold" color="fg.neutral">
             {step === 'name' ? '이름을 입력해 주세요' : '휴대폰 번호를 입력해 주세요'}
           </Text>
@@ -88,12 +96,26 @@ export function SignupPage() {
               {(field) => (
                 <TextField
                   key="name"
+                  invalid={fieldErrors.some(({ field: errorField }) => errorField === 'name')}
+                  errorMessage={fieldErrorMessage(
+                    fieldErrors.find(({ field: errorField }) => errorField === 'name'),
+                  )}
                   value={field.state.value}
-                  onValueChange={({ value }) => field.handleChange(value)}
+                  onValueChange={({ value }) => {
+                    field.handleChange(value);
+                    setFieldErrors((errors) =>
+                      errors.filter(({ field: errorField }) => errorField !== 'name'),
+                    );
+                  }}
                 >
                   <TextFieldInput
                     aria-labelledby={titleId}
                     name="name"
+                    ref={
+                      fieldErrors.some(({ field: errorField }) => errorField === 'name')
+                        ? focusInput
+                        : undefined
+                    }
                     autoComplete="name"
                     enterKeyHint="next"
                     placeholder="본인 이름을 입력해 주세요"
@@ -112,11 +134,22 @@ export function SignupPage() {
               {(field) => (
                 <TextField
                   key="phone"
+                  invalid={fieldErrors.some(
+                    ({ field: errorField }) => errorField === 'phoneNumber',
+                  )}
+                  errorMessage={fieldErrorMessage(
+                    fieldErrors.find(({ field: errorField }) => errorField === 'phoneNumber'),
+                  )}
                   value={field.state.value}
-                  onValueChange={({ value }) => field.handleChange(value)}
+                  onValueChange={({ value }) => {
+                    field.handleChange(value);
+                    setFieldErrors((errors) =>
+                      errors.filter(({ field: errorField }) => errorField !== 'phoneNumber'),
+                    );
+                  }}
                 >
                   <TextFieldInput
-                    ref={focusPhoneInput}
+                    ref={focusInput}
                     aria-labelledby={titleId}
                     name="phoneNumber"
                     type="tel"
@@ -134,9 +167,9 @@ export function SignupPage() {
               {errorMessage}
             </Text>
           ) : null}
-        </div>
+        </VStack>
 
-        <div className={footer}>
+        <VStack py="x3" px="x4">
           <signupForm.Subscribe
             selector={(state) => ({
               canSubmit:
@@ -154,8 +187,27 @@ export function SignupPage() {
               </ActionButton>
             )}
           </signupForm.Subscribe>
-        </div>
-      </form>
-    </main>
+        </VStack>
+      </VStack>
+    </VStack>
   );
+}
+
+/** 브리지의 공개 오류 코드만 사용자 안내로 바꿉니다. */
+function fieldErrorMessage(error: AuthFieldError | undefined): string | undefined {
+  if (!error) {
+    return undefined;
+  }
+  const label = error.field === 'name' ? '이름' : '휴대폰 번호';
+  switch (error.code) {
+    case 'REQUIRED':
+      return `${label}${error.field === 'name' ? '을' : '를'} 입력해 주세요.`;
+    case 'INVALID_FORMAT':
+      return `${label} 형식을 확인해 주세요.`;
+    case 'TOO_LONG':
+      return `${label}${error.field === 'name' ? '이' : '가'} 너무 길어요.`;
+    case 'ALREADY_EXISTS':
+      return `이미 사용 중인 ${label}입니다.`;
+  }
+  return undefined;
 }

@@ -1,6 +1,7 @@
 import { QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
 import { find3Options } from '@yapp-plus/api/generated';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
+import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
@@ -35,7 +36,7 @@ export function CurrentWeekCard() {
         <QueryErrorResetBoundary>
           {({ reset }) => (
             <ErrorBoundary onReset={reset} FallbackComponent={WeekError}>
-              <Suspense fallback={<output>이번 주 세션을 불러오고 있어요…</output>}>
+              <Suspense fallback={<CurrentWeekLoading />}>
                 <CurrentWeekContent />
               </Suspense>
             </ErrorBoundary>
@@ -45,6 +46,26 @@ export function CurrentWeekCard() {
         <output>세션은 YAPP+ 앱에 로그인한 후 확인할 수 있어요.</output>
       )}
     </section>
+  );
+}
+
+function CurrentWeekLoading() {
+  return (
+    <>
+      <VisuallyHidden asChild>
+        <output>이번 주 세션을 불러오고 있어요…</output>
+      </VisuallyHidden>
+      <VStack gap="x4" aria-hidden="true">
+        <Skeleton width="35%" height="lineHeight.t3" />
+        <Skeleton width="80%" height="lineHeight.t7" />
+        <HStack justify="space-between" width="full">
+          {Array.from({ length: 7 }, (_, day) => (
+            <Skeleton key={day} width="24px" height="48px" />
+          ))}
+        </HStack>
+        <Skeleton width="full" height="40px" radius="8" />
+      </VStack>
+    </>
   );
 }
 

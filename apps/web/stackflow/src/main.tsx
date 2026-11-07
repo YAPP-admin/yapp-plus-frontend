@@ -4,6 +4,7 @@ import '@seed-design/css/recipes/app-bar-main.css';
 import '@seed-design/css/recipes/app-screen.css';
 import '@yapp-plus/ui/styles';
 import './styles.css';
+import { ProgressCircle, VStack } from '@seed-design/react';
 import { StrictMode, Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Providers, createAppQueryClient } from '@/app/providers';
@@ -31,7 +32,12 @@ function App() {
         fallback={
           <>
             <title>YAPP+</title>
-            <div>로딩 중…</div>
+            <VStack minHeight="100dvh" align="center" justify="center">
+              <ProgressCircle.Root size="40" tone="neutral" aria-label="로그인 상태 확인 중">
+                <ProgressCircle.Track />
+                <ProgressCircle.Range />
+              </ProgressCircle.Root>
+            </VStack>
           </>
         }
       >
