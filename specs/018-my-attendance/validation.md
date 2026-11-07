@@ -106,3 +106,23 @@ Spec Kit extension 파일이 없어 before/after hook은 모두 적용 대상이
 - 최종 `build` 성공: web 새 실행, admin·storybook 캐시. 로그는 `.context/stage3-review-check.log`, `.context/stage3-review-build.log`다. 기존 청크 크기 경고는 유지된다.
 - 화면 도구 오류와 실서버·WebView·실환경 접근성 검증 제한은 위 기록과 같다. T015는 미완료이며 4단계는 시작하지 않았다. 이번 리뷰 반영은 미커밋이다.
 - 최종 변경량 실제 base `0145466f` 대비 +586/-131줄, 합계 717줄이다. 650줄 기준을 넘어 분리를 검토했으나 점수 조회·화면·검증 계약이 한 목적이며 800줄 미만이므로 현재 단계에 유지한다.
+
+### 3단계 리뷰 반영 — SEED layout과 오류 경계 분리
+
+- 사용자 승인으로 기존 작업을 `789f9f43`(조회·MSW·테스트), `63a502b2`(화면·테스트), `12c2fa00`(계약·검증 문서)로 나눠 커밋했다. hook을 통과했고 당시 작업 트리는 clean이었다.
+- 커밋 전 check·build는 성공했으며 format만 새 실행, lint·typecheck·test·build는 모두 Turbo 캐시였다.
+- seed-design 스킬의 공식 React 문서와 설치본 3.1.0 타입을 확인했다. [HStack](https://seed-design.io/react/components/layout/h-stack), [VStack](https://seed-design.io/react/components/layout/v-stack), [Box](https://seed-design.io/react/components/layout/box), [Grid](https://seed-design.io/react/components/layout/grid)를 사용하고 레이아웃 CSS 103줄을 제거했다.
+- 기존 간격·크기를 같은 SEED dimension으로 옮기고 nav·section·output 의미를 유지했다. 의존성·공용 패키지·생성 파일은 변경하지 않았다.
+- score-error-boundary.tsx로 QueryErrorResetBoundary·ErrorBoundary·초기 오류 안내를 분리했다. score-summary.tsx는 정상·로딩·실패 상태의 같은 점수 배치를 담당한다. 새 공용 추상화는 추가하지 않았다.
+- check 성공: format 새 실행, web lint·typecheck 새 실행/각 6개 캐시, web 40개 파일·245개 테스트 새 실행/다른 4개 패키지 테스트 캐시. 기존 회귀 테스트로 로딩 중 다이얼로그 유지·초기 및 재조회 실패 복구를 확인했다.
+- build 성공: web 새 실행, admin·storybook 캐시. 초기 minWidth 숫자 prop 타입 오류는 공개 API에 맞는 문자열로 수정했다. 기존 청크 크기 경고는 유지된다.
+- 로그는 `.context/stage3-layout-check.log`, `.context/stage3-layout-build.log`다. 화면 캡처·실기기·실서버 검증 제한은 이전 기록과 같고 T015는 여전히 미완료다.
+- 사용자 승인으로 `12c2fa00`에서 후속 브랜치 `DongjaJ/my-page-layout`을 생성·전환했다. 검토 base는 `DongjaJ/my-page-api`이며 미커밋 변경을 보존했다. push·PR 생성·추가 commit은 수행하지 않았다.
+
+### 3단계 화면 비교 완료
+
+- 사용자 승인으로 별도 headless Playwright·Chromium에서 기준 커밋 `12c2fa00`과 현재 코드를 동일한 320×844·390×844 모바일 viewport로 비교했다. 두 서버 모두 DEV+MSW를 사용했다.
+- 정상·로딩·초기 오류·미대상·기수 없음·규칙 다이얼로그 12쌍 모두 PNG 픽셀 차이 0이며 프로필·카드·규칙 버튼·메뉴의 좌표와 크기가 일치했다. `.context/ui-diff.log`, `.context/ui-comparison.json`, `.context/ui-{before,after}-{320,390}-*.png`에 근거를 보관했다.
+- 두 버전에서 오류 후 재시도로 92점 복구를 확인했다. 현재 버전의 키보드 Enter 열기·Escape 닫기·닫힘 후 초점 복귀, 터치 다이얼로그 열기·출석 내역 이동도 확인했다. dark 환경에서도 기존 light-only 정책을 유지한다.
+- headless 검증은 실제 스크린 리더·iOS safe-area·WebView·실서버 검증을 대신하지 않는다. 해당 항목은 5단계에 남긴다. 자동화 코드는 `.context/ui-compare.mjs`, `.context/ui-interactions.mjs`다.
+- 최종 check·build 성공: format 새 실행, lint·typecheck·test·build는 모두 Turbo 캐시 재사용. headless 비교·상호작용은 이번에 새 실행했다. 로그는 `.context/stage3-ui-final-{check,build}.log`다.
