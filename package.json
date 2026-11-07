@@ -12,11 +12,11 @@
     "expo:doctor": "expo-doctor apps/mobile",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",
-    "lint": "turbo run lint",
+    "lint": "oxlint --deny-warnings .github/scripts && turbo run lint",
     "prepare": "lefthook install",
     "storybook": "turbo run storybook --filter=@yapp-plus/storybook",
-    "test": "turbo run test",
-    "typecheck": "turbo run typecheck"
+    "test": "node --test .github/scripts/*.test.mts && turbo run test",
+    "typecheck": "tsc --project .github/tsconfig.json && turbo run typecheck"
   },
   "devDependencies": {
     "@commitlint/cli": "21.2.2",

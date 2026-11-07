@@ -7,10 +7,6 @@ on:
     types:
       - completed
 
-concurrency:
-  group: deploy-preview-${{ github.event.workflow_run.id }}
-  cancel-in-progress: true
-
 permissions:
   contents: read
   pull-requests: write
@@ -76,6 +72,10 @@ jobs:
     name: Deploy ${{ matrix.app }} Preview
     if: needs.resolve-pr.outputs.should_deploy == 'true'
     needs: resolve-pr
+    concurrency:
+      group: preview-${{ needs.resolve-pr.outputs.number }}-${{ matrix.project_id }}
+      cancel-in-progress: false
+      queue: max
     runs-on: ubuntu-latest
     timeout-minutes: 20
     env:
@@ -105,6 +105,13 @@ jobs:
         with:
           version: 2026.8.16
           install_args: --locked
+
+      - name: Verify PR after acquiring lock
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ needs.resolve-pr.outputs.number }}
+          VERIFIED_SHA: ${{ needs.resolve-pr.outputs.head_sha }}
+        run: node .github/scripts/preview-current.mts --require-current
 
       - name: Detect deployment config changes
         id: deployment-config
@@ -149,9 +156,18 @@ jobs:
           echo "### ${{ matrix.app }} Preview" >> "$GITHUB_STEP_SUMMARY"
           echo "$DEPLOYMENT_URL" >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Recheck PR before publishing comment
+        id: publication
+        if: always() && steps.affected.outputs.affected == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ needs.resolve-pr.outputs.number }}
+          VERIFIED_SHA: ${{ needs.resolve-pr.outputs.head_sha }}
+        run: node .github/scripts/preview-current.mts
+
       - name: Update Preview comment
         # 영향받은 앱만 댓글을 남기고, 생략 결과는 Job Summary에서만 확인합니다.
-        if: always() && steps.affected.outputs.affected == 'true'
+        if: always() && steps.publication.outputs.current == 'true'
         uses: marocchino/sticky-pull-request-comment@5770ad5eb8f42dd2c4f34da00c94c5381e49af88 # v3.0.5
         with:
           number_force: ${{ needs.resolve-pr.outputs.number }}
