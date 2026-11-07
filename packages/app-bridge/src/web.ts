@@ -1,5 +1,7 @@
 import { linkBridge } from '@webview-bridge/web';
 
+import { createWebLocationActions } from './web-location';
+
 import {
   INITIAL_SAFE_AREA_INSETS,
   SAFE_AREA_CSS_VARIABLES,
@@ -9,6 +11,8 @@ import {
   type AppBridgeStore,
   type SafeAreaInsets,
 } from './index';
+
+export { isNativeLocationEnvironment } from './web-location';
 
 export type CssVariableTarget = {
   setProperty: (property: string, value: string) => void;
@@ -93,7 +97,7 @@ const getLinkedBridge = (): LinkedAppBridge => {
   return linkedBridge;
 };
 
-/** WebView 전용 인증·safe-area RPC 호출에 사용할 연결된 브리지입니다. */
+/** WebView 전용 인증·위치·safe-area RPC 호출에 사용할 연결된 브리지입니다. */
 export const getAppBridge = (): LinkedAppBridge => getLinkedBridge();
 
 const waitForNativeBridge = async (
@@ -167,3 +171,7 @@ export const installSafeAreaBridge = (target?: CssVariableTarget): (() => void) 
     unsubscribe();
   };
 };
+
+/** 위치 응답은 검증 후 반환하며 브라우저·통신 실패는 LOCATION_UNAVAILABLE로 통일한다. */
+export const { getLocationPermission, requestCurrentLocation, openAppSettings } =
+  createWebLocationActions(getAppBridge);
