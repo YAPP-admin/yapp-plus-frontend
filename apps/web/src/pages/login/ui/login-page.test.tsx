@@ -1,5 +1,6 @@
 import type { NativeAuthCallbacks } from '@/features/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import userEvent from '@testing-library/user-event';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -105,6 +106,34 @@ describe('LoginPage', () => {
     expect(screen.getByText(/YAPP\+ 앱에서 이용할 수 있어요/)).toBeInTheDocument();
     expect(screen.getByRole('button', { name: '닫기' })).toBeInTheDocument();
     expect(screen.getByRole('link', { name: '제보하기' })).toBeInTheDocument();
+  });
+
+  it.each(['{Enter}', ' '])('오류 안내를 %s 키로 닫고 로그인 화면을 유지한다', async (key) => {
+    const user = userEvent.setup();
+    renderLoginPage();
+    await user.click(screen.getByRole('button', { name: '구글로 계속하기' }));
+    const closeButton = screen.getByRole('button', { name: '닫기' });
+    closeButton.focus();
+    await user.keyboard(key);
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+    expect(auth.signInMutate).not.toHaveBeenCalled();
+  });
+
+  it('제보 링크의 새 창·보안 속성을 유지하고 활성화하면 오류 안내를 닫는다', async () => {
+    const user = userEvent.setup();
+    renderLoginPage();
+    await user.click(screen.getByRole('button', { name: '구글로 계속하기' }));
+    const reportLink = screen.getByRole('link', { name: '제보하기' });
+    expect(reportLink).toHaveAttribute('href', 'https://pf.kakao.com/_xkxmxjxd');
+    expect(reportLink).toHaveAttribute('target', '_blank');
+    expect(reportLink).toHaveAttribute('rel', 'noopener noreferrer');
+    reportLink.focus();
+    await user.keyboard('{Enter}');
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+    expect(auth.signInMutate).not.toHaveBeenCalled();
   });
 
   it('native 로그인 요청을 전달하고 성공하면 완료 화면으로 이동한다', () => {
