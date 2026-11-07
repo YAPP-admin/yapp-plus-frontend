@@ -17,7 +17,8 @@
 totalScore·attendanceCount·lateCount·absentCount·earlyLeaveCount는 생성 스키마의 0 이상 정수 규칙을 따른다.
 화면은 점수·출석·지각·결석만 표시한다. earlyLeaveCount는 지각 면제권으로 변환하지 않는다.
 
-공유 query 데이터는 정상 응답 또는 `null`이다. `null`은 계약에 명시한 두 미대상 응답만 뜻한다.
+공유 query 데이터는 `{ status: available, score }` 또는 `{ status: unavailable, reason }`이다.
+reason은 `ATTENDANCE_SCORE_NOT_ELIGIBLE`·`CURRENT_GENERATION_NOT_FOUND` 중 하나이며 미대상 사유를 보존한다.
 undefined/pending은 초기 로딩이며 error는 실패다. 기존 data가 있는 error는 재조회 실패다.
 같은 query key를 쓰는 모든 소비자가 이 반환 형태를 사용해야 한다.
 

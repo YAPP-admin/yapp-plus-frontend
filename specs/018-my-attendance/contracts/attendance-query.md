@@ -4,7 +4,7 @@
 
 | 용도      | 생성 옵션·경로                                     | 조회 데이터                                     |
 | --------- | -------------------------------------------------- | ----------------------------------------------- |
-| 점수·경고 | mineQueryKey·mine / GET /api/attendance-scores/me  | 검증한 MyAttendanceScoreResponse 또는 null      |
+| 점수·경고 | mineOptions / GET /api/attendance-scores/me        | available + score 또는 unavailable + reason     |
 | 내역      | find5InfiniteOptions / GET /api/attendance-history | 검증한 AttendanceHistoryResponse의 InfiniteData |
 
 `SIGNED_IN` 또는 DEV+MSW 브라우저에서만 조회한다. 나머지는 앱 로그인 후 확인 안내를 표시한다.
@@ -12,17 +12,19 @@
 생성 query key를 유지하며 토큰·이름을 추가하지 않는다. 기본 staleTime 30초, retry false를 사용한다.
 점수 queryOptions는 웹 feature에 두고 두 소비자가 같은 스키마·미대상 변환을 사용한다.
 응답 schema는 생성 Zod를 확장한다. int64는 안전 범위를 검사한 뒤 number로 변환한다.
-점수 queryFn은 apiOptions와 signal을 전달해 mine을 throwOnError false, responseStyle fields로 호출한다.
-명시한 throwOnError·responseStyle·signal이 덮어써지지 않도록 전달 순서를 정한다.
-성공 data는 parse 결과를 반환한다. 오류는 SDK가 파싱한 error를 검증하고 response?.status와
-함께 판별한다. Response body를 다시 읽지 않는다. 응답 없는 네트워크·취소도 미대상이 아니다.
+점수는 apiOptions를 받은 mineOptions의 queryFn·query key를 재사용하고 성공 data의 parse 결과를 반환한다.
+HTTP 오류 본문을 생성 SDK가 파싱하도록 kyOptions.throwHttpErrors는 false로 설정하며 기존 인증 훅은 보존한다.
+SDK가 던진 오류 본문을 검증하고 미대상 code는 unavailable 상태와 reason으로 보존한다. HTTP status를 추가 조건으로 사용하지 않는다.
+Response body를 다시 읽지 않는다. 네트워크·취소·잘못된 오류 본문은 미대상이 아니다.
+웹 점수 영역은 useSuspenseQuery·Suspense·ErrorBoundary로 초기 로딩·실패를 처리한다.
+프로필·메뉴·규칙 다이얼로그는 경계 밖에 두며 재조회 실패는 기존 값과 오류 안내를 함께 표시한다.
 내역은 생성 infinite 옵션에 responseTransformer를 전달해 검증·number 정규화 결과를 반환한다.
 responseValidator의 반환값은 SDK에서 버려지므로 변환 용도로 사용하지 않는다.
 
 ## 점수 오류와 경고
 
-- 정확히 `403 + ATTENDANCE_SCORE_NOT_ELIGIBLE`, `404 + CURRENT_GENERATION_NOT_FOUND`만 null로 변환한다.
-- 401 최종 실패·다른 403/404·409·500·형식 오류는 일반 오류로 처리한다.
+- 검증된 오류의 `ATTENDANCE_SCORE_NOT_ELIGIBLE`, `CURRENT_GENERATION_NOT_FOUND` code는 unavailable 상태와 reason으로 보존한다.
+- 다른 code·네트워크 오류·형식 오류는 일반 오류로 처리한다. 401 복구는 기존 인증 계층에 맡긴다.
 - 최초 오류는 카드 오류·재시도이며 프로필·규칙·메뉴는 유지한다. 재조회 실패는 이전 값과 실패 안내를 표시한다.
 - 출석 페이지는 독립 점수 query를 구독해 직접 진입에서도 경고를 판단한다. 점수 실패는 별도 재시도를 제공하고 목록을 막지 않는다.
 - 오류가 없고 유효한 점수 응답의 absentCount ≥ 10일 때만 기존 경고 문구를 표시한다. 점수 오류·미대상·로딩이면 경고를 추정하지 않는다.
