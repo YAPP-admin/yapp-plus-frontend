@@ -18,6 +18,7 @@ export function startMocking(): Promise<void> {
       ...createMemberAttendanceHandlers(
         baseUrl,
         new URLSearchParams(window.location.search).get('myState'),
+        new URLSearchParams(window.location.search).get('attendanceState'),
       ),
       ...createSessionHandlers(
         baseUrl,

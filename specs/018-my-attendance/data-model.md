@@ -27,9 +27,8 @@ undefined/pending은 초기 로딩이며 error는 실패다. 기존 data가 있�
 - 원천은 `AttendanceHistoryResponse`, `AttendanceHistoryItemResponse`, `AttendanceHistorySummaryResponse`다.
 - sessionId는 안전한 정수로 정규화한다. summary의 두 횟수는 0 이상 정수이고 시작 횟수 ≤ 전체 횟수다.
 - 남은 세션은 전체 − 시작, 진행률은 `—`다. 후속 페이지 성공 시 가장 최근 성공 페이지의 summary를 사용한다.
-- 목록은 서버 페이지 순서로 병합하고 같은 sessionId는 기존 위치를 유지하면서 나중 응답으로 갱신한다.
+- 목록은 서버 페이지 순서대로 펼친다. 항목의 중복 제거는 서버 계약에 맡긴다.
 - nextCursor는 불투명 문자열 또는 null이며 빈 문자열은 잘못된 응답으로 처리한다.
-- 현재 조회 체인의 성공 페이지 요청 커서를 기억한다. 다음 커서가 자기 요청 또는 선행 요청 커서와 같으면 반복 오류다. 첫 페이지 재시작·캐시 초기화 시 이전 체인의 이력을 재사용하지 않는다.
 
 ## 상태 전이
 

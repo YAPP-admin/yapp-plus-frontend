@@ -47,7 +47,7 @@ HEAD와 fetch한 origin/main은 `4fc4cd837bc04df3d7c2c99152af5ce6ba68c744`다.
 프로필·메뉴·규칙 다이얼로그는 경계 밖에 유지한다. 생성 `mineOptions`의 queryFn과 key를
 재사용하고 성공 응답 검증과 미대상 상태·사유 변환만 추가한다. HTTP status는 별도로 판별하지 않는다.
 두 화면이 같은 query key와 캐시 형태를 사용하고 재조회 실패는 이전 값과 안내를 표시한다.
-목록은 생성 `find5InfiniteOptions`와 `useInfiniteQuery`로 연결한다. 세부 계약은
+목록은 생성 `find5InfiniteOptions`와 `useSuspenseInfiniteQuery`로 연결한다. 세부 계약은
 [조회 계약](contracts/attendance-query.md)과 [이름 계약](contracts/session-name.md)에 둔다.
 
 ## 단계·의존성·리뷰
