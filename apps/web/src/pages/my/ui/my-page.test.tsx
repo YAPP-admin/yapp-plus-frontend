@@ -109,13 +109,15 @@ describe('MyPage', () => {
     expect(screen.getByText('테스트 회원')).toBeVisible();
     expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
     await userEvent.setup().click(screen.getByRole('button', { name: '출석 규칙 안내' }));
-    expect(await screen.findByRole('dialog')).toBeVisible();
+    expect(await screen.findByRole('dialog', { name: '출석 규칙' })).toBeVisible();
     act(() => finish?.());
     await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
-    expect(screen.getByRole('dialog')).toBeVisible();
-    await userEvent
-      .setup()
-      .click(within(screen.getByRole('dialog')).getByRole('button', { name: '확인' }));
+    expect(screen.getByRole('dialog', { name: '출석 규칙' })).toBeVisible();
+    await userEvent.setup().click(
+      within(screen.getByRole('dialog', { name: '출석 규칙' })).getByRole('button', {
+        name: '확인',
+      }),
+    );
     expect(await screen.findByText('92점')).toBeVisible();
   });
 
@@ -185,7 +187,7 @@ describe('MyPage', () => {
     const heading = await screen.findByRole('heading', { name: '출석 규칙' });
     expect(heading).toBeInTheDocument();
 
-    const dialog = screen.getByRole('dialog');
+    const dialog = screen.getByRole('dialog', { name: '출석 규칙' });
     expect(within(dialog).getByText('1시간 지각/조퇴')).toBeInTheDocument();
     expect(within(dialog).getByText('-4점')).toBeInTheDocument();
     expect(within(dialog).getByText('결석')).toBeInTheDocument();

@@ -1,7 +1,8 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { container, content, list, srOnly } from './notices-page.css';
+import { VStack } from '@seed-design/react';
+import { list, srOnly } from './notices-page.css';
 import { NoticeEmpty } from './notice-empty';
 import { NoticeItem, type NoticeItemProps } from './notice-item';
 import { NoticeTabs, type NoticeCategory } from './notice-tabs';
@@ -60,24 +61,24 @@ export function NoticesPage({
   }, [notices, selectedCategory]);
 
   return (
-    <main className={container}>
+    <VStack as="main" width="full" maxWidth="480px" mx="auto" bg="bg.layerDefault" minHeight="100%">
       <h1 className={srOnly}>게시판</h1>
 
-      <div className={content}>
-        <NoticeTabs selected={selectedCategory} onSelect={setSelectedCategory} />
-
-        {filteredNotices.length > 0 ? (
-          <ul className={list} aria-label="공지사항 목록">
-            {filteredNotices.map((notice) => (
-              <li key={notice.id}>
-                <NoticeItem {...notice} />
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <NoticeEmpty />
-        )}
-      </div>
-    </main>
+      <VStack pt="x2_5" px="x5" pb="x10" width="full">
+        <NoticeTabs selected={selectedCategory} onSelect={setSelectedCategory}>
+          {filteredNotices.length > 0 ? (
+            <ul className={list} aria-label="공지사항 목록">
+              {filteredNotices.map((notice) => (
+                <li key={notice.id}>
+                  <NoticeItem {...notice} />
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <NoticeEmpty />
+          )}
+        </NoticeTabs>
+      </VStack>
+    </VStack>
   );
 }

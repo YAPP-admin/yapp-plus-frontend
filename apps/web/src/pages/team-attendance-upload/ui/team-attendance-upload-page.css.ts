@@ -66,18 +66,6 @@ export const uploadArea = style({
   color: 'inherit',
 });
 
-export const srOnly = style({
-  position: 'absolute',
-  width: '1px',
-  height: '1px',
-  padding: 0,
-  margin: '-1px',
-  overflow: 'hidden',
-  clip: 'rect(0, 0, 0, 0)',
-  whiteSpace: 'nowrap',
-  border: 0,
-});
-
 export const uploadIconWrap = style({
   width: '44px',
   height: '44px',
@@ -170,39 +158,8 @@ export const memberCardChecked = style({
   backgroundColor: '#FFFFFF',
 });
 
-export const memberInfoLeft = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '10px',
-});
-
-export const checkboxSquare = style({
-  width: '20px',
-  height: '20px',
-  borderRadius: '4px',
-  border: '1.14px solid rgba(0, 0, 0, 0.06)',
-  backgroundColor: '#FFFFFF',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  boxSizing: 'border-box',
-  flexShrink: 0,
-  transition: 'all 0.15s ease',
-});
-
-export const checkboxSquareChecked = style({
-  backgroundColor: '#1A1C20',
-  borderColor: '#1A1C20',
-  color: '#FFFFFF',
-});
-
-export const memberTextWrap = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
-});
-
 export const memberName = style({
+  marginTop: 0,
   fontSize: '14px',
   fontWeight: 500,
   lineHeight: '19px',
@@ -240,14 +197,32 @@ export const bottomSection = style({
 export const confirmButton = style({
   width: '100%',
   height: '52px',
-  borderRadius: '12px !important',
-  backgroundColor: '#FF6600 !important',
-  color: '#FFFFFF !important',
-  fontSize: '16px !important',
-  fontWeight: '700 !important',
-  lineHeight: '22px !important',
+  borderRadius: '12px',
+  fontSize: '16px',
+  fontWeight: 700,
+  lineHeight: '22px',
 });
 
 export const homeIndicatorArea = style({
   height: '34px',
 });
+
+// 기존 카드 규격을 유지하고 SEED의 키보드 포커스·상태 동작을 사용합니다.
+export const checkboxControl = style({
+  width: '20px',
+  height: '20px',
+  marginTop: 0,
+  borderRadius: '4px',
+  border: '1.14px solid rgba(0, 0, 0, 0.06)',
+  backgroundColor: '#FFFFFF',
+  selectors: {
+    '&&[data-checked]': {
+      borderWidth: '1.14px',
+      backgroundColor: '#1A1C20',
+      borderColor: '#1A1C20',
+      color: '#FFFFFF',
+    },
+  },
+});
+
+export const checkboxIcon = style({ width: '14px', height: '14px' });

@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { TeamAttendanceUploadPage } from './team-attendance-upload-page';
@@ -17,6 +18,17 @@ vi.mock('@stackflow/react', () => ({
 describe('TeamAttendanceUploadPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+  });
+
+  it('이름으로 찾은 팀원 체크박스를 키보드로 선택한다', async () => {
+    const user = userEvent.setup();
+    render(<TeamAttendanceUploadPage />);
+    const member = screen.getByRole('checkbox', { name: /강야뿌/ });
+    member.focus();
+    expect(member).not.toBeChecked();
+    await user.keyboard(' ');
+    expect(member).toHaveFocus();
+    expect(member).toBeChecked();
   });
 
   it('팀 세션 인증 업로드 페이지가 정상 렌더링되고 팀원 선택을 토글할 수 있다', () => {

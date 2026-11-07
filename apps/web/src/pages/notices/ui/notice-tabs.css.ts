@@ -11,6 +11,8 @@ export const tabList = style({
   margin: 0,
   padding: 0,
   listStyle: 'none',
+  boxShadow: 'none',
+  overflow: 'visible',
 });
 
 export const tabTrigger = style({
@@ -30,6 +32,9 @@ export const tabTrigger = style({
   transition: 'color 150ms ease, border-color 150ms ease',
   margin: 0,
   marginBottom: '-1px',
+  height: 'auto',
+  flex: 'none',
+  minWidth: 0,
   ':hover': {
     color: vars.$color.fg.neutral,
   },

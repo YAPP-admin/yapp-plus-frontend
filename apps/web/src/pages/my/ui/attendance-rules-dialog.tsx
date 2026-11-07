@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  DialogTitle,
   DialogAction,
   DialogBackdrop,
   DialogContent,
@@ -8,6 +9,7 @@ import {
   DialogRoot,
   DialogTrigger,
 } from '@seed-design/react';
+import { ActionButton } from '@yapp-plus/ui';
 import type { ReactNode } from 'react';
 import {
   backdrop,
@@ -40,7 +42,9 @@ export function AttendanceRulesDialog({ children }: AttendanceRulesDialogProps) 
       <DialogPositioner className={positioner}>
         <DialogContent className={content}>
           <div className={header}>
-            <h2 className={title}>출석 규칙</h2>
+            <DialogTitle asChild>
+              <h2 className={title}>출석 규칙</h2>
+            </DialogTitle>
             <div className={ruleGroups}>
               {/* 그룹 1: 1시간 지각/조퇴 */}
               <div className={ruleGroup}>
@@ -102,9 +106,14 @@ export function AttendanceRulesDialog({ children }: AttendanceRulesDialogProps) 
           </div>
 
           <DialogAction asChild>
-            <button type="button" className={confirmButton}>
+            <ActionButton
+              type="button"
+              variant="brandSolid"
+              size="medium"
+              className={confirmButton}
+            >
               확인
-            </button>
+            </ActionButton>
           </DialogAction>
         </DialogContent>
       </DialogPositioner>

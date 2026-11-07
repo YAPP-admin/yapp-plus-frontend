@@ -40,6 +40,14 @@ function renderSettingsPage() {
 }
 
 describe('SettingsPage', () => {
+  it('알림 스위치를 이름으로 찾고 변경할 수 있다', () => {
+    renderSettingsPage();
+    const toggle = screen.getByRole('switch', { name: '알림' });
+    expect(toggle).toBeChecked();
+    fireEvent.click(toggle);
+    expect(toggle).not.toBeChecked();
+  });
+
   it('설정 헤더와 모든 메뉴 항목을 정상적으로 렌더링한다', () => {
     renderSettingsPage();
 

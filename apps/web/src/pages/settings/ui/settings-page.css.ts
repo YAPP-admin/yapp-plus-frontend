@@ -1,28 +1,6 @@
 import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
-export const container = style({
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
-  minHeight: '100dvh',
-  boxSizing: 'border-box',
-  background: vars.$color.bg.layerDefault,
-});
-
-export const header = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  height: '54px',
-  padding: `0 ${vars.$dimension.x4}`,
-  background: vars.$color.bg.layerDefault,
-  width: '100%',
-  maxWidth: '480px',
-  margin: '0 auto',
-  boxSizing: 'border-box',
-});
-
 export const headerTitle = style({
   margin: 0,
   fontSize: vars.$fontSize.t6,
@@ -34,24 +12,6 @@ export const headerTitle = style({
 export const headerSpacer = style({
   width: '24px',
   height: '24px',
-});
-
-export const body = style({
-  display: 'flex',
-  flexDirection: 'column',
-  justifyContent: 'space-between',
-  padding: `0 ${vars.$dimension.x5}`,
-  width: '100%',
-  maxWidth: '480px',
-  margin: '0 auto',
-  boxSizing: 'border-box',
-  flex: 1,
-});
-
-export const menuList = style({
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
 });
 
 export const menuItem = style({
