@@ -64,3 +64,45 @@ Spec Kit extension 파일이 없어 before/after hook은 모두 적용 대상이
 - `node --run build` 성공: web 새 실행, admin·storybook 캐시. web의 청크 크기 경고가 있으며 빌드 실패는 없다.
 - origin/main 대비 untracked 문서·테스트 포함 +698/-20줄, 합계 718줄. 이번 단계는 분리하지 않았으며 다음 단계 전 분리 권장.
 - 문서 최종 포맷과 `git diff --check` 통과. 3단계 구현은 사용자 리뷰 후 진행한다.
+
+## 기존 작업 커밋과 3단계 — 마이페이지 연동
+
+- 사용자 승인으로 기존 문서 `6b015a76`, 이름 전달 `0145466f`를 목적별 커밋했다. hook을 통과했다.
+- 커밋 전 `check`·`build` 성공. format은 새 실행, lint 7개·typecheck 7개·test 5개·build 3개는 전부 Turbo 캐시였다.
+- 사용자 승인으로 `DongjaJ/my-page-api`를 생성·전환했다. 검토 base는 `DongjaJ/my-page-attendance-api-plan`의 `0145466f`다. push·PR 생성은 하지 않았다.
+- 2단계 리뷰·3단계 진행 승인을 받았고 T010–T014를 구현했다. T015는 아래 화면 검증 제한으로 미완료다.
+- 세션 이름과 점수·횟수를 연결하고 미지원 프로필·면제권은 `—`로 남겼다. 기존 메뉴와 규칙 다이얼로그를 유지했다.
+- 생성 SDK·query key·Zod 기반으로 안전한 ID 정규화, status/code가 일치하는 미대상 처리, 실패·재시도·이전 값 유지 동작을 구현했다. 새 의존성·생성 코드·서버 계약 변경은 없다.
+- DEV+MSW에서 정상·미대상 2종·지연·최초 실패 후 복구를 재현한다. `.context/stage3-dev.log`에 개발 서버 로그를 보관한다.
+
+### 자동 검증
+
+- 구현 전 새 query 모듈 미존재로 수집 실패를 확인했고, query 구현 후 화면 연결 전 화면 테스트 10개 실패·query 테스트 18개 성공을 확인했다. 수집 실패와 기능 회귀 실패를 구분한다.
+- 초기 검사에서 lint 규칙, 테스트 Provider 초기화 대기와 query fixture 타입 오류를 수정했다.
+- 최종 `mise exec -- node --run check` 성공: format 새 실행, lint·typecheck 각각 web 1개 새 실행/6개 캐시, test web 1개 새 실행/4개 캐시.
+- web 40개 파일·244개 테스트를 새로 실행했다. 점수 query 18개·마이페이지 10개를 포함한다. 다른 패키지 테스트 수는 캐시 결과이므로 새 실행으로 보고하지 않는다.
+- `mise exec -- node --run build` 성공: web 새 실행, admin·storybook 캐시. 기존 청크 크기 경고가 있으며 빌드 실패는 없다.
+- 로그: `.context/stage3-check.log`, `.context/stage3-build.log`. 키보드 Enter 재시도, 상태 접근성 이름, 메뉴와 규칙 다이얼로그는 자동 테스트로 확인했다.
+
+### 남은 확인과 리뷰
+
+- Chrome 탭 생성·연결·DOM·스크린샷 도구가 `timeoutMs` 관련 오류를 반환했다. native 앱으로 로컬 URL 이동은 했으나 캡처가 검은 화면이고 페이지 접근성 트리도 확보되지 않았다. 유효한 화면 캡처나 시각 검증 성공으로 보고하지 않는다.
+- 실제 터치·스크린 리더, 모바일 폭·safe-area·테마 시각 검증은 미실행이다. 현재 Vite 설정은 light-only이며 테마 정책 변경은 없다.
+- 실제 서버·WebView·구 native 조합 검증은 미실행이다. MSW와 가상 native 테스트 성공을 실서버 연동 성공으로 보지 않는다.
+- 모바일 설정·의존성 변경이 없어 expo:doctor는 미실행이다. 4단계 출석 내역 구현은 시작하지 않았다.
+- 최초 3단계 제출은 실제 base `0145466f` 대비 +406/-59줄, 합계 465줄이었다. 리뷰 반영 후 변경량은 아래에 기록한다.
+- 3단계 변경은 미커밋으로 제출한다. T015의 화면 근거 확보와 사용자 리뷰 후 다음 단계 진행을 확인한다.
+
+### 3단계 리뷰 반영 — 생성 옵션·Suspense·오류 보존
+
+- 사용자 요청으로 직접 SDK 호출을 생성 `mineOptions`의 queryFn·query key 재사용으로 변경하고 HTTP status 중복 판별을 제거했다. 기존 인증 훅·signal 전달은 생성 옵션을 통해 유지한다.
+- `useSuspenseQuery`·Suspense·ErrorBoundary·QueryErrorResetBoundary를 점수 영역에 적용했다. 카드 제목·규칙·프로필·메뉴는 경계 밖에 유지하며 기존 카드 배치를 CSS grid로 보존한다.
+- 초기 실패는 ErrorBoundary 재시도로 복구하고 재조회 실패는 이전 값과 안내를 함께 표시한다. 로딩 중 연 규칙 다이얼로그가 조회 완료에도 유지되는 회귀 테스트를 추가했다.
+- queryFn 부재의 별도 런타임 예외를 제거했다. 생성 타입의 선택적 함수는 optional call로 호출하고 반환값은 기존 스키마로 검증하므로 타입 단언·lint 예외가 없다.
+- 모든 실패를 같은 Error로 감싸는 코드도 제거했다. 미대상 외 오류·스키마 오류·네트워크 오류는 원래 오류를 전파하고 화면에서 안내 문구를 정한다.
+- 사용자가 미대상 상태·사유를 명시적으로 반환하고 `—`로 표시하는 정책을 승인했다. 미대상 code 2개는 null 대신 `{ status: unavailable, reason }`으로 보존하고 정상 값은 `{ status: available, score }`로 반환한다. 별도 에러 클래스는 추가하지 않았다.
+- 수정 전 code 단독 판별 회귀 2개 실패를 확인했다. 중간 검증에서 관련 테스트 29개가 통과했으며 최종 결과는 아래에 기록한다.
+- 최종 `check` 성공: format 새 실행, web lint·typecheck 새 실행/각 6개 캐시, web 40개 파일·245개 테스트 새 실행/다른 4개 패키지 테스트 캐시. 점수 19개·마이페이지 10개 테스트를 포함한다.
+- 최종 `build` 성공: web 새 실행, admin·storybook 캐시. 로그는 `.context/stage3-review-check.log`, `.context/stage3-review-build.log`다. 기존 청크 크기 경고는 유지된다.
+- 화면 도구 오류와 실서버·WebView·실환경 접근성 검증 제한은 위 기록과 같다. T015는 미완료이며 4단계는 시작하지 않았다. 이번 리뷰 반영은 미커밋이다.
+- 최종 변경량 실제 base `0145466f` 대비 +586/-131줄, 합계 717줄이다. 650줄 기준을 넘어 분리를 검토했으나 점수 조회·화면·검증 계약이 한 목적이며 800줄 미만이므로 현재 단계에 유지한다.
