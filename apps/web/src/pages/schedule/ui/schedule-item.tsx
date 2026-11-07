@@ -1,6 +1,7 @@
 'use client';
 
 import { IconClockFill, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
+import { Badge } from '@yapp-plus/ui';
 import { HStack, List, VStack } from '@seed-design/react';
 import { chip, dateText, item, itemPast, metaIcon, metaText, titleText } from './schedule-item.css';
 
@@ -53,7 +54,9 @@ export function ScheduleItem({
         </List.Content>
         {chipText ? (
           <List.Suffix>
-            <span className={chip}>{chipText}</span>
+            <Badge variant="weak" tone="warning" className={chip}>
+              {chipText}
+            </Badge>
           </List.Suffix>
         ) : null}
       </article>

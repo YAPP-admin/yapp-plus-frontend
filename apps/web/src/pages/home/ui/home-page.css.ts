@@ -342,6 +342,8 @@ export const chipRow = style({
 });
 
 export const chip = style({
+  minHeight: 0,
+  WebkitFontSmoothing: 'auto',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -388,6 +390,8 @@ export const noticeChevron = style({
 });
 
 export const attendedBadge = style({
+  minHeight: 0,
+  WebkitFontSmoothing: 'auto',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',

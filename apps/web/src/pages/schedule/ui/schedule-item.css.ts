@@ -49,6 +49,7 @@ export const metaText = style({
 });
 
 export const chip = style({
+  minHeight: 0,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
