@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - 'stackflow/**'
+      - DongjaJ/mobile-delivery-policy
   push:
     branches:
       - main
@@ -15,7 +16,6 @@ concurrency:
 
 permissions:
   contents: read
-  pull-requests: read
 
 jobs:
   verify:
@@ -33,19 +33,6 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Detect mobile changes
-        id: changes
-        uses: dorny/paths-filter@ceb8a2b8f2d89434be7ff52d3de7ec3738c5cc9d # v4.0.3
-        with:
-          base: ${{ github.ref }}
-          filters: |
-            mobile:
-              - 'apps/mobile/**'
-              - 'packages/app-bridge/**'
-              - 'package.json'
-              - 'pnpm-workspace.yaml'
-              - 'pnpm-lock.yaml'
-
       - name: Set up toolchain
         uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
@@ -56,28 +43,70 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Check formatting
-        run: pnpm format:check
+        run: node --run format:check
 
       - name: Lint
         env:
           TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: pnpm lint
+        run: node --run lint
 
       - name: Typecheck
         env:
           TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: pnpm typecheck
+        run: node --run typecheck
 
       - name: Test
         env:
           TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: pnpm test
+        run: node --run test
 
       - name: Build
         env:
           TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: pnpm build
+        run: node --run build
 
+      # 공용 의존성 변경도 빠짐없이 확인하도록 Doctor를 매번 실행합니다.
       - name: Run Expo Doctor
-        if: steps.changes.outputs.mobile == 'true'
-        run: pnpm expo:doctor
+        run: node --run expo:doctor
+
+  # 변경 경로와 관계없이 모든 PR에서 두 OS의 네이티브 호환성을 검사합니다.
+  # secrets를 전달하지 않는 별도 job이므로 기존 Verify의 Turbo token을 공유하지 않습니다.
+  mobile-native-linux:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/mobile-native-check.yml
+    permissions:
+      contents: read
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+      head: ${{ github.sha }}
+      runner: ubuntu-latest
+
+  mobile-native-macos:
+    if: github.event_name == 'pull_request'
+    uses: ./.github/workflows/mobile-native-check.yml
+    permissions:
+      contents: read
+    with:
+      base: ${{ github.event.pull_request.base.sha }}
+      head: ${{ github.sha }}
+      runner: macos-15
+
+  # 한쪽 검사 실패·건너뛰기 또는 OS별 지문 차이가 있으면 최종 검사를 실패시킵니다.
+  mobile-native:
+    name: Mobile native compatibility
+    if: always() && github.event_name == 'pull_request'
+    needs: [mobile-native-linux, mobile-native-macos]
+    runs-on: ubuntu-latest
+    permissions: {}
+    steps:
+      - name: Require matching results on both operating systems
+        env:
+          LINUX_RESULT: ${{ needs.mobile-native-linux.result }}
+          MACOS_RESULT: ${{ needs.mobile-native-macos.result }}
+          LINUX_KEY: ${{ needs.mobile-native-linux.outputs.native-key }}
+          MACOS_KEY: ${{ needs.mobile-native-macos.outputs.native-key }}
+        run: |
+          test "$LINUX_RESULT" = success
+          test "$MACOS_RESULT" = success
+          test -n "$LINUX_KEY"
+          test "$LINUX_KEY" = "$MACOS_KEY"

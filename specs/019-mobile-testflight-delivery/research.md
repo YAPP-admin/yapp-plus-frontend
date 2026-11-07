@@ -56,3 +56,9 @@ config/plugin 평가도 PR 코드 실행이므로 해당 job에는 배포 비밀
 
 [Turbo affected](https://turborepo.dev/docs/reference/run#--affected)는 패키지 의존 관계와 Git 변경 범위로 대상을 고른다. 설치된 2.10.12에서 모바일 dry-run을 확인했다.
 main 배포에는 마지막 실제 반영 SHA와 후보 SHA를 명시한다. 전체 Git 이력을 확보하고 루트 도구·설정 입력도 선언한다. 저장소 밖 환경 변경·수동 복구/재개는 affected만으로 생략하지 않는다.
+
+## GitHub Action 대체 검토
+
+[공식 PR Preview 예제](https://docs.expo.dev/eas-update/github-actions/)는 Expo Action으로 CLI 설치·인증 후 preview Action으로 `eas update --auto`와 QR 댓글을 실행한다.
+[공식 fingerprint Action 소스](https://github.com/expo/expo-github-action/blob/main/src/fingerprint/index.ts)는 현재 지문만 계산하고 이전 지문은 SQLite 캐시 DB에서 조회한다. 이전 기록이 없으면 null이므로 base를 직접 계산하는 현재 검사와 다르다.
+[continuous-deploy-fingerprint](https://github.com/expo/expo-github-action/blob/main/continuous-deploy-fingerprint/action.yml)는 EAS Build와 Update 자동 배포용이며 로컬 빌드 선택을 제공하지 않는다.

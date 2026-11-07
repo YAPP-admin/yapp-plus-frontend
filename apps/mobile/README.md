@@ -100,6 +100,28 @@ mise exec -- pnpm dlx eas-cli@27.4.1 submit \
   --non-interactive
 ```
 
+## main 자동 OTA와 수동 로컬 빌드
+
+main push의 CI 성공 후 `mobile-delivery.yml`이 iOS `testflight` 채널로 OTA를 게시한다.
+Expo 공식 Action이 고정 EAS CLI를 설치·인증한다. 저장소의 `EXPO_TOKEN`을 준비해야 한다.
+PR의 `Mobile native compatibility` 검사를 필수 검사로 설정하고 main 직접 push를 제한한다.
+자동 빌드 분기·활성화 기준 파일·설치 확인 승인은 없다. 네이티브 변경 시 PR에서 앱 버전을
+증가시키고, 새 버전의 로컬 빌드와 TestFlight 제출은 운영자가 실행한다.
+새 runtime의 OTA는 게시돼도 호환되는 설치본이 생기기 전에는 기존 앱에 전달되지 않는다.
+
+```sh
+cd apps/mobile
+mise exec -- pnpm dlx eas-cli@27.4.1 build --local --platform ios --profile testflight --output /tmp/yapp-plus.ipa
+mise exec -- pnpm dlx eas-cli@27.4.1 submit --platform ios --profile testflight --path /tmp/yapp-plus.ipa
+```
+
+이 명령은 macOS의 Xcode·CocoaPods·fastlane과 Apple 서명 준비가 필요하다.
+GitHub macOS에서 같은 명령을 수동 실행하는 workflow는 다음 리뷰 단계에서 연결한다.
+재실행하면 같은 SHA도 다시 게시될 수 있으므로 실패 시 EAS 대시보드에서 실제 게시 결과를 먼저 확인한다.
+문제가 있으면 GitHub에서 자동 OTA workflow를 비활성화하고 실행·대기 작업 종료를 확인한 뒤,
+`eas update:rollback`으로 같은 runtime의 정상 업데이트 또는 내장 업데이트로 복구한다.
+수정한 main이 준비된 뒤 workflow를 명시적으로 다시 활성화한다. 네이티브 결함은 새 빌드로 수정한다.
+
 ## Pretendard와 SDK 58
 
 루트 레이아웃은 로컬 `assets/fonts/PretendardVariable.ttf`를 `useFonts`로 로드한다. 네이티브

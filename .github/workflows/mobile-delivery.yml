@@ -1,0 +1,101 @@
+name: Mobile TestFlight update
+
+# CI 성공 후 검증된 main의 JavaScript와 asset을 TestFlight 채널에 게시합니다.
+on:
+  workflow_run:
+    workflows: [CI]
+    types: [completed]
+    branches: [main]
+
+permissions:
+  contents: read
+  actions: read
+
+# 후속 자동·수동 배포도 같은 그룹을 사용합니다. 실행 중인 작업을 새 push로 취소하지 않습니다.
+concurrency:
+  group: mobile-testflight
+  cancel-in-progress: false
+
+jobs:
+  # 다른 저장소의 PR 실행이나 실패한 CI는 후보로 받지 않습니다.
+  candidate:
+    if: >-
+      github.event.workflow_run.conclusion == 'success' &&
+      github.event.workflow_run.event == 'push' &&
+      github.event.workflow_run.head_branch == 'main' &&
+      github.event.workflow_run.head_repository.full_name == github.repository
+    runs-on: ubuntu-latest
+    outputs:
+      sha: ${{ steps.verify.outputs.sha }}
+    steps:
+      # 같은 이름의 다른 workflow와 뒤늦게 완료된 과거 main CI를 제외합니다.
+      - name: Verify CI source and latest main
+        id: verify
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CANDIDATE: ${{ github.event.workflow_run.head_sha }}
+          WORKFLOW_ID: ${{ github.event.workflow_run.workflow_id }}
+        run: |
+          test "$(gh api "repos/$GH_REPO/actions/workflows/$WORKFLOW_ID" --jq .path)" = .github/workflows/ci.yml
+          latest=$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)
+          if [ "$latest" = "$CANDIDATE" ]; then
+            echo "sha=$CANDIDATE" >> "$GITHUB_OUTPUT"
+          else
+            echo '오래된 CI 결과: 최신 main의 성공을 기다립니다.' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  # 빌드 존재·설치 확인 여부로 분기하지 않습니다. 검증된 main은 항상 OTA를 게시합니다.
+  update:
+    needs: candidate
+    if: needs.candidate.outputs.sha != ''
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    permissions:
+      contents: read
+    env:
+      MOBILE_WEB_URL: https://yapp-plus-web.vercel.app
+    steps:
+      # workflow_run의 기본 SHA 대신 CI가 실제로 검증한 SHA를 사용합니다.
+      - name: Checkout validated SHA
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
+        with:
+          ref: ${{ needs.candidate.outputs.sha }}
+          persist-credentials: false
+      - name: Set up toolchain
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
+        with:
+          version: 2026.8.16
+          install_args: --locked
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile --ignore-scripts
+      # CLI 설치·인증은 Expo 공식 Action에 맡깁니다. token은 이 배포 job에만 전달합니다.
+      - name: Set up EAS CLI
+        uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e # v8.2.1
+        with:
+          eas-version: 27.4.1
+          packager: pnpm
+          token: ${{ secrets.EXPO_TOKEN }}
+      # 설치 중 main이 바뀌었으면 게시하지 않습니다. 다음 최신 CI 성공이 게시를 담당합니다.
+      - name: Recheck latest main
+        id: latest
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          CANDIDATE: ${{ needs.candidate.outputs.sha }}
+        run: |
+          latest=$(gh api "repos/$GH_REPO/git/ref/heads/main" --jq .object.sha)
+          if [ "$latest" = "$CANDIDATE" ]; then
+            echo 'publish=true' >> "$GITHUB_OUTPUT"
+          fi
+      # runtime은 appVersion입니다. 새 버전의 OTA는 기존 버전의 앱에 전달되지 않습니다.
+      # 동일 SHA 재실행도 다시 게시할 수 있습니다. 실패 후 재실행 전 EAS 결과를 확인합니다.
+      - name: Publish TestFlight update
+        if: steps.latest.outputs.publish == 'true'
+        working-directory: apps/mobile
+        env:
+          SOURCE_SHA: ${{ needs.candidate.outputs.sha }}
+        run: >-
+          eas update --platform ios --channel testflight --environment production
+          --message "main:$SOURCE_SHA run:$GITHUB_RUN_ID attempt:$GITHUB_RUN_ATTEMPT"
+          --non-interactive
