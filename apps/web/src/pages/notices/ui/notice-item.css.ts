@@ -15,13 +15,6 @@ export const item = style({
   },
 });
 
-export const chipRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '6px',
-  marginBottom: vars.$dimension.x2,
-});
-
 export const baseChip = style({
   display: 'inline-flex',
   alignItems: 'center',

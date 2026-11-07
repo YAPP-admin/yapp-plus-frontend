@@ -1,18 +1,8 @@
 'use client';
 
 import { IconClockFill, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
-import { List } from '@seed-design/react';
-import {
-  chip,
-  dateText,
-  item,
-  itemPast,
-  metaContainer,
-  metaIcon,
-  metaRow,
-  metaText,
-  titleText,
-} from './schedule-item.css';
+import { HStack, List, VStack } from '@seed-design/react';
+import { chip, dateText, item, itemPast, metaIcon, metaText, titleText } from './schedule-item.css';
 
 export type ScheduleItemProps = {
   date: string;
@@ -45,20 +35,20 @@ export function ScheduleItem({
             <h2 className={titleText}>{title}</h2>
           </List.Title>
           <List.Detail asChild>
-            <div className={metaContainer}>
-              <div className={metaRow}>
+            <VStack gap="x1">
+              <HStack gap="x1" align="center">
                 <span className={metaIcon} aria-hidden="true">
                   <IconLocationpinFill width={12} height={12} />
                 </span>
                 <span className={metaText}>{location}</span>
-              </div>
-              <div className={metaRow}>
+              </HStack>
+              <HStack gap="x1" align="center">
                 <span className={metaIcon} aria-hidden="true">
                   <IconClockFill width={12} height={12} />
                 </span>
                 <span className={metaText}>{time}</span>
-              </div>
-            </div>
+              </HStack>
+            </VStack>
           </List.Detail>
         </List.Content>
         {chipText ? (

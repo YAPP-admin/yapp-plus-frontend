@@ -1,5 +1,5 @@
-import { List, Skeleton } from '@seed-design/react';
-import { item, metaContainer } from './schedule-item.css';
+import { List, Skeleton, VStack } from '@seed-design/react';
+import { item } from './schedule-item.css';
 import { list, srOnly } from './schedule-page.css';
 import { placeholder } from './schedule-loading.css';
 
@@ -15,10 +15,10 @@ export function ScheduleLoading() {
             </List.Prefix>
             <List.Content gap="x2">
               <Skeleton className={placeholder} width="80%" height="lineHeight.t4" />
-              <div className={metaContainer}>
+              <VStack gap="x1">
                 <Skeleton className={placeholder} width="60%" height="lineHeight.t2" />
                 <Skeleton className={placeholder} width="90%" height="lineHeight.t2" />
-              </div>
+              </VStack>
             </List.Content>
           </List.Item>
         ))}
