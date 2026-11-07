@@ -35,7 +35,11 @@ const auth = vi.hoisted(() => {
 });
 vi.mock('@stackflow/react', () => ({ useFlow: () => flow }));
 vi.mock('@/features/auth', () => auth);
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  auth.signupMutate.mockReset();
+  auth.useNativeAuthSession.mockReturnValue({ isNative: false, phase: 'BROWSER' });
+});
 
 function renderSignupPage() {
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -56,6 +60,57 @@ async function goToPhoneStep() {
 }
 
 describe('SignupPage', () => {
+  it('서버의 휴대폰 오류를 입력에 연결하고 수정하면 해제한다', async () => {
+    auth.useNativeAuthSession.mockReturnValue({ isNative: true, phase: 'SIGNED_OUT' });
+    auth.signupMutate.mockImplementation(() =>
+      auth.state.callbacks.onFailure?.({
+        status: 'ERROR',
+        code: 'INVALID_INPUT',
+        retryable: false,
+        fieldErrors: [{ field: 'phoneNumber', code: 'INVALID_FORMAT' }],
+      }),
+    );
+    renderSignupPage();
+    const phone = await goToPhoneStep();
+    fireEvent.change(phone, { target: { value: '010' } });
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    await waitFor(() => expect(phone).toHaveAttribute('aria-invalid', 'true'));
+    expect(phone).toHaveAccessibleDescription('휴대폰 번호 형식을 확인해 주세요.');
+    fireEvent.change(phone, { target: { value: '010-1234-5678' } });
+    expect(phone).not.toHaveAttribute('aria-invalid', 'true');
+    expect(screen.queryByText('휴대폰 번호 형식을 확인해 주세요.')).not.toBeInTheDocument();
+  });
+
+  it('이름과 휴대폰 오류가 함께 오면 이름부터 수정하고 휴대폰 오류를 보존한다', async () => {
+    auth.useNativeAuthSession.mockReturnValue({ isNative: true, phase: 'SIGNED_OUT' });
+    auth.signupMutate.mockImplementation(() =>
+      auth.state.callbacks.onFailure?.({
+        status: 'ERROR',
+        code: 'INVALID_INPUT',
+        retryable: false,
+        fieldErrors: [
+          { field: 'name', code: 'TOO_LONG' },
+          { field: 'phoneNumber', code: 'ALREADY_EXISTS' },
+        ],
+      }),
+    );
+    renderSignupPage();
+    const phone = await goToPhoneStep();
+    fireEvent.change(phone, { target: { value: '010-1234-5678' } });
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    const name = await screen.findByRole('textbox', { name: '이름을 입력해 주세요' });
+    expect(name).toHaveAccessibleDescription('이름이 너무 길어요.');
+    expect(name).toHaveFocus();
+    fireEvent.change(name, { target: { value: '수정 이름' } });
+    fireEvent.click(screen.getByRole('button', { name: '다음' }));
+    await waitFor(() =>
+      expect(
+        screen.getByRole('textbox', { name: '휴대폰 번호를 입력해 주세요' }),
+      ).toHaveAccessibleDescription('이미 사용 중인 휴대폰 번호입니다.'),
+    );
+    expect(auth.signupMutate).toHaveBeenCalledTimes(1);
+  });
+
   it('제목으로 이름 입력창을 안내한다', () => {
     renderSignupPage();
 

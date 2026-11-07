@@ -227,7 +227,7 @@ it('로딩과 오류를 카드에 한정하고 키보드 재시도로 복구한�
     }),
   );
   renderHome();
-  expect(await screen.findByText('이번 주 세션을 불러오고 있어요…')).toBeVisible();
+  expect(await screen.findByRole('status')).toHaveTextContent('이번 주 세션을 불러오고 있어요…');
   expect(screen.getByRole('navigation', { name: '홈 바로가기' })).toBeVisible();
   expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 세션을 불러오지 못했어요');
   server.use(http.get(url, () => HttpResponse.json(response)));
