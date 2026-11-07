@@ -1,3 +1,4 @@
+import { HStack, VStack } from '@seed-design/react';
 import { useActivityZIndexBase } from '@seed-design/stackflow';
 import { useRef, useState } from 'react';
 import { IconExclamationmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
@@ -22,14 +23,11 @@ import {
   sheetContainer,
   sheetContent,
   sheetDescription,
-  sheetFooter,
   sheetHandleArea,
   sheetHandleBar,
-  sheetHeader,
   sheetPrimaryButton,
   sheetSecondaryButton,
   sheetTitle,
-  sheetTopSection,
   codeInputsWrapper,
   teamButtonsWrap,
   teamCheckIcon,
@@ -122,12 +120,12 @@ export function AttendanceCodeSheet({
           <div className={sheetHandleBar} />
         </div>
 
-        <div className={sheetContainer}>
-          <div className={sheetTopSection}>
-            <div className={sheetHeader}>
+        <VStack gap="x5" className={sheetContainer}>
+          <VStack gap="x6" width="full">
+            <VStack gap="x1_5" width="full">
               <h2 className={sheetTitle}>출석 코드를 입력해 주세요</h2>
               <p className={sheetDescription}>코드를 입력하면 출석이 완료돼요</p>
-            </div>
+            </VStack>
 
             <div className={codeInputsWrapper}>
               <div className={codeInputsContainer}>
@@ -159,9 +157,9 @@ export function AttendanceCodeSheet({
                 </div>
               )}
             </div>
-          </div>
+          </VStack>
 
-          <div className={sheetFooter}>
+          <VStack width="full">
             <ActionButton
               variant="brandSolid"
               size="large"
@@ -170,8 +168,8 @@ export function AttendanceCodeSheet({
             >
               확인
             </ActionButton>
-          </div>
-        </div>
+          </VStack>
+        </VStack>
       </BottomSheetContent>
     </BottomSheetRoot>
   );
@@ -200,13 +198,13 @@ export function AttendanceReportSheet({
           <div className={sheetHandleBar} />
         </div>
 
-        <div className={sheetContainer}>
+        <VStack gap="x5" className={sheetContainer}>
           {reportStep === 1 ? (
             <>
-              <div className={sheetHeader}>
+              <VStack gap="x1_5" width="full">
                 <h2 className={sheetTitle}>출결을 보고해 주세요</h2>
                 <p className={sheetDescription}>미리 알려주시면 점수 차감이 줄어들어요</p>
-              </div>
+              </VStack>
 
               <RadioGroup
                 label="출결 유형"
@@ -230,9 +228,9 @@ export function AttendanceReportSheet({
             </>
           ) : (
             <>
-              <div className={sheetHeader}>
+              <VStack gap="x1_5" width="full">
                 <h2 className={sheetTitle}>{selectedReportType} 사유를 입력해 주세요</h2>
-              </div>
+              </VStack>
 
               <div className={textareaContainer}>
                 <TextField
@@ -262,7 +260,7 @@ export function AttendanceReportSheet({
               </ActionButton>
             </>
           )}
-        </div>
+        </VStack>
       </BottomSheetContent>
     </BottomSheetRoot>
   );
@@ -285,11 +283,11 @@ export function TeamGuideSheet({
           <div className={sheetHandleBar} />
         </div>
 
-        <div className={sheetContainer}>
-          <div className={sheetHeader}>
+        <VStack gap="x5" className={sheetContainer}>
+          <VStack gap="x1_5" width="full">
             <h2 className={sheetTitle}>팀 세션 인증 사진을 업로드해 주세요</h2>
             <p className={sheetDescription}>팀원 중 한 명만 올리면 팀 전체에 반영돼요</p>
-          </div>
+          </VStack>
 
           <div className={teamGraphicWrap}>
             <Image
@@ -302,23 +300,23 @@ export function TeamGuideSheet({
             />
           </div>
 
-          <ul className={teamRulesList} aria-label="인증 사진 규칙">
-            <li className={teamRuleItem}>
+          <VStack as="ul" gap="x2" className={teamRulesList} aria-label="인증 사진 규칙">
+            <HStack as="li" align="center" gap="x2" className={teamRuleItem}>
               <OrangeCheckIcon />
               <span>참석한 팀원이 모두 보이게 찍어주세요</span>
-            </li>
-            <li className={teamRuleItem}>
+            </HStack>
+            <HStack as="li" align="center" gap="x2" className={teamRuleItem}>
               <OrangeCheckIcon />
               <span>세션 시간(14:00 - 18:00) 안에 올려주세요</span>
-            </li>
-            <li className={teamRuleItem}>
+            </HStack>
+            <HStack as="li" align="center" gap="x2" className={teamRuleItem}>
               <OrangeCheckIcon />
               <span>운영진 확인 후 출석이 확정돼요</span>
-            </li>
-          </ul>
+            </HStack>
+          </VStack>
 
-          <div className={sheetFooter}>
-            <div className={teamButtonsWrap}>
+          <VStack width="full">
+            <VStack gap="x2" className={teamButtonsWrap}>
               <ActionButton
                 variant="neutralWeak"
                 size="large"
@@ -335,9 +333,9 @@ export function TeamGuideSheet({
               >
                 직접 사진 찍기
               </ActionButton>
-            </div>
-          </div>
-        </div>
+            </VStack>
+          </VStack>
+        </VStack>
       </BottomSheetContent>
     </BottomSheetRoot>
   );

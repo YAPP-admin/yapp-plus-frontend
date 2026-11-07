@@ -443,26 +443,8 @@ export const sheetHandleBar = style({
 });
 
 export const sheetContainer = style({
-  display: 'flex',
-  flexDirection: 'column',
   padding: '0 18px 18px',
   boxSizing: 'border-box',
-  gap: '20px',
-  width: '100%',
-});
-
-export const sheetTopSection = style({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'stretch',
-  gap: '24px',
-  width: '100%',
-});
-
-export const sheetHeader = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '6px',
   width: '100%',
 });
 
@@ -561,12 +543,6 @@ export const codeErrorMessage = style({
   margin: 0,
 });
 
-export const sheetFooter = style({
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
-});
-
 export const textareaContainer = style({
   display: 'flex',
   flexDirection: 'column',
@@ -629,9 +605,6 @@ export const sheetPrimaryButton = style({
 });
 
 export const teamRulesList = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px',
   margin: 0,
   padding: 0,
   width: '100%',
@@ -639,9 +612,6 @@ export const teamRulesList = style({
 });
 
 export const teamRuleItem = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '8px',
   fontSize: '13px',
   lineHeight: '18px',
   fontWeight: 500,
@@ -673,9 +643,6 @@ export const teamGraphicImage = style({
 });
 
 export const teamButtonsWrap = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px',
   width: '100%',
   marginTop: 0,
 });
