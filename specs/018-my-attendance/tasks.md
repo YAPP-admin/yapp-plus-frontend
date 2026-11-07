@@ -30,9 +30,9 @@
 - [x] T012 [US1] apps/web/src/pages/my/ui/my-page.test.tsx에 세션 이름·0값·대상 아님·실패·규칙·메뉴 테스트를 갱신한다.
 - [x] T013 [US1] apps/web/src/pages/my/ui/my-page.tsx, my-page.css.ts에서 목업 제거·name 정규화·점수 Suspense/ErrorBoundary·미지원 `—`를 구현한다.
 - [x] T014 [US1] apps/web/src/mocks/member-attendance-handlers.ts, browser.ts, server.ts에 점수 정상·미대상·지연·오류 fixture와 DEV 전용 myState 시나리오를 연결한다.
-- [ ] T015 [US1] specs/018-my-attendance/validation.md에 check/build·화면·접근성·변경량 결과와 3단계 리뷰를 기록한다.
+- [x] T015 [US1] specs/018-my-attendance/validation.md에 check/build·화면·접근성·변경량 결과와 3단계 리뷰를 기록한다.
 
-T010–T014 구현·자동 검증 완료. T015는 브라우저 도구 오류로 화면 캡처·실환경 접근성 검증이 남아 있다.
+T010–T015 완료. headless 모바일 화면 비교·키보드·터치 검증을 기록했다. 실기기·스크린 리더 검증은 5단계에 남긴다.
 
 ## 4단계 — US2 출석 내역 (P2)
 
