@@ -126,3 +126,49 @@ Spec Kit extension 파일이 없어 before/after hook은 모두 적용 대상이
 - 두 버전에서 오류 후 재시도로 92점 복구를 확인했다. 현재 버전의 키보드 Enter 열기·Escape 닫기·닫힘 후 초점 복귀, 터치 다이얼로그 열기·출석 내역 이동도 확인했다. dark 환경에서도 기존 light-only 정책을 유지한다.
 - headless 검증은 실제 스크린 리더·iOS safe-area·WebView·실서버 검증을 대신하지 않는다. 해당 항목은 5단계에 남긴다. 자동화 코드는 `.context/ui-compare.mjs`, `.context/ui-interactions.mjs`다.
 - 최종 check·build 성공: format 새 실행, lint·typecheck·test·build는 모두 Turbo 캐시 재사용. headless 비교·상호작용은 이번에 새 실행했다. 로그는 `.context/stage3-ui-final-{check,build}.log`다.
+
+### 4단계 — 출석 내역 API 연결
+
+- 사용자 승인으로 `0db68e86`에서 `DongjaJ/attendance-history-api`를 생성·전환했다. 검토 base는 `DongjaJ/my-page-layout`이며 push·PR·추가 commit은 하지 않았다.
+- 생성 find5InfiniteOptions·인증 옵션·30초 캐시를 유지한다. transformer에서 생성 Zod 검증·안전한 ID 변환을 수행하며 현재 조회 체인의 커서 반복을 명시적 오류로 처리한다. 중복 ID는 위치를 유지해 갱신하고 마지막 성공 summary를 사용한다.
+- 목업 mode·records를 제거했다. 실제 스크롤 컨테이너·활성 화면에서만 다음 페이지를 관찰하고, 오류 시 자동 요청을 중단한다. 초기/추가/재조회 오류 재시도·처음부터 조회, 독립 점수 경고와 전체 배지를 연결했다.
+- 모델 구현 전 테스트 모듈 미존재로 실패를 확인했다. 최종 자동화는 응답 검증·3페이지 재조회·중복·반복 커서·전체 상태 매핑·결석 9/10·초기 및 추가 오류 복구·재조회 보존·비활성 화면·직접 진입 MY 복귀를 검증한다.
+- headless Playwright 390×844에서 정상·빈 결과·초기 오류·추가 오류·결석 경고·로딩을 새 실행했다. 3페이지 스크롤·재시도·터치 뒤로가기를 확인했다. `.context/stage4-*.png`, `.context/stage4-browser.log`에 화면 근거를 보관했다.
+- 실서버·실기기 WebView·스크린 리더·iOS safe-area와 5단계 계정 격리 통합은 미실행이다. 기존 light-only 테마를 유지하며 의존성·생성 코드·서버 계약은 변경하지 않았다. 롤백은 이 웹 변경만 되돌린다.
+- 라우팅 테스트가 전환 완료 전에 끝나 다음 테스트에 영향을 주던 문제는 `/my` 복귀 대기·명시적 unmount로 해결했다. 라우팅 19개가 새 실행으로 통과했고 브라우저에서도 `/my` 복귀와 처음부터 조회 후 3페이지 복구를 확인했다.
+- 최종 check·build 성공: format·web lint/typecheck·web 42파일 272테스트·web build 새 실행, 다른 lint/typecheck 각 6개·test 4개·build 2개 Turbo 캐시 재사용. 기존 청크 크기 경고는 유지된다. `.context/stage4-final-{check,build}.log`에 기록했다.
+- 실제 base `0db68e86` 대비 추가·삭제 합계 782줄(새 파일 포함)로 800줄 미만이다. 650줄부터 분리를 검토했으나 내역 조회·화면·검증의 한 목적을 유지했다. T016–T023을 완료하고 4단계 리뷰에서 멈춘다. 5단계는 시작하지 않았다.
+
+### 4단계 리뷰 — 생성 infinite 옵션으로 단순화
+
+- 사용자 요청으로 반복 커서 검사·커서 이력·전용 오류 클래스·중복 병합을 제거했다. 생성 queryFn을 그대로 사용하며 initialPageParam·getNextPageParam만 추가한다. 목록은 서버 페이지 순서로 펼친다. 기존 명세의 해당 방어 정책도 함께 제거했다.
+- 응답 transformer의 생성 Zod 검증과 bigint→안전한 number 변환은 페이지네이션과 별개인 경계 처리로 유지한다. 생성 TypeScript ID 타입과 런타임 반환 타입을 맞추기 위한 처리다.
+- sentinel의 스크롤 부모 탐색과 root 지정을 제거했다. 기본 IntersectionObserver에서도 headless 모바일 3페이지 조회·오류 재시도·처음부터 조회·MY 복귀가 통과했다. `.context/stage4-simple-browser.log`에 새 실행 결과를 기록했다.
+- check·build 통과: web lint·typecheck·270개 테스트·web build 새 실행, 다른 패키지는 Turbo 캐시 재사용. `.context/stage4-simple-{check,build}.log`에 기록했다. 실서버·WebView·스크린 리더 검증은 미실행이며 4단계 리뷰를 유지한다.
+
+### 4단계 리뷰 — Suspense와 오류 경계
+
+- 내역은 useSuspenseInfiniteQuery, 결석 경고는 독립 useSuspenseQuery 경계로 전환했다. 초기 로딩·실패는 별도 attendance-query-boundary.tsx가 처리하고 추가/재조회 실패는 기존 데이터를 보존한다. 로그인 조건은 조회 컴포넌트 마운트 전에 검사한다.
+- 내역은 오류 code를 분류하지 않아 throwHttpErrors 덮어쓰기를 제거했다. SDK 기본 오류 처리를 유지한다. 생성 옵션의 skipToken 포함 타입만 좁히며 queryFn은 감싸지 않는다.
+- useHistorySentinel은 useLoadMoreObserver, sentinel ref는 loadMoreRef, chips는 attendanceBadgeStyles로 이름을 명확히 했다.
+- check·build 통과: web lint/typecheck·270테스트·web build 새 실행, 나머지 Turbo 캐시 재사용. headless 6개 상태·3페이지·복구·MY 복귀도 통과했다. `.context/stage4-suspense-{check,build,browser}.log`에 기록했다. 실제 서버·실기기·스크린 리더는 미실행이다.
+- 누적 diff가 800줄을 초과해 조회 모델·MSW와 화면 변경의 브랜치 분리가 필요하다. 승인 전 commit·새 브랜치·push·PR은 수행하지 않았다. 5단계는 시작하지 않았다.
+
+### 4단계 검토 단위 분리
+
+- 사용자 승인으로 조회 모델·테스트·MSW·계약 11파일을 `2902980e`로 커밋했다. `DongjaJ/attendance-history-api`는 실제 base `DongjaJ/my-page-layout` 대비 +255/-14, 합계 269줄이다. format·lint·commitlint hook을 새로 실행해 통과했다.
+- 해당 커밋에서 `DongjaJ/attendance-history-ui`를 생성·전환했다. 검토 base는 `DongjaJ/attendance-history-api`이며 화면·observer·라우팅·검증 문서는 미커밋으로 보존했다. push·PR은 하지 않았고 4단계 리뷰를 유지한다.
+
+### 4단계 리뷰 — SEED 로딩과 조회 독립성
+
+- 사용자 요청으로 전체 초기화 버튼·useQueryClient를 제거했다. 기존 데이터가 있는 Suspense query의 추가/재조회 오류는 오류 경계로 자동 전파되지 않으므로 isError 안내·같은 페이지 재시도를 유지한다.
+- [SEED Loading 패턴](https://seed-design.io/patterns/loading), [Skeleton](https://seed-design.io/react/components/skeleton), [Progress Circle](https://seed-design.io/react/components/progress-circle)을 확인했다. 첫 로딩은 SEED Skeleton, 추가 로딩은 불확정 ProgressCircle로 표시하고 Grid·Box·HStack·VStack으로 배치했다.
+- 내역·점수 경계를 형제로 분리했다. 내역 로딩·실패 중에도 점수 경고가 표시되며 기존 요약→경고→목록 순서는 유지한다. 관련 회귀 테스트 2개를 추가했다.
+- check·build 성공: web lint/typecheck·272테스트·web build 새 실행, 다른 패키지는 Turbo 캐시 재사용. headless 모바일에서 3페이지·재시도·MY 복귀와 두 로딩 화면을 확인했다. `.context/stage4-seed-{check,build,browser}.log`, `.context/stage4-seed-{loading,more}.png`에 기록했다. 실서버·실기기·스크린 리더는 미실행이다.
+
+### 4단계 최종 리뷰와 커밋
+
+- requested 지역 플래그를 제거하고 isFetching·cancelRefetch: false로 중복 요청을 제어한다. observer mock도 disconnect 이후 관찰 콜백을 제거하도록 수정해 실제 생명주기를 반영했다. 화면의 summary는 sessionSummary로 명확히 했다.
+- 오류 UI를 AttendanceQueryError 컴포넌트로 분리하고 useErrorBoundary의 resetBoundary를 사용한다. AttendanceQueryBoundary의 useCallback·fallbackRender는 제거했다.
+- 최종 check·build 성공: web lint/typecheck·272개 테스트·web build 새 실행, 나머지는 Turbo 캐시 재사용. `.context/stage4-commit-{check,build}.log`에 기록했다. 실서버·실기기·스크린 리더 검증은 미실행이며 5단계에 남긴다.
+- headless 모바일 6개 상태에서 3페이지 스크롤·재시도·MY 복귀를 새 실행해 통과했다. `.context/stage4-commit-browser.log`에 기록했다. 기능과 문서를 별도 커밋으로 분리하며 push·PR·5단계 구현은 수행하지 않는다.

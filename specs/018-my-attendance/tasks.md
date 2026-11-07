@@ -36,16 +36,16 @@ T010–T015 완료. headless 모바일 화면 비교·키보드·터치 검증�
 
 ## 4단계 — US2 출석 내역 (P2)
 
-독립 검증: 3페이지 이상 조회에서 모든 상태·마지막 페이지·추가 오류·중복·반복 커서를 검증한다.
+독립 검증: 3페이지 이상 조회에서 모든 상태·마지막 페이지·추가 오류를 검증한다.
 
-- [ ] T016 [P] [US2] apps/web/src/pages/attendance/model/history-query.test.ts에 schema·커서 반복·정상 다중 페이지 재조회·중복 병합·summary 갱신 테스트를 추가한다.
-- [ ] T017 [P] [US2] apps/web/src/pages/attendance/model/attendance-status.test.ts에 출결·운영진 판단의 모든 매핑과 우선순위를 검증한다.
-- [ ] T018 [US2] apps/web/src/pages/attendance/model/history-query.ts, attendance-status.ts에 생성 infinite 옵션·검증·병합·배지 변환을 구현한다.
-- [ ] T019 [US2] apps/web/src/pages/attendance/ui/attendance-page.test.tsx에 초기·후속·재조회 오류, 빈 페이지, 무한 스크롤 중복 방지, 결석 9/10 경계를 추가한다.
-- [ ] T020 [US2] apps/web/src/pages/attendance/ui/attendance-page.tsx, attendance-page.css.ts에 실제 조회·무한 스크롤·요약·배지·독립 경고와 재시도를 구현한다.
-- [ ] T021 [US2] apps/web/stackflow/src/stack.tsx, activities/activities.tsx와 apps/web/src/pages/attendance/index.ts에서 목업 mode·props를 정리하고 stack.test.tsx로 기존 URL·MY fallback을 검증한다.
-- [ ] T022 [US2] apps/web/src/mocks/member-attendance-handlers.ts, browser.ts에 attendanceState 정상·빈 결과·전체 배지·경고·추가 오류 시나리오를 연결한다.
-- [ ] T023 [US2] docs/web-routing.md의 내역 상태 설명을 실제 조회 기준으로 갱신하고 specs/018-my-attendance/validation.md에 check/build·화면·변경량·4단계 리뷰를 기록한다.
+- [x] T016 [P] [US2] apps/web/src/pages/attendance/model/history-query.test.ts에 schema·정상 다중 페이지 재조회·summary 갱신 테스트를 추가한다.
+- [x] T017 [P] [US2] apps/web/src/pages/attendance/model/attendance-status.test.ts에 출결·운영진 판단의 모든 매핑과 우선순위를 검증한다.
+- [x] T018 [US2] apps/web/src/pages/attendance/model/history-query.ts, attendance-status.ts에 생성 infinite 옵션·검증·병합·배지 변환을 구현한다.
+- [x] T019 [US2] apps/web/src/pages/attendance/ui/attendance-page.test.tsx에 초기·후속·재조회 오류, 빈 페이지, 무한 스크롤 중복 방지, 결석 9/10 경계를 추가한다.
+- [x] T020 [US2] apps/web/src/pages/attendance/ui/attendance-page.tsx, attendance-page.css.ts에 실제 조회·무한 스크롤·요약·배지·독립 경고와 재시도를 구현한다.
+- [x] T021 [US2] apps/web/stackflow/src/stack.tsx, activities/activities.tsx와 apps/web/src/pages/attendance/index.ts에서 목업 mode·props를 정리하고 stack.test.tsx로 기존 URL·MY fallback을 검증한다.
+- [x] T022 [US2] apps/web/src/mocks/member-attendance-handlers.ts, browser.ts에 attendanceState 정상·빈 결과·전체 배지·경고·추가 오류 시나리오를 연결한다.
+- [x] T023 [US2] docs/web-routing.md의 내역 상태 설명을 실제 조회 기준으로 갱신하고 specs/018-my-attendance/validation.md에 check/build·화면·변경량·4단계 리뷰를 기록한다.
 
 ## 5단계 — US3 계정 격리·통합 (P1)
 

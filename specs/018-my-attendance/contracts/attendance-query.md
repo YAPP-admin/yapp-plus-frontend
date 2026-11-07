@@ -38,7 +38,7 @@ responseValidator의 반환값은 SDK에서 버려지므로 변환 용도로 사
 - useLoadMoreObserver의 기본 IntersectionObserver로 목록 끝 요소를 관찰한다. 화면 활성·hasNextPage·조회 중 아님·오류 없음일 때만 fetchNextPage를 호출한다.
 - 화면 숨김·이탈 시 observer를 정리한다. 전체 재조회와 다음 페이지 요청이 겹치지 않게 isFetching을 확인한다.
 - 다음 페이지 실패 시 기존 목록과 재시도를 유지한다. 자동 요청은 중단하고 재시도 성공 후 다시 허용한다.
-- 잘못된 cursor 오류는 추가 조회 오류로 표시한다. 처음부터 다시 불러오는 동작도 제공하며 query를 첫 페이지부터 초기화한다.
+- 추가 조회 실패는 같은 페이지 재시도로 복구하며 전체 목록 초기화 버튼은 제공하지 않는다.
 - 초기 실패는 화면 오류, 재조회 실패는 이전 목록+안내, 모든 병합 항목이 없고 nextCursor도 null이면 빈 화면이다.
 
 ## 상태 매핑
@@ -67,3 +67,6 @@ MSW 시나리오는 정상·빈 결과·미대상·지연·오류·추가 조회
 내역은 useSuspenseInfiniteQuery, 결석 경고는 useSuspenseQuery로 구독하고 각각 독립된
 Suspense·ErrorBoundary를 둔다. 재조회 오류는 기존 data와 함께 표시한다. 내역 조회는
 오류 code를 분류하지 않으므로 kyOptions.throwHttpErrors를 별도로 덮어쓰지 않는다.
+
+초기 내역 로딩은 SEED Skeleton, 추가 페이지 로딩은 불확정 ProgressCircle을 표시한다.
+점수 경고와 내역의 조회 경계는 형제로 배치해 내역 로딩·실패가 점수 경고를 가리지 않는다.
