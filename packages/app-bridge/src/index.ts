@@ -70,10 +70,14 @@ export type AuthFieldError = Readonly<{
   code: 'REQUIRED' | 'INVALID_FORMAT' | 'TOO_LONG' | 'ALREADY_EXISTS';
 }>;
 
+/** 이름 오류는 인증 실패로 처리하지 않고 미지원 값으로 정규화합니다. */
+export const sessionNameSchema = z.string().trim().min(1).optional().catch(undefined);
+
 export type AuthSession = Readonly<{
   accessToken: string;
   expiresAt: number;
   userId: number;
+  name?: string;
   sessionId: string;
   tokenVersion: number;
 }>;

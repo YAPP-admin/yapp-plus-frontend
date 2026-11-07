@@ -25,7 +25,7 @@ vi.mock('./storage', () => ({ authStorage: storage }));
 
 const signedInResponse = (version: number): AuthenticationResponse => ({
   result: 'SIGNED_IN',
-  user: { id: 7, name: '테스트 사용자', phoneNumber: '+821012345678' },
+  user: { id: 7, name: '  테스트 사용자  ', phoneNumber: '+821012345678' },
   session: {
     accessToken: `access-${version}`,
     refreshToken: `refresh-${version}`,
@@ -101,11 +101,18 @@ describe('AuthActions', () => {
 
     const result = await actions.signIn({ provider: 'google' });
 
-    expect(result).toMatchObject({ status: 'SIGNED_IN', session: { accessToken: 'access-1' } });
+    expect(result).toMatchObject({
+      status: 'SIGNED_IN',
+      session: { accessToken: 'access-1', name: '테스트 사용자' },
+    });
     expect(runtime.authenticateGoogle).toHaveBeenCalledWith({
       body: { idToken: 'google-id-token', nonce: 'raw-nonce' },
     });
-    expect(storage.setSession).toHaveBeenCalledWith({ refreshToken: 'refresh-1', userId: 7 });
+    expect(storage.setSession).toHaveBeenCalledWith({
+      refreshToken: 'refresh-1',
+      userId: 7,
+      name: '테스트 사용자',
+    });
   });
 
   it('가입 필요 응답을 보관하고 전화번호를 서버 전송 직전에 E.164로 변환한다', async () => {
@@ -120,7 +127,7 @@ describe('AuthActions', () => {
     });
     await expect(
       actions.completeSignup({ name: '테스트 사용자', phoneNumber: '010-1234-5678' }),
-    ).resolves.toMatchObject({ status: 'SIGNED_IN' });
+    ).resolves.toMatchObject({ status: 'SIGNED_IN', session: { name: '테스트 사용자' } });
 
     expect(runtime.register).toHaveBeenCalledWith({
       body: {
@@ -441,7 +448,7 @@ describe('AuthActions', () => {
     http.mockResolvedValueOnce(Response.json({ ...signedInResponse(2), user: null }));
     await expect(actions.refreshSession(session)).resolves.toMatchObject({
       status: 'SIGNED_IN',
-      session: { userId: 7, accessToken: 'access-2', tokenVersion: 2 },
+      session: { userId: 7, accessToken: 'access-2', tokenVersion: 2, name: '테스트 사용자' },
     });
   });
 
@@ -467,10 +474,10 @@ describe('AuthActions', () => {
     const restarted = new AuthActions(runtime);
     await expect(restarted.getSession()).resolves.toMatchObject({
       status: 'SIGNED_IN',
-      session: { userId: 7, accessToken: 'access-3' },
+      session: { userId: 7, accessToken: 'access-3', name: '테스트 사용자' },
     });
     expect(runtime.renew).toHaveBeenCalledWith({ body: { refreshToken: 'refresh-2' } });
-    expect(persisted).toEqual({ refreshToken: 'refresh-3', userId: 7 });
+    expect(persisted).toEqual({ refreshToken: 'refresh-3', userId: 7, name: '테스트 사용자' });
   });
 
   it('로그인은 사용자 정보가 없으면 토큰을 저장하지 않는다', async () => {

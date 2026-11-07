@@ -1,4 +1,5 @@
 /** API 자격을 검증하고 native 세션 저장에 필요한 값으로 변환합니다. */
+import { sessionNameSchema } from '@yapp-plus/app-bridge';
 import type { AuthenticationResponse } from '@yapp-plus/api/generated';
 import type { SessionCredentials, SessionTokens } from './session';
 
@@ -33,5 +34,5 @@ export const toCredentials = (response: AuthenticationResponse): SessionCredenti
   if (!tokens || !response.user || !Number.isSafeInteger(response.user.id)) {
     return undefined;
   }
-  return { ...tokens, userId: response.user.id };
+  return { ...tokens, userId: response.user.id, name: sessionNameSchema.parse(response.user.name) };
 };
