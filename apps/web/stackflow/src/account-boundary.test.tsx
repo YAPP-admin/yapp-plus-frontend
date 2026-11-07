@@ -49,12 +49,13 @@ vi.mock('@/features/auth/model/native-auth', () => ({
   getNativeSession: () => bridge.getSession(),
 }));
 const context = { platform: 'ios' as const, reducedMotion: true };
-const session = (userId: number, tokenVersion = 1): AuthResult => ({
+const session = (userId: number, tokenVersion = 1, name?: string): AuthResult => ({
   status: 'SIGNED_IN',
   session: {
     userId,
     sessionId: `session-${userId}`,
     tokenVersion,
+    name,
     accessToken: 'test',
     expiresAt: 999999,
   },
@@ -240,3 +241,17 @@ it.each(['/attendance/code', '/attendance/report', '/team-attendance/guide'])(
     await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
   },
 );
+
+it('이름 없는 새 계정으로 전환하면 MY의 이전 이름이 제거된다', async () => {
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  await apply(client, session(1, 1, '가상 회원 A'));
+  window.history.replaceState(null, '', '/my');
+  const view = mount(client);
+  expect(await screen.findByText('가상 회원 A')).toBeVisible();
+  expect(await screen.findByText('92점')).toBeVisible();
+  await act(() => apply(client, session(2)));
+  await waitFor(() => expect(screen.queryByText('가상 회원 A')).not.toBeInTheDocument());
+  expect(screen.getByRole('region', { name: '프로필 및 출석 현황' })).toHaveTextContent('—');
+  view.unmount();
+  client.clear();
+});
