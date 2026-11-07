@@ -54,13 +54,10 @@ type LocationSample = {
 type LocationErrorCode =
   | 'PERMISSION_DENIED' // 위치 권한 미허용. canAskAgain으로 재요청/설정 안내를 구분.
   | 'SERVICES_DISABLED' // 기기 위치 서비스가 꺼져 있어 측정할 수 없음.
-  | 'TIMEOUT' // 네이티브 측정 15초 또는 전체 요청 150초 제한을 초과함.
+  | 'TIMEOUT' // 위치 측정 응답 대기 15초를 초과함.
   | 'BUSY' // 기존 위치 요청이나 권한 팝업이 진행 중이라 새 요청을 시작하지 않음.
-  | 'APP_INACTIVE' // 요청 시작 시 앱이 active가 아니거나 측정 중 background로 전환됨.
-  | 'LOCATION_UNAVAILABLE' // OS가 현재 위치를 취득하지 못함.
-  | 'INVALID_RESPONSE' // 좌표 범위·필드 타입 등 응답 데이터가 계약을 충족하지 못함.
-  | 'BRIDGE_UNAVAILABLE' // 네이티브 브리지가 없거나 브리지 통신·응답 대기에 실패함.
-  | 'SETTINGS_UNAVAILABLE'; // 앱 설정을 여는 실행 요청에 실패함.
+  | 'APP_INACTIVE' // 시작·권한 확인 후·위치 반환 시 앱이 active가 아님.
+  | 'LOCATION_UNAVAILABLE'; // 위치 취득·응답 검증·브리지 통신·설정 실행 실패.
 
 /** RPC 실패 결과. ERROR는 요청 실패를 뜻하며 출석 거절을 뜻하지 않는다. */
 type LocationFailure =
@@ -96,7 +93,7 @@ type OpenAppSettingsResult = { status: 'SUCCESS' } | LocationFailure;
 - accuracy는 기기가 추정한 수평 위치 오차 반경이며, 사용자가 지정하는 수치나 출석 허용 반경이 아니다. 유효한 값은 크기와 관계없이 전달하고 null도 임의의 수치로 대체하지 않는다.
 - 후속 출석 API의 허용 반경은 100m를 예정 기준으로 둔다. accuracy를 더해 허용 반경을 늘리지 않는다. 오차가 크거나 null일 때의 재측정·출석 판정 기준은 후속 API 작업에서 정하며 이 RPC에 추가하지 않는다.
 - Android fine/coarse, iOS full/reduced를 precise/approximate로 매핑한다. OS 정보가 없거나 권한이 없으면 unknown이다. 오차로 정밀 권한을 추정하지 않는다.
-- 네이티브 변환 시 유효성을 검증하고 웹 수신 경계에서도 스키마를 검증한다. 잘못된 응답은 INVALID_RESPONSE이며 원문 오류·추가 OS 필드는 노출하지 않는다.
+- 네이티브 변환 시 유효성을 검증하고 웹 수신 경계에서도 스키마를 검증한다. 잘못된 응답은 LOCATION_UNAVAILABLE이며 원문 오류·추가 OS 필드는 노출하지 않는다.
 - 새 측정 시작 이전 timestamp의 표본은 무시하고 남은 제한 시간 동안 기다린다. 마지막 알려진 위치 API나 이전 요청의 결과를 사용하지 않는다.
 
 ## 요청 처리와 오류
@@ -104,22 +101,23 @@ type OpenAppSettingsResult = { status: 'SUCCESS' } | LocationFailure;
 1. 위치 요청이 이미 진행 중이면 BUSY다. 앱이 active가 아니면 APP_INACTIVE다.
 2. 권한을 조회하고 granted가 아니면서 canAskAgain이면 foreground 권한을 요청한다. 미허용이면 PERMISSION_DENIED다.
 3. 권한 확인 뒤 위치 서비스가 꺼져 있으면 SERVICES_DISABLED다. 권한 조회 RPC는 이 경우에도 servicesEnabled=false로 성공할 수 있다.
-4. Accuracy.High로 단발 수집을 시작한다. 측정 시작부터 15초 이내 첫 유효 표본을 반환하거나 TIMEOUT으로 종료한다.
-5. 잘못된 표본은 INVALID_RESPONSE, OS 취득 실패는 LOCATION_UNAVAILABLE로 종료한다. background 전환은 APP_INACTIVE다.
-6. 모든 종료 경로에서 구독·타이머·AppState listener를 정리한다. 종료는 한 번만 수행하며 지연 callback과 구독 생성을 무효화한다.
+4. getCurrentPositionAsync에 Accuracy.High를 지정한다. 측정 응답을 15초 대기하고 초과 시 TIMEOUT이다.
+5. 잘못된 표본·측정 시작 이전 표본·OS 취득 실패는 LOCATION_UNAVAILABLE다. 권한 확인 후와 위치 반환 시 active가 아니면 APP_INACTIVE다.
+6. 응답 종료 시 타이머와 중복 요청 잠금을 해제한다. 구독·AppState listener·전체 150초 타이머는 사용하지 않는다.
 
-권한 선택을 포함한 네이티브 요청의 전체 방어 제한은 150초다. 측정 15초 제한과 별도로 적용하며 전체 제한이 먼저 끝나면 TIMEOUT이다.
-이 제한은 기존 180초 브리지 전송 제한보다 먼저 종료하기 위한 기본값이다. 종료 뒤 권한 팝업이 응답해도 측정을 시작하지 않는다.
-중복 요청 잠금은 기존 권한 팝업이 실제 응답하기 전까지 유지해 팝업 중복을 방지하고, 이후 요청은 새 권한 상태를 읽는다.
+권한 선택 대기에는 별도 제한을 두지 않으며 팝업 응답 전에는 BUSY로 중복 요청을 막는다.
+기존 브리지의 180초 대기가 먼저 끝나도 OS 팝업은 닫히지 않으며, 이후 승인되면 네이티브 측정은 진행될 수 있다.
+단발 API는 취소할 수 없으므로 timeout 뒤 OS 측정이 남을 수 있다. 재시도는 허용하며 이전 요청의 늦은 성공·실패는 무시한다.
+앱 상태 전환을 감시하지 않으므로 잠시 background에 갔다가 결과 반환 전에 복귀하면 정상 결과를 받을 수 있다.
 앱 설정 열기는 Linking.openSettings의 성공·실패를 반환한다. 복귀 감지·자동 재요청·권한 허용 성공을 뜻하지 않는다.
 
 ## 웹 호출 도우미
 
 `@yapp-plus/app-bridge/web`에서 RPC와 같은 이름의 도우미 세 개를 공개한다.
 SSR·일반 브라우저에서는 호출자가 위치 동작을 실행하지 않고 앱 이용 안내를 제공한다.
-도우미가 직접 잘못 호출되면 BRIDGE_UNAVAILABLE로 처리한다.
+도우미가 직접 잘못 호출되면 LOCATION_UNAVAILABLE로 처리한다.
 출시 전 앱과 웹을 함께 갱신하므로 구버전 메서드 지원 검사·별도 준비 polling·fallback은 추가하지 않는다.
-위치 RPC의 브리지 timeout·통신 예외는 BRIDGE_UNAVAILABLE로 변환하며 네이티브 TIMEOUT과 구분한다.
+위치 RPC의 브리지 timeout·통신 예외는 LOCATION_UNAVAILABLE로 변환하며 네이티브 TIMEOUT과 구분한다.
 예상한 실패를 예외로 던지지 않는다. 기존 인증 RPC의 timeout·오류 정책은 변경하지 않는다.
 
 개발 도구는 권한·정밀 수준·성공/오류 코드만 표시한다. 좌표와 측정 시각 원문을 DOM·콘솔·로그에 남기지 않는다.

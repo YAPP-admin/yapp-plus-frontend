@@ -27,13 +27,10 @@ export const locationSampleSchema = z.object({
 const locationErrorCodeSchema = z.enum([
   'PERMISSION_DENIED', // 위치 권한 미허용. 재요청 가능 여부를 함께 전달한다.
   'SERVICES_DISABLED', // 기기 위치 서비스가 꺼져 있음.
-  'TIMEOUT', // 네이티브 측정 또는 전체 요청 제한 초과.
+  'TIMEOUT', // 위치 측정 응답 대기 15초 초과.
   'BUSY', // 기존 위치 요청이나 권한 팝업이 진행 중.
-  'APP_INACTIVE', // 앱이 active가 아니거나 측정 중 background로 전환됨.
-  'LOCATION_UNAVAILABLE', // OS가 위치를 취득하지 못함.
-  'INVALID_RESPONSE', // 응답 필드가 계약을 충족하지 못함.
-  'BRIDGE_UNAVAILABLE', // 브리지 부재 또는 통신·응답 대기 실패.
-  'SETTINGS_UNAVAILABLE', // 앱 설정 실행 요청 실패.
+  'APP_INACTIVE', // 시작·권한 확인 후·위치 반환 시 앱이 active가 아님.
+  'LOCATION_UNAVAILABLE', // 위치 취득·응답 검증·브리지 통신·설정 실행 실패.
 ]);
 
 /** ERROR는 요청 실패이며 출석 거절을 뜻하지 않는다. 원문 오류 필드는 제거한다. */

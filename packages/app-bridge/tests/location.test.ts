@@ -68,8 +68,8 @@ describe('위치 브리지 수신 계약', () => {
       code: 'TIMEOUT',
     });
     expect(
-      openAppSettingsResultSchema.parse({ status: 'ERROR', code: 'SETTINGS_UNAVAILABLE' }),
-    ).toEqual({ status: 'ERROR', code: 'SETTINGS_UNAVAILABLE' });
+      openAppSettingsResultSchema.parse({ status: 'ERROR', code: 'LOCATION_UNAVAILABLE' }),
+    ).toEqual({ status: 'ERROR', code: 'LOCATION_UNAVAILABLE' });
     expect(openAppSettingsResultSchema.parse({ status: 'SUCCESS' })).toEqual({ status: 'SUCCESS' });
   });
 
