@@ -13,8 +13,10 @@
 
 ## 2단계 — 공용 기반
 
+2-1에서 T006의 타입·스키마·공개 export를 완료했다. AppBridgeState RPC 등록은 2-2 네이티브 연결 때 완료한다.
+
 - [ ] T006 `packages/app-bridge/src/location.ts`에 결과 타입·Zod 스키마를 추가하고 `src/index.ts`에서 공개 및 AppBridgeState RPC를 선언한다.
-- [ ] T007 `packages/app-bridge/tests/location.test.ts`에서 유효 값·경계·잘못된 응답을 검증한다.
+- [x] T007 `packages/app-bridge/tests/location.test.ts`에서 유효 값·경계·잘못된 응답을 검증한다.
 - [ ] T008 `apps/mobile/package.json`, `pnpm-lock.yaml`, `apps/mobile/app.config.ts`에 Expo 호환 의존성·foreground 설정·한국어 문구·앱 버전 1.0.1을 반영한다.
 
 ## 2단계 — US1 단발 위치 전달 (P1)

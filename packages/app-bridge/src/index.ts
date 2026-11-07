@@ -1,6 +1,22 @@
 import type { BridgeStore } from '@webview-bridge/web';
 import { z } from 'zod';
 
+export {
+  locationPermissionSchema,
+  locationSampleSchema,
+  locationPermissionResultSchema,
+  locationResultSchema,
+  openAppSettingsResultSchema,
+  type LocationPrecision,
+  type LocationPermission,
+  type LocationSample,
+  type LocationErrorCode,
+  type LocationFailure,
+  type LocationPermissionResult,
+  type LocationResult,
+  type OpenAppSettingsResult,
+} from './location';
+
 /** WebView와 native가 공유하는 브리지 타입·검증·상수 계약입니다. */
 
 export const YAPP_PLUS_WEBVIEW_USER_AGENT_TOKEN = 'YAPPPlusWebView';
