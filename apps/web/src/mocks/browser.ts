@@ -1,4 +1,5 @@
 import { createSessionHandlers } from './session-handlers';
+import { createMemberAttendanceHandlers } from './member-attendance-handlers';
 import { client } from '@yapp-plus/api/generated';
 import { createApiMockHandlers, onUnhandledApiRequest } from '@yapp-plus/api/mocks';
 import { setupWorker } from 'msw/browser';
@@ -14,6 +15,10 @@ export function startMocking(): Promise<void> {
     }
 
     const worker = setupWorker(
+      ...createMemberAttendanceHandlers(
+        baseUrl,
+        new URLSearchParams(window.location.search).get('myState'),
+      ),
       ...createSessionHandlers(
         baseUrl,
         new URLSearchParams(window.location.search).get('scheduleState'),
