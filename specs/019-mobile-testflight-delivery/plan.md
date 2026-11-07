@@ -1,10 +1,13 @@
 # 구현 계획: main 자동 OTA와 수동 로컬 빌드
 
 **이슈**: [#367](https://github.com/YAPP-admin/yapp-plus-frontend/issues/367) | **명세**: [spec.md](spec.md)
-**브랜치**: `DongjaJ/mobile-delivery-report` | **예정 base**: `DongjaJ/mobile-delivery-policy`
+**브랜치**: `DongjaJ/mobile-local-build` | **예정 base**: `DongjaJ/mobile-delivery-report`
+
+전체 연결 관계와 구현 상태는 [배포 시각화](overview.md)를 참고한다.
 
 ## 현재 구현
 
+- PR의 base 브랜치 필터를 두지 않아 종속 PR도 검사한다. push CI는 main에만 실행한다.
 - 모든 PR에서 네이티브 검사를 실행한다. Turbo affected·경로 필터·Verify 완료 대기 조건은 사용하지 않는다.
 - Expo Doctor도 CI마다 실행하며 경로 필터용 pull-requests 권한은 제거한다.
 - 비밀 없는 Linux/macOS job이 base/merge의 공식 Expo 지문을 직접 계산한다. 이전 지문 캐시에 의존하지 않는다.
@@ -23,7 +26,7 @@ CI의 Mobile native compatibility를 필수 검사로 설정하고 main 직접 p
 
 ## 다음 단계와 복구
 
-현재 코드 리뷰 후 원격 CI·실제 OTA를 검증한다. 그 다음 GitHub macOS 수동 local build·IPA 제출을 연결한다.
+PR 검사·자동 OTA 코드 리뷰 후 사용자가 수동 local build·IPA 제출 구현 진행을 승인했다. 원격 CI·실제 OTA 검증은 별도로 남아 있다.
 Xcode·CocoaPods·fastlane·서명 준비는 실제 runner에서 검증하며 확인 전 준비 완료로 표시하지 않는다.
 복구는 자동 workflow 비활성화 → 실행·대기 종료 → 공식 rollback → 확인 → 명시적 재개 순서다.
 명령과 운영 절차는 [모바일 README](../../apps/mobile/README.md)에 둔다.
@@ -32,3 +35,16 @@ Xcode·CocoaPods·fastlane·서명 준비는 실제 runner에서 검증하며 �
 
 사용자가 설치 확인 게이트와 자동 빌드 분기를 제거하는 정책 변경을 승인했다. 로컬 빌드와 appVersion은 유지한다.
 기본 check·build·expo:doctor를 실행하고 캐시와 새 실행을 구분한다. 각 리뷰는 800줄 미만으로 분리한다.
+
+## 수동 빌드·제출 구현
+
+mobile-manual.yml 하나에서 build/submit을 수동 선택한다. workflow는 main에서만 실행한다.
+build는 실행 시 main SHA에 성공한 push CI가 있는지 GitHub API로 확인하고 공식 local build를 호출한다.
+표준 macos-26 runner에서 Xcode 26.6, Ruby 3.4.12, CocoaPods 1.17.0, fastlane 2.241.2를 확인한다.
+이 버전은 공식 runner 이미지 문서의 제공 목록 기준이며 실제 실행 검증 전 준비 완료로 간주하지 않는다.
+IPA와 SHA-256 파일만 공식 artifact Action으로 30일 보관한다. 이름에는 실행 회차를 넣어 덮어쓰지 않는다.
+submit은 build_run_id와 build_attempt를 받아 해당 회차의 성공·main·workflow 출처를 확인한다.
+공식 download-artifact로 지정 IPA를 받고 checksum을 대조한 뒤 빌드 소스의 testflight 제출 프로필로 submit --path를 실행한다.
+자동 OTA와 같은 concurrency 그룹을 사용한다. 별도 JS·배포 상태 파일·빌드 검색 시스템은 만들지 않는다.
+Expo의 원격 서명 자격 증명·원격 build number·제출 API 키를 사전에 준비해야 한다.
+실패 시 자동 재시도하지 않고 Actions·EAS·App Store Connect 결과를 확인한 뒤 운영자가 재실행한다.

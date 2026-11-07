@@ -102,6 +102,8 @@ mise exec -- pnpm dlx eas-cli@27.4.1 submit \
 
 ## main 자동 OTA와 수동 로컬 빌드
 
+[배포 흐름·복구 흐름·브랜치별 진행 상태](../../specs/019-mobile-testflight-delivery/overview.md)를 Mermaid 다이어그램으로 확인할 수 있다.
+
 main push의 CI 성공 후 `mobile-delivery.yml`이 iOS `testflight` 채널로 OTA를 게시한다.
 Expo 공식 Action이 고정 EAS CLI를 설치·인증한다. 저장소의 `EXPO_TOKEN`을 준비해야 한다.
 PR의 `Mobile native compatibility` 검사를 필수 검사로 설정하고 main 직접 push를 제한한다.
@@ -116,7 +118,21 @@ mise exec -- pnpm dlx eas-cli@27.4.1 submit --platform ios --profile testflight 
 ```
 
 이 명령은 macOS의 Xcode·CocoaPods·fastlane과 Apple 서명 준비가 필요하다.
-GitHub macOS에서 같은 명령을 수동 실행하는 workflow는 다음 리뷰 단계에서 연결한다.
+GitHub에서는 **Actions → Mobile TestFlight manual → Run workflow**에서 branch `main`을 선택한다.
+
+1. `operation=build`: 선택된 main SHA의 push CI가 성공했을 때 macOS 로컬 빌드를 실행한다.
+2. 성공한 실행의 Summary에서 실행 ID·회차와 IPA를 확인한다. artifact는 30일 보관한다.
+3. 새 실행에서 `operation=submit`을 선택하고 `build_run_id`와 `build_attempt`에 해당 값을 입력한다.
+4. 해당 회차의 성공·main 출처·checksum이 확인된 IPA만 제출한다. TestFlight 처리와 설치 여부는 별도 확인한다.
+
+표준 `macos-26` runner에서 Xcode 26.6·Ruby 3.4.12·CocoaPods 1.17.0·fastlane 2.241.2를 확인한다.
+이미지 갱신으로 버전이 달라지면 검사에서 실패하므로 workflow의 도구 버전을 검토한다.
+EAS에 iOS 배포 인증서·프로비저닝 프로필·원격 build number·제출용 App Store Connect API 키를
+사전에 준비하고 GitHub에 `EXPO_TOKEN`을 제공해야 한다. 비밀 파일을 artifact에 추가하지 않는다.
+공개 저장소의 artifact로 IPA가 공개되므로 앱에 비밀을 포함하지 않는다. 서명 키는 업로드하지 않는다.
+artifact가 만료되면 새 build를 실행한다. 빌드 재실행은 새 build number를 사용할 수 있으며,
+재실행 시 artifact 이름의 회차도 증가하므로 제출할 회차를 다시 확인한다.
+자동 OTA와 수동 작업은 같은 concurrency 그룹을 사용한다. 대기 실행이 취소되면 Actions 결과를 확인한다.
 재실행하면 같은 SHA도 다시 게시될 수 있으므로 실패 시 EAS 대시보드에서 실제 게시 결과를 먼저 확인한다.
 문제가 있으면 GitHub에서 자동 OTA workflow를 비활성화하고 실행·대기 작업 종료를 확인한 뒤,
 `eas update:rollback`으로 같은 runtime의 정상 업데이트 또는 내장 업데이트로 복구한다.

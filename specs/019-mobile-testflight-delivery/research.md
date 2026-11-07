@@ -62,3 +62,13 @@ main 배포에는 마지막 실제 반영 SHA와 후보 SHA를 명시한다. 전
 [공식 PR Preview 예제](https://docs.expo.dev/eas-update/github-actions/)는 Expo Action으로 CLI 설치·인증 후 preview Action으로 `eas update --auto`와 QR 댓글을 실행한다.
 [공식 fingerprint Action 소스](https://github.com/expo/expo-github-action/blob/main/src/fingerprint/index.ts)는 현재 지문만 계산하고 이전 지문은 SQLite 캐시 DB에서 조회한다. 이전 기록이 없으면 null이므로 base를 직접 계산하는 현재 검사와 다르다.
 [continuous-deploy-fingerprint](https://github.com/expo/expo-github-action/blob/main/continuous-deploy-fingerprint/action.yml)는 EAS Build와 Update 자동 배포용이며 로컬 빌드 선택을 제공하지 않는다.
+
+## 수동 로컬 빌드 runner와 artifact
+
+[GitHub 표준 runner 목록](https://docs.github.com/en/actions/reference/runners/github-hosted-runners)과
+[macos-26 이미지](https://github.com/actions/runner-images/blob/main/images/macos/macos-26-arm64-Readme.md)를 확인했다.
+안정 이미지 macos-26의 Xcode 26.6·Ruby 3.4.12·CocoaPods 1.17.0·fastlane 2.241.2를 선택했다.
+React Native의 설치된 helpers.rb 최소 Xcode는 16.1이다. 이 확인은 실제 앱 빌드 성공을 대신하지 않는다.
+[local build](https://docs.expo.dev/build-reference/local-builds/)의 도구 버전 제약 때문에 runner에서 버전을 검사한다.
+공식 upload-artifact v4.6.2·download-artifact v4.3.0을 SHA로 고정하고 실행 회차별 IPA와 checksum만 전달한다.
+[Expo Submit](https://docs.expo.dev/submit/ios/)은 Linux에서도 실행할 수 있으므로 제출 job은 Ubuntu를 사용한다.

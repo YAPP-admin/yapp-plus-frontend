@@ -1,11 +1,8 @@
 name: CI
 
 on:
+  # 종속 PR도 검사하도록 병합 대상 브랜치를 제한하지 않습니다.
   pull_request:
-    branches:
-      - main
-      - 'stackflow/**'
-      - DongjaJ/mobile-delivery-policy
   push:
     branches:
       - main

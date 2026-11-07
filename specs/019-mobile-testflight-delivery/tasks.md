@@ -8,7 +8,7 @@
 - [x] S004 앱 README에 수동 local build·지정 IPA 제출·중지·복구 절차를 기록한다.
 - [x] S005 현재 리뷰의 check·build·doctor·workflow 검증 결과를 제출하고 사용자 리뷰를 받는다.
 - [ ] S006 원격 Linux/macOS·fork CI, EXPO_TOKEN·필수 검사 설정, 실제 TestFlight OTA를 검증한다.
-- [ ] S007 다음 리뷰에서 GitHub macOS 수동 빌드·IPA artifact·지정 IPA 제출을 연결한다.
+- [x] S007 GitHub macOS 수동 빌드·IPA artifact·지정 IPA 제출 workflow를 연결한다. 실제 실행 검증은 S008로 분리한다.
 - [ ] S008 실제 서명·설치·동일 runtime OTA·다른 runtime 미수신·rollback을 검증한다.
 
 실제 외부 실행·계정 설정과 미검증 동작은 완료로 표시하지 않는다. 다음 리뷰 단계는 사용자 확인 후 진행한다.

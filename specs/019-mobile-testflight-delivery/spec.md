@@ -31,7 +31,7 @@
 
 ## 범위와 도입 단계
 
-현재 리뷰는 PR 검사와 자동 OTA workflow 코드다. 실제 게시·원격 CI 검증은 아직 실행하지 않았다.
-다음 리뷰는 GitHub macOS 수동 빌드와 지정 IPA 제출이다. 로컬 명령과 복구 절차는 앱 README에 기록한다.
+PR 검사·자동 OTA 코드는 acccd4c8에 기록했다. 현재 리뷰는 GitHub macOS 수동 빌드와 지정 IPA 제출이다.
+실제 게시·원격 CI·서명 검증은 아직 실행하지 않았다. 로컬 명령과 복구 절차는 앱 README에 기록한다.
 설치 확인은 운영 점검으로 남지만 OTA 게시의 승인 조건은 아니다. 기준 파일·자동 버전별 상태 관리는 제거한다.
 Android·App Store 공개 배포·PR Preview는 후속 범위다. PR Preview 도입 시 공식 preview Action을 사용한다.
