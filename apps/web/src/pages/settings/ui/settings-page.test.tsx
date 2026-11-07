@@ -51,16 +51,16 @@ describe('SettingsPage', () => {
     expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument();
   });
 
-  it('브라우저에서는 Android와 같은 약관 문서를 새 탭으로 연다', () => {
+  it('브라우저에서는 공개 약관 문서를 새 탭으로 연다', () => {
     renderSettingsPage();
 
     expect(screen.getByRole('link', { name: '개인정보 처리 방침' })).toHaveAttribute(
       'href',
-      'https://app.notion.com/p/yapp-workspace/3db2106a0e8480899e28c3788ebeaa6f',
+      'https://yapp-workspace.notion.site/3db2106a0e8480899e28c3788ebeaa6f',
     );
     expect(screen.getByRole('link', { name: '이용 약관' })).toHaveAttribute(
       'href',
-      'https://app.notion.com/p/yapp-workspace/3db2106a0e84806f91f8d6c4ac97af5f',
+      'https://yapp-workspace.notion.site/3db2106a0e84806f91f8d6c4ac97af5f',
     );
 
     for (const link of screen.getAllByRole('link')) {
