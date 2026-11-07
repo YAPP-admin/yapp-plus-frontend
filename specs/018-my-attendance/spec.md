@@ -1,10 +1,10 @@
 # 기능 명세: 마이페이지·출석 내역 연동
 
-**브랜치**: `DongjaJ/my-page-attendance-api-plan`
+**브랜치**: `DongjaJ/my-page-api` (base: `DongjaJ/my-page-attendance-api-plan`)
 
 **작성일**: 2026-11-07
 
-**상태**: 2단계 구현 완료·리뷰 대기
+**상태**: 3단계 코드·자동 검증 완료·화면 검증 및 리뷰 대기
 
 **관련 이슈**: [#352](https://github.com/YAPP-admin/yapp-plus-frontend/issues/352)
 

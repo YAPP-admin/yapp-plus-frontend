@@ -1,8 +1,8 @@
 # 구현 계획: 마이페이지·출석 내역 연동
 
-**브랜치**: `DongjaJ/my-page-attendance-api-plan` | **작성일**: 2026-11-07
+**브랜치**: `DongjaJ/my-page-api` (base: `DongjaJ/my-page-attendance-api-plan`) | **작성일**: 2026-11-07
 
-**명세**: [spec.md](spec.md) | **상태**: 2단계 구현 완료·리뷰 대기
+**명세**: [spec.md](spec.md) | **상태**: 3단계 코드·자동 검증 완료·화면 검증 및 리뷰 대기
 
 ## 요약
 
@@ -43,9 +43,10 @@ HEAD와 fetch한 origin/main은 `4fc4cd837bc04df3d7c2c99152af5ce6ba68c744`다.
 - `apps/web/src/mocks`: 해당 조회의 시나리오 handler를 기존 browser/server에 등록한다. 생성 MSW helper를 사용한다.
 
 기존 auth `apiOptions`와 계정 경계를 사용한다. 이름을 query key나 계정 식별자에 추가하지 않는다.
-`useQuery`로 점수 영역을 독립 표시한다. 생성 `mineQueryKey`를 사용하고 `mine` SDK를
-throwOnError false로 호출해 HTTP status와 오류 code를 함께 판별한다. 두 정상 미대상 오류만
-null로 변환하며 두 화면이 같은 query key와 캐시 형태를 사용한다.
+점수 영역은 `useSuspenseQuery`·Suspense·ErrorBoundary로 초기 로딩·실패를 독립 표시한다.
+프로필·메뉴·규칙 다이얼로그는 경계 밖에 유지한다. 생성 `mineOptions`의 queryFn과 key를
+재사용하고 성공 응답 검증과 미대상 상태·사유 변환만 추가한다. HTTP status는 별도로 판별하지 않는다.
+두 화면이 같은 query key와 캐시 형태를 사용하고 재조회 실패는 이전 값과 안내를 표시한다.
 목록은 생성 `find5InfiniteOptions`와 `useInfiniteQuery`로 연결한다. 세부 계약은
 [조회 계약](contracts/attendance-query.md)과 [이름 계약](contracts/session-name.md)에 둔다.
 

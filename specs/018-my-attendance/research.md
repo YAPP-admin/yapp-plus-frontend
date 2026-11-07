@@ -23,16 +23,16 @@ refresh 응답의 user는 없을 수 있어 저장된 이름을 보존해야 한
 ## 조회와 화면 정책
 
 **결정**: 생성 query 옵션·기존 인증 client를 사용하고 점수 조회만 두 화면이 공유한다.
-**근거**: 이미 생성된 `mineQueryKey`·`mine`, `find5InfiniteOptions`, Zod·MSW가 있고 네이티브 401 복구가 연결되어 있다.
+**근거**: 이미 생성된 `mineOptions`, `find5InfiniteOptions`, Zod·MSW가 있고 네이티브 401 복구가 연결되어 있다.
 **대안**: 새 HTTP 래퍼·공용 API 패키지·페이지 간 import는 소비 범위를 불필요하게 넓힌다.
 
 생성 Zod의 int64는 bigint, 생성 TypeScript는 number다. 안전 범위를 검증한 뒤 number로 변환해
 조회 반환값과 생성 타입을 맞춘다. SDK는 responseValidator 반환값을 버리므로 내역은
 responseTransformer에서 검증·변환한 값을 반환하고 점수는 queryFn에서 parse 결과를 반환한다.
-생성 mineOptions는 오류 본문만 throw해 status를 잃는다. 점수만 mineQueryKey를 유지한 queryFn에서
-mine({ throwOnError: false, responseStyle: 'fields' })의 response.status와 error를 확인한다.
-생성 코드의 타입 단언·오류 무시를 소비 코드로 복제하지 않는다.
-점수는 `useQuery`, 내역은 `useInfiniteQuery`로 독립 상태를 표시해 일부 조회 실패가 페이지 전체를 막지 않는다.
+사용자 리뷰에 따라 생성 mineOptions의 queryFn·query key를 재사용하며 HTTP status와 code의
+중복 판별을 제거했다. 생성 SDK가 던진 오류 본문에서 미대상 code는 unavailable 상태와 reason으로 보존하고 나머지 오류는 원형대로 전파한다.
+점수는 `useSuspenseQuery`·Suspense·ErrorBoundary, 내역은 `useInfiniteQuery`로 독립 상태를 표시한다.
+규칙 다이얼로그는 경계 밖에 두어 로딩 완료로 닫히지 않으며 재조회 실패 시 이전 값을 유지한다.
 
 ## 페이지네이션과 경고
 
