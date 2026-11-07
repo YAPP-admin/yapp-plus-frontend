@@ -10,15 +10,15 @@
 - [x] T002 specs/019-member-notices/plan.md, data-model.md, contracts/member-notices.md에 구조·신뢰 경계·상태·복구를 정의한다.
 - [x] T003 specs/019-member-notices/quickstart.md, tasks.md, .context/member-notices-issue.md에 검증·작업·이슈 초안을 작성한다.
 - [x] T004 specs/019-member-notices/checklists/requirements.md, validation.md에 문서 정합성·품질 게이트·변경량을 기록한다.
-- [ ] T005 specs/019-member-notices/validation.md에 1단계 사용자 리뷰·다음 단계 진행 확인·이슈 생성 승인과 번호를 기록한 뒤 제품 구현을 시작한다.
+- [x] T005 specs/019-member-notices/validation.md에 1단계 사용자 리뷰·다음 단계 진행 확인·이슈 생성 승인과 번호를 기록한 뒤 제품 구현을 시작한다.
 
 ## 2단계 기반 — 조회 계약과 개발 응답
 
 독립 검증: UI 없이 생성 queryFn을 실제 MSW 응답에 연결해 검증과 single/infinite 캐시 분리를 확인한다.
 
-- [ ] T006 apps/web/src/features/member-notice/model/notice-queries.test.ts에 int64·날짜·cursor·필터·single/infinite key 검증을 작성한다.
-- [ ] T007 apps/web/src/features/member-notice/model/notice-queries.ts, notice-display.ts, index.ts에 목록 schema·생성 옵션·서울 날짜/유형 변환을 구현한다.
-- [ ] T008 apps/web/src/mocks/member-notice-handlers.ts, browser.ts, server.ts에 생성 helper 기반 목록 fixture·3페이지·빈 결과·실패를 등록하고 테스트 초기화를 연결한다.
+- [x] T006 apps/web/src/features/member-notice/model/notice-queries.test.ts에 int64·날짜·cursor·필터·single/infinite key 검증을 작성한다.
+- [x] T007 apps/web/src/features/member-notice/model/notice-queries.ts, notice-display.ts, index.ts에 목록 schema·생성 옵션·서울 날짜/유형 변환을 구현한다.
+- [x] T008 apps/web/src/mocks/member-notice-handlers.ts, browser.ts, server.ts에 생성 helper 기반 목록 fixture·3페이지·빈 결과·실패를 등록하고 테스트 초기화를 연결한다.
 
 ## 2단계 — US1 게시판 목록 (P1)
 

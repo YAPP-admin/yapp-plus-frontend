@@ -9,7 +9,7 @@
 - 이전 조사에서 받은 OpenAPI 원본의 SHA-256과 임시 생성물 diff 0줄을 다시 확인했다. 이 단계에서 서버 재배포 여부·실회원 조회·PUT을 새로 검증한 것은 아니다.
 - 읽기 전용 조사 검토의 5개 지적을 계약·작업에 반영했다: 강제 GET 복구, callback 격리, 무효 커서 초기화, URL 정규화 경계, 현재 주 필터.
 - 문서 교차 검토에서 발견한 오류 UI 이동의 의존 방향 문제를 보완했다. feature에는 탐색 비의존 콘텐츠만 두고 헤더·BackButton은 페이지에 유지한다.
-- 이슈 제목 제안: `feature: 회원 공지 조회와 읽음 저장 연동`. 담당자 제안: DongjaJ. 라벨·milestone 없음. 초안은 .context/member-notices-issue.md이며 원격 이슈는 생성하지 않았다.
+- 사용자 리뷰와 다음 단계 진행 승인을 받은 뒤 [#368](https://github.com/YAPP-admin/yapp-plus-frontend/issues/368) `feature: 회원 공지 조회와 읽음 저장 연동`을 생성했다. 담당자·라벨·milestone은 지정하지 않았다.
 
 ## 자동 검증
 
@@ -24,5 +24,23 @@
 ## 미실행·리뷰 상태
 
 - build·expo:doctor·화면·실서버·실기기 검증은 문서만 변경한 1단계 대상이 아니다. 이후 단계의 quickstart 시나리오로 남긴다.
-- T005는 사용자 리뷰·다음 단계 진행 확인과 이슈 생성 대기다. 제품 구현·commit·push·PR은 수행하지 않았다.
+- T005를 완료했다. 2단계 기반의 구현 결과는 별도 리뷰 대기이며 목록 UI와 다음 작업은 시작하지 않았다.
 - 이번 문서 검증만으로 본문 렌더링·읽음 경합·계정 격리가 구현 또는 검증됐다고 보지 않는다.
+
+## 2단계 기반 — 조회 계약과 개발 응답
+
+- 생성 `list1Options`와 `list1InfiniteOptions`를 그대로 감싼 query options에 `type` 필터를 추가했다. 응답 경계에서 postId·totalPostCount의 안전한 정수 범위와 양수/0 이상 제약, 비어 있지 않은 nextCursor를 검증한다.
+- 날짜는 공통 `koreanTimestamp`를 사용해 달력상 존재하지 않는 날짜도 거부하고, 표시 변환은 서울 시간대·공지 유형·D-day 형식을 담당한다.
+- 개발용 MSW handler에는 12개 fixture, 4개 단위 3페이지, 유형 필터, 빈 결과, 첫/다음 페이지 실패와 잘못된 커서 응답을 추가했다. browser/server 모두에 등록했다.
+- 회귀 테스트는 single/infinite query key 분리, 필터 전달, 다음 커서, int64·날짜·cursor·음수 count·0 ID 거부, 표시 변환을 확인한다.
+
+## 2단계 기반 자동 검증
+
+- 새 실행: `mise exec -- pnpm --filter @yapp-plus/web typecheck`, `mise exec -- pnpm --filter @yapp-plus/web lint`, `mise exec -- pnpm --filter @yapp-plus/web test -- src/features/member-notice/model/notice-queries.test.ts src/features/member-notice/model/notice-display.test.ts` 통과. 마지막 명령은 Vitest 설정상 web 전체 45 파일·300 테스트를 새로 실행했다.
+- 새 실행: `mise exec -- node --run check` 통과. format:check는 859개 파일을 새로 검사했고 web lint·typecheck·test는 cache miss로 실행했다.
+- Turbo 재사용: check의 나머지 lint/typecheck는 6/7, test는 5/6 패키지가 캐시를 재사용했다. 캐시 결과는 이번 변경의 신규 실행으로 보지 않는다.
+- `git diff --check` 통과. build·화면·실서버·실기기 검증은 이 기반 단계의 대상이 아니며, 목록 UI 단계에서 수행한다.
+
+## 2단계 기반 리뷰 상태
+
+- T006~~T008 완료. 목록 UI(T009~~T014), 홈, Markdown, 상세, 읽음 저장은 사용자 리뷰와 다음 단계 진행 확인 전 시작하지 않는다.
