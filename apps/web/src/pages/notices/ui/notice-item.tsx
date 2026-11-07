@@ -1,9 +1,9 @@
 'use client';
 
+import { HStack } from '@seed-design/react';
 import { ActivityLink } from '@/app/navigation/activity-link';
 import {
   assignmentChip,
-  chipRow,
   dateText,
   dDayChip,
   etcChip,
@@ -44,10 +44,10 @@ export function NoticeItem({ id, category, categoryLabel, title, date, dDay }: N
       className={item}
       aria-label={`${categoryLabel} 공지: ${title}`}
     >
-      <div className={chipRow}>
+      <HStack align="center" gap="x1_5" mb="x2">
         <span className={categoryChipClass}>{categoryLabel}</span>
         {dDay ? <span className={dDayChip}>{dDay}</span> : null}
-      </div>
+      </HStack>
       <h2 className={titleText}>{title}</h2>
       <time className={dateText}>{date}</time>
     </ActivityLink>

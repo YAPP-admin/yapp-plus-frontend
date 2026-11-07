@@ -30,18 +30,6 @@ export const titleText = style({
   margin: 0,
 });
 
-export const metaContainer = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '4px',
-});
-
-export const metaRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: '4px',
-});
-
 export const metaIcon = style({
   display: 'inline-flex',
   alignItems: 'center',

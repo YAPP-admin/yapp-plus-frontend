@@ -4,11 +4,11 @@ import { useSuspenseQuery } from '@tanstack/react-query';
 import { find4Options } from '@yapp-plus/api/generated';
 import { ActionButton } from '@yapp-plus/ui';
 import { Suspense } from 'react';
-import { List } from '@seed-design/react';
+import { List, VStack } from '@seed-design/react';
 import { useNativeAuthSession } from '@/features/auth';
 import { formatKoreanTime, koreanTimestamp } from '@/shared/lib/korean-date-time';
 import { scheduleSchema } from '../model/schedule-schema';
-import { container, content, list, srOnly } from './schedule-page.css';
+import { list, srOnly } from './schedule-page.css';
 import { ScheduleEmpty } from './schedule-empty';
 import { ScheduleItem } from './schedule-item';
 import { ScheduleErrorBoundary } from './schedule-error-boundary';
@@ -30,9 +30,9 @@ export function SchedulePage() {
     phase === 'SIGNED_IN' ||
     (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
   return (
-    <main className={container}>
+    <VStack as="main" width="full" maxWidth="480px" mx="auto" minHeight="100%" bg="bg.layerDefault">
       <h1 className={srOnly}>일정</h1>
-      <div className={content}>
+      <VStack width="full" pt="x2_5" px="x5" pb="x10">
         {canQuery ? (
           <ScheduleErrorBoundary>
             <Suspense fallback={<ScheduleLoading />}>
@@ -42,8 +42,8 @@ export function SchedulePage() {
         ) : (
           <output>일정은 YAPP+ 앱에 로그인한 후 확인할 수 있어요.</output>
         )}
-      </div>
-    </main>
+      </VStack>
+    </VStack>
   );
 }
 
