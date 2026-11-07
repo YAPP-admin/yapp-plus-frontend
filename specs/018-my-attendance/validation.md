@@ -172,3 +172,66 @@ Spec Kit extension 파일이 없어 before/after hook은 모두 적용 대상이
 - 오류 UI를 AttendanceQueryError 컴포넌트로 분리하고 useErrorBoundary의 resetBoundary를 사용한다. AttendanceQueryBoundary의 useCallback·fallbackRender는 제거했다.
 - 최종 check·build 성공: web lint/typecheck·272개 테스트·web build 새 실행, 나머지는 Turbo 캐시 재사용. `.context/stage4-commit-{check,build}.log`에 기록했다. 실서버·실기기·스크린 리더 검증은 미실행이며 5단계에 남긴다.
 - headless 모바일 6개 상태에서 3페이지 스크롤·재시도·MY 복귀를 새 실행해 통과했다. `.context/stage4-commit-browser.log`에 기록했다. 기능과 문서를 별도 커밋으로 분리하며 push·PR·5단계 구현은 수행하지 않는다.
+
+### 5단계 — 계정 격리·통합 자동화
+
+- 사용자 승인으로 `fe9c62b3`에서 `DongjaJ/my-attendance-integration`을 생성·전환했다. 실제 검토 base는 `DongjaJ/attendance-history-ui`다. commit·push·PR은 수행하지 않는다.
+- 생성 mineOptions·find5InfiniteOptions로 각각 최초 401 후 갱신·재시도, 이름 보존, 후속 요청의 새 토큰 사용을 검증했다. 계정 전환은 이전 두 조회를 취소하며 지연 응답이 도착해도 새 세션이나 캐시를 복구하지 않는다.
+- 실제 Stackflow+MY 테스트에서 이름 있는 계정에서 이름 없는 계정으로 전환하면 이전 이름을 제거하고 `—`를 표시한다. React Activity 숨김은 observer를 해제하고 복귀 시 목록 DOM·스크롤 값을 보존하며 다시 관찰한다. 이는 mock DOM 생명주기 검증이며 실제 WebView 스크롤 실측과 구분한다.
+- 기존 최초/추가/재조회 오류·계정 mutation 회귀와 함께 확인했다. 제품 코드·인증 정책·의존성 변경은 없으며 새 테스트만 제거하면 이번 단계 변경을 롤백할 수 있다.
+- 사전 headless Chromium에서 320×844·390×844, dark 선호·reduced motion 조건의 키보드 Enter 진입→3페이지→터치 MY 복귀를 확인했다. 두 폭 모두 가로 넘침이 없고 `/my` 복귀·기존 light-only 정책을 확인했다. `.context/stage5-browser.log`, `.context/stage5-{320,390}.png`에 근거를 보관했다.
+- 실제 서버의 검증 계정과 구버전/신규 앱 조합으로 로그인·재시작·계정 전환·401 복구는 실행하지 않았다. 실행 중 iOS 시뮬레이터는 확인했으나 이를 실제 기기 검증으로 간주하지 않는다. 스크린 리더·기기 safe-area도 미실행이다. T027–T029는 이 결과와 최종 출시 리뷰까지 남긴다.
+- 최종 check·build 성공: format·web lint/typecheck·web 42파일 277테스트·web build 새 실행, 다른 lint/typecheck 각 6개·test 4개·build 2개는 Turbo 캐시 재사용. 기존 청크 크기 경고만 유지된다. `.context/stage5-final-{check,build}.log`에 기록했다. 모바일 설정·의존성을 바꾸지 않아 expo:doctor는 실행하지 않았다.
+- base `fe9c62b3` 대비 +188/-5, 합계 193줄이다. 자동화 범위 T024–T026을 완료하고 실환경 검증 T027–T029는 미완료로 유지한다. 작업은 미커밋 상태다.
+
+### 5단계 — 네이티브 실행 시도
+
+- iOS 17.5 iPhone 15 Pro 시뮬레이터의 개발 빌드를 실제로 열어 확인했다. 연결 대상은 다른 워크스페이스의 Metro 8081이며 위치 브리지 개발 화면이 표시되어, 이번 변경의 검증 결과로 사용할 수 없다.
+- 이번 워크스페이스에서 Metro 8082·웹 3001을 API 모킹 없이 실행했지만 해당 빌드로 연결·조회 성공을 확인하지 못했다. 공유 시뮬레이터 사용을 확인하기 전에는 다른 작업의 연결을 변경하지 않는다.
+- 검증용 WebView 포트 변경은 원복하고 이번에 실행한 두 서버만 종료했다. 실제 서버 로그인·점수·내역·401 복구·네이티브 safe-area는 계속 미검증이며 T027–T029를 완료 처리하지 않는다.
+
+### 5단계 — 전용 시뮬레이터 연결 후 확인
+
+- 다른 세션 종료 후 사용자 승인으로 iPhone 15 Pro(iOS 17.5)를 Metro 8082에 연결했다. 이번 워크스페이스의 iOS 번들(1,581 모듈)이 실행됐고 웹은 API 모킹을 끈 3002 포트로 제공했다.
+- 실제 WebView에서 `로그인 상태를 확인하지 못했어요`와 `다시 시도`가 표시됐다. 마이페이지·출석 내역 조회 성공은 확인하지 못했으며, 이 화면만으로 서버 인증 실패나 원인을 확정하지 않는다.
+- 개발 런처의 접근성 버튼·주소 입력은 동작했지만 WebView 좌표 클릭은 도구의 `noWindowsAvailable` 오류로 실패했다. 사용자에게 복구 버튼 클릭을 요청했다. `.context/stage5-native-session-recovery.png`에 화면을 보관했다.
+- 재시도 결과를 확인하기 위해 검증 서버와 임시 WebView 개발 포트 3002를 유지한다. 검증 종료 시 포트는 3000으로 원복해야 하며 이 임시 변경은 커밋 대상이 아니다. T027–T029는 미완료다.
+
+### 네이티브 세션 복구 실패 원인 확인
+
+- 임시 진단 표시로 `manila:3002`, `ERROR / STORAGE`, `bridge=true`, `session=true`를 확인했다. 현재 워크스페이스 코드이며 브리지 메서드 연결 실패가 아니다.
+- 네이티브 로그에서 SecureStore의 기존 토큰 키 삭제 호출 `deleteValueWithKeyAsync`가 `필요한 권한이 존재하지 않습니다`로 실패하는 것을 확인했다. 토큰 값은 조회·출력하지 않았다.
+- 설치된 YAPP.app의 codesign 조회에서 entitlement가 출력되지 않았다. 기존 개발 바이너리의 Keychain 권한 문제를 해결한 빌드로 재검증해야 한다. 저장소 오류를 무시하거나 인증을 우회하지 않았다. 임시 진단 UI·로그 코드는 원복했다.
+
+### 네이티브 재빌드 후 저장소 복구 확인
+
+- 사용자 승인으로 현재 워크스페이스에서 Expo iOS prebuild·pod install·Xcode Debug simulator 빌드를 새로 실행했다. `CODE_SIGN_IDENTITY=-`, `CODE_SIGNING_ALLOWED=YES`로 빌드 성공 후 같은 앱 ID로 업데이트 설치했다. 앱 삭제나 Keychain 초기화는 하지 않았다.
+- 생성된 `YAPP.app-Simulated.xcent`에는 `FAKETEAMID.org.yapp.yappplus` 앱 식별자가 포함된다. 일반 codesign 출력의 entitlement만으로 시뮬레이터 권한을 단정할 수 없으므로 실제 실행 결과를 기준으로 확인했다.
+- 재설치 앱을 열어 이전 `ERROR / STORAGE` 복구 화면 대신 정상 로그인 화면에 도달했다. `.context/stage5-native-login.png`에 화면 근거를 저장했다. 실제 계정 점수·내역·세션 재시작은 사용자 테스트 계정 로그인 후 검증해야 한다.
+- `mise exec -- node --run expo:doctor`를 새로 실행해 20/20 검사를 통과했다. iOS 빌드 역시 새 실행이며 외부 의존성 다운로드·CocoaPods 캐시는 재사용했다. `.context/stage5-ios-{prebuild,pods,build}.log`, `.context/stage5-expo-doctor.log`에 기록했다. 기존 웹 check·build는 제품 코드 변경이 없어 반복하지 않았다.
+- 생성된 ios 디렉터리·빌드 산출물은 gitignored이며 의존성·운영 설정 변경은 없다. 테스트 계정 로그인을 위해 Metro 8082·웹 3002 및 임시 WebView 포트를 유지한다. 검증 종료 후 포트를 원복해야 한다. commit·push·PR은 수행하지 않았다.
+
+### 실제 로그인과 주간 세션 조회
+
+- 사용자 재시도에서 Apple SDK 성공 → 인증 API HTTP 200 → `SIGNED_IN`을 확인했다. 앞선 일시적 `SERVER` 결과의 원인은 재현되지 않아 확정하지 않는다. 인증 진단 코드는 원복했다.
+- 홈 조회 실패는 `NetworkError`였다. 검증 주소 `http://127.0.0.1:3002`의 CORS 사전 요청은 HTTP 403·허용 헤더 없음, `http://localhost:3002`는 HTTP 200·해당 origin 허용으로 확인됐다. 이는 검증 환경의 호스트 선택 문제다.
+- 임시 WebView 호스트를 localhost로 바꾸자 로그인 상태를 유지하며 홈에 `이번 주 예정된 세션이 없어요`가 표시됐다. 오류를 숨기거나 서버 계약을 변경하지 않았다. 임시 홈 진단 표시도 원복했다.
+- WebView 좌표 클릭은 계속 `noWindowsAvailable`로 실패해 사용자에게 MY 이동을 요청했다. 마이페이지·내역 실서버 검증은 계속 진행 중이다. 임시 포트·호스트 변경은 검증 종료 시 함께 원복한다.
+
+### MY 실제 계정 결과와 첫 진입 오류 보고
+
+- 사용자 보고: MY 첫 진입은 재시도 안내가 표시됐고 수동 재시도 후 표시됐다. 이는 기대 동작으로 간주하지 않으며 최초 실패의 HTTP 상태·오류가 확보되지 않아 원인을 확정하지 않는다.
+- 실제 화면에서 세션 이름과 점수·횟수 `—` 표시를 확인했다. 점수 query의 반환 사유는 `ATTENDANCE_SCORE_NOT_ELIGIBLE`이므로 현재 계정의 `—`는 명세에 따른 미대상 처리다. 점수가 있는 계정의 정상 표시까지 검증한 것은 아니다.
+- 진단용 query 상태 표시는 제거했다. 새 앱 실행에서 첫 요청 결과를 별도로 재현해야 하며 T027–T029는 미완료로 유지한다.
+
+### 시뮬레이터 재시작 후 첫 진입 재검증
+
+- 사용자 요청으로 Device Hub에서 iPhone 15 Pro를 재시작한 뒤 YAPP+ 앱과 이 워크스페이스의 Metro 8082를 다시 열었다. 저장 데이터 초기화·재로그인 없이 홈에 진입하고 주간 세션 없음이 표시됐다.
+- 이번에는 도구의 WebView 좌표 입력이 동작했다. MY 첫 진입에 재시도 안내 없이 이름·미대상 `—` 표시를 확인했다. 이전 첫 진입 오류는 이번 실행에서 재현되지 않았으나 최초 오류 원인 확정이나 영구 해결로 간주하지 않는다.
+- 출석 규칙 열기·확인 닫기, 출석 내역 첫 진입(총/남은 세션 0회·빈 내역), 뒤로가기 MY 복귀가 모두 동작했다. `.context/stage5-native-history-empty.png`에 개인정보 없는 내역 화면을 보관했다. 상태 표시줄·홈 인디케이터와 주요 콘텐츠 겹침은 관찰되지 않았다.
+- 실제 점수·내역이 있는 계정의 페이지 추가 조회, 구버전 앱, 계정 전환, 의도적 401 복구와 실제 스크린 리더는 미검증이다. 이번 실행은 실제 서버를 연결한 iOS 시뮬레이터 검증이며 실물 기기 검증은 아니다.
+
+### 검증 환경 정리
+
+- 검증용 Metro 8082·웹 3002만 종료하고 WebView 임시 포트·호스트 변경을 원복했다. 다른 워크스페이스 서버는 변경하지 않았다. 임시 진단 코드도 남아 있지 않다.
+- 구현과 현재 계정으로 가능한 실서버 시뮬레이터 확인을 마무리했다. 추가 계정·기기 조건이 필요한 미검증 항목과 재현되지 않은 최초 오류는 위 기록대로 남긴다. 통합 테스트·검증 문서는 미커밋이며 push·PR은 수행하지 않았다.
