@@ -16,6 +16,8 @@ export const item = style({
 });
 
 export const baseChip = style({
+  minHeight: 0,
+  WebkitFontSmoothing: 'auto',
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',

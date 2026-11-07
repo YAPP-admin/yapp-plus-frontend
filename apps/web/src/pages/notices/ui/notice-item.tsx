@@ -1,5 +1,6 @@
 'use client';
 
+import { Badge } from '@yapp-plus/ui';
 import { HStack } from '@seed-design/react';
 import { ActivityLink } from '@/app/navigation/activity-link';
 import {
@@ -45,8 +46,14 @@ export function NoticeItem({ id, category, categoryLabel, title, date, dDay }: N
       aria-label={`${categoryLabel} 공지: ${title}`}
     >
       <HStack align="center" gap="x1_5" mb="x2">
-        <span className={categoryChipClass}>{categoryLabel}</span>
-        {dDay ? <span className={dDayChip}>{dDay}</span> : null}
+        <Badge variant="weak" className={categoryChipClass}>
+          {categoryLabel}
+        </Badge>
+        {dDay ? (
+          <Badge variant="weak" tone="warning" className={dDayChip}>
+            {dDay}
+          </Badge>
+        ) : null}
       </HStack>
       <h2 className={titleText}>{title}</h2>
       <time className={dateText}>{date}</time>

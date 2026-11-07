@@ -14,7 +14,7 @@ import {
   HelpBubbleRoot,
   HelpBubbleTitle,
 } from '@seed-design/react';
-import { ActionButton } from '@yapp-plus/ui';
+import { ActionButton, Badge } from '@yapp-plus/ui';
 import { useFlow } from '@stackflow/react';
 import { ActivityLink } from '@/app/navigation/activity-link';
 import { Image } from '@/app/navigation/image';
@@ -246,7 +246,11 @@ export function HomePage({
                       <span className={item.isToday ? calendarDateBadgeActive : calendarDateBadge}>
                         {item.date}
                       </span>
-                      {isAttended && <span className={attendedBadge}>출석</span>}
+                      {isAttended && (
+                        <Badge variant="weak" tone="brand" className={attendedBadge}>
+                          출석
+                        </Badge>
+                      )}
                     </div>
                   );
                 })}
@@ -362,7 +366,13 @@ export function HomePage({
               >
                 <div className={noticeContent}>
                   <div className={chipRow}>
-                    <span className={notice.isSession ? chipBlue : chipGray}>{notice.tag}</span>
+                    <Badge
+                      variant="weak"
+                      tone={notice.isSession ? 'informative' : 'neutral'}
+                      className={notice.isSession ? chipBlue : chipGray}
+                    >
+                      {notice.tag}
+                    </Badge>
                   </div>
                   <p className={noticeTitle}>{notice.title}</p>
                 </div>
