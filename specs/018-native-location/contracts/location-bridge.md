@@ -56,7 +56,7 @@ type LocationErrorCode =
   | 'SERVICES_DISABLED' // 기기 위치 서비스가 꺼져 있어 측정할 수 없음.
   | 'TIMEOUT' // 위치 측정 응답 대기 15초를 초과함.
   | 'BUSY' // 기존 위치 요청이나 권한 팝업이 진행 중이라 새 요청을 시작하지 않음.
-  | 'APP_INACTIVE' // 시작·권한 확인 후·위치 반환 시 앱이 active가 아님.
+  | 'APP_INACTIVE' // 시작 시 active가 아니거나 권한 확인 후·위치 반환 시 background임.
   | 'LOCATION_UNAVAILABLE'; // 위치 취득·응답 검증·브리지 통신·설정 실행 실패.
 
 /** RPC 실패 결과. ERROR는 요청 실패를 뜻하며 출석 거절을 뜻하지 않는다. */
@@ -94,7 +94,7 @@ type OpenAppSettingsResult = { status: 'SUCCESS' } | LocationFailure;
 - 후속 출석 API의 허용 반경은 100m를 예정 기준으로 둔다. accuracy를 더해 허용 반경을 늘리지 않는다. 오차가 크거나 null일 때의 재측정·출석 판정 기준은 후속 API 작업에서 정하며 이 RPC에 추가하지 않는다.
 - 이 저장소의 iOS 구현은 full/reduced를 precise/approximate로 매핑한다. OS 정보가 없거나 권한이 없으면 unknown이다. 오차로 정밀 권한을 추정하지 않는다.
 - 네이티브 변환 시 유효성을 검증하고 웹 수신 경계에서도 스키마를 검증한다. 잘못된 응답은 LOCATION_UNAVAILABLE이며 원문 오류·추가 OS 필드는 노출하지 않는다.
-- 새 측정 시작 이전 timestamp의 표본은 LOCATION_UNAVAILABLE로 거부한다. 마지막 알려진 위치 API나 이전 요청의 결과를 사용하지 않는다.
+- 수신 시점 기준 측정 후 5초를 초과한 표본은 LOCATION_UNAVAILABLE로 거부한다. 마지막 알려진 위치 API나 이전 요청의 결과를 사용하지 않는다.
 
 ## 요청 처리와 오류
 
@@ -102,7 +102,7 @@ type OpenAppSettingsResult = { status: 'SUCCESS' } | LocationFailure;
 2. 권한을 조회하고 granted가 아니면서 canAskAgain이면 foreground 권한을 요청한다. 미허용이면 PERMISSION_DENIED다.
 3. 권한 확인 뒤 위치 서비스가 꺼져 있으면 SERVICES_DISABLED다. 권한 조회 RPC는 이 경우에도 servicesEnabled=false로 성공할 수 있다.
 4. getCurrentPositionAsync에 Accuracy.High를 지정한다. 측정 응답을 15초 대기하고 초과 시 TIMEOUT이다.
-5. 잘못된 표본·측정 시작 이전 표본·OS 취득 실패는 LOCATION_UNAVAILABLE다. 권한 확인 후와 위치 반환 시 active가 아니면 APP_INACTIVE다.
+5. 잘못된 표본·수신 시점 기준 5초를 초과한 표본·OS 취득 실패는 LOCATION_UNAVAILABLE다. 권한 확인 후와 위치 반환 시 background이면 APP_INACTIVE다. 권한 팝업의 일시적 inactive는 허용한다.
 6. 응답 종료 시 타이머와 중복 요청 잠금을 해제한다. 구독·AppState listener·전체 150초 타이머는 사용하지 않는다.
 
 권한 선택 대기에는 별도 제한을 두지 않으며 팝업 응답 전에는 BUSY로 중복 요청을 막는다.
