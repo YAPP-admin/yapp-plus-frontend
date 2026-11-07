@@ -31,6 +31,7 @@ const setup = () => {
     getPermission: vi.fn<LocationRuntime['getPermission']>().mockResolvedValue(granted),
     requestPermission: vi.fn<LocationRuntime['requestPermission']>().mockResolvedValue(granted),
     isActive: vi.fn<LocationRuntime['isActive']>(() => true),
+    isBackground: vi.fn<LocationRuntime['isBackground']>(() => false),
     getPosition: vi
       .fn<LocationRuntime['getPosition']>()
       .mockImplementation(() => Promise.resolve(reading())),
@@ -61,10 +62,25 @@ describe('네이티브 단발 위치 요청', () => {
     runtime.getPosition.mockResolvedValue({ ...reading(), accuracy });
     expect(await actions.requestCurrentLocation()).toEqual(failure('LOCATION_UNAVAILABLE'));
   });
-  it('오래된 위치를 성공 처리하지 않는다', async () => {
+  it.each([0, 600, 5_000, 5_001])('수신 시점에 %sms 지난 위치의 신선도를 판단한다', async (age) => {
     const { runtime, actions } = setup();
-    runtime.getPosition.mockResolvedValue({ ...reading(), timestamp: Date.now() - 1 });
-    expect(await actions.requestCurrentLocation()).toEqual(failure('LOCATION_UNAVAILABLE'));
+    const sample = { ...reading(), timestamp: Date.now() - age };
+    runtime.getPosition.mockResolvedValue(sample);
+    expect(await actions.requestCurrentLocation()).toEqual(
+      age <= 5_000
+        ? { status: 'SUCCESS', location: { ...sample, precision: 'precise' } }
+        : failure('LOCATION_UNAVAILABLE'),
+    );
+  });
+  it('측정 응답을 기다린 시간도 신선도에 포함한다', async () => {
+    const { runtime, actions } = setup();
+    const pending = deferred<LocationReading>();
+    const sample = reading();
+    runtime.getPosition.mockReturnValue(pending.promise);
+    const result = actions.requestCurrentLocation();
+    await vi.advanceTimersByTimeAsync(5_001);
+    pending.resolve(sample);
+    expect(await result).toEqual(failure('LOCATION_UNAVAILABLE'));
   });
   it.each(['resolve', 'reject'] as const)(
     '15초 뒤 재시도를 허용하고 이전 요청의 늦은 %s를 무시한다',
@@ -106,13 +122,17 @@ describe('네이티브 단발 위치 요청', () => {
       location: { precision: 'approximate' },
     });
   });
-  it.each([0, 1, 2])('시작·권한 확인 후·위치 반환 시 비활성 상태(%s)를 거부한다', async (index) => {
-    const { runtime, actions } = setup();
-    let calls = 0;
-    runtime.isActive.mockImplementation(() => calls++ !== index);
-    expect(await actions.requestCurrentLocation()).toEqual(failure('APP_INACTIVE'));
-    expect(runtime.getPosition).toHaveBeenCalledTimes(index === 2 ? 1 : 0);
-  });
+  it.each([0, 1, 2])(
+    '비활성 시작·권한 확인 후 background·반환 시 background(%s)를 거부한다',
+    async (index) => {
+      const { runtime, actions } = setup();
+      let calls = 0;
+      runtime.isActive.mockReturnValue(index !== 0);
+      runtime.isBackground.mockImplementation(() => ++calls === index);
+      expect(await actions.requestCurrentLocation()).toEqual(failure('APP_INACTIVE'));
+      expect(runtime.getPosition).toHaveBeenCalledTimes(index === 2 ? 1 : 0);
+    },
+  );
   it.each(['getPermission', 'requestPermission', 'getPosition'] as const)(
     '%s 실패 후 잠금을 해제한다',
     async (method) => {

@@ -29,7 +29,7 @@ const locationErrorCodeSchema = z.enum([
   'SERVICES_DISABLED', // 기기 위치 서비스가 꺼져 있음.
   'TIMEOUT', // 위치 측정 응답 대기 15초 초과.
   'BUSY', // 기존 위치 요청이나 권한 팝업이 진행 중.
-  'APP_INACTIVE', // 시작·권한 확인 후·위치 반환 시 앱이 active가 아님.
+  'APP_INACTIVE', // 시작 시 active가 아니거나 권한 확인 후·위치 반환 시 background임.
   'LOCATION_UNAVAILABLE', // 위치 취득·응답 검증·브리지 통신·설정 실행 실패.
 ]);
 

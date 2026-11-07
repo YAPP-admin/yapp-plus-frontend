@@ -21,6 +21,7 @@ export type LocationRuntime = {
   getPermission: () => Promise<LocationPermission>;
   requestPermission: () => Promise<LocationPermission>;
   isActive: () => boolean;
+  isBackground: () => boolean;
   getPosition: () => Promise<LocationReading>;
   openSettings: () => Promise<void>;
 };
@@ -47,8 +48,6 @@ const measureLocation = async (
   let timer: ReturnType<typeof setTimeout> | undefined;
 
   try {
-    const startedAt = Date.now();
-
     // 대기만 끝낸다. Expo 단발 요청은 취소할 수 없으며 늦은 결과는 사용하지 않는다.
     const reading = await Promise.race([
       runtime.getPosition(),
@@ -61,7 +60,7 @@ const measureLocation = async (
       return error('TIMEOUT');
     }
 
-    if (!runtime.isActive()) {
+    if (runtime.isBackground()) {
       return error('APP_INACTIVE');
     }
 
@@ -74,7 +73,8 @@ const measureLocation = async (
       precision,
     });
 
-    if (!location.success || location.data.timestamp < startedAt) {
+    // OS가 방금 측정한 표본도 반환할 수 있으므로 수신 시점 기준 5초까지 허용한다.
+    if (!location.success || Date.now() - location.data.timestamp > 5_000) {
       return error('LOCATION_UNAVAILABLE');
     }
 
@@ -137,7 +137,7 @@ export const createLocationActions = (runtime: LocationRuntime) => {
         return error('SERVICES_DISABLED');
       }
 
-      if (!runtime.isActive()) {
+      if (runtime.isBackground()) {
         return error('APP_INACTIVE');
       }
 
