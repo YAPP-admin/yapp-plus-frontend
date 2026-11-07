@@ -92,9 +92,9 @@ type OpenAppSettingsResult = { status: 'SUCCESS' } | LocationFailure;
 - accuracy는 0 이상의 유한수(미터) 또는 null이다. OS가 미확인 값으로 반환한 null·음수 sentinel은 null로 정규화한다. NaN·무한수는 잘못된 응답이다.
 - accuracy는 기기가 추정한 수평 위치 오차 반경이며, 사용자가 지정하는 수치나 출석 허용 반경이 아니다. 유효한 값은 크기와 관계없이 전달하고 null도 임의의 수치로 대체하지 않는다.
 - 후속 출석 API의 허용 반경은 100m를 예정 기준으로 둔다. accuracy를 더해 허용 반경을 늘리지 않는다. 오차가 크거나 null일 때의 재측정·출석 판정 기준은 후속 API 작업에서 정하며 이 RPC에 추가하지 않는다.
-- Android fine/coarse, iOS full/reduced를 precise/approximate로 매핑한다. OS 정보가 없거나 권한이 없으면 unknown이다. 오차로 정밀 권한을 추정하지 않는다.
+- 이 저장소의 iOS 구현은 full/reduced를 precise/approximate로 매핑한다. OS 정보가 없거나 권한이 없으면 unknown이다. 오차로 정밀 권한을 추정하지 않는다.
 - 네이티브 변환 시 유효성을 검증하고 웹 수신 경계에서도 스키마를 검증한다. 잘못된 응답은 LOCATION_UNAVAILABLE이며 원문 오류·추가 OS 필드는 노출하지 않는다.
-- 새 측정 시작 이전 timestamp의 표본은 무시하고 남은 제한 시간 동안 기다린다. 마지막 알려진 위치 API나 이전 요청의 결과를 사용하지 않는다.
+- 새 측정 시작 이전 timestamp의 표본은 LOCATION_UNAVAILABLE로 거부한다. 마지막 알려진 위치 API나 이전 요청의 결과를 사용하지 않는다.
 
 ## 요청 처리와 오류
 

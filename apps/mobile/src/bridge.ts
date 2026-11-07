@@ -15,6 +15,7 @@ import { useEffect } from 'react';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 
 import { authActions } from './auth/native-auth-runtime';
+import { locationActions } from './location/native-location-runtime';
 
 const initialSafeAreaInsets = normalizeSafeAreaInsets(
   initialWindowMetrics?.insets ?? INITIAL_SAFE_AREA_INSETS,
@@ -45,11 +46,15 @@ export const nativeAppBridge = bridge<AppBridgeState>(({ get }) => ({
   },
   signOut: () => authActions.signOut(),
   withdraw: () => authActions.withdraw(),
+  getLocationPermission: () => locationActions.getLocationPermission(),
+  requestCurrentLocation: () => locationActions.requestCurrentLocation(),
+  openAppSettings: () => locationActions.openAppSettings(),
 }));
 
 export const { WebView: BridgeWebView } = createWebView({
   bridge: nativeAppBridge,
-  debug: __DEV__,
+  // 위치·인증 응답이 WebView 콘솔 전달 과정에 노출되지 않도록 비활성화한다.
+  debug: false,
   responseTimeout: 180_000,
 });
 
