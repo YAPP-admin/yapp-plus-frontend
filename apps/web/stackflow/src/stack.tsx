@@ -14,7 +14,6 @@ import type { StackflowInitialContext } from './platform';
 type TabsParams = ActivityBaseParams & TabsState;
 type BooleanQueryParams = ActivityBaseParams & { error?: 'true' };
 type AlertsParams = ActivityBaseParams & { empty?: 'true' };
-type AttendanceParams = ActivityBaseParams & { mode?: 'none' | 'active' | 'warning' };
 
 declare module '@stackflow/config' {
   // Stackflow의 module augmentation은 interface 병합이 필요합니다.
@@ -26,7 +25,7 @@ declare module '@stackflow/config' {
       noticeId: string;
     };
     NotFound: EmptyActivityParams;
-    Attendance: AttendanceParams;
+    Attendance: EmptyActivityParams;
     AttendanceRules: EmptyActivityParams;
     AttendanceCode: EmptyActivityParams;
     AttendanceReport: EmptyActivityParams;
@@ -70,7 +69,7 @@ export const activityComponents = {
       default: NotFoundActivity,
     })),
   ),
-  Attendance: lazy<AttendanceParams>(() =>
+  Attendance: lazy<EmptyActivityParams>(() =>
     import('./activities/activities').then(({ AttendanceActivity }) => ({
       default: AttendanceActivity,
     })),
