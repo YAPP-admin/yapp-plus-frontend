@@ -1,5 +1,6 @@
 import type { BridgeStore } from '@webview-bridge/web';
 import { z } from 'zod';
+import type { LocationPermissionResult, LocationResult, OpenAppSettingsResult } from './location';
 
 export {
   locationPermissionSchema,
@@ -138,6 +139,12 @@ export type AppBridgeState = {
   refreshSession: (input: RefreshSessionInput) => Promise<AuthResult>;
   signOut: () => Promise<AuthResult>;
   withdraw: () => Promise<AuthResult>;
+  /** 팝업 없이 위치 권한과 서비스 상태를 조회한다. */
+  getLocationPermission: () => Promise<LocationPermissionResult>;
+  /** 사용 중 권한을 확인하고 현재 위치를 한 번 측정한다. */
+  requestCurrentLocation: () => Promise<LocationResult>;
+  /** 사용자가 선택했을 때 앱 설정을 연다. 권한 변경을 의미하지 않는다. */
+  openAppSettings: () => Promise<OpenAppSettingsResult>;
 };
 
 export type AppBridgeStore = BridgeStore<AppBridgeState>;

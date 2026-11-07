@@ -23,7 +23,7 @@ const config: ExpoConfig = {
   owner: 'yapp-plus-official',
   // Expo Router의 앱 URL과 iOS Bundle ID를 같은 안정 식별자로 유지합니다.
   scheme: 'org.yapp.yappplus',
-  version: '1.0.0',
+  version: '1.0.1',
   runtimeVersion: {
     policy: 'appVersion',
   },
@@ -45,6 +45,16 @@ const config: ExpoConfig = {
     'expo-router',
     'expo-secure-store',
     'expo-splash-screen',
+    [
+      'expo-location',
+      {
+        locationWhenInUsePermission: '출석 확인을 위해 현재 위치를 사용합니다.',
+        locationAlwaysPermission: false,
+        locationAlwaysAndWhenInUsePermission: false,
+        motionUsagePermission: false,
+        locationFullAccuracyPermission: false,
+      },
+    ],
     [
       'react-native-nitro-google-signin',
       {

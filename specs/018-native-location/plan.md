@@ -1,6 +1,6 @@
 # 구현 계획: 출석용 앱 위치 수집과 웹 공유
 
-**실제 브랜치**: `DongjaJ/m29b9` · **작성일**: 2026-11-07 · **상태**: 1단계 승인, 2단계 진행
+**실제 브랜치**: `DongjaJ/native-location-runtime` · **작성일**: 2026-11-07 · **상태**: 2-2 네이티브 구현 리뷰 대기
 **명세**: [spec.md](spec.md) · **계약**: [location-bridge.md](contracts/location-bridge.md)
 
 ## 요약
@@ -14,7 +14,7 @@
 
 - TypeScript 6, Expo 58.0.23, React Native 0.88.1, Vite·Stackflow 웹, Zod 4, Vitest 5.
 - 신규 의존성은 모바일의 `expo-location` 하나다. SDK 58 공식 권장 `~58.0.20`을 Expo 호환성 검사 후 lockfile에 고정한다.
-- 실제 소비자는 iOS·Android WebView다. 일반 웹은 미지원이며 상태 저장소·서버 API·DB 변경은 없다.
+- 이 저장소의 실제 소비자는 iOS WebView다. Android 앱은 별도 Native 프로젝트이며 수정·빌드하지 않는다. 일반 웹은 미지원이며 상태 저장소·서버 API·DB 변경은 없다.
 - 루트 Node 24.20.0·pnpm 12.3.4를 mise로 실행한다. 새 의존성의 공급망 보호 예외를 추가하지 않는다.
 
 ## 헌법 점검
@@ -39,11 +39,11 @@
 - `packages/app-bridge/src/web-location.ts`: 응답 검증·실행 환경 확인·통신 실패 변환 도우미. 기존 `web.ts`에서 공개한다.
 - `apps/web/src/pages/dev-routes/ui/location-check.tsx`: 기존 개발 화면에 권한 조회·요청·설정 열기와 비민감 상태 표시를 추가한다. 별도 제품 화면이나 공용 UI 패키지를 만들지 않는다.
 
-네이티브는 `Accuracy.High`의 foreground 구독을 첫 유효 결과까지 사용한다. 구독 생성도 측정 제한 시간에 포함한다.
-성공·오류·timeout·background에서 타이머와 listener·구독을 정리한다. 늦은 구독 생성은 즉시 remove한다.
-OS 권한 팝업의 `inactive` 상태를 background로 취급하지 않는다. 시작 시 active가 아니면 수집하지 않는다.
-웹 화면 이탈은 결과 반영을 중단한다. 별도의 취소 RPC는 추가하지 않으며 이미 시작된 네이티브 측정은 종료 조건까지 최대 15초 유지될 수 있다.
-권한 팝업을 프로그램으로 닫을 수 있다고 가정하지 않는다. 늦은 권한 결과로 종료된 요청의 수집을 시작하지 않는다.
+네이티브는 `getCurrentPositionAsync({ accuracy: Accuracy.High })`로 한 번 측정한다.
+권한 선택 대기에는 별도 타이머를 두지 않고, 측정 응답만 15초 대기한다. 응답 종료 시 타이머와 BUSY 잠금을 해제한다.
+시작·권한 확인 후·위치 반환 시 active 여부를 확인한다. AppState listener나 background 전환 시 즉시 취소는 구현하지 않는다.
+단발 API는 취소할 수 없다. timeout 뒤 OS 측정이 남을 수 있고 재시도와 겹칠 수 있으나 이전 결과는 반영하지 않는다.
+웹 화면 이탈·브리지 대기 종료는 화면의 결과 반영만 막는다. 권한 팝업을 닫거나 네이티브 작업을 취소하지 않는다.
 
 ## 단계와 리뷰 단위
 
@@ -62,7 +62,7 @@ OS 권한 팝업의 `inactive` 상태를 background로 취급하지 않는다. �
 [quickstart.md](quickstart.md)의 테스트와 실기기 시나리오를 따른다.
 새 바이너리가 필요하므로 `app.config.ts`의 앱 버전을 1.0.1로 올리고 `runtimeVersion: appVersion`을 유지한다.
 빌드 번호 autoIncrement만으로 런타임을 분리하지 않는다. Android 앱 식별자는 이 기능에서 임의로 새로 정하지 않는다.
-실기기 빌드에 별도 Android 식별자·서명이 필요하면 기존 프로젝트 설정을 확인하고 누락 시 배포 준비 항목으로 보고한다.
+Android 정밀 권한 매핑은 단위 테스트만 확인하며 Android 앱 지원 완료로 보고하지 않는다.
 기존 런타임 1.0.0에 새 모듈을 참조하는 OTA를 배포하지 않는다.
 출시 전이므로 앱과 웹을 함께 갱신하며 구버전 앱의 메서드 지원 검사·fallback은 제공하지 않는다. 기존 인증·safe-area RPC는 유지한다.
 문제 발생 시 웹 호출을 비활성화하고 새 런타임에서 위치 사용을 중단하는 수정으로 복구한다.
@@ -73,3 +73,5 @@ OS 권한 팝업의 `inactive` 상태를 background로 취급하지 않는다. �
 문서 변경량을 포함한 PR 크기 제한을 지키기 위해 2-1은 공용 타입·검증 스키마·공개 export·계약 테스트로 분리한다.
 AppBridgeState RPC 선언은 실제 네이티브 구현과 함께 2-2에서 추가해 미구현 메서드를 등록하지 않는다.
 2-1 리뷰 후 문서/계약 PR과 네이티브 PR의 분리 방법을 확인하고 2-2에 진행한다.
+
+2-2의 실제 종속 PR base는 `DongjaJ/m29b9`의 `53c29215f2051181e53f7820b7ce8e4676a14d46`이다. 브랜치 생성·전환은 사용자 승인으로 수행했다.
