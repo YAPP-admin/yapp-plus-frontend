@@ -1,7 +1,7 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
-import { Checkbox, HStack } from '@seed-design/react';
+import { Checkbox, HStack, VStack } from '@seed-design/react';
 import { IconCameraLine, IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import { Image } from '@/app/navigation/image';
@@ -24,11 +24,9 @@ import {
   memberCard,
   memberCardChecked,
   memberDescription,
-  memberHeader,
   memberList,
   memberName,
   memberRole,
-  memberSection,
   memberTitle,
   uploadArea,
   uploadHintText,
@@ -83,8 +81,8 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
   }
 
   return (
-    <div className={container}>
-      <header className={header}>
+    <VStack className={container}>
+      <HStack as="header" align="center" justify="space-between" className={header}>
         <BackButton
           fallbackActivityName="Tabs"
           fallbackActivityParams={{ initialTab: 'home' }}
@@ -92,9 +90,9 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
         />
         <h1 className={headerTitle}>팀 세션 인증</h1>
         <div className={headerSpacer} aria-hidden="true" />
-      </header>
+      </HStack>
 
-      <main className={body}>
+      <VStack as="main" gap="x5" className={body}>
         {/* 사진 업로드 영역 */}
         <input
           ref={fileInputRef}
@@ -130,17 +128,17 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
         </button>
 
         {/* 팀원 선택 섹션 */}
-        <section className={memberSection} aria-label="참석 팀원 선택">
-          <div className={memberHeader}>
+        <VStack as="section" gap="x5" aria-label="참석 팀원 선택">
+          <VStack gap="x1_5">
             <Text as="h2" className={memberTitle}>
               사진에 나온 팀원을 선택해 주세요
             </Text>
             <Text as="p" className={memberDescription}>
               체크하지 않은 팀원은 운영진이 확인 후 처리해요
             </Text>
-          </div>
+          </VStack>
 
-          <div className={memberList} aria-label="팀원 목록">
+          <VStack gap="x2_5" className={memberList} aria-label="팀원 목록">
             {members.map((member) => (
               <Checkbox.Root
                 tone="neutral"
@@ -163,11 +161,11 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
                 {member.isMe && <span className={meBadge}>나</span>}
               </Checkbox.Root>
             ))}
-          </div>
-        </section>
-      </main>
+          </VStack>
+        </VStack>
+      </VStack>
 
-      <footer className={bottomSection}>
+      <VStack as="footer" gap="x2_5" className={bottomSection}>
         <ActionButton
           variant="brandSolid"
           size="large"
@@ -177,7 +175,7 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
           확인
         </ActionButton>
         <div className={homeIndicatorArea} aria-hidden="true" />
-      </footer>
-    </div>
+      </VStack>
+    </VStack>
   );
 }

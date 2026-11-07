@@ -2,8 +2,6 @@ import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
-  display: 'flex',
-  flexDirection: 'column',
   width: '100%',
   minHeight: '100dvh',
   backgroundColor: '#FFFFFF',
@@ -11,9 +9,6 @@ export const container = style({
 });
 
 export const header = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
   height: '54px',
   padding: '0 16px',
   width: '100%',
@@ -36,15 +31,12 @@ export const headerSpacer = style({
 });
 
 export const body = style({
-  display: 'flex',
-  flexDirection: 'column',
   flex: 1,
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
   padding: '0 16px 24px',
   boxSizing: 'border-box',
-  gap: '20px',
 });
 
 export const uploadArea = style({
@@ -103,18 +95,6 @@ export const fileInputHidden = style({
   display: 'none',
 });
 
-export const memberSection = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '20px',
-});
-
-export const memberHeader = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '6px',
-});
-
 export const memberTitle = style({
   fontSize: '18px',
   fontWeight: 700,
@@ -132,9 +112,6 @@ export const memberDescription = style({
 });
 
 export const memberList = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '10px',
   margin: 0,
   padding: 0,
 });
@@ -184,14 +161,11 @@ export const meBadge = style({
 });
 
 export const bottomSection = style({
-  display: 'flex',
-  flexDirection: 'column',
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
   padding: '12px 16px 20px',
   boxSizing: 'border-box',
-  gap: '10px',
 });
 
 export const confirmButton = style({
