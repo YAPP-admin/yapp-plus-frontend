@@ -1,3 +1,4 @@
+import { Activity } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
@@ -220,4 +221,38 @@ it('추가 로딩은 기존 목록과 ProgressCircle을 표시하고 완료 시 
   act(() => finish?.());
   expect(await screen.findByText('세션 2')).toBeVisible();
   expect(screen.queryByRole('progressbar')).not.toBeInTheDocument();
+});
+
+it('화면 숨김은 observer를 해제하고 복귀 시 목록·스크롤을 유지하며 다시 관찰한다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/attendance-history`, () =>
+      HttpResponse.json({ ...historyFixture, nextCursor: 'next' }),
+    ),
+  );
+  const client = createAppQueryClient();
+  const page = (visible: boolean) => (
+    <QueryClientProvider client={client}>
+      <NativeAuthSessionProvider>
+        <Activity mode={visible ? 'visible' : 'hidden'}>
+          <div data-testid="scroll">
+            <AttendancePage />
+          </div>
+        </Activity>
+      </NativeAuthSessionProvider>
+    </QueryClientProvider>
+  );
+  const view = render(page(true));
+  await screen.findByText('세션 1');
+  await waitFor(() => expect(intersect).toBeDefined());
+  const scroll = screen.getByTestId('scroll');
+  scroll.scrollTop = 120;
+  const before = disconnect.mock.calls.length;
+  view.rerender(page(false));
+  await waitFor(() => expect(disconnect.mock.calls.length).toBeGreaterThan(before));
+  expect(intersect).toBeUndefined();
+  view.rerender(page(true));
+  await waitFor(() => expect(intersect).toBeDefined());
+  expect(screen.getByText('세션 1')).toBeVisible();
+  expect(screen.getByTestId('scroll')).toBe(scroll);
+  expect(scroll.scrollTop).toBe(120);
 });
