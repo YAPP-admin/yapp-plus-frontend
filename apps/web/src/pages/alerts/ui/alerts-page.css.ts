@@ -1,8 +1,6 @@
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
-  display: 'flex',
-  flexDirection: 'column',
   minHeight: '100%',
   backgroundColor: '#FFFFFF',
 });
@@ -11,9 +9,6 @@ export const header = style({
   position: 'sticky',
   top: 0,
   zIndex: 10,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
   height: '54px',
   padding: '0 16px',
   backgroundColor: '#FFFFFF',
@@ -37,8 +32,6 @@ export const headerSpacer = style({
 });
 
 export const body = style({
-  display: 'flex',
-  flexDirection: 'column',
   flex: 1,
   padding: '0 16px',
   width: '100%',
@@ -47,16 +40,7 @@ export const body = style({
   boxSizing: 'border-box',
 });
 
-export const list = style({
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
-});
-
 export const listItem = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px',
   padding: '20px 0',
   borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
   boxSizing: 'border-box',
@@ -80,13 +64,8 @@ export const itemDate = style({
 });
 
 export const emptyContainer = style({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
   flex: 1,
   padding: '0 0 32px',
-  gap: '20px',
 });
 
 export const emptyGraphic = style({

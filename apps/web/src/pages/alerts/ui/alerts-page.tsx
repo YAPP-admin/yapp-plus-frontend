@@ -1,5 +1,6 @@
 'use client';
 
+import { HStack, VStack } from '@seed-design/react';
 import { BackButton } from '@/app/navigation/back-button';
 import { Image } from '@/app/navigation/image';
 import { useState } from 'react';
@@ -14,7 +15,6 @@ import {
   headerTitle,
   itemDate,
   itemMessage,
-  list,
   listItem,
 } from './alerts-page.css';
 
@@ -61,8 +61,8 @@ export function AlertsPage({ showEmpty = false }: { showEmpty?: boolean }) {
   const [alerts] = useState<AlertItem[]>(showEmpty ? [] : mockAlerts);
 
   return (
-    <div className={container}>
-      <header className={header}>
+    <VStack className={container}>
+      <HStack as="header" align="center" justify="space-between" className={header}>
         <BackButton
           fallbackActivityName="Tabs"
           fallbackActivityParams={{ initialTab: 'home' }}
@@ -70,11 +70,18 @@ export function AlertsPage({ showEmpty = false }: { showEmpty?: boolean }) {
         />
         <h1 className={headerTitle}>알림</h1>
         <div className={headerSpacer} aria-hidden="true" />
-      </header>
+      </HStack>
 
-      <div className={body}>
+      <VStack className={body}>
         {alerts.length === 0 ? (
-          <section className={emptyContainer} aria-label="알림 없음">
+          <VStack
+            as="section"
+            align="center"
+            justify="center"
+            gap="x5"
+            className={emptyContainer}
+            aria-label="알림 없음"
+          >
             <Image
               src="/images/notices/graphic-none.svg"
               alt=""
@@ -83,18 +90,18 @@ export function AlertsPage({ showEmpty = false }: { showEmpty?: boolean }) {
               className={emptyGraphic}
             />
             <p className={emptyText}>아직 알림이 없어요</p>
-          </section>
+          </VStack>
         ) : (
-          <main className={list} aria-label="알림 목록">
+          <VStack as="main" width="full" aria-label="알림 목록">
             {alerts.map((item) => (
-              <article key={item.id} className={listItem}>
+              <VStack as="article" key={item.id} gap="x2" className={listItem}>
                 <p className={itemMessage}>{item.message}</p>
                 <time className={itemDate}>{item.date}</time>
-              </article>
+              </VStack>
             ))}
-          </main>
+          </VStack>
         )}
-      </div>
-    </div>
+      </VStack>
+    </VStack>
   );
 }
