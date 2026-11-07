@@ -1,5 +1,13 @@
+/** 개발 경로와 개발 빌드 전용 검증 도구를 제공한다. 위치 도구는 화면 이탈 시 폐기한다. */
+
+import { lazy, Suspense } from 'react';
 import { content, description, title } from '../../../shared/ui/page.css';
 import { link, links } from '../../../shared/ui/page-links.css';
+
+// 프로덕션 번들에는 위치 검증 화면과 전용 훅을 포함하지 않는다.
+const LocationCheck = import.meta.env.DEV
+  ? lazy(() => import('./location-check').then((module) => ({ default: module.LocationCheck })))
+  : null;
 
 const routes = [
   { href: '/', label: '홈' },
@@ -24,7 +32,8 @@ const routes = [
   { href: '/signup/unregistered', label: '미등록 회원 안내' },
 ];
 
-export function DevRoutesPage() {
+/** Stackflow의 활성 상태를 받아 숨겨진 화면의 위치 결과 반영을 차단한다. */
+export function DevRoutesPage({ isActive = true }: { isActive?: boolean }) {
   return (
     <main className={content}>
       <h1 className={title}>개발용 화면 목록</h1>
@@ -32,6 +41,11 @@ export function DevRoutesPage() {
         로컬 개발에서 페이지 경로를 확인하는 목록입니다. 실제 공지·회원 정보나 가입 결과를 제공하지
         않습니다.
       </p>
+      {isActive && LocationCheck && (
+        <Suspense fallback={<output>위치 도구를 준비하고 있습니다.</output>}>
+          <LocationCheck />
+        </Suspense>
+      )}
       <nav className={links} aria-label="개발용 화면 목록">
         {routes.map(({ href, label }) => (
           <a key={href} className={link} href={href}>

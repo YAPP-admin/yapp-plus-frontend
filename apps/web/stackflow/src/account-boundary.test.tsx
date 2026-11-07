@@ -240,3 +240,24 @@ it.each(['/attendance/code', '/attendance/report', '/team-attendance/guide'])(
     await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
   },
 );
+
+it.each([false, true])(
+  '개발 도구는 로그인 상태 조회 실패=%s에도 열 수 있다',
+  async (unavailable) => {
+    vi.stubEnv('DEV', true);
+    bridge.getSession.mockResolvedValue(unavailable ? undefined : { status: 'SIGNED_OUT' });
+    window.history.replaceState(null, '', '/dev/routes');
+    mount(new QueryClient());
+    expect(await screen.findByRole('heading', { name: '위치 브리지 확인' })).toBeInTheDocument();
+    expect(window.location.pathname).toBe('/dev/routes');
+  },
+);
+
+it('운영 빌드에서는 개발 경로의 로그인 가드를 유지한다', async () => {
+  vi.stubEnv('DEV', false);
+  bridge.getSession.mockResolvedValue({ status: 'SIGNED_OUT' });
+  window.history.replaceState(null, '', '/dev/routes');
+  mount(new QueryClient());
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: '위치 브리지 확인' })).not.toBeInTheDocument();
+});

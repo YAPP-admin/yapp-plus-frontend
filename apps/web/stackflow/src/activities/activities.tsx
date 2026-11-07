@@ -255,10 +255,12 @@ export function SignupUnregisteredActivity() {
 }
 
 export function DevRoutesActivity() {
+  const { isActive } = useActivity();
+
   return (
     <ActivityScreen title="개발 경로">
       <PageShell>
-        <DevRoutesPage />
+        <DevRoutesPage isActive={isActive} />
       </PageShell>
     </ActivityScreen>
   );

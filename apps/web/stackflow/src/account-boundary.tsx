@@ -19,12 +19,16 @@ const publicActivities = new Set([
   'NotFound',
 ]);
 
+/** 개발 빌드의 브리지 검증만 로그인과 분리한다. 운영 보호 화면의 정책은 유지한다. */
+const isPublicActivity = (name: string): boolean =>
+  publicActivities.has(name) || (import.meta.env.DEV && name === 'DevRoutes');
+
 /** 확정된 로그아웃의 새 진입은 화면을 만들기 전에 공식 가드가 로그인으로 바꿉니다. */
 export function nativeEntryGuard(client: QueryClient, activities: readonly { name: string }[]) {
   return activityGuardPlugin({
     guards: Object.fromEntries(
       activities
-        .filter(({ name }) => !publicActivities.has(name))
+        .filter(({ name }) => !isPublicActivity(name))
         .map(({ name }) => [
           name,
           () => {
@@ -58,7 +62,7 @@ function AccountScreen({
   children: ReactNode;
 }) {
   const { isNative, phase, session } = useNativeAuthSession();
-  const protectedScreen = !publicActivities.has(activity.name);
+  const protectedScreen = !isPublicActivity(activity.name);
   const blocked = isNative && protectedScreen && phase !== 'SIGNED_IN';
   const flow = useFlow();
 
