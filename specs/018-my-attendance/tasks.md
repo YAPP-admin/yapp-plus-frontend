@@ -51,10 +51,12 @@ T010–T015 완료. headless 모바일 화면 비교·키보드·터치 검증�
 
 독립 검증: 인증 mutation과 실제 생성 query를 함께 실행해 이전 이름·업무 데이터가 새 계정에 반영되지 않는지 확인한다.
 
-- [ ] T024 [P] [US3] apps/web/src/features/auth/model/session-queries.test.ts에 두 조회와 이름이 포함된 세션의 401 복구·계정 전환 지연 응답 사례를 추가한다.
-- [ ] T025 [P] [US3] apps/web/stackflow/src/account-boundary.test.tsx에 이름 없는 새 계정의 이전 화면 비노출을 검증한다.
-- [ ] T026 [US3] apps/web/src/pages/attendance/ui/attendance-page.test.tsx에 화면 숨김·복귀 시 observer 정리·재조회 실패·스크롤 보존 회귀를 보완한다.
+- [x] T024 [P] [US3] apps/web/src/features/auth/model/session-queries.test.ts에 두 조회와 이름이 포함된 세션의 401 복구·계정 전환 지연 응답 사례를 추가한다.
+- [x] T025 [P] [US3] apps/web/stackflow/src/account-boundary.test.tsx에 이름 없는 새 계정의 이전 화면 비노출을 검증한다.
+- [x] T026 [US3] apps/web/src/pages/attendance/ui/attendance-page.test.tsx에 화면 숨김·복귀 시 observer 정리·재조회 실패·스크롤 보존 회귀를 보완한다.
 - [ ] T027 [US3] specs/018-my-attendance/validation.md에 WebView 로그인→MY→내역→복귀, 재시작·계정 전환과 구 native 호환 실측·미실행 근거를 기록한다.
+
+T024–T026 자동화 검증 완료. T027–T029는 실제 WebView·구버전 앱·실서버·스크린 리더 검증과 최종 출시 리뷰가 남아 있다. 브라우저·mock 통과로 대체하지 않는다.
 
 ## 마무리 — 최종 검증과 보고 (5단계 포함)
 
