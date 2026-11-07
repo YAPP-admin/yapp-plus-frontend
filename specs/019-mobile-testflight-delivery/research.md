@@ -35,16 +35,16 @@
 [PR 이벤트](https://docs.github.com/en/actions/reference/workflows-and-actions/events-that-trigger-workflows#pull_request)의 합성 merge 결과와 그 base를 비교한다.
 config/plugin 평가도 PR 코드 실행이므로 해당 job에는 배포 비밀을 제공하지 않는다.
 
-## 기록·복구의 일관성
+## 공식 기능 재사용으로 변경한 결정
 
-[Deployments API](https://docs.github.com/en/rest/deployments/deployments)는 payload 수정 API가 없다.
-요청·결과·활성화를 불변 기록으로 나누고 ref=검증 SHA, auto_merge=false를 사용한다.
-[status API](https://docs.github.com/en/rest/deployments/statuses)의 과거 status 이력은 영구 보관을 보장하지 않는다.
-현재 status와 불변 result payload만 사용하며 성공 시 auto_inactive=false를 명시한다.
-[concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)는 cancel=false만으로 대기 순서·보존을 보장하지 않는다.
-새 queue 기능에 의존하지 않고 취소된 수동 요청의 재실행과 최신 main 재평가를 명시한다.
-[EAS CLI](https://docs.expo.dev/eas/cli/)의 서버 멱등성 키를 가정하지 않는다. 게시 전 작업 키 저장과 결과 조회로 복구한다.
-0개 조회도 외부 실행 없음의 확정 증거가 아니므로 불명확한 작업은 자동 재게시하지 않는다.
+[EAS CLI](https://docs.expo.dev/eas/cli/)의 config·fingerprint·build·submit·update·복구 명령을 직접 사용한다.
+27.4.1 config 조회에서 testflight/store, Node 24.20.0, appVersion 및 공개 WebView URL 일치를 실제 확인했다.
+이 출력은 필요한 공개 필드만 추출했고 원시 config·환경 변수는 저장하지 않았다.
+고정 CLI 소스에서 config와 fingerprint 명령의 인증 의존을 확인했다. PR에는 Expo token을 주지 않고 [공식 로컬 Fingerprint API](https://docs.expo.dev/versions/latest/sdk/fingerprint/)를 사용한다.
+고정 CLI의 fingerprint/utils.js에서 fingerprint 서버 등록을 확인했다. report-only는 원격 fingerprint 명령 대신 로컬 API를 사용한다.
+프로필 상속 해석기와 범용 Deployments ledger는 폐기한다. build/submit/update/recovery별 자체 CLI 래퍼도 추가하지 않는다.
+[Actions concurrency](https://docs.github.com/en/actions/how-tos/write-workflows/choose-when-workflows-run/control-workflow-concurrency)는 실행 중 겹침을 막는 데 사용하되 FIFO나 중복 게시 방지를 대신한다고 가정하지 않는다.
+공식 CLI에 서버 멱등성을 가정하지 않는다. 불명확한 결과는 자동 재시도 없이 수동 확인하며, 활성 기준은 사용자 선택에 따라 Git의 기준 JSON으로 보존하고, 대기 IPA 메타데이터 소실 시 자동 처리를 중단한다.
 
 ## 배제한 대안과 남은 검증
 
@@ -53,3 +53,6 @@ config/plugin 평가도 PR 코드 실행이므로 해당 job에는 배포 비밀
 - 제출 즉시 활성화: 실제 설치 확인 후 활성화라는 사용자 선택에 따라 제외.
 - 기존 TestFlight 기준 가져오기·구버전 OTA 유지보수: 새 기준·최신 버전 지원 선택에 따라 제외.
 - 외부 계정·자격 증명·서명·실제 runner 결과는 [validation.md](validation.md)에서 미확인 상태를 별도로 관리한다.
+
+[Turbo affected](https://turborepo.dev/docs/reference/run#--affected)는 패키지 의존 관계와 Git 변경 범위로 대상을 고른다. 설치된 2.10.12에서 모바일 dry-run을 확인했다.
+main 배포에는 마지막 실제 반영 SHA와 후보 SHA를 명시한다. 전체 Git 이력을 확보하고 루트 도구·설정 입력도 선언한다. 저장소 밖 환경 변경·수동 복구/재개는 affected만으로 생략하지 않는다.
