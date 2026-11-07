@@ -24,12 +24,12 @@
 
 독립 검증: 세 종류의 3페이지와 반복/무효 커서, 직접 URL·상세 왕복을 확인한다.
 
-- [ ] T009 [P] [US1] apps/web/src/pages/notices/ui/notices-page.test.tsx에 필터 전환·페이지·중복·오류·숨김/복귀 회귀를 추가한다.
-- [ ] T010 [P] [US1] apps/web/stackflow/src/stack.test.tsx와 apps/web/src/app/navigation/tab-link.test.tsx에 category 직접 진입·정규화·탭 왕복 회귀를 추가한다.
-- [ ] T011 [US1] apps/web/src/pages/notices/ui/notices-page.tsx, notice-tabs.tsx, index.ts에서 고정 목록을 제거하고 로딩·빈 결과·오류·무한 스크롤·카테고리 선택을 연결한다.
-- [ ] T012 [US1] apps/web/src/shared/lib/use-load-more-observer.ts로 실제 공통 observer를 옮기고 apps/web/src/pages/attendance/ui/attendance-page.tsx와 notices-page.tsx의 소비를 갱신한다.
-- [ ] T013 [US1] apps/web/src/app/navigation/tab.ts, tab-link.tsx, use-tabs-url.ts와 apps/web/stackflow/src/stack.tsx, activities/activities.tsx에 category params·replaceStep·URL·스크롤 복원을 연결한다.
-- [ ] T014 [US1] docs/web-routing.md와 specs/019-member-notices/validation.md에 URL 계약·회귀·check/build·화면·변경량·2단계 리뷰를 기록한다.
+- [x] T009 [P] [US1] apps/web/src/pages/notices/ui/notices-page.test.tsx에 필터 전환·페이지·중복·오류·숨김/복귀 회귀를 추가한다.
+- [x] T010 [P] [US1] apps/web/stackflow/src/stack.test.tsx와 apps/web/src/app/navigation/tab-link.test.tsx에 category 직접 진입·정규화·탭 왕복 회귀를 추가한다.
+- [x] T011 [US1] apps/web/src/pages/notices/ui/notices-page.tsx, notice-tabs.tsx, index.ts에서 고정 목록을 제거하고 로딩·빈 결과·오류·무한 스크롤·카테고리 선택을 연결한다.
+- [x] T012 [US1] apps/web/src/shared/lib/use-load-more-observer.ts로 실제 공통 observer를 옮기고 apps/web/src/pages/attendance/ui/attendance-page.tsx와 notices-page.tsx의 소비를 갱신한다.
+- [x] T013 [US1] apps/web/src/app/navigation/tab.ts, tab-link.tsx, use-tabs-url.ts와 apps/web/stackflow/src/stack.tsx, activities/activities.tsx에 category params·replaceStep·URL·스크롤 복원을 연결한다.
+- [x] T014 [US1] docs/web-routing.md와 specs/019-member-notices/validation.md에 URL 계약·회귀·check/build·화면·변경량·2단계 리뷰를 기록한다.
 
 ## 3단계 — US2 홈 주간 공지 (P2)
 

@@ -1,9 +1,4 @@
-export {
-  DEFAULT_NOTICES,
-  NoticesPage,
-  type Notice,
-  type NoticesPageProps,
-} from './ui/notices-page';
+export { NoticesPage, type NoticesPageProps } from './ui/notices-page';
 export {
   NOTICE_CATEGORIES,
   NoticeTabs,

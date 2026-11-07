@@ -6,7 +6,7 @@ import { useNativeAuthSession } from '@/features/auth';
 import { memberScoreQueryOptions } from '@/features/member-attendance';
 import { historyQueryOptions } from '../model/history-query';
 import { attendanceLabel } from '../model/attendance-status';
-import { useLoadMoreObserver } from '../model/use-load-more-observer';
+import { useLoadMoreObserver } from '@/shared/lib/use-load-more-observer';
 
 import { AttendanceQueryBoundary } from './attendance-query-boundary';
 import { BackButton } from '@/app/navigation/back-button';

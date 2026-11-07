@@ -44,3 +44,16 @@
 ## 2단계 기반 리뷰 상태
 
 - T006~~T008 완료. 목록 UI(T009~~T014), 홈, Markdown, 상세, 읽음 저장은 사용자 리뷰와 다음 단계 진행 확인 전 시작하지 않는다.
+
+## 2단계 — US1 게시판 목록
+
+- 고정 fixture 목록을 제거하고 생성된 `list1InfiniteOptions` 기반의 실제 목록 query를 연결했다. 로딩·초기 오류·재조회 오류·빈 결과·다음 페이지 로딩을 각각 구분한다.
+- 공지 탭은 `ALL`, `SESSION`, `ASSIGNMENT`, `OPERATION` OpenAPI 값을 사용한다. 선택 값은 `/notices?category=…`으로 정규화하고, 상세 이동 뒤 browser back에서도 복원한다.
+- 출석 내역에 있던 활성 Activity 한정 IntersectionObserver를 shared lib로 옮겨 공지 목록과 공유한다. 다음 페이지는 기존 요청 중 중복 호출하지 않는다.
+- UI 자동 검증은 서버 fixture 렌더링, 유형 전환, 상세 링크, 세 페이지 연결과 Stackflow의 category URL·back 복원을 확인한다.
+- 로컬 브라우저 스크린샷은 Computer Use 브라우저가 localhost 연결을 제공하지 않아 수행하지 못했다. 테스트 DOM과 production build로 대체 확인했으며 실기기·스크린 리더 검증은 남아 있다.
+
+## 2단계 — US1 자동 검증
+
+- 새 실행: web 전체 Vitest 45 파일·306 테스트 통과. `node --run check`와 web production build는 rebase 직후 통과했다.
+- rebase: `origin/main`의 `9008b08c` 위로 충돌 없이 재적용했다. 완료 HEAD `a1293495`, `git range-diff`에서 두 공지 커밋의 변경 보존을 확인했다.

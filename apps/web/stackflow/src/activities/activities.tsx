@@ -1,5 +1,5 @@
 import { ActivityScreen } from './activity-screen';
-import { useActivity, useActivityParams } from '@stackflow/react';
+import { useActivity, useActivityParams, useStepFlow } from '@stackflow/react';
 import { Activity } from 'react';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
@@ -26,7 +26,13 @@ import { AuthLayout } from '@/app/layouts/auth-layout';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabsLayout } from '@/app/layouts/tabs-layout';
-import { isTabName, type TabName, type TabsState } from '@/app/navigation/tab';
+import {
+  isNoticeCategory,
+  isTabName,
+  type NoticeCategory,
+  type TabName,
+  type TabsState,
+} from '@/app/navigation/tab';
 import { useTabsUrl } from '@/app/navigation/use-tabs-url';
 import { NativeAuthRedirect } from './native-auth-redirect';
 
@@ -40,6 +46,7 @@ const TAB_TITLES: Record<TabName, string> = {
 export function TabsActivity() {
   const activityParams = useActivityParams<'Tabs'>();
   const activity = useActivity();
+  const tabsStep = useStepFlow('Tabs');
   const step = activity.steps.filter((item) => item.id !== activity.id).at(-1);
   const stepParams = readTabsParams(step?.params);
   const initialParams = readTabsParams(activityParams);
@@ -48,6 +55,7 @@ export function TabsActivity() {
     initialTab: activeTab,
     session: stepParams.session ?? initialParams.session,
     attendance: stepParams.attendance ?? initialParams.attendance,
+    noticeCategory: stepParams.noticeCategory ?? initialParams.noticeCategory,
   } satisfies TabsState;
   useTabsUrl(tabsState);
 
@@ -75,7 +83,15 @@ export function TabsActivity() {
           <SchedulePage />
         </Activity>
         <Activity mode={activeTab === 'notices' ? 'visible' : 'hidden'} name="NoticesTab">
-          <NoticesPage />
+          <NoticesPage
+            category={tabsState.noticeCategory ?? 'ALL'}
+            onCategoryChange={(noticeCategory: NoticeCategory) => {
+              tabsStep.replaceStep(
+                { ...tabsState, initialTab: 'notices', noticeCategory },
+                { targetActivityId: activity.id },
+              );
+            }}
+          />
         </Activity>
         <Activity mode={activeTab === 'my' ? 'visible' : 'hidden'} name="MyTab">
           <MyPage />
@@ -95,11 +111,13 @@ function readTabsParams(params: unknown): TabsState {
   }
 
   const initialTab = 'initialTab' in params ? params.initialTab : undefined;
+  const noticeCategory = 'noticeCategory' in params ? params.noticeCategory : undefined;
   return {
     ...(isTabName(initialTab) ? { initialTab } : {}),
     session: 'session' in params && params.session === 'team' ? params.session : undefined,
     attendance:
       'attendance' in params && params.attendance === 'attended' ? params.attendance : undefined,
+    ...(isNoticeCategory(noticeCategory) ? { noticeCategory } : {}),
   };
 }
 

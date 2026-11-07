@@ -1,3 +1,4 @@
+/** 생성 API 공지 응답을 목록 UI 계약으로 검증·변환하는 query 모델이다. */
 import {
   list1InfiniteOptions,
   list1Options,
@@ -6,6 +7,7 @@ import {
   type UserPostListResponse,
 } from '@yapp-plus/api/generated';
 
+/** OpenAPI 공지 유형에 전체 목록을 위한 클라이언트 선택값을 더한 필터 계약이다. */
 export type NoticeCategory = 'ALL' | 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
 
 const safeInteger = (value: bigint) => Number.isSafeInteger(Number(value));
@@ -20,6 +22,7 @@ const noticeItemSchema = zUserPostListItemResponse.extend({
     .transform((value) => (value === null ? null : Number(value))),
 });
 
+/** API의 bigint ID·집계와 cursor를 UI가 안전하게 소비할 수 있는 값으로 검증·변환한다. */
 export const noticeListSchema = zUserPostListResponse
   .extend({
     totalPostCount: zUserPostListResponse.shape.totalPostCount
@@ -38,6 +41,7 @@ function listOptions(category: NoticeCategory, options?: Parameters<typeof list1
   };
 }
 
+/** 단일 첫 페이지 조회에 인증 옵션과 OpenAPI type 필터를 결합한다. */
 export function memberNoticeListQueryOptions(
   category: NoticeCategory = 'ALL',
   options?: Parameters<typeof list1Options>[0],
@@ -45,6 +49,7 @@ export function memberNoticeListQueryOptions(
   return list1Options(listOptions(category, options));
 }
 
+/** cursor가 null일 때만 종료하는 무한 목록 query 옵션을 생성한다. */
 export function memberNoticeListInfiniteQueryOptions(
   category: NoticeCategory = 'ALL',
   options?: Parameters<typeof list1InfiniteOptions>[0],
