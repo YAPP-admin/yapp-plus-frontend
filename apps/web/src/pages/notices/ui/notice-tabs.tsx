@@ -4,13 +4,13 @@ import { tabList, tabTrigger, tabTriggerActive } from './notice-tabs.css';
 import { Tabs } from '@seed-design/react';
 import type { ReactNode } from 'react';
 
-export type NoticeCategory = 'ALL' | 'SESSION' | 'ASSIGNMENT' | 'ETC';
+export type NoticeCategory = 'ALL' | 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
 
 export const NOTICE_CATEGORIES: { id: NoticeCategory; label: string }[] = [
   { id: 'ALL', label: '전체' },
   { id: 'SESSION', label: '세션' },
   { id: 'ASSIGNMENT', label: '과제' },
-  { id: 'ETC', label: '기타' },
+  { id: 'OPERATION', label: '기타' },
 ];
 
 export type NoticeTabsProps = {

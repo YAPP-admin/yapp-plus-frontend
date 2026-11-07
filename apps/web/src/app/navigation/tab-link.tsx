@@ -6,7 +6,7 @@ import { useHistoryTick } from '@stackflow/plugin-history-sync';
 type TabLinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'onClick'> & {
   children: ReactNode;
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
-  params?: Pick<TabsState, 'session' | 'attendance'>;
+  params?: Pick<TabsState, 'session' | 'attendance' | 'noticeCategory'>;
   tab: TabName;
 };
 
@@ -74,10 +74,17 @@ function readTabsState(params: unknown): TabsState {
   const initialTab = 'initialTab' in params ? params.initialTab : undefined;
   const session = 'session' in params ? params.session : undefined;
   const attendance = 'attendance' in params ? params.attendance : undefined;
+  const noticeCategory = 'noticeCategory' in params ? params.noticeCategory : undefined;
 
   return {
     ...(isTabName(initialTab) ? { initialTab } : {}),
     ...(session === 'team' ? { session } : {}),
     ...(attendance === 'attended' ? { attendance } : {}),
+    ...(noticeCategory === 'ALL' ||
+    noticeCategory === 'SESSION' ||
+    noticeCategory === 'ASSIGNMENT' ||
+    noticeCategory === 'OPERATION'
+      ? { noticeCategory }
+      : {}),
   };
 }

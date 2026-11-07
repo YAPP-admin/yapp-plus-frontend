@@ -7,7 +7,7 @@ import { tabNames, tabPath, tabUrl, type TabsState } from './tab';
 export function useTabsUrl(params: TabsState) {
   const { isTop, transitionState } = useActivity();
   const { requestHistoryTick } = useHistoryTick();
-  const { initialTab, session, attendance } = params;
+  const { initialTab, session, attendance, noticeCategory } = params;
 
   useEffect(() => {
     if (!isTop || transitionState !== 'enter-done') {
@@ -21,7 +21,7 @@ export function useTabsUrl(params: TabsState) {
         resolve();
         return;
       }
-      const nextUrl = tabUrl({ initialTab, session, attendance });
+      const nextUrl = tabUrl({ initialTab, session, attendance, noticeCategory });
       const currentUrl = `${window.location.pathname}${window.location.search}`;
       if (currentUrl !== nextUrl) {
         window.history.replaceState(window.history.state, '', nextUrl);
@@ -31,5 +31,5 @@ export function useTabsUrl(params: TabsState) {
     return () => {
       active = false;
     };
-  }, [attendance, initialTab, requestHistoryTick, session, isTop, transitionState]);
+  }, [attendance, initialTab, noticeCategory, requestHistoryTick, session, isTop, transitionState]);
 }

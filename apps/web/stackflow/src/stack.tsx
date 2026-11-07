@@ -171,7 +171,15 @@ const tabRoutes = [
     }),
   },
   { path: '/schedule', decode: () => ({ initialTab: 'schedule' as const }) },
-  { path: '/notices', decode: () => ({ initialTab: 'notices' as const }) },
+  {
+    path: '/notices',
+    decode: ({ category }: Record<string, string | undefined>) => ({
+      initialTab: 'notices' as const,
+      ...(category === 'SESSION' || category === 'ASSIGNMENT' || category === 'OPERATION'
+        ? { noticeCategory: category }
+        : {}),
+    }),
+  },
   { path: '/my', decode: () => ({ initialTab: 'my' as const }) },
 ];
 

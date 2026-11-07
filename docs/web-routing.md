@@ -151,6 +151,18 @@
 
 ### 공지 분류 계약
 
+> 2026-11-07 갱신: 현재 Vite·Stackflow 구현은 아래의 과거 소문자 표기 대신 OpenAPI 열거형을
+> 그대로 사용한다. `/notices`는 `ALL`이며, `SESSION`, `ASSIGNMENT`, `OPERATION`만 URL에 남긴다.
+> 지원하지 않거나 비어 있는 값은 `ALL`로 정규화한다. 탭 전환은 현재 Tabs step을 교체하고,
+> 상세로 이동한 뒤 browser back하면 선택한 category를 복원한다.
+
+| 선택한 분류 | URL                            |
+| ----------- | ------------------------------ |
+| 전체        | `/notices`                     |
+| 세션        | `/notices?category=SESSION`    |
+| 과제        | `/notices?category=ASSIGNMENT` |
+| 기타        | `/notices?category=OPERATION`  |
+
 쿼리 키는 `category`이며 값은 소문자 영문으로 정의합니다.
 
 | 선택한 분류 | URL                            | 해석                         |

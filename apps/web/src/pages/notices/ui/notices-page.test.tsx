@@ -1,7 +1,13 @@
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createAppQueryClient } from '@/app/providers';
+import { NativeAuthSessionProvider } from '@/features/auth';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { fireEvent, render, screen } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
-import { DEFAULT_NOTICES, NoticesPage } from './notices-page';
+import { http, HttpResponse } from 'msw';
+import { useState } from 'react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { apiBaseUrl, server } from '../../../mocks/server';
+import { NoticesPage } from './notices-page';
 
 vi.mock('@/app/navigation/activity-link', () => ({
   ActivityLink: ({
@@ -19,67 +25,94 @@ vi.mock('@/app/navigation/activity-link', () => ({
   ),
 }));
 
-describe('NoticesPage', () => {
-  it('게시판 기본 목록과 탭을 정상적으로 렌더링한다', () => {
-    render(<NoticesPage />);
+const observer = vi.hoisted(() => ({ trigger: undefined as (() => void) | undefined }));
+vi.mock('@stackflow/react', () => ({
+  useActivity: () => ({ isActive: true }),
+}));
 
-    expect(screen.getByRole('heading', { level: 1, name: '게시판' })).toBeInTheDocument();
-    expect(screen.getByRole('tablist', { name: '게시판 카테고리' })).toBeInTheDocument();
-    expect(screen.getByRole('list', { name: '공지사항 목록' })).toBeInTheDocument();
+beforeEach(() => {
+  vi.stubEnv('VITE_API_MOCKING', 'true');
+  observer.trigger = undefined;
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      constructor(callback: (entries: { isIntersecting: boolean }[]) => void) {
+        observer.trigger = () => callback([{ isIntersecting: true }]);
+      }
+      observe = vi.fn<() => void>();
+      disconnect = vi.fn<() => void>();
+    },
+  );
+});
 
-    expect(screen.getByRole('tab', { name: '전체' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '세션' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '과제' })).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: '기타' })).toBeInTheDocument();
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.unstubAllGlobals();
+});
 
-    expect(
-      screen.getByRole('heading', { level: 2, name: '팀빌딩 소개서 작성' }),
-    ).toBeInTheDocument();
-    expect(screen.getByText('D-2')).toBeInTheDocument();
-    expect(screen.getByText('2026.09.30 (수)')).toBeInTheDocument();
-  });
+function renderPage() {
+  const client = createAppQueryClient();
+  const view = render(
+    <QueryClientProvider client={client}>
+      <NativeAuthSessionProvider>
+        <ControlledNotices />
+      </NativeAuthSessionProvider>
+    </QueryClientProvider>,
+  );
+  return { client, ...view };
+}
 
-  it('방향키로 카테고리를 전환하고 선택한 탭에 목록 패널을 연결한다', async () => {
-    const user = userEvent.setup();
-    render(<NoticesPage />);
-    screen.getByRole('tab', { name: '전체' }).focus();
-    await user.keyboard('{ArrowRight}');
-    const selected = screen.getByRole('tab', { name: '세션' });
-    expect(selected).toHaveFocus();
-    expect(selected).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: '전체' })).toHaveAttribute('tabindex', '-1');
-    const panel = screen.getByRole('tabpanel', { name: '세션' });
-    expect(selected).toHaveAttribute('aria-controls', panel.id);
-    expect(screen.queryByRole('heading', { name: '팀빌딩 소개서 작성' })).not.toBeInTheDocument();
-  });
+function ControlledNotices() {
+  const [category, setCategory] = useState<'ALL' | 'SESSION' | 'ASSIGNMENT' | 'OPERATION'>('ALL');
+  return <NoticesPage category={category} onCategoryChange={setCategory} />;
+}
 
-  it('카테고리 탭을 클릭하면 해당 카테고리의 공지사항만 필터링된다', () => {
-    render(<NoticesPage />);
+it('서버 공지를 표시하고 상세 링크를 연결한다', async () => {
+  renderPage();
+  const list = await screen.findByRole('list', { name: '공지사항 목록' });
+  expect(within(list).getByRole('heading', { name: '6주차 세션 안내' })).toBeVisible();
+  expect(within(list).getByText('2026.11.07.(토)')).toBeVisible();
+  expect(screen.getByRole('link', { name: '세션 공지: 6주차 세션 안내' })).toHaveAttribute(
+    'href',
+    '/notices/1',
+  );
+});
 
-    // '세션' 탭 클릭
-    const sessionTab = screen.getByRole('tab', { name: '세션' });
-    fireEvent.click(sessionTab);
+it('탭 전환 시 유형별 API 결과를 새로 표시한다', async () => {
+  const user = userEvent.setup();
+  renderPage();
+  await screen.findByText('6주차 세션 안내');
+  await user.click(screen.getByRole('tab', { name: '과제' }));
+  const list = await screen.findByRole('list', { name: '공지사항 목록' });
+  expect(within(list).getByText('사용자 테스트 결과 제출')).toBeVisible();
+  expect(within(list).queryByText('6주차 세션 안내')).not.toBeInTheDocument();
+});
 
-    expect(
-      screen.getByRole('heading', { level: 2, name: '3주차 팀빌딩 세션 공지' }),
-    ).toBeInTheDocument();
-    expect(
-      screen.queryByRole('heading', { level: 2, name: '팀빌딩 소개서 작성' }),
-    ).not.toBeInTheDocument();
-  });
+it('관찰 지점에서 다음 페이지를 이어 붙인다', async () => {
+  renderPage();
+  await screen.findByText('6주차 세션 안내');
+  act(() => observer.trigger?.());
+  expect(await screen.findByText('5주차 세션 안내')).toBeVisible();
+  act(() => observer.trigger?.());
+  await waitFor(() => expect(screen.getByText('3주차 세션 안내')).toBeVisible());
+});
 
-  it('공지사항이 빈 배열일 때 빈 상태(아직 작성된 공지사항이 없어요)를 렌더링한다', () => {
-    render(<NoticesPage notices={[]} />);
-
-    expect(screen.getByRole('status', { name: '공지사항 없음' })).toBeInTheDocument();
-    expect(screen.getByText('아직 작성된 공지사항이 없어요')).toBeInTheDocument();
-    expect(screen.queryByRole('list', { name: '공지사항 목록' })).not.toBeInTheDocument();
-  });
-
-  it('개별 공지사항 아이템에 상세 링크가 올바르게 연결된다', () => {
-    render(<NoticesPage notices={DEFAULT_NOTICES.slice(0, 1)} />);
-
-    const link = screen.getByRole('link', { name: /과제 공지: 팀빌딩 소개서 작성/ });
-    expect(link).toHaveAttribute('href', '/notices/1');
-  });
+it('초기 조회 오류를 ResultSection의 재시도로 복구한다', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  const url = `${apiBaseUrl}/api/posts`;
+  server.use(http.get(url, () => HttpResponse.json({ code: 'FAILED' }, { status: 500 })));
+  renderPage();
+  expect(await screen.findByRole('alert')).toHaveTextContent('공지사항을 불러오지 못했어요');
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({
+        totalPostCount: 0,
+        items: [],
+        nextCursor: null,
+      }),
+    ),
+  );
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(await screen.findByText('아직 작성된 공지사항이 없어요')).toBeVisible();
 });

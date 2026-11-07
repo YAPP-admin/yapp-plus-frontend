@@ -15,7 +15,7 @@ import {
 
 export type NoticeItemProps = {
   id: string;
-  category: 'SESSION' | 'ASSIGNMENT' | 'ETC';
+  category: 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
   categoryLabel: string;
   title: string;
   date: string;
@@ -29,7 +29,7 @@ function getCategoryChipClass(category: NoticeItemProps['category']) {
       return assignmentChip;
     case 'SESSION':
       return sessionChip;
-    case 'ETC':
+    case 'OPERATION':
     default:
       return etcChip;
   }
