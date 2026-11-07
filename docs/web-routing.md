@@ -349,3 +349,9 @@ Chrome에서 홈/마이페이지 → 출석 → 규칙 복귀, 앞으로가기 �
 [nuqs-adapter]: https://nuqs.dev/docs/adapters#app-router
 [nuqs-parsers]: https://nuqs.dev/docs/parsers/built-in
 [nuqs-options]: https://nuqs.dev/docs/options#history
+
+### 회원 출석 내역 API 연결
+
+`/my/attendance`는 생성 infinite query로 집계·배지·커서 목록을 조회한다. 기존 `mode` query는
+데이터를 바꾸지 않는다. DEV+MSW의 `attendanceState=empty|loading|error|next-error|warning`으로
+빈 결과·지연·초기 오류·추가 오류·결석 경고를 재현한다. 기본 시나리오는 3페이지와 전체 배지다.
