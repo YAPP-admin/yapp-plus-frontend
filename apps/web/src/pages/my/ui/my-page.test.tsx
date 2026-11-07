@@ -1,5 +1,17 @@
-import { render, screen, waitFor, within } from '@testing-library/react';
-import { describe, expect, it, vi } from 'vitest';
+import type { AuthResult } from '@yapp-plus/app-bridge';
+import { QueryClientProvider } from '@tanstack/react-query';
+import { createAppQueryClient } from '@/app/providers';
+import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
+import { mineQueryKey } from '@yapp-plus/api/generated';
+import userEvent from '@testing-library/user-event';
+import { http, HttpResponse } from 'msw';
+import { apiBaseUrl, server } from '../../../mocks/server';
+import {
+  createMemberAttendanceHandlers,
+  scoreFixture,
+} from '../../../mocks/member-attendance-handlers';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MyPage } from './my-page';
 
 vi.mock('@/app/navigation/activity-link', () => ({
@@ -18,41 +30,154 @@ vi.mock('@/app/navigation/activity-link', () => ({
   ),
 }));
 
+const url = `${apiBaseUrl}/api/attendance-scores/me`;
+beforeEach(() => vi.stubEnv('VITE_API_MOCKING', 'true'));
+afterEach(() => {
+  vi.unstubAllEnvs();
+  vi.restoreAllMocks();
+});
+
+function renderPage(native = false, name?: string) {
+  const client = createAppQueryClient();
+  if (native) {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('YAPPPlusWebView');
+    const result = {
+      status: 'SIGNED_IN',
+      session: {
+        userId: 1,
+        sessionId: 'test-session',
+        tokenVersion: 1,
+        accessToken: 'test-token',
+        expiresAt: 9999999999,
+        name,
+      },
+    } satisfies AuthResult;
+    client.setQueryData(nativeSessionQueryOptions(true).queryKey, result);
+  }
+  render(
+    <QueryClientProvider client={client}>
+      <NativeAuthSessionProvider>
+        <MyPage />
+      </NativeAuthSessionProvider>
+    </QueryClientProvider>,
+  );
+  return { client };
+}
+
 describe('MyPage', () => {
-  it('사용자 프로필 정보(이름, 상태 칩, 기수, 직군)를 렌더링한다', () => {
-    render(<MyPage />);
-    expect(screen.getByText('김야뿌')).toBeInTheDocument();
-    expect(screen.getByText('활동회원')).toBeInTheDocument();
-    expect(screen.getByText('28기')).toBeInTheDocument();
-    expect(screen.getByText('Designer')).toBeInTheDocument();
+  it('세션 이름을 정규화하고 미지원 프로필과 면제권은 —로 표시한다', async () => {
+    renderPage(true, '  테스트 회원  ');
+    expect(await screen.findByText('테스트 회원')).toBeVisible();
+    expect(await screen.findByText('92점')).toBeVisible();
+    expect(screen.queryByText('활동회원')).not.toBeInTheDocument();
+    expect(screen.queryByText('28기')).not.toBeInTheDocument();
+    expect(screen.getAllByText('—')).toHaveLength(4);
+    expect(screen.getByRole('img', { name: '프로필' })).toBeVisible();
   });
 
-  it('출석 현황 카드(총 점수, 출석 통계 4칸)를 정상적으로 표시한다', () => {
-    render(<MyPage />);
-    const card = screen.getByLabelText('내 출석 현황');
-    expect(within(card).getByText('내 출석 현황')).toBeInTheDocument();
-    expect(within(card).getByText('총 점수')).toBeInTheDocument();
-    expect(within(card).getByText('92점')).toBeInTheDocument();
-
-    expect(within(card).getByText('출석')).toBeInTheDocument();
-    expect(within(card).getByText('3')).toBeInTheDocument();
-
-    expect(within(card).getByText('지각')).toBeInTheDocument();
-    expect(within(card).getByText('결석')).toBeInTheDocument();
-    expect(within(card).getByText('0')).toBeInTheDocument();
-    expect(within(card).getByText('지각 면제권')).toBeInTheDocument();
+  it('이름 없는 기존 네이티브도 점수와 0횟수를 표시한다', async () => {
+    server.use(
+      http.get(url, () =>
+        HttpResponse.json({
+          ...scoreFixture,
+          totalScore: 0,
+          attendanceCount: 0,
+          lateCount: 0,
+          absentCount: 0,
+        }),
+      ),
+    );
+    renderPage(true);
+    expect(await screen.findByText('0점')).toBeVisible();
+    expect(within(screen.getByLabelText('내 출석 현황')).getAllByText('0')).toHaveLength(3);
+    expect(screen.getAllByText('—')).toHaveLength(5);
   });
 
-  it('출석 내역 메뉴 링크를 렌더링한다', () => {
-    render(<MyPage />);
-    const menuNav = within(screen.getByRole('navigation', { name: '마이페이지 메뉴' }));
+  it('로딩 중에도 프로필·메뉴·규칙을 유지한다', async () => {
+    let finish: (() => void) | undefined;
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    server.use(
+      http.get(url, async () => {
+        await pending;
+        return HttpResponse.json(scoreFixture);
+      }),
+    );
+    renderPage(true, '테스트 회원');
+    expect(await screen.findByRole('status')).toHaveTextContent('출석 현황을 불러오고 있어요');
+    expect(screen.getByText('테스트 회원')).toBeVisible();
+    expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
+    await userEvent.setup().click(screen.getByRole('button', { name: '출석 규칙 안내' }));
+    expect(await screen.findByRole('dialog')).toBeVisible();
+    act(() => finish?.());
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+    expect(screen.getByRole('dialog')).toBeVisible();
+    await userEvent
+      .setup()
+      .click(within(screen.getByRole('dialog')).getByRole('button', { name: '확인' }));
+    expect(await screen.findByText('92점')).toBeVisible();
+  });
+
+  it.each(['ineligible', 'no-generation'])(
+    '미대상은 —이고 오류 안내가 없다 (%s)',
+    async (state) => {
+      server.use(...createMemberAttendanceHandlers(apiBaseUrl, state));
+      const { client } = renderPage();
+      await waitFor(() =>
+        expect(client.getQueryData(mineQueryKey())).toMatchObject({ status: 'unavailable' }),
+      );
+      expect(screen.getAllByText('—')).toHaveLength(9);
+      expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+    },
+  );
+
+  it('초기 실패에서도 메뉴를 유지하고 키보드 재시도로 복구한다', async () => {
+    server.use(...createMemberAttendanceHandlers(apiBaseUrl, 'error'));
+    renderPage(true, '테스트 회원');
+    expect(await screen.findByRole('alert')).toHaveTextContent('출석 현황을 불러오지 못했어요');
+    expect(screen.getByText('테스트 회원')).toBeVisible();
+    expect(screen.getByRole('button', { name: '출석 규칙 안내' })).toBeVisible();
+    expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
+    const retry = screen.getByRole('button', { name: '다시 시도' });
+    retry.focus();
+    await userEvent.setup().keyboard('{Enter}');
+    expect(await screen.findByText('92점')).toBeVisible();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('재조회 실패는 이전 값과 오류 안내를 함께 표시한다', async () => {
+    const { client } = renderPage();
+    expect(await screen.findByText('92점')).toBeVisible();
+    server.use(http.get(url, () => HttpResponse.json({}, { status: 500 })));
+    await act(() => client.invalidateQueries({ queryKey: mineQueryKey() }));
+    expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
+    expect(screen.getByText('92점')).toBeVisible();
+    server.use(...createMemberAttendanceHandlers(apiBaseUrl));
+    await userEvent.setup().click(screen.getByRole('button', { name: '다시 시도' }));
+    await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+    expect(screen.getByText('92점')).toBeVisible();
+  });
+
+  it('MSW 없는 일반 브라우저에서는 요청하지 않고 로그인 안내를 표시한다', async () => {
+    vi.stubEnv('VITE_API_MOCKING', 'false');
+    const requested = vi.fn<() => Response>(() => HttpResponse.json(scoreFixture));
+    server.use(http.get(url, requested));
+    renderPage();
+    expect(await screen.findByRole('status')).toHaveTextContent('앱에 로그인한 후');
+    expect(requested).not.toHaveBeenCalled();
+  });
+
+  it('출석 내역 메뉴 링크를 렌더링한다', async () => {
+    renderPage();
+    const menuNav = within(await screen.findByRole('navigation', { name: '마이페이지 메뉴' }));
     const attendanceLink = menuNav.getByRole('link', { name: /출석 내역/ });
     expect(attendanceLink).toHaveAttribute('href', '/my/attendance');
   });
 
   it('출석 현황 카드의 ? 버튼을 누르면 SEED 출석 규칙 다이얼로그가 열리고 확인 버튼으로 닫힌다', async () => {
-    render(<MyPage />);
-    const questionBtn = screen.getByRole('button', { name: '출석 규칙 안내' });
+    renderPage();
+    const questionBtn = await screen.findByRole('button', { name: '출석 규칙 안내' });
     expect(screen.queryByRole('heading', { name: '출석 규칙' })).not.toBeInTheDocument();
 
     questionBtn.click();
