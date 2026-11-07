@@ -1,16 +1,17 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
+import { Checkbox, HStack } from '@seed-design/react';
 import { IconCameraLine, IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import { Image } from '@/app/navigation/image';
 import { useFlow } from '@stackflow/react';
 import { useRef, useState } from 'react';
 import {
+  checkboxControl,
+  checkboxIcon,
   body,
   bottomSection,
-  checkboxSquare,
-  checkboxSquareChecked,
   confirmButton,
   container,
   fileInputHidden,
@@ -24,14 +25,11 @@ import {
   memberCardChecked,
   memberDescription,
   memberHeader,
-  memberInfoLeft,
   memberList,
   memberName,
   memberRole,
   memberSection,
-  memberTextWrap,
   memberTitle,
-  srOnly,
   uploadArea,
   uploadHintText,
   uploadIconWrap,
@@ -144,31 +142,26 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
 
           <div className={memberList} aria-label="팀원 목록">
             {members.map((member) => (
-              <label
+              <Checkbox.Root
+                tone="neutral"
+                checked={member.checked}
+                onCheckedChange={() => toggleMember(member.id)}
                 key={member.id}
                 className={`${memberCard} ${member.checked ? memberCardChecked : ''}`}
               >
-                <input
-                  type="checkbox"
-                  className={srOnly}
-                  checked={member.checked}
-                  onChange={() => toggleMember(member.id)}
-                />
-                <div className={memberInfoLeft}>
-                  <div
-                    className={`${checkboxSquare} ${member.checked ? checkboxSquareChecked : ''}`}
-                    aria-hidden="true"
-                  >
-                    {member.checked && <IconCheckmarkLine width={14} height={14} />}
-                  </div>
-                  <div className={memberTextWrap}>
-                    <span className={memberName}>{member.name}</span>
+                <Checkbox.HiddenInput />
+                <HStack gap="x2_5" align="center">
+                  <Checkbox.Control className={checkboxControl}>
+                    <Checkbox.Indicator className={checkboxIcon} checked={<IconCheckmarkLine />} />
+                  </Checkbox.Control>
+                  <HStack gap="x2" align="center">
+                    <Checkbox.Label className={memberName}>{member.name}</Checkbox.Label>
                     <span className={memberRole}>{member.role}</span>
-                  </div>
-                </div>
+                  </HStack>
+                </HStack>
 
                 {member.isMe && <span className={meBadge}>나</span>}
-              </label>
+              </Checkbox.Root>
             ))}
           </div>
         </section>

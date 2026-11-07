@@ -123,23 +123,9 @@ export const noteBullet = style({
 });
 
 export const confirmButton = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
   width: '100%',
   height: '46px',
-  padding: `0 ${vars.$dimension.x5}`,
-  background: vars.$color.bg.brandSolid,
-  color: '#FFFFFF',
+  WebkitFontSmoothing: 'auto',
   borderRadius: vars.$radius.r2,
-  fontSize: vars.$fontSize.t4,
-  lineHeight: vars.$lineHeight.t4,
-  fontWeight: vars.$fontWeight.bold,
-  border: 'none',
-  cursor: 'pointer',
-  textDecoration: 'none',
-  boxSizing: 'border-box',
-  ':active': {
-    opacity: 0.9,
-  },
+  padding: `0 ${vars.$dimension.x5}`,
 });

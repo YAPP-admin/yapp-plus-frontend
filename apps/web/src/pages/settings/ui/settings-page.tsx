@@ -2,6 +2,8 @@
 
 import { BackButton } from '@/app/navigation/back-button';
 import {
+  VStack,
+  HStack,
   DialogAction,
   DialogBackdrop,
   DialogContent,
@@ -26,9 +28,7 @@ import {
 } from '@/features/auth';
 import { ActionButton, Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
 import {
-  body,
   bottomSection,
-  container,
   dialogBackdrop,
   dialogCancelButton,
   dialogConfirmButton,
@@ -38,14 +38,12 @@ import {
   dialogHeader,
   dialogPositioner,
   dialogTitle,
-  header,
   headerSpacer,
   headerTitle,
   logoutButton,
   menuChevron,
   menuItem,
   menuLabel,
-  menuList,
   switchControl,
   switchRoot,
   switchThumb,
@@ -103,8 +101,17 @@ export function SettingsPage() {
   };
 
   return (
-    <div className={container}>
-      <header className={header}>
+    <VStack width="full" minHeight="100dvh" bg="bg.layerDefault">
+      <HStack
+        as="header"
+        align="center"
+        justify="space-between"
+        height="54px"
+        px="x4"
+        width="full"
+        maxWidth="480px"
+        mx="auto"
+      >
         <BackButton
           fallbackActivityName="Tabs"
           fallbackActivityParams={{ initialTab: 'my' }}
@@ -112,10 +119,18 @@ export function SettingsPage() {
         />
         <h1 className={headerTitle}>설정</h1>
         <div className={headerSpacer} aria-hidden="true" />
-      </header>
+      </HStack>
 
-      <main className={body}>
-        <section className={menuList} aria-label="설정 메뉴">
+      <VStack
+        as="main"
+        justify="space-between"
+        px="x5"
+        width="full"
+        maxWidth="480px"
+        mx="auto"
+        style={{ flex: 1 }}
+      >
+        <VStack as="section" width="full" aria-label="설정 메뉴">
           <div className={menuItem}>
             <span className={menuLabel}>알림</span>
             <SwitchRoot
@@ -123,7 +138,7 @@ export function SettingsPage() {
               checked={isNotificationEnabled}
               onCheckedChange={setIsNotificationEnabled}
             >
-              <SwitchHiddenInput />
+              <SwitchHiddenInput aria-label="알림" />
               <SwitchControl className={switchControl}>
                 <SwitchThumb className={switchThumb} />
               </SwitchControl>
@@ -199,7 +214,7 @@ export function SettingsPage() {
               </DialogContent>
             </DialogPositioner>
           </DialogRoot>
-        </section>
+        </VStack>
 
         {/* 로그아웃 다이얼로그 (Figma #222:48244) */}
         <section className={bottomSection} aria-label="계정 관리">
@@ -243,7 +258,7 @@ export function SettingsPage() {
             </DialogPositioner>
           </DialogRoot>
         </section>
-      </main>
-    </div>
+      </VStack>
+    </VStack>
   );
 }

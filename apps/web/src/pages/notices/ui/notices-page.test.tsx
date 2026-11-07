@@ -1,3 +1,4 @@
+import userEvent from '@testing-library/user-event';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { DEFAULT_NOTICES, NoticesPage } from './notices-page';
@@ -36,6 +37,20 @@ describe('NoticesPage', () => {
     ).toBeInTheDocument();
     expect(screen.getByText('D-2')).toBeInTheDocument();
     expect(screen.getByText('2026.09.30 (수)')).toBeInTheDocument();
+  });
+
+  it('방향키로 카테고리를 전환하고 선택한 탭에 목록 패널을 연결한다', async () => {
+    const user = userEvent.setup();
+    render(<NoticesPage />);
+    screen.getByRole('tab', { name: '전체' }).focus();
+    await user.keyboard('{ArrowRight}');
+    const selected = screen.getByRole('tab', { name: '세션' });
+    expect(selected).toHaveFocus();
+    expect(selected).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: '전체' })).toHaveAttribute('tabindex', '-1');
+    const panel = screen.getByRole('tabpanel', { name: '세션' });
+    expect(selected).toHaveAttribute('aria-controls', panel.id);
+    expect(screen.queryByRole('heading', { name: '팀빌딩 소개서 작성' })).not.toBeInTheDocument();
   });
 
   it('카테고리 탭을 클릭하면 해당 카테고리의 공지사항만 필터링된다', () => {
