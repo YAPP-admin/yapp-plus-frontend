@@ -37,10 +37,7 @@ export const headerSpacer = style({
 });
 
 export const body = style({
-  display: 'flex',
-  flexDirection: 'column',
   padding: `10px ${vars.$dimension.x5} 40px`,
-  gap: '40px',
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
@@ -196,6 +193,9 @@ export const sessionItem = style({
 });
 
 export const sessionName = style({
+  minWidth: 0,
+  overflowWrap: 'anywhere',
+  paddingRight: vars.$dimension.x2,
   fontSize: vars.$fontSize.t5,
   lineHeight: vars.$lineHeight.t5,
   fontWeight: vars.$fontWeight.bold,
