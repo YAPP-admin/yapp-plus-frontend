@@ -1,7 +1,6 @@
-import { QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
-import { Suspense, type ReactNode } from 'react';
-import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
-import type { MyAttendanceScoreResponse } from '@yapp-plus/api/generated';
+import { Box, Grid, HStack, VStack } from '@seed-design/react';
+import { useSuspenseQuery } from '@tanstack/react-query';
+import { Suspense } from 'react';
 import { sessionNameSchema } from '@yapp-plus/app-bridge';
 import { ActionButton } from '@yapp-plus/ui';
 import { useNativeAuthSession } from '@/features/auth';
@@ -10,34 +9,22 @@ import { IconQuestionmarkCircleFill } from '@karrotmarket/react-monochrome-icon'
 import { ActivityLink } from '@/app/navigation/activity-link';
 import { Image } from '@/app/navigation/image';
 import { AttendanceRulesDialog } from './attendance-rules-dialog';
+import { ScoreErrorBoundary } from './score-error-boundary';
+import { ScoreSummary } from './score-summary';
 import {
   activeChip,
   attendanceCard,
   avatar,
-  cardStats,
   cardTitle,
-  cardTitleGroup,
   container,
   menuChevron,
   menuItem,
   menuLabel,
-  menuList,
   name,
-  nameRow,
-  profileInfo,
-  profileRow,
-  profileSection,
   questionButton,
-  scoreGroup,
-  scoreLabel,
-  scoreValue,
   sectionDivider,
   queryNotice,
-  statItem,
-  statLabel,
-  statValue,
   subDivider,
-  subRow,
   subText,
 } from './my-page.css';
 
@@ -48,27 +35,49 @@ export function MyPage() {
     phase === 'SIGNED_IN' ||
     (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
   return (
-    <div className={container}>
-      <section className={profileSection} aria-label="프로필 및 출석 현황">
-        <div className={profileRow}>
-          <div className={avatar}>
+    <VStack
+      className={container}
+      width="full"
+      maxWidth="480px"
+      mx="auto"
+      minHeight="full"
+      pb="x8"
+      bg="bg.layerDefault"
+    >
+      <VStack as="section" px="x5" gap="x0_5" aria-label="프로필 및 출석 현황">
+        <HStack align="center" py="x4_5" gap="x4">
+          <Box className={avatar} width="66px" height="66px" borderRadius="full" flexShrink={0}>
             <Image src="/images/my/user-profile.svg" alt="프로필" width={66} height={66} priority />
-          </div>
-          <div className={profileInfo}>
-            <div className={nameRow}>
+          </Box>
+          <VStack gap="x1" minWidth="0px">
+            <HStack align="center" gap="x2">
               <span className={name}>{displayName}</span>
               <span className={activeChip}>—</span>
-            </div>
-            <div className={subRow}>
+            </HStack>
+            <HStack align="center" gap="x2_5">
               <span className={subText}>—</span>
               <span className={subDivider} aria-hidden="true" />
               <span className={subText}>—</span>
-            </div>
-          </div>
-        </div>
+            </HStack>
+          </VStack>
+        </HStack>
 
-        <div className={attendanceCard} aria-label="내 출석 현황">
-          <div className={cardTitleGroup}>
+        <Grid
+          columns="minmax(0, 1fr) auto"
+          className={attendanceCard}
+          borderRadius="r2"
+          bg="bg.layerDefault"
+          aria-label="내 출석 현황"
+        >
+          <HStack
+            gridColumn="1"
+            gridRow="1"
+            py="x2"
+            px="x4"
+            bg="bg.neutralMuted"
+            align="center"
+            gap="x1"
+          >
             <span className={cardTitle}>내 출석 현황</span>
             <AttendanceRulesDialog>
               <button
@@ -80,72 +89,52 @@ export function MyPage() {
                 <IconQuestionmarkCircleFill width={20} height={20} />
               </button>
             </AttendanceRulesDialog>
-          </div>
+          </HStack>
           {canQuery ? (
-            <QueryErrorResetBoundary>
-              {({ reset }) => (
-                <ErrorBoundary onReset={reset} FallbackComponent={ScoreError}>
-                  <Suspense
-                    fallback={
-                      <ScoreSummary
-                        notice={
-                          <output className={queryNotice}>출석 현황을 불러오고 있어요…</output>
-                        }
-                      />
+            <ScoreErrorBoundary>
+              <Suspense
+                fallback={
+                  <ScoreSummary
+                    notice={
+                      <VStack as="output" gridColumn="1 / -1" p="x4" className={queryNotice}>
+                        출석 현황을 불러오고 있어요…
+                      </VStack>
                     }
-                  >
-                    <ScoreContent />
-                  </Suspense>
-                </ErrorBoundary>
-              )}
-            </QueryErrorResetBoundary>
+                  />
+                }
+              >
+                <ScoreContent />
+              </Suspense>
+            </ScoreErrorBoundary>
           ) : (
             <ScoreSummary
               notice={
-                <output className={queryNotice}>
+                <VStack as="output" gridColumn="1 / -1" p="x4" className={queryNotice}>
                   출석 현황은 YAPP+ 앱에 로그인한 후 확인할 수 있어요.
-                </output>
+                </VStack>
               }
             />
           )}
-        </div>
-      </section>
+        </Grid>
+      </VStack>
 
       <hr className={sectionDivider} />
 
-      <nav className={menuList} aria-label="마이페이지 메뉴">
-        <ActivityLink activityName="Attendance" activityParams={{}} className={menuItem}>
-          <span className={menuLabel}>출석 내역</span>
-          <Image
-            src="/images/my/chevron-right.svg"
-            alt=""
-            width={24}
-            height={24}
-            className={menuChevron}
-          />
-        </ActivityLink>
-      </nav>
-    </div>
-  );
-}
-
-function ScoreError({ resetErrorBoundary }: FallbackProps) {
-  return (
-    <ScoreSummary
-      notice={
-        <div className={queryNotice} role="alert">
-          <p>출석 현황을 불러오지 못했어요.</p>
-          <ActionButton
-            type="button"
-            variant="neutralWeak"
-            size="small"
-            onClick={resetErrorBoundary}
-          >
-            다시 시도
-          </ActionButton>
-        </div>
-      }
-    />
+      <VStack as="nav" px="x5" mt="x2_5" aria-label="마이페이지 메뉴">
+        <HStack asChild align="center" justify="space-between" py="x4">
+          <ActivityLink activityName="Attendance" activityParams={{}} className={menuItem}>
+            <span className={menuLabel}>출석 내역</span>
+            <Image
+              src="/images/my/chevron-right.svg"
+              alt=""
+              width={24}
+              height={24}
+              className={menuChevron}
+            />
+          </ActivityLink>
+        </HStack>
+      </VStack>
+    </VStack>
   );
 }
 
@@ -159,7 +148,14 @@ function ScoreContent() {
       score={data.status === 'available' ? data.score : undefined}
       notice={
         error ? (
-          <div className={queryNotice} role="alert">
+          <VStack
+            gridColumn="1 / -1"
+            align="flex-start"
+            gap="x2"
+            p="x4"
+            className={queryNotice}
+            role="alert"
+          >
             <p>출석 현황을 새로 불러오지 못했어요. 이전 내용을 표시하고 있어요.</p>
             <ActionButton
               type="button"
@@ -173,41 +169,9 @@ function ScoreContent() {
             >
               다시 시도
             </ActionButton>
-          </div>
+          </VStack>
         ) : null
       }
     />
-  );
-}
-
-function ScoreSummary({
-  score,
-  notice,
-}: {
-  score?: MyAttendanceScoreResponse;
-  notice?: ReactNode;
-}) {
-  const stats = [
-    { label: '출석', value: score?.attendanceCount ?? '—' },
-    { label: '지각', value: score?.lateCount ?? '—' },
-    { label: '결석', value: score?.absentCount ?? '—' },
-    { label: '지각 면제권', value: '—' },
-  ];
-  return (
-    <>
-      <div className={scoreGroup}>
-        <span className={scoreLabel}>총 점수</span>
-        <span className={scoreValue}>{score ? `${score.totalScore}점` : '—'}</span>
-      </div>
-      {notice}
-      <div className={cardStats}>
-        {stats.map((stat) => (
-          <div key={stat.label} className={statItem}>
-            <span className={statLabel}>{stat.label}</span>
-            <span className={statValue}>{stat.value}</span>
-          </div>
-        ))}
-      </div>
-    </>
   );
 }

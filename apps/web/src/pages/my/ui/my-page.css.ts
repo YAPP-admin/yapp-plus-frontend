@@ -2,51 +2,12 @@ import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
-  display: 'flex',
-  flexDirection: 'column',
-  width: '100%',
-  maxWidth: '480px',
-  margin: '0 auto',
   boxSizing: 'border-box',
-  background: vars.$color.bg.layerDefault,
-  minHeight: '100%',
-  paddingBottom: vars.$dimension.x8,
-});
-
-export const profileSection = style({
-  display: 'flex',
-  flexDirection: 'column',
-  padding: `0 ${vars.$dimension.x5}`,
-  gap: '2px',
-});
-
-export const profileRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  padding: '18px 0',
-  gap: vars.$dimension.x4,
 });
 
 export const avatar = style({
-  width: '66px',
-  height: '66px',
-  borderRadius: vars.$radius.full,
   background: 'rgba(0, 0, 0, 0.06)',
   overflow: 'hidden',
-  flexShrink: 0,
-});
-
-export const profileInfo = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.$dimension.x1,
-  minWidth: 0,
-});
-
-export const nameRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: vars.$dimension.x2,
 });
 
 export const name = style({
@@ -71,12 +32,6 @@ export const activeChip = style({
   fontWeight: vars.$fontWeight.medium,
 });
 
-export const subRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: vars.$dimension.x2_5,
-});
-
 export const subText = style({
   fontSize: vars.$fontSize.t4,
   lineHeight: vars.$lineHeight.t4,
@@ -91,22 +46,8 @@ export const subDivider = style({
 });
 
 export const attendanceCard = style({
-  display: 'grid',
-  gridTemplateColumns: 'minmax(0, 1fr) auto',
   border: '1px solid rgba(0, 0, 0, 0.05)',
-  borderRadius: vars.$radius.r2,
   overflow: 'hidden',
-  background: vars.$color.bg.layerDefault,
-});
-
-export const cardTitleGroup = style({
-  gridColumn: 1,
-  gridRow: 1,
-  padding: `${vars.$dimension.x2} ${vars.$dimension.x4}`,
-  background: vars.$color.bg.neutralMuted,
-  display: 'flex',
-  alignItems: 'center',
-  gap: vars.$dimension.x1,
 });
 
 export const cardTitle = style({
@@ -136,16 +77,6 @@ export const questionButton = style({
   },
 });
 
-export const scoreGroup = style({
-  gridColumn: 2,
-  gridRow: 1,
-  padding: `${vars.$dimension.x2} ${vars.$dimension.x4} ${vars.$dimension.x2} 0`,
-  background: vars.$color.bg.neutralMuted,
-  display: 'flex',
-  alignItems: 'center',
-  gap: '6px',
-});
-
 export const scoreLabel = style({
   fontSize: vars.$fontSize.t3,
   lineHeight: vars.$lineHeight.t3,
@@ -160,25 +91,8 @@ export const scoreValue = style({
   color: vars.$color.fg.brand,
 });
 
-export const cardStats = style({
-  gridColumn: '1 / -1',
-  display: 'flex',
-  alignItems: 'center',
-  padding: '4px',
-  gap: '4px',
-  background: vars.$color.bg.layerDefault,
-  borderRadius: `0 0 ${vars.$radius.r2} ${vars.$radius.r2}`,
-});
-
 export const statItem = style({
   flex: 1,
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  padding: '12px 0',
-  gap: '4px',
-  borderRadius: vars.$radius.r2,
 });
 
 export const statLabel = style({
@@ -206,18 +120,7 @@ export const sectionDivider = style({
   width: '100%',
 });
 
-export const menuList = style({
-  display: 'flex',
-  flexDirection: 'column',
-  padding: `0 ${vars.$dimension.x5}`,
-  marginTop: vars.$dimension.x2_5,
-});
-
 export const menuItem = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: `${vars.$dimension.x4} 0`,
   textDecoration: 'none',
   color: vars.$color.fg.neutral,
 });
@@ -236,12 +139,6 @@ export const menuChevron = style({
 });
 
 export const queryNotice = style({
-  gridColumn: '1 / -1',
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'flex-start',
-  gap: vars.$dimension.x2,
-  padding: vars.$dimension.x4,
   fontSize: vars.$fontSize.t3,
   lineHeight: vars.$lineHeight.t3,
   color: vars.$color.fg.neutralSubtle,
