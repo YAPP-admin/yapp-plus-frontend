@@ -14,8 +14,6 @@ export const srOnly = style({
 });
 
 export const container = style({
-  display: 'flex',
-  flexDirection: 'column',
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
@@ -25,17 +23,8 @@ export const container = style({
 });
 
 export const content = style({
-  display: 'flex',
-  flexDirection: 'column',
   padding: `14px ${vars.$dimension.x4} 56px`,
-  gap: vars.$dimension.x10,
   boxSizing: 'border-box',
-});
-
-export const cardsSection = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.$dimension.x2_5,
 });
 
 export const sessionCard = style({
@@ -167,16 +156,12 @@ export const attendanceButton = style({
 });
 
 export const quickCardsGrid = style({
-  display: 'flex',
-  gap: vars.$dimension.x2_5,
   width: '100%',
 });
 
 export const quickCardCol = style({
   flex: '1 1 0px',
   minWidth: 0,
-  display: 'flex',
-  flexDirection: 'column',
   position: 'relative',
 });
 
@@ -279,30 +264,12 @@ export const quickCardGraphicAttendance = style({
   userSelect: 'none',
 });
 
-export const noticesSection = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.$dimension.x3,
-});
-
-export const noticesHeader = style({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-});
-
 export const noticesSectionTitle = style({
   fontSize: vars.$fontSize.t6,
   lineHeight: vars.$lineHeight.t6,
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.neutral,
   margin: 0,
-});
-
-export const noticesList = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.$dimension.x2_5,
 });
 
 export const noticeCard = style({
@@ -329,16 +296,7 @@ export const noticeCard = style({
 });
 
 export const noticeContent = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: vars.$dimension.x2,
   minWidth: 0,
-});
-
-export const chipRow = style({
-  display: 'flex',
-  alignItems: 'center',
-  gap: vars.$dimension.x1_5,
 });
 
 export const chip = style({
