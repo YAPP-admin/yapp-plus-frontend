@@ -20,7 +20,7 @@ import {
   content,
   dialogBackdrop,
   dialogCancelButton,
-  dialogConfirmButton,
+  dialogButton,
   dialogContent,
   dialogDescription,
   dialogFooter,
@@ -120,24 +120,27 @@ export function LoginPage({ initialError = false }: { initialError?: boolean }) 
             </DialogHeader>
             <div className={dialogFooter}>
               <DialogAction asChild>
-                <button
+                <ActionButton
                   type="button"
+                  variant="neutralWeak"
+                  size="medium"
                   className={dialogCancelButton}
                   onClick={() => setIsErrorOpen(false)}
                 >
                   닫기
-                </button>
+                </ActionButton>
               </DialogAction>
               <DialogAction asChild>
-                <a
-                  href="https://pf.kakao.com/_xkxmxjxd"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={dialogConfirmButton}
-                  onClick={() => setIsErrorOpen(false)}
-                >
-                  제보하기
-                </a>
+                <ActionButton asChild variant="brandSolid" size="medium" className={dialogButton}>
+                  <a
+                    href="https://pf.kakao.com/_xkxmxjxd"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={() => setIsErrorOpen(false)}
+                  >
+                    제보하기
+                  </a>
+                </ActionButton>
               </DialogAction>
             </div>
           </DialogContent>

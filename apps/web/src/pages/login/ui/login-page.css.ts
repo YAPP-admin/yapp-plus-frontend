@@ -113,52 +113,15 @@ export const dialogFooter = style({
   boxSizing: 'border-box',
 });
 
-export const dialogCancelButton = style({
+// 로그인 Dialog 인스턴스의 44px 높이·14px 글자를 유지합니다.
+export const dialogButton = style({
   flex: '1 1 0',
   width: '100%',
   height: '44px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: '#F3F4F5',
-  borderRadius: '8px',
-  border: 'none',
+  WebkitFontSmoothing: 'auto',
   fontSize: '14px',
   lineHeight: '19px',
-  fontWeight: vars.$fontWeight.bold,
-  color: '#868B94',
-  cursor: 'pointer',
   padding: 0,
-  whiteSpace: 'nowrap',
-  boxSizing: 'border-box',
-  textDecoration: 'none',
-  transition: 'background-color 0.15s ease',
-  ':active': {
-    background: '#E5E7EB',
-  },
 });
 
-export const dialogConfirmButton = style({
-  flex: '1 1 0',
-  width: '100%',
-  height: '44px',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  background: vars.$color.bg.brandSolid,
-  borderRadius: '8px',
-  border: 'none',
-  fontSize: '14px',
-  lineHeight: '19px',
-  fontWeight: vars.$fontWeight.bold,
-  color: '#FFFFFF',
-  cursor: 'pointer',
-  padding: 0,
-  whiteSpace: 'nowrap',
-  boxSizing: 'border-box',
-  textDecoration: 'none',
-  transition: 'opacity 0.15s ease',
-  ':active': {
-    opacity: 0.9,
-  },
-});
+export const dialogCancelButton = style([dialogButton, { color: vars.$color.palette.gray700 }]);
