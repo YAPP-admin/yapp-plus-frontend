@@ -38,6 +38,8 @@ export const locationActions = createLocationActions({
   getPermission: () => readPermission(Location.getForegroundPermissionsAsync),
   requestPermission: () => readPermission(Location.requestForegroundPermissionsAsync),
   isActive: () => AppState.currentState === 'active',
+  // 권한 팝업이 닫힐 때의 일시적 inactive는 앱 이탈이 아니다.
+  isBackground: () => AppState.currentState === 'background',
   getPosition: async () => {
     const { coords, timestamp } = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.High,
@@ -47,7 +49,8 @@ export const locationActions = createLocationActions({
       latitude: coords.latitude,
       longitude: coords.longitude,
       accuracy: coords.accuracy,
-      timestamp,
+      // iOS는 소수 밀리초를 반환하므로 공용 계약의 정수 밀리초로 정규화한다.
+      timestamp: Math.trunc(timestamp),
     };
   },
   openSettings: () => Linking.openSettings(),
