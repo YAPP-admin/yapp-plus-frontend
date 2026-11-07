@@ -4,6 +4,8 @@ import { CurrentWeekCard } from './current-week-card';
 
 import { IconChevronRightFill, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
 import {
+  HStack,
+  VStack,
   HelpBubbleAnchor,
   HelpBubbleCloseButton,
   HelpBubbleArrow,
@@ -29,10 +31,8 @@ import {
   calendarDayItem,
   calendarDayLabel,
   calendarWeek,
-  cardsSection,
   chipBlue,
   chipGray,
-  chipRow,
   container,
   content,
   helpBubbleArrowTip,
@@ -44,9 +44,6 @@ import {
   noticeCard,
   noticeChevron,
   noticeContent,
-  noticesHeader,
-  noticesList,
-  noticesSection,
   noticesSectionTitle,
   noticeTitle,
   quickCard,
@@ -202,11 +199,11 @@ export function HomePage({
   }
 
   return (
-    <main className={container}>
+    <VStack as="main" className={container}>
       <h1 className={srOnly}>홈</h1>
 
-      <div className={content}>
-        <section className={cardsSection} aria-label="세션 및 바로가기">
+      <VStack gap="x10" className={content}>
+        <VStack as="section" gap="x2_5" aria-label="세션 및 바로가기">
           {showDemo ? (
             <div className={sessionCard}>
               <div className={sessionHeader}>
@@ -276,8 +273,14 @@ export function HomePage({
             </>
           )}
 
-          <nav className={quickCardsGrid} aria-label="홈 바로가기">
-            <div className={quickCardCol}>
+          <HStack
+            as="nav"
+            gap="x2_5"
+            align="stretch"
+            className={quickCardsGrid}
+            aria-label="홈 바로가기"
+          >
+            <VStack className={quickCardCol}>
               <TabLink tab="schedule" className={quickCard} aria-label="전체 세션 확인하기">
                 <div className={quickCardContent}>
                   <p className={quickCardTitle}>전체 세션</p>
@@ -291,9 +294,9 @@ export function HomePage({
                   className={quickCardGraphicSession}
                 />
               </TabLink>
-            </div>
+            </VStack>
 
-            <div className={quickCardCol}>
+            <VStack className={quickCardCol}>
               <HelpBubbleRoot
                 unmountOnExit
                 defaultOpen={canPreview && attendanceState !== 'attended'}
@@ -346,16 +349,16 @@ export function HomePage({
                   </HelpBubblePositioner>
                 ) : null}
               </HelpBubbleRoot>
-            </div>
-          </nav>
-        </section>
+            </VStack>
+          </HStack>
+        </VStack>
 
-        <section className={noticesSection} aria-label="이번 주 공지">
-          <div className={noticesHeader}>
+        <VStack as="section" gap="x3" aria-label="이번 주 공지">
+          <HStack justify="space-between" align="center">
             <h2 className={noticesSectionTitle}>이번 주 공지</h2>
-          </div>
+          </HStack>
 
-          <div className={noticesList}>
+          <VStack gap="x2_5">
             {weeklyNotices.map((notice) => (
               <ActivityLink
                 key={notice.id}
@@ -364,8 +367,8 @@ export function HomePage({
                 className={noticeCard}
                 aria-label={notice.title}
               >
-                <div className={noticeContent}>
-                  <div className={chipRow}>
+                <VStack gap="x2" className={noticeContent}>
+                  <HStack align="center" gap="x1_5">
                     <Badge
                       variant="weak"
                       tone={notice.isSession ? 'informative' : 'neutral'}
@@ -373,17 +376,17 @@ export function HomePage({
                     >
                       {notice.tag}
                     </Badge>
-                  </div>
+                  </HStack>
                   <p className={noticeTitle}>{notice.title}</p>
-                </div>
+                </VStack>
                 <span className={noticeChevron} aria-hidden="true">
                   <IconChevronRightFill width={20} height={20} />
                 </span>
               </ActivityLink>
             ))}
-          </div>
-        </section>
-      </div>
-    </main>
+          </VStack>
+        </VStack>
+      </VStack>
+    </VStack>
   );
 }
