@@ -33,11 +33,9 @@ responseValidator의 반환값은 SDK에서 버려지므로 변환 용도로 사
 
 - 첫 `initialPageParam`은 빈 객체로 지정해 cursor를 보내지 않는다. 다음 요청은 반환된 문자열 cursor만 전달한다.
 - `getNextPageParam`은 null일 때 undefined를 반환한다. 서버 순서를 바꾸지 않는다.
-- 반환 nextCursor가 현재·이전 요청 cursor와 같으면 해당 페이지를 병합하지 않고 추가 조회 오류로 처리한다. 재시도로 같은 cursor를 다시 받을 수 있으나 자동 순환은 금지한다.
-- 반복 검사는 현재 조회 순서의 앞선 요청만 기준으로 한다. 전체 재조회 시 이전 캐시의 뒤쪽 페이지 cursor를 반복으로 오인하지 않는다.
-- 성공한 페이지들에서 sessionId를 중복 제거한다. 기존 위치를 유지하고 최신 수신 항목으로 내용을 갱신한다.
+- 성공한 페이지의 items를 서버 순서대로 펼친다. 클라이언트에서 중복 제거하지 않는다.
 - summary는 마지막 성공 페이지를 사용한다. 전체·남은 세션을 목록 길이로 계산하지 않는다.
-- 실제 화면 스크롤 컨테이너를 기준으로 하단 sentinel을 관찰한다. 화면 활성·hasNextPage·조회 중 아님·오류 없음일 때만 fetchNextPage를 호출한다.
+- useLoadMoreObserver의 기본 IntersectionObserver로 목록 끝 요소를 관찰한다. 화면 활성·hasNextPage·조회 중 아님·오류 없음일 때만 fetchNextPage를 호출한다.
 - 화면 숨김·이탈 시 observer를 정리한다. 전체 재조회와 다음 페이지 요청이 겹치지 않게 isFetching을 확인한다.
 - 다음 페이지 실패 시 기존 목록과 재시도를 유지한다. 자동 요청은 중단하고 재시도 성공 후 다시 허용한다.
 - 잘못된 cursor 오류는 추가 조회 오류로 표시한다. 처음부터 다시 불러오는 동작도 제공하며 query를 첫 페이지부터 초기화한다.
@@ -65,3 +63,7 @@ NOT_SELECTED → 미선택, APPROVED/null → 미확정이다. 확정 attendance
 운영 `mode` params와 initialMode·records 목업 주입을 제거하고 기존 mode query는 실제 데이터에 영향을 주지 않는다.
 개발용 `myState`, `attendanceState`는 DEV+MSW 초기화에서만 사용하고 운영 Activity params로 추가하지 않는다.
 MSW 시나리오는 정상·빈 결과·미대상·지연·오류·추가 조회 오류·경고·전체 배지를 포함한다.
+
+내역은 useSuspenseInfiniteQuery, 결석 경고는 useSuspenseQuery로 구독하고 각각 독립된
+Suspense·ErrorBoundary를 둔다. 재조회 오류는 기존 data와 함께 표시한다. 내역 조회는
+오류 code를 분류하지 않으므로 kyOptions.throwHttpErrors를 별도로 덮어쓰지 않는다.
