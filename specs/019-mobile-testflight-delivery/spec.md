@@ -1,9 +1,9 @@
 # 기능 명세: TestFlight 자동 OTA와 조건부 iOS 빌드
 
 **기능 디렉터리**: `specs/019-mobile-testflight-delivery`
-**작업 브랜치**: `DongjaJ/eas-update-expo-preview`
+**작업 브랜치**: `DongjaJ/mobile-delivery-policy`
 **작성일**: 2026-11-07
-**상태**: 0단계 리뷰 대기; 구현·배포 미완료
+**상태**: 공식 CLI 중심 축소 승인; 기준 파일 PR 활성화 확정, 배포 미완료
 **이슈**: [#367](https://github.com/YAPP-admin/yapp-plus-frontend/issues/367)
 **입력**: main 변경을 보고 EAS Update 또는 GitHub iOS 로컬 빌드를 실행하며 단계마다 리뷰한다.
 
@@ -105,3 +105,8 @@
 - 앱 내 강제 재시작, Android, 구버전 OTA 유지보수, PR Preview, App Store 공개 배포는 제외한다.
 - 웹은 독립 배포하며 기존 Web/Admin 결함 #131·#132는 회귀 설계의 참고이지 이번 수정 대상이 아니다.
 - Expo·Apple 자격 증명과 GitHub 환경 준비 여부는 [검증 기록](validation.md)의 외부 조건으로 관리한다.
+
+## 공식 기능 중심 축소 결정
+
+GitHub 로컬 빌드는 유지한다. 설정 해석·빌드·제출·게시·복구는 공식 CLI에 맡기고 자체 범용 배포 기록 시스템을 제거한다.
+설치 확인 후 작은 기준 파일을 PR로 등록한다. 병합으로 활성화를 승인하고 해당 main CI 성공 이후 자동 OTA를 평가한다.
