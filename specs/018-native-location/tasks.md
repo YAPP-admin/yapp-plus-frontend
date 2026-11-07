@@ -46,22 +46,24 @@
 
 독립 검증: 합성 브리지 응답으로 공개 도우미를 호출해 유효한 성공·실패만 전달되는지 확인한다.
 
-- [ ] T017 [US1] `packages/app-bridge/src/web-location.ts`에 위치 요청 도우미·응답 검증을 추가하고 `src/web.ts`에서 공개한다.
-- [ ] T018 [US2] `packages/app-bridge/src/web-location.ts`에 권한 조회·설정 열기 도우미를 추가한다.
-- [ ] T019 [US1] `packages/app-bridge/tests/web-location.test.ts`에서 성공·잘못된 응답·네이티브 오류 정규화를 검증한다.
+- [x] T017 [US1] `packages/app-bridge/src/web-location.ts`에 위치 요청 도우미·응답 검증을 추가하고 `src/web.ts`에서 공개한다.
+- [x] T018 [US2] `packages/app-bridge/src/web-location.ts`에 권한 조회·설정 열기 도우미를 추가한다.
+- [x] T019 [US1] `packages/app-bridge/tests/web-location.test.ts`에서 성공·잘못된 응답·네이티브 오류 정규화를 검증한다.
 
 ## 3단계 — US3 실행 환경 확인과 개발 검증 도구 (P2)
 
 독립 검증: 일반 웹·연결 실패와 화면 이탈을 재현하고 프로덕션 접근 차단을 확인한다.
 
-- [ ] T020 [US3] `packages/app-bridge/src/web-location.ts`와 `tests/web-location.test.ts`에 SSR·실행 환경 확인·통신 오류 처리를 구현·검증한다.
-- [ ] T021 [US3] `apps/web/src/pages/dev-routes/ui/location-check.tsx`를 작성하고 `dev-routes-page.tsx`에 개발용 상태 검증 도구를 연결한다.
-- [ ] T022 [US3] `apps/web/src/pages/dev-routes/ui/location-check.test.tsx`에서 중복 클릭·늦은 응답·재진입·접근성 상태·원문 미노출을 검증한다.
+- [x] T020 [US3] `packages/app-bridge/src/web-location.ts`와 `tests/web-location.test.ts`에 SSR·실행 환경 확인·통신 오류 처리를 구현·검증한다.
+- [x] T021 [US3] `apps/web/src/pages/dev-routes/ui/location-check.tsx`를 작성하고 `dev-routes-page.tsx`에 개발용 상태 검증 도구를 연결한다.
+- [x] T022 [US3] `apps/web/src/pages/dev-routes/ui/location-check.test.tsx`에서 중복 클릭·늦은 응답·재진입·접근성 상태·원문 미노출을 검증한다.
 
 ## 최종 검증과 기록
 
-- [ ] T023 `specs/018-native-location/validation.md`에 최종 check·build·expo:doctor, 프로덕션 개발 도구 차단·출석 비활성 회귀 결과를 기록한다.
+- [x] T023 `specs/018-native-location/validation.md`에 최종 check·build·expo:doctor, 프로덕션 개발 도구 차단·출석 비활성 회귀 결과를 기록한다.
 - [ ] T024 `specs/018-native-location/validation.md`에 quickstart의 iOS 실기기 시나리오·런타임 분리·로그 미노출 결과와 미실행 항목을 기록한다.
+
+T024는 실기기 검증 대기다. 자동 검증·미실행 범위는 validation.md에 기록했으며 실기기 통과로 간주하지 않는다.
 
 ## 의존성과 실행 전략
 
