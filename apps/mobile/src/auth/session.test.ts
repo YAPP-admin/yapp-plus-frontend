@@ -250,4 +250,44 @@ describe('SessionManager', () => {
     expect(manager.refreshToken).toBe('refresh-1');
     await expect(manager.refresh(session, renew)).resolves.toMatchObject({ status: 'SIGNED_IN' });
   });
+
+  it('이름을 저장하고 토큰 갱신과 앱 재시작 뒤에도 유지한다', async () => {
+    const manager = new SessionManager();
+    const expected = { status: 'SIGNED_IN', session: { userId: 1, name: '사용자' } };
+    await expect(
+      manager.establish({ ...credentials(1), name: '사용자' }, 0),
+    ).resolves.toMatchObject(expected);
+    await expect(
+      manager.refresh(undefined, () => Promise.resolve(renewed(2))),
+    ).resolves.toMatchObject(expected);
+    const saved = storage.setSession.mock.lastCall?.[0];
+    expect(saved).toEqual({ refreshToken: 'refresh-2', userId: 1, name: '사용자' });
+    storage.getSession.mockResolvedValue(saved ?? null);
+    await expect(
+      new SessionManager().get(() => Promise.resolve(renewed(3))),
+    ).resolves.toMatchObject(expected);
+  });
+
+  it.each(['clear', 'switch'])(
+    '이전 이름과 지연 갱신을 새 계정에 전달하지 않는다 (%s)',
+    async (operation) => {
+      const manager = new SessionManager();
+      await manager.establish({ ...credentials(1), name: '이전 사용자' }, 0);
+      const pending = Promise.withResolvers<RenewalResult>();
+      const refreshing = manager.refresh(undefined, () => pending.promise);
+      if (operation === 'switch') {
+        await manager.establish({ ...credentials(2), userId: 2 }, manager.captureGeneration());
+      } else {
+        await manager.clear();
+      }
+      pending.resolve(renewed(3));
+      await expect(refreshing).resolves.toEqual({ status: 'CANCELLED' });
+      const result = await manager.get(() => Promise.resolve(renewed(4)));
+      expect(result).toMatchObject(
+        operation === 'switch'
+          ? { status: 'SIGNED_IN', session: { userId: 2, name: undefined } }
+          : { status: 'SIGNED_OUT' },
+      );
+    },
+  );
 });
