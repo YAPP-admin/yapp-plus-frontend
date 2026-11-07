@@ -149,3 +149,20 @@ SC-001은 R005~~R009, SC-002는 R010~~R012, SC-003~~SC-005는 R013~~R018로 검�
 - actionlint·check·diff 공백 검사 통과. format은 새 실행, check의 Turbo 19/19 및 build 3/3은 캐시 재사용이다. expo:doctor는 새 실행으로 20/20 통과했으며 원격 CI는 미실행이다.
 - Expo Action의 EAS CLI 설치도 packager:pnpm으로 통일했다. 고정 Action 소스의 pnpm add 호출 지원을 확인했고 실제 원격 CLI 설치는 미실행이다.
 - 사용자 리뷰로 중복 CI·선택 사항 EXPO_NO_TELEMETRY를 제거했다. 사용자가 현재 변경의 커밋과 다음 작업 진행을 승인했다.
+
+## 수동 로컬 빌드·지정 IPA 제출
+
+- 사용자 승인으로 acccd4c8에서 DongjaJ/mobile-local-build를 생성했다. base는 DongjaJ/mobile-delivery-report다.
+- mobile-manual.yml에서 main 전용 build/submit을 연결했다. build는 해당 SHA의 성공한 main push CI를 요구한다.
+- submit은 지정 실행 ID·회차의 성공·저장소·main·workflow 출처를 확인하고 해당 IPA의 checksum을 검증한다.
+- 공식 Expo·upload/download-artifact Action을 SHA로 고정했다. 새 JS·의존성·활성화 상태 파일은 추가하지 않았다.
+- macos-26/Xcode 26.6과 runner 문서의 Ruby·CocoaPods·fastlane 버전을 선택했다. 실제 runner에서 해당 버전과 서명 성공을 확인한 것은 아니다.
+- actionlint·Spec Kit prerequisites·diff 공백 검사 통과. 확장 hook 파일은 없다.
+- 대체 GitHub/EAS 명령으로 CI 실패·다른 출처·잘못된 실행 ID/회차/SHA 거부, 정확한 build/submit 인자, IPA 손상 거부를 검증했다.
+- macOS 기본 Bash 3.2에서도 입력 검사가 중단되도록 정규식 실패에 명시적 exit를 추가했다. 수정 후 실패 경계 검증이 통과했다.
+- check 통과: format·모바일 lint/typecheck/118개 테스트는 새 실행, 나머지 16/19 Turbo 작업은 캐시 재사용이다.
+- build는 3/3 Turbo 캐시로 통과했다. expo:doctor는 새 실행으로 20/20 통과했다.
+- 실제 빌드·서명·artifact 업로드/다운로드·제출·TestFlight 설치·OTA/복구는 미실행이다. EXPO_TOKEN·Apple 자격 증명과 원격 검증은 S006/S008에 남긴다.
+- commit·push·원격 workflow 실행은 수행하지 않았다. 이 단계는 사용자 리뷰 대기 상태다.
+- 리뷰 반영: CI의 PR base 브랜치 나열을 제거해 모든 PR을 검사한다. main push 제한과 자동 OTA의 main 검증은 유지한다.
+- 사용자가 PR base 필터 제거를 포함한 수동 workflow·시각화 문서의 커밋과 다음 검증 단계 진행을 승인했다. 저장소 수준 Secret은 VERCEL_TOKEN만 확인됐으며 조직 Secret 상속 여부는 별도다.
