@@ -5,10 +5,16 @@ import {
   focusManager,
   isCancelledError,
 } from '@tanstack/react-query';
-import { find3Options, find4Options } from '@yapp-plus/api/generated';
+import {
+  find3Options,
+  find4Options,
+  mineOptions,
+  find5InfiniteOptions,
+} from '@yapp-plus/api/generated';
 import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { scoreFixture, historyFixture } from '../../../mocks/member-attendance-handlers';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { nativeAuthClientOptions } from './native-auth-client';
 import { nativeSessionQueryKey } from './operations';
@@ -34,6 +40,7 @@ const first: AuthSession = {
   tokenVersion: 1,
   accessToken: 'test-one',
   expiresAt: 9999999999,
+  name: '가상 회원 A',
 };
 let client: QueryClient;
 beforeEach(async () => {
@@ -194,3 +201,110 @@ it.each(['unavailable', 'other-account'] as const)(
     expect(client.getQueryData(find4Options().queryKey)).toEqual(cached);
   },
 );
+
+it('점수 401 복구 후 내역 조회가 갱신 토큰을 사용하고 이름을 유지한다', async () => {
+  const named = { ...first, name: '가상 회원 A' };
+  bridge.signInWithNative.mockResolvedValue({ status: 'SIGNED_IN', session: named });
+  await new MutationObserver(client, nativeSignInMutationOptions(client)).mutate({
+    input: 'google',
+  });
+  const renewed = { ...named, tokenVersion: 2, accessToken: 'test-renewed' };
+  bridge.refreshNativeSession.mockResolvedValue({ status: 'SIGNED_IN', session: renewed });
+  const tokens: (string | null)[] = [];
+  server.use(
+    http.get(`${apiBaseUrl}/api/attendance-scores/me`, ({ request }) => {
+      tokens.push(request.headers.get('Authorization'));
+      return tokens.length === 1
+        ? HttpResponse.json({ status: 401 }, { status: 401 })
+        : HttpResponse.json(scoreFixture);
+    }),
+    http.get(`${apiBaseUrl}/api/attendance-history`, ({ request }) => {
+      tokens.push(request.headers.get('Authorization'));
+      return HttpResponse.json(historyFixture);
+    }),
+  );
+  await expect(
+    client.fetchQuery(mineOptions(nativeAuthClientOptions(named, client))),
+  ).resolves.toEqual(scoreFixture);
+  expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
+    status: 'SIGNED_IN',
+    session: renewed,
+  });
+  const result = await client.fetchInfiniteQuery({
+    ...find5InfiniteOptions(nativeAuthClientOptions(renewed, client)),
+    initialPageParam: {},
+    getNextPageParam: () => undefined,
+  });
+  expect(result.pages).toEqual([historyFixture]);
+  expect(tokens).toEqual(['Bearer test-one', 'Bearer test-renewed', 'Bearer test-renewed']);
+  expect(bridge.refreshNativeSession).toHaveBeenCalledTimes(1);
+});
+it('계정 전환은 이전 점수·내역 지연 응답과 이름을 새 계정에 반영하지 않는다', async () => {
+  let finish: (() => void) | undefined;
+  const pending = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  let started = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/attendance-scores/me`, async () => {
+      started++;
+      await pending;
+      return HttpResponse.json(scoreFixture);
+    }),
+    http.get(`${apiBaseUrl}/api/attendance-history`, async () => {
+      started++;
+      await pending;
+      return HttpResponse.json(historyFixture);
+    }),
+  );
+  const score = mineOptions(nativeAuthClientOptions(first, client));
+  const history = {
+    ...find5InfiniteOptions(nativeAuthClientOptions(first, client)),
+    initialPageParam: {},
+    getNextPageParam: () => undefined,
+  };
+  const oldScore = client.fetchQuery(score).catch((error: unknown) => error);
+  const oldHistory = client.fetchInfiniteQuery(history).catch((error: unknown) => error);
+  await vi.waitUntil(() => started === 2);
+  const next: AuthResult = {
+    status: 'SIGNED_IN',
+    session: { ...first, userId: 2, sessionId: 'two', accessToken: 'test-two', name: undefined },
+  };
+  bridge.signInWithNative.mockResolvedValue(next);
+  await new MutationObserver(client, nativeSignInMutationOptions(client)).mutate({
+    input: 'google',
+  });
+  expect(isCancelledError(await oldScore)).toBe(true);
+  expect(isCancelledError(await oldHistory)).toBe(true);
+  finish?.();
+  await pending;
+  expect(client.getQueryData(score.queryKey)).toBeUndefined();
+  expect(client.getQueryData(history.queryKey)).toBeUndefined();
+  expect(client.getQueryData(nativeSessionQueryKey)).toEqual(next);
+});
+
+it('출석 내역 최초 요청의 401도 갱신 후 같은 페이지를 재시도한다', async () => {
+  const tokens: (string | null)[] = [];
+  const renewed = { ...first, tokenVersion: 2, accessToken: 'test-renewed' };
+  bridge.refreshNativeSession.mockResolvedValue({ status: 'SIGNED_IN', session: renewed });
+  server.use(
+    http.get(`${apiBaseUrl}/api/attendance-history`, ({ request }) => {
+      tokens.push(request.headers.get('Authorization'));
+      expect(new URL(request.url).searchParams.has('cursor')).toBe(false);
+      return tokens.length === 1
+        ? HttpResponse.json({ status: 401 }, { status: 401 })
+        : HttpResponse.json(historyFixture);
+    }),
+  );
+  const result = await client.fetchInfiniteQuery({
+    ...find5InfiniteOptions(nativeAuthClientOptions(first, client)),
+    initialPageParam: {},
+    getNextPageParam: () => undefined,
+  });
+  expect(result.pages).toEqual([historyFixture]);
+  expect(tokens).toEqual(['Bearer test-one', 'Bearer test-renewed']);
+  expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
+    status: 'SIGNED_IN',
+    session: renewed,
+  });
+});
