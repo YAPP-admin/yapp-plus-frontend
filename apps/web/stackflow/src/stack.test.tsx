@@ -227,6 +227,16 @@ describe('Stackflow FSD 화면 연결', () => {
     detailRendered.unmount();
   });
 
+  it('출석 내역 직접 진입과 기존 mode query는 MY 복귀를 유지한다', async () => {
+    window.history.replaceState({}, '', '/my/attendance?mode=none');
+    const rendered = renderStack();
+    const attendance = await waitForTopHeading('출석 내역');
+    await userEvent.click(attendance.getByRole('button', { name: '뒤로가기' }));
+    expect(await screen.findByText('마이페이지')).toBeVisible();
+    await waitFor(() => expect(window.location.pathname.replace(/\/+$/, '')).toBe('/my'));
+    rendered.unmount();
+  });
+
   it('출석 규칙 직접 진입은 Attendance를 fallback stack에 복원한다', async () => {
     const user = userEvent.setup();
     window.history.replaceState({}, '', '/my/attendance/rules');

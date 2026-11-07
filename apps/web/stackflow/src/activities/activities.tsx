@@ -126,11 +126,10 @@ export function NoticeDetailActivity() {
 }
 
 export function AttendanceActivity() {
-  const { mode } = useActivityParams<'Attendance'>();
   return (
     <ActivityScreen title="출석 내역" preventSwipeBack>
       <PageShell header={null} plain>
-        <AttendancePage initialMode={mode} />
+        <AttendancePage />
       </PageShell>
     </ActivityScreen>
   );
