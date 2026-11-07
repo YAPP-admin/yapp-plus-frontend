@@ -111,3 +111,41 @@ SC-001은 R005~~R009, SC-002는 R010~~R012, SC-003~~SC-005는 R013~~R018로 검�
 - 기본 check 통과: format과 모바일 lint/typecheck/test는 새 실행, 나머지 Turbo 작업 16/19개는 캐시 재사용이다. 모바일 테스트 6파일/107개가 통과했다.
 - Spec Kit prerequisites·diff 공백 검사 통과. 앱 빌드 설정·의존성 변경이 없어 build/expo:doctor는 재실행하지 않았다.
 - 사용자가 “커밋하고 다음 진행해”로 설계 축소 리뷰를 승인하고 PR 검사·보고 전용 단계 진행을 요청했다.
+
+## PR 검사·초기 main 보고 구현
+
+- 사용자 승인으로 `e6a1228d`에서 `DongjaJ/mobile-delivery-report`를 생성했다. 예정 base는 `DongjaJ/mobile-delivery-policy`다.
+- 요구사항 체크리스트 14/14 완료 및 Spec Kit prerequisites 확인. 확장 hook 파일은 없다.
+- Turbo 영향 판정, PR base/merge 격리 설치, base 정책 사용, Linux/macOS 지문 대조 job을 연결했다. 신규 job은 contents:read만 사용하고 비밀을 전달하지 않는다.
+- 초기 도입 PR은 base에 검사기가 없으므로 후보 검사기를 사용한다. 이후 변경은 base 검사기로 검사하며 workflow 자체 변경은 코드 리뷰 대상이다.
+- 동일 저장소 main push CI 성공·CI workflow 경로·최신 main SHA를 확인하는 보고 전용 workflow를 추가했다. 활성 기준이 있으면 후속 구현 전까지 실패 처리한다.
+- 기본 check 통과: format·모바일 lint/typecheck/test는 새 실행, 나머지 16/19 Turbo 작업은 캐시 재사용. 모바일 7파일/118개 테스트 통과(신규 버전 정책 11개).
+- 실제 macOS Expo 지문으로 버전 단독 변경의 지문 유지, iOS 설정 변경 탐지, runtime 정책 변경 거부, 버전 증가 누락 거부를 확인했다. 임시 앱 설정 변경은 복원했다.
+- 공식 actionlint 1.7.12 바이너리의 배포 checksum 확인 후 workflow 3개 문법 검사 통과. 인라인 Node 비교와 GitHub output 줄바꿈도 실행 검증했다.
+- build는 3/3 Turbo 캐시로 통과. expo:doctor는 새 실행으로 20/20 통과했다.
+- 원격 CI·Linux/macOS 일치·fork 실행·서명·TestFlight·OTA는 미실행이다. push나 배포를 수행하지 않았다.
+- 활성 후 누적 변경·마지막 OTA/복구 SHA·인증된 EAS config 조회는 미연결이며 R008/R009를 완료 처리하지 않는다.
+- 실제 JS 파일 추가 시 지문·digest 유지, workspace 보완 입력 변경 시 digest 변경도 확인했다. 임시 파일과 설정은 복원했다.
+
+- 리뷰 반영: workflow 3개에 실행 조건·권한·base 정책·OS 비교·보고 전용 경계를 한국어 주석으로 보강했다. 공식 Expo Action의 대체 범위를 계획에 기록했다. 실행 로직 변경은 없다.
+
+## appVersion 유지·항상 OTA 게시로 정책 변경
+
+- 사용자가 자동 빌드 분기·기준 파일·설치 확인 게이트를 제거하고 PR 버전 누락 검사만 유지하는 구성을 승인했다.
+- 현재 명세·계획·작업 목록을 교체했다. 이전 상태 모델·계약·검증 절차·체크리스트는 이전 설계 기록으로 명시했다.
+- delivery.json을 제거하고 main 보고 workflow를 공식 Expo Action + eas update로 바꿨다. 문서 변경도 게시하며 동일 SHA 재실행의 중복 게시를 허용한다.
+- 이전 1단계의 보고 전용·설치 후 활성화·누적 배포 판정 검증은 현재 정책의 요구사항이 아니다.
+- 수동 로컬 빌드·IPA 제출·rollback 명령을 README에 기록했다. GitHub macOS 수동 빌드 workflow는 다음 리뷰 단계다.
+- 실제 OTA 게시·외부 설정 변경·commit·push는 수행하지 않았다.
+- 변경 후 check 통과: format·모바일 lint/typecheck/118개 테스트는 새 실행, 나머지 16/19 Turbo 작업은 캐시 재사용이다. build는 3/3 캐시, expo:doctor는 새 실행으로 20/20 통과했다.
+- actionlint 통과. GitHub/EAS 대체 명령으로 CI 경로·최신 SHA·게시 직전 재확인·채널/환경/플랫폼/추적 메시지 인자를 검증했다. 실제 서비스 호출 성공을 의미하지 않는다.
+- 실제 EXPO_TOKEN 준비·원격 CI·OTA 수신·복구 검증과 다음 단계 GitHub 수동 빌드는 남아 있다. 변경은 사용자 리뷰 대기 상태다.
+
+## Public runner 기준으로 CI 단순화
+
+- 사용자 요청에 따라 Turbo affected·경로 필터·조건 출력을 제거했다. 모든 PR에서 Linux/macOS 검사를 Verify와 독립적으로 실행한다.
+- Expo Doctor를 CI마다 실행하고 불필요한 pull-requests:read 권한을 제거했다. 루트 script 호출을 node --run으로 통일했다.
+- 두 OS 결과 대조와 PR 버전 규칙, 자동 OTA의 CI 성공·최신 SHA 확인은 유지한다.
+- actionlint·check·diff 공백 검사 통과. format은 새 실행, check의 Turbo 19/19 및 build 3/3은 캐시 재사용이다. expo:doctor는 새 실행으로 20/20 통과했으며 원격 CI는 미실행이다.
+- Expo Action의 EAS CLI 설치도 packager:pnpm으로 통일했다. 고정 Action 소스의 pnpm add 호출 지원을 확인했고 실제 원격 CLI 설치는 미실행이다.
+- 사용자 리뷰로 중복 CI·선택 사항 EXPO_NO_TELEMETRY를 제거했다. 사용자가 현재 변경의 커밋과 다음 작업 진행을 승인했다.
