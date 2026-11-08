@@ -140,6 +140,61 @@ export const contentSection = style({
   marginBottom: '48px',
 });
 
+export const attachmentSection = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '12px',
+  marginBottom: '32px',
+});
+
+export const attachmentTitle = style({
+  fontSize: vars.$fontSize.t5,
+  lineHeight: vars.$lineHeight.t5,
+  fontWeight: vars.$fontWeight.bold,
+  color: vars.$color.fg.neutral,
+  margin: 0,
+});
+
+export const attachmentList = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '8px',
+  margin: 0,
+  padding: 0,
+  listStyle: 'none',
+});
+
+export const attachmentItem = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: '4px',
+  padding: '12px',
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: '8px',
+});
+
+export const attachmentImage = style({
+  width: '100%',
+  borderRadius: '6px',
+  objectFit: 'contain',
+  maxHeight: '320px',
+  background: vars.$color.bg.neutralMuted,
+});
+
+export const attachmentName = style({
+  fontSize: vars.$fontSize.t4,
+  lineHeight: vars.$lineHeight.t4,
+  fontWeight: vars.$fontWeight.medium,
+  color: vars.$color.fg.neutral,
+  overflowWrap: 'anywhere',
+});
+
+export const attachmentMeta = style({
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  color: vars.$color.fg.neutralMuted,
+});
+
 export const paragraph = style({
   fontSize: vars.$fontSize.t4,
   lineHeight: vars.$lineHeight.t4,
@@ -216,5 +271,15 @@ export const checkButtonConfirmed = style([
   {
     background: vars.$color.bg.brandSolid,
     color: vars.$color.palette.gray00,
+  },
+]);
+
+export const disabledCheckButton = style([
+  checkButton,
+  {
+    background: vars.$color.bg.neutralMuted,
+    color: vars.$color.fg.neutralMuted,
+    cursor: 'not-allowed',
+    ':active': { transform: 'none' },
   },
 ]);

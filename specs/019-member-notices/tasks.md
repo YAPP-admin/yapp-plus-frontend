@@ -53,12 +53,12 @@
 
 독립 검증: 세 종류의 상세 직접 진입·404/503·첨부 만료에서 조회만 발생하는지 확인한다.
 
-- [ ] T023 [P] [US3] apps/web/src/pages/notice-detail/model/notice-detail-query.test.ts에 ID·응답 검증·과제/첨부·POST_NOT_FOUND 처리 테스트를 작성한다.
-- [ ] T024 [P] [US3] apps/web/src/pages/notice-detail/ui/notice-detail-page.test.tsx에 실제 조회·기한·첨부 순서·실패/재시도·GET 무부작용 회귀를 추가한다.
-- [ ] T025 [US3] apps/web/src/pages/notice-detail/model/notice-detail-query.ts, notice-detail-data.ts에 생성 detail2Options·검증·서울 D-day 변환을 연결하고 고정 상세를 제거한다.
-- [ ] T026 [US3] apps/web/src/pages/notice-detail/ui/notice-detail-page.tsx, notice-detail-page.css.ts에 본문·과제·이미지·조회 상태를 연결한다. 읽음 UI는 6단계 저장 연결 전 서버 표시만 하고 버튼은 비활성화한다.
-- [ ] T027 [US3] apps/web/src/features/member-notice/ui/notice-error-content.tsx와 index.ts에 탐색 비의존 오류 콘텐츠·그림·스타일만 옮긴다. apps/web/src/pages/notices/ui/notice-error-page.tsx, pages/notice-detail/ui/notice-detail-page.tsx에는 헤더·BackButton을 유지해 페이지 간 import와 feature → app 의존을 제거한다.
-- [ ] T028 [US3] apps/web/src/mocks/member-notice-handlers.ts에 상세·404/503·이미지 재시도 fixture를 연결하고 specs/019-member-notices/validation.md에 check/build·화면·변경량·5단계 리뷰를 기록한다.
+- [x] T023 [P] [US3] apps/web/src/pages/notice-detail/model/notice-detail-query.test.ts에 ID·응답 검증·과제/첨부·POST_NOT_FOUND 처리 테스트를 작성한다.
+- [x] T024 [P] [US3] apps/web/src/pages/notice-detail/ui/notice-detail-page.test.tsx에 실제 조회·기한·첨부 순서·실패/재시도·GET 무부작용 회귀를 추가한다.
+- [x] T025 [US3] apps/web/src/pages/notice-detail/model/notice-detail-query.ts, notice-detail-data.ts에 생성 detail2Options·검증·서울 D-day 변환을 연결하고 고정 상세를 제거한다.
+- [x] T026 [US3] apps/web/src/pages/notice-detail/ui/notice-detail-page.tsx, notice-detail-page.css.ts에 본문·과제·이미지·조회 상태를 연결한다. 읽음 UI는 6단계 저장 연결 전 서버 표시만 하고 버튼은 비활성화한다.
+- [x] T027 [US3] apps/web/src/features/member-notice/ui/notice-error-content.tsx와 index.ts에 탐색 비의존 오류 콘텐츠·그림·스타일만 옮긴다. apps/web/src/pages/notices/ui/notice-error-page.tsx, pages/notice-detail/ui/notice-detail-page.tsx에는 헤더·BackButton을 유지해 페이지 간 import와 feature → app 의존을 제거한다.
+- [x] T028 [US3] apps/web/src/mocks/member-notice-handlers.ts에 상세·404/503·이미지 재시도 fixture를 연결하고 specs/019-member-notices/validation.md에 check/build·화면·변경량·5단계 리뷰를 기록한다.
 
 ## 6단계 — US4 읽음 저장 (P1)
 
