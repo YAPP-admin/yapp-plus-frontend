@@ -6,7 +6,7 @@ import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
 import { useFlow } from '@stackflow/react';
 import { useAttendanceConfirmation } from '../model/code-attendance';
-import type { FallbackProps } from 'react-error-boundary';
+import { useErrorBoundary } from 'react-error-boundary';
 import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { useNativeAuthSession } from '@/features/auth';
 import {
@@ -37,7 +37,7 @@ export function CurrentWeekCard() {
   return (
     <section className={sessionCard} aria-label="이번 주 세션">
       {canQuery ? (
-        <ScreenQueryBoundary renderFallback={(props) => <WeekError {...props} />}>
+        <ScreenQueryBoundary renderFallback={() => <WeekError />}>
           <Suspense fallback={<CurrentWeekLoading />}>
             <CurrentWeekContent />
           </Suspense>
@@ -69,13 +69,14 @@ function CurrentWeekLoading() {
   );
 }
 
-function WeekError({ resetErrorBoundary }: FallbackProps) {
+function WeekError() {
+  const { resetBoundary } = useErrorBoundary();
   return (
     <ResultSection
       role="alert"
       size="medium"
       title="이번 주 세션을 불러오지 못했어요"
-      primaryActionProps={{ children: '다시 시도', onClick: resetErrorBoundary }}
+      primaryActionProps={{ children: '다시 시도', onClick: resetBoundary }}
     />
   );
 }

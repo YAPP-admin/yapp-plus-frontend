@@ -46,7 +46,7 @@
 
 ## 승인된 구조 수정과 보류한 제안
 
-- 앱 인증은 상위 AccountScreen에 맡기고 시트는 일반 브라우저 실행만 제한한다. 생성 `find3Options`와 `useSuspenseQuery`를 사용한다. 최초 로딩·실패는 Suspense·ErrorBoundary로 분리한다.
+- 앱 인증은 상위 AccountScreen에 맡기고 시트는 일반 브라우저 실행만 제한한다. 생성 `find3Options`·`useSuspenseQuery`의 로딩·실패·재시도 경계는 홈 카드와 공유하는 QueryBoundary로 분리한다.
 - TanStack Form의 `code` 필드가 네 칸 입력과 제출 후 수정 검증을 관리한다. 별도 코드 값·입력 오류 state는 제거한다.
 - 생성 `verifyMutationKey`를 요청 식별 기준으로 그대로 사용한다. 기존 키를 생성 파일에 직접 추가하지 않는다.
 - 승인된 단순화: 입력 Activity의 `mutation.isPending`으로 입력·확인·시트 닫기를 막고 제출은 mutate를 사용하며 Form은 검증 중 중복 제출을, mutation은 요청 중 잠금을 담당한다. `useIsMutating`·client.isMutating·닫힘 감시 Effect를 제거한다. 홈 완료 표시·완료 Activity 접근 차단·서버 오류별 복구 UI는 기존 방식을 유지하며 후속 결정한다.
