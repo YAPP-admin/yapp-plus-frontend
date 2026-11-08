@@ -1,5 +1,6 @@
 'use client';
 
+import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { find4Options } from '@yapp-plus/api/generated';
 import { ActionButton } from '@yapp-plus/ui';
@@ -49,13 +50,15 @@ export function SchedulePage() {
 
 function ScheduleList() {
   const { apiOptions } = useNativeAuthSession();
-  const { data, dataUpdatedAt, error, refetch } = useSuspenseQuery({
+  const query = useSuspenseQuery({
     ...find4Options({
       ...apiOptions,
       responseValidator: (response) => scheduleSchema.parseAsync(response),
     }),
   });
 
+  useRefetchOnScreenReturn(query);
+  const { data, dataUpdatedAt, error, refetch } = query;
   return (
     <>
       {error ? (

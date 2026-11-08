@@ -1,3 +1,4 @@
+import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { Box, Grid, HStack, VStack } from '@seed-design/react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Suspense } from 'react';
@@ -140,9 +141,9 @@ export function MyPage() {
 
 function ScoreContent() {
   const { apiOptions } = useNativeAuthSession();
-  const { data, error, isFetching, refetch } = useSuspenseQuery(
-    memberScoreQueryOptions(apiOptions),
-  );
+  const query = useSuspenseQuery(memberScoreQueryOptions(apiOptions));
+  useRefetchOnScreenReturn(query);
+  const { data, error, isFetching, refetch } = query;
   return (
     <ScoreSummary
       score={data.status === 'available' ? data.score : undefined}

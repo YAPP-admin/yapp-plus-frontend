@@ -1,3 +1,4 @@
+import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import type { AttendanceHistoryItemResponse } from '@yapp-plus/api/generated';
 import { Box, Grid, HStack, ProgressCircle, Skeleton, VStack } from '@seed-design/react';
@@ -96,6 +97,7 @@ function AttendanceContent() {
   const { apiOptions } = useNativeAuthSession();
   const options = historyQueryOptions(apiOptions);
   const history = useSuspenseInfiniteQuery(options);
+  useRefetchOnScreenReturn(history);
   const currentRecords = history.data.pages.flatMap((page) => page.items);
   const sessionSummary = history.data.pages.at(-1)?.summary;
   const isNone = currentRecords.length === 0 && !history.hasNextPage;
@@ -196,6 +198,7 @@ function AttendanceContent() {
 function AbsenceWarning() {
   const { apiOptions } = useNativeAuthSession();
   const score = useSuspenseQuery(memberScoreQueryOptions(apiOptions));
+  useRefetchOnScreenReturn(score);
   const showWarning =
     !score.error && score.data.status === 'available' && score.data.score.absentCount >= 10;
   return (

@@ -1,6 +1,7 @@
 'use client';
 
 /** 공지 목록의 인증·조회·탭 상태를 렌더링하는 페이지 UI다. */
+import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { ActionButton } from '@yapp-plus/ui';
 import { HStack, ProgressCircle, Skeleton, VStack } from '@seed-design/react';
@@ -58,6 +59,7 @@ function NoticeList({ category, onCategoryChange }: Required<NoticesPageProps>) 
   const notices = useSuspenseInfiniteQuery(
     memberNoticeListInfiniteQueryOptions(category, apiOptions),
   );
+  useRefetchOnScreenReturn(notices);
   const items = notices.data.pages.flatMap((page) => page.items);
   const isEmpty = items.length === 0 && !notices.hasNextPage;
   const loadMoreRef = useLoadMoreObserver(

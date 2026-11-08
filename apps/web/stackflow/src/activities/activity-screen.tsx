@@ -2,6 +2,7 @@ import { vars } from '@seed-design/css/vars';
 import { useActivity } from '@stackflow/react';
 import { SnackbarProvider } from '@yapp-plus/ui';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 import { AppBar } from '../../../seed-design/ui/app-bar';
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
 import { useAppScreenOptions } from '../platform';
@@ -21,7 +22,7 @@ export function ActivityScreen({
   background?: 'layerDefault' | 'layerBasement';
 }) {
   const appScreenOptions = useAppScreenOptions(preventSwipeBack);
-  const { isTop } = useActivity();
+  const { isTop, isActive } = useActivity();
   const layerRef = useRef<HTMLDivElement>(null);
   const startRef = useRef<HTMLSpanElement>(null);
   const [atTop, setAtTop] = useState(true);
@@ -60,7 +61,7 @@ export function ActivityScreen({
           <AppBar className={statusBar} bg={vars.$color.bg[background]} aria-hidden="true" />
           <AppScreenContent ref={layerRef} style={{ background: vars.$color.bg[background] }}>
             <span ref={startRef} className={scrollStart} aria-hidden="true" />
-            {children}
+            <ScreenActiveContext value={isActive}>{children}</ScreenActiveContext>
           </AppScreenContent>
         </AppScreen>
       </SnackbarProvider>
