@@ -118,6 +118,26 @@ it('읽음 저장 실패는 기존 공지를 유지하고 사용자가 다시 �
   expect(screen.getByText('지금까지 13명이 확인했어요!')).toBeVisible();
 });
 
+it('읽음 저장 뒤 상세 재조회가 실패해도 확인 상태와 본문을 유지한다', async () => {
+  const user = userEvent.setup();
+  let detailRequests = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts/2`, () => {
+      detailRequests += 1;
+      return detailRequests === 1
+        ? HttpResponse.json(memberNoticeDetailFixture)
+        : HttpResponse.json({ code: 'FAILED' }, { status: 503 });
+    }),
+  );
+  renderPage();
+
+  await user.click(await screen.findByRole('button', { name: '확인했어요' }));
+
+  await waitFor(() => expect(detailRequests).toBe(2));
+  expect(screen.getByRole('button', { name: '확인했어요' })).toBeDisabled();
+  expect(screen.getByText('기한 안에 과제를 제출해 주세요.')).toBeVisible();
+});
+
 it('첨부 이미지 로드 실패 시 대체 안내를 표시한다', async () => {
   renderPage();
   const image = await screen.findByRole('img', { name: 'assignment-guide.png' });
