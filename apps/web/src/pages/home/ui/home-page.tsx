@@ -225,21 +225,7 @@ export function HomePage({
               {renderSessionActionButton()}
             </div>
           ) : (
-            <>
-              <CurrentWeekCard />
-              {canPreview ? (
-                <ActionButton
-                  variant="ghost"
-                  size="small"
-                  type="button"
-                  className={sessionToggleChip}
-                  onClick={() => setInternalSessionMode('team')}
-                  aria-label="팀 세션 화면으로 전환"
-                >
-                  팀 세션 시연
-                </ActionButton>
-              ) : null}
-            </>
+            <CurrentWeekCard />
           )}
 
           <HStack

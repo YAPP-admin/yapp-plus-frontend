@@ -1,4 +1,4 @@
-import { createSessionHandlers } from './session-handlers';
+import { createSessionHandlers, currentWeekFixture, scheduleFixture } from './session-handlers';
 import { createMemberAttendanceHandlers } from './member-attendance-handlers';
 import { createMemberNoticeHandlers } from './member-notice-handlers';
 import { createApiMockHandlers } from '@yapp-plus/api/mocks';
@@ -8,6 +8,6 @@ export const apiBaseUrl = 'https://api.yapp.test';
 export const server = setupServer(
   ...createMemberAttendanceHandlers(apiBaseUrl),
   ...createMemberNoticeHandlers(apiBaseUrl),
-  ...createSessionHandlers(apiBaseUrl),
+  ...createSessionHandlers(apiBaseUrl, undefined, { currentWeekFixture, scheduleFixture }),
   ...createApiMockHandlers(apiBaseUrl),
 );
