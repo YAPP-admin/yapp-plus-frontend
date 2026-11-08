@@ -118,6 +118,17 @@ it('읽음 저장 실패는 기존 공지를 유지하고 사용자가 다시 �
   expect(screen.getByText('지금까지 13명이 확인했어요!')).toBeVisible();
 });
 
+it('읽음 PUT 응답이 유실되면 낙관적 상태를 복원하고 재시도를 허용한다', async () => {
+  const user = userEvent.setup();
+  server.use(http.put(`${apiBaseUrl}/api/posts/2/read`, () => HttpResponse.error()));
+  renderPage();
+
+  await user.click(await screen.findByRole('button', { name: '확인했어요' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('확인 저장에 실패했어요.');
+  expect(screen.getByRole('button', { name: '확인했어요' })).toBeEnabled();
+});
+
 it('읽음 저장 뒤 상세 재조회가 실패해도 확인 상태와 본문을 유지한다', async () => {
   const user = userEvent.setup();
   let detailRequests = 0;
