@@ -65,6 +65,13 @@ export const memberNoticeDetailFixture = {
   read: false,
 } satisfies UserPostDetailResponse;
 
+const resetMemberNoticeHandlers = new Set<() => void>();
+
+/** 테스트 종료마다 개발용 읽음 상태를 초기 fixture 값으로 되돌린다. */
+export function resetMemberNoticeHandlerState() {
+  resetMemberNoticeHandlers.forEach((reset) => reset());
+}
+
 function memberNoticeDetail(postId: number): UserPostDetailResponse | undefined {
   const notice = memberNoticeFixture.find((item) => item.postId === postId);
   if (!notice) {
@@ -87,6 +94,10 @@ function memberNoticeDetail(postId: number): UserPostDetailResponse | undefined 
 export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string | null) {
   let failNextRequest = noticeState === 'error' || noticeState === 'next-error';
   let read = false;
+  resetMemberNoticeHandlers.add(() => {
+    failNextRequest = noticeState === 'error' || noticeState === 'next-error';
+    read = false;
+  });
   const { pick } = createMswHandlers({ baseUrl });
   return [
     pick.list1(async ({ request }) => {
