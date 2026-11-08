@@ -87,3 +87,16 @@
 - 상세 fixture 연결 후 build에서 activities chunk는 462.03 kB(gzip 135.54 kB)에서 582.48 kB(gzip 172.94 kB)로 증가했다. index chunk는 523.99 kB(gzip 157.66 kB)에서 gzip 157.67 kB로 사실상 동일하다. 사용자 승인 범위 안에서 이 비용을 유지하며, 실제 상세 query 연결 뒤 다시 측정한다.
 - catalog·package·lockfile은 +667/-202줄이고 렌더러·스타일·테스트는 신규 244줄이다. 합계 +911/-202줄로 일반 PR 제한을 초과하며, 사용자가 `react-markdown` 유지를 선택해 예외를 승인했다.
 - 로컬 브라우저·실기기·스크린 리더 검증은 Computer Use 브라우저가 localhost 연결을 제공하지 않아 미실행이다. 컴포넌트 테스트에서 링크 접근 이름·새 창 속성과 이미지 오류 대체 문구를 확인했다.
+
+## 5단계 — US3 실제 상세 조회
+
+- `detail2Options`에 응답 검증을 결합해 안전한 공지 ID·읽음 수와 서울 기준 D-day를 화면 모델로 변환했다. 고정 상세 fixture를 제거하고 본문 Markdown, 과제 제출 정보, 읽기 URL 첨부 이미지, 서버의 읽음 상태를 표시한다. 읽음 저장 API는 다음 단계 전까지 비활성화했다.
+- 상세 조회 초기 실패는 `NoticeDetailErrorBoundary`에서 재시도하며 `useSuspenseQuery` 본문에 오류 분기를 두지 않았다. 오류 콘텐츠·그림·스타일은 `member-notice` feature로 옮기고, 목록·상세 페이지는 각각 BackButton 헤더를 유지했다.
+- MSW에는 모든 목록 fixture의 상세 응답, 404(`POST_NOT_FOUND`)와 503 개발 시나리오, 과제 첨부 이미지를 추가했다. 화면 테스트는 API 렌더링, Markdown, D-day, 첨부 대체 안내, 404, 재시도, 잘못된 ID의 무요청을 검증한다.
+
+## 5단계 — US3 자동 검증
+
+- 새 실행: `node --run check` 통과. format:check는 872개 파일을 새로 검사했고, web lint·typecheck·test는 cache miss로 실행했다. web은 48개 파일·317개 테스트를 새로 실행해 통과했다.
+- Turbo 재사용: check의 나머지 lint·typecheck·test 작업은 캐시를 재사용했다. 캐시 결과를 이번 단계의 신규 검증으로 보지 않는다.
+- 새 실행: `mise exec -- pnpm --filter @yapp-plus/web build`, `git diff --check` 통과. activities chunk는 583.62 kB(gzip 172.51 kB)이며 기존 500 kB 초과 경고가 유지된다.
+- 로컬 브라우저·실기기·스크린 리더 검증은 Computer Use 브라우저가 localhost 연결을 제공하지 않아 미실행이다. 테스트 DOM과 production build로 대체 확인했다. 6단계 읽음 저장 연동은 사용자 리뷰 이후에만 시작한다.
