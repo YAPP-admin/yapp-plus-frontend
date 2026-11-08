@@ -3,7 +3,7 @@ import { cleanup } from '@testing-library/react';
 import { client } from '@yapp-plus/api/generated';
 import { onUnhandledApiRequest } from '@yapp-plus/api/mocks';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
-import { apiBaseUrl, server } from './src/mocks/server';
+import { apiBaseUrl, server, createTestHandlers } from './src/mocks/server';
 import { resetMemberNoticeHandlerState } from './src/mocks/member-notice-handlers';
 
 beforeAll(() => {
@@ -11,6 +11,7 @@ beforeAll(() => {
 });
 
 beforeEach(() => {
+  server.resetHandlers(...createTestHandlers());
   client.setConfig({ baseUrl: apiBaseUrl });
 });
 

@@ -1,3 +1,4 @@
+import type { createAttendanceFixtures } from './attendance-fixtures';
 import type {
   MyAttendanceScoreResponse,
   AttendanceHistoryResponse,
@@ -19,6 +20,7 @@ export const createMemberAttendanceHandlers = (
   baseUrl: string,
   myState?: string | null,
   attendanceState?: string | null,
+  attendance?: ReturnType<typeof createAttendanceFixtures>,
 ) => {
   let failHistory = attendanceState === 'error' || attendanceState === 'next-error';
   let failNextRequest = myState === 'error';
@@ -38,6 +40,9 @@ export const createMemberAttendanceHandlers = (
       }
       if (attendanceState === 'empty') {
         return HttpResponse.json({ ...historyFixture, items: [], nextCursor: null });
+      }
+      if (attendance && attendanceState !== 'next-error') {
+        return HttpResponse.json(attendance.history);
       }
       const start = cursor === null ? 0 : Number(cursor);
       const items = historyItems.slice(start, start + 4);
@@ -70,9 +75,10 @@ export const createMemberAttendanceHandlers = (
           { status: 500 },
         );
       }
+      const score = attendance?.score ?? scoreFixture;
       return HttpResponse.json({
-        ...scoreFixture,
-        absentCount: attendanceState === 'warning' ? 10 : scoreFixture.absentCount,
+        ...score,
+        absentCount: attendanceState === 'warning' ? 10 : score.absentCount,
       });
     }),
   ];

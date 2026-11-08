@@ -1,3 +1,4 @@
+import { createAttendanceFixtures } from './attendance-fixtures';
 import { createSessionFixtures } from './session-fixtures';
 import { createMswHandlers } from '@yapp-plus/api/generated/msw';
 import { delay, HttpResponse } from 'msw';
@@ -11,12 +12,23 @@ export const createSessionHandlers = (
   baseUrl: string,
   scheduleState?: string | null,
   fixtures = createSessionFixtures(Date.now()),
+  attendance = createAttendanceFixtures(fixtures),
 ) => {
   const { currentWeekFixture: currentWeek, scheduleFixture: schedule } = fixtures;
   let failNextScheduleRequest = scheduleState === 'error';
   const { pick } = createMswHandlers({ baseUrl });
   return [
-    pick.verify(() => HttpResponse.json({ verified: true, checkedInAt: new Date().toISOString() })),
+    pick.verify(async ({ request }) => {
+      const { sessionId, code } = await request.json();
+      if (sessionId !== attendance.sessionId) {
+        return HttpResponse.json({ code: 'ATTENDANCE_SESSION_NOT_FOUND' }, { status: 404 });
+      }
+      if (code !== 1234) {
+        return HttpResponse.json({ code: 'INVALID_ATTENDANCE_CODE' }, { status: 400 });
+      }
+      attendance.checkedInAt ??= new Date().toISOString();
+      return HttpResponse.json({ verified: true, checkedInAt: attendance.checkedInAt });
+    }),
     pick.find3(() => HttpResponse.json(currentWeek)),
     pick.find4(async () => {
       if (scheduleState === 'loading') {
