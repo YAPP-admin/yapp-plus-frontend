@@ -1,0 +1,23 @@
+name: EAS CLI 설치
+description: 설치 스크립트 정책을 명시한 임시 작업 공간에서 EAS CLI를 설치합니다.
+runs:
+  using: composite
+  steps:
+    # Expo Action의 임시 설치에는 저장소의 allowBuilds가 전달되지 않습니다.
+    # 앱 의존성과 분리하되 pnpm의 기본 공급망 보호는 유지합니다.
+    - name: Install EAS CLI
+      shell: bash
+      run: |
+        tool_dir="$RUNNER_TEMP/eas-cli"
+        mkdir -p "$tool_dir"
+        printf '%s\n' '{"private":true,"dependencies":{"eas-cli":"27.4.1"}}' > "$tool_dir/package.json"
+        cat > "$tool_dir/pnpm-workspace.yaml" <<'POLICY'
+        allowBuilds:
+          # 선택적 관측 모듈과 배포된 JS에 불필요한 생성 스크립트를 실행하지 않습니다.
+          # EAS CLI 업그레이드 시 해당 버전과 설치 스크립트 필요성을 다시 검토합니다.
+          dtrace-provider@0.8.8: false
+          protobufjs@7.6.6: false
+        POLICY
+        pnpm --dir "$tool_dir" install
+        "$tool_dir/node_modules/.bin/eas" --version
+        echo "$tool_dir/node_modules/.bin" >> "$GITHUB_PATH"
