@@ -72,8 +72,10 @@ function AccountScreen({
     }
   }, [blocked, activity.isTop, phase, flow]);
 
-  if (isNative && phase === 'UNAVAILABLE' && (protectedScreen || activity.name === 'Login')) {
-    return activity.isTop ? <NativeSessionRecovery /> : null;
+  if (isNative && phase === 'UNAVAILABLE' && protectedScreen) {
+    return activity.isTop ? (
+      <NativeSessionRecovery onGoToLogin={() => flow.replace('Login', {})} />
+    ) : null;
   }
   if (blocked) {
     return null;
