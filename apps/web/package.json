@@ -33,7 +33,8 @@
     "ky": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
-    "react-error-boundary": "catalog:"
+    "react-error-boundary": "catalog:",
+    "react-markdown": "catalog:"
   },
   "devDependencies": {
     "@seed-design/vite-plugin": "catalog:",

@@ -44,10 +44,10 @@
 
 독립 검증: API 없이 본문 문자열로 서식·링크 정책·레이아웃을 확인한다.
 
-- [ ] T019 [US3] pnpm-workspace.yaml, apps/web/package.json, pnpm-lock.yaml에 react-markdown 10.1.0을 고정하고 의존성 변경량을 먼저 검토한다.
-- [ ] T020 [US3] apps/web/src/pages/notice-detail/ui/notice-markdown.test.tsx에 프로젝트 서식·HTML·URL·이미지 정책 테스트를 추가한다.
-- [ ] T021 [US3] apps/web/src/pages/notice-detail/ui/notice-markdown.tsx, notice-markdown.css.ts에 skipHtml·HTTP(S)·제목 계층·코드/긴 링크·이미지 대체 표시를 구현한다.
-- [ ] T022 [US3] specs/019-member-notices/validation.md에 check/build·번들 전후 비교·레이아웃/키보드·lockfile 포함 변경량·4단계 리뷰를 기록한다.
+- [x] T019 [US3] pnpm-workspace.yaml, apps/web/package.json, pnpm-lock.yaml에 react-markdown 10.1.0을 고정하고 의존성 변경량을 먼저 검토한다.
+- [x] T020 [US3] apps/web/src/pages/notice-detail/ui/notice-markdown.test.tsx에 프로젝트 서식·HTML·URL·이미지 정책 테스트를 추가한다.
+- [x] T021 [US3] apps/web/src/pages/notice-detail/ui/notice-markdown.tsx, notice-markdown.css.ts에 skipHtml·HTTP(S)·제목 계층·코드/긴 링크·이미지 대체 표시를 구현한다.
+- [x] T022 [US3] specs/019-member-notices/validation.md에 check/build·번들 전후 비교·레이아웃/키보드·lockfile 포함 변경량·4단계 리뷰를 기록한다.
 
 ## 5단계 — US3 상세 조회 (P1)
 
