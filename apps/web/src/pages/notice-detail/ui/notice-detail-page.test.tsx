@@ -4,7 +4,7 @@ import { createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { memberNoticeDetailFixture } from '../../../mocks/member-notice-handlers';
@@ -63,6 +63,42 @@ it('읽음 저장 성공 뒤 서버 읽음 상태를 다시 조회하고 인원 
 
   await waitFor(() => expect(screen.getByRole('button', { name: '확인했어요' })).toBeDisabled());
   expect(screen.getByText('지금까지 13명이 확인했어요!')).toBeVisible();
+});
+
+it('저장 중 연속 클릭해도 읽음 PUT 요청은 한 번만 보낸다', async () => {
+  const user = userEvent.setup();
+  let requestCount = 0;
+  server.use(
+    http.put(`${apiBaseUrl}/api/posts/2/read`, async () => {
+      requestCount += 1;
+      await delay(50);
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+  renderPage();
+
+  const button = await screen.findByRole('button', { name: '확인했어요' });
+  await user.click(button);
+  await user.click(button);
+
+  await waitFor(() => expect(requestCount).toBe(1));
+});
+
+it('이미 읽은 공지는 확인 버튼을 비활성화하고 PUT을 보내지 않는다', async () => {
+  const requestSpy = vi.fn<() => void>();
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts/2`, () =>
+      HttpResponse.json({ ...memberNoticeDetailFixture, read: true }),
+    ),
+    http.put(`${apiBaseUrl}/api/posts/2/read`, () => {
+      requestSpy();
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+  renderPage();
+
+  expect(await screen.findByRole('button', { name: '확인했어요' })).toBeDisabled();
+  expect(requestSpy).not.toHaveBeenCalled();
 });
 
 it('읽음 저장 실패는 기존 공지를 유지하고 사용자가 다시 시도할 수 있게 한다', async () => {
