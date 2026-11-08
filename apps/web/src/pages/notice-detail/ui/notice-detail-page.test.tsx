@@ -22,6 +22,7 @@ beforeEach(() => {
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
+  vi.useRealTimers();
 });
 
 function renderPage(noticeId = '2') {
@@ -36,6 +37,9 @@ function renderPage(noticeId = '2') {
 }
 
 it('API 공지의 Markdown·제출 안내·첨부 이미지를 표시한다', async () => {
+  // fixture 마감일의 하루 전으로 고정해 실제 날짜에 따라 D-day가 바뀌지 않게 합니다.
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-11-08T03:00:00Z'));
   renderPage();
 
   expect(
