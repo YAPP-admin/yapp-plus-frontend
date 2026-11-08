@@ -1,3 +1,5 @@
+import { queryOptions } from '@tanstack/react-query';
+import { getStaticNotice, staticContentEnabled } from '@/features/static-content';
 /** 생성 상세 API 응답을 화면이 안전하게 소비하는 공지 상세 모델로 검증·변환한다. */
 import {
   detail2Options,
@@ -43,11 +45,21 @@ export function memberNoticeDetailQueryOptions(
   postId: number,
   options?: Omit<Parameters<typeof detail2Options>[0], 'path'>,
 ) {
-  return detail2Options({
+  const generated = detail2Options({
     ...options,
     path: { postId },
     responseTransformer: (data: unknown) => noticeDetailSchema.parseAsync(data),
   });
+  return staticContentEnabled()
+    ? queryOptions({
+        ...generated,
+        queryFn: () =>
+          getStaticNotice(
+            postId,
+            typeof options?.auth === 'string' ? options.auth : undefined,
+          ).then((data) => noticeDetailSchema.parseAsync(data)),
+      })
+    : generated;
 }
 
 /** 서울 오늘을 기준으로 날짜만 있는 마감일의 D-day 문구를 계산한다. */

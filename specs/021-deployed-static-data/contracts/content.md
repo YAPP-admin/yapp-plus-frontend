@@ -1,15 +1,17 @@
-# 요청 처리 계약
+# 콘텐츠 조회 계약
 
-API client에 설정된 origin과 base 경로에서만 적용한다. 그 외 요청은 원래 fetch로 전달한다.
+정적 모드에서는 아래 queryFn·mutationFn이 Promise로 데이터를 반환한다.
+전역 API client와 fetch 설정은 변경하지 않는다.
 
-| 요청                                  | 처리                         |
-| ------------------------------------- | ---------------------------- |
-| GET /api/sessions/current-week        | 이번 주 세션 없음            |
-| GET /api/generations/current/sessions | 미래 정규 일정 3개           |
-| GET /api/posts                        | 유형·커서 검증 후 공지 목록  |
-| GET /api/posts/:id                    | 정적 상세, 없으면 404        |
-| PUT /api/posts/:id/read               | 계정별 읽음 표시, 없으면 404 |
-| POST /api/attendance-verifications    | 409, 실서버 전달 금지        |
-| 그 외 경로·method                     | 실제 API 유지                |
+| 화면 동작                | 정적 처리                                |
+| ------------------------ | ---------------------------------------- |
+| 이번 주 세션             | 세션 없음                                |
+| 기수 일정                | 미래 정규 일정 3개                       |
+| 공지 목록                | 유형 필터 적용, nextCursor는 null        |
+| 공지 상세                | 상세 반환, 없는 ID는 POST_NOT_FOUND 오류 |
+| 공지 읽음                | 메모리에서 사용자별 읽음 상태 갱신       |
+| 출석 제출                | 제출 차단, 실제 API 호출 없음            |
+| 인증·회원·출석 내역·점수 | 기존 실제 API 유지                       |
 
-Response는 기존 생성 SDK가 파싱·변환한다. 모드별 응답 타입을 추가하지 않는다.
+생성 query/mutation 키와 기존 응답 검증기를 재사용한다.
+정적 모드를 끄면 생성된 queryFn·mutationFn을 그대로 사용한다.

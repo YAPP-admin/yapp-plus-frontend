@@ -1,14 +1,15 @@
 'use client';
 
+import { staticContentEnabled } from '@/features/static-content';
+
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { find4Options } from '@yapp-plus/api/generated';
 import { ActionButton } from '@yapp-plus/ui';
 import { Suspense } from 'react';
 import { List, VStack } from '@seed-design/react';
 import { useNativeAuthSession } from '@/features/auth';
 import { formatKoreanTime, koreanTimestamp } from '@/shared/lib/korean-date-time';
-import { scheduleSchema } from '../model/schedule-schema';
+import { scheduleQueryOptions } from '../model/schedule-query';
 import { list, srOnly } from './schedule-page.css';
 import { ScheduleEmpty } from './schedule-empty';
 import { ScheduleItem } from './schedule-item';
@@ -28,6 +29,7 @@ const dayLabels = {
 export function SchedulePage() {
   const { phase } = useNativeAuthSession();
   const canQuery =
+    staticContentEnabled() ||
     phase === 'SIGNED_IN' ||
     (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
   return (
@@ -51,10 +53,7 @@ export function SchedulePage() {
 function ScheduleList() {
   const { apiOptions } = useNativeAuthSession();
   const query = useSuspenseQuery({
-    ...find4Options({
-      ...apiOptions,
-      responseValidator: (response) => scheduleSchema.parseAsync(response),
-    }),
+    ...scheduleQueryOptions(apiOptions),
   });
 
   useRefetchOnScreenReturn(query);

@@ -1,6 +1,8 @@
 /** 홈의 이번 주 공지를 세션 카드와 독립된 query 경계에서 보여주는 UI다. */
 'use client';
 
+import { staticContentEnabled } from '@/features/static-content';
+
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconChevronRightFill } from '@karrotmarket/react-monochrome-icon';
@@ -30,6 +32,7 @@ import { WeeklyNoticesErrorBoundary } from './weekly-notices-error-boundary';
 export function WeeklyNotices() {
   const { phase } = useNativeAuthSession();
   const canQuery =
+    staticContentEnabled() ||
     phase === 'SIGNED_IN' ||
     (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
 

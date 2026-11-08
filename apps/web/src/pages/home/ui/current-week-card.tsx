@@ -1,6 +1,6 @@
+import { staticContentEnabled } from '@/features/static-content';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { find3Options } from '@yapp-plus/api/generated';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
 import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
@@ -15,7 +15,7 @@ import {
   koreanTimestamp,
   nextKoreanMidnight,
 } from '@/shared/lib/korean-date-time';
-import { currentWeekSchema } from '../model/current-week-schema';
+import { currentWeekQueryOptions } from '../model/current-week-query';
 import {
   calendarDateBadge,
   calendarDateBadgeActive,
@@ -32,6 +32,7 @@ import {
 export function CurrentWeekCard() {
   const { phase } = useNativeAuthSession();
   const canQuery =
+    staticContentEnabled() ||
     phase === 'SIGNED_IN' ||
     (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
   return (
@@ -86,10 +87,7 @@ function CurrentWeekContent() {
   const flow = useFlow();
   const confirmed = useAttendanceConfirmation();
   const query = useSuspenseQuery({
-    ...find3Options({
-      ...apiOptions,
-      responseValidator: (response) => currentWeekSchema.parseAsync(response),
-    }),
+    ...currentWeekQueryOptions(apiOptions),
     refetchOnMount: (cachedQuery) =>
       cachedQuery.state.data && nextKoreanMidnight(cachedQuery.state.data.weekEndDate) <= Date.now()
         ? 'always'

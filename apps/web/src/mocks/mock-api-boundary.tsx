@@ -1,8 +1,17 @@
 'use client';
 
+import { staticContentEnabled } from '@/features/static-content';
+
 import { useEffect, useState, type ReactNode } from 'react';
 
 export function MockApiBoundary({ children }: { children: ReactNode }) {
+  const staticFlag = import.meta.env.VITE_STATIC_CONTENT;
+  if (staticFlag !== undefined && staticFlag !== 'true' && staticFlag !== 'false') {
+    return <p role="alert">콘텐츠 설정을 확인해 주세요.</p>;
+  }
+  if (staticContentEnabled()) {
+    return children;
+  }
   if (!import.meta.env.DEV) {
     return children;
   }
@@ -46,12 +55,7 @@ function EnabledMockApiBoundary({ children }: { children: ReactNode }) {
     return children;
   }
   if (status === 'failed') {
-    return (
-      <p role="alert">
-        API 모킹을 시작하지 못했습니다. 개발 서버와 mockServiceWorker.js를 확인한 뒤 새로고침해
-        주세요.
-      </p>
-    );
+    return <p role="alert">콘텐츠를 불러오지 못했습니다. 새로고침해 주세요.</p>;
   }
-  return <output>API 모킹을 준비하고 있습니다.</output>;
+  return <output>콘텐츠를 불러오고 있습니다.</output>;
 }

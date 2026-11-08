@@ -11,6 +11,7 @@ const outputPath = fileURLToPath(new URL('./dist', import.meta.url));
 
 export default defineConfig({
   root: stackflowRoot,
+  envDir: fileURLToPath(new URL('.', import.meta.url)),
   publicDir: publicPath,
   resolve: {
     alias: {
