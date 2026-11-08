@@ -3,6 +3,8 @@ import { find3Options } from '@yapp-plus/api/generated';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
 import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
+import { useFlow } from '@stackflow/react';
+import { useAttendanceConfirmation } from '../model/code-attendance';
 import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
 import {
@@ -82,6 +84,8 @@ function WeekError({ resetErrorBoundary }: FallbackProps) {
 
 function CurrentWeekContent() {
   const { apiOptions } = useNativeAuthSession();
+  const flow = useFlow();
+  const confirmed = useAttendanceConfirmation();
   const { data, dataUpdatedAt, error, refetch } = useSuspenseQuery({
     ...find3Options({
       ...apiOptions,
@@ -149,10 +153,22 @@ function CurrentWeekContent() {
       </div>
       {session ? (
         <>
-          <ActionButton variant="neutralWeak" size="medium" disabled>
-            출석하기
+          <ActionButton
+            variant="neutralWeak"
+            size="medium"
+            disabled={
+              !!error || confirmed === session.sessionId || session.attendanceStatus !== 'AVAILABLE'
+            }
+            onClick={() => flow.push('AttendanceCode', {})}
+          >
+            {confirmed === session.sessionId
+              ? '출석했어요!'
+              : {
+                  AVAILABLE: '출석하기',
+                  NOT_ELIGIBLE: '출석 대상이 아니에요',
+                  NOT_OPEN: '아직 출석할 수 없어요',
+                }[session.attendanceStatus]}
           </ActionButton>
-          <p>출석 기능은 준비 중이에요.</p>
         </>
       ) : null}
     </>

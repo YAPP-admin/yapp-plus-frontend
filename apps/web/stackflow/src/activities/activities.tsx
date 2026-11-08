@@ -6,7 +6,7 @@ import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
 import { AttendanceRulesPage } from '@/pages/attendance-rules';
 import { DevRoutesPage } from '@/pages/dev-routes';
-import { HomePage } from '@/pages/home';
+import { HomePage, useAttendanceConfirmation } from '@/pages/home';
 import { LoginErrorPage } from '@/pages/login-error';
 import { LoginPage } from '@/pages/login';
 import { MyPage } from '@/pages/my';
@@ -164,6 +164,10 @@ export function AttendanceRulesActivity() {
 }
 
 export function AttendanceCompleteActivity() {
+  const confirmed = useAttendanceConfirmation();
+  if (confirmed === null) {
+    return <NotFoundActivity />;
+  }
   return (
     <ActivityScreen title="출석 완료" showBack={false} preventSwipeBack>
       <PageShell header={null} plain>

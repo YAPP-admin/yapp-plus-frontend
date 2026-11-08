@@ -5,7 +5,7 @@ import {
 
 const sessionSchema = zCurrentWeekSessionDetailResponse.extend({
   sessionId: zCurrentWeekSessionDetailResponse.shape.sessionId.refine(
-    (id) => Number.isSafeInteger(Number(id)),
+    (id) => Number.isSafeInteger(Number(id)) && Number(id) > 0,
     '정밀도를 보장할 수 없는 세션 ID입니다.',
   ),
   startTime: zCurrentWeekSessionDetailResponse.shape.startTime.regex(

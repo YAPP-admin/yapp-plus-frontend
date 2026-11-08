@@ -1,7 +1,7 @@
 # 구현 계획: 회원 코드 출석과 사전 출결 보고
 
 **실제 브랜치**: `DongjaJ/7al70` | **작성일**: 2026-11-08 | **명세**: [spec.md](spec.md)
-**상태**: 1단계 코드 출석 구조 수정 중 · [#385](https://github.com/YAPP-admin/yapp-plus-frontend/issues/385). 생성 스크립트의 feature 이름은 Git 브랜치 이름과 다르다.
+**상태**: 1단계 코드 출석 구조 수정 완료 · 리뷰 대기 · [#385](https://github.com/YAPP-admin/yapp-plus-frontend/issues/385). 생성 스크립트의 feature 이름은 Git 브랜치 이름과 다르다.
 
 ## 요약
 

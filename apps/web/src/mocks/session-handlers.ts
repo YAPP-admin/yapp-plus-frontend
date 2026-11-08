@@ -29,6 +29,7 @@ export const createSessionHandlers = (baseUrl: string, scheduleState?: string | 
   let failNextScheduleRequest = scheduleState === 'error';
   const { pick } = createMswHandlers({ baseUrl });
   return [
+    pick.verify(() => HttpResponse.json({ verified: true, checkedInAt: new Date().toISOString() })),
     pick.find3(() => HttpResponse.json(currentWeekFixture)),
     pick.find4(async () => {
       if (scheduleState === 'loading') {

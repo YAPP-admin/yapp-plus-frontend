@@ -1,6 +1,11 @@
 import { HStack, VStack } from '@seed-design/react';
 import { useActivityZIndexBase } from '@seed-design/stackflow';
-import { useRef, useState } from 'react';
+import { Suspense, useId, useRef, useState } from 'react';
+import { revalidateLogic, useField, useForm } from '@tanstack/react-form';
+import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import { useNativeAuthSession } from '@/features/auth';
+import { useCodeAttendance } from '../model/code-attendance';
 import { IconExclamationmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import {
   ActionButton,
@@ -65,8 +70,89 @@ export function AttendanceCodeSheet({
   ...props
 }: BottomSheetRootProps & { onComplete: () => void }) {
   const layerIndex = useActivityZIndexBase();
-  const [code, setCode] = useState(['', '', '', '']);
-  const [codeError, setCodeError] = useState(false);
+  const { phase } = useNativeAuthSession();
+  const allowed =
+    phase === 'SIGNED_IN' ||
+    (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
+  return (
+    <BottomSheetRoot {...props}>
+      <BottomSheetContent
+        layerIndex={layerIndex}
+        aria-label="출석 코드를 입력해 주세요"
+        showHandle={false}
+        showCloseButton={false}
+        className={sheetContent}
+      >
+        <div className={sheetHandleArea} aria-hidden="true">
+          <div className={sheetHandleBar} />
+        </div>
+        <VStack gap="x1_5" className={sheetContainer}>
+          <h2 className={sheetTitle}>출석 코드를 입력해 주세요</h2>
+          <p className={sheetDescription}>코드를 입력하면 출석이 완료돼요</p>
+        </VStack>
+        {allowed ? (
+          <QueryErrorResetBoundary>
+            {({ reset }) => (
+              <ErrorBoundary onReset={reset} FallbackComponent={CodeSheetError}>
+                <Suspense fallback={<CodeSheetMessage message="세션을 불러오고 있어요…" />}>
+                  <AttendanceCodeForm open={props.open === true} onComplete={onComplete} />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </QueryErrorResetBoundary>
+        ) : (
+          <CodeSheetMessage message="앱에 로그인한 후 출석해 주세요." />
+        )}
+      </BottomSheetContent>
+    </BottomSheetRoot>
+  );
+}
+
+function CodeSheetError({ resetErrorBoundary }: FallbackProps) {
+  return (
+    <CodeSheetMessage
+      message="세션을 불러오지 못했어요. 다시 확인해 주세요."
+      retry={resetErrorBoundary}
+    />
+  );
+}
+
+function CodeSheetMessage({ message, retry }: { message: string; retry?: () => void }) {
+  return (
+    <VStack gap="x5" className={sheetContainer}>
+      <p role={retry ? 'alert' : 'status'}>{message}</p>
+      <ActionButton variant="brandSolid" size="large" className={sheetPrimaryButton} disabled>
+        확인
+      </ActionButton>
+      {retry && (
+        <ActionButton variant="ghost" onClick={retry}>
+          세션 다시 확인
+        </ActionButton>
+      )}
+    </VStack>
+  );
+}
+
+function AttendanceCodeForm({ open, onComplete }: { open: boolean; onComplete: () => void }) {
+  const attendance = useCodeAttendance(open, onComplete);
+  const form = useForm({
+    defaultValues: { code: ['', '', '', ''] },
+    validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
+    onSubmit: ({ value }) => attendance.submit(value.code.join('')),
+  });
+  const field = useField({
+    form,
+    name: 'code',
+    validators: {
+      onDynamic: ({ value }) =>
+        value.every((digit) => /^\d$/.test(digit))
+          ? undefined
+          : '출석 코드 네 자리를 입력해 주세요.',
+    },
+  });
+  const code = field.state.value;
+  const error = field.state.meta.errors[0] ?? attendance.error;
+  const errorId = useId();
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
@@ -77,8 +163,8 @@ export function AttendanceCodeSheet({
     }
     const newCode = [...code];
     newCode[index] = value.slice(-1);
-    setCode(newCode);
-    setCodeError(false);
+    field.handleChange(newCode);
+    attendance.reset();
 
     // 다음 칸으로 자동 포커스
     if (value && index < 3) {
@@ -92,86 +178,93 @@ export function AttendanceCodeSheet({
     }
   }
 
-  function handleConfirmCode() {
-    const fullCode = code.join('');
-    if (fullCode.length < 4) {
-      setCodeError(true);
+  function handlePaste(index: number, text: string) {
+    if (!/^\d+$/.test(text)) {
       return;
     }
-    // 예: 0000이거나 4자리 코드 검증
-    if (fullCode === '0000') {
-      setCodeError(true);
-      return;
-    }
-
-    onComplete();
+    const digits = text.slice(0, 4 - index).split('');
+    field.handleChange((previous) => previous.map((digit, i) => digits[i - index] ?? digit));
+    attendance.reset();
+    inputRefs.current[Math.min(index + digits.length, 3)]?.focus();
   }
 
   return (
-    <BottomSheetRoot {...props}>
-      <BottomSheetContent
-        layerIndex={layerIndex}
-        aria-label="출석 코드를 입력해 주세요"
-        showHandle={false}
-        showCloseButton={false}
-        className={sheetContent}
-      >
-        <div className={sheetHandleArea} aria-hidden="true">
-          <div className={sheetHandleBar} />
-        </div>
+    <VStack
+      as="form"
+      gap="x5"
+      className={sheetContainer}
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <VStack gap="x6" width="full">
+        <div className={codeInputsWrapper}>
+          <div className={codeInputsContainer}>
+            {[0, 1, 2, 3].map((index) => (
+              <input
+                key={index}
+                ref={(el) => {
+                  inputRefs.current[index] = el;
+                }}
+                type="text"
+                inputMode="numeric"
+                maxLength={1}
+                autoComplete="off"
+                disabled={attendance.pending}
+                aria-invalid={!!error}
+                aria-describedby={error ? errorId : undefined}
+                onPaste={(event) => {
+                  event.preventDefault();
+                  handlePaste(index, event.clipboardData.getData('text'));
+                }}
+                placeholder={focusedIndex === index ? '' : '0'}
+                value={code[index]}
+                onFocus={() => setFocusedIndex(index)}
+                onBlur={() => {
+                  field.handleBlur();
+                  setFocusedIndex(null);
+                }}
+                onChange={(e) => handleCodeChange(index, e.target.value)}
+                onKeyDown={(e) => handleCodeKeyDown(index, e)}
+                className={error ? codeInputError : codeInput}
+                aria-label={`출석 코드 ${index + 1}번째 자리`}
+              />
+            ))}
+          </div>
 
-        <VStack gap="x5" className={sheetContainer}>
-          <VStack gap="x6" width="full">
-            <VStack gap="x1_5" width="full">
-              <h2 className={sheetTitle}>출석 코드를 입력해 주세요</h2>
-              <p className={sheetDescription}>코드를 입력하면 출석이 완료돼요</p>
-            </VStack>
-
-            <div className={codeInputsWrapper}>
-              <div className={codeInputsContainer}>
-                {[0, 1, 2, 3].map((index) => (
-                  <input
-                    key={index}
-                    ref={(el) => {
-                      inputRefs.current[index] = el;
-                    }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    placeholder={focusedIndex === index ? '' : '0'}
-                    value={code[index]}
-                    onFocus={() => setFocusedIndex(index)}
-                    onBlur={() => setFocusedIndex(null)}
-                    onChange={(e) => handleCodeChange(index, e.target.value)}
-                    onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                    className={codeError ? codeInputError : codeInput}
-                    aria-label={`출석 코드 ${index + 1}번째 자리`}
-                  />
-                ))}
-              </div>
-
-              {codeError && (
-                <div className={codeErrorMessage} role="alert">
-                  <IconExclamationmarkCircleFill width={16} height={16} />
-                  <span>출석 코드가 올바르지 않아요.</span>
-                </div>
-              )}
+          {error && (
+            <div id={errorId} className={codeErrorMessage} role="alert">
+              <IconExclamationmarkCircleFill width={16} height={16} />
+              <span>{error}</span>
             </div>
-          </VStack>
+          )}
+        </div>
+      </VStack>
 
-          <VStack width="full">
-            <ActionButton
-              variant="brandSolid"
-              size="large"
-              className={sheetPrimaryButton}
-              onClick={handleConfirmCode}
-            >
-              확인
-            </ActionButton>
-          </VStack>
-        </VStack>
-      </BottomSheetContent>
-    </BottomSheetRoot>
+      <VStack width="full">
+        <ActionButton
+          variant="brandSolid"
+          size="large"
+          className={sheetPrimaryButton}
+          type="submit"
+          loading={attendance.pending}
+          disabled={attendance.disabled}
+        >
+          확인
+        </ActionButton>
+        {error && (
+          <ActionButton
+            type="button"
+            variant="ghost"
+            disabled={attendance.pending}
+            onClick={attendance.refresh}
+          >
+            세션 다시 확인
+          </ActionButton>
+        )}
+      </VStack>
+    </VStack>
   );
 }
 export function AttendanceReportSheet({

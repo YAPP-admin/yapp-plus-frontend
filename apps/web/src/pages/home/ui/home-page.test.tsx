@@ -207,7 +207,7 @@ it('주간 API만 조회하고 서버 이름·한국 날짜·분과 세션 날�
   const date = screen.getByLabelText('2026-11-07 세션 예정');
   expect(date).toHaveAttribute('aria-current', 'date');
   expect(screen.getByLabelText('2026-11-01')).toHaveTextContent('1');
-  expect(screen.getByRole('button', { name: '출석하기' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '출석하기' })).toBeEnabled();
   expect(screen.queryByText('출석했어요!')).not.toBeInTheDocument();
   expect(scheduleRequest).not.toHaveBeenCalled();
 });
@@ -295,7 +295,7 @@ it('일반 브라우저는 모의 URL 상태로 API나 성공 흐름을 실행�
   expect(mockPush).not.toHaveBeenCalled();
 });
 
-it('로그인 WebView에서도 출석과 보고는 준비 중이며 모의 완료를 표시하지 않는다', async () => {
+it('로그인 WebView는 실제 출석 진입을 허용하고 보고는 준비 중이며 모의 완료를 표시하지 않는다', async () => {
   vi.stubEnv('VITE_API_MOCKING', 'false');
   let authorization: string | null = null;
   server.use(
@@ -307,7 +307,7 @@ it('로그인 WebView에서도 출석과 보고는 준비 중이며 모의 완�
   renderHome({ initialSession: 'team', initialAttendance: 'attended' }, true);
   expect(await screen.findByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
   expect(authorization).toBe('Bearer test-token');
-  expect(screen.getByRole('button', { name: '출석하기' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '출석하기' })).toBeEnabled();
   expect(screen.getByRole('button', { name: '출결 보고 준비 중' })).toBeDisabled();
   expect(
     within(screen.getByRole('button', { name: '출결 보고 준비 중' })).getByText('준비 중'),
@@ -398,3 +398,18 @@ it('주간 조회의 네트워크 오류 후 연결 복구 시 카드와 오류 
   expect(await screen.findByText(/복구된 주간 세션/)).toBeVisible();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
+
+it.each(['NOT_OPEN', 'NOT_ELIGIBLE'])(
+  '서버 상태 %s에서는 출석을 시작할 수 없다',
+  async (attendanceStatus) => {
+    server.use(
+      http.get(url, () =>
+        HttpResponse.json({ ...response, session: { ...response.session, attendanceStatus } }),
+      ),
+    );
+    renderHome({}, true);
+    await screen.findByRole('heading', { name: /설계 리뷰/ });
+    expect(screen.queryByRole('button', { name: '출석하기' })).not.toBeInTheDocument();
+    expect(mockPush).not.toHaveBeenCalled();
+  },
+);
