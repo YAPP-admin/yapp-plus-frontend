@@ -1,4 +1,4 @@
-import { find3, find4, find3Options, find4Options } from '@yapp-plus/api/generated';
+import { detail2, find3, find4, find3Options, find4Options } from '@yapp-plus/api/generated';
 import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, expect, it, vi } from 'vitest';
@@ -51,6 +51,32 @@ it.each([find3, find4])(
     });
   },
 );
+
+it('공지 상세 GET도 401 갱신 후 새 토큰으로 한 번 재시도한다', async () => {
+  const tokens: (string | null)[] = [];
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts/2`, ({ request }) => {
+      tokens.push(request.headers.get('Authorization'));
+      return tokens.length === 1
+        ? new HttpResponse(null, { status: 401 })
+        : HttpResponse.json({ postId: 2 });
+    }),
+  );
+  vi.mocked(refreshNativeSession).mockResolvedValue({
+    status: 'SIGNED_IN',
+    session: { ...session, tokenVersion: 2, accessToken: 'test-new' },
+  });
+
+  await expect(
+    detail2({
+      ...nativeAuthClientOptions(session),
+      path: { postId: 2 },
+      signal: controller.signal,
+      throwOnError: true,
+    }),
+  ).resolves.toMatchObject({ data: { postId: 2 } });
+  expect(tokens).toEqual(['Bearer test-old', 'Bearer test-new']);
+});
 
 it.each([401, 403, 500])('HTTP %i에서 재시도 상한을 지킨다', async (status) => {
   let count = 0;
