@@ -1,5 +1,6 @@
+import { createNoticeFixtures } from './notice-fixtures';
 import { createAttendanceFixtures } from './attendance-fixtures';
-import { createSessionFixtures } from './session-fixtures';
+import { createUpcomingSessionFixtures } from './session-fixtures';
 import { createSessionHandlers } from './session-handlers';
 import { createMemberAttendanceHandlers } from './member-attendance-handlers';
 import { createMemberNoticeHandlers } from './member-notice-handlers';
@@ -17,8 +18,9 @@ export function startMocking(): Promise<void> {
       throw new Error('모킹할 API base URL이 없습니다.');
     }
 
-    const fixtures = createSessionFixtures(Date.now());
+    const fixtures = createUpcomingSessionFixtures(Date.now());
     const attendance = createAttendanceFixtures(fixtures);
+    const noticeState = new URLSearchParams(window.location.search).get('noticeState');
     const worker = setupWorker(
       ...createMemberAttendanceHandlers(
         baseUrl,
@@ -28,7 +30,8 @@ export function startMocking(): Promise<void> {
       ),
       ...createMemberNoticeHandlers(
         baseUrl,
-        new URLSearchParams(window.location.search).get('noticeState'),
+        noticeState,
+        noticeState ? undefined : createNoticeFixtures(fixtures),
       ),
       ...createSessionHandlers(
         baseUrl,

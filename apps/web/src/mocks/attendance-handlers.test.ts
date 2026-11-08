@@ -1,7 +1,7 @@
 import { find3, find5, mine, verify } from '@yapp-plus/api/generated';
 import { beforeEach, expect, it } from 'vitest';
 import { apiBaseUrl, server } from './server';
-import { createSessionFixtures } from './session-fixtures';
+import { createSessionFixtures, createUpcomingSessionFixtures } from './session-fixtures';
 import { createAttendanceFixtures } from './attendance-fixtures';
 import { createSessionHandlers } from './session-handlers';
 import { createMemberAttendanceHandlers } from './member-attendance-handlers';
@@ -55,4 +55,24 @@ it('재제출은 동일한 완료 시각을 반환하고 새 시연은 초기 �
   expect((await find5()).data?.items.find(({ sessionId }) => sessionId === 39902)).toMatchObject({
     attendanceStatus: 'UNDECIDED',
   });
+});
+
+it('예정된 세션만 있으면 출석 요청을 거절하고 내역·집계를 비워 둔다', async () => {
+  const fixtures = createUpcomingSessionFixtures(Date.parse('2026-11-09T12:00:00+09:00'));
+  const attendance = createAttendanceFixtures(fixtures);
+  server.use(
+    ...createSessionHandlers(apiBaseUrl, undefined, fixtures, attendance),
+    ...createMemberAttendanceHandlers(apiBaseUrl, undefined, undefined, attendance),
+  );
+  const result = await verify({
+    body: { sessionId: 39901, code: 1234 },
+    kyOptions: { throwHttpErrors: false },
+  });
+  expect(result.response?.status).toBe(409);
+  expect(result.error).toMatchObject({ code: 'ATTENDANCE_UNAVAILABLE' });
+  expect((await find5()).data).toMatchObject({
+    items: [],
+    summary: { totalSessionCount: 3, startedSessionCount: 0 },
+  });
+  expect((await mine()).data?.attendanceCount).toBe(0);
 });
