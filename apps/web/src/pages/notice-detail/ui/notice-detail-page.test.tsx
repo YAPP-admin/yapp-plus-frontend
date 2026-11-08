@@ -101,6 +101,22 @@ it('이미 읽은 공지는 확인 버튼을 비활성화하고 PUT을 보내지
   expect(requestSpy).not.toHaveBeenCalled();
 });
 
+it('오프라인에서는 확인 버튼을 비활성화하고 읽음 PUT을 예약하지 않는다', async () => {
+  const online = vi.spyOn(navigator, 'onLine', 'get').mockReturnValue(false);
+  const requestSpy = vi.fn<() => void>();
+  server.use(
+    http.put(`${apiBaseUrl}/api/posts/2/read`, () => {
+      requestSpy();
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+  renderPage();
+
+  expect(await screen.findByRole('button', { name: '확인했어요' })).toBeDisabled();
+  expect(requestSpy).not.toHaveBeenCalled();
+  online.mockRestore();
+});
+
 it('읽음 저장 실패는 기존 공지를 유지하고 사용자가 다시 시도할 수 있게 한다', async () => {
   const user = userEvent.setup();
   server.use(

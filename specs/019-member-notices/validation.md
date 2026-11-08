@@ -101,8 +101,30 @@
 - 새 실행: `mise exec -- pnpm --filter @yapp-plus/web build`, `git diff --check` 통과. activities chunk는 583.62 kB(gzip 172.51 kB)이며 기존 500 kB 초과 경고가 유지된다.
 - 로컬 브라우저·실기기·스크린 리더 검증은 Computer Use 브라우저가 localhost 연결을 제공하지 않아 미실행이다. 테스트 DOM과 production build로 대체 확인했다. 6단계 읽음 저장 연동은 사용자 리뷰 이후에만 시작한다.
 
-## 6단계 — US4 읽음 저장 (진행 중)
+## 6단계 — US4 읽음 저장
 
 - 생성 `acknowledgeMutation`으로 `PUT /api/posts/{postId}/read`를 연결했다. 이미 읽은 공지·오프라인·진행 중 중복 요청은 차단하고, 성공한 204 응답에서만 현재 상세 cache의 `read=true`를 확정한 뒤 활성 상세 query를 재조회한다. `readCount`는 로컬에서 증가시키지 않는다.
-- mutation은 자동 재시도와 재연결 대기를 사용하지 않는다. 화면 해제 시 AbortController로 요청을 중단하며, native 사용자·세션 식별자가 바뀐 뒤의 callback은 cache 변경을 건너뛴다. 저장 실패는 본문을 유지한 채 명시적 오류를 보이고 버튼으로 재시도할 수 있다.
+- mutation은 명시 옵션 없이 기본값(자동 재시도 없음)을 사용하고, 오프라인에서는 버튼을 비활성화해 저장을 시작하지 않는다. `cancelQueries`가 이전 상세 조회를 무효화하고, 현재 native 사용자·세션 식별자가 바뀐 뒤의 늦은 callback은 cache 변경을 건너뛴다. 저장 실패는 본문을 유지한 채 명시적 오류를 보이고 버튼으로 재시도할 수 있다.
 - 새 실행: `node --run check`, web production build, `git diff --check` 통과. web은 49개 파일·321개 테스트를 새로 실행해 통과했다. build는 activities 585.18 kB(gzip 173.30 kB)의 기존 500 kB 초과 경고를 유지한다.
+
+## 시뮬레이터 확인
+
+- iOS 17.5 `iPhone 15 Pro` 시뮬레이터가 부팅되어 있고 `org.yapp.yappplus` 앱을 실행했다. 게시판 화면과 탭·목록 렌더링은 확인했다.
+- 설치된 앱은 현재 브랜치가 아닌 이전 WebView 번들을 로드했다. 화면에는 2026년 9월 고정 fixture가 표시되어 이번 공지 상세 API·Markdown·읽음 저장 변경의 동작 근거로 사용할 수 없다.
+- 로컬 Vite를 3000 포트에 열고 Expo iOS 개발 실행을 시도했으나 설치 앱이 새 빌드로 교체되지 않았다. Expo가 생성한 `apps/mobile/ios`는 검증 산출물이므로 휴지통으로 이동했으며, 작업 트리는 유지했다.
+- 따라서 이번 단계의 시뮬레이터 검증은 네이티브 WebView 셸의 기존 화면 진입까지만 완료다. 현재 브랜치의 실제 상세 조회·읽음 저장·VoiceOver는 로컬 WebView를 가리키는 새 simulator development build 또는 해당 브랜치 배포 URL이 필요하다.
+
+## 6단계 보완과 최종 검증
+
+- `useNoticeRead`는 같은 사용자·세션일 때만 낙관적 읽음 상태를 되돌리거나 상세 재조회를 시작한다. 계정 전환 뒤 늦게 성공·실패한 PUT은 새 계정의 cache를 변경하지 않는다.
+- 상세 화면 회귀는 204·응답 유실·저장 뒤 GET 실패·연속 클릭·이미 읽음·오프라인 차단을 확인한다. 생성 상세 query도 기존 native 401 복구·계정 전환 격리 표에 포함했다.
+- 새 실행: `mise exec -- pnpm --filter @yapp-plus/web typecheck`와 대상 Vitest 명령 통과. Vitest 설정상 web 전체 48개 파일·328개 테스트를 새로 실행했다.
+- 새 실행: `mise exec -- node --run check` 통과. format:check는 874개 파일을 새로 검사했고, web lint·typecheck·test는 cache miss로 실행했다. 나머지 6개 패키지의 lint·typecheck·test는 Turbo cache를 재사용했다.
+- 새 실행: `mise exec -- node --run build`, `git diff --check` 통과. web build는 새 실행됐고 admin·storybook build는 Turbo cache를 재사용했다. activities chunk는 585.44 kB(gzip 173.30 kB)이며 기존 500 kB 초과 경고가 유지된다.
+
+## 실제 앱·접근성 범위와 롤백
+
+- iOS 17.5 `iPhone 15 Pro`에서 `org.yapp.yappplus`를 새로 설치하고 로그인했다. Expo Updates cache를 삭제한 뒤 `ExpoCrypto` 오류는 재발하지 않았고, 실제 홈의 이번 주 공지 API가 빈 결과를 "이번 주 공지가 없어요."로 표시하는 것을 확인했다.
+- 로그인한 계정에 이번 주 공지가 없어 실서버 목록·상세·읽음 PUT은 수행하지 못했다. Device Hub의 입력 전달 오류로 알림 목록으로의 자동 이동도 불가능했다. 따라서 실제 상세 Markdown·읽음 저장과 VoiceOver/TalkBack·터치 검증은 테스트 공지가 준비된 뒤 수행해야 한다.
+- 모든 T001~T036을 완료 처리한다. 이 상태는 자동 검증과 실제 빈 결과 확인을 뜻하며, 위 실서버 상세·읽음 및 보조기기 미실행 항목을 통과로 대체하지 않는다.
+- 서버 schema·데이터 migration은 없다. 롤백이 필요하면 이 기능의 웹 commit을 역순으로 revert하고, 배포된 WebView 번들은 이전 검증된 웹 artifact로 되돌린다.

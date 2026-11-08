@@ -70,10 +70,14 @@ export function NoticeDetailPage({ noticeId }: { noticeId: string }) {
 }
 
 function NoticeDetailContent({ postId }: { postId: number }) {
-  const { apiOptions } = useNativeAuthSession();
+  const { apiOptions, session } = useNativeAuthSession();
   const queryOptions = memberNoticeDetailQueryOptions(postId, apiOptions);
   const { data } = useSuspenseQuery(queryOptions);
-  const readMutation = useNoticeRead({ apiOptions, queryKey: queryOptions.queryKey });
+  const readMutation = useNoticeRead({
+    apiOptions,
+    postId,
+    owner: session,
+  });
   const detail = noticeDetailData(data);
   const categoryChipClass = getCategoryChipClass(detail.type);
   const isAcknowledgeDisabled = detail.read || readMutation.isPending || !navigator.onLine;
