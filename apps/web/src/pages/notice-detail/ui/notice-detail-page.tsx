@@ -3,11 +3,13 @@
 
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
+import { ActionButton, PrefixIcon } from '@yapp-plus/ui';
 import { Suspense, useState } from 'react';
 import { useNativeAuthSession } from '@/features/auth';
 import { NoticeErrorContent } from '@/features/member-notice';
 import { noticeDetailData } from '../model/notice-detail-data';
 import { memberNoticeDetailQueryOptions, noticeIdFromParam } from '../model/notice-detail-query';
+import { useNoticeRead } from '../model/use-notice-read';
 import {
   assignmentChip,
   attachmentImage,
@@ -25,7 +27,6 @@ import {
   contentSection,
   dateText,
   dDayChip,
-  disabledCheckButton,
   etcChip,
   headerSection,
   metaBox,
@@ -70,9 +71,20 @@ export function NoticeDetailPage({ noticeId }: { noticeId: string }) {
 
 function NoticeDetailContent({ postId }: { postId: number }) {
   const { apiOptions } = useNativeAuthSession();
-  const { data } = useSuspenseQuery(memberNoticeDetailQueryOptions(postId, apiOptions));
+  const queryOptions = memberNoticeDetailQueryOptions(postId, apiOptions);
+  const { data } = useSuspenseQuery(queryOptions);
+  const readMutation = useNoticeRead({ apiOptions, queryKey: queryOptions.queryKey });
   const detail = noticeDetailData(data);
   const categoryChipClass = getCategoryChipClass(detail.type);
+  const isAcknowledgeDisabled = detail.read || readMutation.isPending || !navigator.onLine;
+  const acknowledgeLabel = readMutation.isPending ? '확인 중' : '확인했어요';
+
+  const handleAcknowledge = () => {
+    if (isAcknowledgeDisabled) {
+      return;
+    }
+    readMutation.mutate({ path: { postId } });
+  };
 
   return (
     <>
@@ -102,10 +114,18 @@ function NoticeDetailContent({ postId }: { postId: number }) {
             <p className={confirmQuestion}>공지를 다 읽으셨나요?</p>
             <p className={confirmCount}>지금까지 {detail.readCount}명이 확인했어요!</p>
           </div>
-          <button type="button" className={disabledCheckButton} disabled>
-            <IconCheckmarkCircleFill width={18} height={18} />
-            <span>{detail.read ? '확인했어요' : '확인 기능 준비 중'}</span>
-          </button>
+          <ActionButton
+            type="button"
+            variant={detail.read ? 'brandSolid' : 'neutralWeak'}
+            size="medium"
+            disabled={isAcknowledgeDisabled}
+            loading={readMutation.isPending}
+            onClick={handleAcknowledge}
+          >
+            <PrefixIcon svg={<IconCheckmarkCircleFill />} />
+            <span>{acknowledgeLabel}</span>
+          </ActionButton>
+          {readMutation.isError ? <output role="alert">확인 저장에 실패했어요.</output> : null}
         </section>
       </main>
     </>
