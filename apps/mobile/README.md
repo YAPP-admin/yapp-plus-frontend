@@ -35,27 +35,42 @@ scheme를 단일 기준으로 관리한다. Google과 Apple 인증은 네이티�
 EAS 계정에 로그인한 뒤, 현재 설정이 조직의 기존 Expo 프로젝트를 가리키는지 확인한다. 이미
 `extra.eas.projectId`가 등록되어 있으므로 `eas init`으로 새 프로젝트를 만들지 않는다.
 
+pnpm 12.3.4의 `dlx`는 설치 스크립트 정책 누락으로 실패할 수 있다. 로컬에서는 아래처럼
+별도 임시 작업 공간에 CLI를 설치한다. 두 스크립트는 실행하지 않으며 전역 설정은 바꾸지 않는다.
+EAS CLI를 업그레이드하면 차단 버전과 필요성을 다시 검토한다. 저장소 루트에서 실행한다.
+
 ```sh
+EAS_CLI_DIR=$(mktemp -d)
+printf '%s\n' '{"private":true,"dependencies":{"eas-cli":"27.4.1"}}' > "$EAS_CLI_DIR/package.json"
+cat > "$EAS_CLI_DIR/pnpm-workspace.yaml" <<'POLICY'
+allowBuilds:
+  dtrace-provider@0.8.8: false
+  protobufjs@7.6.6: false
+POLICY
+mise exec -- pnpm --dir "$EAS_CLI_DIR" install
+eas() { mise exec -- "$EAS_CLI_DIR/node_modules/.bin/eas" "$@"; }
 cd apps/mobile
-mise exec -- pnpm dlx eas-cli@27.4.1 login
-mise exec -- pnpm dlx eas-cli@27.4.1 config --platform ios --profile testflight
+eas login
+eas config --platform ios --profile testflight
 ```
 
 출력에서 `org.yapp.yappplus`, EAS Project ID, `MOBILE_WEB_URL`이 기대값인지 확인한다. 인증서,
 App Store Connect API 키, Apple 계정 비밀번호는 저장소·이슈·로그에 기록하지 않는다.
 
+이하 `eas` 명령은 위 설치를 마친 같은 터미널에서 실행한다. 새 터미널에서는 CLI 준비를 다시 한다.
+
 ## 개발·TestFlight 명령
 
 ```sh
-# 실제 기기용 development build
-mise exec -- pnpm dlx eas-cli@27.4.1 build --platform ios --profile development
+# 선택 사항: EAS 클라우드의 실제 기기용 development build
+eas build --platform ios --profile development
 
-# iOS Simulator 전용 build
-mise exec -- pnpm dlx eas-cli@27.4.1 build --platform ios --profile development-simulator
+# 선택 사항: EAS 클라우드의 iOS Simulator 전용 build
+eas build --platform ios --profile development-simulator
 
-# TestFlight용 아카이브 생성 및 별도 제출
-mise exec -- pnpm dlx eas-cli@27.4.1 build --platform ios --profile testflight
-mise exec -- pnpm dlx eas-cli@27.4.1 submit --platform ios --profile testflight
+# TestFlight 운영: macOS 로컬 아카이브 생성 및 지정 IPA 제출
+eas build --local --platform ios --profile testflight --output /tmp/yapp-plus.ipa
+eas submit --platform ios --profile testflight --path /tmp/yapp-plus.ipa
 ```
 
 `testflight`은 EAS remote build number를 자동 증가시킨다. 사용자에게 보이는 `version`은 새 출시
@@ -68,9 +83,8 @@ TestFlight 배포가 필요한 경우 별도 승인으로 실행한다.
 쓴다. EAS Update는 같은 채널·runtime version을 가진 설치본에 JavaScript와 asset만 배포한다.
 
 ```sh
-cd apps/mobile
 MOBILE_WEB_URL=https://yapp-plus-web.vercel.app \
-  mise exec -- pnpm dlx eas-cli@27.4.1 update \
+  eas update \
   --channel testflight \
   --environment production \
   --message "변경 내용을 설명하는 한국어 메시지"
@@ -89,11 +103,11 @@ MOBILE_WEB_URL=https://yapp-plus-web.vercel.app \
 올리지 말고 `app.config.ts`의 `version`도 새 값으로 올린 뒤 새 build를 만든다. 같은 runtime에
 호환되지 않는 update가 전달되는 일을 막기 위한 기준이다.
 
-TestFlight 제출은 대상 build를 명시한다. `--latest`로 다른 build를 제출하지 않도록 build ID를
-확인한 뒤 실행한다.
+TestFlight 운영 제출은 지정 IPA의 `--path`를 사용한다. 별도로 EAS 클라우드에서 만든 빌드를
+제출할 때에만 다음처럼 정확한 build ID를 지정한다. `--latest`는 사용하지 않는다.
 
 ```sh
-mise exec -- pnpm dlx eas-cli@27.4.1 submit \
+eas submit \
   --platform ios \
   --profile testflight \
   --id <EAS_BUILD_ID> \
@@ -116,9 +130,8 @@ PR의 `Mobile native compatibility` 검사를 필수 검사로 설정하고 main
 새 runtime의 OTA는 게시돼도 호환되는 설치본이 생기기 전에는 기존 앱에 전달되지 않는다.
 
 ```sh
-cd apps/mobile
-mise exec -- pnpm dlx eas-cli@27.4.1 build --local --platform ios --profile testflight --output /tmp/yapp-plus.ipa
-mise exec -- pnpm dlx eas-cli@27.4.1 submit --platform ios --profile testflight --path /tmp/yapp-plus.ipa
+eas build --local --platform ios --profile testflight --output /tmp/yapp-plus.ipa
+eas submit --platform ios --profile testflight --path /tmp/yapp-plus.ipa
 ```
 
 이 명령은 macOS의 Xcode·CocoaPods·fastlane과 Apple 서명 준비가 필요하다.
@@ -127,7 +140,13 @@ GitHub에서는 **Actions → Mobile TestFlight manual → Run workflow**에서 
 1. `operation=build`: 선택된 main SHA의 push CI가 성공했을 때 macOS 로컬 빌드를 실행한다.
 2. 성공한 실행의 Summary에서 실행 ID·회차와 IPA를 확인한다. artifact는 30일 보관한다.
 3. 새 실행에서 `operation=submit`을 선택하고 `build_run_id`와 `build_attempt`에 해당 값을 입력한다.
-4. 해당 회차의 성공·main 출처·checksum이 확인된 IPA만 제출한다. TestFlight 처리와 설치 여부는 별도 확인한다.
+4. 해당 회차의 성공·main 출처·checksum이 확인된 IPA만 제출한다.
+5. App Store Connect → TestFlight에서 Apple 처리 상태를 확인한다. 처리 중이면 기다리고, 추가 정보 요청이 있으면 해당 항목을 확인한다.
+6. 처리 완료 후 필요한 내부 테스트 그룹에 빌드를 추가한다. 자동 배포 그룹은 이미 추가됐을 수 있다.
+7. 사용 가능 메일 수신 후 iPhone의 TestFlight에서 버전·빌드 번호를 확인하고 설치한다. 실행·로그인·주요 화면과 OTA 실제 수신을 별도로 확인한다.
+
+2026-11-08에 앱 **1.0.1 / 빌드 20**의 빌드·제출이 성공했고 사용자가 사용 가능 메일 수신을 확인했다.
+이는 실기기 실행 확인과는 다르다. 실행 ID와 완료·미완료 항목은 [검증 이력](../../specs/019-mobile-testflight-delivery/validation.md)을 따른다.
 
 표준 `macos-26` runner에서 Xcode 26.6·Ruby 3.4.12·CocoaPods 1.17.0·fastlane 2.241.2를 확인한다.
 이미지 갱신으로 버전이 달라지면 검사에서 실패하므로 workflow의 도구 버전을 검토한다.
@@ -141,6 +160,10 @@ artifact가 만료되면 새 build를 실행한다. 빌드 재실행은 새 buil
 문제가 있으면 GitHub에서 자동 OTA workflow를 비활성화하고 실행·대기 작업 종료를 확인한 뒤,
 `eas update:rollback`으로 같은 runtime의 정상 업데이트 또는 내장 업데이트로 복구한다.
 수정한 main이 준비된 뒤 workflow를 명시적으로 다시 활성화한다. 네이티브 결함은 새 빌드로 수정한다.
+
+Rollback 실전 검증은 아직 수행하지 않았다. 정상 배포를 지금 되돌리지 않고, 실기기 설치와 정상
+OTA 수신을 확인한 뒤 테스트 일정·대상 runtime·복구할 업데이트 또는 내장 코드·테스터 영향을
+정해 별도 승인 후 진행한다. 복구 후 실기기 동작과 자동 게시 재개까지 확인해야 완료다.
 
 ## Pretendard와 SDK 58
 

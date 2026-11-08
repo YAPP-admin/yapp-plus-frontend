@@ -5,7 +5,7 @@
 
 ## 배포 흐름
 
-아래는 구현한 코드가 main에 적용됐을 때의 흐름이다. **실제 원격 CI·빌드·제출·OTA 검증은 아직 완료하지 않았다.**
+아래 흐름은 main에 적용됐다. **원격 CI·OTA 게시·서명 빌드·제출은 성공했고, 실기기 수신과 복구 검증은 남아 있다.**
 
 ```mermaid
 flowchart TD
@@ -44,7 +44,7 @@ OTA로 수정할 수 없는 네이티브 결함은 새 빌드로 수정한다. �
 
 ## 브랜치와 검토 단위
 
-브랜치 이름의 공통 접두사는 `DongjaJ/`다. 화살표는 후속 브랜치의 예정 PR base 관계이며, PR 생성·병합 완료를 뜻하지 않는다.
+브랜치 이름의 공통 접두사는 `DongjaJ/`다. 화살표는 도입 당시 PR base 관계다. PR #374–#377은 main에 병합됐고, 후속 설치 수정 PR #380도 병합됐다.
 
 ```mermaid
 flowchart LR
@@ -55,16 +55,19 @@ flowchart LR
 
 ## 구현 상태 스냅샷
 
-기준: `acccd4c8` 이후 `DongjaJ/mobile-local-build`의 수동 빌드 구현 리뷰 승인 시점.
-후속 원격 검증 시 이 표와 [작업 목록](tasks.md)을 함께 갱신한다.
+기준: 2026-11-08, 검증 소스 `3b7ca130` (설치 오류 수정 #380 포함).
 
-| 작업                            | 상태                     | 근거                                                                         |
-| ------------------------------- | ------------------------ | ---------------------------------------------------------------------------- |
-| 초기 명세                       | 커밋 완료                | `26918286`                                                                   |
-| 설계 축소                       | 커밋 완료                | `e6a1228d`                                                                   |
-| PR 버전 검사·자동 OTA           | 커밋 완료                | `acccd4c8`                                                                   |
-| 수동 빌드·지정 IPA 제출         | 구현·로컬 검증·리뷰 완료 | [mobile-manual.yml](../../.github/workflows/mobile-manual.yml)               |
-| 로컬 품질 검사                  | 통과                     | 모바일 118개 테스트·actionlint·Expo Doctor 20/20; 캐시 구분은 검증 이력 참고 |
-| 원격 CI·실제 빌드·제출·OTA·복구 | 미검증                   | Expo/Apple 자격 증명 준비 및 실기기 검증 필요                                |
+| 작업                                     | 상태                            | 근거                                                                                                                          |
+| ---------------------------------------- | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| 명세·설계·자동 OTA·수동 빌드 구현        | main 병합 완료                  | PR #374–#377, #380                                                                                                            |
+| 원격 PR 검사                             | Linux/macOS 및 품질 검사 통과   | [PR #380](https://github.com/YAPP-admin/yapp-plus-frontend/pull/380)                                                          |
+| main CI                                  | 성공                            | [실행 42455644074](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/42455644074)                                 |
+| 자동 OTA 게시                            | testflight / runtime 1.0.1 성공 | [Expo 업데이트](https://expo.dev/accounts/yapp-plus-official/projects/yapp-plus/updates/c931c66e-5d99-483c-80c9-146bc6d4a154) |
+| 서명·로컬 빌드·IPA 보관                  | 앱 1.0.1 / 빌드 20 성공         | [빌드 실행](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/42455684488), 1회차                                 |
+| 지정 IPA 제출                            | App Store Connect 업로드 성공   | [제출 실행](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/42456807290)                                        |
+| TestFlight 사용 가능                     | 사용자 메일 수신 확인           | 실제 설치 성공과는 구분                                                                                                       |
+| 실기기 설치·OTA 수신·다른 runtime 미수신 | 미검증                          | 후속 기기 확인 필요                                                                                                           |
+| fork CI·main 필수 검사 설정              | 미검증                          | 후속 운영 설정 확인 필요                                                                                                      |
+| rollback·자동 OTA 재개                   | 후속 테스트 예정                | 대상·일정과 실행 승인 후 검증                                                                                                 |
 
-현재 다음 작업은 자격 증명 준비와 원격 CI·TestFlight 검증이다.
+다음 작업은 TestFlight 설치·주요 기능·OTA 수신 확인이다. Rollback은 지금 실행하지 않고 별도 테스트로 진행한다.

@@ -166,3 +166,20 @@ SC-001은 R005~~R009, SC-002는 R010~~R012, SC-003~~SC-005는 R013~~R018로 검�
 - commit·push·원격 workflow 실행은 수행하지 않았다. 이 단계는 사용자 리뷰 대기 상태다.
 - 리뷰 반영: CI의 PR base 브랜치 나열을 제거해 모든 PR을 검사한다. main push 제한과 자동 OTA의 main 검증은 유지한다.
 - 사용자가 PR base 필터 제거를 포함한 수동 workflow·시각화 문서의 커밋과 다음 검증 단계 진행을 승인했다. 저장소 수준 Secret은 VERCEL_TOKEN만 확인됐으며 조직 Secret 상속 여부는 별도다.
+
+## 실제 배포 검증 결과 (2026-11-08)
+
+이 절은 앞선 단계의 미실행 기록 이후 수행한 결과다. 과거 기록은 당시 상태로 보존한다.
+
+- PR #374–#377 main 병합 후 자동 OTA의 CLI 설치가 ERR_PNPM_IGNORED_BUILDS로 실패했다.
+- 이슈 #379 / PR #380에서 pnpm 임시 작업 공간에 두 패키지 버전의 설치 스크립트 차단을 명시했다. CLI 27.4.1 실행과 actionlint 통과.
+- 수정 로컬 check는 19개 중 16개 Turbo 캐시 재사용, 나머지 모바일 lint/typecheck/test 새 실행. build는 3개 모두 캐시 재사용.
+- [PR #380](https://github.com/YAPP-admin/yapp-plus-frontend/pull/380)의 원격 품질 검사와 Linux/macOS 네이티브 비교가 통과했다. fork PR 검증을 의미하지 않는다.
+- 검증 소스는 main의 `3b7ca1309a066b12ad907414093391f97ef5b19b`다. [main CI](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/42455644074) 성공.
+- EXPO_TOKEN 등록과 EAS의 Apple 인증 설정을 확인했고, 실제 빌드·제출에서 사용했다. 비밀 값은 기록하지 않는다.
+- [자동 OTA](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/42455677737) 게시 성공: testflight, runtime 1.0.1, [업데이트 그룹 c931c66e](https://expo.dev/accounts/yapp-plus-official/projects/yapp-plus/updates/c931c66e-5d99-483c-80c9-146bc6d4a154).
+- [로컬 빌드 42455684488](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/42455684488), 1회차 성공. macOS 도구 검사·서명을 통과했고 원격 build number를 19에서 20으로 증가시켰다. 앱 1.0.1 / 빌드 20, artifact testflight-ipa-1과 checksum을 보관했다. 실제 새 네이티브 빌드이며 Turbo build 캐시 결과와 별개다.
+- [제출 42456807290](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/42456807290)에서 지정 IPA의 출처·checksum 확인 후 App Store Connect 업로드 성공을 확인했다. [EAS 제출 결과](https://expo.dev/accounts/yapp-plus-official/projects/yapp-plus/submissions/db03ef6d-e855-494d-9abf-032ac4c45895).
+- 사용자가 1.0.1 사용 가능 메일을 받았다고 확인했다. 실기기 설치·로그인·OTA 실제 수신을 확인한 것은 아니다.
+- 남은 항목: fork CI, main 필수 검사·직접 push 제한, 실기기 설치·실행, 동일 runtime OTA 수신, 다른 runtime 미수신, rollback·자동 OTA 재개.
+- Rollback은 정상 배포를 즉시 되돌리는 대신 별도 테스트로 남긴다. 대상 runtime·복구 지점·테스터 영향·일정을 정하고 승인받은 뒤 자동 게시 중지 → 실행 종료 확인 → 복구 → 기기 확인 → 명시적 재개를 검증한다.
