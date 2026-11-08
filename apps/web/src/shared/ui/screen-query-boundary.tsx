@@ -17,10 +17,15 @@ export function ScreenQueryBoundary({
 }) {
   const active = useContext(ScreenActiveContext);
   const boundary = useRef<ErrorBoundary>(null);
+  const hasBeenActive = useRef(false);
 
   useEffect(() => {
     if (active) {
-      boundary.current?.resetErrorBoundary();
+      // 첫 진입의 빠른 조회 실패를 복귀로 오인해 지우지 않습니다.
+      if (hasBeenActive.current) {
+        boundary.current?.resetErrorBoundary();
+      }
+      hasBeenActive.current = true;
     }
   }, [active]);
 
