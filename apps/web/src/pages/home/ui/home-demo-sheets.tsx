@@ -1,10 +1,10 @@
 import { HStack, VStack } from '@seed-design/react';
 import { useActivityZIndexBase } from '@seed-design/stackflow';
-import { Suspense, useId, useRef, useState, type ReactNode } from 'react';
+import { useId, useRef, useState, type ReactNode } from 'react';
 import { revalidateLogic, useField, useForm } from '@tanstack/react-form';
-import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary';
+import { useErrorBoundary } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { QueryBoundary } from '@/shared/ui/query-boundary';
 import { useCodeAttendance } from '../model/code-attendance';
 import { IconExclamationmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import {
@@ -78,28 +78,20 @@ export function AttendanceCodeSheet({ onComplete, ...props }: AttendanceCodeShee
     );
   }
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary
-          onReset={reset}
-          fallback={
-            <CodeSheetShell {...props}>
-              <CodeSheetError />
-            </CodeSheetShell>
-          }
-        >
-          <Suspense
-            fallback={
-              <CodeSheetShell {...props}>
-                <CodeSheetMessage message="세션을 불러오고 있어요…" />
-              </CodeSheetShell>
-            }
-          >
-            <AttendanceCodeContent {...props} onComplete={onComplete} />
-          </Suspense>
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <QueryBoundary
+      errorFallback={
+        <CodeSheetShell {...props}>
+          <CodeSheetError />
+        </CodeSheetShell>
+      }
+      pendingFallback={
+        <CodeSheetShell {...props}>
+          <CodeSheetMessage message="세션을 불러오고 있어요…" />
+        </CodeSheetShell>
+      }
+    >
+      <AttendanceCodeContent {...props} onComplete={onComplete} />
+    </QueryBoundary>
   );
 }
 
