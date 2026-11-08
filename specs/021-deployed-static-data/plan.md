@@ -6,8 +6,8 @@
 ## 기술 맥락
 
 TypeScript·React·TanStack Query·생성 Hey API ky client를 유지한다. 추가 의존성은 없다.
-웹 앱 내부에서 생성 client의 kyOptions.fetch를 설정해 대상 요청만 Response로 반환한다.
-생성 query/mutation 옵션·응답 변환·인증 afterResponse 훅은 유지한다.
+웹 앱의 query options에서 정적 모드일 때 queryFn만 목데이터 Promise로 교체한다.
+생성 키와 기존 응답 검증기를 재사용한다. 공지 읽음은 mutationFn을 교체하며 실제 API의 인증 옵션은 유지한다.
 
 ## 헌법 점검
 
@@ -16,11 +16,11 @@ TypeScript·React·TanStack Query·생성 Hey API ky client를 유지한다. 추
 
 ## 구현 순서와 경로
 
-1. apps/web/src의 정적 콘텐츠 모듈: 기존 날짜·공지 fixture 재사용, endpoint별 처리와 계정별 읽음 상태.
-2. 앱 Provider 경계: 설정을 검사하고 client 설정이 끝난 뒤 자식 화면을 렌더링한다.
+1. apps/web/src의 정적 콘텐츠 모듈: 기존 날짜·공지 fixture 재사용, Promise 조회 함수와 계정별 읽음 상태.
+2. 앱 Provider 경계: 설정을 검사하고 정적 모드에서는 개발용 MSW 초기화를 생략한다.
 3. 공개 콘텐츠 페이지: 정적 모드에서는 브라우저 조회 허용. 회원 화면·네이티브 인증 가드는 유지.
 4. apps/web/.env.production 및 .env.example: VITE_STATIC_CONTENT로 활성화와 해제 경로 명시.
-5. 생성 SDK 경유 계약 테스트, 인증 훅 보존, production 빌드·미리보기 검증.
+5. query options 계약 테스트, 실제 API 복귀, production 빌드·미리보기 검증.
 
 ## 복구 및 배포
 

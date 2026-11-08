@@ -1,3 +1,4 @@
+import { markStaticNoticeRead, staticContentEnabled } from '@/features/static-content';
 /** 공지 읽음 저장의 mutation과 상세 cache 갱신을 화면에서 분리한다. */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { acknowledgeMutation } from '@yapp-plus/api/generated';
@@ -31,8 +32,16 @@ export function useNoticeRead({ apiOptions, postId, owner }: NoticeReadOptions) 
   const queryClient = useQueryClient();
   const queryKey = memberNoticeDetailQueryOptions(postId, apiOptions).queryKey;
 
+  const generated = acknowledgeMutation(apiOptions);
   return useMutation({
-    ...acknowledgeMutation(apiOptions),
+    ...generated,
+    mutationFn: staticContentEnabled()
+      ? () =>
+          markStaticNoticeRead(
+            postId,
+            typeof apiOptions?.auth === 'string' ? apiOptions.auth : undefined,
+          )
+      : generated.mutationFn,
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<MemberNoticeDetail>(queryKey);

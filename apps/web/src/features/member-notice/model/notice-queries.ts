@@ -1,3 +1,5 @@
+import { queryOptions } from '@tanstack/react-query';
+import { getStaticNotices, staticContentEnabled } from '@/features/static-content';
 /** 생성 API 공지 응답을 목록 UI 계약으로 검증·변환하는 query 모델이다. */
 import {
   list1InfiniteOptions,
@@ -46,7 +48,13 @@ export function memberNoticeListQueryOptions(
   category: NoticeCategory = 'ALL',
   options?: Parameters<typeof list1Options>[0],
 ) {
-  return list1Options(listOptions(category, options));
+  const generated = list1Options(listOptions(category, options));
+  return staticContentEnabled()
+    ? queryOptions({
+        ...generated,
+        queryFn: () => getStaticNotices(category).then((data) => noticeListSchema.parseAsync(data)),
+      })
+    : generated;
 }
 
 /** cursor가 null일 때만 종료하는 무한 목록 query 옵션을 생성한다. */
@@ -55,9 +63,12 @@ export function memberNoticeListInfiniteQueryOptions(
   options?: Parameters<typeof list1InfiniteOptions>[0],
 ) {
   const generated = list1InfiniteOptions(listOptions(category, options));
+  const queryFn = typeof generated.queryFn === 'function' ? generated.queryFn : undefined;
   return {
     ...generated,
-    queryFn: typeof generated.queryFn === 'function' ? generated.queryFn : undefined,
+    queryFn: staticContentEnabled()
+      ? () => getStaticNotices(category).then((data) => noticeListSchema.parseAsync(data))
+      : queryFn,
     initialPageParam: {},
     getNextPageParam: (lastPage: UserPostListResponse) => lastPage.nextCursor ?? undefined,
   };

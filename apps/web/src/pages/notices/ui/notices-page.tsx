@@ -1,5 +1,7 @@
 'use client';
 
+import { staticContentEnabled } from '@/features/static-content';
+
 /** 공지 목록의 인증·조회·탭 상태를 렌더링하는 페이지 UI다. */
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
@@ -32,6 +34,7 @@ export type NoticesPageProps = {
 export function NoticesPage({ category = 'ALL', onCategoryChange = () => {} }: NoticesPageProps) {
   const { phase } = useNativeAuthSession();
   const canQuery =
+    staticContentEnabled() ||
     phase === 'SIGNED_IN' ||
     (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
 

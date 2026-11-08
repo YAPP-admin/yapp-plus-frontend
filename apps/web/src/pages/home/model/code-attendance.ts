@@ -6,7 +6,6 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
-  find3Options,
   find5QueryKey,
   mineQueryKey,
   verifyMutation,
@@ -14,7 +13,8 @@ import {
   zVerifyAttendanceCodeResponse,
 } from '@yapp-plus/api/generated';
 import { useNativeAuthSession } from '@/features/auth';
-import { currentWeekSchema } from './current-week-schema';
+import { currentWeekQueryOptions } from './current-week-query';
+import { staticContentEnabled } from '@/features/static-content';
 
 /** 서버가 확인한 성공 결과만 앱 수명 동안 보존합니다. */
 export function useAttendanceConfirmation() {
@@ -37,10 +37,7 @@ class SubmissionError extends Error {}
 export function useCodeAttendance(onComplete: () => void) {
   const { apiOptions } = useNativeAuthSession();
   const client = useQueryClient();
-  const options = find3Options({
-    ...apiOptions,
-    responseValidator: (value) => currentWeekSchema.parseAsync(value),
-  });
+  const options = currentWeekQueryOptions(apiOptions);
   const week = useSuspenseQuery(options);
   const session = week.data.session;
   const confirmed = useAttendanceConfirmation();
@@ -60,6 +57,9 @@ export function useCodeAttendance(onComplete: () => void) {
     retry: false,
     networkMode: 'always',
     onMutate: ({ body }) => {
+      if (staticContentEnabled()) {
+        throw new SubmissionError('지금은 출석할 수 없어요.');
+      }
       if (!onlineManager.isOnline() || !navigator.onLine) {
         throw new SubmissionError('인터넷 연결을 확인한 뒤 다시 제출해 주세요.');
       }

@@ -1,6 +1,8 @@
 /** 회원 공지 상세를 조회해 읽기 전용 제출·첨부 정보와 Markdown 본문을 보여준다. */
 'use client';
 
+import { staticContentEnabled } from '@/features/static-content';
+
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
@@ -48,6 +50,7 @@ export function NoticeDetailPage({ noticeId }: { noticeId: string }) {
   const { phase } = useNativeAuthSession();
   const postId = noticeIdFromParam(noticeId);
   const canQuery =
+    staticContentEnabled() ||
     phase === 'SIGNED_IN' ||
     (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
 
