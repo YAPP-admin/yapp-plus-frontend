@@ -5,7 +5,7 @@ import '@seed-design/css/recipes/app-screen.css';
 import '@yapp-plus/ui/styles';
 import './styles.css';
 import { ProgressCircle, VStack } from '@seed-design/react';
-import { StrictMode, Suspense } from 'react';
+import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Providers, createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
@@ -49,8 +49,4 @@ function App() {
   );
 }
 
-createRoot(root).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
-);
+createRoot(root).render(<App />);

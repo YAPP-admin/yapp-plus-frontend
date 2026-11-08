@@ -1,6 +1,6 @@
 import { SnackbarProvider } from '@yapp-plus/ui';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -39,10 +39,10 @@ afterEach(async () => {
 });
 
 function renderStack() {
-  const { Stack } = createStackflowApp();
+  const { Stack, actions } = createStackflowApp();
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
-  return render(
+  const view = render(
     <QueryClientProvider client={queryClient}>
       <SnackbarProvider>
         <Suspense fallback={<div>로딩 중…</div>}>
@@ -51,6 +51,7 @@ function renderStack() {
       </SnackbarProvider>
     </QueryClientProvider>,
   );
+  return { ...view, actions };
 }
 
 async function waitForTopHeading(name: string | RegExp) {
@@ -103,6 +104,33 @@ function isVisible(element: HTMLElement) {
 }
 
 describe('Stackflow FSD 화면 연결', () => {
+  it('이전 Tabs를 종료한 뒤에도 현재 화면의 탭과 URL을 변경한다', async () => {
+    const user = userEvent.setup();
+    const { actions } = renderStack();
+    await waitForTopHeading('홈');
+    await act(() => actions.replace('Login', {}, { animate: false }));
+    await waitForTopHeading(/당신의 작은 아이디어가/);
+    await act(() => actions.replace('Tabs', { initialTab: 'home' }, { animate: false }));
+    const currentScreen = await waitForTopHeading('홈');
+    const historyLength = window.history.length;
+
+    for (const [label, path, title] of [
+      ['일정', '/schedule', '일정'],
+      ['게시판', '/notices', '게시판'],
+      ['MY', '/my', '마이페이지'],
+      ['홈', '/', '홈'],
+    ]) {
+      await user.click(currentScreen.getByRole('link', { name: label }));
+      await waitFor(() => expect(window.location.pathname).toBe(path));
+      await waitFor(() => expect(document.title).toBe(`${title} | YAPP+`));
+      expect(currentScreen.getByRole('link', { name: label })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+    }
+    expect(window.history.length).toBe(historyLength);
+  }, 15000);
+
   it('web에서는 화면별 prop을 생략해도 swipe edge를 렌더링하지 않는다', async () => {
     window.history.replaceState({}, '', '/alerts');
     renderStack();
