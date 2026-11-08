@@ -1,20 +1,16 @@
 import { VStack } from '@seed-design/react';
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { ActionButton } from '@yapp-plus/ui';
 import type { ReactNode } from 'react';
-import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
 import { ScoreSummary } from './score-summary';
 import { queryNotice } from './my-page.css';
 
 export function ScoreErrorBoundary({ children }: { children: ReactNode }) {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={ScoreError}>
-          {children}
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ScreenQueryBoundary renderFallback={(props) => <ScoreError {...props} />}>
+      {children}
+    </ScreenQueryBoundary>
   );
 }
 

@@ -1,19 +1,15 @@
 /** 공지 목록의 초기 조회 오류를 탭 페이지 안에서 복구하는 UI 경계다. */
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { ResultSection } from '@yapp-plus/ui';
 import type { ReactNode } from 'react';
-import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
 
 /** 공지 목록의 초기 조회 실패를 목록 내부에서 재시도 가능한 결과 화면으로 한정한다. */
 export function NoticeListBoundary({ children }: { children: ReactNode }) {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={NoticeListError}>
-          {children}
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ScreenQueryBoundary renderFallback={(props) => <NoticeListError {...props} />}>
+      {children}
+    </ScreenQueryBoundary>
   );
 }
 

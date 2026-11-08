@@ -1,6 +1,5 @@
 import { Suspense, type ReactNode } from 'react';
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
-import { ErrorBoundary } from 'react-error-boundary';
+import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { AttendanceQueryError } from './attendance-query-error';
 
 export function AttendanceQueryBoundary({
@@ -15,15 +14,10 @@ export function AttendanceQueryBoundary({
   loading?: ReactNode;
 }) {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary
-          onReset={reset}
-          fallback={<AttendanceQueryError message={message} retryLabel={retryLabel} />}
-        >
-          <Suspense fallback={loading}>{children}</Suspense>
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ScreenQueryBoundary
+      renderFallback={() => <AttendanceQueryError message={message} retryLabel={retryLabel} />}
+    >
+      <Suspense fallback={loading}>{children}</Suspense>
+    </ScreenQueryBoundary>
   );
 }

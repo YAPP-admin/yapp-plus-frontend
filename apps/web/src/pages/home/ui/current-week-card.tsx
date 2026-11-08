@@ -1,11 +1,13 @@
-import { QueryErrorResetBoundary, useSuspenseQuery } from '@tanstack/react-query';
+import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
+import { useSuspenseQuery } from '@tanstack/react-query';
 import { find3Options } from '@yapp-plus/api/generated';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
 import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
 import { useFlow } from '@stackflow/react';
 import { useAttendanceConfirmation } from '../model/code-attendance';
-import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
+import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { useNativeAuthSession } from '@/features/auth';
 import {
   formatKoreanTime,
@@ -35,15 +37,11 @@ export function CurrentWeekCard() {
   return (
     <section className={sessionCard} aria-label="이번 주 세션">
       {canQuery ? (
-        <QueryErrorResetBoundary>
-          {({ reset }) => (
-            <ErrorBoundary onReset={reset} FallbackComponent={WeekError}>
-              <Suspense fallback={<CurrentWeekLoading />}>
-                <CurrentWeekContent />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-        </QueryErrorResetBoundary>
+        <ScreenQueryBoundary renderFallback={(props) => <WeekError {...props} />}>
+          <Suspense fallback={<CurrentWeekLoading />}>
+            <CurrentWeekContent />
+          </Suspense>
+        </ScreenQueryBoundary>
       ) : (
         <output>세션은 YAPP+ 앱에 로그인한 후 확인할 수 있어요.</output>
       )}
@@ -86,20 +84,22 @@ function CurrentWeekContent() {
   const { apiOptions } = useNativeAuthSession();
   const flow = useFlow();
   const confirmed = useAttendanceConfirmation();
-  const { data, dataUpdatedAt, error, refetch } = useSuspenseQuery({
+  const query = useSuspenseQuery({
     ...find3Options({
       ...apiOptions,
       responseValidator: (response) => currentWeekSchema.parseAsync(response),
     }),
-    refetchOnMount: (query) =>
-      query.state.data && nextKoreanMidnight(query.state.data.weekEndDate) <= Date.now()
+    refetchOnMount: (cachedQuery) =>
+      cachedQuery.state.data && nextKoreanMidnight(cachedQuery.state.data.weekEndDate) <= Date.now()
         ? 'always'
         : true,
-    refetchOnWindowFocus: (query) =>
-      query.state.data && nextKoreanMidnight(query.state.data.weekEndDate) <= Date.now()
+    refetchOnWindowFocus: (cachedQuery) =>
+      cachedQuery.state.data && nextKoreanMidnight(cachedQuery.state.data.weekEndDate) <= Date.now()
         ? 'always'
         : true,
   });
+  useRefetchOnScreenReturn(query);
+  const { data, dataUpdatedAt, error, refetch } = query;
   const today = koreanDateString(dataUpdatedAt);
   const days = Array.from({ length: 7 }, (_, index) => {
     const timestamp = koreanTimestamp(data.weekStartDate) + index * 86_400_000;

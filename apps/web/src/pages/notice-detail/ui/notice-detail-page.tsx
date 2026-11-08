@@ -1,6 +1,7 @@
 /** 회원 공지 상세를 조회해 읽기 전용 제출·첨부 정보와 Markdown 본문을 보여준다. */
 'use client';
 
+import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, PrefixIcon } from '@yapp-plus/ui';
@@ -72,7 +73,9 @@ export function NoticeDetailPage({ noticeId }: { noticeId: string }) {
 function NoticeDetailContent({ postId }: { postId: number }) {
   const { apiOptions, session } = useNativeAuthSession();
   const queryOptions = memberNoticeDetailQueryOptions(postId, apiOptions);
-  const { data } = useSuspenseQuery(queryOptions);
+  const query = useSuspenseQuery(queryOptions);
+  useRefetchOnScreenReturn(query);
+  const { data } = query;
   const readMutation = useNoticeRead({
     apiOptions,
     postId,

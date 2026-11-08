@@ -1,19 +1,15 @@
 /** 홈 공지 조회 실패를 세션·출석 영역과 분리해 재시도시키는 오류 경계다. */
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { ResultSection } from '@yapp-plus/ui';
 import type { ReactNode } from 'react';
-import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
 
 /** query 오류를 초기 오류 화면으로 변환하고 재시도 시 TanStack Query 오류 상태를 초기화한다. */
 export function WeeklyNoticesErrorBoundary({ children }: { children: ReactNode }) {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={WeeklyNoticesError}>
-          {children}
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ScreenQueryBoundary renderFallback={(props) => <WeeklyNoticesError {...props} />}>
+      {children}
+    </ScreenQueryBoundary>
   );
 }
 

@@ -1,21 +1,17 @@
 /** 공지 상세 초기 조회 실패를 해당 화면 안에서 재시도 가능하게 처리한다. */
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { ResultSection } from '@yapp-plus/ui';
 import type { ReactNode } from 'react';
-import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
 import { container } from './notice-detail-page.css';
 import { NoticeDetailHeader } from './notice-detail-header';
 
 /** query 오류 상태를 재설정하고 상세 조회 오류 안내를 표시한다. */
 export function NoticeDetailErrorBoundary({ children }: { children: ReactNode }) {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={NoticeDetailError}>
-          {children}
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ScreenQueryBoundary renderFallback={(props) => <NoticeDetailError {...props} />}>
+      {children}
+    </ScreenQueryBoundary>
   );
 }
 

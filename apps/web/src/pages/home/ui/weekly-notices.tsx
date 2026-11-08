@@ -1,6 +1,7 @@
 /** 홈의 이번 주 공지를 세션 카드와 독립된 query 경계에서 보여주는 UI다. */
 'use client';
 
+import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconChevronRightFill } from '@karrotmarket/react-monochrome-icon';
 import { Badge } from '@yapp-plus/ui';
@@ -50,7 +51,9 @@ export function WeeklyNotices() {
 
 function WeeklyNoticesContent() {
   const { apiOptions } = useNativeAuthSession();
-  const { data } = useSuspenseQuery(memberNoticeListQueryOptions('ALL', apiOptions));
+  const query = useSuspenseQuery(memberNoticeListQueryOptions('ALL', apiOptions));
+  useRefetchOnScreenReturn(query);
+  const { data } = query;
   const notices = weeklyNotices(data);
 
   return (

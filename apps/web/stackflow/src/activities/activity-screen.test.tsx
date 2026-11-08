@@ -4,7 +4,7 @@ import { vars } from '@seed-design/css/vars';
 import type { CSSProperties, ReactNode, Ref } from 'react';
 import { ActivityScreen } from './activity-screen';
 
-vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isTop: true }) }));
+vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isTop: true, isActive: true }) }));
 vi.mock('../platform', () => ({ useAppScreenOptions: () => ({ theme: 'cupertino' }) }));
 vi.mock('../../../seed-design/ui/app-bar', () => ({
   AppBar: ({ bg }: { bg: string }) => <div data-testid="status-bar" style={{ background: bg }} />,

@@ -1,7 +1,7 @@
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
+import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { ResultSection } from '@yapp-plus/ui';
 import type { ReactNode } from 'react';
-import { ErrorBoundary, type FallbackProps } from 'react-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
 import {
   errorContainer,
   errorTitle,
@@ -12,13 +12,9 @@ import {
 
 export function ScheduleErrorBoundary({ children }: { children: ReactNode }) {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} FallbackComponent={ScheduleErrorFallback}>
-          {children}
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <ScreenQueryBoundary renderFallback={(props) => <ScheduleErrorFallback {...props} />}>
+      {children}
+    </ScreenQueryBoundary>
   );
 }
 
