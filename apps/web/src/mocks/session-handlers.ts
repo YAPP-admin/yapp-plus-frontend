@@ -1,5 +1,5 @@
 import { createAttendanceFixtures } from './attendance-fixtures';
-import { createSessionFixtures } from './session-fixtures';
+import { createSessionFixtures, type SessionFixtures } from './session-fixtures';
 import { createMswHandlers } from '@yapp-plus/api/generated/msw';
 import { delay, HttpResponse } from 'msw';
 
@@ -11,7 +11,7 @@ export const { currentWeekFixture, scheduleFixture } = createSessionFixtures(
 export const createSessionHandlers = (
   baseUrl: string,
   scheduleState?: string | null,
-  fixtures = createSessionFixtures(Date.now()),
+  fixtures: SessionFixtures = createSessionFixtures(Date.now()),
   attendance = createAttendanceFixtures(fixtures),
 ) => {
   const { currentWeekFixture: currentWeek, scheduleFixture: schedule } = fixtures;
@@ -20,6 +20,9 @@ export const createSessionHandlers = (
   return [
     pick.verify(async ({ request }) => {
       const { sessionId, code } = await request.json();
+      if (attendance.sessionId === null) {
+        return HttpResponse.json({ code: 'ATTENDANCE_UNAVAILABLE' }, { status: 409 });
+      }
       if (sessionId !== attendance.sessionId) {
         return HttpResponse.json({ code: 'ATTENDANCE_SESSION_NOT_FOUND' }, { status: 404 });
       }

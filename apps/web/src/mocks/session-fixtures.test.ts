@@ -1,5 +1,5 @@
 import { expect, it } from 'vitest';
-import { createSessionFixtures } from './session-fixtures';
+import { createSessionFixtures, createUpcomingSessionFixtures } from './session-fixtures';
 
 it.each([
   ['2026-11-07T14:59:59Z', '2026-11-01', '2026-11-07'],
@@ -29,4 +29,19 @@ it('홈의 출석 대상과 일정이 같은 정규 세션을 가리킨다', () 
     [39902, 'REGULAR'],
     [39903, 'REGULAR'],
   ]);
+});
+
+it('기본 일정은 2주 뒤 토요일부터 매주 열리고 이번 주 출석 대상은 없다', () => {
+  const fixtures = createUpcomingSessionFixtures(Date.parse('2026-11-09T12:00:00+09:00'));
+  expect(fixtures.currentWeekFixture.session).toBeNull();
+  expect(fixtures.scheduleFixture.sessions.map(({ date }) => date)).toEqual([
+    '2026-11-28',
+    '2026-12-05',
+    '2026-12-12',
+  ]);
+  expect(
+    fixtures.scheduleFixture.sessions.every(
+      ({ name, location }) => !name.includes('샘플') && !location?.includes('샘플'),
+    ),
+  ).toBe(true);
 });

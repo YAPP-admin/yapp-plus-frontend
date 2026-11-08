@@ -91,12 +91,26 @@ function memberNoticeDetail(postId: number): UserPostDetailResponse | undefined 
   };
 }
 
-export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string | null) {
+export function createMemberNoticeHandlers(
+  baseUrl: string,
+  noticeState?: string | null,
+  details?: UserPostDetailResponse[],
+) {
+  const list =
+    details?.map(({ postId, type, title, createdDate }) => ({
+      postId,
+      type,
+      title,
+      createdDate,
+      daysUntilDeadline: null,
+    })) ?? memberNoticeFixture;
+  const detailFor = (postId: number) =>
+    details ? details.find((notice) => notice.postId === postId) : memberNoticeDetail(postId);
   let failNextRequest = noticeState === 'error' || noticeState === 'next-error';
-  let read = false;
+  const readIds = new Set<number>();
   resetMemberNoticeHandlers.add(() => {
     failNextRequest = noticeState === 'error' || noticeState === 'next-error';
-    read = false;
+    readIds.clear();
   });
   const { pick } = createMswHandlers({ baseUrl });
   return [
@@ -120,8 +134,7 @@ export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string
           { status: 400 },
         );
       }
-      const source =
-        noticeState === 'weekly' ? memberNoticeFixture.slice(0, 4) : memberNoticeFixture;
+      const source = noticeState === 'weekly' ? list.slice(0, 4) : list;
       const filtered =
         noticeState === 'empty'
           ? []
@@ -151,14 +164,14 @@ export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string
           { status: noticeState === 'detail-error' ? 404 : 503 },
         );
       }
-      const detail = memberNoticeDetail(Number(params.postId));
+      const detail = detailFor(Number(params.postId));
       if (!detail) {
         return HttpResponse.json(
           { code: 'POST_NOT_FOUND', message: '개발용 공지 상세 없음' },
           { status: 404 },
         );
       }
-      return HttpResponse.json({ ...detail, read });
+      return HttpResponse.json({ ...detail, read: readIds.has(detail.postId) });
     }),
     pick.acknowledge(({ params }) => {
       if (noticeState === 'read-error') {
@@ -167,13 +180,13 @@ export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string
           { status: 503 },
         );
       }
-      if (!memberNoticeDetail(Number(params.postId))) {
+      if (!detailFor(Number(params.postId))) {
         return HttpResponse.json(
           { code: 'POST_NOT_FOUND', message: '개발용 공지 상세 없음' },
           { status: 404 },
         );
       }
-      read = true;
+      readIds.add(Number(params.postId));
       return new HttpResponse(null, { status: 204 });
     }),
   ];
