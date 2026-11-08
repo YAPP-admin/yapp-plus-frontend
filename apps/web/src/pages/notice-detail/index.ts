@@ -1,7 +1,10 @@
+export { noticeDetailData } from './model/notice-detail-data';
 export {
-  DEFAULT_NOTICE_DETAILS,
-  getNoticeDetailById,
-  type NoticeDetail,
-} from './model/notice-detail-data';
+  memberNoticeDetailQueryOptions,
+  noticeDeadlineLabel,
+  noticeDetailSchema,
+  noticeIdFromParam,
+  type MemberNoticeDetail,
+} from './model/notice-detail-query';
 export { NoticeDetailHeader, type NoticeDetailHeaderProps } from './ui/notice-detail-header';
-export { NoticeDetailPage, type NoticeDetailPageProps } from './ui/notice-detail-page';
+export { NoticeDetailPage } from './ui/notice-detail-page';

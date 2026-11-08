@@ -173,14 +173,14 @@ describe('Stackflow FSD 화면 연결', () => {
     );
 
     await waitFor(() => expect(window.location.pathname).toBe('/notices/2'));
-    expect(await waitForTopHeading('1차 UT 준비 과제')).toBeTruthy();
+    expect(await waitForTopHeading('사용자 테스트 결과 제출')).toBeTruthy();
     window.history.back();
 
     const restored = await waitForTopHeading('게시판');
     expect(restored.getByRole('tab', { name: '과제' })).toHaveAttribute('aria-selected', 'true');
     expect(window.location.search).toBe('?category=ASSIGNMENT');
     window.history.forward();
-    expect(await waitForTopHeading('1차 UT 준비 과제')).toBeTruthy();
+    expect(await waitForTopHeading('사용자 테스트 결과 제출')).toBeTruthy();
   }, 15000);
 
   it('Home 위에 Alerts를 push하고 뒤로가면 Home을 복원한다', async () => {
@@ -253,7 +253,7 @@ describe('Stackflow FSD 화면 연결', () => {
     window.history.replaceState({}, '', '/notices/1');
     const detailRendered = renderStack();
 
-    const detailScreen = await waitForTopHeading('팀빌딩 소개서 작성');
+    const detailScreen = await waitForTopHeading('6주차 세션 안내');
     await user.click(detailScreen.getByRole('button', { name: '뒤로가기' }));
     expect(await waitForTopHeading('게시판')).toBeTruthy();
     detailRendered.unmount();

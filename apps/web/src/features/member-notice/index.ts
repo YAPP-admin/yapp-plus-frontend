@@ -11,3 +11,4 @@ export {
   type MemberNoticeList,
   type NoticeCategory,
 } from './model/notice-queries';
+export { NoticeErrorContent } from './ui/notice-error-content';
