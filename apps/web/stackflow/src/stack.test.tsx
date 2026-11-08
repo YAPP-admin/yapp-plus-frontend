@@ -445,10 +445,10 @@ it('출결 보고 시트에서 완료하면 홈으로 돌아가고 알림을 표
   await waitFor(() => expect(window.location.pathname).toBe('/'));
 });
 
-it('모의 API를 사용하지 않으면 시트 URL로 직접 진입해도 입력 폼을 제공하지 않는다', async () => {
+it('일반 브라우저의 출석 시트 직접 진입에서는 로그인 안내와 비활성 제출을 제공한다', async () => {
   vi.stubEnv('VITE_API_MOCKING', 'false');
   window.history.replaceState({}, '', '/attendance/code');
   renderStack();
-  await waitForTopHeading('페이지를 찾을 수 없어요');
-  expect(screen.queryByRole('textbox', { name: '출석 코드 1번째 자리' })).not.toBeInTheDocument();
+  expect(await screen.findByText('앱에 로그인한 후 출석해 주세요.')).toBeVisible();
+  expect(screen.getByRole('button', { name: '확인' })).toBeDisabled();
 });

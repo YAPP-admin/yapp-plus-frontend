@@ -24,7 +24,7 @@ export function AttendanceCompletePage() {
       <header className={header}>
         <BackButton
           fallbackActivityName="Tabs"
-          fallbackActivityParams={{ initialTab: 'home', attendance: 'attended' }}
+          fallbackActivityParams={{ initialTab: 'home' }}
           iconOnly
         />
         <div className={headerSpacer} aria-hidden="true" />
@@ -47,9 +47,7 @@ export function AttendanceCompletePage() {
 
       <footer className={bottomSection}>
         <ActionButton asChild variant="brandSolid" size="large" className={confirmButton}>
-          <TabLink tab="home" params={{ attendance: 'attended' }}>
-            확인
-          </TabLink>
+          <TabLink tab="home">확인</TabLink>
         </ActionButton>
         <div className={homeIndicatorArea} aria-hidden="true" />
       </footer>

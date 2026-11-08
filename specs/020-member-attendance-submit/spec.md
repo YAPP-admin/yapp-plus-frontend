@@ -1,6 +1,6 @@
 # 기능 명세: 회원 코드 출석과 사전 출결 보고
 
-**브랜치**: `DongjaJ/7al70` | **작성일**: 2026-11-08 | **상태**: 1단계 코드 출석 구조 수정 중 · [#385](https://github.com/YAPP-admin/yapp-plus-frontend/issues/385)
+**브랜치**: `DongjaJ/7al70` | **작성일**: 2026-11-08 | **상태**: 1단계 코드 출석 구조 수정 완료 · 리뷰 대기 · [#385](https://github.com/YAPP-admin/yapp-plus-frontend/issues/385)
 **입력**: Android develop의 오늘 커밋을 제외한 구현 범위로 코드 출석과 사전 출결 보고를 연결한다.
 
 ## 사용자 시나리오와 검증

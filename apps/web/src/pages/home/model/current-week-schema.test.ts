@@ -40,6 +40,7 @@ it('null 세션과 장소를 그대로 유지한다', async () => {
 });
 
 it.each([
+  { session: { ...currentWeekFixture.session, sessionId: 0 } },
   { weekEndDate: '2026-11-01' },
   { weekStartDate: '2026-02-30' },
   { session: { ...currentWeekFixture.session, startTime: '12:99' } },
