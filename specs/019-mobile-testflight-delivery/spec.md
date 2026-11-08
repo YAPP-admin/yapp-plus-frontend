@@ -15,7 +15,7 @@
 ## 요구사항과 검증 기준
 
 - **FR-001**: 동일 저장소 main push의 성공 CI가 검증한 SHA만 게시한다. 오래된 CI 결과는 제외한다.
-- **FR-002**: main에서는 변경 영향·빌드 존재·설치 여부로 분기하지 않고 매번 iOS OTA를 게시한다.
+- **FR-002**: 마지막 testflight iOS 게시 SHA부터 검증된 main SHA까지 Turbo --affected로 모바일 영향을 판단한다. 영향이 없을 때만 OTA를 생략한다. 비교 기준·조회·판정 오류 시 기존처럼 게시한다. 빌드 존재·설치 여부로 분기하지 않는다.
 - **FR-003**: appVersion 정책을 유지한다. PR의 네이티브 변경 시 버전 증가를 요구하고 감소를 거부한다.
 - **FR-004**: Expo Fingerprint와 제외된 빌드 입력의 digest를 사용한다. 수집 불완전·OS 불일치는 실패한다.
 - **FR-005**: 빌드·제출은 수동이다. 클라우드 빌드, 자동 IPA 재사용·활성화 상태 관리를 추가하지 않는다.
@@ -31,7 +31,16 @@
 
 ## 범위와 도입 단계
 
-PR 검사·자동 OTA 코드는 acccd4c8에 기록했다. 현재 리뷰는 GitHub macOS 수동 빌드와 지정 IPA 제출이다.
-실제 게시·원격 CI·서명 검증은 아직 실행하지 않았다. 로컬 명령과 복구 절차는 앱 README에 기록한다.
+PR 검사·자동 OTA·수동 빌드·제출은 main에 적용됐고 1.0.1 (20)의 실제 게시·빌드·제출까지 성공했다.
+현재 리뷰는 Turbo 모바일 영향 판정이다. 상세 실행 근거와 남은 실기기 검증은 validation.md를 따른다.
 설치 확인은 운영 점검으로 남지만 OTA 게시의 승인 조건은 아니다. 기준 파일·자동 버전별 상태 관리는 제거한다.
 Android·App Store 공개 배포·PR Preview는 후속 범위다. PR Preview 도입 시 공식 preview Action을 사용한다.
+
+## Turbo 영향 판정 도입
+
+사용자가 패키지 의존성 전파는 Turbo에 맡기는 최소 구현을 승인했다. EAS 공식 update:list/view로
+마지막 testflight iOS 게시의 gitCommitHash를 읽고 전체 Git 이력에서 조상 관계를 확인한다.
+게시 성공 기록은 EAS를 사용하며 별도 기준 파일·GitHub 실행 기록 검색기를 만들지 않는다.
+패키지 단위이므로 apps/mobile/README.md 변경도 영향으로 본다. 루트의 공통 빌드 입력은
+Turbo globalDependencies에 명시한다. rollback 기록·기록 부재·판정 오류는 게시로 처리한다.
+실제 rollback 운영 중에는 기존 절차대로 자동 게시를 중지한다.

@@ -183,3 +183,28 @@ SC-001은 R005~~R009, SC-002는 R010~~R012, SC-003~~SC-005는 R013~~R018로 검�
 - 사용자가 1.0.1 사용 가능 메일을 받았다고 확인했다. 실기기 설치·로그인·OTA 실제 수신을 확인한 것은 아니다.
 - 남은 항목: fork CI, main 필수 검사·직접 push 제한, 실기기 설치·실행, 동일 runtime OTA 수신, 다른 runtime 미수신, rollback·자동 OTA 재개.
 - Rollback은 정상 배포를 즉시 되돌리는 대신 별도 테스트로 남긴다. 대상 runtime·복구 지점·테스터 영향·일정을 정하고 승인받은 뒤 자동 게시 중지 → 실행 종료 확인 → 복구 → 기기 확인 → 명시적 재개를 검증한다.
+
+## Turbo 모바일 영향 판정 구현 (로컬 검증)
+
+- 사용자가 Turbo 의존성 그래프를 활용한 OTA 생략 구현을 승인했다. 배포용 JS·기준 파일·GitHub 게시 이력 검색기는 추가하지 않았다.
+- EAS CLI 27.4.1의 실제 update:list/view 조회에서 testflight iOS 게시와 gitCommitHash를 확인했다. 조회만 수행했으며 새 OTA·빌드·제출은 실행하지 않았다.
+- 마지막 게시 SHA부터 검증 SHA까지 turbo ls --affected로 판단한다. EAS 기록 부재·rollback·조회/JSON/Git/Turbo 오류는 publish=true로 처리한다.
+- 실제 workflow shell과 실제 Turbo를 사용하는 회귀 테스트 23개를 추가했다. 테스트에서는 EAS 응답만 대체하고 별도 임시 Git 저장소에 실제 패키지 그래프·lockfile을 복제한다.
+- 웹·관리자·루트 문서 생략, 모바일·공용 패키지·lockfile·공통 도구 설정·patch·배포 Action 변경 게시, 연속 병합 누적 비교, 동일 SHA 생략, 비조상·기록 유실·오류 시 게시를 검증했다.
+- 최종 check 통과: lint 7개 중 6개, typecheck 7개 중 3개는 Turbo 캐시 재사용. test 5개는 모두 새 실행이며 모바일 148개 테스트 통과.
+- build 3개 모두 캐시 없이 새 실행으로 통과. actionlint·포맷·diff 공백 검사 통과. 모바일 앱 설정·의존성은 바꾸지 않아 expo:doctor는 재실행하지 않았다.
+- globalDependencies 변경은 다른 패키지의 작업 캐시에도 영향을 준다. 모바일 배포에 쓰이는 루트 입력을 보수적으로 포함한 결과다.
+- 원격 CI·main에서의 실제 게시/생략은 사용자 리뷰와 병합 후 검증한다. 영향 조건 제거로 항상 게시 방식에 복귀할 수 있다.
+
+### Actions step 분리 리뷰 반영
+
+- 긴 shell 조건을 마지막 게시 SHA 조회·Turbo 영향 판정·결과 요약 step으로 나눴다. 조회·판정에만 continue-on-error를 적용하고 outcome으로 실제 성공을 구분한다.
+- 최신 main 확인과 실제 게시에는 오류 허용을 적용하지 않는다. 판정 실패라도 오래된 main이면 게시하지 않는 연결을 검증했다. Turbo 단계에는 EXPO_TOKEN을 전달하지 않는다.
+- 기존 회귀 검증을 단계별 shell로 갱신하고 Actions 조건 연결 사례를 추가했다. 영향 판정 테스트 25개, 모바일 전체 150개 통과.
+- check 통과: lint 7개 중 3개 캐시, typecheck 7개·test 5개는 모두 새 실행. build 3개도 모두 새 실행으로 통과했다. actionlint·포맷·diff 공백 검사 통과.
+- 아직 로컬 변경이며 commit·push·원격 배포는 수행하지 않았다.
+
+### 커밋 전 최종 재검증
+
+- 최종 변경 기준 check 19개 작업과 build 3개 작업을 모두 캐시 없이 실행해 통과했다. 모바일 150개 테스트에 OTA 영향 판정 회귀 25개가 포함된다.
+- actionlint와 diff 공백 검사 통과. 원격 Actions에서의 실제 게시·생략은 아직 미검증이다. 이 검증을 위해 OTA나 빌드·제출을 실행하지 않았다.

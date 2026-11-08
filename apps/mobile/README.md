@@ -118,11 +118,19 @@ eas submit \
 
 [배포 흐름·복구 흐름·브랜치별 진행 상태](../../specs/019-mobile-testflight-delivery/overview.md)를 Mermaid 다이어그램으로 확인할 수 있다.
 
-main push의 CI 성공 후 `mobile-delivery.yml`이 iOS `testflight` 채널로 OTA를 게시한다.
+main push의 CI 성공 후 `mobile-delivery.yml`이 Turbo로 모바일 영향을 확인하고 iOS `testflight` 채널로 OTA를 게시한다.
+EAS 공식 `update:list`·`update:view`로 마지막 iOS 게시 SHA를 읽고 현재 검증 SHA까지
+`turbo ls --affected`로 비교한다. 공용 패키지의 영향 전파는 Turbo가 처리한다.
+웹·관리자·루트 문서만 바뀌면 생략하며, 모바일 패키지 내부 문서는 게시 대상이다.
+루트 도구·workspace·patch·배포 설정은 `globalDependencies`에 포함한다.
+게시 기록 부재·rollback 기록·조회 또는 판정 실패 시 생략하지 않고 게시한다.
+조회·판정은 별도 Actions step이며 이 두 단계에만 `continue-on-error`를 적용한다.
+`outcome`으로 성공 여부를 확인하고 Summary에 비교 SHA·단계 결과·게시 여부를 남긴다.
+최신 main 확인과 실제 `eas update` 실패는 그대로 workflow 실패로 보고한다.
 공통 `setup-eas` Action이 pnpm으로 EAS CLI 27.4.1을 임시 작업 공간에 설치한다.
 Expo Action의 임시 설치에 저장소의 스크립트 정책이 전달되지 않아 발생하는 오류를 피하도록
 `dtrace-provider@0.8.8`과 `protobufjs@7.6.6`의 설치 스크립트를 명시적으로 차단한다.
-EAS CLI 업그레이드 시 이 정책을 재검토한다. `EXPO_TOKEN`은 배포 명령 단계에만 전달한다.
+EAS CLI 업그레이드 시 이 정책을 재검토한다. `EXPO_TOKEN`은 EAS 조회·배포 명령 단계에만 전달한다.
 설치 수정에 문제가 있으면 자동 OTA를 중지하고 수정 전 커밋으로 되돌린 뒤 재검증한다.
 PR의 `Mobile native compatibility` 검사를 필수 검사로 설정하고 main 직접 push를 제한한다.
 자동 빌드 분기·활성화 기준 파일·설치 확인 승인은 없다. 네이티브 변경 시 PR에서 앱 버전을
@@ -156,10 +164,12 @@ EAS에 iOS 배포 인증서·프로비저닝 프로필·원격 build number·제
 artifact가 만료되면 새 build를 실행한다. 빌드 재실행은 새 build number를 사용할 수 있으며,
 재실행 시 artifact 이름의 회차도 증가하므로 제출할 회차를 다시 확인한다.
 자동 OTA와 수동 작업은 같은 concurrency 그룹을 사용한다. 대기 실행이 취소되면 Actions 결과를 확인한다.
-재실행하면 같은 SHA도 다시 게시될 수 있으므로 실패 시 EAS 대시보드에서 실제 게시 결과를 먼저 확인한다.
+정상 조회 시 이미 게시한 SHA는 생략하지만 조회 실패 시 같은 SHA도 다시 게시될 수 있으므로 실패 시 EAS 대시보드에서 실제 게시 결과를 먼저 확인한다.
 문제가 있으면 GitHub에서 자동 OTA workflow를 비활성화하고 실행·대기 작업 종료를 확인한 뒤,
 `eas update:rollback`으로 같은 runtime의 정상 업데이트 또는 내장 업데이트로 복구한다.
 수정한 main이 준비된 뒤 workflow를 명시적으로 다시 활성화한다. 네이티브 결함은 새 빌드로 수정한다.
+
+영향 판정에 문제가 있으면 게시 단계의 영향 조건을 제거해 항상 OTA를 게시하는 방식으로 복구한다.
 
 Rollback 실전 검증은 아직 수행하지 않았다. 정상 배포를 지금 되돌리지 않고, 실기기 설치와 정상
 OTA 수신을 확인한 뒤 테스트 일정·대상 runtime·복구할 업데이트 또는 내장 코드·테스터 영향을

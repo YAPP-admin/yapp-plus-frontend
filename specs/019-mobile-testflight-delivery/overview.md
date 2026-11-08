@@ -14,7 +14,9 @@ flowchart TD
     RULE -->|실패| FIX["CI 실패 → 수정"]
     RULE -->|통과| MERGE["main 병합"]
     MERGE --> CI["main CI 성공"]
-    CI --> AUTO["자동 OTA<br/>최신 SHA 재확인 → eas update"]
+    CI --> IMPACT{"EAS 마지막 게시 SHA부터<br/>Turbo 모바일 영향 판정"}
+    IMPACT -->|영향 있음 또는 판정 불가| AUTO["자동 OTA<br/>최신 SHA 재확인 → eas update"]
+    IMPACT -->|영향 없음| SKIP["OTA 생략"]
     AUTO --> MATCH["같은 appVersion의<br/>설치 앱만 OTA 수신"]
     CI -. "운영자가 build 선택" .-> BUILD["수동 로컬 빌드<br/>GitHub macOS → eas build --local"]
     BUILD --> IPA["IPA + checksum 보관<br/>실행 ID·회차로 식별"]
@@ -71,3 +73,9 @@ flowchart LR
 | rollback·자동 OTA 재개                   | 후속 테스트 예정                | 대상·일정과 실행 승인 후 검증                                                                                                 |
 
 다음 작업은 TestFlight 설치·주요 기능·OTA 수신 확인이다. Rollback은 지금 실행하지 않고 별도 테스트로 진행한다.
+
+## Turbo 영향 판정 후속 변경
+
+영향 판정 구현은 로컬 검증 단계이며 아직 main에 배포하지 않았다. EAS 공식 조회와 Turbo를
+사용하며 별도 게시 기준 파일은 없다. 모바일 내부 문서는 보수적으로 포함한다.
+기록 부재·판정 오류는 게시로 처리하고 영향 조건 제거로 기존 항상 게시 방식에 복귀할 수 있다.
