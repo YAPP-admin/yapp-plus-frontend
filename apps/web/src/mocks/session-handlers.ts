@@ -1,36 +1,23 @@
-import {
-  fakeCurrentWeekSessionResponse,
-  fakeCurrentWeekSessionDetailResponse,
-  fakeCurrentGenerationSessionsResponse,
-} from '@yapp-plus/api/generated/faker';
+import { createSessionFixtures } from './session-fixtures';
 import { createMswHandlers } from '@yapp-plus/api/generated/msw';
 import { delay, HttpResponse } from 'msw';
 
-// 생성 faker에서 서로 독립적인 날짜·시간만 실제 주간/일정 범위에 맞춥니다.
-export const currentWeekFixture = {
-  ...fakeCurrentWeekSessionResponse(),
-  weekStartDate: '2026-11-01',
-  weekEndDate: '2026-11-07',
-  session: { ...fakeCurrentWeekSessionDetailResponse(), date: '2026-11-07', startTime: '13:30:00' },
-};
-const schedule = fakeCurrentGenerationSessionsResponse();
-export const scheduleFixture = {
-  ...schedule,
-  sessions: schedule.sessions.map((session) => ({
-    ...session,
-    date: '2026-11-07',
-    dayOfWeek: 'SATURDAY' as const,
-    startTime: '13:30:00',
-    endTime: '18:00:00',
-  })),
-};
+// 기존 화면 테스트는 고정된 주간을 사용하고 브라우저는 시작 시각으로 생성한다.
+export const { currentWeekFixture, scheduleFixture } = createSessionFixtures(
+  Date.parse('2026-11-07T12:00:00+09:00'),
+);
 
-export const createSessionHandlers = (baseUrl: string, scheduleState?: string | null) => {
+export const createSessionHandlers = (
+  baseUrl: string,
+  scheduleState?: string | null,
+  fixtures = createSessionFixtures(Date.now()),
+) => {
+  const { currentWeekFixture: currentWeek, scheduleFixture: schedule } = fixtures;
   let failNextScheduleRequest = scheduleState === 'error';
   const { pick } = createMswHandlers({ baseUrl });
   return [
     pick.verify(() => HttpResponse.json({ verified: true, checkedInAt: new Date().toISOString() })),
-    pick.find3(() => HttpResponse.json(currentWeekFixture)),
+    pick.find3(() => HttpResponse.json(currentWeek)),
     pick.find4(async () => {
       if (scheduleState === 'loading') {
         await delay(5_000);
@@ -43,7 +30,7 @@ export const createSessionHandlers = (baseUrl: string, scheduleState?: string | 
         );
       }
       return HttpResponse.json(
-        scheduleState === 'empty' ? { ...scheduleFixture, sessions: [] } : scheduleFixture,
+        scheduleState === 'empty' ? { ...schedule, sessions: [] } : schedule,
       );
     }),
   ];

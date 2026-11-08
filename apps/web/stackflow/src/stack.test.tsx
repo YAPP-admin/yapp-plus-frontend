@@ -141,6 +141,7 @@ describe('Stackflow FSD 화면 연결', () => {
 
   it('탭 전환은 history를 늘리지 않고 실행 중인 탭 상태를 보존한다', async () => {
     const user = userEvent.setup();
+    window.history.replaceState({}, '', '/?attendance=attended');
     renderStack();
 
     const homeScreen = await waitForTopHeading('홈');

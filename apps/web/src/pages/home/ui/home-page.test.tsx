@@ -413,3 +413,13 @@ it.each(['NOT_OPEN', 'NOT_ELIGIBLE'])(
     expect(mockPush).not.toHaveBeenCalled();
   },
 );
+
+it('기본 목업은 정규 세션의 코드 출석으로 진입하고 팀 사진 진입점을 숨긴다', async () => {
+  server.use(http.get(url, () => HttpResponse.json(currentWeekFixture)));
+  const user = userEvent.setup();
+  renderHome();
+  await user.click(await screen.findByRole('button', { name: '출석하기' }));
+  expect(mockPush).toHaveBeenCalledWith('AttendanceCode', {});
+  expect(screen.queryByRole('button', { name: '인증 사진 올리기' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '팀 세션 화면으로 전환' })).not.toBeInTheDocument();
+});

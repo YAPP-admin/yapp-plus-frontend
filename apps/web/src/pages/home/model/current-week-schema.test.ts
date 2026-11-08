@@ -12,7 +12,7 @@ const options = find3Options({
   retry: 0,
 });
 
-it('생성 queryOptions로 faker의 주간 응답을 변환 없이 받는다', async () => {
+it('생성 queryOptions로 목업의 주간 응답을 변환 없이 받는다', async () => {
   const scheduleRequest = vi.fn<() => void>();
   server.use(
     http.get(`${apiBaseUrl}/api/generations/current/sessions`, () => {
