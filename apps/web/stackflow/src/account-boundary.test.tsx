@@ -1,7 +1,7 @@
 import { MutationObserver, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { StrictMode, Suspense } from 'react';
+import { Suspense } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { AuthResult } from '@yapp-plus/app-bridge';
 import {
@@ -88,18 +88,37 @@ const apply = (
 const mount = (client: QueryClient) => {
   const { Stack, actions } = createStackflowApp({ reducedMotion: true, queryClient: client });
   const view = render(
-    <StrictMode>
-      <QueryClientProvider client={client}>
-        <Suspense fallback="로딩 중">
-          <NativeAuthSessionProvider>
-            <Stack initialContext={context} />
-          </NativeAuthSessionProvider>
-        </Suspense>
-      </QueryClientProvider>
-    </StrictMode>,
+    <QueryClientProvider client={client}>
+      <Suspense fallback="로딩 중">
+        <NativeAuthSessionProvider>
+          <Stack initialContext={context} />
+        </NativeAuthSessionProvider>
+      </Suspense>
+    </QueryClientProvider>,
   );
   return { ...view, actions };
 };
+
+it('세션 복구와 로그아웃 후 재로그인 뒤에도 현재 탭을 전환한다', async () => {
+  const user = userEvent.setup();
+  const client = new QueryClient();
+  bridge.getSession.mockResolvedValue(session(1));
+  mount(client);
+
+  await screen.findByRole('link', { name: '일정' });
+  await user.click(screen.getByRole('link', { name: '일정' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/schedule'));
+  expect(screen.getByRole('link', { name: '일정' })).toHaveAttribute('aria-current', 'page');
+
+  await act(() => apply(client, { status: 'SIGNED_OUT' }, 'logout'));
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+
+  await act(() => apply(client, session(2)));
+  await waitFor(() => expect(window.location.pathname).toBe('/'));
+  await user.click(screen.getByRole('link', { name: '게시판' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/notices'));
+  expect(screen.getByRole('link', { name: '게시판' })).toHaveAttribute('aria-current', 'page');
+});
 
 it('토큰 갱신은 폼을 유지하고 계정 변경은 이전 폼과 화면을 제거한다', async () => {
   const client = new QueryClient();
