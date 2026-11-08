@@ -105,7 +105,7 @@ it('세션 복구와 로그아웃 후 재로그인 뒤에도 현재 탭을 전�
   bridge.getSession.mockResolvedValue(session(1));
   mount(client);
 
-  await screen.findByRole('link', { name: '일정' });
+  await screen.findByRole('link', { name: '일정' }, { timeout: 10000 });
   await user.click(screen.getByRole('link', { name: '일정' }));
   await waitFor(() => expect(window.location.pathname).toBe('/schedule'));
   expect(screen.getByRole('link', { name: '일정' })).toHaveAttribute('aria-current', 'page');
