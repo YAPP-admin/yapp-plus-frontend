@@ -15,13 +15,13 @@
 - base의 검사 코드를 사용하며 최초 도입만 후보 코드의 리뷰가 필요하다. 수집 실패는 호환으로 해석하지 않는다.
 - build·cli·root package·workspace·도구·patch 입력은 보수적으로 digest에 포함한다. submit 전용 변경은 제외한다.
 - main: 성공 CI 출처·최신 SHA를 확인하고 공통 setup-eas Action에서 pnpm으로 고정 EAS CLI를 준비해 `eas update`를 실행한다.
-- main 배포에는 Turbo skip·빌드 조회·설치 승인·마지막 반영 SHA 조회가 없다. 문서 변경도 OTA를 게시한다.
-- 동일 SHA 재실행의 중복 게시 가능성을 허용한다. 불명확한 결과는 운영자가 EAS 대시보드에서 확인한다.
+- main 배포는 EAS의 마지막 게시 SHA부터 Turbo로 모바일 영향을 판단한다. 빌드 조회·설치 승인은 없다.
+- 정상 조회 시 동일 SHA는 생략한다. 조회 실패 시 중복 게시 가능성을 허용하고 EAS 결과를 확인한다.
 
 ## 고정 도구와 권한
 
 Node 24.20.0, pnpm 12.3.4, EAS CLI 27.4.1과 Action commit SHA를 사용한다.
-PR job에는 배포 비밀을 전달하지 않고 OTA·빌드·제출 명령 단계에만 EXPO_TOKEN을 제공한다.
+PR job에는 배포 비밀을 전달하지 않고 EAS 조회·OTA·빌드·제출 명령 단계에만 EXPO_TOKEN을 제공한다.
 CLI 설치 작업 공간에는 dtrace-provider@0.8.8과 protobufjs@7.6.6의 설치 스크립트 차단을 명시한다.
 CI의 Mobile native compatibility를 필수 검사로 설정하고 main 직접 push를 제한하는 운영 설정이 필요하다.
 
@@ -50,3 +50,22 @@ submit은 build_run_id와 build_attempt를 받아 해당 회차의 성공·main�
 자동 OTA와 같은 concurrency 그룹을 사용한다. 별도 JS·배포 상태 파일·빌드 검색 시스템은 만들지 않는다.
 Expo의 원격 서명 자격 증명·원격 build number·제출 API 키를 사전에 준비해야 한다.
 실패 시 자동 재시도하지 않고 Actions·EAS·App Store Connect 결과를 확인한 뒤 운영자가 재실행한다.
+
+## Turbo 영향 판정 구현 계획
+
+- EAS CLI 설치 후 update:list --branch testflight --platform ios --limit 1 --json과 update:view --json으로 게시 소스 SHA를 얻는다. CLI 조회는 읽기 전용이다.
+- checkout에 fetch-depth: 0을 적용하고 기준 SHA 형식·현재 SHA와 조상 관계를 확인한다.
+- TURBO_SCM_BASE/HEAD를 지정한 turbo ls --affected --output=json 결과에 @yapp-plus/mobile이 있는지 jq로 판정한다. JS 판정기는 추가하지 않는다.
+- Turbo가 의존성 전파를 담당한다. 루트 workspace·도구·patch·배포 설정은 globalDependencies로 보완하며 모바일 내부 문서 제외는 하지 않는다.
+- 기준 부재·rollback·CLI/API/JSON/Git/Turbo 오류는 publish=true로 복귀한다. 실제 게시 명령 실패를 숨기지는 않는다.
+- Summary에 base/head·게시 여부·이유를 기록한다. 최신 main 재검사와 수동 빌드는 유지한다.
+- 회귀 검증: 웹/루트 문서 생략, 모바일/공용 패키지/루트 빌드 입력 게시, 연속 병합 누적 비교, 이전 게시 실패, 기준 부재·잘못된 JSON·rollback·비조상·Turbo 오류의 게시 처리.
+- 복구: 영향 판정 조건만 제거하면 기존 항상 게시 정책으로 돌아간다. 실제 앱 rollback은 별도 승인 작업이다.
+
+### Actions step으로 조회·판정 분리
+
+마지막 게시 조회와 Turbo 판정을 별도 step으로 나누고 이 두 단계에만 continue-on-error를 적용한다.
+판정은 조회 단계의 outcome이 success일 때 실행한다. 최신 main이며 Turbo가 성공적으로
+publish=false를 출력한 경우가 아니면 게시한다. 허용된 오류는 conclusion 대신 outcome으로 확인한다.
+결정 step은 비교 SHA·각 단계의 outcome·최종 게시 여부를 Summary에 기록한다.
+최신 main 확인·결정 기록·실제 게시에는 오류 허용을 적용하지 않는다. 새 Action·외부 의존성은 추가하지 않는다.

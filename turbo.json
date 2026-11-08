@@ -1,5 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
+  "globalDependencies": [
+    "mise.toml",
+    "mise.lock",
+    "pnpm-workspace.yaml",
+    ".npmrc",
+    "patches/**",
+    ".github/workflows/mobile-delivery.yml",
+    ".github/workflows/mobile-manual.yml",
+    ".github/actions/setup-eas/**"
+  ],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
