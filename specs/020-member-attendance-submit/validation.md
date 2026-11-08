@@ -25,3 +25,5 @@
 - 브라우저 도구가 탭 생성 시 `Cannot read properties of undefined (reading 'timeoutMs')`로 실패했다. 화면 캡처·VoiceOver·실기기 키패드/터치·실서버 검증은 수행하지 못했다.
 - 로컬 분리: `origin/main` → `DongjaJ/attendance-spec`(252줄) → `DongjaJ/attendance-api-keys`(252줄) → 기존 `DongjaJ/7al70`(추가 673줄·삭제 98줄, 합계 771줄). 각 화살표는 PR base/head를 나타낸다. 명세 PR의 merge-base는 `0ec55581`이며 최신 main의 공지 변경은 합치지 않았다. push·PR 생성은 하지 않는다.
 - 완료 Activity의 접근 차단, 홈 성공 상태 공유, 제출 중 닫기·`useIsMutating`, 서버 오류별 복구 UI 제안은 보류했다. 사전 출결 보고는 첫 단계 리뷰 후 진행한다.
+- 최신 리뷰 반영: 제출은 Activity의 `mutation.isPending`과 TanStack Form으로 관리하고 시트 닫기를 차단했다. 전역 pending 조회·닫힘 감시 Effect·초기 세션 ID state·출석 전용 계정 검사를 제거했다. `check`·`build` 통과: 웹 lint·typecheck·316개 테스트·빌드는 새 실행, 나머지 lint 6개·typecheck 6개·test 4개·build 2개 작업은 캐시 재사용이다. 실기기·실서버 검증은 미실행이며 홈 성공 결과 공유 방식은 후속 결정한다. 생성 키 브랜치 대비 추가 695줄·삭제 104줄, 합계 799줄이고 이번 수정은 아직 커밋·push하지 않았다.
+- 제출 책임 리뷰 반영: 제출 직전 fetchQuery·세션 재검사·토큰 재조회는 제거하고 POST의 404·409 판정에 맡겼다. onSuccess는 조회 갱신, 제출 성공 콜백은 화면 이동, mutation.error는 오류 표시를 담당한다. onMutate에는 오프라인 차단과 홈 완료 표시용 대상 ID 전달만 남겼다. 최종 작업 트리의 check·build 통과: 웹 lint·typecheck·317개 테스트·빌드를 새로 실행했고 다른 작업은 캐시를 재사용했다. 실기기·실서버 검증과 커밋·push는 수행하지 않았다.

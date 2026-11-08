@@ -1,4 +1,4 @@
-import type { AuthResult } from '@yapp-plus/app-bridge';
+import { find3QueryKey } from '@yapp-plus/api/generated';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider, onlineManager } from '@tanstack/react-query';
@@ -42,12 +42,17 @@ afterEach(() => {
   onlineManager.setOnline(true);
 });
 function setup() {
+  const onOpenChange = vi.fn<(open: boolean) => void>();
   const client = createAppQueryClient();
   client.setQueryData(nativeSessionQueryOptions(true).queryKey, signedIn);
-  const tree = (open = true, active = true) => (
+  const tree = (open = true) => (
     <QueryClientProvider client={client}>
       <NativeAuthSessionProvider>
-        {open ? <AttendanceCodeSheet open={active} onComplete={onComplete} /> : <CurrentWeekCard />}
+        {open ? (
+          <AttendanceCodeSheet open onComplete={onComplete} onOpenChange={onOpenChange} />
+        ) : (
+          <CurrentWeekCard />
+        )}
       </NativeAuthSessionProvider>
     </QueryClientProvider>
   );
@@ -56,11 +61,13 @@ function setup() {
     client,
     ...view,
     close: () => view.rerender(tree(false)),
-    hide: () => view.rerender(tree(true, false)),
+    onOpenChange,
   };
 }
 async function enter(code = '0123') {
   await waitFor(() => expect(screen.getByRole('button', { name: '확인' })).toBeEnabled());
+  // happy-dom은 Drawer 전환의 기본 transform을 계산하지 않습니다.
+  screen.getByRole('dialog').style.transform = 'none';
   const user = userEvent.setup();
   await user.click(screen.getByRole('textbox', { name: '출석 코드 1번째 자리' }));
   await user.paste(code);
@@ -197,24 +204,25 @@ it.each(['NOT_OPEN', 'NOT_ELIGIBLE'])(
   },
 );
 
-it('입력 후 서버 대상이 달라지면 코드를 새 세션으로 보내지 않는다', async () => {
-  const request = vi.fn<() => void>();
+it.each([
+  ['ATTENDANCE_SESSION_NOT_FOUND', 404, '출석할 세션을 찾지 못했어요.'],
+  ['ATTENDANCE_UNAVAILABLE', 409, '지금은 출석할 수 없어요.'],
+] as const)('추가 GET 없이 제출하고 서버의 %s 거절을 표시한다', async (code, status, message) => {
+  const lookup = vi.fn<() => Response>(() => HttpResponse.json(week));
+  const request = vi.fn<(body: unknown) => void>();
   server.use(
-    http.post(verifyUrl, () => {
-      request();
-      return HttpResponse.json(success);
+    http.get(weekUrl, lookup),
+    http.post(verifyUrl, async ({ request: req }) => {
+      request(await req.json());
+      return HttpResponse.json({ code }, { status });
     }),
   );
   setup();
   const user = await enter();
-  server.use(
-    http.get(weekUrl, () =>
-      HttpResponse.json({ ...week, session: { ...week.session, sessionId: 43 } }),
-    ),
-  );
   await user.click(screen.getByRole('button', { name: '확인' }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('세션이 변경됐어요');
-  expect(request).not.toHaveBeenCalled();
+  expect(await screen.findByRole('alert')).toHaveTextContent(message);
+  expect(lookup).toHaveBeenCalledOnce();
+  expect(request).toHaveBeenCalledExactlyOnceWith({ sessionId: 42, code: 123 });
   expect(onComplete).not.toHaveBeenCalled();
 });
 
@@ -237,8 +245,20 @@ it('오프라인 제출은 연결 복구 후에도 자동으로 전송하지 않
   expect(request).not.toHaveBeenCalled();
 });
 
-it.each(['화면 이탈', '화면 숨김', '계정 변경'])(
-  '%s 뒤 지연 성공은 강제 이동 없이 같은 계정에만 기록한다',
+it('세션이 없었다가 조회되면 현재 세션으로 제출할 수 있다', async () => {
+  server.use(http.get(weekUrl, () => HttpResponse.json({ ...week, session: null })));
+  const view = setup();
+  expect(await screen.findByText('현재 출석할 수 있는 세션이 없어요.')).toBeVisible();
+  server.use(http.get(weekUrl, () => HttpResponse.json(week)));
+  act(() => {
+    view.client.setQueryData(find3QueryKey(), week);
+  });
+  await enter();
+  expect(screen.getByRole('button', { name: '확인' })).toBeEnabled();
+});
+
+it.each(['오류 후 닫기', '화면 제거'])(
+  '제출 중 입력·닫기·중복 제출을 막고 %s를 처리한다',
   async (boundary) => {
     const received = vi.fn<() => void>();
     let finish!: () => void;
@@ -249,38 +269,35 @@ it.each(['화면 이탈', '화면 숨김', '계정 변경'])(
       http.post(verifyUrl, async () => {
         received();
         await response;
-        return HttpResponse.json(success);
+        return boundary === '오류 후 닫기'
+          ? HttpResponse.json({ code: 'INVALID_ATTENDANCE_CODE' }, { status: 400 })
+          : HttpResponse.json(success);
       }),
     );
     const view = setup();
-    await enter();
-    fireEvent.click(screen.getByRole('button', { name: '확인' }));
-    fireEvent.click(screen.getByRole('button', { name: '확인' }));
+    const user = await enter();
+    const submit = screen.getByRole('button', { name: '확인' });
+    fireEvent.click(submit);
+    fireEvent.click(submit);
     await waitFor(() => expect(received).toHaveBeenCalledOnce());
-    if (boundary === '화면 이탈') {
+    expect(submit).toBeDisabled();
+    for (const input of screen.getAllByRole('textbox')) {
+      expect(input).toBeDisabled();
+    }
+    await user.keyboard('{Escape}');
+    expect(view.onOpenChange).not.toHaveBeenCalled();
+    const removed = boundary === '화면 제거';
+    if (removed) {
       view.close();
-    } else if (boundary === '화면 숨김') {
-      view.hide();
-    } else {
-      act(() => {
-        const other: AuthResult = {
-          ...signedIn,
-          session: { ...signedIn.session, userId: 2, sessionId: 'session-b' },
-        };
-        view.client.setQueryData(nativeSessionQueryOptions(true).queryKey, other);
-      });
     }
     await act(async () => {
       finish();
       await response;
     });
-    await waitFor(() => expect(view.client.isMutating()).toBe(0));
+    const result = removed ? '출석했어요!' : '출석 코드가 올바르지 않아요.';
+    expect(await screen.findByText(result)).toBeVisible();
+    await user.keyboard('{Escape}');
+    expect(view.onOpenChange.mock.calls[0]?.[0]).toBe(removed ? undefined : false);
     expect(onComplete).not.toHaveBeenCalled();
-    view.close();
-    const changed = boundary === '계정 변경';
-    const button = await screen.findByRole('button', {
-      name: changed ? '출석하기' : '출석했어요!',
-    });
-    expect(button).toHaveProperty('disabled', !changed);
   },
 );

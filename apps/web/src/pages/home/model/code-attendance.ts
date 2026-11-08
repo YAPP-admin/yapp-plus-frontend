@@ -1,7 +1,5 @@
-import { useEffect, useState } from 'react';
 import {
   onlineManager,
-  useIsMutating,
   useMutationState,
   useMutation,
   useSuspenseQuery,
@@ -15,19 +13,13 @@ import {
   verifyMutationKey,
   zVerifyAttendanceCodeResponse,
 } from '@yapp-plus/api/generated';
-import { nativeSessionQueryOptions, useNativeAuthSession } from '@/features/auth';
+import { useNativeAuthSession } from '@/features/auth';
 import { currentWeekSchema } from './current-week-schema';
-
-function useAttendanceOwner() {
-  const auth = useNativeAuthSession();
-  return { ...auth, owner: JSON.stringify([auth.session?.userId, auth.session?.sessionId]) };
-}
 
 /** 서버가 확인한 성공 결과만 앱 수명 동안 보존합니다. */
 export function useAttendanceConfirmation() {
-  const { owner } = useAttendanceOwner();
   const confirmations = useMutationState({
-    filters: { mutationKey: [...verifyMutationKey(), { owner }], status: 'success' },
+    filters: { mutationKey: verifyMutationKey(), status: 'success' },
     select: ({ state }) => (typeof state.context === 'number' ? state.context : null),
   });
   return confirmations.at(-1) ?? null;
@@ -42,29 +34,17 @@ const messages: Record<string, string> = {
 
 class SubmissionError extends Error {}
 
-export function useCodeAttendance(open: boolean, onComplete: () => void) {
-  const { owner, isNative, apiOptions } = useAttendanceOwner();
+export function useCodeAttendance(onComplete: () => void) {
+  const { apiOptions } = useNativeAuthSession();
   const client = useQueryClient();
   const options = find3Options({
     ...apiOptions,
     responseValidator: (value) => currentWeekSchema.parseAsync(value),
   });
   const week = useSuspenseQuery(options);
-  const [targetId] = useState(() => week.data.session?.sessionId ?? null);
+  const session = week.data.session;
   const confirmed = useAttendanceConfirmation();
-  const mutationKey = [...verifyMutationKey(), { owner }];
-  const pending = useIsMutating({ mutationKey }) > 0;
 
-  const currentSession = () => {
-    const result = client.getQueryData(nativeSessionQueryOptions(true).queryKey);
-    return result?.status === 'SIGNED_IN' ? result.session : undefined;
-  };
-  const assertOwner = () => {
-    const current = currentSession();
-    if (isNative && (!current || JSON.stringify([current.userId, current.sessionId]) !== owner)) {
-      throw new SubmissionError('계정이 변경됐어요. 홈에서 다시 출석해 주세요.');
-    }
-  };
   const mutation = useMutation({
     ...verifyMutation({
       ...apiOptions,
@@ -76,52 +56,23 @@ export function useCodeAttendance(open: boolean, onComplete: () => void) {
         }
       },
     }),
-    mutationKey,
     gcTime: Infinity,
     retry: false,
     networkMode: 'always',
-    onMutate: async (variables) => {
-      if (!open) {
-        throw new SubmissionError('앱에 로그인한 후 출석해 주세요.');
-      }
-      assertOwner();
+    onMutate: ({ body }) => {
       if (!onlineManager.isOnline() || !navigator.onLine) {
         throw new SubmissionError('인터넷 연결을 확인한 뒤 다시 제출해 주세요.');
       }
-      const latest = await client.fetchQuery({
-        ...options,
-        staleTime: 0,
-        networkMode: 'always',
-        retry: false,
-      });
-      assertOwner();
-      const session = latest.session;
-      if (!session || session.sessionId !== targetId) {
-        throw new SubmissionError('세션이 변경됐어요. 홈에서 다시 출석해 주세요.');
-      }
-      if (session.attendanceStatus !== 'AVAILABLE' || confirmed === targetId) {
-        throw new SubmissionError('지금은 출석할 수 없어요. 세션을 다시 확인해 주세요.');
-      }
-      variables.auth = isNative ? currentSession()?.accessToken : apiOptions.auth;
-      return session.sessionId;
+      return body.sessionId;
     },
     onSuccess: () => {
-      assertOwner();
       for (const queryKey of [options.queryKey, find5QueryKey(), mineQueryKey()]) {
         void client.invalidateQueries({ queryKey });
       }
     },
   });
-  const { reset } = mutation;
-  useEffect(() => {
-    if (!open) {
-      reset();
-    }
-  }, [open, reset]);
-  const available =
-    week.data.session?.sessionId === targetId &&
-    week.data.session?.attendanceStatus === 'AVAILABLE' &&
-    confirmed !== targetId;
+  const { reset, isPending: pending } = mutation;
+  const available = session?.attendanceStatus === 'AVAILABLE' && confirmed !== session.sessionId;
   const queryError = week.error && '세션을 불러오지 못했어요. 다시 확인해 주세요.';
   const submissionError =
     mutation.error &&
@@ -139,11 +90,11 @@ export function useCodeAttendance(open: boolean, onComplete: () => void) {
       void week.refetch();
     },
     submit: (code: string) => {
-      if (client.isMutating({ mutationKey })) {
+      if (!session || !available || pending) {
         return;
       }
       mutation.mutate(
-        { body: { sessionId: targetId ?? 0, code: Number(code) } },
+        { body: { sessionId: session.sessionId, code: Number(code) } },
         { onSuccess: onComplete },
       );
     },
