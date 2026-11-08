@@ -1,4 +1,8 @@
-import type { UserPostListItemResponse, UserPostListResponse } from '@yapp-plus/api/generated';
+import type {
+  UserPostDetailResponse,
+  UserPostListItemResponse,
+  UserPostListResponse,
+} from '@yapp-plus/api/generated';
 import { createMswHandlers } from '@yapp-plus/api/generated/msw';
 import { delay, HttpResponse } from 'msw';
 
@@ -32,6 +36,53 @@ export const memberNoticeFixture = notices.map(
       daysUntilDeadline,
     }) satisfies UserPostListItemResponse,
 );
+
+export const memberNoticeDetailFixture = {
+  postId: 2,
+  type: 'ASSIGNMENT',
+  title: '사용자 테스트 결과 제출',
+  contentMarkdown:
+    '# 제출 안내\n\n기한 안에 과제를 제출해 주세요.\n\n- 테스트 결과 정리\n- 회고 작성',
+  createdDate: '2026-11-07',
+  assignment: {
+    deadlineDate: '2026-11-09',
+    positions: ['WEB', 'ANDROID'],
+    submissionUrl: 'https://example.com/submissions',
+    submissionLinkText: '제출 페이지',
+  },
+  images: [
+    {
+      imageKey: 'notice-1-image',
+      filename: 'assignment-guide.png',
+      contentType: 'image/png',
+      sizeBytes: 1_024,
+      displayOrder: 1,
+      readUrl: 'https://images.example.com/notice-1.png',
+      readUrlExpiresAt: '2026-11-08T01:00:00Z',
+    },
+  ],
+  readCount: 13,
+  read: false,
+} satisfies UserPostDetailResponse;
+
+function memberNoticeDetail(postId: number): UserPostDetailResponse | undefined {
+  const notice = memberNoticeFixture.find((item) => item.postId === postId);
+  if (!notice) {
+    return undefined;
+  }
+  if (postId === memberNoticeDetailFixture.postId) {
+    return memberNoticeDetailFixture;
+  }
+  return {
+    ...memberNoticeDetailFixture,
+    postId,
+    type: notice.type,
+    title: notice.title,
+    createdDate: notice.createdDate,
+    assignment: notice.type === 'ASSIGNMENT' ? memberNoticeDetailFixture.assignment : null,
+    images: [],
+  };
+}
 
 export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string | null) {
   let failNextRequest = noticeState === 'error' || noticeState === 'next-error';
@@ -77,6 +128,25 @@ export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string
         nextCursor: start + 4 < filtered.length ? String(start + 4) : null,
       } satisfies UserPostListResponse;
       return HttpResponse.json(response);
+    }),
+    pick.detail2(({ params }) => {
+      if (noticeState === 'detail-error' || noticeState === 'detail-unavailable') {
+        return HttpResponse.json(
+          {
+            code: noticeState === 'detail-error' ? 'POST_NOT_FOUND' : 'NOTICE_UNAVAILABLE',
+            message: '개발용 공지 상세 조회 실패',
+          },
+          { status: noticeState === 'detail-error' ? 404 : 503 },
+        );
+      }
+      const detail = memberNoticeDetail(Number(params.postId));
+      if (!detail) {
+        return HttpResponse.json(
+          { code: 'POST_NOT_FOUND', message: '개발용 공지 상세 없음' },
+          { status: 404 },
+        );
+      }
+      return HttpResponse.json(detail);
     }),
   ];
 }

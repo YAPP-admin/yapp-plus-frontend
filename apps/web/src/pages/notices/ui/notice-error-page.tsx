@@ -1,16 +1,8 @@
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
-import {
-  container,
-  content,
-  description,
-  graphicContainer,
-  header,
-  title,
-  titleGroup,
-} from './notice-error-page.css';
-import { NoticeErrorIllustration } from './notice-error-illustration';
+import { NoticeErrorContent } from '@/features/member-notice';
+import { container, header } from './notice-error-page.css';
 
 export type NoticeErrorPageProps = {
   titleText?: string;
@@ -31,16 +23,7 @@ export function NoticeErrorPage({
         />
       </header>
 
-      <div className={content}>
-        <div className={titleGroup}>
-          <h1 className={title}>{titleText}</h1>
-          <p className={description}>{descriptionText}</p>
-        </div>
-
-        <div className={graphicContainer}>
-          <NoticeErrorIllustration />
-        </div>
-      </div>
+      <NoticeErrorContent titleText={titleText} descriptionText={descriptionText} />
     </main>
   );
 }
