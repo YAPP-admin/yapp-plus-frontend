@@ -38,9 +38,8 @@ afterEach(() => {
   window.history.replaceState({}, '', '/');
 });
 
-async function renderStack(path: string) {
+async function renderStack(path: string, client = createAppQueryClient()) {
   window.history.replaceState({}, '', path);
-  const client = createAppQueryClient();
   const { Stack, actions } = createStackflowApp({ reducedMotion: true });
   render(
     <QueryClientProvider client={client}>
@@ -82,6 +81,31 @@ it('일정 오류는 숨겨진 동안 재시도하지 않고 탭 복귀 시 한 
   await user.click(screen.getByRole('link', { name: /^일정$/ }));
   await screen.findByRole('list', { name: '세션 일정 목록' });
   await settle();
+  expect(calls).toBe(2);
+});
+
+it('첫 진입 전에 조회가 실패해도 화면 복귀 전에는 재시도하지 않는다', async () => {
+  let calls = 0;
+  server.use(
+    http.get(scheduleUrl, () => {
+      calls++;
+      return calls === 1
+        ? HttpResponse.json({}, { status: 500 })
+        : HttpResponse.json(scheduleFixture);
+    }),
+  );
+  const client = createAppQueryClient();
+  await expect(
+    client.fetchQuery(find4Options({ retry: 0, kyOptions: { throwHttpErrors: false } })),
+  ).rejects.toBeDefined();
+  const { user } = await renderStack('/schedule', client);
+  await screen.findByRole('button', { name: '다시 시도' });
+  await settle();
+  expect(calls).toBe(1);
+  await user.click(screen.getByRole('link', { name: /^홈$/ }));
+  await screen.findByRole('heading', { name: '홈' });
+  await user.click(screen.getByRole('link', { name: /^일정$/ }));
+  await screen.findByRole('list', { name: '세션 일정 목록' });
   expect(calls).toBe(2);
 });
 
