@@ -2,7 +2,7 @@
 
 import { CurrentWeekCard } from './current-week-card';
 
-import { IconChevronRightFill, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
+import { IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
 import {
   HStack,
   VStack,
@@ -18,7 +18,6 @@ import {
 } from '@seed-design/react';
 import { ActionButton, Badge } from '@yapp-plus/ui';
 import { useFlow } from '@stackflow/react';
-import { ActivityLink } from '@/app/navigation/activity-link';
 import { Image } from '@/app/navigation/image';
 import { TabLink } from '@/app/navigation/tab-link';
 import { useState } from 'react';
@@ -31,8 +30,6 @@ import {
   calendarDayItem,
   calendarDayLabel,
   calendarWeek,
-  chipBlue,
-  chipGray,
   container,
   content,
   helpBubbleArrowTip,
@@ -41,11 +38,6 @@ import {
   locationPin,
   locationRow,
   locationText,
-  noticeCard,
-  noticeChevron,
-  noticeContent,
-  noticesSectionTitle,
-  noticeTitle,
   quickCard,
   quickCardCol,
   quickCardContent,
@@ -64,6 +56,7 @@ import {
   sessionTitle,
   srOnly,
 } from './home-page.css';
+import { WeeklyNotices } from './weekly-notices';
 
 const weekSchedule = [
   { day: '일', date: 1, isToday: false, attended: false },
@@ -73,30 +66,6 @@ const weekSchedule = [
   { day: '목', date: 5, isToday: false, attended: false },
   { day: '금', date: 6, isToday: false, attended: false },
   { day: '토', date: 7, isToday: true, attended: false },
-];
-
-const weeklyNotices = [
-  {
-    id: 1,
-    tag: '세션',
-    isSession: true,
-    title: '5주차 개발-디자인 세션 공지',
-    noticeId: '3',
-  },
-  {
-    id: 2,
-    tag: '기타',
-    isSession: false,
-    title: '뒷풀이 참석 여부 수요 조사',
-    noticeId: '4',
-  },
-  {
-    id: 3,
-    tag: '기타',
-    isSession: false,
-    title: '운영진 공지 사항',
-    noticeId: '5',
-  },
 ];
 
 type AttendanceState = 'available' | 'attended';
@@ -353,39 +322,7 @@ export function HomePage({
           </HStack>
         </VStack>
 
-        <VStack as="section" gap="x3" aria-label="이번 주 공지">
-          <HStack justify="space-between" align="center">
-            <h2 className={noticesSectionTitle}>이번 주 공지</h2>
-          </HStack>
-
-          <VStack gap="x2_5">
-            {weeklyNotices.map((notice) => (
-              <ActivityLink
-                key={notice.id}
-                activityName="NoticeDetail"
-                activityParams={{ noticeId: notice.noticeId }}
-                className={noticeCard}
-                aria-label={notice.title}
-              >
-                <VStack gap="x2" className={noticeContent}>
-                  <HStack align="center" gap="x1_5">
-                    <Badge
-                      variant="weak"
-                      tone={notice.isSession ? 'informative' : 'neutral'}
-                      className={notice.isSession ? chipBlue : chipGray}
-                    >
-                      {notice.tag}
-                    </Badge>
-                  </HStack>
-                  <p className={noticeTitle}>{notice.title}</p>
-                </VStack>
-                <span className={noticeChevron} aria-hidden="true">
-                  <IconChevronRightFill width={20} height={20} />
-                </span>
-              </ActivityLink>
-            ))}
-          </VStack>
-        </VStack>
+        <WeeklyNotices />
       </VStack>
     </VStack>
   );

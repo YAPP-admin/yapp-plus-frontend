@@ -35,10 +35,10 @@
 
 독립 검증: 현재 주·지난주·다음주와 홈 공지 실패를 세션 영역과 함께 확인한다.
 
-- [ ] T015 [P] [US2] apps/web/src/pages/home/model/weekly-notices.test.ts에 서울 주간·0/1/4개·해외 시간대 변환 사례를 추가한다.
-- [ ] T016 [P] [US2] apps/web/src/pages/home/ui/home-page.test.tsx에 공지 독립 오류·상세 이동·주 변경 복귀·재조회 실패를 추가한다.
-- [ ] T017 [US2] apps/web/src/pages/home/model/weekly-notices.ts, ui/weekly-notices.tsx, ui/home-page.tsx에 ALL 첫 페이지·현재 주 필터·최대 3개·활성화/focus 갱신을 구현한다.
-- [ ] T018 [US2] apps/web/src/mocks/member-notice-handlers.ts에 주간 시나리오를 보완하고 specs/019-member-notices/validation.md에 check/build·화면·변경량·3단계 리뷰를 기록한다.
+- [x] T015 [P] [US2] apps/web/src/pages/home/model/weekly-notices.test.ts에 서울 주간·0/1/4개·해외 시간대 변환 사례를 추가한다.
+- [x] T016 [P] [US2] apps/web/src/pages/home/ui/home-page.test.tsx에 공지 독립 오류·상세 이동·주 변경 복귀·재조회 실패를 추가한다.
+- [x] T017 [US2] apps/web/src/pages/home/model/weekly-notices.ts, ui/weekly-notices.tsx, ui/home-page.tsx에 ALL 첫 페이지·현재 주 필터·최대 3개·활성화/focus 갱신을 구현한다.
+- [x] T018 [US2] apps/web/src/mocks/member-notice-handlers.ts에 주간 시나리오를 보완하고 specs/019-member-notices/validation.md에 check/build·화면·변경량·3단계 리뷰를 기록한다.
 
 ## 4단계 — US3 Markdown 렌더러 (P1, 상세의 선행 조건)
 

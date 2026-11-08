@@ -57,10 +57,12 @@ export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string
           { status: 400 },
         );
       }
+      const source =
+        noticeState === 'weekly' ? memberNoticeFixture.slice(0, 4) : memberNoticeFixture;
       const filtered =
         noticeState === 'empty'
           ? []
-          : memberNoticeFixture.filter((notice) => type === 'ALL' || notice.type === type);
+          : source.filter((notice) => type === 'ALL' || notice.type === type);
       const start = cursor === null ? 0 : Number(cursor);
       if (!Number.isSafeInteger(start) || start < 0) {
         return HttpResponse.json(

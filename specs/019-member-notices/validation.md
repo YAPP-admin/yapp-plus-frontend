@@ -57,3 +57,18 @@
 
 - 새 실행: web 전체 Vitest 45 파일·306 테스트 통과. `node --run check`와 web production build는 rebase 직후 통과했다.
 - rebase: `origin/main`의 `9008b08c` 위로 충돌 없이 재적용했다. 완료 HEAD `a1293495`, `git range-diff`에서 두 공지 커밋의 변경 보존을 확인했다.
+
+## 3단계 — US2 홈 주간 공지
+
+- 홈의 고정 공지 배열을 `list1Options` 첫 페이지 조회로 교체했다. 응답은 서울 일~토 범위로 거르고 원래 서버 순서를 유지한 채 세 건까지만 표시한다.
+- 목록 query의 기본 `staleTime`과 focus 재조회 정책을 사용한다. 주 경계를 계산해 별도로 강제 재조회하지 않는다.
+- 공지 Suspense/ErrorBoundary는 세션·출석 카드와 별도 경계에 두었다. 공지 조회 실패는 `ResultSection`의 다시 시도로 복구하며 다른 홈 콘텐츠를 가리지 않는다.
+- MSW `weekly` 시나리오는 첫 페이지의 네 건 fixture를 제공한다. 모델 테스트는 서울 토요일·일요일 경계, 지난주 제외, 0/1/4건을 확인하고 홈 테스트는 상세 링크와 독립 오류 복구를 확인한다.
+
+## 3단계 — US2 자동 검증
+
+- 새 실행: `mise exec -- pnpm --filter @yapp-plus/web test -- src/pages/home/model/weekly-notices.test.ts src/pages/home/ui/home-page.test.tsx`는 Vitest 설정상 web 전체 46개 파일·311개 테스트를 실행해 통과했다.
+- 새 실행: `mise exec -- node --run check` 통과. format:check는 864개 파일을 새로 검사했고, web lint·typecheck·test는 cache miss로 실행했다.
+- Turbo 재사용: check의 lint·typecheck는 나머지 6/7 패키지, test는 나머지 4/5 패키지가 캐시를 재사용했다. 캐시 결과를 이번 단계의 신규 검증으로 보지 않는다.
+- 새 실행: `mise exec -- pnpm --filter @yapp-plus/web build` 통과. Vite가 기존 500 kB 초과 chunk 경고를 출력했지만 빌드를 실패시키지 않았고, 이번 변경으로 번들 분할 정책을 변경하지 않았다.
+- `git diff --check` 통과. 로컬 브라우저·실기기·스크린 리더 검증은 Computer Use 브라우저가 localhost 연결을 제공하지 않아 미실행이며, 테스트 DOM과 production build로 대체 확인했다.

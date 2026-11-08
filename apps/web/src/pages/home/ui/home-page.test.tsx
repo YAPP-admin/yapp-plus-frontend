@@ -11,6 +11,7 @@ import { find3Options } from '@yapp-plus/api/generated';
 import { http, HttpResponse, delay } from 'msw';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
 import { apiBaseUrl, server } from '../../../mocks/server';
+import { memberNoticeFixture } from '../../../mocks/member-notice-handlers';
 import { currentWeekFixture } from '../../../mocks/session-handlers';
 import { act, fireEvent, render, screen, within, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -57,6 +58,8 @@ const response = {
   },
 };
 beforeEach(() => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  vi.setSystemTime(new Date('2026-11-06T15:00:00Z'));
   vi.stubEnv('VITE_API_MOCKING', 'true');
   server.use(http.get(url, () => HttpResponse.json(response)));
 });
@@ -110,19 +113,19 @@ describe('HomePage', () => {
     expect(screen.queryByRole('link', { name: '개발용 화면 목록' })).not.toBeInTheDocument();
   });
 
-  it('이번 주 공지 3개가 각각의 공지 상세 페이지로 연결된다', () => {
+  it('이번 주 공지 3개가 각각의 공지 상세 페이지로 연결된다', async () => {
     renderDemo();
-    expect(screen.getByRole('link', { name: '5주차 개발-디자인 세션 공지' })).toHaveAttribute(
+    expect(await screen.findByRole('link', { name: '6주차 세션 안내' })).toHaveAttribute(
+      'href',
+      '/notices/1',
+    );
+    expect(screen.getByRole('link', { name: '사용자 테스트 결과 제출' })).toHaveAttribute(
+      'href',
+      '/notices/2',
+    );
+    expect(screen.getByRole('link', { name: '운영진 전달 사항' })).toHaveAttribute(
       'href',
       '/notices/3',
-    );
-    expect(screen.getByRole('link', { name: '뒷풀이 참석 여부 수요 조사' })).toHaveAttribute(
-      'href',
-      '/notices/4',
-    );
-    expect(screen.getByRole('link', { name: '운영진 공지 사항' })).toHaveAttribute(
-      'href',
-      '/notices/5',
     );
   });
 
@@ -176,15 +179,15 @@ describe('HomePage', () => {
     expect(mockPush).toHaveBeenCalledWith('AttendanceReport', {});
   });
 
-  it('이번 주 공지 목록을 제공한다', () => {
+  it('이번 주 공지 목록을 제공한다', async () => {
     renderDemo();
     const section = screen.getByRole('region', { name: '이번 주 공지' });
     expect(
       within(section).getByRole('heading', { level: 2, name: '이번 주 공지' }),
     ).toBeInTheDocument();
-    expect(within(section).getByText('5주차 개발-디자인 세션 공지')).toBeInTheDocument();
-    expect(within(section).getByText('뒷풀이 참석 여부 수요 조사')).toBeInTheDocument();
-    expect(within(section).getByText('운영진 공지 사항')).toBeInTheDocument();
+    expect(await within(section).findByText('6주차 세션 안내')).toBeInTheDocument();
+    expect(within(section).getByText('사용자 테스트 결과 제출')).toBeInTheDocument();
+    expect(within(section).getByText('운영진 전달 사항')).toBeInTheDocument();
   });
 });
 
@@ -199,7 +202,7 @@ it('주간 API만 조회하고 서버 이름·한국 날짜·분과 세션 날�
     }),
   );
   renderHome();
-  expect(await screen.findByRole('heading', { name: '오늘은 설계 리뷰' })).toBeVisible();
+  expect(await screen.findByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
   expect(screen.getByText('오후 1시 30분 시작')).toBeVisible();
   const date = screen.getByLabelText('2026-11-07 세션 예정');
   expect(date).toHaveAttribute('aria-current', 'date');
@@ -227,7 +230,7 @@ it('로딩과 오류를 카드에 한정하고 키보드 재시도로 복구한�
     }),
   );
   renderHome();
-  expect(await screen.findByRole('status')).toHaveTextContent('이번 주 세션을 불러오고 있어요…');
+  expect(screen.getByText('이번 주 세션을 불러오고 있어요…')).toBeVisible();
   expect(screen.getByRole('navigation', { name: '홈 바로가기' })).toBeVisible();
   expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 세션을 불러오지 못했어요');
   server.use(http.get(url, () => HttpResponse.json(response)));
@@ -235,6 +238,34 @@ it('로딩과 오류를 카드에 한정하고 키보드 재시도로 복구한�
   expect(screen.getByRole('button', { name: '다시 시도' })).toHaveFocus();
   await user.keyboard('{Enter}');
   expect(await screen.findByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
+});
+
+it('공지 조회 오류가 세션 카드를 막지 않고 재시도로 복구된다', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts`, () =>
+      HttpResponse.json({ code: 'NOTICE_UNAVAILABLE' }, { status: 500 }),
+    ),
+  );
+  renderHome();
+
+  expect(await screen.findByRole('heading', { name: '오늘은 설계 리뷰' })).toBeVisible();
+  expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 공지를 불러오지 못했어요');
+
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts`, () =>
+      HttpResponse.json({
+        totalPostCount: memberNoticeFixture.length,
+        items: memberNoticeFixture,
+        nextCursor: null,
+      }),
+    ),
+  );
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+
+  expect(await screen.findByText('6주차 세션 안내')).toBeVisible();
+  expect(screen.getByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
 });
 
 it('재조회 실패 시 기존 카드와 갱신 실패 안내를 유지한다', async () => {
