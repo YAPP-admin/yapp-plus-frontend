@@ -4,6 +4,7 @@ import { client } from '@yapp-plus/api/generated';
 import { onUnhandledApiRequest } from '@yapp-plus/api/mocks';
 import { afterAll, afterEach, beforeAll, beforeEach } from 'vitest';
 import { apiBaseUrl, server } from './src/mocks/server';
+import { resetMemberNoticeHandlerState } from './src/mocks/member-notice-handlers';
 
 beforeAll(() => {
   server.listen({ onUnhandledRequest: onUnhandledApiRequest(apiBaseUrl) });
@@ -16,6 +17,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   server.resetHandlers();
+  resetMemberNoticeHandlerState();
 });
 
 afterAll(() => {
