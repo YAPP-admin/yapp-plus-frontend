@@ -45,7 +45,7 @@ jobs:
           persist-credentials: false
       # PR에서 도구 버전을 바꾸더라도 검사는 base의 고정 도구체인으로 실행합니다.
       - name: Set up toolchain
-        uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+        uses: jdx/mise-action@c2a87611a18de5b3828c5652fe268e992400cb5c # v4.3.0
         with:
           version: 2026.8.16
           working_directory: base
