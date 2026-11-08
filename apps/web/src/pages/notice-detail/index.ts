@@ -6,5 +6,6 @@ export {
   noticeIdFromParam,
   type MemberNoticeDetail,
 } from './model/notice-detail-query';
+export { useNoticeRead } from './model/use-notice-read';
 export { NoticeDetailHeader, type NoticeDetailHeaderProps } from './ui/notice-detail-header';
 export { NoticeDetailPage } from './ui/notice-detail-page';

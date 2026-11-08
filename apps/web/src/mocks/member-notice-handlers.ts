@@ -86,6 +86,7 @@ function memberNoticeDetail(postId: number): UserPostDetailResponse | undefined 
 
 export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string | null) {
   let failNextRequest = noticeState === 'error' || noticeState === 'next-error';
+  let read = false;
   const { pick } = createMswHandlers({ baseUrl });
   return [
     pick.list1(async ({ request }) => {
@@ -146,7 +147,23 @@ export function createMemberNoticeHandlers(baseUrl: string, noticeState?: string
           { status: 404 },
         );
       }
-      return HttpResponse.json(detail);
+      return HttpResponse.json({ ...detail, read });
+    }),
+    pick.acknowledge(({ params }) => {
+      if (noticeState === 'read-error') {
+        return HttpResponse.json(
+          { code: 'NOTICE_UNAVAILABLE', message: '개발용 읽음 저장 실패' },
+          { status: 503 },
+        );
+      }
+      if (!memberNoticeDetail(Number(params.postId))) {
+        return HttpResponse.json(
+          { code: 'POST_NOT_FOUND', message: '개발용 공지 상세 없음' },
+          { status: 404 },
+        );
+      }
+      read = true;
+      return new HttpResponse(null, { status: 204 });
     }),
   ];
 }

@@ -66,8 +66,8 @@
 
 - [ ] T029 [P] [US4] apps/web/src/pages/notice-detail/model/notice-read.test.ts에 204·유실·401 GET 복구·오프라인 예약 방지·세션/공지 소유자 검증을 추가한다.
 - [ ] T030 [P] [US4] apps/web/src/pages/notice-detail/ui/notice-detail-page.test.tsx에 연속 클릭·이미 읽음·저장 후 GET 실패·늦은 GET·이탈/재진입 회귀를 추가한다.
-- [ ] T031 [US4] apps/web/src/pages/notice-detail/model/notice-read.ts에 생성 mutation·온라인 차단·abort·callback 격리·read 확정·상세 강제 재조회와 실패 분리를 구현한다.
-- [ ] T032 [US4] apps/web/src/pages/notice-detail/ui/notice-detail-page.tsx에 저장 상태·비활성·명시적 재시도·접근성 안내를 연결하고 로컬 토글을 제거한다.
+- [x] T031 [US4] apps/web/src/pages/notice-detail/model/notice-read.ts에 생성 mutation·온라인 차단·abort·callback 격리·read 확정·상세 강제 재조회와 실패 분리를 구현한다.
+- [x] T032 [US4] apps/web/src/pages/notice-detail/ui/notice-detail-page.tsx에 저장 상태·비활성·명시적 재시도·접근성 안내를 연결하고 로컬 토글을 제거한다.
 - [ ] T033 [US4] apps/web/src/mocks/member-notice-handlers.ts에 상태 있는 읽음 응답과 테스트별 초기화를 연결한다.
 - [ ] T034 [US4] apps/web/src/features/auth/model/session-queries.test.ts에 공지 GET의 기존 401 복구와 계정 전환 중 응답 격리를 검증하고 specs/019-member-notices/validation.md에 결과를 기록한다.
 

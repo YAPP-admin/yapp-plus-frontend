@@ -100,3 +100,9 @@
 - Turbo 재사용: check의 나머지 lint·typecheck·test 작업은 캐시를 재사용했다. 캐시 결과를 이번 단계의 신규 검증으로 보지 않는다.
 - 새 실행: `mise exec -- pnpm --filter @yapp-plus/web build`, `git diff --check` 통과. activities chunk는 583.62 kB(gzip 172.51 kB)이며 기존 500 kB 초과 경고가 유지된다.
 - 로컬 브라우저·실기기·스크린 리더 검증은 Computer Use 브라우저가 localhost 연결을 제공하지 않아 미실행이다. 테스트 DOM과 production build로 대체 확인했다. 6단계 읽음 저장 연동은 사용자 리뷰 이후에만 시작한다.
+
+## 6단계 — US4 읽음 저장 (진행 중)
+
+- 생성 `acknowledgeMutation`으로 `PUT /api/posts/{postId}/read`를 연결했다. 이미 읽은 공지·오프라인·진행 중 중복 요청은 차단하고, 성공한 204 응답에서만 현재 상세 cache의 `read=true`를 확정한 뒤 활성 상세 query를 재조회한다. `readCount`는 로컬에서 증가시키지 않는다.
+- mutation은 자동 재시도와 재연결 대기를 사용하지 않는다. 화면 해제 시 AbortController로 요청을 중단하며, native 사용자·세션 식별자가 바뀐 뒤의 callback은 cache 변경을 건너뛴다. 저장 실패는 본문을 유지한 채 명시적 오류를 보이고 버튼으로 재시도할 수 있다.
+- 새 실행: `node --run check`, web production build, `git diff --check` 통과. web은 49개 파일·321개 테스트를 새로 실행해 통과했다. build는 activities 585.18 kB(gzip 173.30 kB)의 기존 500 kB 초과 경고를 유지한다.

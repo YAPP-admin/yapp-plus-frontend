@@ -2,7 +2,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -52,7 +52,34 @@ it('API 공지의 Markdown·제출 안내·첨부 이미지를 표시한다', as
     'src',
     'https://images.example.com/notice-1.png',
   );
-  expect(screen.getByRole('button', { name: '확인 기능 준비 중' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '확인했어요' })).toBeEnabled();
+});
+
+it('읽음 저장 성공 뒤 서버 읽음 상태를 다시 조회하고 인원 수를 임의로 늘리지 않는다', async () => {
+  const user = userEvent.setup();
+  renderPage();
+
+  await user.click(await screen.findByRole('button', { name: '확인했어요' }));
+
+  await waitFor(() => expect(screen.getByRole('button', { name: '확인했어요' })).toBeDisabled());
+  expect(screen.getByText('지금까지 13명이 확인했어요!')).toBeVisible();
+});
+
+it('읽음 저장 실패는 기존 공지를 유지하고 사용자가 다시 시도할 수 있게 한다', async () => {
+  const user = userEvent.setup();
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts/2`, () => HttpResponse.json(memberNoticeDetailFixture)),
+    http.put(`${apiBaseUrl}/api/posts/2/read`, () =>
+      HttpResponse.json({ code: 'FAILED' }, { status: 503 }),
+    ),
+  );
+  renderPage();
+
+  await user.click(await screen.findByRole('button', { name: '확인했어요' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('확인 저장에 실패했어요.');
+  expect(screen.getByRole('button', { name: '확인했어요' })).toBeEnabled();
+  expect(screen.getByText('지금까지 13명이 확인했어요!')).toBeVisible();
 });
 
 it('첨부 이미지 로드 실패 시 대체 안내를 표시한다', async () => {
