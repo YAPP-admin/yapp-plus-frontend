@@ -1,4 +1,11 @@
-import { detail2, find3, find4, find3Options, find4Options } from '@yapp-plus/api/generated';
+import {
+  detail2,
+  detail2Options,
+  find3,
+  find4,
+  find3Options,
+  find4Options,
+} from '@yapp-plus/api/generated';
 import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, expect, it, vi } from 'vitest';
@@ -192,6 +199,13 @@ const sessionQueries = [
     options: find4Options,
     fetch: (client: QueryClient, auth: AuthSession) =>
       client.fetchQuery(find4Options(nativeAuthClientOptions(auth))),
+  },
+  {
+    name: '공지 상세',
+    options: (config: Parameters<typeof find3Options>[0]) =>
+      detail2Options({ ...config, path: { postId: 2 } }),
+    fetch: (client: QueryClient, auth: AuthSession) =>
+      client.fetchQuery(detail2Options({ ...nativeAuthClientOptions(auth), path: { postId: 2 } })),
   },
 ];
 

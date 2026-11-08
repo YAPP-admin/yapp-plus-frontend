@@ -22,6 +22,7 @@ export {
 } from './model/mutations';
 export {
   NativeAuthSessionProvider,
+  nativeSessionQueryKey,
   nativeSessionQueryOptions,
   useNativeAuthSession,
   type NativeAuthSessionPhase,

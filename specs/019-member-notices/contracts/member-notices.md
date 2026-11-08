@@ -38,8 +38,8 @@ apiOptions를 전달하고 GET 401만 기존 Native 복구·1회 재요청을 �
 
 ## 읽음·경합·복구
 
-- 저장 전 read=false·현재 세션/화면·온라인 여부를 확인한다. retry=false, networkMode=always와 오프라인 사전 차단으로 재연결 대기 저장을 만들지 않는다.
-- 요청은 postId·userId·sessionId·화면 수명에 귀속한다. 해제 시 abort하고 늦은 callback은 무시한다. 취소를 서버 저장 취소로 해석하지 않는다.
+- 저장 전 read=false·현재 세션·온라인 여부를 확인한다. mutation의 기본값(자동 재시도 없음)을 사용하고, 오프라인에서는 버튼을 비활성화해 저장을 시작하지 않는다.
+- 요청 결과는 postId·userId·sessionId에 귀속한다. 취소 요청을 별도로 만들지 않으며, 계정 전환 뒤 늦은 callback은 현재 cache를 갱신하지 않는다.
 - 204면 현재 상세의 read=true만 확정하고 상세를 재조회한다. readCount는 로컬 증가시키지 않는다.
 - 뒤따른 GET 실패는 확인 완료를 유지하고 인원 갱신 재시도를 보여준다. 이전 GET이 늦게 read=false를 덮지 않도록 취소·재조회 순서를 보장한다.
 - PUT 응답 유실은 결과 불명 오류로 표시한다. 사용자 재시도와 서버 멱등성으로 중복 기록을 막는다.
