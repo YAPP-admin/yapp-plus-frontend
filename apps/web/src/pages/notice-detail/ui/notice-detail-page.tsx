@@ -1,138 +1,100 @@
+/** 회원 공지 상세의 API 조회 결과를 기본 정보와 본문으로 표시한다. */
 'use client';
 
-import { useState } from 'react';
-import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
-import { NoticeErrorPage } from '@/pages/notices';
-import { getNoticeDetailById, type NoticeDetail } from '../model/notice-detail-data';
+import { useQuery } from '@tanstack/react-query';
+import { useNativeAuthSession } from '@/features/auth';
+import {
+  NoticeErrorContent,
+  memberNoticeCategoryLabel,
+  memberNoticeDateLabel,
+} from '@/features/member-notice';
+import { memberNoticeDetailQueryOptions, noticeIdFromParam } from '../model/notice-detail-query';
 import {
   assignmentChip,
-  checkButtonConfirmed,
-  checkButtonUnconfirmed,
-  confirmCount,
-  confirmQuestion,
-  confirmSection,
-  confirmTextGroup,
   container,
   contentSection,
   dateText,
-  dDayChip,
   etcChip,
   headerSection,
-  metaBox,
   metaInfoRow,
-  metaLabel,
-  metaLink,
-  metaRow,
-  metaValue,
   sessionChip,
   titleText,
 } from './notice-detail-page.css';
 import { NoticeDetailHeader } from './notice-detail-header';
 import { NoticeMarkdown } from './notice-markdown';
 
-export type NoticeDetailPageProps = {
-  noticeId: string;
-  initialDetail?: NoticeDetail;
-};
+/** Stackflow의 문자열 ID를 검증한 뒤 인증된 세션으로 상세 API를 조회한다. */
+export function NoticeDetailPage({ noticeId }: { noticeId: string }) {
+  const { apiOptions, phase } = useNativeAuthSession();
+  const postId = noticeIdFromParam(noticeId);
+  const canQuery =
+    phase === 'SIGNED_IN' ||
+    (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
+  const { data, isError, isPending } = useQuery({
+    ...memberNoticeDetailQueryOptions(postId ?? 0, apiOptions),
+    enabled: Boolean(postId && canQuery),
+  });
 
-function getCategoryChipClass(category: NoticeDetail['category']) {
+  if (!postId) {
+    return <NoticeDetailErrorContent />;
+  }
+
+  if (!canQuery) {
+    return (
+      <NoticeDetailErrorContent descriptionText="YAPP+ 앱에 로그인한 후 공지를 확인할 수 있어요." />
+    );
+  }
+
+  if (isPending) {
+    return <output>공지 상세를 불러오고 있어요.</output>;
+  }
+
+  if (isError || !data) {
+    return (
+      <NoticeDetailErrorContent descriptionText="공지 상세를 불러오지 못했어요. 잠시 후 다시 시도해 주세요." />
+    );
+  }
+
+  const categoryChipClass = getCategoryChipClass(data.type);
+
+  return (
+    <>
+      <NoticeDetailHeader categoryLabel={memberNoticeCategoryLabel(data.type)} />
+      <main className={container}>
+        <section className={headerSection}>
+          <h1 className={titleText}>{data.title}</h1>
+          <div className={metaInfoRow}>
+            <span className={categoryChipClass}>{memberNoticeCategoryLabel(data.type)}</span>
+            <time className={dateText} dateTime={data.createdDate}>
+              {memberNoticeDateLabel(data.createdDate)}
+            </time>
+          </div>
+        </section>
+        <article className={contentSection}>
+          <NoticeMarkdown content={data.contentMarkdown} />
+        </article>
+      </main>
+    </>
+  );
+}
+
+function getCategoryChipClass(category: 'ASSIGNMENT' | 'SESSION' | 'OPERATION') {
   switch (category) {
     case 'ASSIGNMENT':
       return assignmentChip;
     case 'SESSION':
       return sessionChip;
-    case 'ETC':
+    case 'OPERATION':
+      return etcChip;
     default:
       return etcChip;
   }
 }
 
-export function NoticeDetailPage({ noticeId, initialDetail }: NoticeDetailPageProps) {
-  const detail = initialDetail ?? getNoticeDetailById(noticeId);
-
-  if (!detail) {
-    return <NoticeErrorPage />;
-  }
-
-  return <NoticeDetailContent detail={detail} />;
-}
-
-function NoticeDetailContent({ detail }: { detail: NoticeDetail }) {
-  const [isConfirmed, setIsConfirmed] = useState(false);
-  const [confirmedCount, setConfirmedCount] = useState(detail.confirmedCount);
-
-  const handleToggleConfirm = () => {
-    if (isConfirmed) {
-      setIsConfirmed(false);
-      setConfirmedCount((prev) => Math.max(0, prev - 1));
-    } else {
-      setIsConfirmed(true);
-      setConfirmedCount((prev) => prev + 1);
-    }
-  };
-
-  const categoryChipClass = getCategoryChipClass(detail.category);
-
+function NoticeDetailErrorContent({ descriptionText }: { descriptionText?: string }) {
   return (
-    <>
-      <NoticeDetailHeader categoryLabel={detail.categoryLabel} />
-
-      <main className={container}>
-        <section className={headerSection}>
-          <h1 className={titleText}>{detail.title}</h1>
-          <div className={metaInfoRow}>
-            <span className={categoryChipClass}>{detail.categoryLabel}</span>
-            {detail.dDay ? <span className={dDayChip}>{detail.dDay}</span> : null}
-            <time className={dateText}>{detail.date}</time>
-          </div>
-        </section>
-
-        {detail.metaBox ? (
-          <section className={metaBox} aria-label="제출 안내">
-            <div className={metaRow}>
-              <span className={metaLabel}>제출 기한</span>
-              <span className={metaValue}>{detail.metaBox.deadline}</span>
-            </div>
-            <div className={metaRow}>
-              <span className={metaLabel}>제출 대상</span>
-              <span className={metaValue}>{detail.metaBox.target}</span>
-            </div>
-            <div className={metaRow}>
-              <span className={metaLabel}>제출 방법</span>
-              <span className={metaValue}>
-                <a
-                  href={detail.metaBox.submissionMethod.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={metaLink}
-                >
-                  🔗 {detail.metaBox.submissionMethod.label}
-                </a>
-              </span>
-            </div>
-          </section>
-        ) : null}
-
-        <article className={contentSection}>
-          <NoticeMarkdown content={detail.content.join('\n\n')} />
-        </article>
-
-        <section className={confirmSection} aria-label="공지 확인">
-          <div className={confirmTextGroup}>
-            <p className={confirmQuestion}>공지를 다 읽으셨나요?</p>
-            <p className={confirmCount}>지금까지 {confirmedCount}명이 확인했어요!</p>
-          </div>
-          <button
-            type="button"
-            className={isConfirmed ? checkButtonConfirmed : checkButtonUnconfirmed}
-            onClick={handleToggleConfirm}
-            aria-pressed={isConfirmed}
-          >
-            <IconCheckmarkCircleFill width={18} height={18} />
-            <span>확인했어요</span>
-          </button>
-        </section>
-      </main>
-    </>
+    <main className={container}>
+      <NoticeErrorContent descriptionText={descriptionText} />
+    </main>
   );
 }
