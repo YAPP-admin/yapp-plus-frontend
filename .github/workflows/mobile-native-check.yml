@@ -77,7 +77,17 @@ jobs:
           version: 2026.8.16
           mise_dir: ${{ runner.temp }}/mise-api
           working_directory: base
-          install_args: --locked
+          install_args: --locked node
+      # pnpm의 GitHub 릴리스 다운로드도 504가 발생하므로 npm 레지스트리를 임시로 사용합니다.
+      # 다운로드 정상화 후 이 단계를 제거하고 mise install의 node 제한을 해제합니다.
+      - name: Install pinned pnpm from npm registry
+        shell: bash
+        run: |
+          package_manager=$(jq -er '.packageManager | select(test("^pnpm@[0-9]+\\.[0-9]+\\.[0-9]+$"))' base/package.json)
+          npm install --global --prefix "$RUNNER_TEMP/pnpm" --ignore-scripts \
+            --registry=https://registry.npmjs.org "$package_manager"
+          test "$("$RUNNER_TEMP/pnpm/bin/pnpm" --version)" = "${package_manager#pnpm@}"
+          echo "$RUNNER_TEMP/pnpm/bin" >> "$GITHUB_PATH"
       # 검사 대상 PR이 자신의 버전 검사 로직을 동시에 완화하지 않도록 base 코드를 보존합니다.
       - name: Keep base policy
         shell: bash
