@@ -1,4 +1,4 @@
-import { useActivity, useStack, useFlow, useStepFlow } from '@stackflow/react';
+import { useActivity, useFlow, useStepFlow } from '@stackflow/react';
 import { type MouseEvent, type ReactNode } from 'react';
 import { isTabName, tabUrl, type TabName, type TabsState } from './tab';
 import { useHistoryTick } from '@stackflow/plugin-history-sync';
@@ -13,19 +13,18 @@ type TabLinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' |
 /** 탭 history를 추가하지 않고 기존 Tabs Activity의 step만 교체합니다. */
 export function TabLink({ children, onClick, params, tab, ...props }: TabLinkProps) {
   const { requestHistoryTick } = useHistoryTick();
-  const { name: currentActivityName } = useActivity();
+  const currentActivity = useActivity();
   const flow = useFlow();
-  const stack = useStack();
   const tabsStep = useStepFlow('Tabs');
-  const tabsActivity = stack.activities.find((activity) => activity.name === 'Tabs');
-  const currentParams = readTabsState(tabsActivity?.steps.at(-1)?.params ?? tabsActivity?.params);
-  const nextParams = { ...currentParams, ...params, initialTab: tab } satisfies TabsState;
+  const nextParams = { ...params, initialTab: tab } satisfies TabsState;
 
   function replaceTabStep() {
-    if (!tabsActivity) {
-      return;
-    }
-    tabsStep.replaceStep(nextParams, { targetActivityId: tabsActivity.id });
+    // Stackflow가 현재 활성 Tabs를 대상으로 선택하게 하고 그 화면의 조회 조건을 유지합니다.
+    tabsStep.replaceStep((currentParams) => ({
+      ...readTabsState(currentParams),
+      ...params,
+      initialTab: tab,
+    }));
   }
 
   function handleClick(event: MouseEvent<HTMLAnchorElement>) {
@@ -42,12 +41,12 @@ export function TabLink({ children, onClick, params, tab, ...props }: TabLinkPro
     }
 
     event.preventDefault();
-    if (currentActivityName === 'Tabs' && tabsActivity) {
+    if (currentActivity.name === 'Tabs') {
       replaceTabStep();
       return;
     }
 
-    if (currentActivityName === 'Alerts' && tabsActivity) {
+    if (currentActivity.name === 'Alerts') {
       // pop이 예약한 history 이동 뒤에 같은 Stack의 step 교체를 실행합니다.
       flow.pop({ animate: false });
       requestHistoryTick((resolve) => {

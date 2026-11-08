@@ -136,7 +136,7 @@ describe('LoginPage', () => {
     expect(auth.signInMutate).not.toHaveBeenCalled();
   });
 
-  it('native 로그인 요청을 전달하고 성공하면 완료 화면으로 이동한다', () => {
+  it('native 로그인 요청을 전달하고 성공해도 화면 이동은 인증 상태 경계에 맡긴다', () => {
     auth.useNativeAuthSession.mockReturnValue({
       isNative: true,
       phase: 'SIGNED_OUT',
@@ -146,7 +146,7 @@ describe('LoginPage', () => {
 
     fireEvent.click(screen.getByRole('button', { name: '구글로 계속하기' }));
 
-    expect(flow.replace).toHaveBeenCalledWith('Tabs', { initialTab: 'home' });
+    expect(flow.replace).not.toHaveBeenCalled();
     expect(auth.signInMutate).toHaveBeenCalledWith('google');
   });
 });
