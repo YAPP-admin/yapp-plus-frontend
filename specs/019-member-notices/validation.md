@@ -72,3 +72,18 @@
 - Turbo 재사용: check의 lint·typecheck는 나머지 6/7 패키지, test는 나머지 4/5 패키지가 캐시를 재사용했다. 캐시 결과를 이번 단계의 신규 검증으로 보지 않는다.
 - 새 실행: `mise exec -- pnpm --filter @yapp-plus/web build` 통과. Vite가 기존 500 kB 초과 chunk 경고를 출력했지만 빌드를 실패시키지 않았고, 이번 변경으로 번들 분할 정책을 변경하지 않았다.
 - `git diff --check` 통과. 로컬 브라우저·실기기·스크린 리더 검증은 Computer Use 브라우저가 localhost 연결을 제공하지 않아 미실행이며, 테스트 DOM과 production build로 대체 확인했다.
+
+## 4단계 — US3 Markdown 렌더러
+
+- `react-markdown` 10.1.0을 pnpm catalog와 web 의존성으로 고정했다. 본문은 상세 화면의 Markdown 문자열만 받는 독립 UI이며, 현재 고정 fixture에도 연결해 표시를 확인했다. 실제 상세 API 연결과 고정 fixture 제거는 5단계에서 수행한다.
+- `skipHtml`로 raw HTML·JSX를 무시한다. 링크와 이미지는 절대 HTTP(S) URL만 허용하고, 링크는 새 창의 `noopener noreferrer`로 연다. 허용하지 않은 URL과 이미지 로드 실패는 텍스트 대체 표시로 남긴다.
+- 본문 최상위 h1은 화면 제목 아래 h2로, h2는 h3로 낮춘다. 문단·목록·인용·인라인/블록 코드·긴 링크의 읽기 레이아웃을 전용 스타일로 제공한다.
+- 사용자 선택으로 `react-markdown`을 유지한다. 이 패키지는 unified 기반 확장성과 HTML 미해석 경계를 제공하지만 transitive 의존성이 많아, 이번 단계는 PR 크기 예외를 적용한다.
+
+## 4단계 — US3 자동 검증
+
+- 새 실행: `mise exec -- pnpm --filter @yapp-plus/web test -- src/pages/notice-detail/ui/notice-markdown.test.tsx`는 Vitest 설정상 web 전체 47개 파일·314개 테스트를 실행해 통과했다.
+- 새 실행: `mise exec -- pnpm --filter @yapp-plus/web lint`, `mise exec -- pnpm --filter @yapp-plus/web typecheck`, `mise exec -- pnpm --filter @yapp-plus/web build`, `git diff --check` 통과했다. build는 500 kB 초과 chunk 경고를 출력했다.
+- 상세 fixture 연결 후 build에서 activities chunk는 462.03 kB(gzip 135.54 kB)에서 582.48 kB(gzip 172.94 kB)로 증가했다. index chunk는 523.99 kB(gzip 157.66 kB)에서 gzip 157.67 kB로 사실상 동일하다. 사용자 승인 범위 안에서 이 비용을 유지하며, 실제 상세 query 연결 뒤 다시 측정한다.
+- catalog·package·lockfile은 +667/-202줄이고 렌더러·스타일·테스트는 신규 244줄이다. 합계 +911/-202줄로 일반 PR 제한을 초과하며, 사용자가 `react-markdown` 유지를 선택해 예외를 승인했다.
+- 로컬 브라우저·실기기·스크린 리더 검증은 Computer Use 브라우저가 localhost 연결을 제공하지 않아 미실행이다. 컴포넌트 테스트에서 링크 접근 이름·새 창 속성과 이미지 오류 대체 문구를 확인했다.

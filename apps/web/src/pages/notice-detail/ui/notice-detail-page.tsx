@@ -24,11 +24,11 @@ import {
   metaLink,
   metaRow,
   metaValue,
-  paragraph,
   sessionChip,
   titleText,
 } from './notice-detail-page.css';
 import { NoticeDetailHeader } from './notice-detail-header';
+import { NoticeMarkdown } from './notice-markdown';
 
 export type NoticeDetailPageProps = {
   noticeId: string;
@@ -114,11 +114,7 @@ function NoticeDetailContent({ detail }: { detail: NoticeDetail }) {
         ) : null}
 
         <article className={contentSection}>
-          {detail.content.map((p, index) => (
-            <p key={index} className={paragraph}>
-              {p}
-            </p>
-          ))}
+          <NoticeMarkdown content={detail.content.join('\n\n')} />
         </article>
 
         <section className={confirmSection} aria-label="공지 확인">
