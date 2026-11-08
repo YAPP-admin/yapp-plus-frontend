@@ -199,6 +199,20 @@ it('조회 실패는 보호 URL을 유지하며 안내하고 수동 복구 후 �
   expect(bridge.getSession).toHaveBeenCalledTimes(2);
 });
 
+it('재시도 가능한 세션 조회 실패에서 로그인 화면으로 이동할 수 있다', async () => {
+  const client = new QueryClient();
+  bridge.getSession.mockResolvedValue({
+    status: 'UNAVAILABLE',
+    code: 'NETWORK',
+    retryable: true,
+  });
+  window.history.replaceState(null, '', '/team-attendance/upload');
+  mount(client);
+  await userEvent.click(await screen.findByRole('button', { name: '로그인 화면으로' }));
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+  await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+});
+
 it('미지원 앱에서는 보호 내용을 숨기고 재시도 없이 업데이트를 안내한다', async () => {
   bridge.getSession.mockResolvedValue({
     status: 'UNAVAILABLE',

@@ -2,8 +2,11 @@ import { ActionButton, Text } from '@yapp-plus/ui';
 import { VStack } from '@seed-design/react';
 import { useNativeAuthSession } from '../model/session';
 
-/** 인증 여부를 확인할 수 없을 때 보호 내용을 대신하는 복구 안내입니다. */
-export function NativeSessionRecovery() {
+/**
+ * 인증 여부를 확인할 수 없을 때 보호 내용을 대신하는 복구 안내입니다.
+ * 로그인 이동은 native에 저장된 갱신 자격을 삭제하지 않고 웹 화면 전환만 요청합니다.
+ */
+export function NativeSessionRecovery({ onGoToLogin }: { onGoToLogin: () => void }) {
   const { unsupported, canRetry, isRecovering, retry } = useNativeAuthSession();
   return (
     <VStack as="main" gap="x4" p="x6" align="center" justify="center" minHeight="100dvh">
@@ -18,8 +21,13 @@ export function NativeSessionRecovery() {
         </Text>
       </output>
       {canRetry && (
-        <ActionButton size="large" disabled={isRecovering} onClick={retry}>
+        <ActionButton type="button" size="large" disabled={isRecovering} onClick={retry}>
           {isRecovering ? '확인 중…' : '다시 시도'}
+        </ActionButton>
+      )}
+      {!unsupported && (
+        <ActionButton type="button" variant="neutralWeak" size="large" onClick={onGoToLogin}>
+          로그인 화면으로
         </ActionButton>
       )}
     </VStack>
