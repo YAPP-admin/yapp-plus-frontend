@@ -1,4 +1,8 @@
-import { find3QueryKey } from '@yapp-plus/api/generated';
+import { createSessionFixtures } from '@/mocks/session-fixtures';
+import { createAttendanceFixtures } from '@/mocks/attendance-fixtures';
+import { createSessionHandlers, currentWeekFixture } from '@/mocks/session-handlers';
+import { createMemberAttendanceHandlers } from '@/mocks/member-attendance-handlers';
+import { find3QueryKey, find5Options } from '@yapp-plus/api/generated';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider, onlineManager } from '@tanstack/react-query';
@@ -7,7 +11,6 @@ import { createAppQueryClient } from '@/app/providers';
 import { http, HttpResponse } from 'msw';
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '@/mocks/server';
-import { currentWeekFixture } from '@/mocks/session-handlers';
 import { AttendanceCodeSheet } from './home-demo-sheets';
 import { CurrentWeekCard } from './current-week-card';
 
@@ -301,3 +304,27 @@ it.each(['오류 후 닫기', '화면 제거'])(
     expect(onComplete).not.toHaveBeenCalled();
   },
 );
+
+it('목업 출석 성공은 홈 완료 표시와 이미 조회한 출석 내역을 함께 갱신한다', async () => {
+  const fixtures = createSessionFixtures(Date.parse('2026-11-07T13:30:00+09:00'));
+  const attendance = createAttendanceFixtures(fixtures);
+  server.use(
+    ...createSessionHandlers(apiBaseUrl, undefined, fixtures, attendance),
+    ...createMemberAttendanceHandlers(apiBaseUrl, undefined, undefined, attendance),
+  );
+  const view = setup();
+  const options = { ...find5Options(), staleTime: Infinity };
+  const before = await view.client.fetchQuery(options);
+  expect(before.items.find(({ sessionId }) => sessionId === 39902)?.attendanceStatus).toBe(
+    'UNDECIDED',
+  );
+  const user = await enter('1234');
+  await user.keyboard('{Enter}');
+  await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
+  view.close();
+  expect(await screen.findByRole('button', { name: '출석했어요!' })).toBeDisabled();
+  const after = await view.client.fetchQuery(options);
+  expect(after.items.find(({ sessionId }) => sessionId === 39902)?.attendanceStatus).toBe(
+    'PRESENT',
+  );
+});
