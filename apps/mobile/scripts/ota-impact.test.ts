@@ -206,7 +206,6 @@ describe('실제 workflow와 Turbo의 OTA 영향 판정', () => {
     ['packages/config/probe.ts', true],
     ['patches/probe.patch', true],
     ['.github/actions/setup-eas/probe.yml', true],
-    ['.github/actions/setup-toolchain/probe.yml', true],
   ] as const)('%s 변경의 게시 여부는 %s', (path, publish) => {
     const base = git('rev-parse', 'HEAD');
     write(path, 'fixture\n');

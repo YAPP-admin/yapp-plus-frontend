@@ -8,8 +8,7 @@
     "patches/**",
     ".github/workflows/mobile-delivery.yml",
     ".github/workflows/mobile-manual.yml",
-    ".github/actions/setup-eas/**",
-    ".github/actions/setup-toolchain/**"
+    ".github/actions/setup-eas/**"
   ],
   "tasks": {
     "build": {
