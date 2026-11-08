@@ -105,7 +105,11 @@ mise exec -- pnpm dlx eas-cli@27.4.1 submit \
 [배포 흐름·복구 흐름·브랜치별 진행 상태](../../specs/019-mobile-testflight-delivery/overview.md)를 Mermaid 다이어그램으로 확인할 수 있다.
 
 main push의 CI 성공 후 `mobile-delivery.yml`이 iOS `testflight` 채널로 OTA를 게시한다.
-Expo 공식 Action이 고정 EAS CLI를 설치·인증한다. 저장소의 `EXPO_TOKEN`을 준비해야 한다.
+공통 `setup-eas` Action이 pnpm으로 EAS CLI 27.4.1을 임시 작업 공간에 설치한다.
+Expo Action의 임시 설치에 저장소의 스크립트 정책이 전달되지 않아 발생하는 오류를 피하도록
+`dtrace-provider@0.8.8`과 `protobufjs@7.6.6`의 설치 스크립트를 명시적으로 차단한다.
+EAS CLI 업그레이드 시 이 정책을 재검토한다. `EXPO_TOKEN`은 배포 명령 단계에만 전달한다.
+설치 수정에 문제가 있으면 자동 OTA를 중지하고 수정 전 커밋으로 되돌린 뒤 재검증한다.
 PR의 `Mobile native compatibility` 검사를 필수 검사로 설정하고 main 직접 push를 제한한다.
 자동 빌드 분기·활성화 기준 파일·설치 확인 승인은 없다. 네이티브 변경 시 PR에서 앱 버전을
 증가시키고, 새 버전의 로컬 빌드와 TestFlight 제출은 운영자가 실행한다.

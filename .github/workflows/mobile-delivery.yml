@@ -69,13 +69,9 @@ jobs:
           install_args: --locked
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --ignore-scripts
-      # CLI 설치·인증은 Expo 공식 Action에 맡깁니다. token은 이 배포 job에만 전달합니다.
+      # CLI 설치에는 인증 정보가 필요하지 않습니다. token은 실제 게시 단계에만 전달합니다.
       - name: Set up EAS CLI
-        uses: expo/expo-github-action@c7b66a9c327a43a8fa7c0158e7f30d6040d2481e # v8.2.1
-        with:
-          eas-version: 27.4.1
-          packager: pnpm
-          token: ${{ secrets.EXPO_TOKEN }}
+        uses: ./.github/actions/setup-eas
       # 설치 중 main이 바뀌었으면 게시하지 않습니다. 다음 최신 CI 성공이 게시를 담당합니다.
       - name: Recheck latest main
         id: latest
@@ -94,6 +90,7 @@ jobs:
         if: steps.latest.outputs.publish == 'true'
         working-directory: apps/mobile
         env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           SOURCE_SHA: ${{ needs.candidate.outputs.sha }}
         run: >-
           eas update --platform ios --channel testflight --environment production
