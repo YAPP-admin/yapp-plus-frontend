@@ -307,6 +307,43 @@ import type {
   WithdrawResponse,
 } from '../types.gen';
 
+export type MutationKey<TOptions extends Partial<Options>> = [
+  Pick<TOptions, 'baseUrl' | 'body' | 'headers' | 'path' | 'query'> & {
+    _id: string;
+    tags?: ReadonlyArray<string>;
+  },
+];
+
+const createMutationKey = <TOptions extends Partial<Options>>(
+  id: string,
+  options?: TOptions,
+  tags?: ReadonlyArray<string>,
+): [MutationKey<TOptions>[0]] => {
+  const params: MutationKey<TOptions>[0] = {
+    _id: id,
+    baseUrl: options?.baseUrl || (options?.client ?? client).getConfig().baseUrl,
+  };
+  if (tags) {
+    params.tags = tags;
+  }
+  if (options?.body) {
+    params.body = options.body;
+  }
+  if (options?.headers) {
+    params.headers = options.headers;
+  }
+  if (options?.path) {
+    params.path = options.path;
+  }
+  if (options?.query) {
+    params.query = options.query;
+  }
+  return [params];
+};
+
+export const removeMutationKey = (options?: Partial<Options<RemoveData>>) =>
+  createMutationKey('remove', options);
+
 /**
  * 현재 세션 기기 등록 해제
  *
@@ -324,9 +361,13 @@ export const removeMutation = (
       });
       return data;
     },
+    mutationKey: removeMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const registerMutationKey = (options?: Partial<Options<RegisterData>>) =>
+  createMutationKey('register', options);
 
 /**
  * 현재 세션 기기 등록·갱신
@@ -349,9 +390,13 @@ export const registerMutation = (
       });
       return data;
     },
+    mutationKey: registerMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const acknowledgeMutationKey = (options?: Partial<Options<AcknowledgeData>>) =>
+  createMutationKey('acknowledge', options);
 
 /**
  * 사용자 공지 읽음 처리
@@ -374,9 +419,13 @@ export const acknowledgeMutation = (
       });
       return data;
     },
+    mutationKey: acknowledgeMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const deleteMutationKey = (options?: Partial<Options<DeleteData>>) =>
+  createMutationKey('delete', options);
 
 /**
  * Team 삭제
@@ -395,6 +444,7 @@ export const deleteMutation = (
       });
       return data;
     },
+    mutationKey: deleteMutationKey(options),
   };
   return mutationOptions;
 };
@@ -457,6 +507,9 @@ export const findOptions = (options: Options<FindData>) =>
     queryKey: findQueryKey(options),
   });
 
+export const updateMutationKey = (options?: Partial<Options<UpdateData>>) =>
+  createMutationKey('update', options);
+
 /**
  * Team 정보 수정
  */
@@ -472,9 +525,13 @@ export const updateMutation = (
       });
       return data;
     },
+    mutationKey: updateMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const replaceMembersMutationKey = (options?: Partial<Options<ReplaceMembersData>>) =>
+  createMutationKey('replaceMembers', options);
 
 /**
  * Team 팀원 전체 교체
@@ -497,9 +554,13 @@ export const replaceMembersMutation = (
       });
       return data;
     },
+    mutationKey: replaceMembersMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const delete1MutationKey = (options?: Partial<Options<Delete1Data>>) =>
+  createMutationKey('delete1', options);
 
 /**
  * 기수 세션 삭제
@@ -518,9 +579,13 @@ export const delete1Mutation = (
       });
       return data;
     },
+    mutationKey: delete1MutationKey(options),
   };
   return mutationOptions;
 };
+
+export const update1MutationKey = (options?: Partial<Options<Update1Data>>) =>
+  createMutationKey('update1', options);
 
 /**
  * 기수 세션 수정
@@ -539,6 +604,7 @@ export const update1Mutation = (
       });
       return data;
     },
+    mutationKey: update1MutationKey(options),
   };
   return mutationOptions;
 };
@@ -564,6 +630,9 @@ export const detailOptions = (options: Options<DetailData>) =>
     queryKey: detailQueryKey(options),
   });
 
+export const correctMutationKey = (options?: Partial<Options<CorrectData>>) =>
+  createMutationKey('correct', options);
+
 /**
  * 회원 상태·Position 정정
  *
@@ -581,9 +650,13 @@ export const correctMutation = (
       });
       return data;
     },
+    mutationKey: correctMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const register1MutationKey = (options?: Partial<Options<Register1Data>>) =>
+  createMutationKey('register1', options);
 
 /**
  * User 가입 완료
@@ -606,9 +679,13 @@ export const register1Mutation = (
       });
       return data;
     },
+    mutationKey: register1MutationKey(options),
   };
   return mutationOptions;
 };
+
+export const submitMutationKey = (options?: Partial<Options<SubmitData>>) =>
+  createMutationKey('submit', options);
 
 /**
  * 팀 출석 사진 최종 제출
@@ -625,9 +702,13 @@ export const submitMutation = (
       });
       return data;
     },
+    mutationKey: submitMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const presignMutationKey = (options?: Partial<Options<PresignData>>) =>
+  createMutationKey('presign', options);
 
 /**
  * 팀 출석 사진 업로드 URL 발급
@@ -644,9 +725,13 @@ export const presignMutation = (
       });
       return data;
     },
+    mutationKey: presignMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const renewMutationKey = (options?: Partial<Options<RenewData>>) =>
+  createMutationKey('renew', options);
 
 /**
  * 세션 갱신
@@ -665,9 +750,13 @@ export const renewMutation = (
       });
       return data;
     },
+    mutationKey: renewMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const consumeHandoffMutationKey = (options?: Partial<Options<ConsumeHandoffData>>) =>
+  createMutationKey('consumeHandoff', options);
 
 /**
  * Android OIDC handoff 소비
@@ -690,9 +779,13 @@ export const consumeHandoffMutation = (
       });
       return data;
     },
+    mutationKey: consumeHandoffMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const authenticateKakaoMutationKey = (options?: Partial<Options<AuthenticateKakaoData>>) =>
+  createMutationKey('authenticateKakao', options);
 
 /**
  * Kakao Native OIDC 인증
@@ -719,9 +812,13 @@ export const authenticateKakaoMutation = (
       });
       return data;
     },
+    mutationKey: authenticateKakaoMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const authenticateGoogleMutationKey = (options?: Partial<Options<AuthenticateGoogleData>>) =>
+  createMutationKey('authenticateGoogle', options);
 
 /**
  * Google Native OIDC 인증
@@ -748,9 +845,13 @@ export const authenticateGoogleMutation = (
       });
       return data;
     },
+    mutationKey: authenticateGoogleMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const receiveMutationKey = (options?: Partial<Options<ReceiveData>>) =>
+  createMutationKey('receive', options);
 
 /**
  * Apple 계정 변경 알림
@@ -769,9 +870,13 @@ export const receiveMutation = (
       });
       return data;
     },
+    mutationKey: receiveMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const authenticateAppleMutationKey = (options?: Partial<Options<AuthenticateAppleData>>) =>
+  createMutationKey('authenticateApple', options);
 
 /**
  * Apple Native OIDC 인증
@@ -798,9 +903,14 @@ export const authenticateAppleMutation = (
       });
       return data;
     },
+    mutationKey: authenticateAppleMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const completeAppleAuthorizationMutationKey = (
+  options?: Partial<Options<CompleteAppleAuthorizationData>>,
+) => createMutationKey('completeAppleAuthorization', options);
 
 /**
  * Apple Browser callback 처리
@@ -827,9 +937,13 @@ export const completeAppleAuthorizationMutation = (
       });
       return data;
     },
+    mutationKey: completeAppleAuthorizationMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const verifyMutationKey = (options?: Partial<Options<VerifyData>>) =>
+  createMutationKey('verify', options);
 
 /**
  * 출석 4자리 코드 인증
@@ -846,9 +960,13 @@ export const verifyMutation = (
       });
       return data;
     },
+    mutationKey: verifyMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const submit1MutationKey = (options?: Partial<Options<Submit1Data>>) =>
+  createMutationKey('submit1', options);
 
 /**
  * 이번 주 세션 사전 출결 보고
@@ -865,6 +983,7 @@ export const submit1Mutation = (
       });
       return data;
     },
+    mutationKey: submit1MutationKey(options),
   };
   return mutationOptions;
 };
@@ -969,6 +1088,9 @@ export const historyInfiniteOptions = (options?: Options<HistoryData>) => {
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
+export const createMutationKey2 = (options?: Partial<Options<CreateData>>) =>
+  createMutationKey('create', options);
+
 /**
  * 알림 즉시·예약 발송 접수
  *
@@ -986,9 +1108,13 @@ export const createMutation = (
       });
       return data;
     },
+    mutationKey: createMutationKey2(options),
   };
   return mutationOptions;
 };
+
+export const cancelMutationKey = (options?: Partial<Options<CancelData>>) =>
+  createMutationKey('cancel', options);
 
 /**
  * 대기 예약 취소
@@ -1005,9 +1131,13 @@ export const cancelMutation = (
       });
       return data;
     },
+    mutationKey: cancelMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const rejectMutationKey = (options?: Partial<Options<RejectData>>) =>
+  createMutationKey('reject', options);
 
 /**
  * 가입 대기 회원 거절
@@ -1024,9 +1154,13 @@ export const rejectMutation = (
       });
       return data;
     },
+    mutationKey: rejectMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const approveMutationKey = (options?: Partial<Options<ApproveData>>) =>
+  createMutationKey('approve', options);
 
 /**
  * 가입 대기 회원 승인
@@ -1043,6 +1177,7 @@ export const approveMutation = (
       });
       return data;
     },
+    mutationKey: approveMutationKey(options),
   };
   return mutationOptions;
 };
@@ -1069,6 +1204,9 @@ export const findAllOptions = (options: Options<FindAllData>) =>
     queryKey: findAllQueryKey(options),
   });
 
+export const create1MutationKey = (options?: Partial<Options<Create1Data>>) =>
+  createMutationKey('create1', options);
+
 /**
  * Team 생성
  *
@@ -1086,6 +1224,7 @@ export const create1Mutation = (
       });
       return data;
     },
+    mutationKey: create1MutationKey(options),
   };
   return mutationOptions;
 };
@@ -1111,6 +1250,9 @@ export const find1Options = (options: Options<Find1Data>) =>
     queryKey: find1QueryKey(options),
   });
 
+export const create2MutationKey = (options?: Partial<Options<Create2Data>>) =>
+  createMutationKey('create2', options);
+
 /**
  * 기수 세션 등록
  *
@@ -1128,9 +1270,13 @@ export const create2Mutation = (
       });
       return data;
     },
+    mutationKey: create2MutationKey(options),
   };
   return mutationOptions;
 };
+
+export const decideMutationKey = (options?: Partial<Options<DecideData>>) =>
+  createMutationKey('decide', options);
 
 /**
  * 팀 출석 사진 승인 또는 거절
@@ -1147,9 +1293,13 @@ export const decideMutation = (
       });
       return data;
     },
+    mutationKey: decideMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const closeMutationKey = (options?: Partial<Options<CloseData>>) =>
+  createMutationKey('close', options);
 
 export const closeMutation = (
   options?: Partial<Options<CloseData>>,
@@ -1163,9 +1313,13 @@ export const closeMutation = (
       });
       return data;
     },
+    mutationKey: closeMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const cancel1MutationKey = (options?: Partial<Options<Cancel1Data>>) =>
+  createMutationKey('cancel1', options);
 
 export const cancel1Mutation = (
   options?: Partial<Options<Cancel1Data>>,
@@ -1179,6 +1333,7 @@ export const cancel1Mutation = (
       });
       return data;
     },
+    mutationKey: cancel1MutationKey(options),
   };
   return mutationOptions;
 };
@@ -1202,6 +1357,9 @@ export const getOptions = (options: Options<GetData>) =>
     queryKey: getQueryKey(options),
   });
 
+export const startMutationKey = (options?: Partial<Options<StartData>>) =>
+  createMutationKey('start', options);
+
 /**
  * 세션 출석 코드 발급 및 출석 대상 생성
  */
@@ -1217,9 +1375,13 @@ export const startMutation = (
       });
       return data;
     },
+    mutationKey: startMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const reissueMutationKey = (options?: Partial<Options<ReissueData>>) =>
+  createMutationKey('reissue', options);
 
 /**
  * 세션 출석 코드 재발급
@@ -1236,9 +1398,13 @@ export const reissueMutation = (
       });
       return data;
     },
+    mutationKey: reissueMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const register2MutationKey = (options?: Partial<Options<Register2Data>>) =>
+  createMutationKey('register2', options);
 
 /**
  * 기수 사전 명단 일괄 등록
@@ -1261,6 +1427,7 @@ export const register2Mutation = (
       });
       return data;
     },
+    mutationKey: register2MutationKey(options),
   };
   return mutationOptions;
 };
@@ -1329,6 +1496,9 @@ export const listInfiniteOptions = (options: Options<ListData>) => {
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
+export const create3MutationKey = (options?: Partial<Options<Create3Data>>) =>
+  createMutationKey('create3', options);
+
 /**
  * 공지 작성
  *
@@ -1346,9 +1516,13 @@ export const create3Mutation = (
       });
       return data;
     },
+    mutationKey: create3MutationKey(options),
   };
   return mutationOptions;
 };
+
+export const presign1MutationKey = (options?: Partial<Options<Presign1Data>>) =>
+  createMutationKey('presign1', options);
 
 /**
  * 공지 이미지 업로드 URL 발급
@@ -1371,9 +1545,13 @@ export const presign1Mutation = (
       });
       return data;
     },
+    mutationKey: presign1MutationKey(options),
   };
   return mutationOptions;
 };
+
+export const loginMutationKey = (options?: Partial<Options<LoginData>>) =>
+  createMutationKey('login', options);
 
 /**
  * Staff 로그인
@@ -1392,9 +1570,13 @@ export const loginMutation = (
       });
       return data;
     },
+    mutationKey: loginMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const overrideMutationKey = (options?: Partial<Options<OverrideData>>) =>
+  createMutationKey('override', options);
 
 export const overrideMutation = (
   options?: Partial<Options<OverrideData>>,
@@ -1408,9 +1590,13 @@ export const overrideMutation = (
       });
       return data;
     },
+    mutationKey: overrideMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const badgeMutationKey = (options?: Partial<Options<BadgeData>>) =>
+  createMutationKey('badge', options);
 
 export const badgeMutation = (
   options?: Partial<Options<BadgeData>>,
@@ -1424,9 +1610,13 @@ export const badgeMutation = (
       });
       return data;
     },
+    mutationKey: badgeMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const delete2MutationKey = (options?: Partial<Options<Delete2Data>>) =>
+  createMutationKey('delete2', options);
 
 /**
  * 공지 삭제
@@ -1445,6 +1635,7 @@ export const delete2Mutation = (
       });
       return data;
     },
+    mutationKey: delete2MutationKey(options),
   };
   return mutationOptions;
 };
@@ -1471,6 +1662,9 @@ export const detail1Options = (options: Options<Detail1Data>) =>
     queryKey: detail1QueryKey(options),
   });
 
+export const update2MutationKey = (options?: Partial<Options<Update2Data>>) =>
+  createMutationKey('update2', options);
+
 /**
  * 공지 제목·본문·이미지 수정
  *
@@ -1488,6 +1682,7 @@ export const update2Mutation = (
       });
       return data;
     },
+    mutationKey: update2MutationKey(options),
   };
   return mutationOptions;
 };
@@ -2476,6 +2671,9 @@ export const list6Options = (options: Options<List6Data>) =>
     queryKey: list6QueryKey(options),
   });
 
+export const withdrawMutationKey = (options?: Partial<Options<WithdrawData>>) =>
+  createMutationKey('withdraw', options);
+
 /**
  * 계정·동아리 통합 탈퇴
  *
@@ -2497,9 +2695,13 @@ export const withdrawMutation = (
       });
       return data;
     },
+    mutationKey: withdrawMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const revokeMutationKey = (options?: Partial<Options<RevokeData>>) =>
+  createMutationKey('revoke', options);
 
 /**
  * 현재 세션 로그아웃
@@ -2518,9 +2720,13 @@ export const revokeMutation = (
       });
       return data;
     },
+    mutationKey: revokeMutationKey(options),
   };
   return mutationOptions;
 };
+
+export const logoutMutationKey = (options?: Partial<Options<LogoutData>>) =>
+  createMutationKey('logout', options);
 
 /**
  * 현재 Staff 세션 로그아웃
@@ -2537,6 +2743,7 @@ export const logoutMutation = (
       });
       return data;
     },
+    mutationKey: logoutMutationKey(options),
   };
   return mutationOptions;
 };

@@ -38,6 +38,7 @@ export default defineConfig({
     {
       name: '@tanstack/react-query',
       includeInEntry: true,
+      mutationKeys: true,
     },
     {
       name: '@faker-js/faker',
