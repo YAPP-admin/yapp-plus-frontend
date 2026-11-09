@@ -13,6 +13,7 @@ export const tabList = style({
   listStyle: 'none',
   boxShadow: 'none',
   overflow: 'visible',
+  position: 'relative',
 });
 
 export const tabTrigger = style({
@@ -22,30 +23,44 @@ export const tabTrigger = style({
   padding: '8px 6px 10px',
   background: 'none',
   border: 'none',
-  borderBottom: '2px solid transparent',
   fontSize: vars.$fontSize.t5,
   lineHeight: vars.$lineHeight.t5,
   fontWeight: vars.$fontWeight.bold,
   color: vars.$color.fg.placeholder,
   cursor: 'pointer',
   touchAction: 'manipulation',
-  transition: 'color 150ms ease, border-color 150ms ease',
+  transition: 'color 150ms ease',
   margin: 0,
-  marginBottom: '-1px',
   height: 'auto',
   flex: 'none',
   minWidth: 0,
   ':hover': {
     color: vars.$color.fg.neutral,
   },
+  selectors: {
+    '&[data-selected]': {
+      color: vars.$color.fg.neutral,
+    },
+  },
   ':focus-visible': {
     outline: `2px solid ${vars.$color.fg.neutral}`,
-    outlineOffset: '-2px',
+    outlineOffset: '2px',
     borderRadius: vars.$radius.r1,
   },
 });
 
-export const tabTriggerActive = style({
-  color: vars.$color.fg.neutral,
-  borderBottomColor: vars.$color.fg.neutral,
+export const tabIndicator = style({
+  position: 'absolute',
+  bottom: '-1px',
+  left: 0,
+  width: 'var(--indicator-width)',
+  height: '2px',
+  backgroundColor: vars.$color.fg.neutral,
+  transform: 'translateX(var(--indicator-left))',
+  transition: `transform ${vars.$duration.d3} ${vars.$timingFunction.easing}`,
+  '@media': {
+    '(prefers-reduced-motion: reduce)': {
+      transition: 'none',
+    },
+  },
 });
