@@ -199,6 +199,46 @@ it('조회 실패는 보호 URL을 유지하며 안내하고 수동 복구 후 �
   expect(bridge.getSession).toHaveBeenCalledTimes(2);
 });
 
+it('세션 삭제 실패 후 수동 재시도로 정리되면 보호 내용을 노출하지 않고 로그인으로 이동한다', async () => {
+  vi.useFakeTimers({ toFake: ['Date'] });
+  const user = userEvent.setup();
+  const client = new QueryClient();
+  let resolveSession: ((result: AuthResult) => void) | undefined;
+  const pending = new Promise<AuthResult>((resolve) => {
+    resolveSession = resolve;
+  });
+  bridge.getSession
+    .mockResolvedValueOnce({ status: 'ERROR', code: 'STORAGE', retryable: true })
+    .mockReturnValueOnce(pending);
+  window.history.replaceState(null, '', '/team-attendance/upload');
+  const view = mount(client);
+
+  expect(
+    await screen.findByRole('heading', { name: '로그인 상태를 확인하지 못했어요' }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
+  expect(window.location.pathname).toBe('/team-attendance/upload');
+
+  // Date만 이동시켜 자동 재조회 타이머와 수동 버튼의 효과를 구분합니다.
+  vi.setSystemTime(Date.now() + 5001);
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(bridge.getSession).toHaveBeenCalledTimes(2);
+  expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '구글로 계속하기' })).not.toBeInTheDocument();
+
+  await act(async () => {
+    resolveSession?.({ status: 'SIGNED_OUT' });
+    await pending;
+  });
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+  await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+  expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
+  expect(replaceDocument).not.toHaveBeenCalled();
+  expect(bridge.getSession).toHaveBeenCalledTimes(2);
+  view.unmount();
+  client.clear();
+});
+
 it('재시도 가능한 세션 조회 실패에서 로그인 화면으로 이동할 수 있다', async () => {
   const client = new QueryClient();
   bridge.getSession.mockResolvedValue({

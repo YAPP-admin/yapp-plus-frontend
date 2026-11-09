@@ -183,12 +183,140 @@ describe('SessionManager', () => {
     storage.getSession.mockResolvedValue({ refreshToken: 'refresh-1', userId: 1 });
     const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
     await expect(manager.clear()).resolves.toMatchObject({ code: 'STORAGE' });
-    await expect(manager.get(renew)).resolves.toMatchObject({ code: 'STORAGE' });
+    await expect(manager.get(renew)).resolves.toEqual({ status: 'SIGNED_OUT' });
+    expect(storage.clearSession).toHaveBeenCalledTimes(2);
     expect(storage.getSession).not.toHaveBeenCalled();
     expect(renew).not.toHaveBeenCalled();
     await expect(
       manager.establish(credentials(3), manager.captureGeneration()),
     ).resolves.toMatchObject({ status: 'SIGNED_IN' });
+  });
+
+  it('삭제 실패가 계속되어도 동시 재조회는 삭제 하나를 공유하고 이후 다시 시도한다', async () => {
+    const manager = new SessionManager();
+    storage.clearSession.mockRejectedValueOnce(new Error('storage'));
+    await manager.clear();
+    const pending = Promise.withResolvers<void>();
+    storage.clearSession.mockReturnValueOnce(pending.promise);
+    const renew = vi.fn<() => Promise<RenewalResult>>();
+    const first = manager.get(renew);
+    const second = manager.get(renew);
+    pending.reject(new Error('storage'));
+    const failure = { status: 'ERROR', code: 'STORAGE', retryable: true };
+    await expect(Promise.all([first, second])).resolves.toEqual([failure, failure]);
+    expect(storage.clearSession).toHaveBeenCalledTimes(2);
+    await expect(manager.get(renew)).resolves.toEqual({ status: 'SIGNED_OUT' });
+    expect(storage.clearSession).toHaveBeenCalledTimes(3);
+    expect(storage.getSession).not.toHaveBeenCalled();
+    expect(renew).not.toHaveBeenCalled();
+  });
+
+  it.each(['delete-first', 'login-first'])(
+    '삭제 재시도가 새 로그인을 보존한다 (%s)',
+    async (order) => {
+      const manager = new SessionManager();
+      storage.clearSession.mockRejectedValueOnce(new Error('storage'));
+      await manager.clear();
+      const generation = manager.captureGeneration();
+      const pending = Promise.withResolvers<void>();
+      const started = Promise.withResolvers<void>();
+      let persisted: StoredSession | null = null;
+      storage.setSession.mockImplementation(async (session) => {
+        if (order === 'login-first') {
+          started.resolve();
+          await pending.promise;
+        }
+        persisted = session;
+      });
+      storage.clearSession.mockImplementation(async () => {
+        if (order === 'delete-first') {
+          started.resolve();
+          await pending.promise;
+        }
+        persisted = null;
+      });
+      const renew = vi.fn<() => Promise<RenewalResult>>();
+      const first =
+        order === 'delete-first'
+          ? manager.get(renew)
+          : manager.establish(credentials(2), generation);
+      await started.promise;
+      const second =
+        order === 'delete-first'
+          ? manager.establish(credentials(2), generation)
+          : manager.get(renew);
+      pending.resolve();
+      const results = await Promise.all([first, second]);
+      expect(results[order === 'delete-first' ? 1 : 0]).toMatchObject({ status: 'SIGNED_IN' });
+      expect(results[order === 'delete-first' ? 0 : 1]).toEqual({
+        status: order === 'delete-first' ? 'SIGNED_OUT' : 'CANCELLED',
+      });
+      expect(persisted).toEqual({ refreshToken: 'refresh-2', userId: 1, name: undefined });
+      expect(storage.clearSession).toHaveBeenCalledTimes(order === 'delete-first' ? 2 : 1);
+      await expect(manager.get(renew)).resolves.toMatchObject({
+        status: 'SIGNED_IN',
+        session: { accessToken: 'access-2' },
+      });
+    },
+  );
+
+  it.each([false, true])(
+    '이전 삭제 완료가 추가 clear의 실패와 새 재시도를 덮지 않는다 (실패: %s)',
+    async (rejectOld) => {
+      const manager = new SessionManager();
+      storage.clearSession.mockRejectedValueOnce(new Error('storage'));
+      await manager.clear();
+      const old = Promise.withResolvers<void>();
+      const started = Promise.withResolvers<void>();
+      storage.clearSession
+        .mockImplementationOnce(() => {
+          started.resolve();
+          return old.promise;
+        })
+        .mockRejectedValueOnce(new Error('new storage failure'));
+      const renew = vi.fn<() => Promise<RenewalResult>>();
+      const oldRequest = manager.get(renew);
+      await started.promise;
+      const clearing = manager.clear();
+      if (rejectOld) {
+        old.reject(new Error('old storage failure'));
+      } else {
+        old.resolve();
+      }
+      await expect(clearing).resolves.toMatchObject({ code: 'STORAGE' });
+      await expect(oldRequest).resolves.toEqual({ status: 'CANCELLED' });
+      await expect(manager.get(renew)).resolves.toEqual({ status: 'SIGNED_OUT' });
+      expect(storage.clearSession).toHaveBeenCalledTimes(4);
+    },
+  );
+
+  it('이전 복구의 finally가 새 세대의 삭제 재시도 공유를 해제하지 않는다', async () => {
+    const manager = new SessionManager();
+    storage.getSession.mockResolvedValue({ refreshToken: 'old', userId: 1 });
+    const old = Promise.withResolvers<RenewalResult>();
+    const started = Promise.withResolvers<void>();
+    const oldRequest = manager.get(() => {
+      started.resolve();
+      return old.promise;
+    });
+    await started.promise;
+    storage.clearSession.mockRejectedValueOnce(new Error('storage'));
+    await manager.clear();
+    const pending = Promise.withResolvers<void>();
+    storage.clearSession.mockReturnValueOnce(pending.promise);
+    const renew = vi.fn<() => Promise<RenewalResult>>();
+    const retry = manager.get(renew);
+    old.resolve(renewed(2));
+    await expect(oldRequest).resolves.toEqual({ status: 'CANCELLED' });
+    const duplicate = manager.get(renew);
+    pending.resolve();
+    await expect(Promise.all([retry, duplicate])).resolves.toEqual([
+      { status: 'SIGNED_OUT' },
+      { status: 'SIGNED_OUT' },
+    ]);
+    expect(storage.clearSession).toHaveBeenCalledTimes(2);
+    expect(storage.getSession).toHaveBeenCalledTimes(1);
+    expect(renew).not.toHaveBeenCalled();
   });
 
   it('이전 갱신의 finally가 새 세션의 진행 갱신을 해제하지 않는다', async () => {

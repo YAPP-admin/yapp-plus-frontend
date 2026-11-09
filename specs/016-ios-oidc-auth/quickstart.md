@@ -105,3 +105,39 @@ mise exec -- node --run expo:doctor
 2. 로그인에서 userId를 저장하고 user 없는 갱신 뒤에도 같은 userId와 새 refresh token이 남는지 확인한다.
 3. 앱 재실행 시 저장된 userId로 복구하고 이전 토큰 단독 저장에서는 로그인 화면으로 이동하는지 확인한다.
 4. 실제 시뮬레이터는 로컬 웹·MSW false·수정 native 번들임을 확인한 뒤 Apple 로그인과 재실행 복구를 확인한다. 인증 정보는 기록하지 않는다.
+
+## #406 삭제 재시도 검증 — 2026-11-09
+
+### 자동 검증
+
+```sh
+mise exec -- pnpm install --frozen-lockfile
+mise exec -- pnpm --filter @yapp-plus/mobile test
+mise exec -- pnpm --filter @yapp-plus/web test
+mise exec -- node --run check
+mise exec -- node --run build
+```
+
+삭제 실패 후 성공·반복 실패·동시 요청 공유·새 로그인 보존을 세션 계층에서 검증한다.
+실제 AuthStorage와 저장소 대역을 연결해 현재 키 삭제 후 legacy 키만 실패하는 경우를 별도로 확인한다.
+웹은 실제 세션 상태 연결과 사용자 버튼 이벤트로 STORAGE에서 로그인 화면으로의 전환을 검증한다.
+Turbo 캐시 재사용과 새 실행을 구분하고, 수정 전 회귀 실패 근거도 기록한다.
+
+### 전용 시뮬레이터 오류 주입
+
+1. iPhone 15 Pro / iOS 17.5 전용 시뮬레이터를 만들고 이 워크스페이스의 개발 빌드를 설치한다. Xcode 27.2 빌드와 `node --run expo:doctor`를 확인한다. 기존 서버·기기를 종료하지 않는다. 3000/8081이 점유되면 빈 포트와 임시 연결 설정을 사용한다.
+2. 3단계 제품 변경본을 `.context/auth-recovery/`에 보관한다. 임시 구성은 실제 AuthActions가 사용하는 SessionManager singleton에 만료된 가짜 자격을 establish한다. 갱신 대역은 AuthActions 생성 전에 설정하고, 준비 완료 후 WebView를 마운트한다. 가짜 자격을 실제 API에 보내지 않는다.
+3. 갱신 대역은 invalid-session을 반환한다. 실패 주입은 clearSession 내부의 legacy 키 삭제 직전에만 둔다. get/set의 legacy 정리에는 주입하지 않고 getSession 결과·상태·화면 이동은 대역으로 바꾸지 않는다. 로그에는 상태·횟수·시각만 남긴다.
+4. 실패를 유지한 채 자동 재조회 2회 이상에서 STORAGE·보호 콘텐츠 비노출·삭제 횟수 증가를 확인한다. 이전 자격 읽기와 갱신은 반복되지 않아야 한다. 실패를 해제하고 버튼 조작 없이 기존 5초 재조회로 로그인 화면에 도달하는지 확인한다.
+5. 수동 복구는 별도 사례로 실행한다. 자동 재조회의 refetchInterval만 임시로 false로 설정하고 마지막 실패 후 5초 이상 기다린 뒤 실제 재시도 버튼을 누른다. staleTime·재시도 함수·응답은 바꾸지 않는다. 각 사례의 실패→복구 사이에 앱을 재시작하지 않는다.
+6. 실제 재시도로 테스트 자격 정리를 완료한 뒤 임시 패치·패널·갱신 대역·재조회 설정을 제거한다. 전체 git restore를 사용하지 않고 3단계 제품 변경본과 비교한다. 화면 근거는 `.context/auth-recovery/`에 저장한다.
+7. 결과와 임시 구성 제거를 리뷰받는다. 실제 iOS 저장소 장애나 사용자 기기 원인 확정으로 보고하지 않는다.
+
+### 정상 구성의 실제 Google 인증
+
+앱을 완전히 종료하고 정상 번들로 실행한다. Fast Refresh만으로 전환하지 않는다.
+`VITE_API_MOCKING=false`, `VITE_STATIC_CONTENT=false`에서 실제 Google 로그인→홈→30초 백그라운드→
+같은 계정 복귀→UI 로그아웃→Google 재로그인→앱 종료/재실행 후 세션 복구를 확인한다.
+필요한 계정 선택·추가 인증은 사용자와 진행하고 토큰·개인정보를 기록하지 않는다.
+짧은 복귀를 만료 토큰 갱신 검증으로 간주하지 않는다. 제품 수정이 추가됐을 때만 관련 검사를 다시 실행한다.
+이번 작업에서 시작한 서버·시뮬레이터를 정리한다. TestFlight 배포와 Android·Apple 인증 검증은 포함하지 않는다.
