@@ -2,13 +2,13 @@
 
 /** Stackflow가 소유한 탭 선택을 SEED의 키보드 탐색·패널 관계에 연결합니다. */
 import { Tabs } from '@seed-design/react';
-import { useContext, type ReactNode, type CSSProperties } from 'react';
+import { useContext, type ReactNode } from 'react';
 import { ScreenActiveContext } from '@/shared/lib/screen-activity';
-import { isTabName, tabNames, type TabName } from '../navigation/tab';
+import { isTabName, type TabName } from '../navigation/tab';
 import { BottomNavigation } from './bottom-navigation';
 import { PageShell } from './page-shell';
 import { TabsHeader } from './tabs-header';
-import { camera, carousel, panel, tabShell } from './tabs-layout.css';
+import { panel, tabShell } from './tabs-layout.css';
 
 type TabsLayoutProps = {
   children: ReactNode;
@@ -19,9 +19,6 @@ type TabsLayoutProps = {
 
 /** 선택은 호출자가 확정하며, null인 알림 화면은 탭 패널 없이 기존 메뉴를 표시합니다. */
 export function TabsLayout({ children, activeTab, onTabChange }: TabsLayoutProps) {
-  const cameraStyle: CSSProperties & { '--tab-index': number } = {
-    '--tab-index': activeTab ? tabNames.indexOf(activeTab) : 0,
-  };
   const shell = (
     <PageShell
       className={activeTab === null ? undefined : tabShell}
@@ -29,15 +26,7 @@ export function TabsLayout({ children, activeTab, onTabChange }: TabsLayoutProps
       borderlessHeader
       header={<TabsHeader activeTab={activeTab} />}
     >
-      {activeTab === null ? (
-        children
-      ) : (
-        <Tabs.Carousel swipeable={false} loop={false} autoHeight={false} className={carousel}>
-          <Tabs.CarouselCamera className={camera} style={cameraStyle}>
-            {children}
-          </Tabs.CarouselCamera>
-        </Tabs.Carousel>
-      )}
+      {children}
     </PageShell>
   );
 

@@ -2,7 +2,7 @@ import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const homeHeader = style({
-  // 탭마다 본문 높이가 달라져 Carousel 전환이 재초기화되지 않도록 맞춥니다.
+  // 탭별 헤더 높이가 바뀌지 않도록 맞춥니다.
   height: '54px',
   boxSizing: 'border-box',
   width: '100%',

@@ -3,37 +3,10 @@ import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { TabPanel, TabsLayout } from './tabs-layout';
 import { PageShell } from './page-shell';
-import {
-  createElement,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-  type ComponentProps,
-} from 'react';
-import type * as Seed from '@seed-design/react';
+import { useContext, useEffect, useState, type ReactNode } from 'react';
 import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 import { tabNames, type TabName } from '../navigation/tab';
 import userEvent from '@testing-library/user-event';
-
-vi.mock('@seed-design/react', async (importOriginal) => {
-  const actual = await importOriginal<typeof Seed>();
-  return {
-    ...actual,
-    Tabs: {
-      ...actual.Tabs,
-      Carousel: ({ children, swipeable, loop }: ComponentProps<typeof Seed.Tabs.Carousel>) => {
-        return createElement(
-          'div',
-          { 'data-testid': 'carousel', 'data-swipeable': swipeable, 'data-loop': loop },
-          children,
-        );
-      },
-      CarouselCamera: ({ children, ...props }: ComponentProps<typeof Seed.Tabs.CarouselCamera>) =>
-        createElement('div', props, children),
-    },
-  };
-});
 
 vi.mock('@/app/navigation/tab-link', () => ({
   TabLink: ({
@@ -206,8 +179,6 @@ describe('TabsLayout', () => {
     expect(screen.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-controls', homePanel.id);
     homePanel.scrollTop = 120;
     fireEvent.scroll(homePanel);
-    expect(screen.getByTestId('carousel')).toHaveAttribute('data-swipeable', 'false');
-    expect(screen.getByTestId('carousel')).toHaveAttribute('data-loop', 'false');
     expect(start).toHaveBeenCalledTimes(1);
 
     rerender(
