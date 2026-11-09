@@ -102,3 +102,17 @@ SecureStore의 org.yapp.yappplus.auth.session에는 {version: 1, refreshToken, u
 userId는 로그인 응답에서 검증한 안전한 정수이며 갱신 응답에서 다시 얻지 않는다. access token과 만료 시간은 메모리에만 둔다.
 키 org.yapp.yappplus.auth.refresh-token의 이전 토큰은 폐기한다. 새 저장 값이 없거나 손상된 경우 SIGNED_OUT,
 읽기·쓰기·삭제 실패는 STORAGE다. 새 토큰과 userId 저장이 완료된 뒤에만 SIGNED_IN을 공개한다.
+
+## #406 삭제 재시도 상태 전이
+
+| 사건                        | 상태·결과                                                |
+| --------------------------- | -------------------------------------------------------- |
+| 최초 clear                  | generation 증가, 메모리 세션 제거, blocked에서 삭제 시작 |
+| 현재 세대의 삭제 실패       | deletion-failed, ERROR/STORAGE, retryable: true          |
+| deletion-failed에서 get     | generation 유지, restoring 공유, 삭제만 재시도           |
+| 현재 세대의 두 키 삭제 성공 | blocked, SIGNED_OUT                                      |
+| 삭제 전후 세대 불일치       | CANCELLED, 새 세대 상태를 변경하지 않음                  |
+
+재시도 중에도 deletion-failed를 유지한다. mutex 획득 후와 삭제 완료 후 generation을 검사하고,
+Promise 정리는 참조 일치 시에만 수행한다. 새 establish 성공은 allowed가 된다.
+blocked·일반 복원·갱신 동작과 저장 형식은 유지한다. 오래된 삭제는 새 로그인 저장 값을 지우지 않아야 한다.

@@ -94,18 +94,21 @@ export class SessionManager {
   /**
    * 현재 세션을 반환합니다.
    * access token이 30초 안에 만료되면 Keychain의 refresh token으로 갱신을 시작합니다.
+   * 삭제 실패 후에는 이전 자격을 읽지 않고 삭제만 재시도합니다.
    */
   public async get(renew: Renew): Promise<AuthResult> {
     if (this.currentSession && this.currentSession.expiresAt > Date.now() + REFRESH_EARLY_MS) {
       return { status: 'SIGNED_IN', session: this.currentSession };
     }
-    if (this.restoreState !== 'allowed') {
-      return this.restoreState === 'deletion-failed'
-        ? { status: 'ERROR', code: 'STORAGE', retryable: true }
-        : { status: 'SIGNED_OUT' };
+    if (this.restoreState === 'blocked') {
+      return { status: 'SIGNED_OUT' };
     }
     if (!this.restoring) {
-      const restoring = this.restore(this.generation, renew).finally(() => {
+      const operation =
+        this.restoreState === 'deletion-failed'
+          ? this.deleteSession(this.generation)
+          : this.restore(this.generation, renew);
+      const restoring = operation.finally(() => {
         if (this.restoring === restoring) {
           this.restoring = undefined;
         }
@@ -183,9 +186,23 @@ export class SessionManager {
     this.currentSession = undefined;
     this.storedSession = undefined;
     this.restoreState = 'blocked';
+    return this.deleteSession(currentGeneration);
+  }
+
+  /** 재시도는 세대를 올리지 않아 진행 중인 새 로그인을 취소하지 않습니다. */
+  private async deleteSession(currentGeneration: number): Promise<AuthResult> {
     try {
-      await this.storageMutex.withLock(() => authStorage.clearSession());
-      return this.isCurrent(currentGeneration) ? { status: 'SIGNED_OUT' } : { status: 'CANCELLED' };
+      return await this.storageMutex.withLock(async (): Promise<AuthResult> => {
+        if (!this.isCurrent(currentGeneration)) {
+          return { status: 'CANCELLED' };
+        }
+        await authStorage.clearSession();
+        if (!this.isCurrent(currentGeneration)) {
+          return { status: 'CANCELLED' };
+        }
+        this.restoreState = 'blocked';
+        return { status: 'SIGNED_OUT' };
+      });
     } catch {
       if (!this.isCurrent(currentGeneration)) {
         return { status: 'CANCELLED' };

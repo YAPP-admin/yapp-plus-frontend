@@ -156,3 +156,10 @@ API 어댑터는 예외를 포함한 통신 결과를 이 타입으로 정규화
 공개 AuthResult와 RPC signature는 유지한다. 웹 내부에서 현재 세대의 응답만 세션 cache·화면 callback에 전달하며 오래된 결과는 CANCELLED로 폐기하고 오래된 오류는 cache·화면에 반영하지 않는다. 웹 인증 hook은 mutate만 제공하고 실패는 callback으로 처리한다. 낮은 tokenVersion을 반영하지 않는다. logout 진행 중 보호 콘텐츠를 차단하되 응답 전에 SIGNED_OUT을 확정하지 않는다.
 
 브리지 미준비·undefined·timeout은 인증 조회 불가이며, 정상 SIGNED_OUT과 구분한다. 현재 initialBridge는 함수가 없는 상태 fallback만 가진다. 이 전제 아래 isWebViewBridgeAvailable=false는 연결 대기, true이고 getSession 미지원이면 미지원이다. onReady는 hydration 완료로 사용하지 않는다. 실패 후 5초 간격·진행 요청 공유 정책은 수동/자동 재시도에 공통 적용한다.
+
+## #406 iOS 삭제 재시도
+
+공개 RPC와 AuthResult는 유지한다. iOS getSession은 deletion-failed에서 기존 자격 조회·갱신 없이
+로컬 삭제를 재시도한다. 두 키 정리 성공은 SIGNED_OUT, 계속되는 실패는 ERROR/STORAGE와
+retryable: true, 오래된 세대의 결과는 CANCELLED다. 웹은 기존 5초 재시도와 로그인 전환을 사용한다.
+브리지·네트워크 오류 자체로 강제 로그아웃하지 않으며 Android 계약은 변경하지 않는다.

@@ -1,5 +1,7 @@
 # 1단계 검증 기록
 
+> 2026-11-09의 #406은 마지막 절의 단계별 기록을 따른다. 아래 2026-11-07 결과는 과거 이력이며 이번 작업의 신규 검증이 아니다.
+
 ## 최신 인증 검증 상태 — 2026-11-07
 
 - Apple 로그인과 Google 가입 후 홈 진입·앱 종료/재실행 복구를 iOS 시뮬레이터에서 확인했다. 아래 과거 단계의 실제 OAuth 미검증·PR 미생성 표기는 당시 기록이며 이 요약과 마지막 추가 검증 기록이 현재 상태다.
@@ -582,3 +584,37 @@ URL 회귀 5개와 최종 check 통과: admin 658·web 139·mobile 60개 테스�
 - 잔여 범위: Google 기존 가입 계정의 재로그인 분기, 가입 입력 검증·서버 fieldErrors, registrationToken 만료 안내, 실제 네트워크 단절·계정 전환·Android/TestFlight·VoiceOver/TalkBack. 기존 저장 형식과 롤백 시 재로그인 필요 조건은 앞선 기록을 유지한다.
 
 - 문서 현행화 검증: `node --run check` 통과. format은 새 실행, lint 7/7·typecheck 7/7·test 5/5는 Turbo 캐시 재사용이다. 원래 hong-kong workspace의 `.context/docs-update-native-check.log`에 기록했다. 문서만 변경하여 build·expo:doctor는 재실행하지 않았다. 기존 #341 병합 후 세션 문서와 함께 최신 main 기준 `docs/session-validation-results`의 별도 후속 PR으로 묶었다.
+
+## #406 1단계 — 추적·명세·환경 준비 (2026-11-09)
+
+- 승인된 초안으로 [#406](https://github.com/YAPP-admin/yapp-plus-frontend/issues/406)을 생성하고 제목·본문·담당자 DongjaJ·열림 상태를 확인했다. 추가 라벨·milestone은 없으며 #329는 관련 이슈로만 연결했다.
+- git fetch 후 origin/main과 HEAD는 `6001bebb9f8b27c61f10bb99f84844121cd8fe76`으로 일치했다. 시작 작업 트리는 깨끗했고 `DongjaJ/15w81` 브랜치를 유지했다.
+- 계획 중 수행한 소스+저장소 대역의 Node VM 재현은 research.md에 기록했다. 이번 단계의 Vitest 회귀 테스트·실제 iOS 장애·동시성 증거로 간주하지 않는다.
+- Spec Kit setup-plan/setup-tasks로 기존 문서를 유지하며 DR-001–005와 T059–T073을 추가했다. extension hook은 없다. 과거 완료 기록과 이번 범위를 분리했다.
+- Node v24.20.0 / pnpm 12.3.4에서 frozen-lockfile 설치가 성공했다. 로그는 `.context/auth-recovery-install.log`다. 의존성 선언과 lockfile은 변경하지 않았다.
+- 제품 코드 수정·시뮬레이터 실행·실제 Google 로그인은 후속 단계다. 이번 단계에서 commit·push·PR·배포는 수행하지 않았다.
+- `node --run check`는 종료 코드 0으로 통과했다. format은 새 실행, lint 7/7·typecheck 7/7·test 5/5는 Turbo 캐시 재사용이다. 로그는 `.context/auth-recovery-stage1-check.log`다. 삭제 재시도 회귀 테스트를 새로 실행한 결과는 아니다.
+- Spec Kit 필수 문서 검사와 git diff --check를 통과했다. 신규 작업 15개의 ID·체크리스트·경로를 확인했다. 문서만 변경하여 build·expo:doctor·시뮬레이터·실제 Google 인증은 실행하지 않았다.
+- 변경은 Spec Kit 문서 8개이며 1단계 사용자 리뷰를 기다린다. 2단계 구현은 다음 단계 진행 확인 후 시작한다.
+
+## #406 2단계 — 네이티브 삭제 재시도·회귀 (2026-11-09)
+
+- 사용자 진행 확인 후 시작했다. fetch 결과 origin/main은 1단계 기준과 같으며 기존 문서 변경과 브랜치를 유지했다.
+- session.ts의 get은 deletion-failed에서 generation을 유지한 삭제 작업을 공유한다. 공통 삭제 경로는 mutex 안에서 삭제 전후 세대를 확인한다. 성공 시 blocked/SIGNED_OUT, 현재 세대의 실패 시 deletion-failed/STORAGE를 반환한다. 공개 계약·저장 형식·의존성은 변경하지 않았다.
+- session.test.ts에 반복 실패·동시 요청 공유·로그인과 삭제의 두 실행 순서·추가 clear와 이전 삭제 성공/실패·이전 finally와 새 재시도 경쟁을 검증했다. 기존 자격 읽기 금지 테스트는 삭제 복구 성공 기대값으로 갱신했다.
+- session-recovery.test.ts는 실제 SessionManager와 AuthStorage를 연결했다. 갱신 무효 응답 후 현재 키 삭제 성공·legacy 키 삭제 실패를 주입하고, 같은 인스턴스의 재조회로 두 키 정리가 완료되는지 확인했다. SecureStore만 대역이며 실제 iOS 장애 재현은 아니다.
+- 수정 전 세션 테스트는 7개 실패·15개 통과였다. 삭제 호출을 기다리는 사례의 timeout과 기존 코드가 소비하지 않은 대역 Promise의 rejection도 포함하므로 모든 실패를 단언 실패로 세지 않는다. 별도 저장소 연결 테스트는 SIGNED_OUT 대신 STORAGE가 반환되는 단언으로 실패했다. 로그: `.context/auth-recovery-stage2-red.log`, `.context/auth-recovery-stage2-storage-red.log`.
+- 수정 후 모바일 전체 9개 파일·157개 테스트를 새로 실행해 통과했다. 첫 check는 테스트 코드의 중괄호·불필요한 async lint 5건으로 실패했고 이를 수정했다. 최종 check는 성공: format 및 모바일 lint/typecheck/test는 새 실행, 나머지 lint 6개·typecheck 6개·test 4개는 Turbo 캐시 재사용이다. 로그: `.context/auth-recovery-stage2-check-final.log`.
+- 앱 코드 변경에 따른 기본 build도 실행해 성공했다. 3/3 작업 모두 Turbo 캐시이며 iOS 바이너리를 새로 빌드한 결과가 아니다. 로그: `.context/auth-recovery-stage2-build.log`. 모바일 설정·의존성 변경이 없어 expo:doctor는 이번 단계에 실행하지 않았다.
+- 웹 전환 테스트·시뮬레이터 오류 주입·실제 Google 인증·사용자 기기 원인 확인은 남아 있다. 임시 앱 구성을 추가하지 않았고 commit·push·PR·배포도 하지 않았다. 실패 시 제품 수정만 되돌릴 수 있으며 기존 삭제 재시도 결함이 돌아온다.
+- T062–T065를 완료하고 2단계 리뷰를 기다린다. 3단계 웹 연결 검증은 다음 단계 진행 확인 후 시작한다.
+
+## #406 3단계 — 웹 연결·품질 검사 (2026-11-09)
+
+- 사용자 진행 확인 후 시작했다. fetch 후 origin/main은 기존 기준 commit과 같으며 1·2단계 변경을 유지했다.
+- account-boundary.test.tsx에 STORAGE→5초 이후 실제 재시도 버튼→진행 중 보호 콘텐츠 차단→SIGNED_OUT→로그인 화면·URL 전환을 추가했다. userEvent로 클릭하고 실제 Provider·Stackflow 연결을 사용하며 native 조회 응답만 대역으로 제공한다. 문서 reload 없이 이동함을 확인했다.
+- Date만 이동해 자동 재조회가 수동 검증을 대신하지 않게 했다. 실패 중·조회 진행 중·로그인 도착 후의 보호 콘텐츠 비노출을 확인했다. 웹 제품 코드는 변경하지 않았다. 기기의 프레임 단위 화면 검증이나 실제 브리지 통신 검증은 아니다.
+- 대상 파일 18개 테스트를 새로 실행해 통과했다. 이후 웹 TypeScript 대상에서 지원하지 않는 Promise.withResolvers와 동기 act의 await에 관한 lint 오류를 수정했다. 최종 check는 성공했다. format·웹 lint/typecheck/test는 새 실행, 나머지 lint 6개·typecheck 6개·test 4개는 Turbo 캐시 재사용이다. 로그: `.context/auth-recovery-stage3-web.log`, `.context/auth-recovery-stage3-check-passed.log`.
+- build 성공: 웹은 새 실행, 나머지 2/3 작업은 캐시 재사용이다. 이후 테스트의 Promise 처리만 수정하여 빌드는 반복하지 않았다. 로그: `.context/auth-recovery-stage3-build.log`. iOS 바이너리 빌드·expo:doctor는 이번 단계에서 실행하지 않았다.
+- 제품 변경 파일 4개의 원본 사본·SHA-256 manifest·tracked diff를 `.context/auth-recovery/stage3-product/`에 저장하고 현재 파일과 일치함을 확인했다. 새 파일 session-recovery.test.ts도 포함한다. 4단계 임시 구성을 제거할 때 이 기준본과 비교한다.
+- T066–T067 완료. T068의 기준본 저장은 완료했으며 사용자 리뷰는 대기 중이다. 시뮬레이터 오류 주입·정상 Google 인증·배포 기기의 원인 확인은 아직 수행하지 않았다. commit·push·PR·배포는 하지 않았다.

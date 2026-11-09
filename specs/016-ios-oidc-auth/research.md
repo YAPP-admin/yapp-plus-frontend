@@ -135,3 +135,13 @@ Android develop `2b837e3cb21762c6a73f1db205be6a3ef2749a97`의 [GoogleCredentialM
 추가 재현: 토큰 저장 뒤 세션 ID를 만들 때 전역 crypto.randomUUID가 실패했다.
 시뮬레이터에서 typeof globalThis.crypto 및 randomUUID가 undefined임을 확인했다.
 Node의 전역 crypto 때문에 단위 테스트가 놓쳤으며, expo-crypto와 전역 crypto 부재 회귀로 보완했다.
+
+## #406 삭제 재시도 조사 — 2026-11-09
+
+- TestFlight 1.0.1 (20)의 [빌드 기록](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/42455684488)은 소스 `3b7ca1309a066b12ad907414093391f97ef5b19b`를 가리킨다. 조사한 세션·저장소·갱신·웹 인증 코드는 현재 기준 commit과 같다.
+- 계획 중 실제 TypeScript 소스와 저장소 대역을 연결한 Node VM 검사에서 현재 키 삭제 후 legacy 키 삭제 실패를 재현했다. 실패 해제 후 get 3회는 추가 삭제 없이 STORAGE를 반환했고 새 SessionManager는 SIGNED_OUT을 반환했다. 실제 iOS 저장소 장애나 동시성 검증은 아니다.
+- 결정: 기존 restoring Promise를 공유하며 저장소 mutex 안에서 삭제 전후 generation을 검사하는 복구 경로를 추가한다. finally는 자신이 등록한 Promise만 해제한다.
+- 재조회에서 clear()를 호출하면 generation이 증가해 진행 중인 새 로그인을 취소할 수 있다. 오류 무시나 기존 자격 재조회도 삭제 의도를 훼손하므로 채택하지 않는다.
+- 자동 복구는 기존 5초 재조회 정책으로 확인한다. 수동 복구는 자동 재조회만 임시 중지하고 실패 후 5초 이상 기다려 버튼 효과를 구분한다.
+- 조사한 Android Kotlin 구현에는 동일한 deletion-failed 상태가 없다. Android 전체 장애 복구를 검증했다는 의미는 아니며 이번 변경 대상에서 제외한다.
+- 사용자 기기의 오류 코드·저장소 실패 원인은 미확인이다. 앱 복귀 증상만으로 초기 브리지 메서드 도착 지연이나 이 결함을 실제 원인으로 확정하지 않는다.

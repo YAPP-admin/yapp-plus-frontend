@@ -1,6 +1,7 @@
 # 작업 목록: iOS OIDC 인증
 
 > T001–T034는 기존 이력이다. #329 보완은 T035부터 시작하며 과거 체크를 현재 결함 해결의 증거로 사용하지 않는다.
+> 2026-11-09의 #406 삭제 재시도 작업은 T059–T073이다. 기존 완료 기록과 구분한다.
 
 **입력**: [명세](spec.md), [계획](plan.md), [계약](contracts/auth.md), [상태 모델](data-model.md).
 
@@ -171,3 +172,42 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 - [x] 로그인·갱신 자격 검증 분리와 userId 유지.
 - [x] 버전이 있는 저장 세션 및 이전 형식 재로그인, 저장소 경계 검증.
 - [x] 회귀 테스트와 check/build, 수정 native 번들·시뮬레이터 결과 기록.
+
+## #406 준비 — 1단계
+
+- [x] T059 이슈 #406 생성과 기준 commit·배포 버전 근거를 specs/016-ios-oidc-auth/validation.md에 기록한다.
+- [x] T060 specs/016-ios-oidc-auth/의 spec.md, plan.md, research.md, data-model.md, contracts/auth.md, quickstart.md에 DR-001–005와 단계별 종료 기준을 정리한다.
+- [x] T061 고정 버전 설치·문서 형식·품질 검사 결과를 specs/016-ios-oidc-auth/validation.md에 기록한다.
+
+## #406 US3 (P1) — 2단계: 네이티브 복구
+
+독립 검증 기준: 삭제 실패 후 재조회가 실제 삭제를 다시 수행하고, 새 로그인 세션을 보존한다.
+
+- [x] T062 [US3] apps/mobile/src/auth/session.test.ts에 삭제 실패→성공·반복 실패·동시 재조회 회귀를 추가하고 수정 전 실패를 확인한다.
+- [x] T063 [US3] apps/mobile/src/auth/session.ts에 generation·mutex·restoring을 사용하는 삭제 재시도를 구현한다.
+- [x] T064 [US3] apps/mobile/src/auth/session.test.ts에서 새 로그인과 삭제의 실행 순서·추가 clear·오래된 finally 경쟁을 검증한다.
+- [x] T065 [US3] apps/mobile/src/auth/session-recovery.test.ts에서 실제 AuthStorage와 대역 저장소의 부분 삭제를 검증하고 모바일 테스트 결과를 specs/016-ios-oidc-auth/validation.md에 제출한다.
+
+## #406 US3 — 3단계: 웹 연결·품질 검사
+
+- [x] T066 [US3] apps/web/stackflow/src/account-boundary.test.tsx에 STORAGE→재시도→SIGNED_OUT→로그인 화면 및 보호 콘텐츠 비노출을 실제 사용자 이벤트로 검증한다.
+- [x] T067 [US3] package.json의 check/build를 실행하고 새 실행·Turbo 캐시·실패를 specs/016-ios-oidc-auth/validation.md에 구분한다.
+- [ ] T068 [US3] 3단계 제품 변경본을 .context/auth-recovery/에 보관하고 specs/016-ios-oidc-auth/validation.md에 사용자 리뷰 결과를 남긴다. 기준본 저장은 완료했으며 리뷰 대기 중이다.
+
+## #406 US3 — 4단계: 시뮬레이터 오류 주입
+
+- [ ] T069 [US3] specs/016-ios-oidc-auth/quickstart.md에 따라 전용 시뮬레이터와 실제 브리지 singleton의 오류 주입 구성을 준비하고 .context/auth-recovery/에 기록한다.
+- [ ] T070 [US3] 실패 지속·자동 복구·수동 복구를 재시작 없이 검증하고 .context/auth-recovery/에 상태·삭제 횟수·화면 근거를 저장한다.
+- [ ] T071 [US3] 테스트 자격과 임시 구성을 제거하고 3단계 변경본과 비교한 결과를 specs/016-ios-oidc-auth/validation.md에 제출한다.
+
+## #406 US3 — 5단계: 실제 Google 인증
+
+- [ ] T072 [US3] 정상 구성에서 Google 로그인·30초 복귀·UI 로그아웃·재로그인·재실행 복구를 확인하고 specs/016-ios-oidc-auth/validation.md에 기록한다.
+- [ ] T073 최종 변경량·필수 검사·미검증·서버/시뮬레이터 정리·롤백을 specs/016-ios-oidc-auth/validation.md에 제출한다.
+
+### 의존성과 최소 구현 범위
+
+1→2→3→4→5 순서이며 각 단계 보고 후 사용자 리뷰와 다음 단계 확인이 필요하다.
+새 작업 15개 중 US3 11개, 준비·최종 정리 4개다. 최소 제품 수정은 US3의 삭제 재시도이며
+완료 판정에는 기기 검증도 포함한다. 같은 세션 상태와 검증본을 공유하므로 구현을 병렬 진행하지 않는다.
+3단계의 웹 테스트 검토와 네이티브 결과 검토는 독립적으로 수행할 수 있다.
