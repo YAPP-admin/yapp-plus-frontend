@@ -1,7 +1,7 @@
 'use client';
 
 /** 탭 화면에서는 SEED 탭 탐색을 제공하고 알림에서는 일반 복귀 링크를 제공합니다. */
-import { Tabs, Text } from '@seed-design/react';
+import { Box, Grid, Tabs, Text, VStack } from '@seed-design/react';
 import type { ComponentProps } from 'react';
 import {
   IconArticleFill,
@@ -49,35 +49,43 @@ export function BottomNavigation({ activeTab }: { activeTab: TabName | null }) {
     );
 
     return activeTab === null ? (
-      <TabLink key={tab} tab={tab} className={item}>
-        {content}
-      </TabLink>
+      <VStack key={tab} asChild align="center" justify="center" gap="x1">
+        <TabLink tab={tab} className={item}>
+          {content}
+        </TabLink>
+      </VStack>
     ) : (
       <Tabs.Trigger key={tab} value={tab} asChild>
-        <BottomTabLink
-          tab={tab}
-          className={item}
-          aria-current={activeTab === tab ? 'page' : undefined}
-        >
-          {content}
-        </BottomTabLink>
+        <VStack asChild align="center" justify="center" gap="x1">
+          <BottomTabLink
+            tab={tab}
+            className={item}
+            aria-current={activeTab === tab ? 'page' : undefined}
+          >
+            {content}
+          </BottomTabLink>
+        </VStack>
       </Tabs.Trigger>
     );
   });
 
   return (
-    <div className={bottomBar}>
-      <nav aria-label="주요 메뉴">
+    <VStack className={bottomBar}>
+      <Box as="nav" aria-label="주요 메뉴">
         {activeTab === null ? (
-          <div className={navigation}>{links}</div>
-        ) : (
-          <Tabs.List className={navigation} aria-label="주요 메뉴">
+          <Grid columns={4} className={navigation}>
             {links}
+          </Grid>
+        ) : (
+          <Tabs.List asChild aria-label="주요 메뉴">
+            <Grid columns={4} className={navigation}>
+              {links}
+            </Grid>
           </Tabs.List>
         )}
-      </nav>
-      <div className={homeIndicatorArea} aria-hidden="true" />
-    </div>
+      </Box>
+      <Box className={homeIndicatorArea} aria-hidden="true" />
+    </VStack>
   );
 }
 

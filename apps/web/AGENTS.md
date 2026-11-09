@@ -41,7 +41,7 @@ apps/web/
 - 일반 화면 링크는 `ActivityLink`, 명령형 이동은 typed `useFlow`를 사용합니다. Next.js 호환
   router, href mapper 또는 별도 navigation adapter를 만들지 않습니다.
 - 하단 메뉴는 `TabLink`의 `replaceStep`으로 현재 Tabs Activity를 갱신합니다. 탭 이동은 browser
-  history에 쌓거나 화면 전환 애니메이션을 실행하지 않습니다.
+  history에 쌓거나 Stackflow Activity 전환 애니메이션을 실행하지 않습니다.
 - 하단 메뉴와 본문은 controlled SEED Tabs로 연결합니다. 클릭은 `TabLink`, 방향키·Home·End는
   `TabsActivity`의 `replaceStep`이 처리하고 선택 상태는 Stackflow params만 소유합니다.
   SEED 클릭 선택과 링크 탐색을 중복 실행하지 않으며 href·수정키 클릭·패널의 접근성 연결을 유지합니다.
@@ -51,8 +51,9 @@ apps/web/
 - 일반 Activity의 push·replace·pop에는 `animate: false`를 지정하지 않고 플랫폼 전환 정책을
   사용합니다. 여러 Stackflow 동작을 하나의 탭 전환으로 합치는 경우처럼 의도가 명확하고 테스트된
   경로에서만 애니메이션을 끕니다.
-- 탭 panel은 React `Activity`로 표시·숨김을 제어합니다. 숨겨진 panel의 state와 DOM은 보존되지만
-  Effect는 정리되므로 timer와 전역 event listener는 cleanup을 제공해야 합니다.
+- 탭 panel은 SEED `lazyMount`로 첫 방문까지 지연하고 이후 DOM·스크롤을 유지합니다.
+  비활성 탭은 `ScreenActiveContext`로 observer를 중단합니다. Query는 구독을 유지합니다. 새 timer·전역 event
+  listener도 활성 상태에 맞춰 연결하고 cleanup을 제공해야 합니다.
 
 ## UI와 실행 환경
 

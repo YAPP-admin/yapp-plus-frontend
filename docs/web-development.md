@@ -79,13 +79,23 @@ apps/web/
 `stackflow/src/stack.tsx`가 URL과 Activity를 연결하고, `src/app`은 앱의 전역 구성을
 담당합니다. Activity는 `src/pages`의 공개 `index.ts`를 통해 화면 슬라이스를 조합합니다.
 
-`TabsLayout`은 `PageShell`과 하단 메뉴를 조합합니다. Tabs Activity의 각 탭 panel은 React
-`Activity`로 표시·숨김을 제어해 실행 중 state·DOM을 보존하고 숨겨진 panel의 Effect를 정리합니다.
+`TabsLayout`은 `PageShell`과 하단 메뉴를 조합합니다. 탭 panel은 SEED `lazyMount`로 첫 방문까지
+지연하고 이후 마운트를 유지해 입력·DOM·스크롤을 보존합니다.
 하단 메뉴와 본문은 controlled SEED Tabs로 연결합니다. 클릭의 URL 탐색은 `TabLink`가 소유하고,
 방향키·Home·End 선택은 `TabsActivity`의 `replaceStep`으로 연결합니다. 선택 상태의 기준은
 Stackflow step params이며 별도 로컬 선택 상태를 만들지 않습니다. 링크에는 href와 수정키 클릭
 동작을 유지하고, 선택된 탭과 본문은 `tab`·`tabpanel` 관계로 연결합니다. 알림 화면의 하단 메뉴는
 선택된 탭 없이 일반 복귀 링크를 제공합니다.
+
+탭 본문은 `Tabs.Carousel`의 기본 전환을 사용하며 `swipeable=false`, `loop=false`로 둡니다.
+헤더와 하단 메뉴는 고정하고 각 패널이 스크롤을 소유합니다. 비활성 본문은 즉시 `inert`로
+전환합니다. 탭 본문 Query는 마운트를 유지해 cache 무효화와 window focus 재조회 정책을 그대로
+적용합니다. 화면 활성 상태와 탭 선택을 결합한 `ScreenActiveContext`로 무한 목록 observer만
+해제합니다. 복귀 시 stale 재조회와 오류 복구 정책을 유지합니다.
+모션 감소 설정에서는 DOM을 교체하지 않고 카메라 위치만 즉시 적용합니다. Carousel 내부의
+`fixed` 다이얼로그는 Portal로 렌더링해 transform·overflow에 종속되지 않게 합니다.
+테스트 환경에는 레이아웃 측정이 없으므로 Carousel의 DOM 경계를 대체해 탐색·활성 상태를 검증하며,
+실제 이동 방향·스크롤 배치·모션 감소 표현은 브라우저와 WebView에서 별도로 확인합니다.
 
 공지 상세·출석·설정 Activity는 `DetailLayout` 또는 `PageShell`을 조합합니다. `AuthLayout`은
 `PageShell`의 `plain` 옵션을 사용해 YAPP+ 문구와 구분선 없이 흰색 배경으로 표시합니다. 가입
@@ -186,9 +196,9 @@ Next.js 호환 router를 만들지 않습니다.
 edge swipe를 허용하고 입력 손실 위험이 있는 화면, reduced motion, Android와 일반 web에서는
 차단합니다. 화면 prop을 생략했다고 플랫폼 정책을 `undefined`로 덮어쓰지 않습니다.
 
-Tabs Activity의 panel은 CSS `hidden` wrapper 대신 React `Activity`를 사용합니다. hidden panel은
-state와 DOM을 보존하지만 Effect를 정리하므로 timer, subscription과 전역 event listener는 cleanup을
-반환해야 합니다. 탭을 다시 열면 Effect가 새로 시작된다는 수명 계약을 전제로 작성합니다.
+Tabs Activity의 panel은 SEED가 첫 방문 이후 마운트를 유지합니다. 비활성 탭의 일반 Effect는
+자동으로 정리되지 않습니다. timer, subscription과 전역 event listener를 추가할 때는
+`ScreenActiveContext`가 활성일 때만 연결하고 비활성 전환 시 cleanup으로 해제합니다.
 
 ## 명명과 스타일
 

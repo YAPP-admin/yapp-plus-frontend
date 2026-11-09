@@ -1,10 +1,39 @@
-/** 웹 탭 셸의 접근성 관계와 React Activity 수명을 검증합니다. */
-import { render, screen, within } from '@testing-library/react';
+/** 웹 탭 셸의 접근성 관계와 SEED 패널 보존·활성 상태를 검증합니다. */
+import { fireEvent, render, screen, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { TabPanel, TabsLayout } from './tabs-layout';
 import { PageShell } from './page-shell';
-import { useEffect, useState, type ReactNode } from 'react';
+import {
+  createElement,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+  type ComponentProps,
+} from 'react';
+import type * as Seed from '@seed-design/react';
+import { ScreenActiveContext } from '@/shared/lib/screen-activity';
+import { tabNames, type TabName } from '../navigation/tab';
 import userEvent from '@testing-library/user-event';
+
+vi.mock('@seed-design/react', async (importOriginal) => {
+  const actual = await importOriginal<typeof Seed>();
+  return {
+    ...actual,
+    Tabs: {
+      ...actual.Tabs,
+      Carousel: ({ children, swipeable, loop }: ComponentProps<typeof Seed.Tabs.Carousel>) => {
+        return createElement(
+          'div',
+          { 'data-testid': 'carousel', 'data-swipeable': swipeable, 'data-loop': loop },
+          children,
+        );
+      },
+      CarouselCamera: ({ children, ...props }: ComponentProps<typeof Seed.Tabs.CarouselCamera>) =>
+        createElement('div', props, children),
+    },
+  };
+});
 
 vi.mock('@/app/navigation/tab-link', () => ({
   TabLink: ({
@@ -43,6 +72,31 @@ function PanelView({ active, children }: { active: 'home' | 'schedule'; children
         <main>일정</main>
       </TabPanel>
     </TabsLayout>
+  );
+}
+
+function ActiveProbe({ tab }: { tab: TabName }) {
+  const active = useContext(ScreenActiveContext);
+  return <input aria-label={`${tab} 입력`} data-active={active} defaultValue={tab} />;
+}
+
+function TransitionView({
+  active,
+  screenActive = true,
+}: {
+  active: TabName;
+  screenActive?: boolean;
+}) {
+  return (
+    <ScreenActiveContext value={screenActive}>
+      <TabsLayout activeTab={active} onTabChange={vi.fn<() => void>()}>
+        {tabNames.map((tab) => (
+          <TabPanel key={tab} tab={tab} active={tab === active}>
+            <ActiveProbe tab={tab} />
+          </TabPanel>
+        ))}
+      </TabsLayout>
+    </ScreenActiveContext>
   );
 }
 
@@ -123,7 +177,7 @@ describe('TabsLayout', () => {
     expect(navigation.queryByRole('link', { current: 'page' })).not.toBeInTheDocument();
   });
 
-  it('패널의 DOM·입력 상태를 보존하고 비활성 Effect를 정리한다', async () => {
+  it('방문한 패널의 DOM·입력·스크롤을 숨김이나 재마운트 없이 보존한다', async () => {
     const start = vi.fn<() => void>();
     const stop = vi.fn<() => void>();
     const user = userEvent.setup();
@@ -150,6 +204,10 @@ describe('TabsLayout', () => {
     await user.type(input, '보존할 내용');
     const homePanel = screen.getByRole('tabpanel', { name: '홈' });
     expect(screen.getByRole('tab', { name: '홈' })).toHaveAttribute('aria-controls', homePanel.id);
+    homePanel.scrollTop = 120;
+    fireEvent.scroll(homePanel);
+    expect(screen.getByTestId('carousel')).toHaveAttribute('data-swipeable', 'false');
+    expect(screen.getByTestId('carousel')).toHaveAttribute('data-loop', 'false');
     expect(start).toHaveBeenCalledTimes(1);
 
     rerender(
@@ -159,7 +217,7 @@ describe('TabsLayout', () => {
     );
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     expect(homePanel).toHaveAttribute('inert');
-    expect(stop).toHaveBeenCalledTimes(1);
+    expect(stop).not.toHaveBeenCalled();
 
     rerender(
       <PanelView active="home">
@@ -168,6 +226,25 @@ describe('TabsLayout', () => {
     );
     expect(screen.getByRole('textbox')).toBe(input);
     expect(input).toHaveValue('보존할 내용');
-    expect(start).toHaveBeenCalledTimes(2);
+    expect(homePanel.scrollTop).toBe(120);
+    expect(start).toHaveBeenCalledTimes(1);
+    expect(stop).not.toHaveBeenCalled();
+  });
+  it('미방문 탭은 마운트하지 않고 방문 후에는 활성 context만 갱신한다', () => {
+    const { rerender } = render(<TransitionView active="home" />);
+    expect(screen.queryByLabelText('my 입력')).not.toBeInTheDocument();
+    const home = screen.getByLabelText('home 입력');
+    rerender(<TransitionView active="my" />);
+    const my = screen.getByLabelText('my 입력');
+    expect(home).toHaveAttribute('data-active', 'false');
+    expect(my).toHaveAttribute('data-active', 'true');
+    rerender(<TransitionView active="schedule" />);
+    rerender(<TransitionView active="home" />);
+    expect(screen.getByLabelText('home 입력')).toBe(home);
+    expect(screen.getByLabelText('my 입력')).toBe(my);
+    expect(home).toHaveAttribute('data-active', 'true');
+    expect(my).toHaveAttribute('data-active', 'false');
+    rerender(<TransitionView active="home" screenActive={false} />);
+    expect(home).toHaveAttribute('data-active', 'false');
   });
 });

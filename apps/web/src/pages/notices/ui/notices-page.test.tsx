@@ -7,6 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { useState } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
+import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 import { NoticesPage } from './notices-page';
 
 vi.mock('@/app/navigation/activity-link', () => ({
@@ -40,7 +41,9 @@ beforeEach(() => {
         observer.trigger = () => callback([{ isIntersecting: true }]);
       }
       observe = vi.fn<() => void>();
-      disconnect = vi.fn<() => void>();
+      disconnect = () => {
+        observer.trigger = undefined;
+      };
     },
   );
 });
@@ -52,14 +55,17 @@ afterEach(() => {
 
 function renderPage() {
   const client = createAppQueryClient();
-  const view = render(
+  const content = (active: boolean) => (
     <QueryClientProvider client={client}>
       <NativeAuthSessionProvider>
-        <ControlledNotices />
+        <ScreenActiveContext value={active}>
+          <ControlledNotices />
+        </ScreenActiveContext>
       </NativeAuthSessionProvider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
-  return { client, ...view };
+  const view = render(content(true));
+  return { client, ...view, setActive: (active: boolean) => view.rerender(content(active)) };
 }
 
 function ControlledNotices() {
@@ -115,4 +121,17 @@ it('초기 조회 오류를 ResultSection의 재시도로 복구한다', async (
   );
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(await screen.findByText('아직 작성된 공지사항이 없어요')).toBeVisible();
+});
+
+it('비활성 탭에서는 추가 조회 관찰을 해제하고 복귀하면 다시 연결한다', async () => {
+  const { setActive } = renderPage();
+  await screen.findByText('6주차 세션 안내');
+  await waitFor(() => expect(observer.trigger).toBeDefined());
+  setActive(false);
+  expect(observer.trigger).toBeUndefined();
+  expect(screen.queryByText('5주차 세션 안내')).not.toBeInTheDocument();
+  setActive(true);
+  await waitFor(() => expect(observer.trigger).toBeDefined());
+  act(() => observer.trigger?.());
+  expect(await screen.findByText('5주차 세션 안내')).toBeVisible();
 });

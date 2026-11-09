@@ -99,6 +99,7 @@ const mount = (client: QueryClient) => {
   return { ...view, actions };
 };
 
+// 첫 진입의 lazy 화면 로딩과 탐색을 포함하므로 내부 10초 대기보다 긴 한도를 둡니다.
 it('세션 복구와 로그아웃 후 재로그인 뒤에도 현재 탭을 전환한다', async () => {
   const user = userEvent.setup();
   const client = new QueryClient();
@@ -118,7 +119,7 @@ it('세션 복구와 로그아웃 후 재로그인 뒤에도 현재 탭을 전�
   await user.click(screen.getByRole('tab', { name: '게시판' }));
   await waitFor(() => expect(window.location.pathname).toBe('/notices'));
   expect(screen.getByRole('tab', { name: '게시판' })).toHaveAttribute('aria-current', 'page');
-});
+}, 15000);
 
 it('토큰 갱신은 폼을 유지하고 계정 변경은 이전 폼과 화면을 제거한다', async () => {
   const client = new QueryClient();

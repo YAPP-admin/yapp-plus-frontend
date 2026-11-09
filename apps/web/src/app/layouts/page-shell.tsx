@@ -1,17 +1,18 @@
+/** 화면별 헤더·본문·하단 탐색의 의미와 기본 배치를 제공합니다. */
+import { Flex, Grid, Text } from '@seed-design/react';
 import type { ReactNode } from 'react';
 import {
   customHeaderContainer,
   header,
   headerPlain,
   shell,
-  shellPlain,
   shellWithNavigation,
   wordmark,
 } from './page-shell.css';
 
 function getShellClassName(plain: boolean, hasNavigation: boolean) {
   if (plain) {
-    return shellPlain;
+    return shell;
   }
   return hasNavigation ? shellWithNavigation : shell;
 }
@@ -32,6 +33,7 @@ function getHeaderClassName(
 
 export function PageShell({
   children,
+  className,
   navigation,
   backButton,
   plain = false,
@@ -39,6 +41,8 @@ export function PageShell({
   header: customHeader,
 }: {
   children: ReactNode;
+  /** 화면별 높이·스크롤 배치를 조정합니다. */
+  className?: string;
   navigation?: ReactNode;
   backButton?: ReactNode;
   /** 인증 화면용입니다. YAPP+ 문구와 구분선을 숨기고 흰색 배경을 사용합니다. */
@@ -51,19 +55,35 @@ export function PageShell({
   const headerClassName = getHeaderClassName(customHeader, plain, borderlessHeader);
 
   return (
-    <div className={getShellClassName(plain, Boolean(navigation))}>
+    <Grid
+      rows={navigation && !plain ? 'auto 1fr auto' : 'auto 1fr'}
+      bg="bg.layerDefault"
+      className={[getShellClassName(plain, Boolean(navigation)), className]
+        .filter(Boolean)
+        .join(' ')}
+    >
       {customHeader !== null && (
-        <header className={headerClassName}>
+        <Flex
+          as="header"
+          direction={customHeader ? 'column' : 'row'}
+          align={customHeader ? undefined : 'center'}
+          gap={customHeader ? undefined : 'x3'}
+          className={headerClassName}
+        >
           {customHeader ?? (
             <>
               {backButton}
-              {plain ? null : <span className={wordmark}>YAPP+</span>}
+              {plain ? null : (
+                <Text textStyle="t3Bold" className={wordmark}>
+                  YAPP+
+                </Text>
+              )}
             </>
           )}
-        </header>
+        </Flex>
       )}
       {children}
       {navigation}
-    </div>
+    </Grid>
   );
 }

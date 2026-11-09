@@ -5,8 +5,6 @@ import { globalStyle, style } from '@vanilla-extract/css';
 export const bottomBar = style({
   position: 'sticky',
   bottom: 0,
-  display: 'flex',
-  flexDirection: 'column',
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
@@ -20,7 +18,6 @@ export const bottomBar = style({
 
 export const navigation = style({
   display: 'grid',
-  gridTemplateColumns: 'repeat(4, minmax(0, 1fr))',
   padding: '8px 20px 4px',
   width: '100%',
   boxSizing: 'border-box',
@@ -36,11 +33,8 @@ export const navigation = style({
 });
 
 export const item = style({
-  display: 'flex',
-  flexDirection: 'column',
   alignItems: 'center',
   justifyContent: 'center',
-  gap: '4px',
   padding: '4px 0',
   color: vars.$color.palette.gray600,
   fontSize: vars.$fontSize.t2,

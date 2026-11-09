@@ -188,6 +188,8 @@ describe('MyPage', () => {
     expect(heading).toBeInTheDocument();
 
     const dialog = screen.getByRole('dialog', { name: '출석 규칙' });
+    // Carousel의 transform·overflow에 가려지지 않도록 페이지 밖에 렌더링합니다.
+    expect(dialog.closest('main')).toBeNull();
     expect(within(dialog).getByText('1시간 지각/조퇴')).toBeInTheDocument();
     expect(within(dialog).getByText('-4점')).toBeInTheDocument();
     expect(within(dialog).getByText('결석')).toBeInTheDocument();
