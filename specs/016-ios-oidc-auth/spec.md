@@ -1,6 +1,6 @@
 # 기능 명세: iOS 소셜 로그인과 세션 관리
 
-> 2026-11-09 보완: `DongjaJ/15w81`, [#406](https://github.com/YAPP-admin/yapp-plus-frontend/issues/406), 삭제 재시도 복구의 4단계 시뮬레이터 검증 리뷰.
+> 2026-11-09 보완: `DongjaJ/15w81`, [#406](https://github.com/YAPP-admin/yapp-plus-frontend/issues/406), 삭제 재시도 복구의 5단계 검증 완료·최종 리뷰.
 > 아래 초기 명세·완료 기록은 이력이다. 이번 작업의 범위와 완료 판정은 마지막의 #406 보완 요구사항을 따른다.
 
 **브랜치**: `DongjaJ/apple/google-oidc-plan`
