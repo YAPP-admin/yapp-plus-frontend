@@ -104,6 +104,40 @@ function isVisible(element: HTMLElement) {
 }
 
 describe('Stackflow FSD 화면 연결', () => {
+  it('하단 탭의 키보드 선택은 URL·포커스·query를 동기화하고 history를 늘리지 않는다', async () => {
+    window.history.replaceState({}, '', '/notices?category=ASSIGNMENT');
+    const user = userEvent.setup();
+    renderStack();
+    await waitForTopHeading('게시판');
+    const navigation = within(screen.getByRole('tablist', { name: '주요 메뉴' }));
+    const historyLength = window.history.length;
+    act(() => navigation.getByRole('tab', { name: '게시판' }).focus());
+
+    for (const [key, label, path] of [
+      ['ArrowRight', 'MY', '/my'],
+      ['Home', '홈', '/'],
+      ['End', 'MY', '/my'],
+      ['ArrowLeft', '게시판', '/notices'],
+    ] as const) {
+      await user.keyboard(`{${key}}`);
+      await waitFor(() => expect(window.location.pathname).toBe(path));
+      const selected = navigation.getByRole('tab', { selected: true });
+      expect(selected).toHaveTextContent(label);
+      expect(selected).toHaveFocus();
+      expect(document.getElementById(selected.getAttribute('aria-controls') ?? '')).toBeVisible();
+    }
+
+    expect(window.location.search).toBe('?category=ASSIGNMENT');
+    const notices = screen.getByRole('tabpanel', { name: '게시판' });
+    expect(within(notices).getByRole('tab', { name: '과제' })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await user.keyboard('{Enter}');
+    expect(window.history.length).toBe(historyLength);
+    expect(window.location.pathname).toBe('/notices');
+  }, 15000);
+
   it('이전 Tabs를 종료한 뒤에도 현재 화면의 탭과 URL을 변경한다', async () => {
     const user = userEvent.setup();
     const { actions } = renderStack();
@@ -120,10 +154,10 @@ describe('Stackflow FSD 화면 연결', () => {
       ['MY', '/my', '마이페이지'],
       ['홈', '/', '홈'],
     ]) {
-      await user.click(currentScreen.getByRole('link', { name: label }));
+      await user.click(currentScreen.getByRole('tab', { name: label }));
       await waitFor(() => expect(window.location.pathname).toBe(path));
       await waitFor(() => expect(document.title).toBe(`${title} | YAPP+`));
-      expect(currentScreen.getByRole('link', { name: label })).toHaveAttribute(
+      expect(currentScreen.getByRole('tab', { name: label })).toHaveAttribute(
         'aria-current',
         'page',
       );
@@ -148,11 +182,11 @@ describe('Stackflow FSD 화면 연결', () => {
     await user.click(homeScreen.getByRole('button', { name: '팀 세션 화면으로 전환' }));
     const historyLength = window.history.length;
 
-    await user.click(screen.getByRole('link', { name: /^일정$/ }));
+    await user.click(screen.getByRole('tab', { name: /^일정$/ }));
     await waitFor(() => expect(window.location.pathname).toBe('/schedule'));
     expect(await waitForTopHeading('일정')).toBeTruthy();
 
-    await user.click(screen.getByRole('link', { name: /^홈$/ }));
+    await user.click(screen.getByRole('tab', { name: /^홈$/ }));
     await waitFor(() => expect(window.location.pathname).toBe('/'));
     const restoredHome = await waitForTopHeading('홈');
     expect(restoredHome.getByRole('heading', { name: '이번 주는 팀 세션이에요' })).toBeVisible();
@@ -164,7 +198,7 @@ describe('Stackflow FSD 화면 연결', () => {
     renderStack();
 
     const homeScreen = await waitForTopHeading('홈');
-    await user.click(homeScreen.getByRole('link', { name: /^게시판$/ }));
+    await user.click(homeScreen.getByRole('tab', { name: /^게시판$/ }));
     await waitFor(() => expect(window.location.pathname).toBe('/notices'));
     const noticesScreen = await waitForTopHeading('게시판');
     await user.click(noticesScreen.getByRole('tab', { name: '과제' }));
@@ -353,9 +387,9 @@ describe('Stackflow FSD 화면 연결', () => {
     const schedule = await waitForTopHeading('일정');
     expect(await schedule.findByRole('list', { name: '세션 일정 목록' })).toBeVisible();
     const titles = schedule.getAllByRole('article').map((article) => article.textContent);
-    await user.click(screen.getByRole('link', { name: /^홈$/ }));
+    await user.click(screen.getByRole('tab', { name: /^홈$/ }));
     await waitForTopHeading('홈');
-    await user.click(screen.getByRole('link', { name: /^일정$/ }));
+    await user.click(screen.getByRole('tab', { name: /^일정$/ }));
     const restored = await waitForTopHeading('일정');
     expect(restored.getAllByRole('article').map((article) => article.textContent)).toEqual(titles);
     expect(window.location.pathname).toBe('/schedule');

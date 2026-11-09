@@ -74,11 +74,11 @@ it('일정 오류는 숨겨진 동안 재시도하지 않고 탭 복귀 시 한 
   );
   const { user } = await renderStack('/schedule');
   await screen.findByRole('button', { name: '다시 시도' });
-  await user.click(screen.getByRole('link', { name: /^홈$/ }));
+  await user.click(screen.getByRole('tab', { name: /^홈$/ }));
   await screen.findByRole('heading', { name: '홈' });
   await settle();
   expect(calls).toBe(1);
-  await user.click(screen.getByRole('link', { name: /^일정$/ }));
+  await user.click(screen.getByRole('tab', { name: /^일정$/ }));
   await screen.findByRole('list', { name: '세션 일정 목록' });
   await settle();
   expect(calls).toBe(2);
@@ -102,9 +102,9 @@ it('첫 진입 전에 조회가 실패해도 화면 복귀 전에는 재시도�
   await screen.findByRole('button', { name: '다시 시도' });
   await settle();
   expect(calls).toBe(1);
-  await user.click(screen.getByRole('link', { name: /^홈$/ }));
+  await user.click(screen.getByRole('tab', { name: /^홈$/ }));
   await screen.findByRole('heading', { name: '홈' });
-  await user.click(screen.getByRole('link', { name: /^일정$/ }));
+  await user.click(screen.getByRole('tab', { name: /^일정$/ }));
   await screen.findByRole('list', { name: '세션 일정 목록' });
   expect(calls).toBe(2);
 });
@@ -121,9 +121,9 @@ it('반복 실패해도 복귀당 한 번만 재시도하고 수동 재시도를
   );
   const { user } = await renderStack('/schedule');
   await screen.findByRole('button', { name: '다시 시도' });
-  await user.click(screen.getByRole('link', { name: /^홈$/ }));
+  await user.click(screen.getByRole('tab', { name: /^홈$/ }));
   await screen.findByRole('heading', { name: '홈' });
-  await user.click(screen.getByRole('link', { name: /^일정$/ }));
+  await user.click(screen.getByRole('tab', { name: /^일정$/ }));
   await waitFor(() => expect(calls).toBe(2));
   const retry = await screen.findByRole('button', { name: '다시 시도' });
   await settle();
@@ -144,7 +144,7 @@ it.each([false, true])('탭 복귀는 기존 stale 재조회 정책을 유지한
   );
   const { client, user } = await renderStack('/schedule');
   const list = await screen.findByRole('list', { name: '세션 일정 목록' });
-  await user.click(screen.getByRole('link', { name: /^홈$/ }));
+  await user.click(screen.getByRole('tab', { name: /^홈$/ }));
   await screen.findByRole('heading', { name: '홈' });
   if (stale) {
     const key = find4Options().queryKey;
@@ -152,7 +152,7 @@ it.each([false, true])('탭 복귀는 기존 stale 재조회 정책을 유지한
       client.setQueryData(key, (current) => current, { updatedAt: Date.now() - 31_000 });
     });
   }
-  await user.click(screen.getByRole('link', { name: /^일정$/ }));
+  await user.click(screen.getByRole('tab', { name: /^일정$/ }));
   await waitFor(() => expect(list).toBeVisible());
   await settle();
   expect(calls).toBe(stale ? 2 : 1);
@@ -263,7 +263,7 @@ it('상세 복귀가 다른 탭의 stale 조회를 실행하지 않는다', asyn
   );
   const { client, user, actions } = await renderStack('/schedule');
   await screen.findByRole('list', { name: '세션 일정 목록' });
-  await user.click(screen.getByRole('link', { name: 'MY' }));
+  await user.click(screen.getByRole('tab', { name: 'MY' }));
   await screen.findByText('92점');
   await user.click(screen.getByRole('link', { name: '출석 내역' }));
   await screen.findByRole('heading', { name: '출석 내역', level: 1 });

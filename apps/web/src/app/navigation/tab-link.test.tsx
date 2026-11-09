@@ -2,6 +2,9 @@ import { fireEvent, render, screen } from '@testing-library/react';
 import { beforeEach, expect, it, vi } from 'vitest';
 import { TabLink } from './tab-link';
 import type { TabsState } from './tab';
+import { Tabs } from '@seed-design/react';
+import userEvent from '@testing-library/user-event';
+import { BottomNavigation } from '../layouts/bottom-navigation';
 
 type Tick = (resolve: () => void) => void;
 type ReplaceStepInput = TabsState | ((currentParams: TabsState) => TabsState);
@@ -102,4 +105,95 @@ it('수정키로 탭 링크를 열면 브라우저의 기본 이동을 유지한
   expect(fireEvent.click(link, { ctrlKey: true })).toBe(true);
   expect(state.pop).not.toHaveBeenCalled();
   expect(state.queues.get('a')).toHaveLength(0);
+});
+
+it('SEED 탭 클릭은 step을 한 번만 교체하고 현재 탭 재선택은 무시한다', async () => {
+  state.currentName = 'Tabs';
+  state.stepParams = { initialTab: 'home', noticeCategory: 'ASSIGNMENT' };
+  const onValueChange = vi.fn<(value: string) => void>();
+  const user = userEvent.setup();
+  render(
+    <Tabs.Root value="home" onValueChange={onValueChange}>
+      <BottomNavigation activeTab="home" />
+    </Tabs.Root>,
+  );
+
+  await user.click(screen.getByRole('tab', { name: '홈' }));
+  expect(state.replace).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('tab', { name: '일정' }));
+  expect(state.replace).toHaveBeenCalledExactlyOnceWith('a', {
+    initialTab: 'schedule',
+    noticeCategory: 'ASSIGNMENT',
+  });
+  expect(onValueChange).not.toHaveBeenCalled();
+});
+
+it.each(['Control', 'Meta', 'Shift', 'Alt'])(
+  'SEED 탭의 %s 클릭은 URL을 제공하고 현재 선택을 변경하지 않는다',
+  async (modifier) => {
+    state.currentName = 'Tabs';
+    const onValueChange = vi.fn<(value: string) => void>();
+    const user = userEvent.setup();
+    render(
+      <Tabs.Root value="home" onValueChange={onValueChange}>
+        <BottomNavigation activeTab="home" />
+      </Tabs.Root>,
+    );
+    for (const [name, href] of [
+      ['게시판', '/notices'],
+      ['홈', '/'],
+    ] as const) {
+      const tab = screen.getByRole('tab', { name });
+      expect(tab).toHaveAttribute('href', href);
+      const clicks: boolean[] = [];
+      document.addEventListener('click', (event) => clicks.push(event.defaultPrevented), {
+        once: true,
+      });
+      await user.keyboard(`{${modifier}>}`);
+      await user.click(tab);
+      await user.keyboard(`{/${modifier}}`);
+      expect(clicks).toEqual([false]);
+    }
+    expect(state.replace).not.toHaveBeenCalled();
+    expect(onValueChange).not.toHaveBeenCalled();
+  },
+);
+
+it('현재 탭 링크도 명시한 조회 조건이 있으면 갱신한다', () => {
+  state.currentName = 'Tabs';
+  state.stepParams = { initialTab: 'notices', noticeCategory: 'ALL' };
+  render(
+    <TabLink tab="notices" aria-current="page" params={{ noticeCategory: 'ASSIGNMENT' }}>
+      과제
+    </TabLink>,
+  );
+  fireEvent.click(screen.getByRole('link', { name: '과제' }));
+  expect(state.replace).toHaveBeenCalledExactlyOnceWith('a', {
+    initialTab: 'notices',
+    noticeCategory: 'ASSIGNMENT',
+  });
+});
+
+it('새 창 대상 링크는 Stackflow 이동으로 가로채지 않는다', async () => {
+  const user = userEvent.setup();
+  render(
+    <TabLink tab="schedule" target="_blank">
+      일정 새 창
+    </TabLink>,
+  );
+  // 앱의 탐색 차단 여부를 기록한 뒤 테스트 환경의 실제 새 창 로드만 막습니다.
+  const clicks: boolean[] = [];
+  document.addEventListener(
+    'click',
+    (event) => {
+      clicks.push(event.defaultPrevented);
+      event.preventDefault();
+    },
+    { once: true },
+  );
+  await user.click(screen.getByRole('link', { name: '일정 새 창' }));
+  expect(clicks).toEqual([false]);
+  expect(state.pop).not.toHaveBeenCalled();
+  expect(state.replace).not.toHaveBeenCalled();
+  expect(state.push).not.toHaveBeenCalled();
 });

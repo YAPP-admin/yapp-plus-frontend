@@ -1,19 +1,24 @@
 'use client';
 
-import type { ReactNode } from 'react';
-import type { TabName } from '../navigation/tab';
+/** Stackflow가 소유한 탭 선택을 SEED의 키보드 탐색·패널 관계에 연결합니다. */
+import { Tabs } from '@seed-design/react';
+import { Activity, type ReactNode } from 'react';
+import { isTabName, type TabName } from '../navigation/tab';
 import { BottomNavigation } from './bottom-navigation';
 import { PageShell } from './page-shell';
 import { TabsHeader } from './tabs-header';
+import { panel } from './tabs-layout.css';
 
 type TabsLayoutProps = {
   children: ReactNode;
-  /** Stackflow Activity가 확정한 현재 탭입니다. */
-  activeTab: TabName | null;
-};
+} & (
+  | { activeTab: TabName; onTabChange: (tab: TabName) => void }
+  | { activeTab: null; onTabChange?: never }
+);
 
-export function TabsLayout({ children, activeTab }: TabsLayoutProps) {
-  return (
+/** 선택은 호출자가 확정하며, null인 알림 화면은 탭 패널 없이 기존 메뉴를 표시합니다. */
+export function TabsLayout({ children, activeTab, onTabChange }: TabsLayoutProps) {
+  const shell = (
     <PageShell
       navigation={<BottomNavigation activeTab={activeTab} />}
       borderlessHeader
@@ -21,5 +26,39 @@ export function TabsLayout({ children, activeTab }: TabsLayoutProps) {
     >
       {children}
     </PageShell>
+  );
+
+  if (activeTab === null) {
+    return shell;
+  }
+
+  return (
+    <Tabs.Root
+      value={activeTab}
+      onValueChange={(value) => {
+        if (isTabName(value) && value !== activeTab) {
+          onTabChange(value);
+        }
+      }}
+    >
+      {shell}
+    </Tabs.Root>
+  );
+}
+
+/** 비활성 본문의 DOM·state는 보존하고 Effect는 정리합니다. 패널의 식별자는 탭과 함께 고정합니다. */
+export function TabPanel({
+  tab,
+  active,
+  children,
+}: {
+  tab: TabName;
+  active: boolean;
+  children: ReactNode;
+}) {
+  return (
+    <Tabs.Content value={tab} className={panel} inert={!active}>
+      <Activity mode={active ? 'visible' : 'hidden'}>{children}</Activity>
+    </Tabs.Content>
   );
 }
