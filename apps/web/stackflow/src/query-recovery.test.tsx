@@ -62,6 +62,7 @@ async function settle() {
   await act(async () => new Promise((resolve) => setTimeout(resolve, 100)));
 }
 
+// 첫 진입의 lazy 화면 로딩과 탐색을 포함하므로 내부 10초 대기보다 긴 한도를 둡니다.
 it('일정 오류는 숨겨진 동안 재시도하지 않고 탭 복귀 시 한 번 복구한다', async () => {
   let calls = 0;
   server.use(
@@ -82,7 +83,7 @@ it('일정 오류는 숨겨진 동안 재시도하지 않고 탭 복귀 시 한 
   await screen.findByRole('list', { name: '세션 일정 목록' });
   await settle();
   expect(calls).toBe(2);
-});
+}, 15000);
 
 it('첫 진입 전에 조회가 실패해도 화면 복귀 전에는 재시도하지 않는다', async () => {
   let calls = 0;
@@ -276,4 +277,26 @@ it('상세 복귀가 다른 탭의 stale 조회를 실행하지 않는다', asyn
   await waitFor(() => expect(document.title).toBe('마이페이지 | YAPP+'));
   await settle();
   expect(scheduleCalls).toBe(1);
+});
+
+it('비활성 탭도 캐시 무효화 후 조회를 유지한다', async () => {
+  let calls = 0;
+  server.use(
+    http.get(scheduleUrl, () => {
+      calls++;
+      return HttpResponse.json(scheduleFixture);
+    }),
+  );
+  const { client, user } = await renderStack('/schedule');
+  const list = await screen.findByRole('list', { name: '세션 일정 목록' });
+  await user.click(screen.getByRole('tab', { name: 'MY' }));
+  await screen.findByText('92점');
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: find4Options().queryKey });
+  });
+  await waitFor(() => expect(calls).toBe(2));
+  await user.click(screen.getByRole('tab', { name: '일정' }));
+  expect(screen.getByRole('list', { name: '세션 일정 목록' })).toBe(list);
+  await settle();
+  expect(calls).toBe(2);
 });

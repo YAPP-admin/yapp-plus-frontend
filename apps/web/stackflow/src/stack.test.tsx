@@ -201,7 +201,7 @@ describe('Stackflow FSD 화면 연결', () => {
     await user.click(homeScreen.getByRole('tab', { name: /^게시판$/ }));
     await waitFor(() => expect(window.location.pathname).toBe('/notices'));
     const noticesScreen = await waitForTopHeading('게시판');
-    await user.click(noticesScreen.getByRole('tab', { name: '과제' }));
+    await user.click(await noticesScreen.findByRole('tab', { name: '과제' }));
     await waitFor(() => expect(window.location.search).toBe('?category=ASSIGNMENT'));
     await user.click(
       noticesScreen.getByRole('link', { name: /과제 공지: 사용자 테스트 결과 제출/ }),

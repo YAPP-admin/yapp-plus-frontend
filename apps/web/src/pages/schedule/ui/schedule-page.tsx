@@ -52,9 +52,7 @@ export function SchedulePage() {
 
 function ScheduleList() {
   const { apiOptions } = useNativeAuthSession();
-  const query = useSuspenseQuery({
-    ...scheduleQueryOptions(apiOptions),
-  });
+  const query = useSuspenseQuery(scheduleQueryOptions(apiOptions));
 
   useRefetchOnScreenReturn(query);
   const { data, dataUpdatedAt, error, refetch } = query;

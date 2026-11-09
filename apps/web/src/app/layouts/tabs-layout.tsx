@@ -2,12 +2,13 @@
 
 /** Stackflow가 소유한 탭 선택을 SEED의 키보드 탐색·패널 관계에 연결합니다. */
 import { Tabs } from '@seed-design/react';
-import { Activity, type ReactNode } from 'react';
-import { isTabName, type TabName } from '../navigation/tab';
+import { useContext, type ReactNode, type CSSProperties } from 'react';
+import { ScreenActiveContext } from '@/shared/lib/screen-activity';
+import { isTabName, tabNames, type TabName } from '../navigation/tab';
 import { BottomNavigation } from './bottom-navigation';
 import { PageShell } from './page-shell';
 import { TabsHeader } from './tabs-header';
-import { panel } from './tabs-layout.css';
+import { camera, carousel, panel, tabShell } from './tabs-layout.css';
 
 type TabsLayoutProps = {
   children: ReactNode;
@@ -18,13 +19,25 @@ type TabsLayoutProps = {
 
 /** 선택은 호출자가 확정하며, null인 알림 화면은 탭 패널 없이 기존 메뉴를 표시합니다. */
 export function TabsLayout({ children, activeTab, onTabChange }: TabsLayoutProps) {
+  const cameraStyle: CSSProperties & { '--tab-index': number } = {
+    '--tab-index': activeTab ? tabNames.indexOf(activeTab) : 0,
+  };
   const shell = (
     <PageShell
+      className={activeTab === null ? undefined : tabShell}
       navigation={<BottomNavigation activeTab={activeTab} />}
       borderlessHeader
       header={<TabsHeader activeTab={activeTab} />}
     >
-      {children}
+      {activeTab === null ? (
+        children
+      ) : (
+        <Tabs.Carousel swipeable={false} loop={false} autoHeight={false} className={carousel}>
+          <Tabs.CarouselCamera className={camera} style={cameraStyle}>
+            {children}
+          </Tabs.CarouselCamera>
+        </Tabs.Carousel>
+      )}
     </PageShell>
   );
 
@@ -34,6 +47,8 @@ export function TabsLayout({ children, activeTab, onTabChange }: TabsLayoutProps
 
   return (
     <Tabs.Root
+      lazyMount
+      unmountOnExit={false}
       value={activeTab}
       onValueChange={(value) => {
         if (isTabName(value) && value !== activeTab) {
@@ -46,7 +61,7 @@ export function TabsLayout({ children, activeTab, onTabChange }: TabsLayoutProps
   );
 }
 
-/** 비활성 본문의 DOM·state는 보존하고 Effect는 정리합니다. 패널의 식별자는 탭과 함께 고정합니다. */
+/** 방문한 패널의 DOM·스크롤은 SEED가 유지하며, 활성 상태는 observer 제어에 제공합니다. */
 export function TabPanel({
   tab,
   active,
@@ -56,9 +71,10 @@ export function TabPanel({
   active: boolean;
   children: ReactNode;
 }) {
+  const screenActive = useContext(ScreenActiveContext);
   return (
     <Tabs.Content value={tab} className={panel} inert={!active}>
-      <Activity mode={active ? 'visible' : 'hidden'}>{children}</Activity>
+      <ScreenActiveContext value={screenActive && active}>{children}</ScreenActiveContext>
     </Tabs.Content>
   );
 }

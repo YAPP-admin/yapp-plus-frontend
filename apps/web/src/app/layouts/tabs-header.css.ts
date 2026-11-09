@@ -2,11 +2,8 @@ import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const homeHeader = style({
-  display: 'flex',
-  justifyContent: 'space-between',
-  alignItems: 'center',
-  padding: `${vars.$dimension.x3} ${vars.$dimension.x4}`,
-  background: vars.$color.bg.layerBasement,
+  // 탭마다 본문 높이가 달라져 Carousel 전환이 재초기화되지 않도록 맞춥니다.
+  height: '54px',
   boxSizing: 'border-box',
   width: '100%',
   maxWidth: '480px',
@@ -29,12 +26,7 @@ export const bellButton = style({
 });
 
 export const defaultHeader = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  padding: `0 ${vars.$dimension.x5}`,
   height: '54px',
-  background: vars.$color.bg.layerDefault,
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
@@ -42,10 +34,6 @@ export const defaultHeader = style({
 });
 
 export const defaultTitle = style({
-  fontSize: vars.$fontSize.t8,
-  lineHeight: vars.$lineHeight.t8,
-  fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.neutral,
   letterSpacing: '-0.3px',
 });
 
