@@ -42,6 +42,9 @@ apps/web/
   router, href mapper 또는 별도 navigation adapter를 만들지 않습니다.
 - 하단 메뉴는 `TabLink`의 `replaceStep`으로 현재 Tabs Activity를 갱신합니다. 탭 이동은 browser
   history에 쌓거나 화면 전환 애니메이션을 실행하지 않습니다.
+- 하단 메뉴와 본문은 controlled SEED Tabs로 연결합니다. 클릭은 `TabLink`, 방향키·Home·End는
+  `TabsActivity`의 `replaceStep`이 처리하고 선택 상태는 Stackflow params만 소유합니다.
+  SEED 클릭 선택과 링크 탐색을 중복 실행하지 않으며 href·수정키 클릭·패널의 접근성 연결을 유지합니다.
 - URL로 복원해야 하는 조회 조건은 Activity params에 포함합니다. `window.history` 직접 수정은
   history-sync와 canonical URL을 조정하는 `src/app/navigation` 훅 또는 Stackflow plugin
   경계에서만 수행합니다.

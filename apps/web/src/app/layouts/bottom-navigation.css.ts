@@ -1,3 +1,4 @@
+/** SEED 탭 동작을 합성해도 기존 하단 메뉴의 배치와 터치 영역을 유지합니다. */
 import { vars } from '@seed-design/css/vars';
 import { globalStyle, style } from '@vanilla-extract/css';
 
@@ -23,6 +24,15 @@ export const navigation = style({
   padding: '8px 20px 4px',
   width: '100%',
   boxSizing: 'border-box',
+  selectors: {
+    '&&': {
+      display: 'grid',
+      padding: '8px 20px 4px',
+      alignItems: 'center',
+      boxShadow: 'none',
+      overflow: 'visible',
+    },
+  },
 });
 
 export const item = style({
@@ -40,7 +50,16 @@ export const item = style({
   touchAction: 'manipulation',
   transition: 'color 150ms ease, transform 100ms ease',
   selectors: {
-    '&[aria-current="page"]': {
+    '&&': {
+      padding: '4px 0',
+      alignItems: 'center',
+      fontSize: vars.$fontSize.t2,
+      lineHeight: vars.$lineHeight.t2,
+      color: vars.$color.palette.gray600,
+      scale: 'none',
+      transition: 'color 150ms ease, transform 100ms ease',
+    },
+    '&&[aria-current="page"]': {
       color: vars.$color.fg.neutralMuted,
       fontWeight: vars.$fontWeight.bold,
     },
@@ -53,20 +72,14 @@ export const item = style({
       borderRadius: vars.$radius.r2,
     },
   },
-});
-
-export const iconWrapper = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: '24px',
-  height: '24px',
+  '@media': {
+    '(prefers-reduced-motion: reduce)': {
+      selectors: { '&&': { transition: 'none' }, '&&:active': { transform: 'none' } },
+    },
+  },
 });
 
 export const itemLabel = style({
-  fontSize: vars.$fontSize.t2,
-  lineHeight: vars.$lineHeight.t2,
-  fontWeight: 'inherit',
   letterSpacing: '-0.2px',
 });
 

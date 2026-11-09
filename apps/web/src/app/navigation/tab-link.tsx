@@ -1,9 +1,10 @@
+/** 링크의 기본 동작과 Stackflow 탭 탐색 경계를 소유합니다. */
 import { useActivity, useFlow, useStepFlow } from '@stackflow/react';
-import { type MouseEvent, type ReactNode } from 'react';
+import { type ComponentProps, type MouseEvent, type ReactNode } from 'react';
 import { isTabName, tabUrl, type TabName, type TabsState } from './tab';
 import { useHistoryTick } from '@stackflow/plugin-history-sync';
 
-type TabLinkProps = Omit<React.AnchorHTMLAttributes<HTMLAnchorElement>, 'href' | 'onClick'> & {
+type TabLinkProps = Omit<ComponentProps<'a'>, 'href' | 'onClick'> & {
   children: ReactNode;
   onClick?: (event: MouseEvent<HTMLAnchorElement>) => void;
   params?: Pick<TabsState, 'session' | 'attendance' | 'noticeCategory'>;
@@ -35,12 +36,18 @@ export function TabLink({ children, onClick, params, tab, ...props }: TabLinkPro
       event.metaKey ||
       event.ctrlKey ||
       event.shiftKey ||
-      event.altKey
+      event.altKey ||
+      (props.target !== undefined && props.target !== '_self') ||
+      props.download !== undefined
     ) {
       return;
     }
 
     event.preventDefault();
+    // 현재 메뉴를 다시 누르는 동작은 무시하되 수정키·새 창 링크는 위에서 그대로 허용합니다.
+    if (props['aria-current'] === 'page' && params === undefined) {
+      return;
+    }
     if (currentActivity.name === 'Tabs') {
       replaceTabStep();
       return;

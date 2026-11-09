@@ -81,8 +81,11 @@ apps/web/
 
 `TabsLayout`은 `PageShell`과 하단 메뉴를 조합합니다. Tabs Activity의 각 탭 panel은 React
 `Activity`로 표시·숨김을 제어해 실행 중 state·DOM을 보존하고 숨겨진 panel의 Effect를 정리합니다.
-하단 메뉴는 URL을 소유하는 `TabLink`이므로 SEED Tabs는 URL navigation과 분리된 local tab
-control이 필요한 경우에만 사용합니다.
+하단 메뉴와 본문은 controlled SEED Tabs로 연결합니다. 클릭의 URL 탐색은 `TabLink`가 소유하고,
+방향키·Home·End 선택은 `TabsActivity`의 `replaceStep`으로 연결합니다. 선택 상태의 기준은
+Stackflow step params이며 별도 로컬 선택 상태를 만들지 않습니다. 링크에는 href와 수정키 클릭
+동작을 유지하고, 선택된 탭과 본문은 `tab`·`tabpanel` 관계로 연결합니다. 알림 화면의 하단 메뉴는
+선택된 탭 없이 일반 복귀 링크를 제공합니다.
 
 공지 상세·출석·설정 Activity는 `DetailLayout` 또는 `PageShell`을 조합합니다. `AuthLayout`은
 `PageShell`의 `plain` 옵션을 사용해 YAPP+ 문구와 구분선 없이 흰색 배경으로 표시합니다. 가입

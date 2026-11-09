@@ -1,6 +1,6 @@
+/** URL·step params를 화면 슬라이스와 연결하며 탭의 선택과 패널 수명을 소유합니다. */
 import { ActivityScreen } from './activity-screen';
 import { useActivity, useActivityParams, useStepFlow } from '@stackflow/react';
-import { Activity } from 'react';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
@@ -25,7 +25,7 @@ import { TeamAttendanceUploadPage } from '@/pages/team-attendance-upload';
 import { AuthLayout } from '@/app/layouts/auth-layout';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
-import { TabsLayout } from '@/app/layouts/tabs-layout';
+import { TabPanel, TabsLayout } from '@/app/layouts/tabs-layout';
 import {
   isNoticeCategory,
   isTabName,
@@ -64,8 +64,13 @@ export function TabsActivity() {
       title={TAB_TITLES[activeTab]}
       background={activeTab === 'home' ? 'layerBasement' : 'layerDefault'}
     >
-      <TabsLayout activeTab={activeTab}>
-        <Activity mode={activeTab === 'home' ? 'visible' : 'hidden'} name="HomeTab">
+      <TabsLayout
+        activeTab={activeTab}
+        onTabChange={(initialTab) => {
+          tabsStep.replaceStep({ ...tabsState, initialTab }, { targetActivityId: activity.id });
+        }}
+      >
+        <TabPanel tab="home" active={activeTab === 'home'}>
           <HomePage
             initialSession={
               import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true'
@@ -78,11 +83,11 @@ export function TabsActivity() {
                 : undefined
             }
           />
-        </Activity>
-        <Activity mode={activeTab === 'schedule' ? 'visible' : 'hidden'} name="ScheduleTab">
+        </TabPanel>
+        <TabPanel tab="schedule" active={activeTab === 'schedule'}>
           <SchedulePage />
-        </Activity>
-        <Activity mode={activeTab === 'notices' ? 'visible' : 'hidden'} name="NoticesTab">
+        </TabPanel>
+        <TabPanel tab="notices" active={activeTab === 'notices'}>
           <NoticesPage
             category={tabsState.noticeCategory ?? 'ALL'}
             onCategoryChange={(noticeCategory: NoticeCategory) => {
@@ -92,10 +97,10 @@ export function TabsActivity() {
               );
             }}
           />
-        </Activity>
-        <Activity mode={activeTab === 'my' ? 'visible' : 'hidden'} name="MyTab">
+        </TabPanel>
+        <TabPanel tab="my" active={activeTab === 'my'}>
           <MyPage />
-        </Activity>
+        </TabPanel>
       </TabsLayout>
     </ActivityScreen>
   );

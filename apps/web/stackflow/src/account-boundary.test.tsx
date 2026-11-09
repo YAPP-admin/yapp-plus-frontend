@@ -105,19 +105,19 @@ it('세션 복구와 로그아웃 후 재로그인 뒤에도 현재 탭을 전�
   bridge.getSession.mockResolvedValue(session(1));
   mount(client);
 
-  await screen.findByRole('link', { name: '일정' }, { timeout: 10000 });
-  await user.click(screen.getByRole('link', { name: '일정' }));
+  await screen.findByRole('tab', { name: '일정' }, { timeout: 10000 });
+  await user.click(screen.getByRole('tab', { name: '일정' }));
   await waitFor(() => expect(window.location.pathname).toBe('/schedule'));
-  expect(screen.getByRole('link', { name: '일정' })).toHaveAttribute('aria-current', 'page');
+  expect(screen.getByRole('tab', { name: '일정' })).toHaveAttribute('aria-current', 'page');
 
   await act(() => apply(client, { status: 'SIGNED_OUT' }, 'logout'));
   expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
 
   await act(() => apply(client, session(2)));
   await waitFor(() => expect(window.location.pathname).toBe('/'));
-  await user.click(screen.getByRole('link', { name: '게시판' }));
+  await user.click(screen.getByRole('tab', { name: '게시판' }));
   await waitFor(() => expect(window.location.pathname).toBe('/notices'));
-  expect(screen.getByRole('link', { name: '게시판' })).toHaveAttribute('aria-current', 'page');
+  expect(screen.getByRole('tab', { name: '게시판' })).toHaveAttribute('aria-current', 'page');
 });
 
 it('토큰 갱신은 폼을 유지하고 계정 변경은 이전 폼과 화면을 제거한다', async () => {
