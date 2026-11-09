@@ -618,3 +618,18 @@ URL 회귀 5개와 최종 check 통과: admin 658·web 139·mobile 60개 테스�
 - build 성공: 웹은 새 실행, 나머지 2/3 작업은 캐시 재사용이다. 이후 테스트의 Promise 처리만 수정하여 빌드는 반복하지 않았다. 로그: `.context/auth-recovery-stage3-build.log`. iOS 바이너리 빌드·expo:doctor는 이번 단계에서 실행하지 않았다.
 - 제품 변경 파일 4개의 원본 사본·SHA-256 manifest·tracked diff를 `.context/auth-recovery/stage3-product/`에 저장하고 현재 파일과 일치함을 확인했다. 새 파일 session-recovery.test.ts도 포함한다. 4단계 임시 구성을 제거할 때 이 기준본과 비교한다.
 - T066–T067 완료. T068의 기준본 저장은 완료했으며 사용자 리뷰는 대기 중이다. 시뮬레이터 오류 주입·정상 Google 인증·배포 기기의 원인 확인은 아직 수행하지 않았다. commit·push·PR·배포는 하지 않았다.
+
+## #406 4단계 — 시뮬레이터 오류 주입·복구 (2026-11-09)
+
+- 사용자 승인으로 1–3단계 변경을 `39db9a22` (`fix(auth): iOS 세션 삭제 실패 후 재시도 복구 (#406)`)에 커밋했다. 12개 파일 +481/-12이며 format·lint·commitlint 훅을 통과했다. push·PR·배포는 하지 않았다.
+- 전용 기기 `YAPP Auth Recovery 406`(iPhone 15 Pro / iOS 17.5, UDID `92C06DBC-1007-4CA9-B4A8-52DD632C4FD3`)를 생성했다. Xcode 27.2에서 이 워크스페이스의 개발 앱 1.0.2를 새로 빌드했다. 기존 기기와 서버는 사용하지 않았다.
+- expo:doctor 20/20 신규 검사 통과. prebuild 성공 후 CocoaPods는 처음 루트에서 실행해 Expo 경로 해석에 실패했고 ios 디렉터리에서 고정 Node 환경으로 재실행해 성공했다. 서명 비활성 빌드는 컴파일에 성공했지만 테스트 자격 저장에 실패했다. 시뮬레이터 ad-hoc 서명 빌드에서 저장·검증이 정상 동작했다. 이를 제품 삭제 재시도 실패로 집계하지 않는다.
+- 실제 AuthActions의 SessionManager singleton을 사용하고 establish 완료 후 WebView를 열었다. 갱신 경계만 invalid-session 대역으로 바꿔 가짜 자격이 서버에 전송되지 않게 했다. 실제 clearSession에서 현재 키 삭제 후 legacy 키 삭제 직전에 실패를 주입했다. getSession 결과·웹 이동을 대역으로 바꾸지 않았다.
+- 자동 사례: STORAGE 응답의 삭제 횟수 1→7, 읽기 0·갱신 1 유지. 최초 실패 이후 약 5초 간격으로 6회 추가 실패를 확인했다. 실패 해제 4,433ms 뒤 8번째 삭제에서 SIGNED_OUT과 로그인 화면을 확인했다. PID 32439가 유지되어 실패→복구 사이 앱 재시작이 없었다.
+- 수동 사례: 별도 실행에서 refetchInterval만 false로 변경했다. 최초 STORAGE 후 5초 이상 기다려 실패를 해제했지만 삭제 횟수는 1로 유지됐다. 실제 웹의 다시 시도 버튼을 누르자 2번째 삭제에서 SIGNED_OUT·로그인으로 이동했다. 읽기 0·갱신 1, PID 33653 유지. 자동·수동 사례 사이에만 재실행했다.
+- Device Hub 일반 창의 좌표 입력이 실패하여 전용 기기 창으로 바꾼 뒤 실제 버튼을 눌렀다. 버튼 함수를 코드로 호출하거나 대체 버튼을 만들지 않았다. 오류 화면에서 보호 콘텐츠가 보이지 않는 것을 화면으로 확인했으며 프레임 단위 비노출 검증으로 확대하지 않는다.
+- 화면 근거: `.context/auth-recovery/auto-failure.png`, `auto-recovered.png`, `manual-failure.png`, `manual-recovered.png`. 상태·횟수·시각 기록은 `all-events.log`, 빌드는 `xcodebuild-signed.log`, 환경 검사는 `doctor.log`에 있다. 인증 토큰·개인정보는 기록하지 않았다.
+- 실제 삭제 성공으로 테스트 자격을 정리한 뒤 임시 패널·오류 주입·갱신 대역·refetchInterval 변경을 제거했다. 제품 파일 4개는 3단계 SHA-256 기준본과 일치하고 apps/packages의 HEAD 대비 diff가 없다. 임시 구성 타입 검사는 새로 통과했으며 제품 코드가 검증본과 같아 자동 테스트·루트 build를 반복하지 않았다.
+- 실제 Google 로그인·복귀·재로그인과 사용자 배포 기기의 원인 확인은 미실행이다. T068–T071을 완료하고 4단계 리뷰를 기다린다. 이번 결과는 실패 주입 복구 검증이며 자연 발생 Keychain 장애나 브리지 초기화 지연을 배포 오류 원인으로 확정하지 않는다.
+
+- 앱을 완전히 종료하고 Metro를 재시작해 정상 번들에서 임시 패널 없는 로그인 화면을 확인했다(`.context/auth-recovery/clean-login.png`). 이번 작업의 웹·Metro 서버와 전용 시뮬레이터를 종료했다. 4단계 검증 문서 갱신은 커밋하지 않은 상태로 제출한다.
