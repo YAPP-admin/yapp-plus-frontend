@@ -1,6 +1,6 @@
 # 구현 계획: iOS OIDC 인증과 TestFlight 준비
 
-> 최신 작업은 [#406](https://github.com/YAPP-admin/yapp-plus-frontend/issues/406)의 삭제 재시도 복구 4단계 시뮬레이터 검증 리뷰다.
+> 최신 작업은 [#406](https://github.com/YAPP-admin/yapp-plus-frontend/issues/406)의 삭제 재시도 복구 5단계 검증 완료·최종 리뷰다.
 > 아래 기존 계획은 이력으로 보존하며, 현재 실행 순서는 마지막의 #406 1–5단계를 따른다.
 
 **브랜치**: `DongjaJ/apple/google-oidc-plan`

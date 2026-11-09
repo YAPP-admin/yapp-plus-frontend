@@ -202,8 +202,8 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 
 ## #406 US3 — 5단계: 실제 Google 인증
 
-- [ ] T072 [US3] 정상 구성에서 Google 로그인·30초 복귀·UI 로그아웃·재로그인·재실행 복구를 확인하고 specs/016-ios-oidc-auth/validation.md에 기록한다.
-- [ ] T073 최종 변경량·필수 검사·미검증·서버/시뮬레이터 정리·롤백을 specs/016-ios-oidc-auth/validation.md에 제출한다.
+- [x] T072 [US3] 정상 구성에서 Google 로그인·30초 복귀·UI 로그아웃·재로그인·재실행 복구를 확인하고 specs/016-ios-oidc-auth/validation.md에 기록한다.
+- [x] T073 최종 변경량·필수 검사·미검증·서버/시뮬레이터 정리·롤백을 specs/016-ios-oidc-auth/validation.md에 제출한다.
 
 ### 의존성과 최소 구현 범위
 
