@@ -192,13 +192,13 @@ US2–US4는 US1의 세션 기반을 사용한다. 최소 시연은 US1의 기�
 
 - [x] T066 [US3] apps/web/stackflow/src/account-boundary.test.tsx에 STORAGE→재시도→SIGNED_OUT→로그인 화면 및 보호 콘텐츠 비노출을 실제 사용자 이벤트로 검증한다.
 - [x] T067 [US3] package.json의 check/build를 실행하고 새 실행·Turbo 캐시·실패를 specs/016-ios-oidc-auth/validation.md에 구분한다.
-- [ ] T068 [US3] 3단계 제품 변경본을 .context/auth-recovery/에 보관하고 specs/016-ios-oidc-auth/validation.md에 사용자 리뷰 결과를 남긴다. 기준본 저장은 완료했으며 리뷰 대기 중이다.
+- [x] T068 [US3] 3단계 제품 변경본을 .context/auth-recovery/에 보관하고 specs/016-ios-oidc-auth/validation.md에 사용자 리뷰 결과를 남긴다. 기준본 저장과 사용자 다음 단계 진행 확인을 완료했다.
 
 ## #406 US3 — 4단계: 시뮬레이터 오류 주입
 
-- [ ] T069 [US3] specs/016-ios-oidc-auth/quickstart.md에 따라 전용 시뮬레이터와 실제 브리지 singleton의 오류 주입 구성을 준비하고 .context/auth-recovery/에 기록한다.
-- [ ] T070 [US3] 실패 지속·자동 복구·수동 복구를 재시작 없이 검증하고 .context/auth-recovery/에 상태·삭제 횟수·화면 근거를 저장한다.
-- [ ] T071 [US3] 테스트 자격과 임시 구성을 제거하고 3단계 변경본과 비교한 결과를 specs/016-ios-oidc-auth/validation.md에 제출한다.
+- [x] T069 [US3] specs/016-ios-oidc-auth/quickstart.md에 따라 전용 시뮬레이터와 실제 브리지 singleton의 오류 주입 구성을 준비하고 .context/auth-recovery/에 기록한다.
+- [x] T070 [US3] 실패 지속·자동 복구·수동 복구를 재시작 없이 검증하고 .context/auth-recovery/에 상태·삭제 횟수·화면 근거를 저장한다.
+- [x] T071 [US3] 테스트 자격과 임시 구성을 제거하고 3단계 변경본과 비교한 결과를 specs/016-ios-oidc-auth/validation.md에 제출한다.
 
 ## #406 US3 — 5단계: 실제 Google 인증
 
