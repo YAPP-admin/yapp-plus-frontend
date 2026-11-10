@@ -29,29 +29,29 @@
 
 목표: 네 항목을 서버 계약대로 표시한다. 정상·소속 없음·직군 없음과 세션 이름 불일치로 독립 검증한다.
 
-- [ ] T010 [P] [US1] `apps/web/src/pages/my/model/profile-model.test.ts`에 모든 상태·직군·기수·null 표시 변환 사례를 추가한다.
-- [ ] T011 [P] [US1] `apps/web/src/pages/my/model/profile-query.test.ts`에 생성 요청·검증 오류·원본 number 보존·성공 캐시 오염 방지 사례를 추가한다.
-- [ ] T012 [US1] `apps/web/src/pages/my/model/profile-query.ts`에 생성 옵션과 responseValidator 연결, `profile-model.ts`에 생성 타입 기반 표시 변환을 구현한다.
-- [ ] T013 [US1] `apps/web/src/mocks/member-profile-handlers.ts`의 생성 타입 fixture·핸들러를 `browser.ts`와 `server.ts`의 공용 fallback 앞에 연결한다.
-- [ ] T014 [US1] `apps/web/src/pages/my/ui/my-page.test.tsx`에 API 이름 전용·null 화면 사례를 추가하고 기존 세션 이름·전역 — 개수 기반 검증을 프로필 영역 기준으로 갱신한다.
-- [ ] T015 [US1] `apps/web/src/pages/my/ui/profile-section.tsx`와 `my-page.tsx`에 조회·표시를 연결하고 세션 이름 fallback을 제거한다.
+- [x] T010 [P] [US1] `apps/web/src/pages/my/model/profile-model.test.ts`에 모든 상태·직군·기수·null 표시 변환 사례를 추가한다.
+- [x] T011 [P] [US1] `apps/web/src/pages/my/model/profile-query.test.ts`에 생성 요청·검증 오류·원본 number 보존·성공 캐시 오염 방지 사례를 추가한다.
+- [x] T012 [US1] `apps/web/src/pages/my/model/profile-query.ts`에 생성 옵션과 responseValidator 연결, `profile-model.ts`에 생성 타입 기반 표시 변환을 구현한다.
+- [x] T013 [US1] `apps/web/src/mocks/member-profile-handlers.ts`의 생성 타입 fixture·핸들러를 `browser.ts`와 `server.ts`의 공용 fallback 앞에 연결한다.
+- [x] T014 [US1] `apps/web/src/pages/my/ui/my-page.test.tsx`에 API 이름 전용·null 화면 사례를 추가하고 기존 세션 이름·전역 — 개수 기반 검증을 프로필 영역 기준으로 갱신한다.
+- [x] T015 [US1] `apps/web/src/pages/my/ui/profile-section.tsx`와 `my-page.tsx`에 조회·표시를 연결하고 세션 이름 fallback을 제거한다.
 
 ### US2 — 독립적인 실패와 복구 (P1)
 
 목표: 프로필 장애 중 출석·메뉴를 유지한다. 프로필 지연·실패·재시도와 출석 실패를 분리해 검증한다.
 
-- [ ] T016 [US2] `apps/web/src/pages/my/ui/my-page.test.tsx`에 최초 지연·409/503·네트워크 오류·성공 후 재조회 실패의 UI 사례를 추가한다. 잘못된 응답 조합은 T011에서만 검증한다.
-- [ ] T017 [US2] `apps/web/src/pages/my/ui/profile-section.tsx`에 프로필 전용 ScreenQueryBoundary·Suspense·로딩·오류·이전 값 안내와 재시도를 구현한다.
-- [ ] T018 [US2] `apps/web/src/pages/my/ui/my-page.test.tsx`에서 프로필·점수 양방향 독립성, 메뉴·규칙 유지, 재시도 대상과 중복 실행 차단을 확인한다.
-- [ ] T019 [US2] `apps/web/src/pages/my/ui/profile-section.tsx`의 상태 역할·오류 안내·버튼 이름·loading/disabled를 확인하고 필요한 범위만 `my-page.css.ts`에 반영한다.
+- [x] T016 [US2] `apps/web/src/pages/my/ui/my-page.test.tsx`에 최초 지연·409/503·네트워크 오류 UI 사례를 추가한다. 잘못된 응답 조합은 T011에서만 검증한다.
+- [x] T017 [US2] `apps/web/src/pages/my/ui/profile-section.tsx`에 프로필 전용 ScreenQueryBoundary·Suspense·최초 로딩·오류와 재시도를 구현한다.
+- [x] T018 [US2] `apps/web/src/pages/my/ui/my-page.test.tsx`에서 프로필·점수 양방향 독립성과 메뉴·규칙 유지를 확인한다.
+- [x] T019 [US2] `apps/web/src/pages/my/ui/profile-section.tsx`의 상태 역할·오류 안내·버튼 이름·loading/disabled를 확인하고 필요한 범위만 `my-page.css.ts`에 반영한다.
 
 ### US3 — 인증과 화면 수명 (P1)
 
 목표: 현재 계정만 조회하고 기존 복귀 정책을 따른다. 미로그인·계정 변경·늦은 응답·복귀로 독립 검증한다.
 
-- [ ] T020 [US3] `apps/web/src/pages/my/ui/my-page.test.tsx`에 브라우저 요청 차단, 로그아웃·계정 전환 시 이전 프로필과 늦은 응답 차단 사례를 기존 인증 경계와 연결해 추가한다.
-- [ ] T021 [US3] `apps/web/src/pages/my/ui/profile-section.tsx`에서 인증 apiOptions·요청 허용 조건·useRefetchOnScreenReturn을 연결하고 전용 인증/캐시 계층이 없는지 확인한다.
-- [ ] T022 [US3] `apps/web/src/pages/my/ui/my-page.test.tsx`에서 stale·fresh 복귀를 확인하고 `apps/web/src/mocks/browser.ts` 연결이 개발 전용임을 검증한다.
+- [x] T020 [US3] `apps/web/src/pages/my/ui/my-page.test.tsx`에 브라우저 요청 차단, 로그아웃·계정 전환 시 이전 프로필과 늦은 응답 차단 사례를 기존 인증 경계와 연결해 추가한다.
+- [x] T021 [US3] `apps/web/src/pages/my/ui/profile-section.tsx`에서 인증 apiOptions·요청 허용 조건·useRefetchOnScreenReturn을 연결하고 전용 인증/캐시 계층이 없는지 확인한다.
+- [x] T022 [US3] `apps/web/src/pages/my/ui/my-page.test.tsx`에서 stale·fresh 복귀를 확인하고 `apps/web/src/mocks/browser.ts` 연결이 개발 전용임을 검증한다.
 
 ### 3단계 종료
 

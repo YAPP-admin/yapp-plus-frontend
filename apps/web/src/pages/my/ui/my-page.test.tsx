@@ -2,7 +2,7 @@ import type { AuthResult } from '@yapp-plus/app-bridge';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
-import { mineQueryKey } from '@yapp-plus/api/generated';
+import { mineQueryKey, type UserProfileResponse } from '@yapp-plus/api/generated';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse } from 'msw';
 import { apiBaseUrl, server } from '../../../mocks/server';
@@ -30,7 +30,8 @@ vi.mock('@/app/navigation/activity-link', () => ({
   ),
 }));
 
-const url = `${apiBaseUrl}/api/attendance-scores/me`;
+const scoreUrl = `${apiBaseUrl}/api/attendance-scores/me`;
+const profileUrl = `${apiBaseUrl}/api/users/me`;
 beforeEach(() => vi.stubEnv('VITE_API_MOCKING', 'true'));
 afterEach(() => {
   vi.unstubAllEnvs();
@@ -65,19 +66,20 @@ function renderPage(native = false, name?: string) {
 }
 
 describe('MyPage', () => {
-  it('세션 이름을 정규화하고 미지원 프로필과 면제권은 —로 표시한다', async () => {
-    renderPage(true, '  테스트 회원  ');
+  it('세션 이름 대신 API 프로필과 소속 정보를 표시한다', async () => {
+    renderPage(true, '세션에만 있는 이름');
     expect(await screen.findByText('테스트 회원')).toBeVisible();
     expect(await screen.findByText('92점')).toBeVisible();
-    expect(screen.queryByText('활동회원')).not.toBeInTheDocument();
-    expect(screen.queryByText('28기')).not.toBeInTheDocument();
-    expect(screen.getAllByText('—')).toHaveLength(4);
+    expect(screen.queryByText('세션에만 있는 이름')).not.toBeInTheDocument();
+    expect(screen.getByText('활동회원')).toBeVisible();
+    expect(screen.getByText('28기')).toBeVisible();
+    expect(screen.getByText('Web')).toBeVisible();
     expect(screen.getByRole('img', { name: '프로필' })).toBeVisible();
   });
 
-  it('이름 없는 기존 네이티브도 점수와 0횟수를 표시한다', async () => {
+  it('소속 정보가 없는 프로필도 이름과 출석 현황을 표시한다', async () => {
     server.use(
-      http.get(url, () =>
+      http.get(scoreUrl, () =>
         HttpResponse.json({
           ...scoreFixture,
           totalScore: 0,
@@ -86,27 +88,45 @@ describe('MyPage', () => {
           absentCount: 0,
         }),
       ),
+      http.get(profileUrl, () =>
+        HttpResponse.json({
+          userId: 1,
+          name: '소속 없는 회원',
+          membershipStatus: null,
+          generationId: null,
+          generationNumber: null,
+          position: null,
+        } satisfies UserProfileResponse),
+      ),
     );
     renderPage(true);
     expect(await screen.findByText('0점')).toBeVisible();
     expect(within(screen.getByLabelText('내 출석 현황')).getAllByText('0')).toHaveLength(3);
-    expect(screen.getAllByText('—')).toHaveLength(5);
+    expect(screen.getByText('소속 없는 회원')).toBeVisible();
+    expect(screen.getAllByText('—')).toHaveLength(4);
   });
 
-  it('로딩 중에도 프로필·메뉴·규칙을 유지한다', async () => {
+  it('프로필을 불러오는 동안에도 출석·메뉴·규칙을 유지한다', async () => {
     let finish: (() => void) | undefined;
     const pending = new Promise<void>((resolve) => {
       finish = resolve;
     });
     server.use(
-      http.get(url, async () => {
+      http.get(profileUrl, async () => {
         await pending;
-        return HttpResponse.json(scoreFixture);
+        return HttpResponse.json({
+          userId: 1,
+          name: '늦게 도착한 회원',
+          membershipStatus: 'PLAYER',
+          generationId: 28,
+          generationNumber: 28,
+          position: 'WEB',
+        } satisfies UserProfileResponse);
       }),
     );
-    renderPage(true, '테스트 회원');
-    expect(await screen.findByRole('status')).toHaveTextContent('출석 현황을 불러오고 있어요');
-    expect(screen.getByText('테스트 회원')).toBeVisible();
+    renderPage(true, '세션 이름');
+    expect(await screen.findByRole('status')).toHaveTextContent('프로필을 불러오는 중이에요');
+    expect(await screen.findByText('92점')).toBeVisible();
     expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
     await userEvent.setup().click(screen.getByRole('button', { name: '출석 규칙 안내' }));
     expect(await screen.findByRole('dialog', { name: '출석 규칙' })).toBeVisible();
@@ -118,7 +138,7 @@ describe('MyPage', () => {
         name: '확인',
       }),
     );
-    expect(await screen.findByText('92점')).toBeVisible();
+    expect(await screen.findByText('늦게 도착한 회원')).toBeVisible();
   });
 
   it.each(['ineligible', 'no-generation'])(
@@ -151,7 +171,7 @@ describe('MyPage', () => {
   it('재조회 실패는 이전 값과 오류 안내를 함께 표시한다', async () => {
     const { client } = renderPage();
     expect(await screen.findByText('92점')).toBeVisible();
-    server.use(http.get(url, () => HttpResponse.json({}, { status: 500 })));
+    server.use(http.get(scoreUrl, () => HttpResponse.json({}, { status: 500 })));
     await act(() => client.invalidateQueries({ queryKey: mineQueryKey() }));
     expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
     expect(screen.getByText('92점')).toBeVisible();
@@ -161,13 +181,44 @@ describe('MyPage', () => {
     expect(screen.getByText('92점')).toBeVisible();
   });
 
-  it('MSW 없는 일반 브라우저에서는 요청하지 않고 로그인 안내를 표시한다', async () => {
+  it('MSW 없는 일반 브라우저에서는 프로필·출석 요청 없이 로그인 안내를 표시한다', async () => {
     vi.stubEnv('VITE_API_MOCKING', 'false');
-    const requested = vi.fn<() => Response>(() => HttpResponse.json(scoreFixture));
-    server.use(http.get(url, requested));
+    const scoreRequested = vi.fn<() => Response>(() => HttpResponse.json(scoreFixture));
+    const profileRequested = vi.fn<() => Response>(() => HttpResponse.json({}));
+    server.use(http.get(scoreUrl, scoreRequested), http.get(profileUrl, profileRequested));
     renderPage();
     expect(await screen.findByRole('status')).toHaveTextContent('앱에 로그인한 후');
-    expect(requested).not.toHaveBeenCalled();
+    expect(scoreRequested).not.toHaveBeenCalled();
+    expect(profileRequested).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ['409 응답', () => HttpResponse.json({}, { status: 409 })],
+    ['503 응답', () => HttpResponse.json({}, { status: 503 })],
+    ['네트워크 오류', () => HttpResponse.error()],
+  ])('프로필 %s에도 출석과 메뉴를 유지하고 재시도로 복구한다', async (_label, failure) => {
+    server.use(http.get(profileUrl, failure));
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    renderPage(true);
+    expect(await screen.findByRole('alert')).toHaveTextContent('프로필을 불러오지 못했어요');
+    expect(screen.getByText('92점')).toBeVisible();
+    expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
+    expect(screen.getByRole('button', { name: '출석 규칙 안내' })).toBeVisible();
+    server.use(
+      http.get(profileUrl, () =>
+        HttpResponse.json({
+          userId: 1,
+          name: '재시도 회원',
+          membershipStatus: 'OB',
+          generationId: 28,
+          generationNumber: 28,
+          position: 'IOS',
+        } satisfies UserProfileResponse),
+      ),
+    );
+    await userEvent.setup().click(screen.getByRole('button', { name: '프로필 다시 시도' }));
+    expect(await screen.findByText('재시도 회원')).toBeVisible();
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
   it('출석 내역 메뉴 링크를 렌더링한다', async () => {

@@ -358,16 +358,17 @@ it('운영 빌드에서는 개발 경로의 로그인 가드를 유지한다', a
   expect(screen.queryByRole('heading', { name: '위치 브리지 확인' })).not.toBeInTheDocument();
 });
 
-it('이름 없는 새 계정으로 전환하면 MY의 이전 이름이 제거된다', async () => {
+it('계정 전환 후 MY는 세션 이름을 표시하지 않는다', async () => {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   await apply(client, session(1, 1, '가상 회원 A'));
   window.history.replaceState(null, '', '/my');
   const view = mount(client);
-  expect(await screen.findByText('가상 회원 A')).toBeVisible();
+  expect(await screen.findByText('테스트 회원')).toBeVisible();
+  expect(screen.queryByText('가상 회원 A')).not.toBeInTheDocument();
   expect(await screen.findByText('92점')).toBeVisible();
   await act(() => apply(client, session(2)));
-  await waitFor(() => expect(screen.queryByText('가상 회원 A')).not.toBeInTheDocument());
-  expect(screen.getByRole('region', { name: '프로필 및 출석 현황' })).toHaveTextContent('—');
+  await waitFor(() => expect(screen.getByText('테스트 회원')).toBeVisible());
+  expect(screen.queryByText('가상 회원 A')).not.toBeInTheDocument();
   view.unmount();
   client.clear();
 });

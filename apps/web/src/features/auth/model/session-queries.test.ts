@@ -6,6 +6,7 @@ import {
   isCancelledError,
 } from '@tanstack/react-query';
 import {
+  find2Options,
   find4Options,
   find5Options,
   mineOptions,
@@ -239,13 +240,25 @@ it('점수 401 복구 후 내역 조회가 갱신 토큰을 사용하고 이름�
   expect(tokens).toEqual(['Bearer test-one', 'Bearer test-renewed', 'Bearer test-renewed']);
   expect(bridge.refreshNativeSession).toHaveBeenCalledTimes(1);
 });
-it('계정 전환은 이전 점수·내역 지연 응답과 이름을 새 계정에 반영하지 않는다', async () => {
+it('계정 전환은 이전 프로필·점수·내역 지연 응답을 새 계정에 반영하지 않는다', async () => {
   let finish: (() => void) | undefined;
   const pending = new Promise<void>((resolve) => {
     finish = resolve;
   });
   let started = 0;
   server.use(
+    http.get(`${apiBaseUrl}/api/users/me`, async () => {
+      started++;
+      await pending;
+      return HttpResponse.json({
+        userId: 1,
+        name: '이전 회원',
+        membershipStatus: 'PLAYER',
+        generationId: 28,
+        generationNumber: 28,
+        position: 'WEB',
+      });
+    }),
     http.get(`${apiBaseUrl}/api/attendance-scores/me`, async () => {
       started++;
       await pending;
@@ -257,15 +270,17 @@ it('계정 전환은 이전 점수·내역 지연 응답과 이름을 새 계정
       return HttpResponse.json(historyFixture);
     }),
   );
+  const profile = find2Options(nativeAuthClientOptions(first, client));
   const score = mineOptions(nativeAuthClientOptions(first, client));
   const history = {
     ...find6InfiniteOptions(nativeAuthClientOptions(first, client)),
     initialPageParam: {},
     getNextPageParam: () => undefined,
   };
+  const oldProfile = client.fetchQuery(profile).catch((error: unknown) => error);
   const oldScore = client.fetchQuery(score).catch((error: unknown) => error);
   const oldHistory = client.fetchInfiniteQuery(history).catch((error: unknown) => error);
-  await vi.waitUntil(() => started === 2);
+  await vi.waitUntil(() => started === 3);
   const next: AuthResult = {
     status: 'SIGNED_IN',
     session: { ...first, userId: 2, sessionId: 'two', accessToken: 'test-two', name: undefined },
@@ -274,10 +289,12 @@ it('계정 전환은 이전 점수·내역 지연 응답과 이름을 새 계정
   await new MutationObserver(client, nativeSignInMutationOptions(client)).mutate({
     input: 'google',
   });
+  expect(isCancelledError(await oldProfile)).toBe(true);
   expect(isCancelledError(await oldScore)).toBe(true);
   expect(isCancelledError(await oldHistory)).toBe(true);
   finish?.();
   await pending;
+  expect(client.getQueryData(profile.queryKey)).toBeUndefined();
   expect(client.getQueryData(score.queryKey)).toBeUndefined();
   expect(client.getQueryData(history.queryKey)).toBeUndefined();
   expect(client.getQueryData(nativeSessionQueryKey)).toEqual(next);

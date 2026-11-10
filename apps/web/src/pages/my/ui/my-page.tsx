@@ -1,8 +1,7 @@
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
-import { Box, Grid, HStack, VStack } from '@seed-design/react';
+import { Grid, HStack, VStack } from '@seed-design/react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Suspense } from 'react';
-import { sessionNameSchema } from '@yapp-plus/app-bridge';
 import { ActionButton } from '@yapp-plus/ui';
 import { useNativeAuthSession } from '@/features/auth';
 import { memberScoreQueryOptions } from '@/features/member-attendance';
@@ -13,28 +12,26 @@ import { AttendanceRulesDialog } from './attendance-rules-dialog';
 import { ScoreErrorBoundary } from './score-error-boundary';
 import { ScoreSummary } from './score-summary';
 import {
-  activeChip,
   attendanceCard,
-  avatar,
   cardTitle,
   container,
   menuChevron,
   menuItem,
   menuLabel,
-  name,
   questionButton,
   sectionDivider,
   queryNotice,
-  subDivider,
-  subText,
 } from './my-page.css';
+import { ProfileSection } from './profile-section';
 
 export function MyPage() {
-  const { phase, session } = useNativeAuthSession();
-  const displayName = sessionNameSchema.parse(session?.name) ?? '—';
+  const { phase } = useNativeAuthSession();
   const canQuery =
     phase === 'SIGNED_IN' ||
-    (phase === 'BROWSER' && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true');
+    (phase === 'BROWSER' &&
+      import.meta.env.DEV &&
+      import.meta.env.VITE_API_MOCKING === 'true' &&
+      import.meta.env.VITE_STATIC_CONTENT !== 'true');
   return (
     <VStack
       className={container}
@@ -46,22 +43,7 @@ export function MyPage() {
       bg="bg.layerDefault"
     >
       <VStack as="section" px="x5" gap="x0_5" aria-label="프로필 및 출석 현황">
-        <HStack align="center" py="x4_5" gap="x4">
-          <Box className={avatar} width="66px" height="66px" borderRadius="full" flexShrink={0}>
-            <Image src="/images/my/user-profile.svg" alt="프로필" width={66} height={66} priority />
-          </Box>
-          <VStack gap="x1" minWidth="0px">
-            <HStack align="center" gap="x2">
-              <span className={name}>{displayName}</span>
-              <span className={activeChip}>—</span>
-            </HStack>
-            <HStack align="center" gap="x2_5">
-              <span className={subText}>—</span>
-              <span className={subDivider} aria-hidden="true" />
-              <span className={subText}>—</span>
-            </HStack>
-          </VStack>
-        </HStack>
+        <ProfileSection canQuery={canQuery} />
 
         <Grid
           columns="minmax(0, 1fr) auto"

@@ -4,6 +4,7 @@ import { createUpcomingSessionFixtures } from './session-fixtures';
 import { createSessionHandlers } from './session-handlers';
 import { createMemberAttendanceHandlers } from './member-attendance-handlers';
 import { createMemberNoticeHandlers } from './member-notice-handlers';
+import { createMemberProfileHandlers } from './member-profile-handlers';
 import { client } from '@yapp-plus/api/generated';
 import { createApiMockHandlers, onUnhandledApiRequest } from '@yapp-plus/api/mocks';
 import { setupWorker } from 'msw/browser';
@@ -22,6 +23,7 @@ export function startMocking(): Promise<void> {
     const attendance = createAttendanceFixtures(fixtures);
     const noticeState = new URLSearchParams(window.location.search).get('noticeState');
     const worker = setupWorker(
+      ...createMemberProfileHandlers(baseUrl),
       ...createMemberAttendanceHandlers(
         baseUrl,
         new URLSearchParams(window.location.search).get('myState'),

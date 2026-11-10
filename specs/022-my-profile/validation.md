@@ -30,8 +30,21 @@
 - 변경량은 2단계 작업만 +532/-287줄(생성 7개 파일 +532/-287, 소비 코드·테스트·README·mock +116/-116)이다. 1단계 커밋을 포함한 `origin/main` 대비 누적 변경량은 +1115/-369줄로 800줄 제한을 넘는다. 후속 프로필 UI를 시작하기 전에 PR 분리 방안을 확정해야 한다.
 - 사용자 리뷰 및 3단계 진행 승인: 2026-11-10 사용자가 생성 계약·호환성 수정을 하나의 작업으로 취급하고 전체 커밋 뒤 3단계를 진행하도록 지시했다. 생성 파일만으로 800줄을 넘는 사유를 기록했으며, 이 변경은 독립 분리하지 않는다.
 
+## 3단계 — 프로필 조회 연결
+
+- 생성한 `find2Options`에 화면 전용 응답 validator를 연결했다. `int64`를 `number`로 안전하게 표현할 수 없는 `userId`·`generationId`는 성공 캐시에 넣지 않으며, 생성 client가 유지하는 원본 JSON number는 그대로 반환한다.
+- API 응답의 이름·회원 상태·기수·직군만 표시하고 세션 이름 fallback을 제거했다. 모든 회원 상태와 직군, null 소속을 단위 테스트로 확인했다.
+- 프로필 조회는 출석 조회와 별도 `ScreenQueryBoundary`·Suspense 경계로 분리했다. 프로필 지연·409·503·네트워크 오류·최초 실패 재시도에도 출석 현황·메뉴·규칙을 유지한다. 재조회 실패는 마지막 성공 값을 조용히 유지한다.
+- 개발 MSW에서만 프로필 fixture를 공용 fallback보다 먼저 제공한다. 일반 브라우저에서는 프로필과 출석 API 모두 요청하지 않고 로그인 안내를 보인다.
+- 계정 전환 시 이전 프로필의 지연 응답을 취소하고 캐시를 비운다. 화면 복귀는 기존 `useRefetchOnScreenReturn` 정책을 사용한다.
+- 신규 실행: `pnpm --filter @yapp-plus/web exec vitest run src/pages/my/ui/my-page.test.tsx src/pages/my/model/profile-model.test.ts src/pages/my/model/profile-query.test.ts src/features/auth/model/session-queries.test.ts`에서 4개 파일 40개 테스트, 웹 typecheck가 통과했다.
+- 신규 실행: `mise exec -- node --run check`가 통과했다. format:check는 새로 실행했고, lint·typecheck는 7개 중 웹 1개가 새로 실행되고 6개는 Turbo 캐시를 재사용했다. test는 5개 중 웹 1개가 새로 실행되어 웹 56개 파일·410개 테스트가 통과했고, 나머지 4개는 캐시를 재사용했다.
+- 신규 실행: `mise exec -- node --run build`가 통과했다. 3개 build 중 웹 1개가 새로 실행되고 2개는 캐시를 재사용했다. 기존 웹 번들 500kB chunk 경고는 남아 있으나 이번 변경으로 새 오류가 되지는 않았다.
+- 로그: `.context/profile-stage-3-final-check.log`, `.context/profile-stage-3-final-build.log`. `git diff --check`가 통과했다.
+- 현재 `origin/main` 대비 변경량은 untracked 파일을 포함해 +1533/-424줄(총 1957줄)이다. 생성 계약 갱신의 큰 변경량과 이를 하나의 작업으로 유지하라는 사용자 지시를 2단계에 기록했다.
+- 모바일 너비·긴 이름·테마·키보드·터치·스크린 리더의 실제 화면, 인증된 WebView·실서버 프로필 조회는 4단계에서 확인한다.
+- 사용자 리뷰 및 4단계 진행 승인: 대기.
+
 ## 후속 단계
 
-2단계 생성 입력 해시·operation 대응·호환성·check/build, 3단계 회귀 테스트·UI 근거,
 4단계 최종 검증·실서버/WebView·접근성 확인 결과는 각 단계 실행 후 추가한다.
-후속 단계의 명령·테스트·빌드·실기기 검증은 아직 실행하지 않았다.
