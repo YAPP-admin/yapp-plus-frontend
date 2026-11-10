@@ -5,7 +5,7 @@ export const container = style({
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
-  minHeight: '100dvh',
+  minHeight: '100%',
   boxSizing: 'border-box',
   background: vars.$color.bg.layerDefault,
   position: 'relative',
@@ -39,6 +39,7 @@ export const body = style({
   margin: '0 auto',
   boxSizing: 'border-box',
   flex: 1,
+  minHeight: 0,
 });
 
 export const titleSection = style({
@@ -80,6 +81,7 @@ export const bottomSection = style({
   maxWidth: '480px',
   margin: '0 auto',
   boxSizing: 'border-box',
+  paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
 });
 
 export const contactButton = style({
@@ -100,10 +102,4 @@ export const contactButton = style({
   ':active': {
     opacity: 0.7,
   },
-});
-
-export const homeIndicatorArea = style({
-  height: '34px',
-  paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
-  boxSizing: 'content-box',
 });
