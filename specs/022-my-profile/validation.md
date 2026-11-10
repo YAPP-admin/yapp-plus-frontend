@@ -48,3 +48,12 @@
 ## 후속 단계
 
 4단계 최종 검증·실서버/WebView·접근성 확인 결과는 각 단계 실행 후 추가한다.
+
+## 4단계 — 최종 검증
+
+- 정적 접근성 점검: 프로필 이미지는 대체 텍스트 `프로필`을 제공한다. 최초 로딩은 `output`과 `aria-live="polite"`, 최초 오류는 `role="alert"`·`aria-live="polite"`, 최초 실패 재시도는 이름이 있는 기본 버튼을 사용한다. 긴 이름에는 `minWidth: 0`과 `overflowWrap: anywhere`를 적용했고, 색상은 SEED 토큰을 사용한다.
+- 실제 화면 점검은 미실행이다. 개발 서버를 `VITE_STATIC_CONTENT=false VITE_API_MOCKING=true`로 실행했으나, 브라우저 자동화 연결은 로컬 탭 생성 시 `Cannot read properties of undefined (reading 'timeoutMs')`를 반환했고 in-app browser도 사용할 수 없었다. 따라서 모바일 너비·라이트/다크 모드·키보드·터치·스크린 리더 화면 캡처는 만들지 못했다.
+- 인증된 WebView·실서버 `GET /api/users/me` 검증은 인증 토큰과 실행 가능한 WebView 환경이 제공되지 않아 미실행이다. 자동 테스트나 개발 MSW 결과로 이를 대신 주장하지 않는다.
+- `mise exec -- node --run check`, `mise exec -- node --run build`, `git diff --check`가 통과했다. 이번 최종 check의 lint·typecheck 7개와 test 5개, build 3개는 모두 Turbo 캐시를 재사용했으므로 새 실행으로 간주하지 않는다. 변경에 따른 새 실행 결과는 3단계 기록을 기준으로 한다.
+- 로그: `.context/profile-stage-4-check.log`, `.context/profile-stage-4-build.log`. `origin/main` 대비 변경량은 +1522/-424줄(총 1946줄)이다. 800줄 초과는 2단계에 기록한 사용자 지시에 따라 하나의 작업으로 유지한다.
+- 완료 대조: T001~~T023·T025~~T027은 기록과 실제 결과가 일치한다. T024만 브라우저 연결 제약으로 미완료이며, 화면·접근성 검증과 캡처를 재개할 수 있는 환경에서 수행해야 한다.
