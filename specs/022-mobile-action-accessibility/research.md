@@ -9,12 +9,12 @@
 | 본문만 스크롤                          | 헤더·액션과 본문을 분리해야 작은 화면과 큰 글자 모두 대응한다                  | fixed CTA로 본문을 덮는 배치 제외                                 |
 | 실제 본문을 observer root로 사용       | activity-screen.tsx는 현재 외부 Layer sentinel을 관찰한다                      | 외부 Layer 관찰만 유지하면 내부 스크롤을 놓친다                   |
 | 가입 단계는 Activity step, 초안은 폼   | 현재 SignupPage의 useState 단계와 AuthLayout flow.pop이 분리돼 있다            | 입력값을 탐색 params에 저장하거나 전역 폼 store를 추가하지 않는다 |
-| 가시 영역 훅은 가입 활성 수명에 한정   | ScreenActiveContext가 이미 존재한다                                            | 전역 키보드 store·브리지 이벤트 추가 제외                         |
+| 가시 영역 훅은 실측 재현 뒤에만 도입   | 현재 `dvh`·flex 배치만으로 가려짐을 재현하지 못했다                            | 근거 없이 VisualViewport 리스너·동적 CSS 변수를 추가하지 않는다   |
 
 [MDN VisualViewport](https://developer.mozilla.org/en-US/docs/Web/API/VisualViewport)에서
 height·offsetTop·scale과 resize·scroll 이벤트를 확인했다. 화면 키보드와 확대는 layout viewport와
-독립적으로 visual viewport를 줄일 수 있다. 이 사실에 따라 앱 영역과 가시 영역의 교집합을 사용한다.
-확대 상태에서는 키보드 전용 보정을 적용하지 않는다.
+독립적으로 visual viewport를 줄일 수 있다. 다만 실제 앱 WebView에서 CTA가 가려지는 재현을 다시
+확보하기 전에는 이 값을 구독하거나 레이아웃 보정에 사용하지 않는다.
 
 ## 기존 계약과 회귀 위험
 
@@ -37,3 +37,9 @@ height·offsetTop·scale과 resize·scroll 이벤트를 확인했다. 화면 키
 | 팀 사진 실제 제출 | TeamAttendanceUploadPage.handleSubmit이 완료/오류 Activity로 바로 이동 | 실제 제출 없이 완료 안내 가능       | 업로드·인증 제출 API, 팀원 계약, 서버 성공 판정  |
 
 두 기능의 개발은 이번 UI 작업에 포함하지 않는다.
+
+## 최종 범위 재확인
+
+2026-11-11 기준으로 알림 설정 저장과 팀 사진 실제 제출 API는 제품 계약·서버 성공 판정이
+필요한 별도 기능이다. 이번 작업은 기존 화면의 가시성·탐색·접근성 회귀를 줄이는 범위에만
+한정하며, 두 기능의 동작을 구현하거나 성공 상태를 보장하지 않는다.
