@@ -23,6 +23,6 @@ export const filterItem = style({
   cursor: 'pointer',
   selectors: {
     '&[data-checked]': { borderBottomColor: vars.$color.fg.brand, color: vars.$color.fg.neutral },
-    '&:focus-visible': { outline: `2px solid ${vars.$color.fg.brand}`, outlineOffset: 2 },
+    '&[data-focus-visible]': { outline: `2px solid ${vars.$color.fg.brand}`, outlineOffset: 2 },
   },
 });
