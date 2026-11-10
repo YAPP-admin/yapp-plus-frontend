@@ -5,7 +5,10 @@ import { style } from '@vanilla-extract/css';
 export const screen = style({
   display: 'flex',
   flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
   width: '100%',
+  height: '100%',
   maxWidth: '480px',
   margin: '0 auto',
 });
@@ -15,7 +18,13 @@ export const body = style({
   display: 'flex',
   flexDirection: 'column',
   flexGrow: 1,
+  minHeight: 0,
   padding: `${vars.$dimension.x5} ${vars.$dimension.x5} 0`,
+});
+
+export const form = style({
+  flex: 1,
+  minHeight: 0,
 });
 
 // 피그마 title: 제목과 설명 사이 10px

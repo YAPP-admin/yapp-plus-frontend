@@ -53,10 +53,16 @@ export function PageShell({
   header?: ReactNode;
 }) {
   const headerClassName = getHeaderClassName(customHeader, plain, borderlessHeader);
+  let rows = 'auto 1fr';
+  if (navigation && !plain) {
+    rows = 'auto 1fr auto';
+  } else if (customHeader === null) {
+    rows = '1fr';
+  }
 
   return (
     <Grid
-      rows={navigation && !plain ? 'auto 1fr auto' : 'auto 1fr'}
+      rows={rows}
       bg="bg.layerDefault"
       className={[getShellClassName(plain, Boolean(navigation)), className]
         .filter(Boolean)

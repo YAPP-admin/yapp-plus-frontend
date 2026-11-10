@@ -2,8 +2,11 @@ import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const shell = style({
-  minHeight: '100dvh',
+  height: 'calc(100dvh - var(--seed-safe-area-top, 0px))',
+  minHeight: 0,
   paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
+  // safe-area padding을 최소 높이에 포함해 하단 CTA가 별도 스크롤 영역으로 밀리지 않게 합니다.
+  boxSizing: 'border-box',
 });
 
 export const header = style({

@@ -14,6 +14,19 @@ export const headerSpacer = style({
   height: '24px',
 });
 
+export const screen = style({
+  height: '100%',
+});
+
+export const content = style({
+  selectors: {
+    '&&': {
+      flex: '1 1 0',
+      minHeight: 0,
+    },
+  },
+});
+
 export const menuItem = style({
   display: 'flex',
   alignItems: 'center',
@@ -91,7 +104,7 @@ export const switchThumb = style({
 export const bottomSection = style({
   display: 'flex',
   flexDirection: 'column',
-  padding: `12px 0 34px`,
+  padding: '12px 16px',
   width: '100%',
   boxSizing: 'border-box',
 });

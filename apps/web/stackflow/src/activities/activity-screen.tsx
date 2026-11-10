@@ -1,4 +1,3 @@
-import { vars } from '@seed-design/css/vars';
 import { useActivity } from '@stackflow/react';
 import { SnackbarProvider } from '@yapp-plus/ui';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
@@ -6,7 +5,7 @@ import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 import { AppBar } from '../../../seed-design/ui/app-bar';
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
 import { useAppScreenOptions } from '../platform';
-import { statusBar, scrollStart } from './activity-screen.css';
+import { screen, screenBasement, scrollLayer, scrollStart, statusBar } from './activity-screen.css';
 
 export function ActivityScreen({
   children,
@@ -26,6 +25,7 @@ export function ActivityScreen({
   const layerRef = useRef<HTMLDivElement>(null);
   const startRef = useRef<HTMLSpanElement>(null);
   const [atTop, setAtTop] = useState(true);
+  const backgroundClassName = background === 'layerBasement' ? screenBasement : screen;
 
   useEffect(() => {
     const layer = layerRef.current;
@@ -55,11 +55,11 @@ export function ActivityScreen({
           layerOffsetTop="safeArea"
           tone={atTop ? 'transparent' : 'layer'}
           gradient={false}
-          style={{ background: vars.$color.bg[background] }}
+          className={backgroundClassName}
         >
           {/* 화면별 헤더는 유지하고 OS 상태바 영역만 스크롤 내용 위에 덮습니다. */}
-          <AppBar className={statusBar} bg={vars.$color.bg[background]} aria-hidden="true" />
-          <AppScreenContent ref={layerRef} style={{ background: vars.$color.bg[background] }}>
+          <AppBar className={`${statusBar} ${backgroundClassName}`} aria-hidden="true" />
+          <AppScreenContent ref={layerRef} className={`${scrollLayer} ${backgroundClassName}`}>
             <span ref={startRef} className={scrollStart} aria-hidden="true" />
             <ScreenActiveContext value={isActive}>{children}</ScreenActiveContext>
           </AppScreenContent>

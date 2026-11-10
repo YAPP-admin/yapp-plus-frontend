@@ -40,10 +40,12 @@ import {
   dialogTitle,
   headerSpacer,
   headerTitle,
+  screen,
   logoutButton,
   menuChevron,
   menuItem,
   menuLabel,
+  content,
   switchControl,
   switchRoot,
   switchThumb,
@@ -101,7 +103,7 @@ export function SettingsPage() {
   };
 
   return (
-    <VStack width="full" minHeight="100dvh" bg="bg.layerDefault">
+    <VStack width="full" bg="bg.layerDefault" className={screen}>
       <HStack
         as="header"
         align="center"
@@ -128,7 +130,7 @@ export function SettingsPage() {
         width="full"
         maxWidth="480px"
         mx="auto"
-        style={{ flex: 1 }}
+        className={content}
       >
         <VStack as="section" width="full" aria-label="설정 메뉴">
           <div className={menuItem}>
@@ -215,50 +217,50 @@ export function SettingsPage() {
             </DialogPositioner>
           </DialogRoot>
         </VStack>
-
-        {/* 로그아웃 다이얼로그 (Figma #222:48244) */}
-        <section className={bottomSection} aria-label="계정 관리">
-          <DialogRoot>
-            <DialogTrigger asChild>
-              <button type="button" className={logoutButton}>
-                로그아웃
-              </button>
-            </DialogTrigger>
-            <DialogBackdrop className={dialogBackdrop} />
-            <DialogPositioner className={dialogPositioner}>
-              <DialogContent className={dialogContent}>
-                <DialogHeader className={dialogHeader}>
-                  <DialogTitle className={dialogTitle}>로그아웃 할까요?</DialogTitle>
-                </DialogHeader>
-                <div className={dialogFooter}>
-                  <DialogAction asChild>
-                    <ActionButton
-                      type="button"
-                      size="medium"
-                      variant="neutralWeak"
-                      className={dialogCancelButton}
-                    >
-                      취소
-                    </ActionButton>
-                  </DialogAction>
-                  <DialogAction asChild>
-                    <ActionButton
-                      type="button"
-                      size="medium"
-                      variant="brandSolid"
-                      className={dialogConfirmButton}
-                      disabled={isAccountActionPending}
-                      onClick={handleLogout}
-                    >
-                      로그아웃
-                    </ActionButton>
-                  </DialogAction>
-                </div>
-              </DialogContent>
-            </DialogPositioner>
-          </DialogRoot>
-        </section>
       </VStack>
+
+      {/* 로그아웃 다이얼로그 (Figma #222:48244) */}
+      <section className={bottomSection} aria-label="계정 관리">
+        <DialogRoot>
+          <DialogTrigger asChild>
+            <button type="button" className={logoutButton}>
+              로그아웃
+            </button>
+          </DialogTrigger>
+          <DialogBackdrop className={dialogBackdrop} />
+          <DialogPositioner className={dialogPositioner}>
+            <DialogContent className={dialogContent}>
+              <DialogHeader className={dialogHeader}>
+                <DialogTitle className={dialogTitle}>로그아웃 할까요?</DialogTitle>
+              </DialogHeader>
+              <div className={dialogFooter}>
+                <DialogAction asChild>
+                  <ActionButton
+                    type="button"
+                    size="medium"
+                    variant="neutralWeak"
+                    className={dialogCancelButton}
+                  >
+                    취소
+                  </ActionButton>
+                </DialogAction>
+                <DialogAction asChild>
+                  <ActionButton
+                    type="button"
+                    size="medium"
+                    variant="brandSolid"
+                    className={dialogConfirmButton}
+                    disabled={isAccountActionPending}
+                    onClick={handleLogout}
+                  >
+                    로그아웃
+                  </ActionButton>
+                </DialogAction>
+              </div>
+            </DialogContent>
+          </DialogPositioner>
+        </DialogRoot>
+      </section>
     </VStack>
   );
 }

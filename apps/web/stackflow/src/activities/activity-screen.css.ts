@@ -1,4 +1,17 @@
+import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
+
+export const screen = style({
+  background: vars.$color.bg.layerDefault,
+});
+
+export const screenBasement = style({
+  background: vars.$color.bg.layerBasement,
+});
+
+export const scrollLayer = style({
+  minHeight: 0,
+});
 
 export const statusBar = style({
   height: 'var(--seed-safe-area-top)',
