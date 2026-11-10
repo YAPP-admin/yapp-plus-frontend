@@ -5,6 +5,8 @@ import { style } from '@vanilla-extract/css';
 export const container = style({
   display: 'flex',
   flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
   gap: vars.$dimension.x5,
   boxSizing: 'border-box',
   padding: `${vars.$dimension.x3_5} ${vars.$dimension.x5} 0`,
@@ -19,6 +21,12 @@ export const content = style({
   flexDirection: 'column',
   gap: vars.$dimension.x14,
   paddingTop: vars.$dimension.x16,
+  '@media': {
+    '(max-height: 700px)': {
+      gap: vars.$dimension.x8,
+      paddingTop: vars.$dimension.x8,
+    },
+  },
 });
 
 export const illustrationSection = style({
@@ -32,6 +40,11 @@ export const buttonGroup = style({
   flexDirection: 'column',
   gap: vars.$dimension.x2_5,
   paddingBlock: vars.$dimension.x12,
+  '@media': {
+    '(max-height: 700px)': {
+      paddingBlock: vars.$dimension.x6,
+    },
+  },
 });
 
 // SEED ActionButton 규격은 유지하고 폭만 지정합니다.

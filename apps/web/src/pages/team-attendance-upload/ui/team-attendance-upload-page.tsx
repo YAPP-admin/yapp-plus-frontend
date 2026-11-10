@@ -18,7 +18,6 @@ import {
   header,
   headerSpacer,
   headerTitle,
-  homeIndicatorArea,
   imagePreview,
   meBadge,
   memberCard,
@@ -174,7 +173,6 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
         >
           확인
         </ActionButton>
-        <div className={homeIndicatorArea} aria-hidden="true" />
       </VStack>
     </VStack>
   );

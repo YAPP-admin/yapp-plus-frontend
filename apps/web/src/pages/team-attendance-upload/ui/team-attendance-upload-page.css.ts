@@ -2,8 +2,11 @@ import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
+  display: 'flex',
+  flexDirection: 'column',
+  flex: 1,
+  minHeight: 0,
   width: '100%',
-  minHeight: '100dvh',
   backgroundColor: '#FFFFFF',
   boxSizing: 'border-box',
 });
@@ -32,6 +35,8 @@ export const headerSpacer = style({
 
 export const body = style({
   flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
@@ -164,7 +169,8 @@ export const bottomSection = style({
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
-  padding: '12px 16px 20px',
+  flexShrink: 0,
+  padding: '12px 16px calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))',
   boxSizing: 'border-box',
 });
 
@@ -175,10 +181,6 @@ export const confirmButton = style({
   fontSize: '16px',
   fontWeight: 700,
   lineHeight: '22px',
-});
-
-export const homeIndicatorArea = style({
-  height: '34px',
 });
 
 // 기존 카드 규격을 유지하고 SEED의 키보드 포커스·상태 동작을 사용합니다.
