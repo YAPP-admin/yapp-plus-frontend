@@ -5,7 +5,7 @@ export const container = style({
   display: 'flex',
   flexDirection: 'column',
   width: '100%',
-  minHeight: '100dvh',
+  minHeight: '100%',
   backgroundColor: '#FFFFFF',
   boxSizing: 'border-box',
 });
@@ -33,6 +33,7 @@ export const body = style({
   alignItems: 'center',
   justifyContent: 'center',
   flex: 1,
+  minHeight: 0,
   padding: '20px 20px 30px',
   textAlign: 'center',
   width: '100%',
@@ -82,7 +83,7 @@ export const bottomSection = style({
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
-  padding: '12px 20px 20px',
+  padding: '12px 20px calc(12px + var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)))',
   boxSizing: 'border-box',
   gap: '8px',
 });
@@ -91,8 +92,4 @@ export const confirmButton = style({
   width: '100%',
   height: '52px',
   borderRadius: '12px',
-});
-
-export const homeIndicatorArea = style({
-  height: '24px',
 });

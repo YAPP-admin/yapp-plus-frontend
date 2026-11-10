@@ -13,7 +13,6 @@ import {
   graphicSection,
   header,
   headerSpacer,
-  homeIndicatorArea,
   infoCard,
   infoDotLine,
   infoLabel,
@@ -77,7 +76,6 @@ export function TeamAttendanceCompletePage() {
         <ActionButton asChild variant="brandSolid" size="large" className={confirmButton}>
           <TabLink tab="home">확인</TabLink>
         </ActionButton>
-        <div className={homeIndicatorArea} aria-hidden="true" />
       </footer>
     </div>
   );

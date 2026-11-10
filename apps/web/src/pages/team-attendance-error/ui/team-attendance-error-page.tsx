@@ -13,7 +13,6 @@ import {
   graphicSection,
   header,
   headerSpacer,
-  homeIndicatorArea,
   title,
   titleSection,
 } from './team-attendance-error-page.css';
@@ -49,7 +48,6 @@ export function TeamAttendanceErrorPage() {
         <ActionButton asChild variant="brandSolid" size="large" className={confirmButton}>
           <TabLink tab="home">확인</TabLink>
         </ActionButton>
-        <div className={homeIndicatorArea} aria-hidden="true" />
       </footer>
     </div>
   );
