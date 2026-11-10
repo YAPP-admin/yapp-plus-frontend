@@ -13,7 +13,6 @@ import {
   graphicSection,
   header,
   headerSpacer,
-  homeIndicatorArea,
   title,
   titleSection,
 } from './attendance-complete-page.css';
@@ -49,7 +48,6 @@ export function AttendanceCompletePage() {
         <ActionButton asChild variant="brandSolid" size="large" className={confirmButton}>
           <TabLink tab="home">확인</TabLink>
         </ActionButton>
-        <div className={homeIndicatorArea} aria-hidden="true" />
       </footer>
     </div>
   );

@@ -1,8 +1,10 @@
+import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
-// 피그마 contents: 제목 묶음과 일러스트 사이 160px (SEED dimension 토큰에 없는 값)
+// 제목과 일러스트는 본문의 남는 높이를 나눠 작은 화면에서 고정 간격으로 CTA를 밀어내지 않습니다.
 export const contents = style({
-  gap: '160px',
+  justifyContent: 'space-between',
+  gap: vars.$dimension.x8,
 });
 
 export const illustration = style({
