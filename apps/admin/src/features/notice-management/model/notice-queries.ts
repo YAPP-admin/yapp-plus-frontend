@@ -77,6 +77,10 @@ export function useNoticeMutations() {
     mutationFn: deleteNotice,
     retry: false,
     onSuccess: async (_, id) => {
+      await client.cancelQueries({ queryKey: noticesKey, exact: true });
+      client.setQueryData(noticesQueryOptions.queryKey, (notices) =>
+        notices?.filter((notice) => notice.id !== id),
+      );
       client.removeQueries({ queryKey: noticeQueryOptions(id).queryKey, exact: true });
       await client.invalidateQueries({ queryKey: noticesKey });
     },
