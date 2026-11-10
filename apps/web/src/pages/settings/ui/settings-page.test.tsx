@@ -104,6 +104,16 @@ describe('SettingsPage', () => {
     expect(navigation.push).toHaveBeenCalledWith('Login', {});
   });
 
+  it('회원 탈퇴 팝업을 취소하면 닫고 로그인으로 이동하지 않는다', () => {
+    renderSettingsPage();
+
+    fireEvent.click(screen.getByRole('button', { name: /회원 탈퇴/i }));
+    fireEvent.click(screen.getByRole('button', { name: '취소' }));
+
+    expect(screen.queryByRole('heading', { name: '정말 탈퇴하시겠어요?' })).not.toBeInTheDocument();
+    expect(navigation.push).not.toHaveBeenCalled();
+  });
+
   it('로그아웃 클릭 시 SEED 다이얼로그가 열리고 로그아웃 확인 클릭 시 로그인으로 이동한다', () => {
     renderSettingsPage();
 
@@ -121,6 +131,16 @@ describe('SettingsPage', () => {
     }
 
     expect(navigation.push).toHaveBeenCalledWith('Login', {});
+  });
+
+  it('로그아웃 팝업을 취소하면 닫고 로그인으로 이동하지 않는다', () => {
+    renderSettingsPage();
+
+    fireEvent.click(screen.getByRole('button', { name: '로그아웃' }));
+    fireEvent.click(screen.getByRole('button', { name: '취소' }));
+
+    expect(screen.queryByRole('heading', { name: '로그아웃 할까요?' })).not.toBeInTheDocument();
+    expect(navigation.push).not.toHaveBeenCalled();
   });
 
   it('뒤로가기 버튼이 렌더링된다', () => {

@@ -45,6 +45,10 @@ Native는 deep link의 path와 query를 변경하지 않고 WebView에 전달합
 Native는 위 부모 흐름을 중복 생성하지 않습니다. 첫 로드 시 WebView의 현재 URL을 유지하고,
 웹의 history sync가 다음 URL을 관리하도록 둡니다.
 
+가입의 name→phone 전환은 URL query에 입력값을 넣지 않습니다. Signup Activity 내부 step history만
+사용하며, phone 단계의 WebView back은 name 단계로 돌아갑니다. 가입 Activity를 벗어나거나
+`/signup`을 새로 열면 폼 초안은 초기화됩니다.
+
 ## 검증 책임
 
 환경마다 확인할 수 있는 범위가 다르므로 실행하지 못한 항목을 다른 계층의 통과 결과로 대체하지

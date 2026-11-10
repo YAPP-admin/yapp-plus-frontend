@@ -105,6 +105,11 @@ Stackflow step params이며 별도 로컬 선택 상태를 만들지 않습니�
 적용하고 페이지 본문에 중복 적용하지 않습니다. 여러 준비 중 페이지의 도메인 비의존 스타일은
 `shared/ui/page.css.ts`를 사용합니다.
 
+`PageShell`은 상위 Activity가 제공한 가용 높이 안에서 헤더·본문·하단 액션을 grid row로
+나눕니다. 하단 액션은 자신의 safe-area 여백을 별도로 더하지 않고 셸의 padding을 사용합니다.
+긴 본문만 스크롤하게 하며, 홈 인디케이터를 위한 임의의 고정 빈 여백을 새 화면에 추가하지
+않습니다.
+
 새 `features` 슬라이스와 `shared` 하위 모듈은 실제 사용처가 생길 때 생성합니다. 빈 레이어·역할별 폴더·슬라이스 그룹을
 미리 만들지 않습니다.
 
@@ -184,6 +189,10 @@ Next.js 호환 router를 만들지 않습니다.
 - URL로 복원해야 하는 조회 조건은 Activity params에 포함합니다. history-sync가 기록을 완료한 뒤
   canonical URL을 조정해야 할 때만 `src/app/navigation` 훅 또는 Stackflow plugin 안에서
   `window.history`를 직접 수정합니다.
+- 가입은 Signup Activity의 step history만 URL 이력에 기록합니다. 이름 제출은 `phone` step을
+  추가하고, phone step의 헤더·browser back은 name step으로 복귀합니다. 이름·전화번호 초안은
+  같은 SignupPage 폼 인스턴스에만 두며 직접 `/signup` 진입과 새로고침에서는 name부터
+  시작합니다.
 - 뒤로가기는 `useActivity().isRoot`로 판단해 부모가 있으면 `useFlow.pop`, root이면 명시적
   fallback으로 `replace`합니다. 직접 진입의 부모 흐름은 route의 `defaultHistory`로 복원하고
   별도 browser history 추적기를 두지 않습니다. Native가 부모 Activity를 중복 생성하지 않도록 합니다.

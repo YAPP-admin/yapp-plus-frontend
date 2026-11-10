@@ -19,6 +19,9 @@ export const positioner = style({
 });
 
 export const content = style({
+  width: '100%',
+  maxHeight: 'calc(100dvh - 40px)',
+  overflowY: 'auto',
   boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
 });
 
