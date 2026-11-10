@@ -113,9 +113,15 @@ Zod 검증을 거치지 않으므로 생성 타입을 사용하고, 필요할 �
 
 - 미구현 응답·잘못된 모의 데이터: 501. handler 연결, 데이터와 생성 스키마를 확인합니다.
 - 대상 origin·base 경로의 미등록 `/api/` 요청: 실서버로 보내지 않습니다. 브라우저는 MSW 오류 500,
-  Node에서는 `Cannot bypass` 오류로 나타납니다. 외부 서비스·정적 자원은 차단 대상이 아닙니다.
+  Node에서는 `Cannot bypass` 오류로 나타납니다. 모의 업로드 origin `https://upload.yapp.test`의 미등록 요청도 차단합니다. 그 밖의 외부 서비스·정적 자원은 차단 대상이 아닙니다.
 - 브라우저 초기화 실패: 화면을 열지 않습니다. worker 파일과 개발 서버를 확인한 뒤 새로고침합니다.
 - 범위: 개발 브라우저·Vitest. SSR 요청·route loader·네이티브·WebView 실기기·Storybook은 포함하지 않습니다.
   기존 화면의 직접 mock 서비스를 생성 SDK로 전환하는 작업도 별도입니다.
 
 앱별 실행과 worker 갱신은 [어드민](../../apps/admin/README.md), [회원 웹](../../apps/web/README.md)을 참고합니다.
+
+공지 이미지 presign은 임의 외부 URL 대신 `https://upload.yapp.test/post-images/example`과
+고정 imageKey·signedHeaders를 반환합니다. 같은 공용 핸들러가 해당 URL의 PUT을 200으로
+처리하므로 개발 파일이 외부 Faker 도메인으로 나가지 않습니다. 이 핸들러는 객체 저장소·서명
+검증·실제 이미지 저장을 흉내 내지 않으며, 이미지는 저장 후 다시 읽을 수 없습니다. 실제 업로드
+연결 시 만료·서명 헤더·파일 바이트·용량 검증은 별도로 수행합니다.
