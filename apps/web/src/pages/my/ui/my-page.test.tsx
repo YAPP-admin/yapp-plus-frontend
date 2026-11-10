@@ -13,6 +13,7 @@ import {
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MyPage } from './my-page';
+import { name as profileName } from './my-page.css';
 
 vi.mock('@/app/navigation/activity-link', () => ({
   ActivityLink: ({
@@ -75,6 +76,26 @@ describe('MyPage', () => {
     expect(screen.getByText('28기')).toBeVisible();
     expect(screen.getByText('Web')).toBeVisible();
     expect(screen.getByRole('img', { name: '프로필' })).toBeVisible();
+  });
+
+  it('긴 API 이름을 줄바꿈 가능한 프로필 영역에 표시한다', async () => {
+    const longName = '긴이름을가진프로필회원긴이름을가진프로필회원';
+    server.use(
+      http.get(profileUrl, () =>
+        HttpResponse.json({
+          userId: 1,
+          name: longName,
+          membershipStatus: 'PLAYER',
+          generationId: 28,
+          generationNumber: 28,
+          position: 'WEB',
+        } satisfies UserProfileResponse),
+      ),
+    );
+    renderPage(true);
+    const displayName = await screen.findByText(longName);
+    expect(displayName).toBeVisible();
+    expect(displayName).toHaveClass(profileName);
   });
 
   it('소속 정보가 없는 프로필도 이름과 출석 현황을 표시한다', async () => {
