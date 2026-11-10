@@ -30,7 +30,15 @@ beforeEach(() => {
   replaceDocument.mockClear();
   vi.spyOn(window.location, 'replace').mockImplementation(replaceDocument);
 });
-afterEach(() => {
+afterEach(async () => {
+  if (
+    'happyDOM' in window &&
+    window.happyDOM instanceof Object &&
+    'abort' in window.happyDOM &&
+    typeof window.happyDOM.abort === 'function'
+  ) {
+    await window.happyDOM.abort();
+  }
   for (const listener of historyListeners.splice(0)) {
     window.removeEventListener('popstate', listener);
   }
