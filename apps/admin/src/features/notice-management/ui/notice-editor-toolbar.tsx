@@ -21,6 +21,35 @@ export function NoticeEditorToolbar({ editor }: { editor: Editor }) {
       heading: [1, 2, 3, 4, 5, 6].find((level) => current.isActive('heading', { level })) ?? 0,
     }),
   });
+  function applyLink() {
+    const href = url.trim();
+    if (!href || !editor.can().setLink({ href })) {
+      setError('허용되지 않는 링크 주소입니다.');
+      return;
+    }
+    if (editor.state.selection.empty && !editor.isActive('link')) {
+      editor
+        .chain()
+        .focus()
+        .insertContent({
+          type: 'text',
+          text: href,
+          marks: [{ type: 'link', attrs: { href } }],
+        })
+        .command(({ tr }) => {
+          tr.setMeta('preventAutolink', true);
+          const link = editor.schema.marks.link;
+          if (link) {
+            tr.removeStoredMark(link);
+          }
+          return true;
+        })
+        .run();
+    } else {
+      editor.chain().focus().extendMarkRange('link').setLink({ href }).run();
+    }
+    setLinkOpen(false);
+  }
   return (
     <>
       <fieldset className={styles.toolbar} aria-label="본문 서식">
@@ -97,41 +126,19 @@ export function NoticeEditorToolbar({ editor }: { editor: Editor }) {
               aria-invalid={Boolean(error)}
               onChange={(event) => setUrl(event.target.value)}
               placeholder="https://"
+              onKeyDown={(event) => {
+                if (event.key !== 'Enter') {
+                  return;
+                }
+                event.preventDefault();
+                event.stopPropagation();
+                if (!event.nativeEvent.isComposing && event.nativeEvent.keyCode !== 229) {
+                  applyLink();
+                }
+              }}
             />
           </label>
-          <button
-            className={styles.control}
-            type="button"
-            onClick={() => {
-              const href = url.trim();
-              if (!href || !editor.can().setLink({ href })) {
-                setError('허용되지 않는 링크 주소입니다.');
-                return;
-              }
-              if (editor.state.selection.empty && !editor.isActive('link')) {
-                editor
-                  .chain()
-                  .focus()
-                  .insertContent({
-                    type: 'text',
-                    text: href,
-                    marks: [{ type: 'link', attrs: { href } }],
-                  })
-                  .command(({ tr }) => {
-                    tr.setMeta('preventAutolink', true);
-                    const link = editor.schema.marks.link;
-                    if (link) {
-                      tr.removeStoredMark(link);
-                    }
-                    return true;
-                  })
-                  .run();
-              } else {
-                editor.chain().focus().extendMarkRange('link').setLink({ href }).run();
-              }
-              setLinkOpen(false);
-            }}
-          >
+          <button className={styles.control} type="button" onClick={applyLink}>
             적용
           </button>
           <button

@@ -1,5 +1,6 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
+import userEvent from '@testing-library/user-event';
 import type { JSONContent } from '@tiptap/core';
 import { NoticeEditor } from './notice-editor';
 
@@ -11,6 +12,45 @@ function body(text: string): JSONContent {
 }
 
 describe('공지 에디터', () => {
+  it('링크 주소의 Enter는 링크만 적용하고 바깥 공지 폼을 제출하지 않는다', async () => {
+    const submit = vi.fn<() => void>();
+    const user = userEvent.setup();
+    render(
+      <form
+        onSubmit={(event) => {
+          event.preventDefault();
+          submit();
+        }}
+      >
+        <NoticeEditor labelId="label" />
+        <button type="submit">공지 저장</button>
+      </form>,
+    );
+    await screen.findByRole('textbox');
+    await user.click(screen.getByRole('button', { name: '링크' }));
+    await user.type(screen.getByLabelText('링크 주소'), 'https://example.com');
+    await user.keyboard('{Enter}');
+    expect(screen.getByRole('link')).toHaveAttribute('href', 'https://example.com');
+    expect(submit).not.toHaveBeenCalled();
+  });
+  it.each([true, false])(
+    'IME 조합과 잘못된 URL에서는 Enter로 링크를 적용하지 않는다: %s',
+    async (composing) => {
+      render(<NoticeEditor labelId="label" />);
+      await screen.findByRole('textbox');
+      fireEvent.click(screen.getByRole('button', { name: '링크' }));
+      const input = screen.getByLabelText('링크 주소');
+      fireEvent.change(input, {
+        target: { value: composing ? 'https://example.com' : 'javascript:alert(1)' },
+      });
+      expect(fireEvent.keyDown(input, { key: 'Enter', isComposing: composing })).toBe(false);
+      expect(screen.queryByRole('link')).not.toBeInTheDocument();
+      expect(screen.queryByRole('alert')?.textContent ?? '').toBe(
+        composing ? '' : '허용되지 않는 링크 주소입니다.',
+      );
+    },
+  );
+
   it('초기값 없이 빈 편집기와 안내를 제공하고 안내를 본문에 저장하지 않는다', async () => {
     const onChange = vi.fn<(value: JSONContent) => void>();
     render(<NoticeEditor labelId="label" onChange={onChange} />);
