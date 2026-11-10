@@ -19,7 +19,9 @@ const bridge = vi.hoisted(() => ({
 }));
 const replaceDocument = vi.fn<(url: string | URL) => void>();
 const historyListeners: EventListenerOrEventListenerObject[] = [];
+const stackflowIntervals = new Set<ReturnType<typeof globalThis.setInterval>>();
 const addListener = window.addEventListener.bind(window);
+const addInterval = globalThis.setInterval.bind(globalThis);
 beforeEach(() => {
   vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
     if (type === 'popstate' && listener) {
@@ -27,10 +29,21 @@ beforeEach(() => {
     }
     addListener(type, listener, options);
   });
+  vi.spyOn(globalThis, 'setInterval').mockImplementation((handler, timeout, ...args) => {
+    const interval = addInterval(handler, timeout, ...args);
+    stackflowIntervals.add(interval);
+    return interval;
+  });
   replaceDocument.mockClear();
   vi.spyOn(window.location, 'replace').mockImplementation(replaceDocument);
 });
 afterEach(async () => {
+  // Stackflow core는 전환 안정화 interval의 dispose API를 제공하지 않습니다.
+  // 테스트 DOM이 해제되기 전에 이 파일에서 시작한 interval을 직접 정리합니다.
+  for (const interval of stackflowIntervals) {
+    clearInterval(interval);
+  }
+  stackflowIntervals.clear();
   if (
     'happyDOM' in window &&
     window.happyDOM instanceof Object &&
