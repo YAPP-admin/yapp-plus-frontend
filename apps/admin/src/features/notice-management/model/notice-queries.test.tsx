@@ -1,6 +1,6 @@
 /** 저장 성공 시 캐시 무효화와 실패 시 기존 데이터 보존을 검증한다. */
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { noticeContentSchema, noticeSchema } from './notice';
@@ -11,6 +11,7 @@ import {
   useNoticeMutations,
 } from './notice-queries';
 import * as service from './notices';
+import { createAdminQueryClient } from '../../../query-client';
 
 vi.mock('./notices', () => ({
   listNotices: vi.fn<typeof service.listNotices>(),
@@ -43,9 +44,7 @@ const clients: QueryClient[] = [];
 
 /** 테스트별로 캐시를 격리하고 자동 재시도를 끈다. */
 function setup() {
-  const client = new QueryClient({
-    defaultOptions: { queries: { retry: false }, mutations: { retry: false } },
-  });
+  const client = createAdminQueryClient();
   clients.push(client);
 
   function Wrapper({ children }: { children: ReactNode }) {
@@ -68,6 +67,28 @@ afterEach(() => {
 });
 
 describe('공지 변경 후 캐시 처리', () => {
+  it.each(['create', 'update'] as const)(
+    '비활성 목록도 %s 성공 후 실제 앱 정책에서 최신 목록을 반환한다',
+    async (kind) => {
+      const { client, wrapper } = setup();
+      const changed = { ...saved, title: '새 제목' };
+      vi.mocked(service.listNotices).mockResolvedValueOnce([saved]).mockResolvedValue([changed]);
+      vi.mocked(service.createNotice).mockResolvedValue(changed);
+      vi.mocked(service.updateNotice).mockResolvedValue(changed);
+      await client.fetchQuery(noticesQueryOptions);
+      const { result } = renderHook(useNoticeMutations, { wrapper });
+      await act(async () => {
+        if (kind === 'create') {
+          await result.current.create.mutateAsync(input);
+        } else {
+          await result.current.update.mutateAsync({ id: saved.id, input });
+        }
+      });
+      expect(client.getQueryData(noticesQueryOptions.queryKey)).toEqual([changed]);
+      expect(service.listNotices).toHaveBeenCalledTimes(2);
+    },
+  );
+
   it('생성·수정 성공은 목록과 상세를 무효화하고 삭제 성공은 대상 상세만 제거한다', async () => {
     const { client, wrapper } = setup();
     vi.mocked(service.createNotice).mockResolvedValue(saved);
