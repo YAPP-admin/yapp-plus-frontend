@@ -60,9 +60,9 @@
 ## 4단계 — 최종 품질과 완료 보고
 
 - [ ] T024 [P] `specs/022-my-profile/quickstart.md`에 따라 모바일 너비·긴 이름·테마·키보드·터치·스크린 리더를 확인하고 `.context/`에 비식별 화면 근거를 남긴다.
-- [ ] T025 [P] 인증된 WebView·실서버 조회를 확인하거나 미실행 사유와 위험을 `specs/022-my-profile/validation.md`에 기록한다.
-- [ ] T026 전체 check/build·diff 검사와 실제 base 대비 변경량을 `specs/022-my-profile/validation.md`에 기록한다. 신규 실행과 Turbo 캐시를 구분한다.
-- [ ] T027 `specs/022-my-profile/checklists/requirements.md`, `tasks.md`, `validation.md`의 완료 표시를 실제 결과와 대조하고 최종 변경·검증·복구·남은 제한을 제출한다.
+- [x] T025 [P] 인증된 WebView·실서버 조회를 확인하거나 미실행 사유와 위험을 `specs/022-my-profile/validation.md`에 기록한다.
+- [x] T026 전체 check/build·diff 검사와 실제 base 대비 변경량을 `specs/022-my-profile/validation.md`에 기록한다. 신규 실행과 Turbo 캐시를 구분한다.
+- [x] T027 `specs/022-my-profile/checklists/requirements.md`, `tasks.md`, `validation.md`의 완료 표시를 실제 결과와 대조하고 최종 변경·검증·복구·남은 제한을 제출한다.
 
 ## 의존성과 병렬 가능성
 
