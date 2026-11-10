@@ -1,1 +1,1 @@
-export { SignupPage } from './ui/signup-page';
+export { SignupPage, type SignupStep } from './ui/signup-page';

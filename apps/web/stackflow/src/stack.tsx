@@ -14,6 +14,7 @@ import type { StackflowInitialContext } from './platform';
 type TabsParams = ActivityBaseParams & TabsState;
 type BooleanQueryParams = ActivityBaseParams & { error?: 'true' };
 type AlertsParams = ActivityBaseParams & { empty?: 'true' };
+type SignupParams = ActivityBaseParams & { step?: 'phone' };
 
 declare module '@stackflow/config' {
   // Stackflow의 module augmentation은 interface 병합이 필요합니다.
@@ -38,7 +39,7 @@ declare module '@stackflow/config' {
     Login: BooleanQueryParams;
     LoginError: EmptyActivityParams;
     Error: EmptyActivityParams;
-    Signup: EmptyActivityParams;
+    Signup: SignupParams;
     SignupStatus: EmptyActivityParams;
     SignupComplete: EmptyActivityParams;
     SignupUnregistered: EmptyActivityParams;
@@ -134,7 +135,7 @@ export const activityComponents = {
       default: LoginErrorActivity,
     })),
   ),
-  Signup: lazy<EmptyActivityParams>(() =>
+  Signup: lazy<SignupParams>(() =>
     import('./activities/activities').then(({ SignupActivity }) => ({
       default: SignupActivity,
     })),
