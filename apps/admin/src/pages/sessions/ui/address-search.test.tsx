@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useState, type ReactNode } from 'react';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClientProvider } from '@tanstack/react-query';
 import { searchAddresses, type AddressSearchResult } from '../model/location/juso-search';
 import type { AddressSearchItemViewModel } from '../model/location/location-view-model';
 import { createAdminQueryClient } from '../../../query-client';
@@ -98,6 +98,7 @@ beforeEach(() => {
   search.mockResolvedValue(result());
 });
 afterEach(() => {
+  onlineManager.setOnline(true);
   search.mockReset();
   vi.unstubAllEnvs();
 });
@@ -258,4 +259,19 @@ it('연속 입력은 마지막 입력에서 300ms 후 한 번 조회하고 비�
   } finally {
     vi.useRealTimers();
   }
+});
+
+it('새 검색이 오프라인 대기 중이면 이전 결과를 새 결과로 안내하지 않는다', async () => {
+  setup();
+  submit('세종대로');
+  await screen.findByText(/“세종대로” 검색 결과/);
+  act(() => onlineManager.setOnline(false));
+  submit('다른 도로');
+  expect(await screen.findByText('네트워크 연결을 기다리고 있습니다.')).toBeVisible();
+  expect(screen.queryByText(/“다른 도로” 검색 결과/)).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: /서울특별시 중구 세종대로 110/ })).toBeDisabled();
+  expect(search).toHaveBeenCalledTimes(1);
+  act(() => onlineManager.setOnline(true));
+  expect(await screen.findByText(/“다른 도로” 검색 결과/)).toBeVisible();
+  expect(search).toHaveBeenCalledTimes(2);
 });

@@ -49,7 +49,8 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
   const unavailable = !isAddressSearchAvailable();
   const options = addressSearchQueryOptions(conditions);
   const query = useQuery({ ...options, enabled: options.enabled && !!keyword && !disabled });
-  const loading = !!keyword && (keyword !== searchKeyword || query.isFetching);
+  const paused = !!keyword && query.fetchStatus === 'paused';
+  const loading = !!keyword && (keyword !== searchKeyword || query.isFetching || paused);
   // 새 결과가 올 때까지 목록을 유지하되 조회 중 선택과 페이지 이동은 막습니다.
   const data =
     keyword && !query.isError && query.data?.status === 'success' ? query.data.data : undefined;
@@ -112,7 +113,8 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
           </p>
         ) : (
           <output aria-live="polite" className={styles.statusMessage}>
-            {loading && '주소를 검색하고 있습니다.'}
+            {paused && '네트워크 연결을 기다리고 있습니다.'}
+            {loading && !paused && '주소를 검색하고 있습니다.'}
             {!loading && !data && '검색 결과에서 세션 장소를 선택해 주세요.'}
             {!loading &&
               data?.items.length === 0 &&
