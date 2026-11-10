@@ -57,3 +57,9 @@
 - `mise exec -- node --run check`, `mise exec -- node --run build`, `git diff --check`가 통과했다. 이번 최종 check의 lint·typecheck 7개와 test 5개, build 3개는 모두 Turbo 캐시를 재사용했으므로 새 실행으로 간주하지 않는다. 변경에 따른 새 실행 결과는 3단계 기록을 기준으로 한다.
 - 로그: `.context/profile-stage-4-check.log`, `.context/profile-stage-4-build.log`. `origin/main` 대비 변경량은 +1522/-424줄(총 1946줄)이다. 800줄 초과는 2단계에 기록한 사용자 지시에 따라 하나의 작업으로 유지한다.
 - 완료 대조: T001~~T023·T025~~T027은 기록과 실제 결과가 일치한다. T024만 브라우저 연결 제약으로 미완료이며, 화면·접근성 검증과 캡처를 재개할 수 있는 환경에서 수행해야 한다.
+
+## 시뮬레이터 보완 확인
+
+- iOS 17.5 iPhone 15 Simulator에서 이 워크트리의 Metro(`localhost:8081`)와 WebView 개발 서버(`localhost:3000`)를 연결했다. 인증된 로컬 WebView의 마이페이지에서 프로필 API가 반환한 이름과 null 소속·기수·직군의 `—` 표시를 확인했다. 세션 이름 fallback은 구현에 없으므로 표시된 이름은 프로필 조회 성공 근거다.
+- 일반 iPhone 15 너비에서는 프로필·출석 현황·메뉴가 가려지거나 가로로 넘치지 않았다. 실제 사용자 이름 등 개인정보는 검증 기록과 캡처에 남기지 않았다.
+- 긴 이름·다크 모드·키보드·터치·스크린 리더 점검은 이번 확인 범위에 포함하지 않아 T024는 계속 미완료다.
