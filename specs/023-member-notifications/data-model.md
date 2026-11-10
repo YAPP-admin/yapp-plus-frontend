@@ -2,8 +2,8 @@
 
 | 개체          | 필드·책임                                             | 수명·검증                                                                       |
 | ------------- | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
-| 알림 항목     | id, content, sentDate, type, postId                   | 서버 원본에서 검증한 Query 캐시; id 양의 안전한 정수, 날짜는 ISO date           |
-| 알림 페이지   | items, nextCursor                                     | 서버 순서 유지; null 종료, 빈/반복 커서 거절                                    |
+| 알림 항목     | id, content, sentDate, type, postId                   | 생성 SDK 계약을 따르는 Query 캐시                                               |
+| 알림 페이지   | items, nextCursor                                     | 서버 순서 유지; null 종료                                                       |
 | 설치 선택     | enabled                                               | Firebase project·FID별 SecureStore; 없음 ON, 손상 OFF, 읽기 실패 자동 등록 금지 |
 | OS 권한       | notDetermined/denied/authorized/provisional/ephemeral | OS 조회 결과, 저장 선택과 별개; 허용 세 상태는 등록 가능                        |
 | 등록 캐시     | 세션 식별자, FID, FCM token                           | 네이티브 메모리만; 같은 조합 PUT 생략, OFF는 DELETE 생략하지 않음               |
