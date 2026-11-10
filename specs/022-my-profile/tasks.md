@@ -15,11 +15,11 @@
 
 ## 2단계 — 공용 생성 기반과 호환성
 
-- [ ] T005 최신 OpenAPI를 `.context/profile-openapi.json`에 받아 프로필 계약을 확인하고 수신 시각·해시를 `specs/022-my-profile/validation.md`에 기록한다.
-- [ ] T006 기존 `packages/api/openapi-ts.config.ts`와 고정 도구로 `packages/api/src/generated/`를 재생성한다.
-- [ ] T007 `packages/api/src/mocks/handlers.ts`, `apps/web/src/`, `apps/admin/src/`의 생성 소비 지점을 HTTP 경로·메서드와 대조해 필요한 호환성만 수정한다.
-- [ ] T008 생성 validator의 원본 JSON 보존을 확인하고 전체 check/build·operation 대응·변경량을 `specs/022-my-profile/validation.md`에 기록한다.
-- [ ] T009 변경량에 따른 분리 필요성을 보고하고 2단계 리뷰·3단계 진행 확인을 `specs/022-my-profile/validation.md`에 기록한다.
+- [x] T005 최신 OpenAPI를 `.context/profile-openapi.json`에 받아 프로필 계약을 확인하고 수신 시각·해시를 `specs/022-my-profile/validation.md`에 기록한다.
+- [x] T006 기존 `packages/api/openapi-ts.config.ts`와 고정 도구로 `packages/api/src/generated/`를 재생성한다.
+- [x] T007 `packages/api/src/mocks/handlers.ts`, `apps/web/src/`, `apps/admin/src/`의 생성 소비 지점을 HTTP 경로·메서드와 대조해 필요한 호환성만 수정한다.
+- [x] T008 생성 validator의 원본 JSON 보존을 확인하고 전체 check/build·operation 대응·변경량을 `specs/022-my-profile/validation.md`에 기록한다.
+- [x] T009 변경량에 따른 분리 필요성을 보고하고 2단계 리뷰·3단계 진행 확인을 `specs/022-my-profile/validation.md`에 기록한다.
 
 **리뷰 경계**: T009 완료 전 프로필 연결을 시작하지 않는다. 800줄 이상이면 분리 방안부터 확정한다.
 

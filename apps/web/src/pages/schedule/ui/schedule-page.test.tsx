@@ -1,6 +1,6 @@
 import { QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
-import { find4Options } from '@yapp-plus/api/generated';
+import { find5Options } from '@yapp-plus/api/generated';
 import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { http, HttpResponse, delay } from 'msw';
@@ -121,7 +121,7 @@ it('재조회 실패 시 목록을 유지하고 재시도 요청을 공유한다
   const { client } = renderPage();
   await screen.findByText('기획 세션');
   server.use(http.get(url, () => HttpResponse.json({ code: 'FAILED' }, { status: 500 })));
-  await act(() => client.invalidateQueries({ queryKey: find4Options().queryKey }));
+  await act(() => client.invalidateQueries({ queryKey: find5Options().queryKey }));
   expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
   expect(screen.getByText('기획 세션')).toBeVisible();
   let finish: (() => void) | undefined;
@@ -178,7 +178,7 @@ it('시간 경과만으로 바꾸지 않고 재조회 시 지난 일정 표시�
   const item = await screen.findByRole('article', { name: '11.7 (토) 기획 세션' });
   vi.setSystemTime(new Date('2026-11-07T09:00:00Z'));
   expect(item).toHaveAccessibleName('11.7 (토) 기획 세션');
-  await act(() => client.invalidateQueries({ queryKey: find4Options().queryKey }));
+  await act(() => client.invalidateQueries({ queryKey: find5Options().queryKey }));
   await waitFor(() => expect(item).toHaveAccessibleName('11.7 (토) 기획 세션 (종료)'));
 });
 
@@ -202,7 +202,7 @@ it('네트워크 오류 후 연결이 복구되면 기존 목록을 유지한 �
   const { client } = renderPage();
   await screen.findByText('기획 세션');
   server.use(http.get(url, () => HttpResponse.error()));
-  await act(() => client.invalidateQueries({ queryKey: find4Options().queryKey }));
+  await act(() => client.invalidateQueries({ queryKey: find5Options().queryKey }));
   expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
   expect(screen.getByText('기획 세션')).toBeVisible();
 

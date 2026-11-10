@@ -244,6 +244,7 @@ export type ErrorResponse = {
     | 'TEAM_PHOTO_UNAVAILABLE'
     | 'TEAM_VERSION_CONFLICT'
     | 'USER_ALREADY_EXISTS'
+    | 'USER_PROFILE_UNAVAILABLE'
     | 'USER_NOT_FOUND'
     | 'USER_REGISTRATION_FAILED'
     | 'USER_WITHDRAWAL_FAILED';
@@ -645,6 +646,21 @@ export type PostImageResponse = {
   sizeBytes: number;
   displayOrder: number;
   readUrl: string | null;
+};
+
+export type UserProfileResponse = {
+  userId: number;
+  name: string;
+  membershipStatus: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | null;
+  /**
+   * 선택된 기수의 DB ID. 유효 소속이 없으면 null
+   */
+  generationId: number | null;
+  /**
+   * 선택된 기수의 표시 번호. 유효 소속이 없으면 null
+   */
+  generationNumber: number | null;
+  position: 'PM' | 'DESIGN' | 'WEB' | 'MOBILE' | 'ANDROID' | 'IOS' | 'SERVER' | 'AI_NATIVE' | null;
 };
 
 export type UserNotificationListItemResponse = {
@@ -2924,7 +2940,69 @@ export type Update2Responses = {
 
 export type Update2Response = Update2Responses[keyof Update2Responses];
 
+export type WithdrawData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/users/me';
+};
+
+export type WithdrawErrors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * USER_WITHDRAWAL_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type WithdrawError = WithdrawErrors[keyof WithdrawErrors];
+
+export type WithdrawResponses = {
+  /**
+   * 탈퇴 완료
+   */
+  204: void;
+};
+
+export type WithdrawResponse = WithdrawResponses[keyof WithdrawResponses];
+
 export type Find2Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/users/me';
+};
+
+export type Find2Errors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * ACTIVE_GENERATION_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * USER_PROFILE_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Find2Error = Find2Errors[keyof Find2Errors];
+
+export type Find2Responses = {
+  /**
+   * 조회 성공
+   */
+  200: UserProfileResponse;
+};
+
+export type Find2Response = Find2Responses[keyof Find2Responses];
+
+export type Find3Data = {
   body?: never;
   path?: never;
   query?: {
@@ -2936,7 +3014,7 @@ export type Find2Data = {
   url: '/api/users/me/notifications';
 };
 
-export type Find2Errors = {
+export type Find3Errors = {
   /**
    * INVALID_USER_NOTIFICATION_CURSOR
    */
@@ -2951,25 +3029,25 @@ export type Find2Errors = {
   503: ErrorResponse;
 };
 
-export type Find2Error = Find2Errors[keyof Find2Errors];
+export type Find3Error = Find3Errors[keyof Find3Errors];
 
-export type Find2Responses = {
+export type Find3Responses = {
   /**
    * 조회 성공
    */
   200: UserNotificationListResponse;
 };
 
-export type Find2Response = Find2Responses[keyof Find2Responses];
+export type Find3Response = Find3Responses[keyof Find3Responses];
 
-export type Find3Data = {
+export type Find4Data = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/sessions/current-week';
 };
 
-export type Find3Errors = {
+export type Find4Errors = {
   /**
    * AUTHENTICATION_FAILED
    */
@@ -2984,16 +3062,16 @@ export type Find3Errors = {
   409: ErrorResponse;
 };
 
-export type Find3Error = Find3Errors[keyof Find3Errors];
+export type Find4Error = Find4Errors[keyof Find4Errors];
 
-export type Find3Responses = {
+export type Find4Responses = {
   /**
    * 조회 성공. 토요일 세션이 없으면 session은 null
    */
   200: CurrentWeekSessionResponse;
 };
 
-export type Find3Response = Find3Responses[keyof Find3Responses];
+export type Find4Response = Find4Responses[keyof Find4Responses];
 
 export type List1Data = {
   body?: never;
@@ -3072,14 +3150,14 @@ export type Detail2Responses = {
 
 export type Detail2Response = Detail2Responses[keyof Detail2Responses];
 
-export type Find4Data = {
+export type Find5Data = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/generations/current/sessions';
 };
 
-export type Find4Errors = {
+export type Find5Errors = {
   /**
    * AUTHENTICATION_FAILED
    */
@@ -3094,16 +3172,16 @@ export type Find4Errors = {
   409: ErrorResponse;
 };
 
-export type Find4Error = Find4Errors[keyof Find4Errors];
+export type Find5Error = Find5Errors[keyof Find5Errors];
 
-export type Find4Responses = {
+export type Find5Responses = {
   /**
    * 조회 성공
    */
   200: CurrentGenerationSessionsResponse;
 };
 
-export type Find4Response = Find4Responses[keyof Find4Responses];
+export type Find5Response = Find5Responses[keyof Find5Responses];
 
 export type CompleteKakaoAuthorizationData = {
   body?: never;
@@ -3278,7 +3356,7 @@ export type MineResponses = {
 
 export type MineResponse = MineResponses[keyof MineResponses];
 
-export type Find5Data = {
+export type Find6Data = {
   body?: never;
   path?: never;
   query?: {
@@ -3287,7 +3365,7 @@ export type Find5Data = {
   url: '/api/attendance-history';
 };
 
-export type Find5Errors = {
+export type Find6Errors = {
   /**
    * INVALID_ATTENDANCE_HISTORY_CURSOR
    */
@@ -3302,18 +3380,18 @@ export type Find5Errors = {
   409: ErrorResponse;
 };
 
-export type Find5Error = Find5Errors[keyof Find5Errors];
+export type Find6Error = Find6Errors[keyof Find6Errors];
 
-export type Find5Responses = {
+export type Find6Responses = {
   /**
    * 조회 성공
    */
   200: AttendanceHistoryResponse;
 };
 
-export type Find5Response = Find5Responses[keyof Find5Responses];
+export type Find6Response = Find6Responses[keyof Find6Responses];
 
-export type Find6Data = {
+export type Find7Data = {
   body?: never;
   path: {
     userId: number;
@@ -3325,7 +3403,7 @@ export type Find6Data = {
   url: '/api/admin/users/{userId}/retained-history';
 };
 
-export type Find6Errors = {
+export type Find7Errors = {
   /**
    * INVALID_HISTORY_REQUEST
    */
@@ -3344,16 +3422,16 @@ export type Find6Errors = {
   503: ErrorResponse;
 };
 
-export type Find6Error = Find6Errors[keyof Find6Errors];
+export type Find7Error = Find7Errors[keyof Find7Errors];
 
-export type Find6Responses = {
+export type Find7Responses = {
   /**
    * 조회 성공; 이력이 없으면 빈 목록
    */
   200: RetainedHistoryPage;
 };
 
-export type Find6Response = Find6Responses[keyof Find6Responses];
+export type Find7Response = Find7Responses[keyof Find7Responses];
 
 export type FindPendingData = {
   body?: never;
@@ -3828,35 +3906,6 @@ export type List6Responses = {
 };
 
 export type List6Response = List6Responses[keyof List6Responses];
-
-export type WithdrawData = {
-  body?: never;
-  path?: never;
-  query?: never;
-  url: '/api/users/me';
-};
-
-export type WithdrawErrors = {
-  /**
-   * AUTHENTICATION_FAILED
-   */
-  401: ErrorResponse;
-  /**
-   * USER_WITHDRAWAL_FAILED
-   */
-  503: ErrorResponse;
-};
-
-export type WithdrawError = WithdrawErrors[keyof WithdrawErrors];
-
-export type WithdrawResponses = {
-  /**
-   * 탈퇴 완료
-   */
-  204: void;
-};
-
-export type WithdrawResponse = WithdrawResponses[keyof WithdrawResponses];
 
 export type RevokeData = {
   /**

@@ -54,6 +54,7 @@ import type {
   Find4Responses,
   Find5Responses,
   Find6Responses,
+  Find7Responses,
   FindAllResponses,
   FindCandidatesResponses,
   FindDetailResponses,
@@ -2223,20 +2224,54 @@ export function handleUpdate2(
   );
 }
 
+export type HandleWithdrawResponse = {
+  body: WithdrawResponses[204];
+  status?: 204;
+};
+
+/**
+ * Handler for the `DELETE /api/users/me` operation.
+ */
+export function handleWithdraw(
+  response?: HandleWithdrawResponse | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.delete<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return new HttpResponse(body, { status: response?.status ?? 204 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleFind2Response = {
   body: Find2Responses[200];
   status?: 200;
 };
 
 /**
- * Handler for the `GET /api/users/me/notifications` operation.
+ * Handler for the `GET /api/users/me` operation.
  */
 export function handleFind2(
   response?: HandleFind2Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
-    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me/notifications`,
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me`,
     (info) => {
       if (typeof response === 'function') {
         return response(info);
@@ -2263,10 +2298,44 @@ export type HandleFind3Response = {
 };
 
 /**
- * Handler for the `GET /api/sessions/current-week` operation.
+ * Handler for the `GET /api/users/me/notifications` operation.
  */
 export function handleFind3(
   response?: HandleFind3Response | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me/notifications`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleFind4Response = {
+  body: Find4Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/sessions/current-week` operation.
+ */
+export function handleFind4(
+  response?: HandleFind4Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2371,16 +2440,16 @@ export function handleDetail2(
   );
 }
 
-export type HandleFind4Response = {
-  body: Find4Responses[200];
+export type HandleFind5Response = {
+  body: Find5Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/generations/current/sessions` operation.
  */
-export function handleFind4(
-  response?: HandleFind4Response | HttpResponseResolver<never, never>,
+export function handleFind5(
+  response?: HandleFind5Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2609,16 +2678,16 @@ export function handleMine(
   );
 }
 
-export type HandleFind5Response = {
-  body: Find5Responses[200];
+export type HandleFind6Response = {
+  body: Find6Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/attendance-history` operation.
  */
-export function handleFind5(
-  response?: HandleFind5Response | HttpResponseResolver<never, never>,
+export function handleFind6(
+  response?: HandleFind6Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2643,17 +2712,17 @@ export function handleFind5(
   );
 }
 
-export type HandleFind6Response = {
-  body: Find6Responses[200];
+export type HandleFind7Response = {
+  body: Find7Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/users/{userId}/retained-history` operation.
  */
-export function handleFind6(
+export function handleFind7(
   response?:
-    | HandleFind6Response
+    | HandleFind7Response
     | HttpResponseResolver<
         {
           userId: string;
@@ -3237,40 +3306,6 @@ export function handleList6(
   );
 }
 
-export type HandleWithdrawResponse = {
-  body: WithdrawResponses[204];
-  status?: 204;
-};
-
-/**
- * Handler for the `DELETE /api/users/me` operation.
- */
-export function handleWithdraw(
-  response?: HandleWithdrawResponse | HttpResponseResolver<never, never>,
-  options?: RequestHandlerOptions,
-): HttpHandler {
-  return http.delete<never, never>(
-    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users/me`,
-    (info) => {
-      if (typeof response === 'function') {
-        return response(info);
-      }
-      const body = response?.body;
-      if (body !== undefined) {
-        return new HttpResponse(body, { status: response?.status ?? 204 });
-      }
-      if (options?.responseFallback === 'passthrough') {
-        return;
-      }
-      return new Response('Not Implemented', {
-        status: 501,
-        statusText: 'Not Implemented',
-      });
-    },
-    options,
-  );
-}
-
 export type HandleRevokeResponse = {
   body: RevokeResponses[204];
   status?: 204;
@@ -3533,13 +3568,21 @@ export type MswHandlerFactories = {
    */
   update2: typeof handleUpdate2;
   /**
-   * Handler for the `GET /api/users/me/notifications` operation.
+   * Handler for the `DELETE /api/users/me` operation.
+   */
+  withdraw: typeof handleWithdraw;
+  /**
+   * Handler for the `GET /api/users/me` operation.
    */
   find2: typeof handleFind2;
   /**
-   * Handler for the `GET /api/sessions/current-week` operation.
+   * Handler for the `GET /api/users/me/notifications` operation.
    */
   find3: typeof handleFind3;
+  /**
+   * Handler for the `GET /api/sessions/current-week` operation.
+   */
+  find4: typeof handleFind4;
   /**
    * Handler for the `GET /api/posts` operation.
    */
@@ -3551,7 +3594,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/generations/current/sessions` operation.
    */
-  find4: typeof handleFind4;
+  find5: typeof handleFind5;
   /**
    * Handler for the `GET /api/auth/oidc/kakao/callback` operation.
    */
@@ -3579,11 +3622,11 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/attendance-history` operation.
    */
-  find5: typeof handleFind5;
+  find6: typeof handleFind6;
   /**
    * Handler for the `GET /api/admin/users/{userId}/retained-history` operation.
    */
-  find6: typeof handleFind6;
+  find7: typeof handleFind7;
   /**
    * Handler for the `GET /api/admin/membership-approvals` operation.
    */
@@ -3632,10 +3675,6 @@ export type MswHandlerFactories = {
    * Handler for the `GET /api/admin/generations/{generationId}/attendance-statistics` operation.
    */
   list6: typeof handleList6;
-  /**
-   * Handler for the `DELETE /api/users/me` operation.
-   */
-  withdraw: typeof handleWithdraw;
   /**
    * Handler for the `DELETE /api/auth/sessions/current` operation.
    */
@@ -3711,19 +3750,21 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     delete2: wrap(handleDelete2),
     detail1: wrap(handleDetail1),
     update2: wrap(handleUpdate2),
+    withdraw: wrap(handleWithdraw),
     find2: wrap(handleFind2),
     find3: wrap(handleFind3),
+    find4: wrap(handleFind4),
     list1: wrap(handleList1),
     detail2: wrap(handleDetail2),
-    find4: wrap(handleFind4),
+    find5: wrap(handleFind5),
     completeKakaoAuthorization: wrap(handleCompleteKakaoAuthorization),
     startKakaoAuthorization: wrap(handleStartKakaoAuthorization),
     completeGoogleAuthorization: wrap(handleCompleteGoogleAuthorization),
     startGoogleAuthorization: wrap(handleStartGoogleAuthorization),
     startAppleAuthorization: wrap(handleStartAppleAuthorization),
     mine: wrap(handleMine),
-    find5: wrap(handleFind5),
     find6: wrap(handleFind6),
+    find7: wrap(handleFind7),
     findPending: wrap(handleFindPending),
     findDetail: wrap(handleFindDetail),
     findCandidates: wrap(handleFindCandidates),
@@ -3736,7 +3777,6 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     list5: wrap(handleList5),
     teamOptions: wrap(handleTeamOptions),
     list6: wrap(handleList6),
-    withdraw: wrap(handleWithdraw),
     revoke: wrap(handleRevoke),
     logout: wrap(handleLogout),
   };
@@ -3794,7 +3834,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.register2, overrides.register2),
       invoke(pick.list, overrides.list),
       invoke(pick.create3, overrides.create3),
-      invoke(pick.find6, overrides.find6),
+      invoke(pick.find7, overrides.find7),
       invoke(pick.findCandidates, overrides.findCandidates),
       invoke(pick.candidates, overrides.candidates),
       invoke(pick.list4, overrides.list4),
@@ -3804,8 +3844,8 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.presign, overrides.presign),
       invoke(pick.consumeHandoff, overrides.consumeHandoff),
       invoke(pick.login, overrides.login),
-      invoke(pick.find2, overrides.find2),
-      invoke(pick.find4, overrides.find4),
+      invoke(pick.find3, overrides.find3),
+      invoke(pick.find5, overrides.find5),
       invoke(pick.revoke, overrides.revoke),
       invoke(pick.findDetail, overrides.findDetail),
       invoke(pick.acknowledge, overrides.acknowledge),
@@ -3813,16 +3853,17 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.renew, overrides.renew),
       invoke(pick.history, overrides.history),
       invoke(pick.create, overrides.create),
-      invoke(pick.find3, overrides.find3),
+      invoke(pick.withdraw, overrides.withdraw),
+      invoke(pick.find2, overrides.find2),
+      invoke(pick.find4, overrides.find4),
       invoke(pick.mine, overrides.mine),
       invoke(pick.findPending, overrides.findPending),
-      invoke(pick.withdraw, overrides.withdraw),
       invoke(pick.detail2, overrides.detail2),
       invoke(pick.register1, overrides.register1),
       invoke(pick.verify, overrides.verify),
       invoke(pick.submit1, overrides.submit1),
       invoke(pick.list1, overrides.list1),
-      invoke(pick.find5, overrides.find5),
+      invoke(pick.find6, overrides.find6),
     ];
   };
   return { all, pick };

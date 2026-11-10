@@ -38,12 +38,12 @@ SDK 요청·응답 검증과 응답 변환은 기본적으로 비활성화되어
 
 일반 `generated` 진입점에는 Faker·MSW·고정 응답을 export하지 않습니다.
 제품 코드는 SDK를 사용하고, 모킹 진입점은 개발 초기화나 테스트에서만 사용합니다.
-현재 이번 주 세션 조회 함수는 `find2`이며, 실제 API 경로는 생성 SDK의 주석에서 확인할 수 있습니다.
+현재 이번 주 세션 조회 함수는 `find4`이며, 실제 API 경로는 생성 SDK의 주석에서 확인할 수 있습니다.
 
 ```ts
-import { find2 } from '@yapp-plus/api/generated';
+import { find4 } from '@yapp-plus/api/generated';
 
-const { data } = await find2({ throwOnError: true });
+const { data } = await find4({ throwOnError: true });
 ```
 
 ## 모의 응답 구성

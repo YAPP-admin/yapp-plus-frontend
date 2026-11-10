@@ -1,6 +1,6 @@
 /** 실제 탭·상세 탐색에서 조회 복구와 캐시 수명을 검증합니다. */
 import { QueryClientProvider } from '@tanstack/react-query';
-import { find4Options } from '@yapp-plus/api/generated';
+import { find5Options } from '@yapp-plus/api/generated';
 import { SnackbarProvider } from '@yapp-plus/ui';
 import { act, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -97,7 +97,7 @@ it('첫 진입 전에 조회가 실패해도 화면 복귀 전에는 재시도�
   );
   const client = createAppQueryClient();
   await expect(
-    client.fetchQuery(find4Options({ retry: 0, kyOptions: { throwHttpErrors: false } })),
+    client.fetchQuery(find5Options({ retry: 0, kyOptions: { throwHttpErrors: false } })),
   ).rejects.toBeDefined();
   const { user } = await renderStack('/schedule', client);
   await screen.findByRole('button', { name: '다시 시도' });
@@ -148,7 +148,7 @@ it.each([false, true])('탭 복귀는 기존 stale 재조회 정책을 유지한
   await user.click(screen.getByRole('tab', { name: /^홈$/ }));
   await screen.findByRole('heading', { name: '홈' });
   if (stale) {
-    const key = find4Options().queryKey;
+    const key = find5Options().queryKey;
     act(() => {
       client.setQueryData(key, (current) => current, { updatedAt: Date.now() - 31_000 });
     });
@@ -269,7 +269,7 @@ it('상세 복귀가 다른 탭의 stale 조회를 실행하지 않는다', asyn
   await user.click(screen.getByRole('link', { name: '출석 내역' }));
   await screen.findByRole('heading', { name: '출석 내역', level: 1 });
   act(() => {
-    client.setQueryData(find4Options().queryKey, (current) => current, {
+    client.setQueryData(find5Options().queryKey, (current) => current, {
       updatedAt: Date.now() - 31_000,
     });
     actions.pop();
@@ -292,7 +292,7 @@ it('비활성 탭도 캐시 무효화 후 조회를 유지한다', async () => {
   await user.click(screen.getByRole('tab', { name: 'MY' }));
   await screen.findByText('92점');
   await act(async () => {
-    await client.invalidateQueries({ queryKey: find4Options().queryKey });
+    await client.invalidateQueries({ queryKey: find5Options().queryKey });
   });
   await waitFor(() => expect(calls).toBe(2));
   await user.click(screen.getByRole('tab', { name: '일정' }));

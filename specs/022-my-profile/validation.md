@@ -18,6 +18,18 @@
 - 변경량: merge-base `7bd77d09035d8c1a317469bc4d03caedb25955f1` 대비 문서 9개 추가, +501/-0줄. 현재 650줄 미만으로 1단계 분리 불필요. 후속 생성·연동 변경은 다시 합산해야 한다.
 - 사용자 리뷰 및 2단계 진행 승인: 대기.
 
+## 2단계 — 공용 생성 기반과 호환성
+
+- 최신 명세는 2026-11-10에 `https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com/v3/api-docs`에서 받았다. 최초 조회는 503이었고 재시도에 성공했다. `.context/profile-openapi.json`의 SHA-256은 `6035d754ee1ed2400583b3f4be2160ffe6791493a36cff5c6934bc2f7558bd96`다.
+- OpenAPI 3.1.0에서 `GET /api/users/me`의 operationId `find_2`, 200·401·409·503 응답과 `userId`, `name`, `membershipStatus`, `generationId`, `generationNumber`, `position` 여섯 필수 키를 확인했다.
+- `OPENAPI_INPUT="$PWD/.context/profile-openapi.json" mise exec -- pnpm --filter @yapp-plus/api generate`로 `packages/api/src/generated/` 7개 파일을 재생성했다. 생성 파일은 직접 수정하지 않았다.
+- `find2`가 새 프로필 조회가 되면서 알림·현재 주·일정·출석 이력·운영 이력의 번호형 생성 operation이 각각 한 칸 이동했다. 웹 Query·SDK·MSW handler·고정 fixture·회귀 테스트와 README를 HTTP 경로 기준으로 맞췄다. 관리자 앱은 해당 번호형 소비가 없어 수정이 없었다.
+- 생성 client의 validator가 원본 JSON을 유지하는 경계와 기존 Zod 사용을 확인했다. 새 프로필 연결은 다음 단계에서 추가한다.
+- 신규 실행: 웹·API·관리자 typecheck와 `mise exec -- node --run check`, `mise exec -- node --run build`가 모두 성공했다. check는 lint·typecheck 7개 작업 중 각 3개, test 5개 중 2개가 Turbo 캐시 재사용이었고 나머지는 신규 실행이다. build는 3개 중 1개가 캐시 재사용이고 2개가 신규 실행이다.
+- 로그: `.context/profile-stage-2-check.log`, `.context/profile-stage-2-build.log`. `git diff --check`가 통과했다. 브라우저·WebView·실서버 인증 조회는 3~4단계 범위라 미실행이다.
+- 변경량은 2단계 작업만 +532/-287줄(생성 7개 파일 +532/-287, 소비 코드·테스트·README·mock +116/-116)이다. 1단계 커밋을 포함한 `origin/main` 대비 누적 변경량은 +1115/-369줄로 800줄 제한을 넘는다. 후속 프로필 UI를 시작하기 전에 PR 분리 방안을 확정해야 한다.
+- 사용자 리뷰 및 3단계 진행 승인: 2026-11-10 사용자가 생성 계약·호환성 수정을 하나의 작업으로 취급하고 전체 커밋 뒤 3단계를 진행하도록 지시했다. 생성 파일만으로 800줄을 넘는 사유를 기록했으며, 이 변경은 독립 분리하지 않는다.
+
 ## 후속 단계
 
 2단계 생성 입력 해시·operation 대응·호환성·check/build, 3단계 회귀 테스트·UI 근거,

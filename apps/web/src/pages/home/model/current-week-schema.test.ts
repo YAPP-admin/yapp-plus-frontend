@@ -1,12 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
-import { find3Options } from '@yapp-plus/api/generated';
+import { find4Options } from '@yapp-plus/api/generated';
 import { http, HttpResponse } from 'msw';
 import { expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { currentWeekFixture } from '../../../mocks/session-handlers';
 import { currentWeekSchema } from './current-week-schema';
 
-const options = find3Options({
+const options = find4Options({
   baseUrl: apiBaseUrl,
   responseValidator: (data) => currentWeekSchema.parseAsync(data),
   retry: 0,

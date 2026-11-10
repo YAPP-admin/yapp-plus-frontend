@@ -128,11 +128,11 @@ export function createApiMockHandlers(
         detail1: fakerResponse(generatedFaker.fakeDetail1Response200, schemas.zDetail1Response),
         update1: () => new HttpResponse(null, { status: 204 }),
         update2: fakerResponse(generatedFaker.fakeUpdate2Response200, schemas.zUpdate2Response),
-        find3: fixedResponse(
+        find4: fixedResponse(
           empty ? fixtures.emptyWeek : fixtures.currentWeek,
-          schemas.zFind3Response,
+          schemas.zFind4Response,
         ),
-        find4: fakerResponse(generatedFaker.fakeFind4Response200, schemas.zFind4Response),
+        find5: fakerResponse(generatedFaker.fakeFind5Response200, schemas.zFind5Response),
         findPending: fakerResponse(
           generatedFaker.fakeFindPendingResponse200,
           schemas.zFindPendingResponse,

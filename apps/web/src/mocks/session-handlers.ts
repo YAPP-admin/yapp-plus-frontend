@@ -32,8 +32,8 @@ export const createSessionHandlers = (
       attendance.checkedInAt ??= new Date().toISOString();
       return HttpResponse.json({ verified: true, checkedInAt: attendance.checkedInAt });
     }),
-    pick.find3(() => HttpResponse.json(currentWeek)),
-    pick.find4(async () => {
+    pick.find4(() => HttpResponse.json(currentWeek)),
+    pick.find5(async () => {
       if (scheduleState === 'loading') {
         await delay(5_000);
       }

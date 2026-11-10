@@ -2,7 +2,7 @@ import { createSessionFixtures } from '@/mocks/session-fixtures';
 import { createAttendanceFixtures } from '@/mocks/attendance-fixtures';
 import { createSessionHandlers, currentWeekFixture } from '@/mocks/session-handlers';
 import { createMemberAttendanceHandlers } from '@/mocks/member-attendance-handlers';
-import { find3QueryKey, find5Options } from '@yapp-plus/api/generated';
+import { find4QueryKey, find6Options } from '@yapp-plus/api/generated';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider, onlineManager } from '@tanstack/react-query';
@@ -254,7 +254,7 @@ it('세션이 없었다가 조회되면 현재 세션으로 제출할 수 있다
   expect(await screen.findByText('현재 출석할 수 있는 세션이 없어요.')).toBeVisible();
   server.use(http.get(weekUrl, () => HttpResponse.json(week)));
   act(() => {
-    view.client.setQueryData(find3QueryKey(), week);
+    view.client.setQueryData(find4QueryKey(), week);
   });
   await enter();
   expect(screen.getByRole('button', { name: '확인' })).toBeEnabled();
@@ -313,7 +313,7 @@ it('목업 출석 성공은 홈 완료 표시와 이미 조회한 출석 내역�
     ...createMemberAttendanceHandlers(apiBaseUrl, undefined, undefined, attendance),
   );
   const view = setup();
-  const options = { ...find5Options(), staleTime: Infinity };
+  const options = { ...find6Options(), staleTime: Infinity };
   const before = await view.client.fetchQuery(options);
   expect(before.items.find(({ sessionId }) => sessionId === 39902)?.attendanceStatus).toBe(
     'UNDECIDED',
