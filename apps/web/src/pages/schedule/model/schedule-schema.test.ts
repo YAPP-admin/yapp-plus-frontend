@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { find4Options } from '@yapp-plus/api/generated';
+import { find5Options } from '@yapp-plus/api/generated';
 import { fakeCurrentGenerationSessionItemResponse } from '@yapp-plus/api/generated/faker';
 import { http, HttpResponse } from 'msw';
 import { expect, it } from 'vitest';
@@ -13,7 +13,7 @@ const session = {
   startTime: '13:30',
   endTime: '18:00',
 };
-const options = find4Options({
+const options = find5Options({
   baseUrl: apiBaseUrl,
   responseValidator: (data) => scheduleSchema.parseAsync(data),
   retry: 0,

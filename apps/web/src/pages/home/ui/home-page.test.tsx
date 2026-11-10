@@ -7,7 +7,7 @@ import {
   onlineManager,
 } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
-import { find3Options } from '@yapp-plus/api/generated';
+import { find4Options } from '@yapp-plus/api/generated';
 import { http, HttpResponse, delay } from 'msw';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
 import { apiBaseUrl, server } from '../../../mocks/server';
@@ -272,7 +272,7 @@ it('재조회 실패 시 기존 카드와 갱신 실패 안내를 유지한다',
   const { client } = renderHome();
   await screen.findByRole('heading', { name: /설계 리뷰/ });
   server.use(http.get(url, () => HttpResponse.json({}, { status: 500 })));
-  await act(() => client.invalidateQueries({ queryKey: find3Options().queryKey }));
+  await act(() => client.invalidateQueries({ queryKey: find4Options().queryKey }));
   expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
   expect(screen.getByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
 });
@@ -358,7 +358,7 @@ it('주 경계를 지난 캐시로 복귀하면 staleTime과 무관하게 새 �
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
-  client.setQueryData([...find3Options().queryKey], response, {
+  client.setQueryData([...find4Options().queryKey], response, {
     updatedAt: Date.parse('2026-11-07T14:59:59Z'),
   });
   server.use(
@@ -381,7 +381,7 @@ it('주간 조회의 네트워크 오류 후 연결 복구 시 카드와 오류 
   const { client } = renderHome();
   await screen.findByText(/설계 리뷰/);
   server.use(http.get(url, () => HttpResponse.error()));
-  await act(() => client.invalidateQueries({ queryKey: find3Options().queryKey }));
+  await act(() => client.invalidateQueries({ queryKey: find4Options().queryKey }));
   expect(await screen.findByRole('alert')).toBeVisible();
   expect(screen.getByText(/설계 리뷰/)).toBeVisible();
 

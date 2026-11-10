@@ -1,10 +1,10 @@
 import { queryOptions } from '@tanstack/react-query';
-import { find4Options } from '@yapp-plus/api/generated';
+import { find5Options } from '@yapp-plus/api/generated';
 import { getStaticSchedule, staticContentEnabled } from '@/features/static-content';
 import { scheduleSchema } from './schedule-schema';
 
-export function scheduleQueryOptions(options?: Parameters<typeof find4Options>[0]) {
-  const generated = find4Options({
+export function scheduleQueryOptions(options?: Parameters<typeof find5Options>[0]) {
+  const generated = find5Options({
     ...options,
     responseValidator: (value) => scheduleSchema.parseAsync(value),
   });

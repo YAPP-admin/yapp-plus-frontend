@@ -43,6 +43,7 @@ import {
   find4,
   find5,
   find6,
+  find7,
   findAll,
   findCandidates,
   findDetail,
@@ -181,6 +182,9 @@ import type {
   Find6Data,
   Find6Error,
   Find6Response,
+  Find7Data,
+  Find7Error,
+  Find7Response,
   FindAllData,
   FindAllError,
   FindAllResponse,
@@ -1687,12 +1691,41 @@ export const update2Mutation = (
   return mutationOptions;
 };
 
+export const withdrawMutationKey = (options?: Partial<Options<WithdrawData>>) =>
+  createMutationKey('withdraw', options);
+
+/**
+ * 계정·동아리 통합 탈퇴
+ *
+ * 모든 기수 소속과 세션을 폐기하고 구조화된 개인정보를 비식별화한다. Native는 보관한 token을 제거한다.
+ */
+export const withdrawMutation = (
+  options?: Partial<Options<WithdrawData>>,
+): UseMutationOptions<WithdrawResponse, WithdrawError, Options<WithdrawData>> => {
+  const mutationOptions: UseMutationOptions<
+    WithdrawResponse,
+    WithdrawError,
+    Options<WithdrawData>
+  > = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await withdraw({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+    mutationKey: withdrawMutationKey(options),
+  };
+  return mutationOptions;
+};
+
 export const find2QueryKey = (options?: Options<Find2Data>) => createQueryKey('find2', options);
 
 /**
- * 본인 알림 목록 조회
+ * 본인 프로필 조회
  *
- * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
+ * 현재 활동 기수 소속을 우선하고, 없으면 가장 높은 번호의 유효 기수 소속을 보여준다. 소속이 없으면 사용자 ID와 이름 외 필드는 null이다.
  */
 export const find2Options = (options?: Options<Find2Data>) =>
   queryOptions<Find2Response, Find2Error, Find2Response, ReturnType<typeof find2QueryKey>>({
@@ -1708,55 +1741,12 @@ export const find2Options = (options?: Options<Find2Data>) =>
     queryKey: find2QueryKey(options),
   });
 
-export const find2InfiniteQueryKey = (options?: Options<Find2Data>): QueryKey<Options<Find2Data>> =>
-  createQueryKey('find2', options, true);
+export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
 
 /**
  * 본인 알림 목록 조회
  *
  * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
- */
-export const find2InfiniteOptions = (options?: Options<Find2Data>) => {
-  const opts = infiniteQueryOptions<
-    Find2Response,
-    Find2Error,
-    InfiniteData<Find2Response>,
-    QueryKey<Options<Find2Data>>,
-    string | Pick<QueryKey<Options<Find2Data>>[0], 'body' | 'headers' | 'path' | 'query'>
-  >(
-    // @ts-ignore
-    {
-      queryFn: async ({ pageParam, queryKey, signal }) => {
-        // @ts-ignore
-        const page: Pick<QueryKey<Options<Find2Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
-          typeof pageParam === 'object'
-            ? pageParam
-            : {
-                query: {
-                  cursor: pageParam,
-                },
-              };
-        const params = createInfiniteParams(queryKey, page);
-        const { data } = await find2({
-          ...options,
-          ...params,
-          signal,
-          throwOnError: true,
-        });
-        return data;
-      },
-      queryKey: find2InfiniteQueryKey(options),
-    },
-  );
-  return opts as Omit<typeof opts, 'initialData'>;
-};
-
-export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
-
-/**
- * 이번 주 세션 조회
- *
- * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
  */
 export const find3Options = (options?: Options<Find3Data>) =>
   queryOptions<Find3Response, Find3Error, Find3Response, ReturnType<typeof find3QueryKey>>({
@@ -1770,6 +1760,70 @@ export const find3Options = (options?: Options<Find3Data>) =>
       return data;
     },
     queryKey: find3QueryKey(options),
+  });
+
+export const find3InfiniteQueryKey = (options?: Options<Find3Data>): QueryKey<Options<Find3Data>> =>
+  createQueryKey('find3', options, true);
+
+/**
+ * 본인 알림 목록 조회
+ *
+ * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
+ */
+export const find3InfiniteOptions = (options?: Options<Find3Data>) => {
+  const opts = infiniteQueryOptions<
+    Find3Response,
+    Find3Error,
+    InfiniteData<Find3Response>,
+    QueryKey<Options<Find3Data>>,
+    string | Pick<QueryKey<Options<Find3Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Find3Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await find3({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: find3InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('find4', options);
+
+/**
+ * 이번 주 세션 조회
+ *
+ * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
+ */
+export const find4Options = (options?: Options<Find4Data>) =>
+  queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find4({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find4QueryKey(options),
   });
 
 export const list1QueryKey = (options?: Options<List1Data>) => createQueryKey('list1', options);
@@ -1858,17 +1912,17 @@ export const detail2Options = (options: Options<Detail2Data>) =>
     queryKey: detail2QueryKey(options),
   });
 
-export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('find4', options);
+export const find5QueryKey = (options?: Options<Find5Data>) => createQueryKey('find5', options);
 
 /**
  * 현재 기수 전체 세션 일정 조회
  *
  * 로그인 사용자의 소속 기수와 무관하게 현재 활동 중인 기수의 세션 일정을 모두 조회한다.
  */
-export const find4Options = (options?: Options<Find4Data>) =>
-  queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
+export const find5Options = (options?: Options<Find5Data>) =>
+  queryOptions<Find5Response, Find5Error, Find5Response, ReturnType<typeof find5QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find4({
+      const { data } = await find5({
         ...options,
         ...queryKey[0],
         signal,
@@ -1876,7 +1930,7 @@ export const find4Options = (options?: Options<Find4Data>) =>
       });
       return data;
     },
-    queryKey: find4QueryKey(options),
+    queryKey: find5QueryKey(options),
   });
 
 export const completeKakaoAuthorizationQueryKey = (
@@ -2039,78 +2093,14 @@ export const mineOptions = (options?: Options<MineData>) =>
     queryKey: mineQueryKey(options),
   });
 
-export const find5QueryKey = (options?: Options<Find5Data>) => createQueryKey('find5', options);
+export const find6QueryKey = (options?: Options<Find6Data>) => createQueryKey('find6', options);
 
 /**
  * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
  *
  * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find5Options = (options?: Options<Find5Data>) =>
-  queryOptions<Find5Response, Find5Error, Find5Response, ReturnType<typeof find5QueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find5({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: find5QueryKey(options),
-  });
-
-export const find5InfiniteQueryKey = (options?: Options<Find5Data>): QueryKey<Options<Find5Data>> =>
-  createQueryKey('find5', options, true);
-
-/**
- * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
- *
- * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
- */
-export const find5InfiniteOptions = (options?: Options<Find5Data>) => {
-  const opts = infiniteQueryOptions<
-    Find5Response,
-    Find5Error,
-    InfiniteData<Find5Response>,
-    QueryKey<Options<Find5Data>>,
-    string | Pick<QueryKey<Options<Find5Data>>[0], 'body' | 'headers' | 'path' | 'query'>
-  >(
-    // @ts-ignore
-    {
-      queryFn: async ({ pageParam, queryKey, signal }) => {
-        // @ts-ignore
-        const page: Pick<QueryKey<Options<Find5Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
-          typeof pageParam === 'object'
-            ? pageParam
-            : {
-                query: {
-                  cursor: pageParam,
-                },
-              };
-        const params = createInfiniteParams(queryKey, page);
-        const { data } = await find5({
-          ...options,
-          ...params,
-          signal,
-          throwOnError: true,
-        });
-        return data;
-      },
-      queryKey: find5InfiniteQueryKey(options),
-    },
-  );
-  return opts as Omit<typeof opts, 'initialData'>;
-};
-
-export const find6QueryKey = (options: Options<Find6Data>) => createQueryKey('find6', options);
-
-/**
- * 탈퇴 사용자 보존 사유 이력 조회
- *
- * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
- */
-export const find6Options = (options: Options<Find6Data>) =>
+export const find6Options = (options?: Options<Find6Data>) =>
   queryOptions<Find6Response, Find6Error, Find6Response, ReturnType<typeof find6QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
       const { data } = await find6({
@@ -2124,15 +2114,15 @@ export const find6Options = (options: Options<Find6Data>) =>
     queryKey: find6QueryKey(options),
   });
 
-export const find6InfiniteQueryKey = (options: Options<Find6Data>): QueryKey<Options<Find6Data>> =>
+export const find6InfiniteQueryKey = (options?: Options<Find6Data>): QueryKey<Options<Find6Data>> =>
   createQueryKey('find6', options, true);
 
 /**
- * 탈퇴 사용자 보존 사유 이력 조회
+ * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
  *
- * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find6InfiniteOptions = (options: Options<Find6Data>) => {
+export const find6InfiniteOptions = (options?: Options<Find6Data>) => {
   const opts = infiniteQueryOptions<
     Find6Response,
     Find6Error,
@@ -2162,6 +2152,70 @@ export const find6InfiniteOptions = (options: Options<Find6Data>) => {
         return data;
       },
       queryKey: find6InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const find7QueryKey = (options: Options<Find7Data>) => createQueryKey('find7', options);
+
+/**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find7Options = (options: Options<Find7Data>) =>
+  queryOptions<Find7Response, Find7Error, Find7Response, ReturnType<typeof find7QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find7({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find7QueryKey(options),
+  });
+
+export const find7InfiniteQueryKey = (options: Options<Find7Data>): QueryKey<Options<Find7Data>> =>
+  createQueryKey('find7', options, true);
+
+/**
+ * 탈퇴 사용자 보존 사유 이력 조회
+ *
+ * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ */
+export const find7InfiniteOptions = (options: Options<Find7Data>) => {
+  const opts = infiniteQueryOptions<
+    Find7Response,
+    Find7Error,
+    InfiniteData<Find7Response>,
+    QueryKey<Options<Find7Data>>,
+    string | Pick<QueryKey<Options<Find7Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Find7Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await find7({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: find7InfiniteQueryKey(options),
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;
@@ -2670,35 +2724,6 @@ export const list6Options = (options: Options<List6Data>) =>
     },
     queryKey: list6QueryKey(options),
   });
-
-export const withdrawMutationKey = (options?: Partial<Options<WithdrawData>>) =>
-  createMutationKey('withdraw', options);
-
-/**
- * 계정·동아리 통합 탈퇴
- *
- * 모든 기수 소속과 세션을 폐기하고 구조화된 개인정보를 비식별화한다. Native는 보관한 token을 제거한다.
- */
-export const withdrawMutation = (
-  options?: Partial<Options<WithdrawData>>,
-): UseMutationOptions<WithdrawResponse, WithdrawError, Options<WithdrawData>> => {
-  const mutationOptions: UseMutationOptions<
-    WithdrawResponse,
-    WithdrawError,
-    Options<WithdrawData>
-  > = {
-    mutationFn: async (fnOptions) => {
-      const { data } = await withdraw({
-        ...options,
-        ...fnOptions,
-        throwOnError: true,
-      });
-      return data;
-    },
-    mutationKey: withdrawMutationKey(options),
-  };
-  return mutationOptions;
-};
 
 export const revokeMutationKey = (options?: Partial<Options<RevokeData>>) =>
   createMutationKey('revoke', options);

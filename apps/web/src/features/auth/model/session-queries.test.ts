@@ -6,10 +6,10 @@ import {
   isCancelledError,
 } from '@tanstack/react-query';
 import {
-  find3Options,
   find4Options,
+  find5Options,
   mineOptions,
-  find5InfiniteOptions,
+  find6InfiniteOptions,
 } from '@yapp-plus/api/generated';
 import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
 import { http, HttpResponse } from 'msw';
@@ -66,16 +66,16 @@ it('홈의 401 갱신을 세션 cache에 반영하고 다음 일정 요청이 �
   );
   const renewed = { ...first, tokenVersion: 2, accessToken: 'test-renewed' };
   bridge.refreshNativeSession.mockResolvedValue({ status: 'SIGNED_IN', session: renewed });
-  await client.fetchQuery(find3Options(nativeAuthClientOptions(first, client)));
+  await client.fetchQuery(find4Options(nativeAuthClientOptions(first, client)));
   const current = client.getQueryData<AuthResult>(nativeSessionQueryKey);
   expect(current).toEqual({ status: 'SIGNED_IN', session: renewed });
   if (current?.status !== 'SIGNED_IN') {
     throw new Error('로그인 세션이 없습니다.');
   }
-  await client.fetchQuery(find4Options(nativeAuthClientOptions(current.session, client)));
+  await client.fetchQuery(find5Options(nativeAuthClientOptions(current.session, client)));
   expect(tokens).toEqual(['Bearer test-one', 'Bearer test-renewed', 'Bearer test-renewed']);
   expect(bridge.refreshNativeSession).toHaveBeenCalledTimes(1);
-  expect(client.getQueryData(find3Options().queryKey)).toEqual({ account: 1 });
+  expect(client.getQueryData(find4Options().queryKey)).toEqual({ account: 1 });
 });
 
 it.each(['logout', 'withdraw', 'account', 'resume'] as const)(
@@ -96,8 +96,8 @@ it.each(['logout', 'withdraw', 'account', 'resume'] as const)(
       started();
       return pending;
     });
-    const home = find3Options(nativeAuthClientOptions(first, client));
-    const schedule = find4Options(nativeAuthClientOptions(first, client));
+    const home = find4Options(nativeAuthClientOptions(first, client));
+    const schedule = find5Options(nativeAuthClientOptions(first, client));
     client.setQueryData(schedule.queryKey, { generationId: 1, generationNumber: 1, sessions: [] });
     client.getMutationCache().build(client, { mutationKey: ['report'] });
     const oldRequest = client.fetchQuery(home).catch((error: unknown) => error);
@@ -164,17 +164,17 @@ it('401 갱신이 로그아웃을 확정하면 세션과 일정 cache를 정리�
     http.get(`${apiBaseUrl}/api/*`, () => HttpResponse.json({ status: 401 }, { status: 401 })),
   );
   bridge.refreshNativeSession.mockResolvedValue({ status: 'SIGNED_OUT' });
-  client.setQueryData(find4Options().queryKey, {
+  client.setQueryData(find5Options().queryKey, {
     generationId: 1,
     generationNumber: 1,
     sessions: [],
   });
   const result = await client
-    .fetchQuery(find3Options(nativeAuthClientOptions(first, client)))
+    .fetchQuery(find4Options(nativeAuthClientOptions(first, client)))
     .catch((error: unknown) => error);
   expect(isCancelledError(result)).toBe(true);
   expect(client.getQueryData(nativeSessionQueryKey)).toEqual({ status: 'SIGNED_OUT' });
-  expect(client.getQueryData(find4Options().queryKey)).toBeUndefined();
+  expect(client.getQueryData(find5Options().queryKey)).toBeUndefined();
 });
 
 it.each(['unavailable', 'other-account'] as const)(
@@ -189,16 +189,16 @@ it.each(['unavailable', 'other-account'] as const)(
         : { status: 'SIGNED_IN', session: { ...first, userId: 2, sessionId: 'other' } };
     bridge.refreshNativeSession.mockResolvedValue(response);
     const cached = { generationId: 1, generationNumber: 1, sessions: [] };
-    client.setQueryData(find4Options().queryKey, cached);
+    client.setQueryData(find5Options().queryKey, cached);
     const result = await client
-      .fetchQuery(find3Options(nativeAuthClientOptions(first, client)))
+      .fetchQuery(find4Options(nativeAuthClientOptions(first, client)))
       .catch((error: unknown) => error);
     expect(result).toMatchObject({ status: 401 });
     expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
       status: 'SIGNED_IN',
       session: first,
     });
-    expect(client.getQueryData(find4Options().queryKey)).toEqual(cached);
+    expect(client.getQueryData(find5Options().queryKey)).toEqual(cached);
   },
 );
 
@@ -231,7 +231,7 @@ it('점수 401 복구 후 내역 조회가 갱신 토큰을 사용하고 이름�
     session: renewed,
   });
   const result = await client.fetchInfiniteQuery({
-    ...find5InfiniteOptions(nativeAuthClientOptions(renewed, client)),
+    ...find6InfiniteOptions(nativeAuthClientOptions(renewed, client)),
     initialPageParam: {},
     getNextPageParam: () => undefined,
   });
@@ -259,7 +259,7 @@ it('계정 전환은 이전 점수·내역 지연 응답과 이름을 새 계정
   );
   const score = mineOptions(nativeAuthClientOptions(first, client));
   const history = {
-    ...find5InfiniteOptions(nativeAuthClientOptions(first, client)),
+    ...find6InfiniteOptions(nativeAuthClientOptions(first, client)),
     initialPageParam: {},
     getNextPageParam: () => undefined,
   };
@@ -297,7 +297,7 @@ it('출석 내역 최초 요청의 401도 갱신 후 같은 페이지를 재시�
     }),
   );
   const result = await client.fetchInfiniteQuery({
-    ...find5InfiniteOptions(nativeAuthClientOptions(first, client)),
+    ...find6InfiniteOptions(nativeAuthClientOptions(first, client)),
     initialPageParam: {},
     getNextPageParam: () => undefined,
   });

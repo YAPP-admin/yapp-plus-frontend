@@ -358,6 +358,7 @@ export const zErrorResponse = z.object({
     'TEAM_PHOTO_UNAVAILABLE',
     'TEAM_VERSION_CONFLICT',
     'USER_ALREADY_EXISTS',
+    'USER_PROFILE_UNAVAILABLE',
     'USER_NOT_FOUND',
     'USER_REGISTRATION_FAILED',
     'USER_WITHDRAWAL_FAILED',
@@ -955,6 +956,52 @@ export const zAdminPostDetailResponse = z.object({
     }),
   assignment: zAssignmentPostResponse.nullable(),
   images: z.array(zPostImageResponse),
+});
+
+export const zUserProfileResponse = z.object({
+  userId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  name: z.string(),
+  membershipStatus: z
+    .union([
+      z.literal('PLAYER'),
+      z.literal('OB'),
+      z.literal('COMPLETED_MEMBER'),
+      z.literal('DEFERRED'),
+    ])
+    .nullable(),
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .nullable(),
+  generationNumber: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })
+    .nullable(),
+  position: z
+    .union([
+      z.literal('PM'),
+      z.literal('DESIGN'),
+      z.literal('WEB'),
+      z.literal('MOBILE'),
+      z.literal('ANDROID'),
+      z.literal('IOS'),
+      z.literal('SERVER'),
+      z.literal('AI_NATIVE'),
+    ])
+    .nullable(),
 });
 
 export const zUserNotificationListItemResponse = z.object({
@@ -2707,19 +2754,29 @@ export const zUpdate2Path = z.object({
  */
 export const zUpdate2Response = zAdminPostDetailResponse;
 
-export const zFind2Query = z.object({
+/**
+ * 탈퇴 완료
+ */
+export const zWithdrawResponse = z.void();
+
+/**
+ * 조회 성공
+ */
+export const zFind2Response = zUserProfileResponse;
+
+export const zFind3Query = z.object({
   cursor: z.string().optional(),
 });
 
 /**
  * 조회 성공
  */
-export const zFind2Response = zUserNotificationListResponse;
+export const zFind3Response = zUserNotificationListResponse;
 
 /**
  * 조회 성공. 토요일 세션이 없으면 session은 null
  */
-export const zFind3Response = zCurrentWeekSessionResponse;
+export const zFind4Response = zCurrentWeekSessionResponse;
 
 export const zList1Query = z.object({
   type: z.enum(['ALL', 'SESSION', 'ASSIGNMENT', 'OPERATION']).optional(),
@@ -2750,7 +2807,7 @@ export const zDetail2Response = zUserPostDetailResponse;
 /**
  * 조회 성공
  */
-export const zFind4Response = zCurrentGenerationSessionsResponse;
+export const zFind5Response = zCurrentGenerationSessionsResponse;
 
 export const zCompleteKakaoAuthorizationQuery = z.object({
   code: z.string(),
@@ -2771,16 +2828,16 @@ export const zStartAppleAuthorizationQuery = z.object({
  */
 export const zMineResponse = zMyAttendanceScoreResponse;
 
-export const zFind5Query = z.object({
+export const zFind6Query = z.object({
   cursor: z.string().optional(),
 });
 
 /**
  * 조회 성공
  */
-export const zFind5Response = zAttendanceHistoryResponse;
+export const zFind6Response = zAttendanceHistoryResponse;
 
-export const zFind6Path = z.object({
+export const zFind7Path = z.object({
   userId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -2791,7 +2848,7 @@ export const zFind6Path = z.object({
     }),
 });
 
-export const zFind6Query = z.object({
+export const zFind7Query = z.object({
   cursor: z.string().optional(),
   size: z
     .int()
@@ -2804,7 +2861,7 @@ export const zFind6Query = z.object({
 /**
  * 조회 성공; 이력이 없으면 빈 목록
  */
-export const zFind6Response = zRetainedHistoryPage;
+export const zFind7Response = zRetainedHistoryPage;
 
 export const zFindPendingQuery = z.object({
   size: z
@@ -3093,11 +3150,6 @@ export const zList6Query = z.object({
  * 조회 성공. 승인 회원이 없으면 items는 빈 배열
  */
 export const zList6Response = zAdminAttendanceStatisticsListResponse;
-
-/**
- * 탈퇴 완료
- */
-export const zWithdrawResponse = z.void();
 
 /**
  * Native refresh token. 해당 세션의 기기 등록을 해제하려면 전달해야 한다. Web cookie 흐름에서는 body를 생략할 수 있다.

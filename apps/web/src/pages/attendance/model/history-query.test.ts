@@ -1,6 +1,6 @@
 import { InfiniteQueryObserver } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
-import { find5InfiniteQueryKey, type AttendanceHistoryResponse } from '@yapp-plus/api/generated';
+import { find6InfiniteQueryKey, type AttendanceHistoryResponse } from '@yapp-plus/api/generated';
 import { http, HttpResponse } from 'msw';
 import { expect, it } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
@@ -38,7 +38,7 @@ it('생성 key·cursor 생략·안전한 ID 변환을 유지한다', async () =>
       return HttpResponse.json({ ...page(), items: [{ ...page().items[0], sessionId: '42' }] });
     }),
   );
-  expect(historyQueryOptions().queryKey).toEqual(find5InfiniteQueryKey());
+  expect(historyQueryOptions().queryKey).toEqual(find6InfiniteQueryKey());
   const data = await createAppQueryClient().fetchInfiniteQuery(historyQueryOptions());
   expect(data.pages[0]?.items[0]?.sessionId).toBe(42);
 });

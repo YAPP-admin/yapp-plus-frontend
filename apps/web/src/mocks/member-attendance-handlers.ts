@@ -26,7 +26,7 @@ export const createMemberAttendanceHandlers = (
   let failNextRequest = myState === 'error';
   const { pick } = createMswHandlers({ baseUrl });
   return [
-    pick.find5(async ({ request }) => {
+    pick.find6(async ({ request }) => {
       const cursor = new URL(request.url).searchParams.get('cursor');
       if (attendanceState === 'loading') {
         await delay(5_000);

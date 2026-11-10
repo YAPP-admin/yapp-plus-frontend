@@ -106,6 +106,9 @@ import type {
   Find6Data,
   Find6Errors,
   Find6Responses,
+  Find7Data,
+  Find7Errors,
+  Find7Responses,
   FindAllData,
   FindAllErrors,
   FindAllResponses,
@@ -1237,14 +1240,54 @@ export const update2 = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * 본인 알림 목록 조회
+ * 계정·동아리 통합 탈퇴
  *
- * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
+ * 모든 기수 소속과 세션을 폐기하고 구조화된 개인정보를 비식별화한다. Native는 보관한 token을 제거한다.
+ */
+export const withdraw = <ThrowOnError extends boolean = false>(
+  options?: Options<WithdrawData, ThrowOnError>,
+): RequestResult<WithdrawResponses, WithdrawErrors, ThrowOnError> =>
+  (options?.client ?? client).delete<WithdrawResponses, WithdrawErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/users/me',
+    ...options,
+  });
+
+/**
+ * 본인 프로필 조회
+ *
+ * 현재 활동 기수 소속을 우선하고, 없으면 가장 높은 번호의 유효 기수 소속을 보여준다. 소속이 없으면 사용자 ID와 이름 외 필드는 null이다.
  */
 export const find2 = <ThrowOnError extends boolean = false>(
   options?: Options<Find2Data, ThrowOnError>,
 ): RequestResult<Find2Responses, Find2Errors, ThrowOnError> =>
   (options?.client ?? client).get<Find2Responses, Find2Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/users/me',
+    ...options,
+  });
+
+/**
+ * 본인 알림 목록 조회
+ *
+ * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
+ */
+export const find3 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find3Data, ThrowOnError>,
+): RequestResult<Find3Responses, Find3Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find3Responses, Find3Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1261,10 +1304,10 @@ export const find2 = <ThrowOnError extends boolean = false>(
  *
  * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
  */
-export const find3 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find3Data, ThrowOnError>,
-): RequestResult<Find3Responses, Find3Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find3Responses, Find3Errors, ThrowOnError>({
+export const find4 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find4Data, ThrowOnError>,
+): RequestResult<Find4Responses, Find4Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find4Responses, Find4Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1321,10 +1364,10 @@ export const detail2 = <ThrowOnError extends boolean = false>(
  *
  * 로그인 사용자의 소속 기수와 무관하게 현재 활동 중인 기수의 세션 일정을 모두 조회한다.
  */
-export const find4 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find4Data, ThrowOnError>,
-): RequestResult<Find4Responses, Find4Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find4Responses, Find4Errors, ThrowOnError>({
+export const find5 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find5Data, ThrowOnError>,
+): RequestResult<Find5Responses, Find5Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find5Responses, Find5Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1424,10 +1467,10 @@ export const mine = <ThrowOnError extends boolean = false>(
  *
  * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find5 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find5Data, ThrowOnError>,
-): RequestResult<Find5Responses, Find5Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find5Responses, Find5Errors, ThrowOnError>({
+export const find6 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find6Data, ThrowOnError>,
+): RequestResult<Find6Responses, Find6Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find6Responses, Find6Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1444,10 +1487,10 @@ export const find5 = <ThrowOnError extends boolean = false>(
  *
  * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
  */
-export const find6 = <ThrowOnError extends boolean = false>(
-  options: Options<Find6Data, ThrowOnError>,
-): RequestResult<Find6Responses, Find6Errors, ThrowOnError> =>
-  (options.client ?? client).get<Find6Responses, Find6Errors, ThrowOnError>({
+export const find7 = <ThrowOnError extends boolean = false>(
+  options: Options<Find7Data, ThrowOnError>,
+): RequestResult<Find7Responses, Find7Errors, ThrowOnError> =>
+  (options.client ?? client).get<Find7Responses, Find7Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1690,26 +1733,6 @@ export const list6 = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/admin/generations/{generationId}/attendance-statistics',
-    ...options,
-  });
-
-/**
- * 계정·동아리 통합 탈퇴
- *
- * 모든 기수 소속과 세션을 폐기하고 구조화된 개인정보를 비식별화한다. Native는 보관한 token을 제거한다.
- */
-export const withdraw = <ThrowOnError extends boolean = false>(
-  options?: Options<WithdrawData, ThrowOnError>,
-): RequestResult<WithdrawResponses, WithdrawErrors, ThrowOnError> =>
-  (options?.client ?? client).delete<WithdrawResponses, WithdrawErrors, ThrowOnError>({
-    security: [
-      {
-        key: 'userBearerAuth',
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/users/me',
     ...options,
   });
 

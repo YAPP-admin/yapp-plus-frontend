@@ -6,7 +6,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
-  find5QueryKey,
+  find6QueryKey,
   mineQueryKey,
   verifyMutation,
   verifyMutationKey,
@@ -66,7 +66,7 @@ export function useCodeAttendance(onComplete: () => void) {
       return body.sessionId;
     },
     onSuccess: () => {
-      for (const queryKey of [options.queryKey, find5QueryKey(), mineQueryKey()]) {
+      for (const queryKey of [options.queryKey, find6QueryKey(), mineQueryKey()]) {
         void client.invalidateQueries({ queryKey });
       }
     },
