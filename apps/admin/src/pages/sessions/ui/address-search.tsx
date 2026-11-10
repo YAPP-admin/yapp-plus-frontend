@@ -1,3 +1,4 @@
+import { addressIdentity } from '../model/location/location-view-model';
 /** 세션 폼에 넣는 주소 검색 영역입니다. 선택값은 부모가 소유하고 검색 요청만 내부에서 관리합니다. */
 import { useForm, useStore } from '@tanstack/react-form';
 import { useQuery } from '@tanstack/react-query';
@@ -17,20 +18,6 @@ type Props = {
   onSelect: (address: AddressSearchItemViewModel) => void;
   disabled?: boolean;
 };
-
-/** 좌표 조회의 식별자를 모두 포함해 같은 주소 재선택으로 부모 초안을 초기화하지 않습니다. */
-function addressIdentity(item: AddressSearchItemViewModel): string {
-  const ref = item.lookupReference;
-  return JSON.stringify([
-    item.roadAddress,
-    ref.administrativeAreaCode,
-    ref.roadNameManagementNumber,
-    ref.isUnderground,
-    ref.buildingMainNumber,
-    ref.buildingSubNumber,
-    ref.buildingManagementNumber,
-  ]);
-}
 
 /** 입력이 300ms 동안 멈추면 검색하고 페이지 이동은 즉시 조회합니다. */
 export function AddressSearch({ value, onSelect, disabled = false }: Props) {

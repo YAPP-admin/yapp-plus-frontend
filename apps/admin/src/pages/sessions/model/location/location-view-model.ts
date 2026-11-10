@@ -27,3 +27,17 @@ export type CoordinatesViewModel = {
   latitude: number;
   longitude: number;
 };
+
+/** 좌표 조회의 식별자를 모두 포함해 같은 주소 재선택으로 부모 초안을 초기화하지 않습니다. */
+export function addressIdentity(item: AddressSearchItemViewModel): string {
+  const ref = item.lookupReference;
+  return JSON.stringify([
+    item.roadAddress,
+    ref.administrativeAreaCode,
+    ref.roadNameManagementNumber,
+    ref.isUnderground,
+    ref.buildingMainNumber,
+    ref.buildingSubNumber,
+    ref.buildingManagementNumber,
+  ]);
+}
