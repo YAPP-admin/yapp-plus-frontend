@@ -1,6 +1,6 @@
 /** 저장 성공 시 캐시 무효화와 실패 시 기존 데이터 보존을 검증한다. */
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { noticeContentSchema, noticeSchema } from './notice';
@@ -60,6 +60,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  onlineManager.setOnline(true);
   for (const client of clients) {
     client.clear();
   }
@@ -68,6 +69,31 @@ afterEach(() => {
 });
 
 describe('공지 변경 후 캐시 처리', () => {
+  it('오프라인에서도 메모리 조회와 저장·삭제가 대기하지 않고 완료된다', async () => {
+    const { client, wrapper } = setup();
+    vi.mocked(service.listNotices).mockResolvedValue([saved]);
+    vi.mocked(service.listNoticeMembers).mockResolvedValue([]);
+    vi.mocked(service.getNotice).mockResolvedValue(saved);
+    vi.mocked(service.createNotice).mockResolvedValue(saved);
+    vi.mocked(service.updateNotice).mockResolvedValue(saved);
+    vi.mocked(service.deleteNotice).mockResolvedValue(undefined);
+    onlineManager.setOnline(false);
+    await expect(client.fetchQuery(noticesQueryOptions)).resolves.toEqual([saved]);
+    await expect(client.fetchQuery(noticeMembersQueryOptions)).resolves.toEqual([]);
+    await expect(client.fetchQuery(noticeQueryOptions(saved.id))).resolves.toEqual(saved);
+    const { result, unmount } = renderHook(useNoticeMutations, { wrapper });
+    await act(async () => {
+      await result.current.create.mutateAsync(input);
+      await result.current.update.mutateAsync({ id: saved.id, input });
+      await result.current.remove.mutateAsync(saved.id);
+    });
+    unmount();
+    onlineManager.setOnline(true);
+    expect(service.createNotice).toHaveBeenCalledTimes(1);
+    expect(service.updateNotice).toHaveBeenCalledTimes(1);
+    expect(service.deleteNotice).toHaveBeenCalledTimes(1);
+  });
+
   it('생성·수정 성공은 목록과 상세를 무효화하고 삭제 성공은 대상 상세만 제거한다', async () => {
     const { client, wrapper } = setup();
     vi.mocked(service.createNotice).mockResolvedValue(saved);
