@@ -1,6 +1,9 @@
 /** URL·step params를 화면 슬라이스와 연결하며 탭의 선택과 패널 수명을 소유합니다. */
 import { ActivityScreen } from './activity-screen';
+import { useSignupFunnel } from './use-signup-funnel';
+import { IconChevronLeftLine } from '@karrotmarket/react-monochrome-icon';
 import { useActivity, useActivityParams, useStepFlow } from '@stackflow/react';
+import { ActionButton, Icon } from '@yapp-plus/ui';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
@@ -26,6 +29,8 @@ import { AuthLayout } from '@/app/layouts/auth-layout';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabPanel, TabsLayout } from '@/app/layouts/tabs-layout';
+import { BackButton } from '@/app/navigation/back-button';
+import { iconBackButton } from '@/app/navigation/back-button.css';
 import {
   isNoticeCategory,
   isTabName,
@@ -241,11 +246,32 @@ export function LoginErrorActivity() {
 }
 
 export function SignupActivity() {
+  const funnel = useSignupFunnel();
+
   return (
     <ActivityScreen title="회원가입" preventSwipeBack>
-      <AuthLayout showBack>
-        <SignupPage />
-      </AuthLayout>
+      <PageShell
+        plain
+        backButton={
+          funnel.step === 'phone' ? (
+            <ActionButton
+              type="button"
+              className={iconBackButton}
+              variant="ghost"
+              size="medium"
+              layout="iconOnly"
+              aria-label="뒤로가기"
+              onClick={funnel.back}
+            >
+              <Icon svg={<IconChevronLeftLine />} />
+            </ActionButton>
+          ) : (
+            <BackButton fallbackActivityName="Login" fallbackActivityParams={{}} iconOnly />
+          )
+        }
+      >
+        <SignupPage step={funnel.step} onPhoneStep={funnel.next} onNameStep={funnel.back} />
+      </PageShell>
     </ActivityScreen>
   );
 }

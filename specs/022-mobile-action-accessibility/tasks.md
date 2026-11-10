@@ -28,11 +28,11 @@
 
 **독립 검증**: 키보드 위 버튼, 이름↔휴대폰 값 보존, 서버 이름 오류 복귀, 반복 제출 차단.
 
-- [ ] T012 [P] [US2] apps/web/src/pages/signup/model/use-signup-viewport.test.ts에 좌표 교집합·확대·미지원·활성 listener 정리 회귀를 작성한다.
-- [ ] T013 [P] [US2] apps/web/src/pages/signup/ui/signup-page.test.tsx와 apps/web/stackflow/src/stack.test.tsx에 단계 왕복·오류·직접 진입·새로고침·history back·중복 제출 테스트를 작성한다.
-- [ ] T014 [US2] apps/web/src/pages/signup/model/use-signup-viewport.ts에 활성 수명 한정 가시 영역 계산을 구현하고 signup-page.tsx에 연결한다.
-- [ ] T015 [US2] apps/web/stackflow/src/stack.tsx·activities/activities.tsx의 Signup typed params와 apps/web/src/app/layouts/auth-layout.tsx에 가입 전용 step-aware back 조합을 연결한다.
-- [ ] T016 [US2] apps/web/src/pages/signup/ui/signup-page.tsx에서 로컬 step을 Activity 계약으로 대체하고 단일 폼·오류 보존·포커스·loading·중복 제출을 유지한다.
+- [ ] T012 [P] [US2] 실제 WebView 재현 근거가 생길 때 apps/web/src/pages/signup/model/use-signup-viewport.test.ts에 좌표 교집합·확대·미지원·활성 listener 정리 회귀를 작성한다.
+- [x] T013 [P] [US2] apps/web/src/pages/signup/ui/signup-page.test.tsx와 apps/web/stackflow/src/stack.test.tsx에 단계 왕복·오류·직접 진입·새로고침·history back·중복 제출 테스트를 작성한다.
+- [ ] T014 [US2] 실제 WebView 재현 근거가 생길 때 apps/web/src/pages/signup/model/use-signup-viewport.ts에 활성 수명 한정 가시 영역 계산을 구현하고 signup-page.tsx에 연결한다.
+- [x] T015 [US2] apps/web/stackflow/src/stack.tsx·activities/activities.tsx의 Signup typed params와 apps/web/src/app/layouts/auth-layout.tsx에 가입 전용 step-aware back 조합을 연결한다.
+- [x] T016 [US2] apps/web/src/pages/signup/ui/signup-page.tsx에서 로컬 step을 Activity 계약으로 대체하고 단일 폼·오류 보존·포커스·loading·중복 제출을 유지한다.
 - [ ] T017 [US2] specs/022-mobile-action-accessibility/validation.md에 키보드 전후·브라우저/Android back·자동 검증·3단계 리뷰 및 다음 단계 확인을 기록한다.
 
 ## 4단계 — US3 관련 화면 적용

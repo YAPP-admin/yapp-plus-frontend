@@ -2,6 +2,7 @@ import type { NativeAuthCallbacks } from '@/features/auth';
 import type { CompleteSignupInput } from '@yapp-plus/app-bridge';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { useState } from 'react';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { SignupPage } from './signup-page';
@@ -15,7 +16,10 @@ const auth = vi.hoisted(() => {
     isNative: boolean;
     phase: 'BROWSER' | 'LOADING' | 'SIGNED_OUT' | 'SIGNED_IN' | 'UNAVAILABLE';
   };
-  const state: { callbacks: NativeAuthCallbacks } = { callbacks: {} };
+  const state: { callbacks: NativeAuthCallbacks; pending: boolean } = {
+    callbacks: {},
+    pending: false,
+  };
   const signupMutate = vi.fn<(input: CompleteSignupInput) => void>();
   type TestMutation = { isPending: boolean; mutate: typeof signupMutate };
   return {
@@ -24,7 +28,7 @@ const auth = vi.hoisted(() => {
     useNativeSignupMutation: vi.fn<(callbacks?: NativeAuthCallbacks) => TestMutation>(
       (callbacks = {}) => {
         state.callbacks = callbacks;
-        return { isPending: false, mutate: signupMutate };
+        return { isPending: state.pending, mutate: signupMutate };
       },
     ),
     useNativeAuthSession: vi.fn<() => TestSession>(() => ({
@@ -35,8 +39,21 @@ const auth = vi.hoisted(() => {
 });
 vi.mock('@stackflow/react', () => ({ useFlow: () => flow }));
 vi.mock('@/features/auth', () => auth);
+
+function SignupHarness() {
+  const [step, setStep] = useState<'name' | 'phone'>('name');
+  return (
+    <SignupPage
+      step={step}
+      onPhoneStep={() => setStep('phone')}
+      onNameStep={() => setStep('name')}
+    />
+  );
+}
+
 beforeEach(() => {
   vi.clearAllMocks();
+  auth.state.pending = false;
   auth.signupMutate.mockReset();
   auth.useNativeAuthSession.mockReturnValue({ isNative: false, phase: 'BROWSER' });
 });
@@ -46,7 +63,7 @@ function renderSignupPage() {
 
   return render(
     <QueryClientProvider client={queryClient}>
-      <SignupPage />
+      <SignupHarness />
     </QueryClientProvider>,
   );
 }
@@ -135,6 +152,17 @@ describe('SignupPage', () => {
 
     fireEvent.change(input, { target: { value: '김야뿌' } });
     expect(next).toBeEnabled();
+  });
+
+  it('가입 요청 중에는 진행 상태를 표시하고 다음 제출을 막는다', () => {
+    auth.useNativeAuthSession.mockReturnValue({ isNative: true, phase: 'SIGNED_OUT' });
+    auth.state.pending = true;
+    renderSignupPage();
+    const input = screen.getByRole('textbox', { name: '이름을 입력해 주세요' });
+    fireEvent.change(input, { target: { value: '김야뿌' } });
+
+    expect(screen.getByRole('progressbar')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /다음/ })).toBeDisabled();
   });
 
   it('이름 다음에 휴대폰 번호 입력 단계를 표시한다', async () => {

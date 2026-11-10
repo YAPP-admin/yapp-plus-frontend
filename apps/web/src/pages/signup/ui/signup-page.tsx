@@ -12,7 +12,8 @@ import { useNativeAuthSession, useNativeSignupMutation } from '@/features/auth';
 import { body, footer, form, screen } from '@/shared/ui/step-screen.css';
 import { signupFormSchema, signupNameSchema, signupPhoneNumberSchema } from '../model/signup-form';
 
-type Step = 'name' | 'phone';
+/** Signup Activity가 소유하는 입력 단계입니다. */
+export type SignupStep = 'name' | 'phone';
 type SignupFormValues = Readonly<{ name: string; phoneNumber: string }>;
 
 /** 다음 단계 또는 서버 오류로 돌아온 입력칸을 사용자가 바로 수정할 수 있게 합니다. */
@@ -21,11 +22,18 @@ const focusInput = (input: HTMLInputElement | null): void => {
 };
 
 /** TanStack Form이 입력·검증을 관리하고 mutation 결과는 화면 전환으로 연결합니다. */
-export function SignupPage() {
+export function SignupPage({
+  step,
+  onPhoneStep,
+  onNameStep,
+}: {
+  step: SignupStep;
+  onPhoneStep: () => void;
+  onNameStep: () => void;
+}) {
   const flow = useFlow();
   const { isNative } = useNativeAuthSession();
   const titleId = useId();
-  const [step, setStep] = useState<Step>('name');
   const [errorMessage, setErrorMessage] = useState('');
   const [fieldErrors, setFieldErrors] = useState<readonly AuthFieldError[]>([]);
   const signupMutation = useNativeSignupMutation({
@@ -38,11 +46,9 @@ export function SignupPage() {
       if (result.status === 'ERROR' && result.fieldErrors?.length) {
         setFieldErrors(result.fieldErrors);
         setErrorMessage('');
-        setStep(
-          result.fieldErrors.some(({ field: errorField }) => errorField === 'name')
-            ? 'name'
-            : 'phone',
-        );
+        if (result.fieldErrors.some(({ field: errorField }) => errorField === 'name')) {
+          onNameStep();
+        }
         return;
       }
       setErrorMessage('가입 중 문제가 발생했어요. 다시 로그인해 주세요.');
@@ -54,7 +60,7 @@ export function SignupPage() {
     validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
     onSubmit: ({ value }) => {
       if (step === 'name') {
-        setStep('phone');
+        onPhoneStep();
         return;
       }
 
@@ -183,6 +189,7 @@ export function SignupPage() {
                 size="large"
                 variant="brandSolid"
                 disabled={!canSubmit || isSubmitting}
+                loading={isSubmitting}
               >
                 다음
               </ActionButton>

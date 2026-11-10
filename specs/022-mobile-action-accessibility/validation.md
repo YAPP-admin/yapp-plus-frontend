@@ -113,3 +113,15 @@
 - 앱 내부 WebView 재검증: 이 워크트리의 Expo Metro를 `http://localhost:8082`, 웹 Vite를 `http://localhost:3000`으로 실행하고 설치된 YAPP+ 개발 클라이언트를 `org.yapp.yappplus://expo-development-client/?url=http://localhost:8082`로 연결했다. iPhone 15 Simulator에서 로그인된 홈과 설정 화면을 실제 WebView로 확인했다. 홈은 하단 탭과 홈 인디케이터가 겹치지 않았고, 설정은 하단 로그아웃 CTA가 온전히 표시됐다. 캡처: `.context/ui-baseline/ios-simulator-native-nairobi-home-restored.png`, `ios-simulator-native-nairobi-settings-after-ve.png`. 앱 내부 WebView 요소가 Device Hub 접근성 트리에 노출되지 않아 임시 로컬 리다이렉트로 설정 경로를 초기 로드했으며, 제품 코드에는 변경이 없다. 이후 로그아웃 버튼의 하단 잘림을 재현했고, `PageShell`의 `box-sizing` 수정 뒤 Expo reload가 네이티브 로그인 세션을 초기화해 로그인 화면으로 전환됐다. 따라서 최신 수정의 실제 WebView 수용 확인은 로그인 후 재실행이 필요하다. 캡처: `.context/ui-baseline/ios-simulator-native-nairobi-settings-one-owner-safe-area.png`, `ios-simulator-native-nairobi-settings-box-sizing-after-wait.png`.
 
 **2단계 리뷰 대기**: 실제 앱 UI 수용 측정을 제외한 자동 검증은 완료했다. 기준 `origin/main` 대비 변경량은 단계 제출 시 산출하며, 사용자 리뷰와 3단계 진행 확인 전에는 가입 키보드·탐색 구현(T012–T017)을 시작하지 않는다.
+
+## 3단계 US2 구현 기록
+
+- `useSignupViewport`·`rootRef`·동적 CSS 변수·`@vanilla-extract/dynamic`은 실제 WebView에서 `dvh`·flex만으로 CTA가 가려진다는 재현 근거가 없어 제거했다. 키보드 보정은 필요한 결함이 재현될 때만 추가한다.
+- 가입 단계는 화면 로컬 state가 아니라 Signup Activity 내부의 `useSignupFunnel` step API가 소유한다. 이름 제출은 phone step을 추가하고, 헤더·브라우저 뒤로가기는 phone step에서 name step으로 복귀한다. 직접 `/signup` 진입은 URL params와 무관하게 name부터 시작하며 폼 값은 같은 화면 인스턴스가 보존한다.
+- 단일 TanStack Form 인스턴스를 유지해 name/phone 왕복과 서버 name 오류 복귀 시 입력·다른 필드 오류를 보존한다. native 가입 요청 pending 동안 `다음` 버튼은 loading 표시와 함께 비활성화해 중복 제출을 막는다.
+- 새로 실행한 가입 관련 검증: `use-signup-viewport`, `signup-page`, `stack` 3개 파일·34개 테스트 통과, `@yapp-plus/web` lint·typecheck 통과.
+- 전체 `mise exec -- node --run check` 통과: format 신규 실행, lint는 web·admin 신규/나머지 캐시 5개, typecheck·test는 lockfile 변경으로 모두 신규 실행됐다. web 55개 파일·398개 테스트가 통과했다.
+- 전체 `mise exec -- node --run build` 통과: web·admin·storybook build를 새로 실행했다. 기존 web 및 storybook 청크 크기 경고만 출력됐다.
+- 실제 앱 내부 WebView는 iPhone 15 / iOS 17.5에서 로컬 `/signup` 진입과 키보드 닫힘 레이아웃을 확인했다. 캡처: `.context/ui-baseline/ios-simulator-stage3-signup-retry.png`. Device Hub 입력 제어가 `noWindowsAvailable` 오류로 실패해 소프트웨어 키보드가 열린 활성 CTA의 최종 수동 확인은 남아 있다.
+
+**3단계 리뷰 대기**: 코드·자동 검증은 완료했다. 실제 iOS 키보드 열린 상태의 CTA 탭 가능 여부와 Android back은 다음 단계로 넘어가기 전 사용자/정상화된 도구로 확인한다.

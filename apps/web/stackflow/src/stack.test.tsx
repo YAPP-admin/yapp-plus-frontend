@@ -395,6 +395,41 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(window.location.pathname).toBe('/schedule');
   });
 
+  it('가입 단계 뒤로가기는 이름 입력을 보존하고 이름 단계에서만 로그인으로 돌아간다', async () => {
+    window.history.replaceState({}, '', '/signup');
+    const user = userEvent.setup();
+    renderStack();
+    const signup = await waitForTopHeading('이름을 입력해 주세요');
+    const name = signup.getByRole('textbox', { name: '이름을 입력해 주세요' });
+    await user.type(name, '김야뿌');
+    await user.click(signup.getByRole('button', { name: '다음' }));
+
+    const phone = await screen.findByRole('textbox', { name: '휴대폰 번호를 입력해 주세요' });
+    expect(phone).toHaveFocus();
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }));
+
+    const restoredName = await screen.findByRole('textbox', { name: '이름을 입력해 주세요' });
+    expect(restoredName).toHaveValue('김야뿌');
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/login'));
+  }, 15000);
+
+  it('브라우저 뒤로가기도 가입 phone step에서 이름 step으로 돌아간다', async () => {
+    window.history.replaceState({}, '', '/signup');
+    const user = userEvent.setup();
+    renderStack();
+    const signup = await waitForTopHeading('이름을 입력해 주세요');
+    await user.type(signup.getByRole('textbox', { name: '이름을 입력해 주세요' }), '김야뿌');
+    await user.click(signup.getByRole('button', { name: '다음' }));
+    await screen.findByRole('textbox', { name: '휴대폰 번호를 입력해 주세요' });
+
+    window.history.back();
+
+    expect(await screen.findByRole('textbox', { name: '이름을 입력해 주세요' })).toHaveValue(
+      '김야뿌',
+    );
+  }, 15000);
+
   it('전체 Stackflow Activity route를 등록한다', () => {
     expect(stackflowConfig.activities.map((activity) => activity.name)).toEqual([
       'Tabs',
