@@ -1,40 +1,42 @@
 import { act, render, screen } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
-import { vars } from '@seed-design/css/vars';
-import type { CSSProperties, ReactNode, Ref } from 'react';
+import type { ReactNode, Ref } from 'react';
+import { screen as screenClass, screenBasement, scrollLayer } from './activity-screen.css';
 import { ActivityScreen } from './activity-screen';
 
 vi.mock('@stackflow/react', () => ({ useActivity: () => ({ isTop: true, isActive: true }) }));
 vi.mock('../platform', () => ({ useAppScreenOptions: () => ({ theme: 'cupertino' }) }));
 vi.mock('../../../seed-design/ui/app-bar', () => ({
-  AppBar: ({ bg }: { bg: string }) => <div data-testid="status-bar" style={{ background: bg }} />,
+  AppBar: ({ className }: { className: string }) => (
+    <div data-testid="status-bar" className={className} />
+  ),
 }));
 vi.mock('../../../seed-design/ui/app-screen', () => ({
   AppScreen: ({
     children,
     tone,
     layerOffsetTop,
-    style,
+    className,
   }: {
     children: ReactNode;
     tone: string;
     layerOffsetTop: string;
-    style: CSSProperties;
+    className: string;
   }) => (
-    <div data-testid="screen" data-tone={tone} data-offset={layerOffsetTop} style={style}>
+    <div data-testid="screen" data-tone={tone} data-offset={layerOffsetTop} className={className}>
       {children}
     </div>
   ),
   AppScreenContent: ({
     children,
     ref,
-    style,
+    className,
   }: {
     children: ReactNode;
     ref: Ref<HTMLDivElement>;
-    style: CSSProperties;
+    className: string;
   }) => (
-    <div ref={ref} data-testid="scroll-layer" style={style}>
+    <div ref={ref} data-testid="scroll-layer" className={className}>
       {children}
     </div>
   ),
@@ -64,6 +66,8 @@ it('safeArea를 확보하고 실제 스크롤 영역의 시작점에 따라 tone
   );
   expect(screen.getByTestId('screen')).toHaveAttribute('data-offset', 'safeArea');
   expect(root).toBe(screen.getByTestId('scroll-layer'));
+  expect(screen.getByTestId('scroll-layer')).toHaveClass(scrollLayer);
+  expect(screen.getByTestId('screen')).toHaveClass(screenBasement);
   expect(screen.getByTestId('screen')).toHaveAttribute('data-tone', 'transparent');
   const target = observe.mock.calls[0]?.[0];
   if (!target) {
@@ -94,11 +98,11 @@ it('safeArea를 확보하고 실제 스크롤 영역의 시작점에 따라 tone
   act(() => notify([{ ...entry, boundingClientRect: new DOMRect(0, 80, 1, 1) }]));
   expect(screen.getByTestId('screen')).toHaveAttribute('data-tone', 'transparent');
   for (const id of ['screen', 'scroll-layer', 'status-bar']) {
-    expect(screen.getByTestId(id).style.background).toBe(vars.$color.bg.layerBasement);
+    expect(screen.getByTestId(id)).toHaveClass(screenBasement);
   }
   rerender(<ActivityScreen title="일정">일정</ActivityScreen>);
   for (const id of ['screen', 'scroll-layer', 'status-bar']) {
-    expect(screen.getByTestId(id).style.background).toBe(vars.$color.bg.layerDefault);
+    expect(screen.getByTestId(id)).toHaveClass(screenClass);
   }
   unmount();
   expect(disconnect).toHaveBeenCalledOnce();

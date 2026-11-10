@@ -1,6 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { HomePage } from '../../pages/home';
+import { shell } from './page-shell.css';
 import { PageShell } from './page-shell';
 
 vi.mock('@stackflow/react', () => ({
@@ -47,6 +48,7 @@ describe('PageShell', () => {
     expect(screen.getByRole('main')).toContainElement(
       screen.getByRole('heading', { level: 1, name: '홈' }),
     );
+    expect(screen.getByRole('banner').parentElement).toHaveClass(shell);
   });
 
   it('plain 셸은 YAPP+ 문구 없이 헤더 영역과 본문을 하나씩만 렌더링한다', () => {

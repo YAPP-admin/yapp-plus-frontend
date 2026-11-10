@@ -56,7 +56,9 @@ describe('SettingsPage', () => {
     expect(screen.getByText('개인정보 처리 방침')).toBeInTheDocument();
     expect(screen.getByText('이용 약관')).toBeInTheDocument();
     expect(screen.getByText('회원 탈퇴')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: '로그아웃' })).toBeInTheDocument();
+    const logoutButton = screen.getByRole('button', { name: '로그아웃' });
+    expect(logoutButton).toBeInTheDocument();
+    expect(logoutButton.closest('main')).toBeNull();
   });
 
   it('브라우저에서는 공개 약관 문서를 새 탭으로 연다', () => {

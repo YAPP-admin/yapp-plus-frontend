@@ -9,6 +9,7 @@ import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useFlow } from '@stackflow/react';
 import { useId, useState, type FormEvent } from 'react';
 import { useNativeAuthSession, useNativeSignupMutation } from '@/features/auth';
+import { body, footer, form, screen } from '@/shared/ui/step-screen.css';
 import { signupFormSchema, signupNameSchema, signupPhoneNumberSchema } from '../model/signup-form';
 
 type Step = 'name' | 'phone';
@@ -80,9 +81,9 @@ export function SignupPage() {
   }
 
   return (
-    <VStack as="main" width="full" maxWidth="480px" mx="auto">
-      <VStack as="form" style={{ flexGrow: 1 }} onSubmit={handleSubmit}>
-        <VStack style={{ flexGrow: 1 }} pt="x5" px="x5" gap="x10">
+    <VStack as="main" className={screen}>
+      <VStack as="form" className={form} onSubmit={handleSubmit}>
+        <VStack className={body} gap="x10">
           <Text as="h1" id={titleId} textStyle="t10Bold" color="fg.neutral">
             {step === 'name' ? '이름을 입력해 주세요' : '휴대폰 번호를 입력해 주세요'}
           </Text>
@@ -169,7 +170,7 @@ export function SignupPage() {
           ) : null}
         </VStack>
 
-        <VStack py="x3" px="x4">
+        <VStack className={footer}>
           <signupForm.Subscribe
             selector={(state) => ({
               canSubmit:

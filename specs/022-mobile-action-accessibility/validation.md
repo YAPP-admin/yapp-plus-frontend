@@ -3,7 +3,7 @@
 **기준일**: 2026-11-10
 **기준 commit**: `7bd77d09035d8c1a317469bc4d03caedb25955f1`
 **작업 위치**: nairobi / `DongjaJ/plan-proceed`
-**상태**: 명세 작성 완료, 화면 기준 측정 미완료. 2단계 미착수.
+**상태**: 2단계 US1 구현·자동 검증 완료. 실제 앱 UI 수용 측정과 2단계 리뷰 대기.
 
 ## 실행 환경과 구분
 
@@ -92,4 +92,24 @@
 1단계 완료에는 대상 화면 전체의 수정 전 재현표·유효한 캡처와 키보드 기준이 필요하다. 설정·가입 이름의 iOS 근거와 가입 키보드 결함은 확보했지만, 대상 화면 전체·활성 CTA 키보드 상태·휴대폰 단계는 아직 확인하지 못했으므로 이 조건은 충족하지 못했다.
 명세와 계획은 검토할 수 있으나, 측정 완료 및 사용자 리뷰 전에 제품 코드 변경을 시작하지 않는다.
 
-제품 코드·브랜치·commit·push·PR 변경은 없다.
+1단계에서는 제품 코드·브랜치·commit·push·PR 변경이 없었다.
+
+## 2단계 US1 구현 기록
+
+- `ActivityScreen`의 실제 `AppScreenContent` 스크롤 레이어에 `min-height: 0`을 부여하고, 기존 시작점 observer와 활성 화면 cleanup을 유지했다.
+- `PageShell`·탭 셸·가입 공통 화면은 상위 Activity가 제공한 `height: 100%`를 사용하도록 바꾸고, 자식의 `100dvh` 중복 요구를 제거했다.
+- 설정 화면의 중복 `100dvh`와 로그아웃 영역의 고정 34px 하단 여백을 제거했다. 가입 이름 화면은 공통 `screen / form / body / footer` 프레임을 사용하도록 연결했다.
+- 하단 탭의 고정 34px 영역을 없애고 `--safe-area-inset-bottom`만 최하단 여백으로 사용하도록 변경했다. 탭 panel의 DOM·스크롤 보존 계약은 기존 `tabs-layout.test.tsx` 회귀 테스트로 유지한다.
+- 사용자 리뷰 후 하단 탭의 위치 변경은 현 단계에서 생략하기로 했으며, `TabsLayout`과 하단 탭의 기존 34px·safe-area 처리로 되돌렸다. T010은 미완료로 유지한다.
+- 설정 로그아웃은 `PageShell`이 네이티브 브리지의 `--safe-area-inset-bottom`을 단독 소유하고, 화면 로컬 footer는 Figma의 `12px 16px`만 사용한다. safe-area padding이 `100dvh` 바깥으로 추가되어 CTA가 스크롤로 밀리던 문제는 `PageShell`의 `box-sizing: border-box`로 수정했다.
+- Figma `222:40475` 재대조 후 로그아웃 CTA를 설정 `main`에서 분리된 footer sibling으로 배치했다. 본문은 남은 높이를 사용하고, footer 아래의 네이티브 홈 인디케이터 영역은 `PageShell` safe-area가 제공한다. footer가 `main` 밖에 있다는 회귀 테스트를 추가했다.
+- T006 회귀 테스트는 구현 전 `ActivityScreen` 스크롤 레이어와 `PageShell` 높이 계약에서 실패했고, 구현 후 `activity-screen`, `page-shell`, `tabs-layout`, `settings`, `signup` 관련 5개 파일·28개 테스트가 통과했다.
+- 전체 `mise exec -- node --run check` 통과: format 신규 실행, lint 7/7(신규 web 1·캐시 6), typecheck 7/7(신규 web 1·캐시 6), test 5/5(신규 web 1·캐시 4). web 테스트는 54개 파일·392개 테스트를 새로 실행해 통과했다. 기존 React act 경고와 의도된 오류 경계 로그는 실패가 아니다.
+- 전체 `mise exec -- node --run build` 통과: web build 신규 실행, admin·storybook build는 Turbo 캐시 재사용. 기존 web 청크 크기 경고만 출력됐고 실패는 없다.
+- 로컬 Vite로 브라우저 재확인을 시도했으나 브라우저 연결이 `timeoutMs` 오류로 실패해 유효한 전후 캡처를 얻지 못했다. 이 결과를 시각 검증 통과 근거로 사용하지 않는다. 실제 앱 UI 측정은 사용자 요청에 따라 후속 수용 검증으로 남긴다.
+- WebView 연결 확인: 이 워크트리의 `@yapp-plus/web` Vite 서버를 `http://localhost:3000`에서 실행한 뒤 iPhone 15 Simulator의 Expo 개발 메뉴에서 앱을 재로드했다. 약 15초 로딩 뒤 로그인된 홈 화면이 표시됐다. 네이티브 셸은 기존 Metro `http://localhost:8081` 연결을 유지했으며, `resolveMobileWebUrl()`의 개발용 포트 3000 경로로 이 워크트리 웹 콘텐츠를 불러온 결과다. 캡처: `.context/ui-baseline/ios-simulator-nairobi-webview-verified.png`. 이는 WebView URL 연결 검증이며, 화면별 수용 측정 완료 근거는 아니다.
+- VE 전환 후 iPhone 15 Simulator Safari에서 `/`, `/schedule`, `/notices`, `/my`, `/settings`, `/signup`을 새로 열어 확인했다. 하단 탭·홈 인디케이터·설정 로그아웃·가입 CTA의 레이아웃이 깨지지 않았으며, 캡처는 `.context/ui-baseline/ios-simulator-{home,schedule,notices,my,settings,signup}-after-ve.png`에 보관했다. 가입 화면은 빈 입력의 비활성 CTA까지만 확인했다. Device Hub가 Safari WebView의 입력 필드를 접근성 트리에 노출하지 않아, 소프트웨어 키보드를 연 활성 CTA 상태는 재현하지 못했다.
+- 네이티브 WebView를 새로 기동해 같은 검증을 재시도했으나, 기존 Metro `http://localhost:8081`이 `react-native/setup-env` 모듈을 찾지 못해 Expo의 컴파일 오류 화면을 표시했다. 이번 웹 스타일 변경과 별개인 네이티브 번들 오류이며, 네이티브 UI 수용 검증은 이 Metro 오류가 해소된 뒤 재실행해야 한다.
+- 앱 내부 WebView 재검증: 이 워크트리의 Expo Metro를 `http://localhost:8082`, 웹 Vite를 `http://localhost:3000`으로 실행하고 설치된 YAPP+ 개발 클라이언트를 `org.yapp.yappplus://expo-development-client/?url=http://localhost:8082`로 연결했다. iPhone 15 Simulator에서 로그인된 홈과 설정 화면을 실제 WebView로 확인했다. 홈은 하단 탭과 홈 인디케이터가 겹치지 않았고, 설정은 하단 로그아웃 CTA가 온전히 표시됐다. 캡처: `.context/ui-baseline/ios-simulator-native-nairobi-home-restored.png`, `ios-simulator-native-nairobi-settings-after-ve.png`. 앱 내부 WebView 요소가 Device Hub 접근성 트리에 노출되지 않아 임시 로컬 리다이렉트로 설정 경로를 초기 로드했으며, 제품 코드에는 변경이 없다. 이후 로그아웃 버튼의 하단 잘림을 재현했고, `PageShell`의 `box-sizing` 수정 뒤 Expo reload가 네이티브 로그인 세션을 초기화해 로그인 화면으로 전환됐다. 따라서 최신 수정의 실제 WebView 수용 확인은 로그인 후 재실행이 필요하다. 캡처: `.context/ui-baseline/ios-simulator-native-nairobi-settings-one-owner-safe-area.png`, `ios-simulator-native-nairobi-settings-box-sizing-after-wait.png`.
+
+**2단계 리뷰 대기**: 실제 앱 UI 수용 측정을 제외한 자동 검증은 완료했다. 기준 `origin/main` 대비 변경량은 단계 제출 시 산출하며, 사용자 리뷰와 3단계 진행 확인 전에는 가입 키보드·탐색 구현(T012–T017)을 시작하지 않는다.

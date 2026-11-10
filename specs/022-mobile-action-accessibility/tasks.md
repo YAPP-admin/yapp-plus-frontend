@@ -17,11 +17,11 @@
 
 **독립 검증**: 기본 글자·키보드 닫힘에서 설정·가입 버튼이 스크롤 없이 보이며 본문과 겹치지 않는다.
 
-- [ ] T006 [US1] apps/web/stackflow/src/activities/activity-screen.test.tsx와 apps/web/src/app/layouts의 인접 테스트에 활성 본문 관찰·safe-area 소유 회귀를 추가한다.
-- [ ] T007 [US1] apps/web/src/shared/ui/step-screen.css.ts와 apps/web/src/app/layouts/page-shell.tsx·page-shell.css.ts에 헤더·본문·액션 합성과 실제 콘텐츠 높이를 적용한다.
-- [ ] T008 [US1] apps/web/stackflow/src/activities/activity-screen.tsx에서 실제 스크롤 본문 root·시작점 연결 및 활성 상태 cleanup을 구현한다.
-- [ ] T009 [US1] apps/web/src/pages/settings/ui/settings-page.tsx와 apps/web/src/pages/signup/ui/signup-page.tsx에 공통 본문·액션 배치를 적용하고 중복 높이를 제거한다.
-- [ ] T010 [US1] apps/web/src/app/layouts/bottom-navigation.tsx·bottom-navigation.css.ts·tabs-layout.css.ts의 고정 34px과 중복 inset을 정리하고 탭 DOM·스크롤 보존을 확인한다.
+- [x] T006 [US1] apps/web/stackflow/src/activities/activity-screen.test.tsx와 apps/web/src/app/layouts의 인접 테스트에 활성 본문 관찰·safe-area 소유 회귀를 추가한다.
+- [x] T007 [US1] apps/web/src/shared/ui/step-screen.css.ts와 apps/web/src/app/layouts/page-shell.tsx·page-shell.css.ts에 헤더·본문·액션 합성과 실제 콘텐츠 높이를 적용한다.
+- [x] T008 [US1] apps/web/stackflow/src/activities/activity-screen.tsx에서 실제 스크롤 본문 root·시작점 연결 및 활성 상태 cleanup을 구현한다.
+- [x] T009 [US1] apps/web/src/pages/settings/ui/settings-page.tsx와 apps/web/src/pages/signup/ui/signup-page.tsx에 공통 본문·액션 배치를 적용하고 중복 높이를 제거한다.
+- [ ] T010 [US1] apps/web/src/app/layouts/bottom-navigation.tsx·bottom-navigation.css.ts·tabs-layout.css.ts의 고정 34px과 중복 inset을 정리하고 탭 DOM·스크롤 보존을 확인한다. (사용자 리뷰로 현 단계에서는 생략)
 - [ ] T011 [US1] specs/022-mobile-action-accessibility/validation.md에 화면 전후·check·build·변경량·2단계 리뷰 및 다음 단계 확인을 기록한다.
 
 ## 3단계 — US2 가입 키보드·탐색
