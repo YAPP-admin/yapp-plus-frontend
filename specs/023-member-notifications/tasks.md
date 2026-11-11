@@ -27,11 +27,11 @@
 - [x] T009 [US1] apps/web/src/mocks/member-notification-handlers.ts와 browser.ts·server.ts에 개발/테스트 핸들러를 연결한다.
 - [x] T010 [US1] apps/web/src/pages/alerts/model/alerts-query.ts에 첫 페이지 갱신·오류 보존·계정 취소를 연결한다.
 - [x] T011 [US1] specs/023-member-notifications/validation.md에 2단계 검증·변경량·사용자 리뷰를 기록한다.
-- [ ] T012 [P] [US1] apps/web/src/pages/alerts/ui/alerts-page.test.tsx에 목록 상태·추가 조회·일반/공지 링크 테스트를 작성한다.
-- [ ] T013 [P] [US1] apps/web/stackflow/src/stack.test.tsx에 알림 직접 진입·상세 왕복·시연 query 제거 회귀를 작성한다.
-- [ ] T014 [US1] apps/web/src/pages/alerts/ui/alerts-page.tsx에 실제 query·기존 공통 경계·상태별 UI·상세 링크를 연결한다.
-- [ ] T015 [US1] apps/web/stackflow/src/stack.tsx·activities/activities.tsx에서 empty 파라미터·showEmpty를 제거하고 기존 부모 탐색을 유지한다.
-- [ ] T016 [US1] specs/023-member-notifications/validation.md에 3단계 check/build·접근성·캡처·사용자 리뷰를 기록한다.
+- [x] T012 [P] [US1] apps/web/src/pages/alerts/ui/alerts-page.test.tsx에 목록 상태·추가 조회·일반/공지 링크 테스트를 작성한다.
+- [x] T013 [P] [US1] apps/web/stackflow/src/stack.test.tsx에 알림 직접 진입·상세 왕복·시연 query 제거 회귀를 작성한다.
+- [x] T014 [US1] apps/web/src/pages/alerts/ui/alerts-page.tsx에 실제 query·기존 공통 경계·상태별 UI·상세 링크를 연결한다.
+- [x] T015 [US1] apps/web/stackflow/src/stack.tsx·activities/activities.tsx에서 empty 파라미터·showEmpty를 제거하고 기존 부모 탐색을 유지한다.
+- [x] T016 [US1] specs/023-member-notifications/validation.md에 3단계 check/build·접근성·캡처·사용자 리뷰를 기록한다.
 
 ## US2 — 네이티브 설정 기반 (단계 4-A → 리뷰 → 4-B → 리뷰 → 4-C)
 
