@@ -1,3 +1,4 @@
+import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
@@ -5,7 +6,7 @@ export const container = style({
   flexDirection: 'column',
   width: '100%',
   minHeight: '100%',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: vars.$color.bg.layerDefault,
   boxSizing: 'border-box',
 });
 
@@ -55,7 +56,7 @@ export const title = style({
   fontSize: '26px',
   fontWeight: 700,
   lineHeight: '35px',
-  color: '#1A1C20',
+  color: vars.$color.fg.neutral,
   margin: 0,
   textAlign: 'left',
 });
@@ -64,7 +65,7 @@ export const description = style({
   fontSize: '16px',
   fontWeight: 400,
   lineHeight: '22px',
-  color: '#555D6D',
+  color: vars.$color.fg.neutralMuted,
   margin: 0,
   textAlign: 'left',
 });

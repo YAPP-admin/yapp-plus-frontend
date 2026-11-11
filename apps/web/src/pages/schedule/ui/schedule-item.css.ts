@@ -3,7 +3,7 @@ import { style } from '@vanilla-extract/css';
 
 export const item = style({
   padding: '20px 0',
-  borderBottom: '1px solid rgba(0, 0, 0, 0.05)',
+  borderBottom: `1px solid ${vars.$color.stroke.neutralSubtle}`,
   boxSizing: 'border-box',
   width: '100%',
 });
@@ -55,8 +55,8 @@ export const chip = style({
   justifyContent: 'center',
   padding: '2px 6px',
   borderRadius: vars.$radius.r1,
-  background: '#FFF7DE',
-  color: '#C49725',
+  background: vars.$color.bg.warningWeak,
+  color: vars.$color.fg.warning,
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
   fontWeight: vars.$fontWeight.bold,

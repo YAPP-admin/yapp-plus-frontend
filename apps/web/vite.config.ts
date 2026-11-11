@@ -21,7 +21,7 @@ export default defineConfig({
   plugins: [
     vanillaExtractPlugin(),
     react({ compiler: true }),
-    seedDesignPlugin({ colorMode: 'light-only' }),
+    seedDesignPlugin({ colorMode: 'system' }),
   ],
   build: {
     emptyOutDir: true,

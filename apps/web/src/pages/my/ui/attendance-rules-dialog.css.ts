@@ -4,7 +4,7 @@ import { style } from '@vanilla-extract/css';
 export const backdrop = style({
   position: 'fixed',
   inset: 0,
-  background: 'rgba(0, 0, 0, 0.46)',
+  background: vars.$color.bg.overlay,
   zIndex: 100,
 });
 
@@ -22,13 +22,13 @@ export const content = style({
   width: '100%',
   maxHeight: 'calc(100dvh - 40px)',
   overflowY: 'auto',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.12)',
+  boxShadow: vars.$shadow.s2,
 });
 
 export const dottedLine = style({
   flex: 1,
   height: '1px',
-  borderBottom: '1px dashed #DCDEE3',
+  borderBottom: `1px dashed ${vars.$color.stroke.neutralWeak}`,
   minWidth: '8px',
 });
 

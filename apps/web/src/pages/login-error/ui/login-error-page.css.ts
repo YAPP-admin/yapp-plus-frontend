@@ -95,7 +95,7 @@ export const contactButton = style({
   fontSize: vars.$fontSize.t6,
   lineHeight: vars.$lineHeight.t6,
   fontWeight: vars.$fontWeight.bold,
-  color: '#868B94',
+  color: vars.$color.fg.neutralSubtle,
   textDecoration: 'none',
   cursor: 'pointer',
   transition: 'opacity 0.15s ease',

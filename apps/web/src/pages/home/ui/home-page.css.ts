@@ -55,8 +55,8 @@ export const sessionToggleChip = style({
   alignItems: 'center',
   padding: '4px 8px',
   borderRadius: '6px',
-  backgroundColor: '#F3F4F5',
-  color: '#555D6D',
+  backgroundColor: vars.$color.bg.neutralMuted,
+  color: vars.$color.fg.neutralMuted,
   fontSize: '11px',
   fontWeight: vars.$fontWeight.bold,
   border: 'none',
@@ -64,7 +64,7 @@ export const sessionToggleChip = style({
   transition: 'background-color 0.15s ease',
   selectors: {
     '&:hover': {
-      backgroundColor: '#E5E7EB',
+      backgroundColor: vars.$color.bg.neutralWeakPressed,
     },
   },
 });
@@ -114,7 +114,7 @@ export const calendarDayItem = style({
   flex: 1,
   paddingBottom: vars.$dimension.x4,
   boxSizing: 'border-box',
-  borderRight: '1px dashed rgba(0, 0, 0, 0.06)',
+  borderRight: `1px dashed ${vars.$color.stroke.neutralSubtle}`,
   selectors: {
     '&:last-child': {
       borderRight: 'none',
@@ -145,8 +145,8 @@ export const calendarDateBadge = style({
 export const calendarDateBadgeActive = style([
   calendarDateBadge,
   {
-    background: '#2A3038',
-    color: '#FFFFFF',
+    background: vars.$color.bg.neutralSolid,
+    color: vars.$color.fg.onNeutralSolid,
   },
 ]);
 
@@ -315,16 +315,16 @@ export const chip = style({
 export const chipBlue = style([
   chip,
   {
-    background: '#EFF6FF',
-    color: '#5E98FE',
+    background: vars.$color.bg.informativeWeak,
+    color: vars.$color.fg.informative,
   },
 ]);
 
 export const chipGray = style([
   chip,
   {
-    background: '#F3F4F5',
-    color: '#555D6D',
+    background: vars.$color.bg.neutralMuted,
+    color: vars.$color.fg.neutralMuted,
   },
 ]);
 
@@ -332,7 +332,7 @@ export const noticeTitle = style({
   fontSize: vars.$fontSize.t4,
   lineHeight: vars.$lineHeight.t4,
   fontWeight: vars.$fontWeight.bold,
-  color: '#555D6D',
+  color: vars.$color.fg.neutralMuted,
   margin: 0,
   overflow: 'hidden',
   textOverflow: 'ellipsis',
@@ -343,7 +343,7 @@ export const noticeChevron = style({
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: vars.$color.palette.gray400,
+  color: vars.$color.fg.placeholder,
   flexShrink: 0,
 });
 
@@ -356,8 +356,8 @@ export const attendedBadge = style({
   marginTop: '4px',
   padding: '2px 4px',
   borderRadius: '4px',
-  backgroundColor: '#FFF0E6',
-  color: '#FF6600',
+  backgroundColor: vars.$color.bg.brandWeak,
+  color: vars.$color.fg.brand,
   fontSize: '11px',
   fontWeight: 700,
   lineHeight: '13px',
@@ -367,8 +367,8 @@ export const disabledSessionButton = style({
   width: '100%',
   height: '44px',
   borderRadius: '8px',
-  backgroundColor: '#F3F4F5 !important',
-  color: '#868B94 !important',
+  backgroundColor: `${vars.$color.bg.disabled} !important`,
+  color: `${vars.$color.fg.disabled} !important`,
   fontSize: '14px !important',
   fontWeight: '700 !important',
   cursor: 'default',
@@ -378,9 +378,9 @@ export const attendedSessionButton = style({
   width: '100%',
   height: '44px',
   borderRadius: '8px',
-  backgroundColor: '#555D6D !important',
+  backgroundColor: `${vars.$color.bg.neutralSolid} !important`,
   opacity: 0.5,
-  color: '#FFFFFF !important',
+  color: `${vars.$color.fg.onNeutralSolid} !important`,
   fontSize: '16px !important',
   lineHeight: '22px !important',
   fontWeight: '700 !important',
@@ -395,30 +395,30 @@ export const quickCardWrapper = style({
 });
 
 export const helpBubbleContent = style({
-  backgroundColor: '#2A3038 !important',
+  backgroundColor: `${vars.$color.bg.neutralSolid} !important`,
   padding: '8px 10px !important',
   borderRadius: '8px !important',
-  boxShadow: '0 2px 8px rgba(0, 0, 0, 0.15)',
+  boxShadow: vars.$shadow.s1,
 });
 
 export const helpBubbleTitle = style({
   fontSize: '12px !important',
   lineHeight: '16px !important',
   fontWeight: '500 !important',
-  color: '#FFFFFF !important',
+  color: `${vars.$color.fg.onNeutralSolid} !important`,
   textAlign: 'center',
   whiteSpace: 'pre-line',
   margin: 0,
 });
 
 export const helpBubbleArrowTip = style({
-  fill: '#2A3038 !important',
+  fill: `${vars.$color.bg.neutralSolid} !important`,
 });
 
 export const sheetContent = style({
   borderTopLeftRadius: '16px !important',
   borderTopRightRadius: '16px !important',
-  backgroundColor: '#FFFFFF !important',
+  backgroundColor: `${vars.$color.bg.layerFloating} !important`,
   padding: '0 !important',
   boxSizing: 'border-box',
   height: 'auto !important',
@@ -439,7 +439,7 @@ export const sheetHandleBar = style({
   width: '52px',
   height: '4px',
   borderRadius: '9999px',
-  backgroundColor: '#F3F4F5',
+  backgroundColor: vars.$color.bg.neutralWeak,
 });
 
 export const sheetContainer = style({
@@ -452,7 +452,7 @@ export const sheetTitle = style({
   fontSize: '20px',
   lineHeight: '27px',
   fontWeight: 700,
-  color: '#1A1C20',
+  color: vars.$color.fg.neutral,
   margin: 0,
   textAlign: 'left',
 });
@@ -461,7 +461,7 @@ export const sheetDescription = style({
   fontSize: '14px',
   lineHeight: '19px',
   fontWeight: 500,
-  color: '#555D6D',
+  color: vars.$color.fg.neutralMuted,
   margin: 0,
   textAlign: 'left',
 });
@@ -486,26 +486,26 @@ export const codeInput = style({
   width: '54px',
   height: '54px',
   borderRadius: '12px',
-  border: '1px solid #DCDEE3',
-  backgroundColor: '#FFFFFF',
+  border: `1px solid ${vars.$color.stroke.neutralWeak}`,
+  backgroundColor: vars.$color.bg.layerDefault,
   textAlign: 'center',
   fontSize: '18px',
   fontWeight: 700,
   lineHeight: '24px',
-  color: '#1A1C20',
+  color: vars.$color.fg.neutral,
   outline: 'none',
   boxSizing: 'border-box',
   padding: 0,
   transition: 'border-color 0.15s ease',
   '::placeholder': {
-    color: '#B0B3BA',
+    color: vars.$color.fg.placeholder,
     fontSize: '18px',
     fontWeight: 700,
     opacity: 1,
   },
   selectors: {
     '&:focus': {
-      borderColor: '#555D6D',
+      borderColor: vars.$color.stroke.neutralSolid,
     },
     '&:focus::placeholder': {
       color: 'transparent !important',
@@ -517,11 +517,11 @@ export const codeInput = style({
 export const codeInputError = style([
   codeInput,
   {
-    borderColor: '#FA342C !important',
-    color: '#FA342C',
+    borderColor: `${vars.$color.stroke.criticalSolid} !important`,
+    color: vars.$color.fg.critical,
     selectors: {
       '&:focus': {
-        borderColor: '#FA342C !important',
+        borderColor: `${vars.$color.stroke.criticalSolid} !important`,
       },
       '&:focus::placeholder': {
         color: 'transparent !important',
@@ -539,7 +539,7 @@ export const codeErrorMessage = style({
   fontSize: '13px',
   lineHeight: '18px',
   fontWeight: 500,
-  color: '#FA342C',
+  color: vars.$color.fg.critical,
   margin: 0,
 });
 
@@ -559,21 +559,21 @@ export const reportTextFieldTextarea = style({
   width: '100%',
   minHeight: '100px',
   borderRadius: '10px !important',
-  border: '1px solid #DCDEE3 !important',
+  border: `1px solid ${vars.$color.stroke.neutralWeak} !important`,
   padding: '12px 14px !important',
   fontSize: '15px !important',
   fontWeight: '500 !important',
-  color: '#1A1C20 !important',
-  backgroundColor: '#FFFFFF !important',
+  color: `${vars.$color.fg.neutral} !important`,
+  backgroundColor: `${vars.$color.bg.layerDefault} !important`,
   resize: 'none',
   boxSizing: 'border-box',
   outline: 'none',
   '::placeholder': {
-    color: '#B0B3BA !important',
+    color: `${vars.$color.fg.placeholder} !important`,
   },
   selectors: {
     '&:focus': {
-      borderColor: '#555D6D !important',
+      borderColor: `${vars.$color.stroke.neutralSolid} !important`,
     },
   },
 });
@@ -589,7 +589,7 @@ export const teamSessionButton = style({
   borderRadius: '8px',
   // HelpBubbleCloseButton의 투명 배경만 덮고 SEED pressed 상태는 유지합니다.
   backgroundColor: vars.$color.bg.neutralSolid,
-  color: '#FFFFFF !important',
+  color: `${vars.$color.fg.onNeutralSolid} !important`,
   fontSize: '14px !important',
   fontWeight: '700 !important',
   cursor: 'pointer',
@@ -599,7 +599,7 @@ export const sheetPrimaryButton = style({
   width: '100%',
   height: '52px',
   borderRadius: '12px !important',
-  color: '#FFFFFF !important',
+  color: `${vars.$color.fg.onBrandSolid} !important`,
   fontSize: '16px !important',
   fontWeight: '700 !important',
 });
@@ -615,7 +615,7 @@ export const teamRuleItem = style({
   fontSize: '13px',
   lineHeight: '18px',
   fontWeight: 500,
-  color: '#555D6D',
+  color: vars.$color.fg.neutralMuted,
 });
 
 export const teamCheckIcon = style({
@@ -651,7 +651,7 @@ export const sheetSecondaryButton = style({
   width: '100%',
   height: '52px',
   borderRadius: '8px',
-  color: '#868B94 !important',
+  color: `${vars.$color.fg.neutralSubtle} !important`,
   fontSize: '16px !important',
   fontWeight: '700 !important',
 });

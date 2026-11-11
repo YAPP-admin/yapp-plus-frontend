@@ -78,7 +78,7 @@ export const switchControl = style({
       background: vars.$color.bg.brandSolid,
     },
     '&[data-checked="false"]': {
-      background: '#DCDEE3',
+      background: vars.$color.bg.neutralWeak,
     },
   },
 });
@@ -88,8 +88,8 @@ export const switchThumb = style({
   width: '24px',
   height: '24px',
   borderRadius: vars.$radius.full,
-  background: '#FFFFFF',
-  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.15)',
+  background: vars.$color.palette.staticWhite,
+  boxShadow: vars.$shadow.s1,
   transition: 'transform 0.2s ease',
   selectors: {
     [`${switchControl}[data-checked="true"] &`]: {
@@ -116,7 +116,7 @@ export const logoutButton = style({
   width: '100%',
   padding: '16px 20px',
   borderRadius: '12px',
-  border: '1px solid #DCDEE3',
+  border: `1px solid ${vars.$color.stroke.neutralWeak}`,
   background: vars.$color.bg.layerDefault,
   color: vars.$color.fg.neutral,
   fontSize: vars.$fontSize.t6,
@@ -134,7 +134,7 @@ export const logoutButton = style({
 export const dialogBackdrop = style({
   position: 'fixed',
   inset: 0,
-  background: 'rgba(0, 0, 0, 0.46)',
+  background: vars.$color.bg.overlay,
   zIndex: 100,
 });
 
@@ -163,7 +163,7 @@ export const dialogContent = style({
   margin: '0 auto',
   boxSizing: 'border-box',
   gap: '16px',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.16)',
+  boxShadow: vars.$shadow.s2,
 });
 
 export const dialogHeader = style({
@@ -213,20 +213,20 @@ export const dialogCancelButton = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: '#F3F4F5',
+  background: vars.$color.bg.neutralMuted,
   borderRadius: '8px',
   border: 'none',
   fontSize: '14px',
   lineHeight: '19px',
   fontWeight: vars.$fontWeight.bold,
-  color: '#868B94',
+  color: vars.$color.fg.neutralSubtle,
   cursor: 'pointer',
   padding: 0,
   whiteSpace: 'nowrap',
   boxSizing: 'border-box',
   transition: 'background-color 0.15s ease',
   ':active': {
-    background: '#E5E7EB',
+    background: vars.$color.bg.neutralWeakPressed,
   },
 });
 
@@ -243,7 +243,7 @@ export const dialogConfirmButton = style({
   fontSize: '14px',
   lineHeight: '19px',
   fontWeight: vars.$fontWeight.bold,
-  color: '#FFFFFF',
+  color: vars.$color.fg.onBrandSolid,
   cursor: 'pointer',
   padding: 0,
   whiteSpace: 'nowrap',

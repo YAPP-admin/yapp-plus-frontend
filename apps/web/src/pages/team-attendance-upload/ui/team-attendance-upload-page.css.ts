@@ -7,7 +7,7 @@ export const container = style({
   flex: 1,
   minHeight: 0,
   width: '100%',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: vars.$color.bg.layerDefault,
   boxSizing: 'border-box',
 });
 
@@ -24,7 +24,7 @@ export const headerTitle = style({
   fontSize: '18px',
   fontWeight: 700,
   lineHeight: '24px',
-  color: '#1A1C20',
+  color: vars.$color.fg.neutral,
   margin: 0,
 });
 
@@ -48,7 +48,7 @@ export const uploadArea = style({
   width: '100%',
   height: '206px',
   borderRadius: '12px',
-  backgroundColor: '#F3F4F5',
+  backgroundColor: vars.$color.bg.neutralMuted,
   display: 'flex',
   flexDirection: 'column',
   alignItems: 'center',
@@ -67,25 +67,25 @@ export const uploadIconWrap = style({
   width: '44px',
   height: '44px',
   borderRadius: '50%',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: vars.$color.palette.staticWhite,
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  color: vars.$color.palette.gray700,
-  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.06)',
+  color: vars.$color.fg.neutralMuted,
+  boxShadow: vars.$shadow.s1,
 });
 
 export const uploadPromptText = style({
   fontSize: '14px',
   fontWeight: 500,
-  color: vars.$color.palette.gray700,
+  color: vars.$color.fg.neutralMuted,
   margin: 0,
 });
 
 export const uploadHintText = style({
   fontSize: '12px',
   fontWeight: 400,
-  color: vars.$color.palette.gray500,
+  color: vars.$color.fg.neutralSubtle,
   margin: 0,
 });
 
@@ -104,7 +104,7 @@ export const memberTitle = style({
   fontSize: '18px',
   fontWeight: 700,
   lineHeight: '24px',
-  color: '#1A1C20',
+  color: vars.$color.fg.neutral,
   margin: 0,
 });
 
@@ -112,7 +112,7 @@ export const memberDescription = style({
   fontSize: '14px',
   fontWeight: 500,
   lineHeight: '19px',
-  color: '#555D6D',
+  color: vars.$color.fg.neutralMuted,
   margin: 0,
 });
 
@@ -127,8 +127,8 @@ export const memberCard = style({
   justifyContent: 'space-between',
   padding: '12px 16px',
   borderRadius: '10px',
-  border: '1px solid rgba(0, 0, 0, 0.06)',
-  backgroundColor: '#FFFFFF',
+  border: `1px solid ${vars.$color.stroke.neutralSubtle}`,
+  backgroundColor: vars.$color.bg.layerDefault,
   cursor: 'pointer',
   userSelect: 'none',
   transition: 'border-color 0.15s ease, background-color 0.15s ease',
@@ -136,8 +136,8 @@ export const memberCard = style({
 });
 
 export const memberCardChecked = style({
-  border: '1px solid #1A1C20',
-  backgroundColor: '#FFFFFF',
+  border: `1px solid ${vars.$color.stroke.neutralSolid}`,
+  backgroundColor: vars.$color.bg.layerDefault,
 });
 
 export const memberName = style({
@@ -145,7 +145,7 @@ export const memberName = style({
   fontSize: '14px',
   fontWeight: 500,
   lineHeight: '19px',
-  color: '#1A1C20',
+  color: vars.$color.fg.neutral,
   margin: 0,
 });
 
@@ -153,7 +153,7 @@ export const memberRole = style({
   fontSize: '13px',
   fontWeight: 500,
   lineHeight: '18px',
-  color: '#868B94',
+  color: vars.$color.fg.neutralSubtle,
   margin: 0,
 });
 
@@ -161,7 +161,7 @@ export const meBadge = style({
   fontSize: '13px',
   fontWeight: 500,
   lineHeight: '18px',
-  color: '#FF6600',
+  color: vars.$color.fg.brand,
   margin: 0,
 });
 
@@ -189,14 +189,14 @@ export const checkboxControl = style({
   height: '20px',
   marginTop: 0,
   borderRadius: '4px',
-  border: '1.14px solid rgba(0, 0, 0, 0.06)',
-  backgroundColor: '#FFFFFF',
+  border: `1.14px solid ${vars.$color.stroke.neutralSubtle}`,
+  backgroundColor: vars.$color.bg.layerDefault,
   selectors: {
     '&&[data-checked]': {
       borderWidth: '1.14px',
-      backgroundColor: '#1A1C20',
-      borderColor: '#1A1C20',
-      color: '#FFFFFF',
+      backgroundColor: vars.$color.bg.neutralSolid,
+      borderColor: vars.$color.stroke.neutralSolid,
+      color: vars.$color.fg.onNeutralSolid,
     },
   },
 });

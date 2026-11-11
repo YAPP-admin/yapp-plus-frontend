@@ -54,7 +54,7 @@ export const topCardSection = style({
 export const statusCard = style({
   display: 'flex',
   flexDirection: 'column',
-  border: '1px solid rgba(0, 0, 0, 0.05)',
+  border: `1px solid ${vars.$color.stroke.neutralSubtle}`,
   borderRadius: vars.$radius.r2,
   overflow: 'hidden',
   background: vars.$color.bg.layerDefault,
@@ -133,7 +133,7 @@ export const warningBanner = style({
   display: 'flex',
   alignItems: 'center',
   padding: '12px 14px',
-  background: '#F7F8F9',
+  background: vars.$color.bg.neutralMuted,
   borderRadius: vars.$radius.r2,
   gap: '10px',
 });
@@ -225,15 +225,15 @@ export const attendedChip = style([
 export const lateChip = style([
   chipBase,
   {
-    background: '#FFF7DE',
-    color: '#C49725',
+    background: vars.$color.bg.warningWeak,
+    color: vars.$color.fg.warning,
   },
 ]);
 
 export const absentChip = style([
   chipBase,
   {
-    background: '#FDF0F0',
-    color: '#FA342C',
+    background: vars.$color.bg.criticalWeak,
+    color: vars.$color.fg.critical,
   },
 ]);

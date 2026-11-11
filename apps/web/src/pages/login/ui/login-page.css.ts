@@ -55,7 +55,7 @@ export const socialButton = style({
 export const dialogBackdrop = style({
   position: 'fixed',
   inset: 0,
-  background: 'rgba(0, 0, 0, 0.46)',
+  background: vars.$color.bg.overlay,
   zIndex: 100,
 });
 
@@ -84,7 +84,7 @@ export const dialogContent = style({
   margin: '0 auto',
   boxSizing: 'border-box',
   gap: '16px',
-  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.16)',
+  boxShadow: vars.$shadow.s2,
 });
 
 export const dialogHeader = style({
@@ -139,4 +139,4 @@ export const dialogButton = style({
   padding: 0,
 });
 
-export const dialogCancelButton = style([dialogButton, { color: vars.$color.palette.gray700 }]);
+export const dialogCancelButton = style([dialogButton, { color: vars.$color.fg.neutralMuted }]);
