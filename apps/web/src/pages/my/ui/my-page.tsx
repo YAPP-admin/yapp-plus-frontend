@@ -25,7 +25,7 @@ import {
 import { ProfileSection } from './profile-section';
 
 export function MyPage() {
-  const { phase } = useNativeAuthSession();
+  const { phase, isNative } = useNativeAuthSession();
   const canQuery =
     phase === 'SIGNED_IN' ||
     (phase === 'BROWSER' &&
@@ -115,6 +115,23 @@ export function MyPage() {
               className={menuChevron}
             />
           </ActivityLink>
+        </HStack>
+        <HStack asChild align="center" justify="space-between" py="x4">
+          <a
+            href="https://pf.kakao.com/_aGxofd"
+            target={isNative ? '_self' : '_blank'}
+            rel={isNative ? undefined : 'noopener noreferrer'}
+            className={menuItem}
+          >
+            <span className={menuLabel}>이용문의</span>
+            <Image
+              src="/images/my/chevron-right.svg"
+              alt=""
+              width={24}
+              height={24}
+              className={menuChevron}
+            />
+          </a>
         </HStack>
       </VStack>
     </VStack>

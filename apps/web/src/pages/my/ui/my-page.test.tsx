@@ -249,6 +249,26 @@ describe('MyPage', () => {
     expect(attendanceLink).toHaveAttribute('href', '/my/attendance');
   });
 
+  it('이용문의를 카카오톡 채널 홈으로 연결한다', async () => {
+    renderPage();
+    const menuNav = within(await screen.findByRole('navigation', { name: '마이페이지 메뉴' }));
+    const inquiryLink = menuNav.getByRole('link', { name: '이용문의' });
+
+    expect(inquiryLink).toHaveAttribute('href', 'https://pf.kakao.com/_aGxofd');
+    expect(inquiryLink).toHaveAttribute('target', '_blank');
+    expect(inquiryLink).toHaveAttribute('rel', 'noopener noreferrer');
+  });
+
+  it('WebView에서는 이용문의를 현재 창으로 연다', async () => {
+    renderPage(true);
+    const menuNav = within(await screen.findByRole('navigation', { name: '마이페이지 메뉴' }));
+    const inquiryLink = menuNav.getByRole('link', { name: '이용문의' });
+
+    expect(inquiryLink).toHaveAttribute('href', 'https://pf.kakao.com/_aGxofd');
+    expect(inquiryLink).toHaveAttribute('target', '_self');
+    expect(inquiryLink).not.toHaveAttribute('rel');
+  });
+
   it('출석 현황 카드의 ? 버튼을 누르면 SEED 출석 규칙 다이얼로그가 열리고 확인 버튼으로 닫힌다', async () => {
     renderPage();
     const questionBtn = await screen.findByRole('button', { name: '출석 규칙 안내' });
