@@ -56,7 +56,7 @@ function OrangeCheckIcon() {
     >
       <path
         d="M20 6L9 17L4 12"
-        stroke="#FF6600"
+        stroke="currentColor"
         strokeWidth="2.5"
         strokeLinecap="round"
         strokeLinejoin="round"
