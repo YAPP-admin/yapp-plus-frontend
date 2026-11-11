@@ -1,8 +1,9 @@
+import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
   minHeight: '100%',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: vars.$color.bg.layerDefault,
 });
 
 export const header = style({
@@ -10,8 +11,8 @@ export const header = style({
   top: 0,
   zIndex: 10,
   height: '54px',
-  padding: '0 16px',
-  backgroundColor: '#FFFFFF',
+  padding: `0 ${vars.$dimension.x4}`,
+  backgroundColor: vars.$color.bg.layerDefault,
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
@@ -19,53 +20,60 @@ export const header = style({
 });
 
 export const headerTitle = style({
-  fontSize: '18px',
-  lineHeight: '24px',
-  fontWeight: 700,
-  color: '#1A1C20',
+  fontSize: vars.$fontSize.t6,
+  lineHeight: vars.$lineHeight.t6,
+  fontWeight: vars.$fontWeight.bold,
+  color: vars.$color.fg.neutral,
   margin: 0,
 });
 
 export const headerSpacer = style({
-  width: '24px',
-  height: '24px',
+  width: vars.$dimension.x6,
+  height: vars.$dimension.x6,
 });
 
 export const body = style({
   flex: 1,
-  padding: '0 16px',
+  padding: 0,
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
   boxSizing: 'border-box',
 });
 
+export const list = style({
+  listStyle: 'none',
+  margin: 0,
+  padding: 0,
+  width: '100%',
+});
+
 export const listItem = style({
-  padding: '20px 0',
-  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
-  boxSizing: 'border-box',
+  paddingBlock: vars.$dimension.x5,
+  borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
 });
 
 export const itemMessage = style({
-  fontSize: '16px',
-  lineHeight: '22px',
-  fontWeight: 500,
-  color: '#1A1C20',
+  fontSize: vars.$fontSize.t5,
+  lineHeight: vars.$lineHeight.t5,
+  fontWeight: vars.$fontWeight.medium,
+  color: vars.$color.fg.neutral,
+  flexShrink: 1,
   whiteSpace: 'pre-line',
   margin: 0,
 });
 
 export const itemDate = style({
-  fontSize: '13px',
-  lineHeight: '18px',
-  fontWeight: 400,
-  color: '#868B94',
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  fontWeight: vars.$fontWeight.regular,
+  color: vars.$color.fg.neutralSubtle,
   margin: 0,
 });
 
 export const emptyContainer = style({
   flex: 1,
-  padding: '0 0 32px',
+  padding: `0 ${vars.$dimension.x4} ${vars.$dimension.x8}`,
 });
 
 export const emptyGraphic = style({
@@ -75,10 +83,10 @@ export const emptyGraphic = style({
 });
 
 export const emptyText = style({
-  fontSize: '16px',
-  lineHeight: '22px',
-  fontWeight: 400,
-  color: '#868B94',
+  fontSize: vars.$fontSize.t5,
+  lineHeight: vars.$lineHeight.t5,
+  fontWeight: vars.$fontWeight.regular,
+  color: vars.$color.fg.neutralSubtle,
   textAlign: 'center',
   margin: 0,
 });
