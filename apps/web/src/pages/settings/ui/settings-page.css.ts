@@ -152,7 +152,7 @@ export const dialogContent = style({
   position: 'relative',
   display: 'flex',
   flexDirection: 'column',
-  width: 'min(290px, 100%)',
+  width: '100%',
   minWidth: 0,
   maxWidth: '290px',
   maxHeight: 'calc(100dvh - 40px)',
