@@ -41,7 +41,7 @@ const teamPartOrder: readonly TeamMappingPart[] = [
 
 /** 아직 연결하지 않은 생성 제출이 Enter로 실행되지 않도록 막는다. */
 const preventEnter: KeyboardEventHandler<HTMLInputElement> = (event) => {
-  if (event.key === 'Enter') {
+  if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) {
     event.preventDefault();
   }
 };

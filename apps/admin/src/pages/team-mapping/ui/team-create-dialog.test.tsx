@@ -1,5 +1,5 @@
 /** 팀 생성 입력의 필수 조건·초안 상태와 제출 경계를 검증한다. */
-import { render, screen } from '@testing-library/react';
+import { createEvent, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { OverlayProvider } from 'overlay-kit';
 import { expect, it, vi } from 'vitest';
@@ -81,6 +81,17 @@ it('유효한 이름을 입력해도 Enter 제출과 실제 생성을 실행하�
 
   expect(onCreate).not.toHaveBeenCalled();
   expect(screen.getByRole('dialog')).toBeVisible();
+});
+
+it('한글 조합 중 Enter는 입력을 방해하지 않는다', async () => {
+  renderDialog();
+
+  const nameInput = await screen.findByRole('textbox', { name: '팀명' });
+  const event = createEvent.keyDown(nameInput, { key: 'Enter', isComposing: true });
+
+  fireEvent(nameInput, event);
+
+  expect(event.defaultPrevented).toBe(false);
 });
 
 it('변경 후 닫으면 계속 편집과 변경 버리기를 선택할 수 있다', async () => {

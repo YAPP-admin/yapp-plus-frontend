@@ -1,5 +1,5 @@
 /** 부모 폼 제출 방지와 검색·선택·요청 수명을 사용자 조작으로 검증합니다. */
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, createEvent, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useState, type ReactNode } from 'react';
@@ -108,8 +108,11 @@ it('빈 입력에서는 조회하지 않고 입력하면 자동 검색한다', a
   submit('  세종대로  ');
   await screen.findByRole('list');
   expect(search).toHaveBeenCalledWith({ keyword: '세종대로', page: 1, approvalKey: 'test-key=' });
-  fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter' });
-  fireEvent.keyDown(screen.getByRole('searchbox'), { key: 'Enter', isComposing: true });
+  const searchbox = screen.getByRole('searchbox');
+  fireEvent.keyDown(searchbox, { key: 'Enter' });
+  const composingEvent = createEvent.keyDown(searchbox, { key: 'Enter', isComposing: true });
+  fireEvent(searchbox, composingEvent);
+  expect(composingEvent.defaultPrevented).toBe(false);
   expect(onSubmit).not.toHaveBeenCalled();
   expect(search).toHaveBeenCalledTimes(1);
 });
