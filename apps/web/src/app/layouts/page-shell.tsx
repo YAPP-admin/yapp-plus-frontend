@@ -31,6 +31,20 @@ function getHeaderClassName(
   return header;
 }
 
+function getGridRows(
+  customHeader: ReactNode | undefined,
+  plain: boolean,
+  navigation: ReactNode | undefined,
+) {
+  if (customHeader === null) {
+    return '1fr';
+  }
+  if (navigation && !plain) {
+    return 'auto 1fr auto';
+  }
+  return 'auto 1fr';
+}
+
 export function PageShell({
   children,
   className,
@@ -53,12 +67,7 @@ export function PageShell({
   header?: ReactNode;
 }) {
   const headerClassName = getHeaderClassName(customHeader, plain, borderlessHeader);
-  let rows = 'auto 1fr';
-  if (navigation && !plain) {
-    rows = 'auto 1fr auto';
-  } else if (customHeader === null) {
-    rows = '1fr';
-  }
+  const rows = getGridRows(customHeader, plain, navigation);
 
   return (
     <Grid
