@@ -82,7 +82,11 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
                   spellCheck={false}
                   aria-describedby={`${id}-hint`}
                   onKeyDown={(event) => {
-                    if (event.key !== 'Enter') {
+                    if (
+                      event.key !== 'Enter' ||
+                      event.nativeEvent.isComposing ||
+                      event.keyCode === 229
+                    ) {
                       return;
                     }
                     event.preventDefault();
