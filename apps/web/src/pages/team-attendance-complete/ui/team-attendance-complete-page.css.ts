@@ -6,7 +6,7 @@ export const container = style({
   flexDirection: 'column',
   width: '100%',
   minHeight: '100%',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: vars.$color.bg.layerDefault,
   boxSizing: 'border-box',
 });
 
@@ -55,7 +55,7 @@ export const title = style({
   fontSize: '26px',
   fontWeight: 700,
   lineHeight: '35px',
-  color: vars.$color.palette.gray900,
+  color: vars.$color.fg.neutral,
   margin: 0,
   textAlign: 'left',
   width: '100%',
@@ -65,7 +65,7 @@ export const description = style({
   fontSize: '16px',
   fontWeight: 400,
   lineHeight: '22px',
-  color: vars.$color.palette.gray700,
+  color: vars.$color.fg.neutralMuted,
   margin: 0,
   textAlign: 'left',
   width: '100%',
@@ -87,7 +87,7 @@ export const infoCard = style({
   width: '100%',
   padding: '18px',
   gap: '14px',
-  backgroundColor: vars.$color.palette.gray100,
+  backgroundColor: vars.$color.bg.neutralMuted,
   borderRadius: '8px',
   boxSizing: 'border-box',
 });
@@ -104,7 +104,7 @@ export const infoLabel = style({
   fontSize: '14px',
   fontWeight: 500,
   lineHeight: '19px',
-  color: vars.$color.palette.gray700,
+  color: vars.$color.fg.neutralMuted,
   margin: 0,
   whiteSpace: 'nowrap',
 });
@@ -112,7 +112,7 @@ export const infoLabel = style({
 export const infoDotLine = style({
   flex: 1,
   height: '1px',
-  borderBottom: '1px dashed #DCDEE3',
+  borderBottom: `1px dashed ${vars.$color.stroke.neutralWeak}`,
   alignSelf: 'center',
 });
 
@@ -120,7 +120,7 @@ export const infoValue = style({
   fontSize: '14px',
   fontWeight: 500,
   lineHeight: '19px',
-  color: vars.$color.palette.gray900,
+  color: vars.$color.fg.neutral,
   margin: 0,
   textAlign: 'right',
   whiteSpace: 'nowrap',

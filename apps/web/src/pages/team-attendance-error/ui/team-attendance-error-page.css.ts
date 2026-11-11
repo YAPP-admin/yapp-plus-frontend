@@ -6,7 +6,7 @@ export const container = style({
   flexDirection: 'column',
   width: '100%',
   minHeight: '100%',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: vars.$color.bg.layerDefault,
   boxSizing: 'border-box',
 });
 
@@ -54,7 +54,7 @@ export const title = style({
   fontSize: '24px',
   fontWeight: 700,
   lineHeight: '34px',
-  color: vars.$color.palette.gray900,
+  color: vars.$color.fg.neutral,
   margin: 0,
 });
 
@@ -62,7 +62,7 @@ export const description = style({
   fontSize: '16px',
   fontWeight: 400,
   lineHeight: '22px',
-  color: vars.$color.palette.gray700,
+  color: vars.$color.fg.neutralMuted,
   whiteSpace: 'pre-line',
   margin: 0,
 });

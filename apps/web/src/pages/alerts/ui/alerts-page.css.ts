@@ -1,8 +1,9 @@
+import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
   minHeight: '100%',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: vars.$color.bg.layerDefault,
 });
 
 export const header = style({
@@ -11,7 +12,7 @@ export const header = style({
   zIndex: 10,
   height: '54px',
   padding: '0 16px',
-  backgroundColor: '#FFFFFF',
+  backgroundColor: vars.$color.bg.layerDefault,
   width: '100%',
   maxWidth: '480px',
   margin: '0 auto',
@@ -22,7 +23,7 @@ export const headerTitle = style({
   fontSize: '18px',
   lineHeight: '24px',
   fontWeight: 700,
-  color: '#1A1C20',
+  color: vars.$color.fg.neutral,
   margin: 0,
 });
 
@@ -42,7 +43,7 @@ export const body = style({
 
 export const listItem = style({
   padding: '20px 0',
-  borderBottom: '1px solid rgba(0, 0, 0, 0.06)',
+  borderBottom: `1px solid ${vars.$color.stroke.neutralSubtle}`,
   boxSizing: 'border-box',
 });
 
@@ -50,7 +51,7 @@ export const itemMessage = style({
   fontSize: '16px',
   lineHeight: '22px',
   fontWeight: 500,
-  color: '#1A1C20',
+  color: vars.$color.fg.neutral,
   whiteSpace: 'pre-line',
   margin: 0,
 });
@@ -59,7 +60,7 @@ export const itemDate = style({
   fontSize: '13px',
   lineHeight: '18px',
   fontWeight: 400,
-  color: '#868B94',
+  color: vars.$color.fg.neutralSubtle,
   margin: 0,
 });
 
@@ -78,7 +79,7 @@ export const emptyText = style({
   fontSize: '16px',
   lineHeight: '22px',
   fontWeight: 400,
-  color: '#868B94',
+  color: vars.$color.fg.neutralSubtle,
   textAlign: 'center',
   margin: 0,
 });

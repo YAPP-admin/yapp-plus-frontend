@@ -6,7 +6,7 @@ export const container = style({
 });
 
 export const avatar = style({
-  background: 'rgba(0, 0, 0, 0.06)',
+  background: vars.$color.bg.neutralMuted,
   overflow: 'hidden',
 });
 
@@ -26,7 +26,7 @@ export const activeChip = style({
   padding: '2px 10px',
   borderRadius: vars.$radius.r2,
   background: vars.$color.bg.brandSolid,
-  color: '#FFFFFF',
+  color: vars.$color.fg.onBrandSolid,
   fontSize: vars.$fontSize.t3,
   lineHeight: vars.$lineHeight.t3,
   fontWeight: vars.$fontWeight.medium,
@@ -46,7 +46,7 @@ export const subDivider = style({
 });
 
 export const attendanceCard = style({
-  border: '1px solid rgba(0, 0, 0, 0.05)',
+  border: `1px solid ${vars.$color.stroke.neutralSubtle}`,
   overflow: 'hidden',
 });
 
@@ -68,7 +68,7 @@ export const questionButton = style({
   background: 'none',
   cursor: 'pointer',
   lineHeight: 1,
-  color: vars.$color.palette.gray500,
+  color: vars.$color.fg.neutralSubtle,
   transition: 'opacity 150ms ease',
   selectors: {
     '&:hover': {
@@ -99,7 +99,7 @@ export const statLabel = style({
   fontSize: vars.$fontSize.t2,
   lineHeight: vars.$lineHeight.t2,
   fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.palette.gray600,
+  color: vars.$color.fg.neutralMuted,
   textAlign: 'center',
 });
 
