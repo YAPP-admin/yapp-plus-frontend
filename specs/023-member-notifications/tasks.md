@@ -11,7 +11,7 @@
 - [x] T003 specs/023-member-notifications/plan.md·data-model.md·contracts/notifications.md에 단계·수명·계약을 작성한다.
 - [x] T004 specs/023-member-notifications/quickstart.md·tasks.md·issue-draft.md에 검증·실행 순서·이슈 초안을 작성한다.
 - [x] T005 specs/023-member-notifications/validation.md에 1단계 check·문서 검증·변경량을 기록한다.
-- [ ] T006 specs/023-member-notifications/issue-draft.md의 생성 승인을 받아 이슈 번호를 spec.md에 연결하고 1단계 리뷰를 완료한다.
+- [x] T006 specs/023-member-notifications/issue-draft.md의 생성 승인을 받아 이슈 번호를 spec.md에 연결하고 1단계 리뷰를 완료한다.
 
 ## 공통 기반
 
@@ -22,16 +22,16 @@
 
 독립 검증: quickstart Q01~Q03, Q13. 우선 MVP는 US1까지다.
 
-- [ ] T007 [US1] apps/web/src/pages/alerts/model/alerts-query.test.ts에 schema·날짜·중복·커서·401/503 회귀를 작성한다.
-- [ ] T008 [US1] apps/web/src/pages/alerts/model/alerts-query.ts·alerts-display.ts에 생성 find3InfiniteOptions·응답 검증·날짜·중복 처리를 구현한다.
-- [ ] T009 [US1] apps/web/src/mocks/member-notification-handlers.ts와 browser.ts·server.ts에 개발/테스트 핸들러를 연결한다.
-- [ ] T010 [US1] apps/web/src/pages/alerts/model/alerts-query.ts에 첫 페이지 갱신·오류 보존·반복 커서 방어·계정 취소를 연결한다.
-- [ ] T011 [US1] specs/023-member-notifications/validation.md에 2단계 검증·변경량·사용자 리뷰를 기록한다.
-- [ ] T012 [P] [US1] apps/web/src/pages/alerts/ui/alerts-page.test.tsx에 목록 상태·추가 조회·일반/공지 링크 테스트를 작성한다.
-- [ ] T013 [P] [US1] apps/web/stackflow/src/stack.test.tsx에 알림 직접 진입·상세 왕복·시연 query 제거 회귀를 작성한다.
-- [ ] T014 [US1] apps/web/src/pages/alerts/ui/alerts-page.tsx에 실제 query·기존 공통 경계·상태별 UI·상세 링크를 연결한다.
-- [ ] T015 [US1] apps/web/stackflow/src/stack.tsx·activities/activities.tsx에서 empty 파라미터·showEmpty를 제거하고 기존 부모 탐색을 유지한다.
-- [ ] T016 [US1] specs/023-member-notifications/validation.md에 3단계 check/build·접근성·캡처·사용자 리뷰를 기록한다.
+- [x] T007 [US1] apps/web/src/pages/alerts/model/alerts-query.test.ts에 날짜·cursor·401/503 회귀를 작성한다.
+- [x] T008 [US1] apps/web/src/pages/alerts/model/alerts-query.ts·alerts-display.ts에 생성 find3InfiniteOptions·날짜 처리를 구현한다.
+- [x] T009 [US1] apps/web/src/mocks/member-notification-handlers.ts와 browser.ts·server.ts에 개발/테스트 핸들러를 연결한다.
+- [x] T010 [US1] apps/web/src/pages/alerts/model/alerts-query.ts에 첫 페이지 갱신·오류 보존·계정 취소를 연결한다.
+- [x] T011 [US1] specs/023-member-notifications/validation.md에 2단계 검증·변경량·사용자 리뷰를 기록한다.
+- [x] T012 [P] [US1] apps/web/src/pages/alerts/ui/alerts-page.test.tsx에 목록 상태·추가 조회·일반/공지 링크 테스트를 작성한다.
+- [x] T013 [P] [US1] apps/web/stackflow/src/stack.test.tsx에 알림 직접 진입·상세 왕복·시연 query 제거 회귀를 작성한다.
+- [x] T014 [US1] apps/web/src/pages/alerts/ui/alerts-page.tsx에 실제 query·기존 공통 경계·상태별 UI·상세 링크를 연결한다.
+- [x] T015 [US1] apps/web/stackflow/src/stack.tsx·activities/activities.tsx에서 empty 파라미터·showEmpty를 제거하고 기존 부모 탐색을 유지한다.
+- [x] T016 [US1] specs/023-member-notifications/validation.md에 3단계 check/build·접근성·캡처·사용자 리뷰를 기록한다.
 
 ## US2 — 네이티브 설정 기반 (단계 4-A → 리뷰 → 4-B → 리뷰 → 4-C)
 

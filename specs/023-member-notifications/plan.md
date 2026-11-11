@@ -52,8 +52,8 @@ Vitest·Testing Library·MSW와 실제 iPhone을 사용한다. 별도 성능 SLA
 
 `find3InfiniteOptions`에 기존 인증 옵션·AbortSignal과 응답 검증을 연결한다. 생성 Zod를 확장해
 양의 안전한 정수 ID·한국 날짜·불투명 커서를 검증한다. 기존 client의 responseTransformer에서 parseAsync 결과를 반환해
-검증된 number 모델을 캐시에 저장한다. 서버 순서를 유지하고 id 중복은 첫 항목만 남긴다.
-`nextCursor=null` 종료, 반복 커서 추가 요청 차단, 잘못된 커서는 수동 첫 페이지 재조회로 복구한다.
+생성 SDK의 number 모델을 캐시에 저장하고 서버 순서를 그대로 표시한다.
+`nextCursor=null`에서 종료하고, 첫 페이지를 수동 재조회할 수 있다.
 갱신 성공 후 첫 페이지부터 다시 시작하며 실패하면 기존 목록을 유지한다. 계정 경계는 기존
 업무 캐시 정리를 재사용한다. MSW는 개발·테스트에서만 연결한다.
 완료: 모델·query·401·커서·계정 경합 테스트와 check, 데이터 계약 리뷰.

@@ -132,11 +132,10 @@ function readTabsParams(params: unknown): TabsState {
 }
 
 export function AlertsActivity() {
-  const { empty } = useActivityParams<'Alerts'>();
   return (
     <ActivityScreen title="알림">
       <TabsLayout activeTab={null}>
-        <AlertsPage showEmpty={empty === 'true'} />
+        <AlertsPage />
       </TabsLayout>
     </ActivityScreen>
   );
