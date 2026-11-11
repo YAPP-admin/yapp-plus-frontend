@@ -405,7 +405,6 @@ export function TeamGuideSheet({
               width={337}
               height={158}
               className={teamGraphicImage}
-              priority
             />
           </div>
 

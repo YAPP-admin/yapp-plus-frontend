@@ -39,7 +39,7 @@ export function TabsHeader({ activeTab }: TabsHeaderProps) {
         className={homeHeader}
       >
         <TabLink tab="home" className={logoLink} aria-label="YAPP 홈">
-          <Image src="/images/home/yapp-logo.svg" alt="YAPP" width={80} height={30} priority />
+          <Image src="/images/home/yapp-logo.svg" alt="YAPP" width={80} height={30} />
         </TabLink>
         <ActivityLink
           activityName="Alerts"

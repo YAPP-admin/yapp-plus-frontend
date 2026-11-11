@@ -4,12 +4,10 @@ import type { ImgHTMLAttributes } from 'react';
 export function Image({
   alt,
   fill,
-  priority: _priority,
   unoptimized: _unoptimized,
   ...props
 }: ImgHTMLAttributes<HTMLImageElement> & {
   fill?: boolean;
-  priority?: boolean;
   unoptimized?: boolean;
 }) {
   const style = fill ? { ...props.style, width: '100%', height: '100%' } : props.style;
