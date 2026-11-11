@@ -40,7 +40,13 @@ export function TeamAttendanceErrorPage() {
         </section>
 
         <section className={graphicSection} aria-hidden="true">
-          <Image src="/images/notices/graphic-error.svg" alt="" width={350} height={170} priority />
+          <Image
+            src="/images/notices/graphic-error.svg"
+            alt=""
+            width={350}
+            height={170}
+            fetchPriority="high"
+          />
         </section>
       </main>
 

@@ -149,7 +149,7 @@ function AttendanceContent() {
 
         {isNone ? (
           <div className={emptyContainer}>
-            <Image src="/images/my/attendance-empty.svg" alt="" width={90} height={74} priority />
+            <Image src="/images/my/attendance-empty.svg" alt="" width={90} height={74} />
             <p className={emptyText}>아직 출석 내역이 없어요</p>
           </div>
         ) : (
@@ -220,7 +220,7 @@ function AbsenceWarning() {
       )}
       {showWarning && (
         <HStack mt="x2_5" className={warningBanner} role="alert">
-          <Image src="/images/my/info.svg" alt="" width={18} height={18} priority />
+          <Image src="/images/my/info.svg" alt="" width={18} height={18} />
           <p className={warningText}>10번 이상 결석하면 재적처리 될 수 있어요. </p>
         </HStack>
       )}
