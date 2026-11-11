@@ -119,6 +119,12 @@ import '@seed-design/css/base.css';
 import '@yapp-plus/ui/styles';
 ```
 
+## Modern Web Guidance
+
+웹 UI·CSS·클라이언트 로직 작업은 [Modern Web Guidance 사용법](./docs/modern-web-guidance.md)에 따라
+관련 가이드를 먼저 조회합니다. 공식 스킬은 Codex와 Claude Code가 공유하며, 저장소 설정과 CLI 버전은
+`modern-web-guidance@1.0.0`으로 고정합니다.
+
 기본 디자인 토큰과 전역 reset은 `packages/ui`가 관리합니다. 패키지의 일반 진입점을 가져오는
 것만으로 전역 스타일이 적용되지는 않습니다. web의 `global.css.ts`는 스타일을 다시 선언하는
 파일이 아니라 Vite 진입점에서 공용 스타일을 연결하는 파일입니다.

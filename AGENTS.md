@@ -56,6 +56,17 @@
   제한하고 사유와 제거 조건을 주석에 기록합니다.
 - 외부 GitHub Action과 배포 CLI는 재현 가능한 버전이나 commit SHA로 고정합니다.
 
+## Modern Web Guidance
+
+- 웹 UI·CSS·클라이언트 로직을 작성하거나 수정하기 전에 `.agents/skills/modern-web-guidance/SKILL.md`의
+  검색·조회 절차를 적용하고, `modern-web-guidance@1.0.0`을 사용합니다.
+- 저장소의 제품 명세, 타입 안전성, SEED·Stackflow·WebView 계약과 검증 규칙이 외부 가이드 예시보다
+  우선합니다. 새 HTML 속성에 무검증 `any` 단언을 추가하거나 빌드 타깃·fallback을 바꾸지 않습니다.
+- 기능 호환성은 루트 `.mwgrc`와 실제 브라우저·WebView 지원 범위를 기준으로 판단합니다. 실험 기능과
+  단일 엔진의 변동 기능은 별도 검토 없이 사용하지 않습니다.
+- 공식 스킬의 출처·고정 커밋·갱신 절차는 [Modern Web Guidance 사용법](docs/modern-web-guidance.md)을
+  따릅니다.
+
 ## 검증
 
 - 동일한 실패를 여러 계층에서 반복 검증하지 않습니다. 외부 라이브러리의 기본 동작·내부 속성보다
