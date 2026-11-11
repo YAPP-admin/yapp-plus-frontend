@@ -622,6 +622,7 @@ export const teamCheckIcon = style({
   width: '16px',
   height: '16px',
   flexShrink: 0,
+  color: vars.$color.fg.brand,
 });
 
 export const teamGraphicWrap = style({
