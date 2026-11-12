@@ -11,6 +11,7 @@
 - `expo-image-picker`, `expo-image-manipulator`, `expo-file-system`을 앱에 직접 추가한다. 선택·촬영·HEIC를 JPEG로 변환하고 이번 작업이 생성한 캐시만 지운다.
 - `packages/app-bridge/src/photo.ts`, `web-photo.ts`에 입력·응답 스키마와 web 호출을 둔다. native는 JPEG Base64만 반환하고 URI·EXIF·OS 오류를 전달하지 않는다.
 - `apps/mobile/src/photo/`는 권한·picker·변환·캐시 정리를 담당한다. runtime을 주입해 취소·권한·busy·변환을 가까운 테스트에서 검증한다.
+- 중복 요청은 대기시키지 않고 즉시 거절한다. 실행 제어 패턴 비교·선택 근거·흐름도는 [사진 작업 설계](photo-operation-design.md)를 따른다.
 - `apps/web/src/features/team-attendance/`는 대상·사진 검증, SHA-256/Base64, presign → S3 PUT → submit, 오류·수명을 담당한다. 페이지는 해당 feature의 공개 진입점만 사용한다.
 - Base64의 최대 10MiB 바이너리 상한은 13,981,016자다. Blob과 object URL은 화면 수명에만 보관하고 mutation/query 캐시에 사진 바이트를 저장하지 않는다.
 - PUT은 `credentials: 'omit'`, `redirect: 'error'`, 응답 `signedHeaders`로 수행한다. 기존 native 인증 옵션으로 presign·submit만 호출한다.
