@@ -23,7 +23,7 @@ const config: ExpoConfig = {
   owner: 'yapp-plus-official',
   // Expo Router의 앱 URL과 iOS Bundle ID를 같은 안정 식별자로 유지합니다.
   scheme: 'org.yapp.yappplus',
-  version: '1.0.3',
+  version: '1.0.4',
   runtimeVersion: {
     policy: 'appVersion',
   },
