@@ -42,7 +42,8 @@ const config: ExpoConfig = {
   owner: 'yapp-plus-official',
   // Expo Router의 앱 URL과 iOS Bundle ID를 같은 안정 식별자로 유지합니다.
   scheme: 'org.yapp.yappplus',
-  version: '1.0.6',
+  // 사진 네이티브 모듈을 포함한 새 바이너리와 OTA runtime을 함께 구분한다.
+  version: '1.0.7',
   runtimeVersion: {
     policy: 'appVersion',
   },
@@ -76,6 +77,14 @@ const config: ExpoConfig = {
         ios: {
           useFrameworks: 'dynamic',
         },
+      },
+    ],
+    [
+      'expo-image-picker',
+      {
+        photosPermission: '팀 세션 인증 사진을 선택하기 위해 사진을 사용합니다.',
+        cameraPermission: '팀 세션 인증 사진을 촬영하기 위해 카메라를 사용합니다.',
+        microphonePermission: false,
       },
     ],
     [
