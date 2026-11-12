@@ -2,6 +2,7 @@ import { linkBridge } from '@webview-bridge/web';
 
 import { createWebLocationActions } from './web-location';
 import { createWebNotificationActions } from './web-notifications';
+import { createWebPhotoActions } from './web-photo';
 
 import {
   INITIAL_SAFE_AREA_INSETS,
@@ -182,3 +183,5 @@ export const { getLocationPermission, requestCurrentLocation, openAppSettings } 
 /** 알림 설정 응답은 검증 후 반환하며 구버전 앱·브라우저는 UNSUPPORTED로 처리합니다. */
 export const { getNotificationSettings, setNotificationEnabled, requestNotificationPermission } =
   createWebNotificationActions(getAppBridge);
+/** native 사진 준비를 요청한다. 성공은 업로드 완료를 뜻하지 않는다. */
+export const { pickAttendancePhoto } = createWebPhotoActions(getAppBridge);
