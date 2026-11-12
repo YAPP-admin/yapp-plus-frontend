@@ -93,7 +93,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p "$RUNNER_TEMP/mobile-policy"
-          for file in native-snapshot.ts delivery-policy.ts; do
+          for file in native-snapshot.ts native-workspace-config.ts delivery-policy.ts; do
             source="base/apps/mobile/scripts/$file"
             if [ ! -f "$source" ]; then
               # 최초 도입 PR만 후보 정책을 사용합니다. 이후 PR은 base 정책으로 검사합니다.
@@ -111,6 +111,7 @@ jobs:
             (cd "$tree" && pnpm install --frozen-lockfile --ignore-scripts)
             mkdir -p "$tree/apps/mobile/scripts"
             cp "$RUNNER_TEMP/mobile-policy/native-snapshot.ts" "$tree/apps/mobile/scripts/.native-check.ts"
+            cp "$RUNNER_TEMP/mobile-policy/native-workspace-config.ts" "$tree/apps/mobile/scripts/native-workspace-config.ts"
             node "$tree/apps/mobile/scripts/.native-check.ts" "$tree" "$RUNNER_TEMP/$tree-native.json"
           done
       # 지문 계산은 Expo에 맡기고, 네이티브 변경 시 앱 버전 증가라는 프로젝트 규칙만 비교합니다.

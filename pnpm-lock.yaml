@@ -461,6 +461,9 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.0.0(@types/node@24.13.3)(happy-dom@20.14.0)(msw@2.15.0(@types/node@24.13.3)(typescript@6.0.3))(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(terser@5.51.2)(yaml@2.9.0))
+      yaml:
+        specifier: 2.9.0
+        version: 2.9.0
 
   apps/storybook:
     devDependencies:
@@ -14809,8 +14812,7 @@ snapshots:
 
   yallist@3.1.1: {}
 
-  yaml@2.9.0:
-    optional: true
+  yaml@2.9.0: {}
 
   yargs-parser@21.1.1: {}
 

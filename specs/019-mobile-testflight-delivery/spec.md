@@ -18,6 +18,8 @@
 - **FR-002**: 마지막 testflight iOS 게시 SHA부터 검증된 main SHA까지 Turbo --affected로 모바일 영향을 판단한다. 영향이 없을 때만 OTA를 생략한다. 비교 기준·조회·판정 오류 시 기존처럼 게시한다. 빌드 존재·설치 여부로 분기하지 않는다.
 - **FR-003**: appVersion 정책을 유지한다. PR의 네이티브 변경 시 버전 증가를 요구하고 감소를 거부한다.
 - **FR-004**: Expo Fingerprint와 제외된 빌드 입력의 digest를 사용한다. 수집 불완전·OS 불일치는 실패한다.
+  catalog 정의 자체는 보조 digest에서 제외하고 설치된 네이티브 구성은 Expo Fingerprint로 확인한다.
+  catalog 외 workspace 설치·빌드 정책은 계속 검사하며, YAML 해석 실패는 검사를 중단한다.
 - **FR-005**: 빌드·제출은 수동이다. 클라우드 빌드, 자동 IPA 재사용·활성화 상태 관리를 추가하지 않는다.
 - **FR-006**: 채널은 testflight, 플랫폼은 ios, OTA 환경은 production이다. 공개 WebView URL을 일치시킨다.
 - **FR-007**: 실행을 직렬화하고 게시 직전 최신 main을 재확인한다. 메시지에 소스 SHA·실행 ID를 남긴다.

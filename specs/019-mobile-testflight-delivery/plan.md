@@ -11,7 +11,7 @@
 - 모든 PR에서 네이티브 검사를 실행한다. Turbo affected·경로 필터·Verify 완료 대기 조건은 사용하지 않는다.
 - Expo Doctor도 CI마다 실행하며 경로 필터용 pull-requests 권한은 제거한다.
 - 비밀 없는 Linux/macOS job이 base/merge의 공식 Expo 지문을 직접 계산한다. 이전 지문 캐시에 의존하지 않는다.
-- 지문 수집과 앱 버전 규칙 두 파일만 유지한다. 별도 상태 머신·기준 파일·배포 래퍼를 만들지 않는다.
+- 지문 수집·workspace 설정 해석·앱 버전 규칙을 분리한다. 별도 상태 머신·기준 파일·배포 래퍼를 만들지 않는다.
 - base의 검사 코드를 사용하며 최초 도입만 후보 코드의 리뷰가 필요하다. 수집 실패는 호환으로 해석하지 않는다.
 - build·cli·root package·workspace·도구·patch 입력은 보수적으로 digest에 포함한다. submit 전용 변경은 제외한다.
 - main: 성공 CI 출처·최신 SHA를 확인하고 공통 setup-eas Action에서 pnpm으로 고정 EAS CLI를 준비해 `eas update`를 실행한다.
@@ -34,6 +34,17 @@ Rollback은 후속 테스트로 남긴다. 테스트 일정·대상 runtime·복
 명령과 운영 절차는 [모바일 README](../../apps/mobile/README.md)에 둔다.
 
 ## 헌법 점검
+
+### catalog 변경의 네이티브 영향 판정 보정
+
+React 통일 전후 실제 Expo fingerprint가 같고 보조 digest만 달라지는 사례를 확인했다.
+workspace YAML에서 catalog·catalogs만 제외하고 나머지 설정은 정규화하여 hash한다.
+YAML을 정규식으로 편집하지 않고 기존 lockfile에 있는 yaml 2.9.0을 명시적 도구 의존성으로 사용한다.
+allowBuilds·overrides·patchedDependencies 등 다른 키와 수집 실패 차단은 유지한다.
+웹 catalog만 바뀌는 경우·빌드 정책 변경·잘못된 YAML의 회귀 테스트를 추가하고,
+실제 base/React checkout에서 Expo fingerprint와 보조 digest를 비교한다.
+base 검사기 신뢰 규칙은 유지하므로 정책 변경을 먼저 반영하고 React PR의 base를 갱신한다.
+복구는 검사기·helper 복사·도구 의존성을 함께 되돌려 기존 보수적 판정으로 돌아간다.
 
 사용자가 설치 확인 게이트와 자동 빌드 분기를 제거하는 정책 변경을 승인했다. 로컬 빌드와 appVersion은 유지한다.
 기본 check·build·expo:doctor를 실행하고 캐시와 새 실행을 구분한다. 각 리뷰는 800줄 미만으로 분리한다.
