@@ -6,6 +6,7 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { getConfig } from 'expo/config';
 import { createFingerprintAsync } from 'expo/fingerprint';
+import { nativeWorkspaceConfig } from './native-workspace-config.ts';
 
 // 검사기는 base에서 가져오고, 각 checkout의 의존성과 Expo 설정은 격리 설치합니다.
 const root = resolve(process.argv[2] ?? '.');
@@ -70,10 +71,11 @@ const files = execFileSync(
   .filter(Boolean)
   .toSorted();
 for (const file of files) {
+  const source = readFileSync(resolve(root, file), 'utf8');
   digest
     .update(file)
     .update('\0')
-    .update(readFileSync(resolve(root, file)))
+    .update(file === 'pnpm-workspace.yaml' ? nativeWorkspaceConfig(source) : source)
     .update('\0');
 }
 writeFileSync(

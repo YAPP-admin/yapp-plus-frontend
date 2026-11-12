@@ -53,6 +53,7 @@
     "@yapp-plus/config": "workspace:*",
     "expo-doctor": "catalog:",
     "typescript": "catalog:",
-    "vitest": "catalog:"
+    "vitest": "catalog:",
+    "yaml": "2.9.0"
   }
 }

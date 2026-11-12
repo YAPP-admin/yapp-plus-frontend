@@ -208,3 +208,29 @@ SC-001은 R005~~R009, SC-002는 R010~~R012, SC-003~~SC-005는 R013~~R018로 검�
 
 - 최종 변경 기준 check 19개 작업과 build 3개 작업을 모두 캐시 없이 실행해 통과했다. 모바일 150개 테스트에 OTA 영향 판정 회귀 25개가 포함된다.
 - actionlint와 diff 공백 검사 통과. 원격 Actions에서의 실제 게시·생략은 아직 미검증이다. 이 검증을 위해 OTA나 빌드·제출을 실행하지 않았다.
+
+## 2026-11-12 — catalog 변경의 네이티브 영향 판정 보정
+
+React 통일 PR #429의 버전 증가 필요성을 재검토했다. main 73f8a0c2와 React 통일 355252cf는
+앱 버전이 모두 1.0.3이고 Expo fingerprint도 b90dc4887e4b367d07d9d6edd77bfd08fee2686d로 같다.
+기존 보조 digest가 pnpm-workspace.yaml 전체를 읽어 웹 catalog 변경을 네이티브 변경으로 판단했다.
+
+catalog·catalogs만 YAML 객체에서 제외하며 다른 설치 정책은 보존하도록 수정했다.
+yaml 2.9.0을 모바일 검사 도구의 개발 의존성으로 명시했다. Node에서 실행하는 검사 helper의
+.ts import를 타입 검사할 수 있도록 allowImportingTsExtensions를 사용한다.
+base 검사기를 사용하는 규칙은 유지하고 helper도 같은 방식으로 복사한다.
+
+- 수정한 검사기로 main과 React 통일을 비교하면 fingerprint와 보조 digest가 모두 같다.
+  compareNative 결과는 nativeChanged=false, needsBuild=false다.
+- 검사기 수정만 적용한 main을 기존 검사기로 비교해도 같은 결과다. 검사기 도입 자체에도
+  앱 버전 증가가 필요하지 않다.
+- iOS supportsTablet 설정을 임시 변경해 fingerprint가 달라지고 같은 앱 버전이 거절되는 것을
+  확인한 뒤 원래 설정으로 복구했다. catalog 외 설정과 잘못된 YAML은 12개 회귀로 검증했다.
+- check 통과: 모바일 lint 새 실행, 나머지 6개 캐시. 모바일·웹 typecheck 새 실행, 5개 캐시.
+  모바일 169개·웹 419개 테스트 새 실행, 다른 테스트 작업 3개 캐시.
+- build 통과: 웹 새 실행, 관리자·Storybook 캐시. expo:doctor 20/20 통과.
+
+검사기 수정은 main 기반 .context/native-policy-base에 미커밋 상태로 분리했다.
+React PR 작업 폴더에는 앱 버전을 1.0.3으로 되돌리는 변경만 남겼다. 적용 순서는 검사기 PR의
+main 병합 후 React PR의 base 갱신·버전 증가 제거다. 같은 PR에서 base 검사기를 우회하지 않는다.
+원격 PR 갱신·배포·실기기 검증은 수행하지 않았다.
