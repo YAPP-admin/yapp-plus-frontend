@@ -12,7 +12,7 @@
 
 독립 검증: 제출 API 없이 native 사진을 웹에 표시·교체·취소한다.
 
-PR 크기 제한을 위해 2a 공용 계약, 2b native·RPC 연결, 2c 개발 화면 연결로 나누어 리뷰한다. 현재 브랜치는 2a까지 포함하며, 후속 브랜치·PR 분리는 별도 승인 후 진행한다.
+PR 크기 제한을 위해 2a 공용 계약, 2b native·RPC 연결, 2c 개발 화면 연결로 나누어 리뷰한다. 사용자 승인으로 2a 브랜치를 최신 main에 rebase하고 2b 브랜치 `DongjaJ/team-photo-native`를 분리했다. 2b는 2a를 base로 검토한다. 최신 main rebase 후 2a 기준 커밋은 `69cafa0c`이며 기존 2a 브랜치는 이전 이력을 유지한다. PR 생성 전 base 브랜치 정렬이 필요하다.
 
 ### 2a — 공용 사진 계약
 
@@ -21,10 +21,10 @@ PR 크기 제한을 위해 2a 공용 계약, 2b native·RPC 연결, 2c 개발 �
 
 ### 2b — native·RPC 연결
 
-- [ ] T006 [US1] `packages/app-bridge/src/web-photo.ts`, `web.ts`, `index.ts`에 웹 호출과 결과 검증을 연결한다.
-- [ ] T007 [US1] `apps/mobile/package.json`, `app.config.ts`, `pnpm-lock.yaml`에 사진 의존성·권한 설정을 추가한다.
-- [ ] T008 [US1] `apps/mobile/src/photo/actions.ts`, `actions.test.ts`에 취소·권한·busy·변환·정리 계약을 구현한다.
-- [ ] T009 [US1] `apps/mobile/src/photo/native-photo-runtime.ts`, `src/bridge.ts`에 picker·변환·임시 파일 정리를 연결한다.
+- [x] T006 [US1] `packages/app-bridge/src/web-photo.ts`, `web.ts`, `index.ts`에 웹 호출과 결과 검증을 연결한다.
+- [x] T007 [US1] `apps/mobile/package.json`, `app.config.ts`, `pnpm-lock.yaml`에 사진 의존성·권한 설정을 추가한다.
+- [x] T008 [US1] `apps/mobile/src/photo/actions.ts`, `actions.test.ts`에 취소·권한·busy·변환·정리 계약을 구현한다.
+- [x] T009 [US1] `apps/mobile/src/photo/native-photo-runtime.ts`, `src/bridge.ts`에 picker·변환·임시 파일 정리를 연결한다.
 
 ### 2c — 개발 화면 연결과 실기기 검증
 
