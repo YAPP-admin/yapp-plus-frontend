@@ -19,6 +19,7 @@ import { authActions } from './auth/native-auth-runtime';
 import { locationActions } from './location/native-location-runtime';
 import { PushNotificationState } from './notifications/push-notification-state';
 import { notificationSettingsActions } from './notifications/native-registration-sync';
+import { photoActions } from './photo/native-photo-runtime';
 
 const initialSafeAreaInsets = normalizeSafeAreaInsets(
   initialWindowMetrics?.insets ?? INITIAL_SAFE_AREA_INSETS,
@@ -67,6 +68,7 @@ export const nativeAppBridge = bridge<AppBridgeState>(({ get, set }) => ({
   getNotificationSettings: () => notificationSettingsActions.getNotificationSettings(),
   setNotificationEnabled: (input) => notificationSettingsActions.setNotificationEnabled(input),
   requestNotificationPermission: () => notificationSettingsActions.requestNotificationPermission(),
+  pickAttendancePhoto: (input) => photoActions.pickAttendancePhoto(input),
 }));
 
 export const { WebView: BridgeWebView } = createWebView({

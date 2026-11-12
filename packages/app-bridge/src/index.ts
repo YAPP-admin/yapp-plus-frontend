@@ -10,6 +10,7 @@ import type {
 } from './notifications';
 
 export * from './notifications';
+import type { PickAttendancePhotoInput, PickAttendancePhotoResult } from './photo';
 
 export {
   ATTENDANCE_PHOTO_MAX_BYTES,
@@ -185,6 +186,8 @@ export type AppBridgeState = {
   ) => Promise<NotificationSettingsResult>;
   /** OS 권한만 요청하며 저장된 수신 선택은 변경하지 않습니다. */
   requestNotificationPermission: () => Promise<NotificationPermissionResult>;
+  /** 사용자 선택으로 사진을 준비한다. 업로드·출석 제출은 수행하지 않는다. */
+  pickAttendancePhoto: (input: PickAttendancePhotoInput) => Promise<PickAttendancePhotoResult>;
 };
 
 export type AppBridgeStore = BridgeStore<AppBridgeState>;
