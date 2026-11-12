@@ -12,6 +12,19 @@ import type {
 export * from './notifications';
 
 export {
+  ATTENDANCE_PHOTO_MAX_BYTES,
+  ATTENDANCE_PHOTO_MAX_DIMENSION,
+  ATTENDANCE_PHOTO_JPEG_QUALITY,
+  attendancePhotoSchema,
+  pickAttendancePhotoInputSchema,
+  pickAttendancePhotoResultSchema,
+  type PickAttendancePhotoInput,
+  type AttendancePhoto,
+  type AttendancePhotoFailure,
+  type PickAttendancePhotoResult,
+} from './photo';
+
+export {
   locationPermissionSchema,
   locationSampleSchema,
   locationPermissionResultSchema,

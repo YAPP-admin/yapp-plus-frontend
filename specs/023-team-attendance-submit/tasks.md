@@ -12,12 +12,22 @@
 
 독립 검증: 제출 API 없이 native 사진을 웹에 표시·교체·취소한다.
 
-- [ ] T004 최신 main의 mobile 변경과 Modern Web Guidance를 기준으로 구현 전 차이를 확인한다.
-- [ ] T005 [US1] `packages/app-bridge/src/photo.ts`, `photo.test.ts`에 RPC·결과·크기 검증을 구현한다.
+PR 크기 제한을 위해 2a 공용 계약, 2b native·RPC 연결, 2c 개발 화면 연결로 나누어 리뷰한다. 현재 브랜치는 2a까지 포함하며, 후속 브랜치·PR 분리는 별도 승인 후 진행한다.
+
+### 2a — 공용 사진 계약
+
+- [x] T004 최신 main의 mobile 변경과 Modern Web Guidance를 기준으로 구현 전 차이를 확인한다. 공용 스키마에는 웹 플랫폼 가이드를 적용할 항목이 없으며 UI 구현 시 검색한다.
+- [x] T005 [US1] `packages/app-bridge/src/photo.ts`, `photo.test.ts`에 RPC·결과·크기 검증을 구현한다. 공개 스키마·타입만 추가하고 실제 RPC 등록은 2b에서 처리한다.
+
+### 2b — native·RPC 연결
+
 - [ ] T006 [US1] `packages/app-bridge/src/web-photo.ts`, `web.ts`, `index.ts`에 웹 호출과 결과 검증을 연결한다.
 - [ ] T007 [US1] `apps/mobile/package.json`, `app.config.ts`, `pnpm-lock.yaml`에 사진 의존성·권한 설정을 추가한다.
 - [ ] T008 [US1] `apps/mobile/src/photo/actions.ts`, `actions.test.ts`에 취소·권한·busy·변환·정리 계약을 구현한다.
 - [ ] T009 [US1] `apps/mobile/src/photo/native-photo-runtime.ts`, `src/bridge.ts`에 picker·변환·임시 파일 정리를 연결한다.
+
+### 2c — 개발 화면 연결과 실기기 검증
+
 - [ ] T010 [US1] `apps/web/src/pages/team-attendance-upload/`에 개발 사진 입력·미리보기·이탈 정리와 테스트를 연결한다.
 - [ ] T011 [US1] `validation.md`에 품질 게이트·development build·실기기 결과를 기록하고 리뷰받는다.
 
