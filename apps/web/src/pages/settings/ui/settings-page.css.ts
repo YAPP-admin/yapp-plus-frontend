@@ -78,7 +78,7 @@ export const switchControl = style({
       background: vars.$color.bg.brandSolid,
     },
     '&[data-checked="false"]': {
-      background: vars.$color.bg.neutralWeak,
+      background: '#DCDEE3',
     },
   },
 });
@@ -88,8 +88,8 @@ export const switchThumb = style({
   width: '24px',
   height: '24px',
   borderRadius: vars.$radius.full,
-  background: vars.$color.palette.staticWhite,
-  boxShadow: vars.$shadow.s1,
+  background: '#FFFFFF',
+  boxShadow: '0 1px 3px rgba(0, 0, 0, 0.15)',
   transition: 'transform 0.2s ease',
   selectors: {
     [`${switchControl}[data-checked="true"] &`]: {
@@ -116,7 +116,7 @@ export const logoutButton = style({
   width: '100%',
   padding: '16px 20px',
   borderRadius: '12px',
-  border: `1px solid ${vars.$color.stroke.neutralWeak}`,
+  border: '1px solid #DCDEE3',
   background: vars.$color.bg.layerDefault,
   color: vars.$color.fg.neutral,
   fontSize: vars.$fontSize.t6,
@@ -134,7 +134,7 @@ export const logoutButton = style({
 export const dialogBackdrop = style({
   position: 'fixed',
   inset: 0,
-  background: vars.$color.bg.overlay,
+  background: 'rgba(0, 0, 0, 0.46)',
   zIndex: 100,
 });
 
@@ -163,7 +163,7 @@ export const dialogContent = style({
   margin: '0 auto',
   boxSizing: 'border-box',
   gap: '16px',
-  boxShadow: vars.$shadow.s2,
+  boxShadow: '0 8px 32px rgba(0, 0, 0, 0.16)',
 });
 
 export const dialogHeader = style({
@@ -213,20 +213,20 @@ export const dialogCancelButton = style({
   display: 'flex',
   alignItems: 'center',
   justifyContent: 'center',
-  background: vars.$color.bg.neutralMuted,
+  background: '#F3F4F5',
   borderRadius: '8px',
   border: 'none',
   fontSize: '14px',
   lineHeight: '19px',
   fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.neutralSubtle,
+  color: '#868B94',
   cursor: 'pointer',
   padding: 0,
   whiteSpace: 'nowrap',
   boxSizing: 'border-box',
   transition: 'background-color 0.15s ease',
   ':active': {
-    background: vars.$color.bg.neutralWeakPressed,
+    background: '#E5E7EB',
   },
 });
 
@@ -243,7 +243,7 @@ export const dialogConfirmButton = style({
   fontSize: '14px',
   lineHeight: '19px',
   fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.onBrandSolid,
+  color: '#FFFFFF',
   cursor: 'pointer',
   padding: 0,
   whiteSpace: 'nowrap',
@@ -252,4 +252,13 @@ export const dialogConfirmButton = style({
   ':active': {
     opacity: 0.9,
   },
+});
+
+/** 선택과 별개인 권한·실패 상태를 스위치 설명으로 표시합니다. */
+export const notificationHint = style({
+  margin: 0,
+  paddingBottom: vars.$dimension.x3,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  color: vars.$color.fg.neutralMuted,
 });
