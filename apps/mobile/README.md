@@ -209,3 +209,6 @@ development build와 TestFlight에서 로그인, 세션 복원·갱신, 로그�
 - [EAS 빌드 프로필](https://docs.expo.dev/build/eas-json/)
 - [EAS Update runtime version](https://docs.expo.dev/eas-update/runtime-versions/)
 - [Expo App version 관리](https://docs.expo.dev/build-reference/app-versions/)
+
+Firebase app 27.1.1 기반을 추가했다. 네이티브 의존성이 달라 앱 runtime을 1.0.5로 구분한다.
+실제 푸시 설정·등록·수신 연결은 후속 PR에서 추가한다.
