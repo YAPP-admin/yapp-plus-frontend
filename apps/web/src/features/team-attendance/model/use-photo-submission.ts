@@ -2,6 +2,7 @@
 import { useMutation } from '@tanstack/react-query';
 import { useRef } from 'react';
 import ky from 'ky';
+import { ApiError } from '@yapp-plus/api';
 import {
   presignMutation,
   submitMutation,
@@ -90,11 +91,8 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
           afterResponse: [
             ...(apiOptions.kyOptions?.hooks?.afterResponse ?? []),
             ({ response }) => {
-              // 생성 options는 응답 본문만 반환하므로 HTTP 접수 판정은 응답 훅에서 한다.
-              if (TEAM_PHOTO_ERROR_MESSAGE_BY_HTTP_STATUS[response.status]) {
-                throw createSubmissionFailedError(response.status);
-              }
-              if (response.status !== 201) {
+              // HTTP 실패는 공통 ApiError로 처리하고, 성공 응답의 접수 상태만 확인한다.
+              if (response.ok && response.status !== 201) {
                 throw createSubmissionUncertainError();
               }
             },
@@ -166,6 +164,10 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
       };
     } catch (error) {
       // 최종 POST 이후의 응답 유실은 서버 미접수를 뜻하지 않는다.
+      if (error instanceof ApiError && TEAM_PHOTO_ERROR_MESSAGE_BY_HTTP_STATUS[error.status]) {
+        throw createSubmissionFailedError(error.status);
+      }
+
       throw error instanceof SubmissionError ? error : createSubmissionUncertainError();
     } finally {
       presign.reset();
