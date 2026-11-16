@@ -53,6 +53,22 @@ export type CreateSessionRequest = {
   startTime: string;
   endTime: string;
   type: 'REGULAR' | 'TEAM';
+  /**
+   * REGULAR 필수 도로명주소, TEAM은 null. 최대 255자
+   */
+  roadAddress?: string | null;
+  /**
+   * REGULAR 필수 위도(-90~90). 저장 시 소수점 7자리 HALF_UP 반올림, TEAM은 null
+   */
+  latitude?: number | null;
+  /**
+   * REGULAR 필수 경도(-180~180). 저장 시 소수점 7자리 HALF_UP 반올림, TEAM은 null
+   */
+  longitude?: number | null;
+  /**
+   * REGULAR 선택 상세주소, TEAM은 null. 최대 255자
+   */
+  detailAddress?: string | null;
 };
 
 export type AdminMemberUpdateRequest = {
@@ -227,7 +243,6 @@ export type ErrorResponse = {
     | 'ROSTER_VALIDATION_FAILED'
     | 'SESSION_DATE_CONFLICT'
     | 'SESSION_DELETE_CONFLICT'
-    | 'SESSION_MANAGEMENT_DISABLED'
     | 'SESSION_NOT_FOUND'
     | 'SESSION_UPDATE_CONFLICT'
     | 'STAFF_AUTHENTICATION_FAILED'
@@ -713,6 +728,22 @@ export type CurrentWeekSessionDetailResponse = {
    * 출석 UI 상태. 현재 기수 PLAYER 아님, 시간 전/종료 후, 출석 가능
    */
   attendanceStatus: 'NOT_ELIGIBLE' | 'NOT_OPEN' | 'AVAILABLE';
+  /**
+   * 도로명주소. legacy/TEAM이면 null
+   */
+  roadAddress: string | null;
+  /**
+   * 위도. legacy/TEAM이면 null
+   */
+  latitude: number | null;
+  /**
+   * 경도. legacy/TEAM이면 null
+   */
+  longitude: number | null;
+  /**
+   * 상세주소. 미입력/legacy/TEAM이면 null
+   */
+  detailAddress: string | null;
 };
 
 export type CurrentWeekSessionResponse = {
@@ -794,6 +825,22 @@ export type CurrentGenerationSessionItemResponse = {
   startTime: string;
   endTime: string;
   type: 'REGULAR' | 'TEAM';
+  /**
+   * 도로명주소. legacy/TEAM이면 null
+   */
+  roadAddress: string | null;
+  /**
+   * 위도. legacy/TEAM이면 null
+   */
+  latitude: number | null;
+  /**
+   * 경도. legacy/TEAM이면 null
+   */
+  longitude: number | null;
+  /**
+   * 상세주소. 미입력/legacy/TEAM이면 null
+   */
+  detailAddress: string | null;
 };
 
 export type CurrentGenerationSessionsResponse = {
@@ -942,6 +989,22 @@ export type AdminSessionResponse = {
   endTime: string;
   type: 'REGULAR' | 'TEAM';
   attendanceSummary: AttendanceSummaryResponse;
+  /**
+   * 도로명주소. legacy/TEAM이면 null
+   */
+  roadAddress: string | null;
+  /**
+   * 위도. legacy/TEAM이면 null
+   */
+  latitude: number | null;
+  /**
+   * 경도. legacy/TEAM이면 null
+   */
+  longitude: number | null;
+  /**
+   * 상세주소. 미입력/legacy/TEAM이면 null
+   */
+  detailAddress: string | null;
 };
 
 export type AttendanceSummaryResponse = {
@@ -1451,10 +1514,6 @@ export type Update1Errors = {
    * SESSION_UPDATE_CONFLICT|SESSION_DATE_CONFLICT
    */
   409: ErrorResponse;
-  /**
-   * SESSION_MANAGEMENT_DISABLED
-   */
-  503: ErrorResponse;
 };
 
 export type Update1Error = Update1Errors[keyof Update1Errors];
@@ -2337,10 +2396,6 @@ export type Create2Errors = {
    * SESSION_DATE_CONFLICT
    */
   409: ErrorResponse;
-  /**
-   * SESSION_MANAGEMENT_DISABLED
-   */
-  503: ErrorResponse;
 };
 
 export type Create2Error = Create2Errors[keyof Create2Errors];

@@ -109,6 +109,10 @@ export const zCreateSessionRequest = z.object({
   startTime: z.string(),
   endTime: z.string(),
   type: z.enum(['REGULAR', 'TEAM']),
+  roadAddress: z.string().nullish(),
+  latitude: z.number().nullish(),
+  longitude: z.number().nullish(),
+  detailAddress: z.string().nullish(),
 });
 
 export const zAdminMemberUpdateRequest = z.object({
@@ -341,7 +345,6 @@ export const zErrorResponse = z.object({
     'ROSTER_VALIDATION_FAILED',
     'SESSION_DATE_CONFLICT',
     'SESSION_DELETE_CONFLICT',
-    'SESSION_MANAGEMENT_DISABLED',
     'SESSION_NOT_FOUND',
     'SESSION_UPDATE_CONFLICT',
     'STAFF_AUTHENTICATION_FAILED',
@@ -1046,6 +1049,10 @@ export const zCurrentWeekSessionDetailResponse = z.object({
   startTime: z.string(),
   location: z.string().nullable(),
   attendanceStatus: z.enum(['NOT_ELIGIBLE', 'NOT_OPEN', 'AVAILABLE']),
+  roadAddress: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  detailAddress: z.string().nullable(),
 });
 
 export const zCurrentWeekSessionResponse = z.object({
@@ -1159,6 +1166,10 @@ export const zCurrentGenerationSessionItemResponse = z.object({
   startTime: z.string(),
   endTime: z.string(),
   type: z.enum(['REGULAR', 'TEAM']),
+  roadAddress: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  detailAddress: z.string().nullable(),
 });
 
 export const zCurrentGenerationSessionsResponse = z.object({
@@ -1447,6 +1458,10 @@ export const zAdminSessionResponse = z.object({
   endTime: z.string(),
   type: z.enum(['REGULAR', 'TEAM']),
   attendanceSummary: zAttendanceSummaryResponse,
+  roadAddress: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  detailAddress: z.string().nullable(),
 });
 
 export const zSessionListResponse = z.object({
