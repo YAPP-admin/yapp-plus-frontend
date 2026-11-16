@@ -18,6 +18,10 @@ export const sessions = {
   teamCount: 1,
   sessions: [
     {
+      roadAddress: null,
+      latitude: null,
+      longitude: null,
+      detailAddress: null,
       sessionId: 101,
       name: '정규 세션',
       location: '개발용 교육장',
@@ -34,6 +38,10 @@ export const sessions = {
       },
     },
     {
+      roadAddress: null,
+      latitude: null,
+      longitude: null,
+      detailAddress: null,
       sessionId: 102,
       name: '팀 세션',
       location: null,
@@ -56,6 +64,10 @@ export const currentWeek = {
   weekStartDate: '2026-10-25',
   weekEndDate: '2026-10-31',
   session: {
+    roadAddress: null,
+    latitude: null,
+    longitude: null,
+    detailAddress: null,
     sessionId: 101,
     name: '정규 세션',
     date: '2026-10-31',

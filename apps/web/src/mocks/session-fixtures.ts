@@ -16,6 +16,10 @@ export function createSessionFixtures(now: number) {
   const sunday = koreanTimestamp(today) - dayOfWeek * 86_400_000;
   const dateAt = (day: number) => koreanDateString(sunday + day * 86_400_000);
   const currentSession = {
+    roadAddress: null,
+    latitude: null,
+    longitude: null,
+    detailAddress: null,
     sessionId: 39902,
     name: '정규 세션 — 개발·디자인 교류',
     date: dateAt(6),
@@ -31,6 +35,10 @@ export function createSessionFixtures(now: number) {
       weekStartDate: dateAt(0),
       weekEndDate: dateAt(6),
       session: {
+        roadAddress: null,
+        latitude: null,
+        longitude: null,
+        detailAddress: null,
         sessionId: currentSession.sessionId,
         name: currentSession.name,
         date: currentSession.date,

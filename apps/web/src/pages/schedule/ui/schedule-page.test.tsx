@@ -14,6 +14,10 @@ const response = {
   ...scheduleFixture,
   sessions: [
     {
+      roadAddress: null,
+      latitude: null,
+      longitude: null,
+      detailAddress: null,
       sessionId: 2,
       name: '기획 세션',
       date: '2026-11-07',
@@ -24,6 +28,10 @@ const response = {
       type: 'REGULAR',
     },
     {
+      roadAddress: null,
+      latitude: null,
+      longitude: null,
+      detailAddress: null,
       sessionId: 1,
       name: '팀 세션',
       date: '2026-11-14',
@@ -56,6 +64,10 @@ function renderPage(native = false) {
       status: 'SIGNED_IN',
       session: {
         userId: 1,
+        roadAddress: null,
+        latitude: null,
+        longitude: null,
+        detailAddress: null,
         sessionId: 'test-session',
         tokenVersion: 1,
         accessToken: 'test-token',

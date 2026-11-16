@@ -354,6 +354,18 @@ export const fakeCreateSessionRequest = (options?: Options): CreateSessionReques
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { roadAddress: f.datatype.boolean() ? f.string.sample() : null }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { latitude: f.datatype.boolean() ? f.number.float() : null }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { longitude: f.datatype.boolean() ? f.number.float() : null }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { detailAddress: f.datatype.boolean() ? f.string.sample() : null }),
   };
 };
 
@@ -553,7 +565,6 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'ROSTER_VALIDATION_FAILED',
       'SESSION_DATE_CONFLICT',
       'SESSION_DELETE_CONFLICT',
-      'SESSION_MANAGEMENT_DISABLED',
       'SESSION_NOT_FOUND',
       'SESSION_UPDATE_CONFLICT',
       'STAFF_AUTHENTICATION_FAILED',
@@ -1247,6 +1258,10 @@ export const fakeCurrentWeekSessionDetailResponse = (
     startTime: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
     attendanceStatus: f.helpers.arrayElement(['NOT_ELIGIBLE', 'NOT_OPEN', 'AVAILABLE']),
+    roadAddress: f.datatype.boolean() ? f.string.sample() : null,
+    latitude: f.datatype.boolean() ? f.number.float() : null,
+    longitude: f.datatype.boolean() ? f.number.float() : null,
+    detailAddress: f.datatype.boolean() ? f.string.sample() : null,
   };
 };
 
@@ -1338,6 +1353,10 @@ export const fakeCurrentGenerationSessionItemResponse = (
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
+    roadAddress: f.datatype.boolean() ? f.string.sample() : null,
+    latitude: f.datatype.boolean() ? f.number.float() : null,
+    longitude: f.datatype.boolean() ? f.number.float() : null,
+    detailAddress: f.datatype.boolean() ? f.string.sample() : null,
   };
 };
 
@@ -1559,6 +1578,10 @@ export const fakeAdminSessionResponse = (options?: Options): AdminSessionRespons
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
     attendanceSummary: fakeAttendanceSummaryResponse(options),
+    roadAddress: f.datatype.boolean() ? f.string.sample() : null,
+    latitude: f.datatype.boolean() ? f.number.float() : null,
+    longitude: f.datatype.boolean() ? f.number.float() : null,
+    detailAddress: f.datatype.boolean() ? f.string.sample() : null,
   };
 };
 
@@ -1956,9 +1979,6 @@ export const fakeUpdate1Response404 = (options?: Options): Update1Errors[404] =>
 export const fakeUpdate1Response409 = (options?: Options): Update1Errors[409] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate1Response503 = (options?: Options): Update1Errors[503] =>
-  fakeErrorResponse(options);
-
 export const fakeDetailResponse200 = (options?: Options): DetailResponses[200] =>
   fakeAdminMemberDetailResponse(options);
 
@@ -2290,9 +2310,6 @@ export const fakeCreate2Response404 = (options?: Options): Create2Errors[404] =>
   fakeErrorResponse(options);
 
 export const fakeCreate2Response409 = (options?: Options): Create2Errors[409] =>
-  fakeErrorResponse(options);
-
-export const fakeCreate2Response503 = (options?: Options): Create2Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeDecideResponse200 = (options?: Options): DecideResponses[200] =>
