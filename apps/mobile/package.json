@@ -16,6 +16,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@react-native-firebase/app": "27.1.1",
     "@webview-bridge/react-native": "1.8.0",
     "@yapp-plus/api": "workspace:*",
     "@yapp-plus/app-bridge": "workspace:*",

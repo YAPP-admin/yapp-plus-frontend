@@ -73,6 +73,8 @@ catalogs:
     react-dom: 19.3.0
 
 allowBuilds:
+  # Firebase JS 유틸리티의 postinstall은 네이티브 모듈에 필요하지 않습니다. 의존성 변경 시 재검토합니다.
+  '@firebase/util@1.15.3': false
   '@swc/core': true
   # EAS CLI의 선택적 관측 모듈입니다. iOS 빌드·제출에는 필요하지 않아 네이티브 설치 스크립트를 허용하지 않습니다.
   dtrace-provider: false
