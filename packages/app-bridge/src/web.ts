@@ -1,6 +1,7 @@
 import { linkBridge } from '@webview-bridge/web';
 
 import { createWebLocationActions } from './web-location';
+import { createWebNotificationActions } from './web-notifications';
 
 import {
   INITIAL_SAFE_AREA_INSETS,
@@ -175,3 +176,7 @@ export const installSafeAreaBridge = (target?: CssVariableTarget): (() => void) 
 /** 위치 응답은 검증 후 반환하며 브라우저·통신 실패는 LOCATION_UNAVAILABLE로 통일한다. */
 export const { getLocationPermission, requestCurrentLocation, openAppSettings } =
   createWebLocationActions(getAppBridge);
+
+/** 알림 설정 응답은 검증 후 반환하며 구버전 앱·브라우저는 UNSUPPORTED로 처리합니다. */
+export const { getNotificationSettings, setNotificationEnabled, requestNotificationPermission } =
+  createWebNotificationActions(getAppBridge);
