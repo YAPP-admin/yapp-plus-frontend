@@ -16,7 +16,7 @@ const authSession = vi.hoisted(() => ({ isNative: false }));
 
 vi.mock('@stackflow/react', () => ({
   useFlow: () => navigation,
-  useActivity: () => ({ isRoot: navigation.isRoot }),
+  useActivity: () => ({ isRoot: navigation.isRoot, isActive: true }),
 }));
 
 vi.mock('@/features/auth', async (importOriginal) => ({
@@ -40,12 +40,9 @@ function renderSettingsPage() {
 }
 
 describe('SettingsPage', () => {
-  it('알림 스위치를 이름으로 찾고 변경할 수 있다', () => {
+  it('조회 전 알림 스위치를 비활성화한다', () => {
     renderSettingsPage();
-    const toggle = screen.getByRole('switch', { name: '알림' });
-    expect(toggle).toBeChecked();
-    fireEvent.click(toggle);
-    expect(toggle).not.toBeChecked();
+    expect(screen.getByRole('switch', { name: '알림' })).toBeDisabled();
   });
 
   it('설정 헤더와 모든 메뉴 항목을 정상적으로 렌더링한다', () => {

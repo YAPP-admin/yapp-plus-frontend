@@ -13,14 +13,10 @@ import {
   DialogRoot,
   DialogTitle,
   DialogTrigger,
-  SwitchControl,
-  SwitchHiddenInput,
-  SwitchRoot,
-  SwitchThumb,
 } from '@seed-design/react';
 import { Image } from '@/app/navigation/image';
 import { useFlow } from '@stackflow/react';
-import { useState } from 'react';
+import { NotificationSetting } from './notification-setting';
 import {
   useNativeAuthSession,
   useNativeSignOutMutation,
@@ -46,9 +42,6 @@ import {
   menuItem,
   menuLabel,
   content,
-  switchControl,
-  switchRoot,
-  switchThumb,
 } from './settings-page.css';
 
 const SETTINGS_LINKS = [
@@ -67,7 +60,6 @@ const SETTINGS_LINKS = [
 export function SettingsPage() {
   const flow = useFlow();
   const { isNative } = useNativeAuthSession();
-  const [isNotificationEnabled, setIsNotificationEnabled] = useState(true);
   const snackbar = useSnackbarAdapter();
   const withdrawMutation = useNativeWithdrawMutation({
     onFailure: () => showAccountError('탈퇴 처리 결과를 확인하지 못했어요. 다시 시도해 주세요.'),
@@ -133,19 +125,7 @@ export function SettingsPage() {
         className={content}
       >
         <VStack as="section" width="full" aria-label="설정 메뉴">
-          <div className={menuItem}>
-            <span className={menuLabel}>알림</span>
-            <SwitchRoot
-              className={switchRoot}
-              checked={isNotificationEnabled}
-              onCheckedChange={setIsNotificationEnabled}
-            >
-              <SwitchHiddenInput aria-label="알림" />
-              <SwitchControl className={switchControl}>
-                <SwitchThumb className={switchThumb} />
-              </SwitchControl>
-            </SwitchRoot>
-          </div>
+          <NotificationSetting />
 
           {SETTINGS_LINKS.map((link) => (
             <a
