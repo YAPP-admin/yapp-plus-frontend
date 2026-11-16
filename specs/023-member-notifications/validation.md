@@ -567,3 +567,14 @@ Modern Web Guidance 1.0.0의 switch·accessibility 가이드를 조회했으나 
 - 문서 준비 후 check 통과: 모바일 lint·typecheck·256개 테스트 새 실행, 나머지 Turbo
   작업은 캐시 재사용. 문서만 변경해 build·expo:doctor는 반복하지 않았다.
   로그: .context/notification-testflight-plan-check.log. 최종 format:check·diff 검사 통과.
+
+## 2026-11-16 Firebase 포함 TestFlight 빌드·업로드
+
+- 최종 main 소스: `c41d6160d8c51f5ab2452f9a1fec90b13275ccb9`. 앱 설정 버전은 1.0.6이다.
+- [빌드 실행 43861837702](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/43861837702)의
+  회차 1에서 source·build 성공과 IPA 생성을 확인했다.
+- [제출 실행 43865589307](https://github.com/YAPP-admin/yapp-plus-frontend/actions/runs/43865589307)에서
+  submit 성공과 App Store Connect 업로드 완료 로그를 확인했다.
+- Apple 처리 완료, 실제 빌드 번호, 내부 테스터 설치 가능 여부와 기기 설치는 아직 확인하지 않았다.
+  실제 FCM 수신·탭·알림함 갱신 및 App Store 심사·출시도 완료로 처리하지 않는다.
+- 이전의 미실행 기록은 당시 상태이며, 이번 기록이 빌드·업로드 진행 상태를 갱신한다.
