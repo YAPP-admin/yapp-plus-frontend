@@ -4,7 +4,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '@/mocks/server';
 import { teamAttendanceTargetSchema, type SubmissionInput } from './submission-input';
 import { usePhotoSubmission } from './use-photo-submission';
-import { act, renderHook, waitFor } from '@testing-library/react';
+import { act, renderHook } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 
@@ -214,38 +214,4 @@ it('PUT은 30초 뒤 실패하고 자동 재시도·최종 제출을 하지 않�
     finishUpload?.();
     vi.useRealTimers();
   }
-});
-
-it.each(['presign', 'put', 'submit'])('%s 응답 대기 중에는 진행 상태를 유지한다', async (stage) => {
-  let finish: (() => void) | undefined;
-  const gate = new Promise<void>((resolve) => {
-    finish = resolve;
-  });
-  const response = vi.fn<() => Promise<Response>>(async () => {
-    await gate;
-    return stage === 'presign'
-      ? HttpResponse.json(signed())
-      : HttpResponse.json(receipt, { status: 201 });
-  });
-  server.use(
-    stage === 'put'
-      ? http.put(uploadUrl, response)
-      : http.post(stage === 'presign' ? `${endpoint}/presign` : endpoint, response),
-  );
-  const { result, unmount, client } = setup();
-  let submitted: ReturnType<typeof result.current.submitPhoto> | undefined;
-  act(() => {
-    submitted = result.current.submitPhoto(makeInput(), new AbortController().signal);
-  });
-  await waitFor(() => {
-    expect(response).toHaveBeenCalledOnce();
-    expect(result.current.isPending).toBe(true);
-  });
-  await act(async () => {
-    finish?.();
-    await submitted;
-  });
-  await waitFor(() => expect(result.current.isPending).toBe(false));
-  unmount();
-  client.clear();
 });

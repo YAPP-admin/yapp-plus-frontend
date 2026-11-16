@@ -1,3 +1,6 @@
+import { apiBaseUrl, server } from '@/mocks/server';
+import { createTeamPhotoHandlers } from '@/mocks/team-photo-handlers';
+import { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
 import { MutationObserver, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -374,3 +377,54 @@ it('계정 전환 후 MY는 세션 이름을 표시하지 않는다', async () =
   view.unmount();
   client.clear();
 });
+
+vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  pickAttendancePhoto: vi.fn<typeof pickAttendancePhoto>(),
+}));
+
+it.each(['계정 변경', '홈 복귀'])(
+  '사진 접수 완료 뒤 %s 시 완료 정보를 폐기한다',
+  async (exit) => {
+    server.use(...createTeamPhotoHandlers(apiBaseUrl));
+    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:route-photo');
+    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
+    vi.mocked(pickAttendancePhoto).mockResolvedValue({
+      status: 'SUCCESS',
+      photo: {
+        filename: 'team-attendance.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 3,
+        width: 1,
+        height: 1,
+        base64: 'YWJj',
+      },
+    });
+    const client = new QueryClient();
+    await apply(client, session(1));
+    window.history.replaceState(null, '', '/team-attendance/upload');
+    const view = mount(client);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole('button', { name: '인증 사진 선택' }));
+    await screen.findByAltText('선택한 팀 인증 사진');
+    await user.click(screen.getByRole('checkbox', { name: /강야뿌/ }));
+    await user.click(screen.getByRole('button', { name: '인증 사진 제출하기' }));
+    expect(await screen.findByText('인증 사진을 올렸어요!')).toBeVisible();
+    expect(screen.getByText('강야뿌, 김야뿌')).toBeVisible();
+    expect(screen.getByText('2명')).toBeVisible();
+    await waitFor(() => expect(window.location.pathname).toBe('/team-attendance/complete'));
+    expect(window.location.search).toBe('');
+    expect(revoke).toHaveBeenCalledWith('blob:route-photo');
+    if (exit === '계정 변경') {
+      await act(() => apply(client, session(2)));
+    } else {
+      await user.click(screen.getByRole('link', { name: '확인' }));
+      await act(() => view.actions.push('TeamAttendanceUpload', { stage: 'complete' }));
+    }
+    await waitFor(() =>
+      expect(screen.queryByText('인증 사진을 올렸어요!')).not.toBeInTheDocument(),
+    );
+    view.unmount();
+  },
+  15000,
+);

@@ -325,7 +325,7 @@ describe('Stackflow FSD 화면 연결', () => {
 
     const uploadScreen = await waitForTopHeading('팀 세션 인증');
     expect(document.querySelector('[data-part="edge"]')).not.toBeInTheDocument();
-    expect(uploadScreen.getByRole('button', { name: '제출 기능 준비 중' })).toBeDisabled();
+    expect(uploadScreen.getByRole('button', { name: '인증 사진 제출하기' })).toBeDisabled();
     expect(uploadScreen.getByAltText('개발용 JPEG 미리보기')).toBeInTheDocument();
   });
 
@@ -445,7 +445,6 @@ describe('Stackflow FSD 화면 연결', () => {
       'Settings',
       'TeamAttendanceUpload',
       'TeamAttendanceError',
-      'TeamAttendanceComplete',
       'Login',
       'LoginError',
       'Error',
@@ -538,4 +537,21 @@ it.each([
   renderStack();
   expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
   expect(screen.queryByRole('button', { name: '인증 사진 선택' })).not.toBeInTheDocument();
+});
+
+it.each(['/team-attendance/complete', '/team-attendance/error', '/team-attendance/guide'])(
+  '운영에서는 팀 인증 경로를 직접 열 수 없다: %s',
+  async (path) => {
+    vi.stubEnv('DEV', false);
+    window.history.replaceState({}, '', path);
+    renderStack();
+    expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
+  },
+);
+
+it('접수 정보 없는 완료 URL은 성공을 표시하지 않는다', async () => {
+  window.history.replaceState({}, '', '/team-attendance/complete');
+  renderStack();
+  expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
+  expect(screen.queryByText('인증 사진을 올렸어요!')).not.toBeInTheDocument();
 });

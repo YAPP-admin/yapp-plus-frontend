@@ -1,11 +1,17 @@
-/** 개발용 사진 입력·미리보기를 제공한다. 제출 API 연결은 후속 단계에서 수행한다. */
+/** 사진 준비와 참석 명단 폼을 연결한다. 대상과 접수 이동은 상위 Activity가 공급한다. */
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
 import { Checkbox, HStack, ImageFrame, VStack } from '@seed-design/react';
 import { IconCameraLine, IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import { useId, useState } from 'react';
+import { useId, useRef, useState } from 'react';
+import {
+  useTeamAttendance,
+  type TeamAttendanceTarget,
+  type TeamAttendanceReceipt,
+} from '@/features/team-attendance';
+import { TabLink } from '@/app/navigation/tab-link';
 import { useNativeAuthSession } from '@/features/auth';
 import { useScreenActiveContext } from '@/shared/lib/screen-activity';
 import fixturePhotoUrl from '../model/photo-fixture.jpg';
@@ -36,54 +42,49 @@ import {
   uploadPromptText,
 } from './team-attendance-upload-page.css';
 
-type TeamMember = {
-  id: string;
-  name: string;
-  role: string;
-  isMe?: boolean;
-  checked: boolean;
+type Props = {
+  target: TeamAttendanceTarget;
+  onSubmitted: (receipt: TeamAttendanceReceipt) => void;
 };
 
-const DEFAULT_MEMBERS: TeamMember[] = [
-  { id: '1', name: '강야뿌', role: 'PM', checked: false },
-  { id: '2', name: '김야뿌', role: 'Design', isMe: true, checked: true },
-  { id: '3', name: '이야뿌', role: 'Android', checked: true },
-  { id: '4', name: '박야뿌', role: 'iOS', checked: true },
-  { id: '5', name: '최야뿌', role: 'Server', checked: true },
-];
-
 /** 비활성 화면과 계정이 바뀐 화면의 사진 초안은 재사용하지 않는다. */
-export function TeamAttendanceUploadPage() {
+export function TeamAttendanceUploadPage(props: Props) {
   const active = useScreenActiveContext();
   const { isNative, phase, session } = useNativeAuthSession();
   return active ? (
-    <PhotoForm key={`${phase}:${session?.userId ?? 'browser'}`} isNative={isNative} />
+    <PhotoForm
+      key={`${phase}:${session?.sessionId ?? 'browser'}:${session?.userId}:${props.target.sessionId}`}
+      {...props}
+      isNative={isNative}
+    />
   ) : null;
 }
 
-function PhotoForm({ isNative }: { isNative: boolean }) {
+function PhotoForm({ isNative, target, onSubmitted }: Props & { isNative: boolean }) {
   // 화면이 여러 개 쌓여도 각 사진 선택 버튼이 자신의 안내 문구를 참조하게 한다.
   const hintId = useId();
+  const photoButtonRef = useRef<HTMLButtonElement>(null);
   const [fixtureError, setFixtureError] = useState(false);
   const showFixture =
     !isNative && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true';
-  const photo = useAttendancePhoto();
-  const [members, setMembers] = useState<TeamMember[]>(DEFAULT_MEMBERS);
-
-  function toggleMember(id: string) {
-    setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, checked: !m.checked } : m)));
-  }
+  const { apiOptions } = useNativeAuthSession();
+  const { form, receipt, error, isPending } = useTeamAttendance(target, apiOptions, onSubmitted);
+  const photo = useAttendancePhoto(({ blob }) => {
+    form.setFieldValue('photo', new File([blob], 'team-attendance.jpg', { type: 'image/jpeg' }));
+  });
+  const isPhotoSubmissionFormDisabled = isPending || !!receipt || error?.kind === 'unknown';
 
   const photoTrigger = (
     <ActionButton
       type="button"
       variant="neutralWeak"
       className={uploadArea}
-      disabled={photo.isPending}
+      disabled={photo.isPending || isPhotoSubmissionFormDisabled}
       aria-busy={photo.isPending}
       onClick={() => photo.pick('library')}
       aria-label={photo.photo ? '인증 사진 바꾸기' : '인증 사진 선택'}
-      aria-describedby={hintId}
+      ref={photoButtonRef}
+      aria-describedby={`${hintId} ${hintId}-error`}
     >
       {photo.photo ? (
         <ImageFrame
@@ -103,7 +104,20 @@ function PhotoForm({ isNative }: { isNative: boolean }) {
   );
 
   return (
-    <VStack className={container}>
+    <VStack
+      as="form"
+      className={container}
+      aria-label="팀 인증 사진 제출"
+      onSubmit={(event) => {
+        event.preventDefault();
+        if (isNative && !isPhotoSubmissionFormDisabled && !photo.isPending) {
+          void form.handleSubmit();
+          if (!photo.photo) {
+            photoButtonRef.current?.focus();
+          }
+        }
+      }}
+    >
       <HStack as="header" align="center" justify="space-between" className={header}>
         <BackButton
           fallbackActivityName="Tabs"
@@ -115,7 +129,7 @@ function PhotoForm({ isNative }: { isNative: boolean }) {
       </HStack>
 
       <VStack as="main" gap="x5" className={body}>
-        <Text as="p">개발용 사진 준비 화면이에요. 아직 인증을 제출하지 않아요.</Text>
+        <Text as="p">개발용 팀 정보로 서버에 사진을 제출해요.</Text>
         {isNative && photoTrigger}
         {showFixture && (
           <>
@@ -143,14 +157,14 @@ function PhotoForm({ isNative }: { isNative: boolean }) {
           <ActionButton
             type="button"
             variant="neutralWeak"
-            disabled={photo.isPending}
+            disabled={photo.isPending || isPhotoSubmissionFormDisabled}
             onClick={() => photo.pick('camera')}
           >
             사진 촬영하기
           </ActionButton>
         )}
         {photo.isPending && <progress aria-label="사진 준비 중" />}
-        <output>
+        <output aria-label="사진 준비 상태">
           {showFixture && fixtureError
             ? '사진을 준비하지 못했어요. 다시 시도해 주세요.'
             : (photo.error ?? (photo.photo ? '사진을 준비했어요. 아직 제출하지 않았어요.' : ''))}
@@ -168,41 +182,74 @@ function PhotoForm({ isNative }: { isNative: boolean }) {
           </VStack>
 
           <VStack gap="x2_5" className={memberList} aria-label="팀원 목록">
-            {members.map((member) => (
-              <Checkbox.Root
-                tone="neutral"
-                checked={member.checked}
-                onCheckedChange={() => toggleMember(member.id)}
-                key={member.id}
-                className={`${memberCard} ${member.checked ? memberCardChecked : ''}`}
-              >
-                <Checkbox.HiddenInput />
-                <HStack gap="x2_5" align="center">
-                  <Checkbox.Control className={checkboxControl}>
-                    <Checkbox.Indicator className={checkboxIcon} checked={<IconCheckmarkLine />} />
-                  </Checkbox.Control>
-                  <HStack gap="x2" align="center">
-                    <Checkbox.Label className={memberName}>{member.name}</Checkbox.Label>
-                    <span className={memberRole}>{member.role}</span>
-                  </HStack>
-                </HStack>
+            <form.Field name="selectedMembershipIds">
+              {(field) =>
+                target.members.map((member) => (
+                  <Checkbox.Root
+                    tone="neutral"
+                    checked={field.state.value.includes(member.membershipId)}
+                    disabled={
+                      isPhotoSubmissionFormDisabled ||
+                      member.membershipId === target.selfMembershipId
+                    }
+                    onCheckedChange={(checked) =>
+                      field.handleChange(
+                        checked
+                          ? [...field.state.value, member.membershipId]
+                          : field.state.value.filter((id) => id !== member.membershipId),
+                      )
+                    }
+                    key={member.membershipId}
+                    className={`${memberCard} ${field.state.value.includes(member.membershipId) ? memberCardChecked : ''}`}
+                  >
+                    <Checkbox.HiddenInput />
+                    <HStack gap="x2_5" align="center">
+                      <Checkbox.Control className={checkboxControl}>
+                        <Checkbox.Indicator
+                          className={checkboxIcon}
+                          checked={<IconCheckmarkLine />}
+                        />
+                      </Checkbox.Control>
+                      <HStack gap="x2" align="center">
+                        <Checkbox.Label className={memberName}>{member.name}</Checkbox.Label>
+                        <span className={memberRole}>{member.positionLabel}</span>
+                      </HStack>
+                    </HStack>
 
-                {member.isMe && <span className={meBadge}>나</span>}
-              </Checkbox.Root>
-            ))}
+                    {member.membershipId === target.selfMembershipId && (
+                      <span className={meBadge}>나</span>
+                    )}
+                  </Checkbox.Root>
+                ))
+              }
+            </form.Field>
           </VStack>
         </VStack>
       </VStack>
 
+      <form.Field name="photo">
+        {(field) => (
+          <output id={`${hintId}-error`} aria-label="사진 입력 오류">
+            {field.state.meta.errors.map((issue) => issue?.message).join(' ')}
+          </output>
+        )}
+      </form.Field>
+      {error && <p role="alert">{error.message}</p>}
+      {isPending && <output>인증 사진을 제출하고 있어요.</output>}
+      {error?.kind === 'unknown' && (
+        <ActionButton asChild>
+          <TabLink tab="home">홈으로 돌아가기</TabLink>
+        </ActionButton>
+      )}
       <VStack as="footer" gap="x2_5" className={bottomSection}>
         <ActionButton
           variant="brandSolid"
           size="large"
           className={confirmButton}
-          type="button"
-          disabled
+          type="submit"
+          disabled={!isNative || photo.isPending || isPhotoSubmissionFormDisabled}
         >
-          제출 기능 준비 중
+          {isPending ? '제출 중' : '인증 사진 제출하기'}
         </ActionButton>
       </VStack>
     </VStack>

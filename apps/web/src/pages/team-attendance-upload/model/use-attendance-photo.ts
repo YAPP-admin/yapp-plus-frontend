@@ -24,8 +24,8 @@ function failureMessage(failure: AttendancePhotoFailure): string {
   return '사진을 준비하지 못했어요. 다시 시도해 주세요.';
 }
 
-/** 소유 화면이 이탈·계정 변경으로 unmount되면 늦은 응답을 버린다. 취소·실패는 기존 사진을 유지한다. */
-export function useAttendancePhoto() {
+/** 소유 화면이 이탈·계정 변경으로 unmount되면 늦은 응답을 버린다. 취소·실패는 기존 사진을 유지하며 성공한 사진만 onPrepared로 전달한다. */
+export function useAttendancePhoto(onPrepared: (photo: PreparedPhoto) => void) {
   const [photo, setPhoto] = useState<(PreparedPhoto & { previewUrl: string }) | null>(null);
   // unmount 후 응답으로 URL을 만들면 cleanup이 다시 실행되지 않아 Blob이 남을 수 있다.
   const mounted = useRef(false);
@@ -64,6 +64,7 @@ export function useAttendancePhoto() {
         }
         previewUrl.current = url;
         setPhoto({ ...next, previewUrl: url });
+        onPrepared(next);
       } catch {
         // 원문 예외의 사진 데이터·경로가 mutation cache에 보관되지 않도록 cause도 넘기지 않는다.
         throw new Error('사진을 준비하지 못했어요. 다시 시도해 주세요.');
