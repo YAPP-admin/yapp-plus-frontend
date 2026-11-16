@@ -155,6 +155,50 @@ eas submit \
   --non-interactive
 ```
 
+## 변경에 따른 배포·검증 기준
+
+| 변경                                      | 배포 방법       | 확인할 조건                                                   |
+| ----------------------------------------- | --------------- | ------------------------------------------------------------- |
+| WebView가 표시하는 웹 화면                | 웹 배포         | 설치된 앱의 브리지 계약과 호환되는지 확인한다.                |
+| 모바일 JavaScript·asset                   | EAS Update      | 설치본의 네이티브 기능과 runtime이 호환돼야 한다.             |
+| 네이티브 SDK 추가·변경 또는 네이티브 설정 | 새 앱 빌드·설치 | TestFlight 검증 후 App Store 배포 시 새 버전 심사를 진행한다. |
+
+Firebase 자체가 항상 네이티브인 것은 아니지만 이 앱의 `@react-native-firebase/*`는 iOS SDK를
+호출한다. SDK를 처음 포함하거나 네이티브 구성을 변경할 때는 새 빌드가 필요하며, 이후 호환되는
+알림 처리 JS 로직만 수정하면 OTA로 배포할 수 있다. 사용자 수나 팀 규모는 이 기술적 구분을 바꾸지 않는다.
+OTA도 스토어 정책을 준수해야 하며, 새 runtime의 OTA 게시 성공을 기존 설치본의 업데이트 성공으로 보고하지 않는다.
+
+현재 `appVersion` 정책은 표시 버전과 runtime을 연결한다. 네이티브 변경을 여러 PR로 분리하기 전에
+각 PR의 호환성 검사와 최종 배포 단위를 함께 계획한다. PR 개수만큼 앱을 빌드해야 하는 것은 아니지만,
+현재 검사에서는 각 base 대비 네이티브 변경에 버전 증가가 필요하다. 표시 버전을 유지하려면 runtime
+정책과 검사기를 함께 변경하는 별도 설계가 필요하며, 검사만 우회하지 않는다.
+
+로컬 실행 확인과 배포 서버 준비 확인을 구분한다. Firebase 파일 등 로컬에만 있는 입력은 배포
+workflow에서 공급하는 경로까지 확인한다. plist의 형식·Bundle ID뿐 아니라 Firebase 프로젝트와
+백엔드 발송 환경의 일치 여부도 확인한다. 실제 값이나 인증 정보는 문서·로그에 남기지 않는다.
+
+배포 결과는 아래 단계 중 실제 확인한 지점까지만 보고한다.
+
+| 확인한 상태          | 확인된 사실                    | 다음 확인                                 |
+| -------------------- | ------------------------------ | ----------------------------------------- |
+| build 성공           | IPA 생성                       | 소스 SHA·실행 ID·회차와 제출할 artifact   |
+| submit 성공          | App Store Connect 업로드       | Apple 처리 상태·추가 정보 요청            |
+| TestFlight 사용 가능 | 지정 테스터가 설치 가능한 빌드 | 기기의 버전·빌드 번호와 실제 실행         |
+| 실기기 검증 완료     | 기록한 사용자 흐름의 동작      | App Store 출시를 원하면 새 버전 심사·출시 |
+
+`Mobile TestFlight update`는 OTA 게시이며 IPA 생성·submit이 아니다. `submit`도 정식 출시 심사
+신청이나 출시 완료를 의미하지 않는다. 내부 TestFlight 테스트와 외부 베타 심사, App Store 심사를
+구분한다. 운영 방법은 아래 수동 빌드 절차를 따른다.
+
+시뮬레이터 관찰과 mock 기반 테스트는 실제 FCM/APNs 수신 검증을 대신하지 않는다. 실기기에서는
+알림 선택 유지, 권한, 포그라운드 수신, 백그라운드·종료 상태의 탭 이동과 알림함 갱신을 확인한다.
+기능별 `validation.md`에 환경·앱 버전·빌드·관찰 결과·미검증 항목을 기록하고, 실행 ID처럼 일회성인
+정보는 작업 가이드의 규칙으로 추가하지 않는다.
+
+참고: [Expo runtime 호환성](https://docs.expo.dev/eas-update/runtime-versions/),
+[Apple TestFlight 개요](https://developer.apple.com/help/app-store-connect/test-a-beta-version/testflight-overview/),
+[App Store 새 버전 제출](https://developer.apple.com/help/app-store-connect/update-your-app/create-a-new-version).
+
 ## main 자동 OTA와 수동 로컬 빌드
 
 [배포 흐름·복구 흐름·브랜치별 진행 상태](../../specs/019-mobile-testflight-delivery/overview.md)를 Mermaid 다이어그램으로 확인할 수 있다.
