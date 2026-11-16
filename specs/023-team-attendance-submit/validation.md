@@ -100,3 +100,17 @@ origin/main의 merge-base 대비 작업 트리와 새 파일을 포함해 463줄
 - `useScreenActiveContext`로 페이지의 컨텍스트 접근을 감쌌고 사진 선택 버튼을 공용 `ActionButton`으로 교체했다. `useId`는 화면별 안내 문구 연결을 위해 유지한다.
 - unmount 후 늦은 native 응답으로 해제되지 않는 Blob URL을 생성하지 않도록 mounted 검사를 유지하며, Blob 변환 전부터 반환한다. 해당 수명 정책과 접근성 연결 이유를 코드 주석으로 기록했다.
 - `check` 통과: 웹 lint·typecheck·테스트 424개 새 실행, 나머지 lint·typecheck 각 6개 및 테스트 4개 캐시 재사용. 빌드는 웹 새 실행·나머지 2개 캐시 통과. 브라우저·실기기 검증은 미실행이다.
+
+### 3단계 — 제출 로직과 리뷰 반영
+
+- `DongjaJ/team-photo-submit`을 사용자 승인으로 `6760f635`에서 생성했다. 검토 base는 `DongjaJ/team-photo-preview`이며 사용자 리뷰 후 3단계 커밋을 진행한다. push·PR은 수행하지 않는다.
+- 공급 대상과 폼 입력은 Zod·TanStack Form으로 검증한다. 사진은 Zod 내장 MIME·크기 검증을 사용하고, 본인 포함·명단 부분집합·중복 정책은 프로젝트 테스트로 확인한다. native 사진은 재변환하지 않고 SHA-256 Base64를 presign에 전달한다.
+- 사용자 요청에 따라 스냅샷 복사, 서명 응답의 주소·만료·헤더 검증과 요청 옵션 헬퍼를 제거했다. 오류 메시지는 `TEAM_PHOTO_ERROR_MESSAGE_BY_HTTP_STATUS`로 명명했다.
+- 생성 `presignMutation`·`submitMutation` options와 PUT mutation을 `mutateAsync`로 연결한다. 생성 options가 HTTP 상태를 반환하지 않아 최종 201·확정 4xx 판정은 응답 훅에 두며 인증 Provider의 기존 훅을 보존한다.
+- PUT은 인증 설정을 전달하지 않는 `ky.put`을 사용한다. `timeout: 30_000`, `retry: 0`, credentials·redirect·referrer 정책과 화면 이탈 signal을 유지한다. 프론트엔드 가이드에도 생성 SDK 밖의 직접 작성 요청은 ky를 사용하도록 기록했다.
+- pending은 세 mutation의 `isPending`을 합산한다. `completionRef`와 폼 `isSubmitting` 구독을 제거했다. 체크섬 계산 중·연속 클릭의 중복 실행과 성공·결과 불명 뒤 재전송은 `controllerRef`로 차단한다.
+- 사진은 PUT mutation 변수·결과에 넣지 않고 ref에서 소비한다. 완료·실패 시 mutation을 reset하고 `gcTime: 0`으로 정리한다. 최종 201/PENDING과 유효한 ID·시각만 접수로 인정하며 응답 유실·5xx·잘못된 성공 응답은 결과 불명으로 처리한다.
+- 폼 검증 중 이탈, 늦은 접수 무시, 재제출 정책, 요청 순서·체크섬·인증 분리·30초 timeout을 검증한다. 각 HTTP 단계 응답 대기 중 pending 유지와 완료 후 해제를 추가 검증하며 삭제한 검증·복사 정책은 테스트하지 않는다.
+- 계정·대상 변경 시 폼 remount는 호출 화면의 계약이다. 시뮬레이터에서 picker 반환만 대체해 JPEG·PNG·HEIC 변환과 취소·손상 파일·캐시 정리를 확인했다. 실제 선택창·WebView 미리보기·실기기·실서버 제출은 미검증이다. 인증 갱신 timeout으로 화면 진입이 막혔으며 화면 연결은 4단계로 남긴다. 복구는 아직 화면에 연결하지 않은 feature를 제거하면 된다.
+- Modern Web Guidance에서 요청 진행 표시를 검색했으나 이번 상태 합산에 적용할 UI 가이드는 없었다. [TanStack Query 공식 문서](https://tanstack.com/query/latest/docs/framework/react/guides/mutations)의 mutation 상태와 순차 실행 방식을 따른다.
+- 최종 `check` 통과: 웹 lint·typecheck·456개 테스트(제출 관련 32개) 새 실행, 나머지 lint·typecheck 각 6개와 테스트 4개 캐시 재사용. 빌드는 웹 새 실행·나머지 2개 캐시 통과이며 기존 큰 청크 경고만 남았다.

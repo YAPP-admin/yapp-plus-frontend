@@ -611,6 +611,9 @@ importers:
       react-markdown:
         specifier: 'catalog:'
         version: 10.1.0(@types/react@19.3.0)(react@19.3.0)(supports-color@8.1.1)
+      zod:
+        specifier: 'catalog:'
+        version: 4.5.4
     devDependencies:
       '@seed-design/vite-plugin':
         specifier: 'catalog:'
