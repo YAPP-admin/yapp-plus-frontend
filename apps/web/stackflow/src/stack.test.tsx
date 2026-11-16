@@ -166,10 +166,12 @@ describe('Stackflow FSD 화면 연결', () => {
   }, 15000);
 
   it('web에서는 화면별 prop을 생략해도 swipe edge를 렌더링하지 않는다', async () => {
-    window.history.replaceState({}, '', '/alerts');
+    window.history.replaceState({}, '', '/alerts?empty=true');
     renderStack();
 
     expect(await waitForTopHeading('알림')).toBeTruthy();
+    expect(await screen.findByText('새 공지가 올라왔어요. 게시판을 확인해 주세요.')).toBeVisible();
+    expect(screen.queryByText('아직 알림이 없어요')).not.toBeInTheDocument();
     expect(document.querySelector('[data-part="edge"]')).not.toBeInTheDocument();
   }, 15000);
 
