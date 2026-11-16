@@ -9,8 +9,9 @@ import type {
   SetNotificationEnabledInput,
 } from './notifications';
 
-export * from './notifications';
 import type { PickAttendancePhotoInput, PickAttendancePhotoResult } from './photo';
+
+export * from './notifications';
 
 export {
   ATTENDANCE_PHOTO_MAX_BYTES,

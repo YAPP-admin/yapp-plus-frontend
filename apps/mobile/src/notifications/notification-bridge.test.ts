@@ -22,6 +22,7 @@ vi.mock('@webview-bridge/react-native', () => ({
 vi.mock('react-native-safe-area-context', () => ({ initialWindowMetrics: null }));
 vi.mock('../auth/native-auth-runtime', () => ({ authActions: {} }));
 vi.mock('../location/native-location-runtime', () => ({ locationActions: {} }));
+vi.mock('../photo/native-photo-runtime', () => ({ photoActions: {} }));
 vi.mock('./native-registration-sync', () => ({ notificationSettingsActions: {} }));
 
 describe('알림 브리지 처리 확인', () => {
