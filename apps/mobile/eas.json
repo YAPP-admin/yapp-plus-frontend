@@ -8,7 +8,8 @@
       "node": "24.20.0",
       "corepack": false,
       "env": {
-        "MOBILE_WEB_URL": "https://yapp-plus-web.vercel.app"
+        "MOBILE_WEB_URL": "https://yapp-plus-web.vercel.app",
+        "APNS_ENVIRONMENT": "development"
       }
     },
     "development": {
@@ -26,6 +27,9 @@
       "extends": "base",
       "distribution": "store",
       "autoIncrement": true,
+      "env": {
+        "APNS_ENVIRONMENT": "production"
+      },
       "channel": "testflight"
     }
   },

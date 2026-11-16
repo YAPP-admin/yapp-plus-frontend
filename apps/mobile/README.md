@@ -18,6 +18,47 @@
 scheme를 단일 기준으로 관리한다. Google과 Apple 인증은 네이티브 모듈을 사용하므로 Expo Go가
 아닌 development build 또는 TestFlight 빌드에서 확인한다.
 
+Firebase Cloud Messaging은 React Native Firebase의 `app`·`messaging`·`installations` 패키지를
+같은 버전으로 사용한다. `GoogleService-Info.plist`는 저장소에 넣지 않으며,
+`FIREBASE_IOS_GOOGLE_SERVICES_FILE`에 해당 파일의 절대 경로를 제공한다. EAS에서는 같은 이름의
+file 환경 변수로 설정한다. TestFlight 빌드는 이 값이 없거나 파일이 없으면 시작하지 않는다.
+Firebase 프로젝트의 iOS 앱 Bundle ID는 반드시 `org.yapp.yappplus`와 일치해야 한다.
+
+FCM 수신에는 Apple Developer의 Push Notifications capability와 APNs 인증 키를 Firebase 프로젝트에
+등록해야 한다. 앱 설정은 development 빌드에 `aps-environment=development`, TestFlight에
+`aps-environment=production`을 적용한다. 인증 완료·복원·FCM 토큰 변경·앱 복귀 시 저장된 선택과
+OS 권한을 확인해 서버 등록을 동기화한다. ON인 설치에서 미결정 권한만 요청하고, OFF 또는
+권한 차단이면 등록을 해제한다. Firebase 설정 파일이 없는 로컬 개발 빌드는 알림 기능을 지원하지 않는다.
+
+## 알림 기능의 TestFlight 통합 검증
+
+실제 FCM 검증은 TestFlight의 실기기에서 진행한다. 현재 ARM64 시뮬레이터에서 확인된
+messaging/unregistered 실패는 ON 등록·실제 수신 성공으로 간주하지 않는다.
+수신·탭의 자동 테스트와 모의 푸시는 Firebase→APNs→실기기 전체 경로의 검증을 대신하지 않는다.
+
+TestFlight에 올리기 전에 다음 조합을 확인한다.
+
+- 네이티브 빌드: Firebase SDK, Push Notifications entitlement, firebase.json의
+  banner/list 설정이 포함된 검증 SHA와 앱 버전·빌드 번호·runtime.
+- 웹 배포: 네이티브가 로드하는 MOBILE_WEB_URL에 7-C의 탐색·목록 갱신 코드가 포함된 SHA.
+  현재 testflight 프로필은 운영 웹 URL을 사용하므로 로컬 웹 변경만으로는 검증할 수 없다.
+- 서버·Firebase 환경: 웹 API가 사용하는 서버와 Firebase 설정 파일·서버 발송 프로젝트가
+  일치해야 한다. dev에서 받은 plist를 운영 서버 조합에 그대로 사용하지 않는다.
+- APNs: Firebase 프로젝트의 Apple 인증 연결과 production entitlement를 확인한다.
+  APNs의 production/sandbox 구분은 Firebase의 dev/운영 프로젝트 구분과 별개다.
+- 대상: 승인된 테스트 계정·설치 기기에 한정한다. 토큰·FID·개인 정보는 로그나 문서에 남기지 않는다.
+
+firebase.json과 네이티브 SDK 변경은 EAS Update만으로 반영되지 않는다. 기존 설치본에
+호환되지 않는 JS를 보내지 않도록 runtime을 구분하고 새 빌드를 설치한다. 빌드·업로드·시험
+발송은 실제 실행 대상과 승인 범위를 확인한 뒤 진행한다.
+
+검증 순서는 로그인 → 알림 ON·권한 허용 → 앱 실행 중/백그라운드/종료 상태의
+공지·일반 푸시 → 화면 이동·뒤로가기 → OFF·권한 차단·계정 전환이다.
+상세 시나리오와 실행 기록 양식은
+[알림 검증 안내](../../specs/023-member-notifications/quickstart.md#testflight-실행-기록)를 따른다.
+실패 시 웹 이전 배포, 동일 runtime의 이전 JS, 네이티브 수정 빌드를 구분해 복구하며
+기기 등록 또는 발송 환경 문제는 서버·Firebase 측에서도 별도로 확인한다.
+
 ## 빌드 프로필
 
 | 프로필                  | 용도                                        | 설치 대상                    |
@@ -210,5 +251,4 @@ development build와 TestFlight에서 로그인, 세션 복원·갱신, 로그�
 - [EAS Update runtime version](https://docs.expo.dev/eas-update/runtime-versions/)
 - [Expo App version 관리](https://docs.expo.dev/build-reference/app-versions/)
 
-Firebase app 27.1.1 기반을 추가했다. 네이티브 의존성이 달라 앱 runtime을 1.0.5로 구분한다.
-실제 푸시 설정·등록·수신 연결은 후속 PR에서 추가한다.
+Firebase 푸시 SDK·설정이 추가된 앱 runtime은 1.0.6이다. 1.0.5 기반과 구분하며 새 빌드가 필요하다.
