@@ -12,16 +12,16 @@
 - `packages/app-bridge/src/photo.ts`, `web-photo.ts`에 입력·응답 스키마와 web 호출을 둔다. native는 JPEG Base64만 반환하고 URI·EXIF·OS 오류를 전달하지 않는다.
 - `apps/mobile/src/photo/`는 권한·picker·변환·캐시 정리를 담당한다. runtime을 주입해 취소·권한·busy·변환을 가까운 테스트에서 검증한다.
 - 중복 요청은 대기시키지 않고 즉시 거절한다. 실행 제어 패턴 비교·선택 근거·흐름도는 [사진 작업 설계](photo-operation-design.md)를 따른다.
-- `apps/web/src/features/team-attendance/`는 대상·사진 검증, SHA-256/Base64, presign → S3 PUT → submit, 오류·수명을 담당한다. 페이지는 해당 feature의 공개 진입점만 사용한다.
+- `apps/web/src/features/team-attendance/`는 대상·사진 검증, SHA-256/Base64, presign → S3 PUT → submit, 오류·수명을 담당한다. 페이지는 해당 feature의 공개 진입점만 사용한다. 전체 제출 상태는 상위 mutation이 관리하고 내부 세 HTTP mutation을 순차 실행한다.
 - Base64의 최대 10MiB 바이너리 상한은 13,981,016자다. Blob과 object URL은 화면 수명에만 보관하고 mutation/query 캐시에 사진 바이트를 저장하지 않는다.
 - PUT은 `credentials: 'omit'`, `redirect: 'error'`, 응답 `signedHeaders`로 수행한다. 기존 native 인증 옵션으로 presign·submit만 호출한다.
 - mutation의 retry는 꺼두고 오프라인이면 요청 전 실패한다. GET 전용 인증 복구 정책은 바꾸지 않는다. submit 전송 뒤 결과 불명은 자동 재전송·성공 추정 없이 홈 복귀로 안내한다.
 
 ## 개발과 운영 경계
 
-`DEV && VITE_API_MOCKING === 'true'`에서만 fixture와 팀 인증 흐름을 연다. 사진 선택·JPEG 변환은 native에서만 수행한다. 브라우저에서는 고정 JPEG fixture로 미리보기·오류 UI만 확인하고 파일 선택·변환 경로를 만들지 않는다. fixture ID는 실서버 API에 전송하지 않으며 PUT도 MSW가 가로챈다.
+`DEV && VITE_API_MOCKING === 'true'`에서만 fixture와 팀 인증 흐름을 연다. 사진 선택·JPEG 변환은 native에서만 수행한다. 브라우저에서는 고정 JPEG fixture로 미리보기·오류 UI만 확인하고 파일 선택·변환 경로를 만들지 않는다. 사용자 승인에 따라 개발 화면의 제출도 기존 서버 API를 호출한다. 페이지의 별도 base URL은 제거하며 MSW는 presign·submit만 passthrough한다. PUT은 서버가 반환한 주소로 보낸다. 자동 테스트만 모의 API·PUT을 사용한다.
 
-회원용 세션 유형·대상·본인 membershipId·팀원 조회는 없다. 관리자 API를 우회하거나 경로를 새로 만들지 않는다. 현재 안내 Activity만 막혀 있고 업로드·완료 Activity는 직접 진입 차단이 없으므로 4단계에서 전체 Activity를 차단한다.
+회원용 세션 유형·대상·본인 membershipId·팀원 조회는 없다. 관리자 API를 우회하거나 경로를 새로 만들지 않는다. 입력·완료는 하나의 Activity 단계로 연결하고 활성 흐름의 로컬 접수 state만 공유한다. 이탈·계정 변경 시 흐름이 해제되며, 운영 진입과 접수 정보 없는 완료 직접 진입은 차단한다.
 
 ## 헌법 점검
 

@@ -19,7 +19,7 @@
 ## 기존 서버 API
 
 1. `presign`: `POST /api/sessions/{sessionId}/team-attendance-photos/presign`에 filename, contentType, sizeBytes, 최종 JPEG 바이트의 SHA-256 Base64를 보낸다.
-2. imageKey·HTTPS uploadUrl·signedHeaders·미래 expiresAt을 검증하고 S3 PUT에 정확한 JPEG 바이트와 headers를 사용한다. API Bearer는 보내지 않으며 2xx만 성공이다.
+2. 서버가 반환한 imageKey·uploadUrl·signedHeaders를 사용하며 추가 주소·만료·헤더 검증은 하지 않는다. PUT에 정확한 JPEG 바이트와 headers를 사용한다. API Bearer는 보내지 않으며 2xx만 성공이다.
 3. `submit`: `POST /api/sessions/{sessionId}/team-attendance-photos`에 imageKey와 selectedMembershipIds를 보낸다.
 4. 성공은 201, 양의 안전 정수 photoId, 파싱 가능한 submittedAt, 정확히 PENDING인 status다.
 

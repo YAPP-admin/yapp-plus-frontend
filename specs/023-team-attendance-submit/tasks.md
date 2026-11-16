@@ -44,10 +44,12 @@ PR 크기 제한을 위해 2a 공용 계약, 2b native·RPC 연결, 2c 개발 �
 
 ## 4단계 — US2 개발 화면 통합
 
-- [ ] T016 [US2] 업로드 페이지에 본인 잠금·다른 팀원 선택·제출/실패 UI와 테스트를 구현한다.
-- [ ] T017 [US2] 완료 페이지에 응답·제출 명단 기반 접수 정보 props와 테스트를 구현한다.
-- [ ] T018 [US2] MSW에 기존 API·PUT 사례를 추가하고 fixture 실서버 전송을 차단한다.
-- [ ] T019 [US2] Stackflow Activity에 개발 공급부·메모리 완료 정보·전체 팀 Activity 운영 차단을 연결한다.
-- [ ] T020 [US2] 전체 흐름·접근성·계정 변경·이탈을 검증하고 validation 결과를 기록한다.
+사용자 승인으로 `a6e613b6` 위에 `DongjaJ/team-photo-integration`을 생성했다. 검토 base는 `DongjaJ/team-photo-submit`이다. 앨범 시나리오는 사용자 검증 완료, 카메라 실기기는 추후 점검한다.
+
+- [x] T016 [US2] 업로드 페이지에 본인 잠금·다른 팀원 선택·제출/실패 UI와 테스트를 구현한다.
+- [x] T017 [US2] 완료 페이지에 응답·제출 명단 기반 접수 정보 props와 테스트를 구현한다.
+- [x] T018 [US2] 자동 테스트에 기존 API·PUT 모의 사례를 추가한다. 사용자 리뷰에 따라 개발 실행은 presign·submit passthrough로 실제 서버를 사용한다.
+- [x] T019 [US2] Stackflow Activity에 개발 공급부·메모리 완료 정보·전체 팀 Activity 운영 차단을 연결한다.
+- [ ] T020 [US2] 전체 흐름·접근성·계정 변경·이탈을 검증하고 validation 결과를 기록한다. 자동 검증 완료, 새 제출 흐름의 앱 터치·VoiceOver 및 사용자 리뷰 대기.
 
 단계별 리뷰를 받고 650줄부터 PR 분리를 검토한다. branch·commit·push·PR은 별도 승인 대상이다.
