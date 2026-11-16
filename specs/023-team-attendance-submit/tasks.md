@@ -35,10 +35,12 @@ PR 크기 제한을 위해 2a 공용 계약, 2b native·RPC 연결, 2c 개발 �
 
 ## 3단계 — US2 제출 로직
 
-- [ ] T012 [US2] `apps/web/src/features/team-attendance/model/`에 대상·선택·최종 사진 검증과 인접 테스트를 추가한다.
-- [ ] T013 [US2] `submit-photo.ts`와 테스트에 생성 SDK·체크섬·격리된 PUT을 구현한다.
-- [ ] T014 [US2] `use-team-attendance.ts`와 테스트에 mutation·오프라인 차단·화면 수명·결과 불명을 구현한다.
-- [ ] T015 [US2] feature 공개 진입점에 필요한 입력·결과·훅만 export하고 검증·리뷰한다.
+사용자 승인으로 `DongjaJ/team-photo-submit`을 2c 최종 커밋 `6760f635`에서 분리했다. PR base는 `DongjaJ/team-photo-preview`다. 2c의 실기기 검증(T011)은 미완료로 유지하고 3단계 로직을 독립 검증한다.
+
+- [x] T012 [US2] `apps/web/src/features/team-attendance/model/`에 대상·선택·최종 사진 검증과 인접 테스트를 추가한다.
+- [x] T013 [US2] `use-photo-submission.ts`와 테스트에 생성 mutation options·체크섬·격리된 PUT을 구현한다.
+- [x] T014 [US2] `use-team-attendance.ts`와 테스트에 mutation·오프라인 차단·화면 수명·결과 불명을 구현한다.
+- [x] T015 [US2] feature 공개 진입점에 필요한 입력·결과·훅만 export하고 검증·리뷰한다. 구현·자동 검증 완료, 사용자 리뷰와 커밋 진행 확인.
 
 ## 4단계 — US2 개발 화면 통합
 
