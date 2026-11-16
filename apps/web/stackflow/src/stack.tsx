@@ -13,7 +13,7 @@ import type { StackflowInitialContext } from './platform';
 
 type TabsParams = ActivityBaseParams & TabsState;
 type BooleanQueryParams = ActivityBaseParams & { error?: 'true' };
-type AlertsParams = ActivityBaseParams & { empty?: 'true' };
+type AlertsParams = ActivityBaseParams;
 type SignupParams = ActivityBaseParams & { step?: 'phone' };
 
 declare module '@stackflow/config' {
