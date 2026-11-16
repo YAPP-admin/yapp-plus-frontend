@@ -4,12 +4,14 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-context';
 import pretendardVariable from '../assets/fonts/PretendardVariable.ttf';
+import { startNativeNotificationRuntime } from '../src/notifications/native-notification-runtime';
 import { startNativeNotificationRegistrationSync } from '../src/notifications/native-registration-sync';
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({ 'Pretendard Variable': pretendardVariable });
 
   useEffect(startNativeNotificationRegistrationSync, []);
+  useEffect(startNativeNotificationRuntime, []);
 
   useEffect(() => {
     if (error) {

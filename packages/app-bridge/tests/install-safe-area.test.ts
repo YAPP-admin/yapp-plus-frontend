@@ -49,7 +49,11 @@ describe('installSafeAreaBridge', () => {
     const { getAppBridge } = await import('../src/web');
     getAppBridge();
     expect(linkBridgeMock).toHaveBeenCalledWith({
-      initialBridge: { safeAreaInsets: INITIAL_SAFE_AREA_INSETS },
+      initialBridge: {
+        safeAreaInsets: INITIAL_SAFE_AREA_INSETS,
+        notificationOpen: null,
+        notificationRevision: 0,
+      },
       timeout: 180_000,
       throwOnError: ['getSafeAreaInsets'],
     });
