@@ -23,6 +23,8 @@ const stackflowIntervals = new Set<ReturnType<typeof globalThis.setInterval>>();
 const addListener = window.addEventListener.bind(window);
 const addInterval = globalThis.setInterval.bind(globalThis);
 beforeEach(() => {
+  // 팀 사진 폼은 개발 모의 환경에서만 노출한다. 인증 경계 검증도 같은 조건으로 실행한다.
+  vi.stubEnv('VITE_API_MOCKING', 'true');
   vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
     if (type === 'popstate' && listener) {
       historyListeners.push(listener);

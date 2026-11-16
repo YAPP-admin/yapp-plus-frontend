@@ -19,7 +19,7 @@
 
 ## 개발과 운영 경계
 
-`DEV && VITE_API_MOCKING === 'true'`에서만 fixture와 팀 인증 흐름을 연다. 브라우저 선택은 JPEG·PNG만, HEIC·카메라는 native build에서 검증한다. fixture ID는 실서버 API에 전송하지 않으며 PUT도 MSW가 가로챈다.
+`DEV && VITE_API_MOCKING === 'true'`에서만 fixture와 팀 인증 흐름을 연다. 사진 선택·JPEG 변환은 native에서만 수행한다. 브라우저에서는 고정 JPEG fixture로 미리보기·오류 UI만 확인하고 파일 선택·변환 경로를 만들지 않는다. fixture ID는 실서버 API에 전송하지 않으며 PUT도 MSW가 가로챈다.
 
 회원용 세션 유형·대상·본인 membershipId·팀원 조회는 없다. 관리자 API를 우회하거나 경로를 새로 만들지 않는다. 현재 안내 Activity만 막혀 있고 업로드·완료 Activity는 직접 진입 차단이 없으므로 4단계에서 전체 Activity를 차단한다.
 

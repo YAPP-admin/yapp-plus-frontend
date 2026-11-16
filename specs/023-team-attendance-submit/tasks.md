@@ -28,7 +28,9 @@ PR 크기 제한을 위해 2a 공용 계약, 2b native·RPC 연결, 2c 개발 �
 
 ### 2c — 개발 화면 연결과 실기기 검증
 
-- [ ] T010 [US1] `apps/web/src/pages/team-attendance-upload/`에 개발 사진 입력·미리보기·이탈 정리와 테스트를 연결한다.
+사용자 승인으로 `DongjaJ/team-photo-preview`를 2b 최종 커밋 `45726d9d`에서 분리했다. 이 단계의 PR base는 `DongjaJ/team-photo-native`다.
+
+- [x] T010 [US1] `apps/web/src/pages/team-attendance-upload/`에 개발 사진 입력·미리보기·이탈 정리와 테스트를 연결한다.
 - [ ] T011 [US1] `validation.md`에 품질 게이트·development build·실기기 결과를 기록하고 리뷰받는다.
 
 ## 3단계 — US2 제출 로직

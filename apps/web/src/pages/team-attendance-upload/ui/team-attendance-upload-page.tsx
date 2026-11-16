@@ -1,12 +1,15 @@
+/** 개발용 사진 입력·미리보기를 제공한다. 제출 API 연결은 후속 단계에서 수행한다. */
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
-import { Checkbox, HStack, VStack } from '@seed-design/react';
+import { Checkbox, HStack, ImageFrame, VStack } from '@seed-design/react';
 import { IconCameraLine, IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import { Image } from '@/app/navigation/image';
-import { useFlow } from '@stackflow/react';
-import { useRef, useState } from 'react';
+import { useId, useState } from 'react';
+import { useNativeAuthSession } from '@/features/auth';
+import { useScreenActiveContext } from '@/shared/lib/screen-activity';
+import fixturePhotoUrl from '../model/photo-fixture.jpg';
+import { useAttendancePhoto } from '../model/use-attendance-photo';
 import {
   checkboxControl,
   checkboxIcon,
@@ -14,11 +17,11 @@ import {
   bottomSection,
   confirmButton,
   container,
-  fileInputHidden,
   header,
   headerSpacer,
   headerTitle,
   imagePreview,
+  fixturePreview,
   meBadge,
   memberCard,
   memberCardChecked,
@@ -49,35 +52,55 @@ const DEFAULT_MEMBERS: TeamMember[] = [
   { id: '5', name: '최야뿌', role: 'Server', checked: true },
 ];
 
-export function TeamAttendanceUploadPage({ simulateError = false }: { simulateError?: boolean }) {
-  const flow = useFlow();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+/** 비활성 화면과 계정이 바뀐 화면의 사진 초안은 재사용하지 않는다. */
+export function TeamAttendanceUploadPage() {
+  const active = useScreenActiveContext();
+  const { isNative, phase, session } = useNativeAuthSession();
+  return active ? (
+    <PhotoForm key={`${phase}:${session?.userId ?? 'browser'}`} isNative={isNative} />
+  ) : null;
+}
 
-  // 기본적으로 피그마처럼 샘플 사진이 들어가 있거나, 사용자가 직접 올릴 수 있게 지원
-  const [photoUrl, setPhotoUrl] = useState<string | null>(
-    '/images/home/team-session-sample-photo.png',
-  );
+function PhotoForm({ isNative }: { isNative: boolean }) {
+  // 화면이 여러 개 쌓여도 각 사진 선택 버튼이 자신의 안내 문구를 참조하게 한다.
+  const hintId = useId();
+  const [fixtureError, setFixtureError] = useState(false);
+  const showFixture =
+    !isNative && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true';
+  const photo = useAttendancePhoto();
   const [members, setMembers] = useState<TeamMember[]>(DEFAULT_MEMBERS);
-
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      setPhotoUrl(url);
-    }
-  }
 
   function toggleMember(id: string) {
     setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, checked: !m.checked } : m)));
   }
 
-  function handleSubmit() {
-    if (simulateError) {
-      flow.push('TeamAttendanceError', {});
-    } else {
-      flow.push('TeamAttendanceComplete', {});
-    }
-  }
+  const photoTrigger = (
+    <ActionButton
+      type="button"
+      variant="neutralWeak"
+      className={uploadArea}
+      disabled={photo.isPending}
+      aria-busy={photo.isPending}
+      onClick={() => photo.pick('library')}
+      aria-label={photo.photo ? '인증 사진 바꾸기' : '인증 사진 선택'}
+      aria-describedby={hintId}
+    >
+      {photo.photo ? (
+        <ImageFrame
+          src={photo.photo.previewUrl}
+          alt="선택한 팀 인증 사진"
+          className={imagePreview}
+        />
+      ) : (
+        <>
+          <div className={uploadIconWrap}>
+            <IconCameraLine width={24} height={24} aria-hidden="true" />
+          </div>
+          <p className={uploadPromptText}>사진 첨부하기</p>
+        </>
+      )}
+    </ActionButton>
+  );
 
   return (
     <VStack className={container}>
@@ -92,39 +115,46 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
       </HStack>
 
       <VStack as="main" gap="x5" className={body}>
-        {/* 사진 업로드 영역 */}
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          className={fileInputHidden}
-          onChange={handleFileChange}
-        />
-        <button
-          type="button"
-          className={uploadArea}
-          onClick={() => fileInputRef.current?.click()}
-          aria-label="인증 사진 선택"
-        >
-          {photoUrl ? (
-            <Image
-              src={photoUrl}
-              alt="업로드된 팀 인증 사진"
-              width={361}
-              height={206}
-              className={imagePreview}
-              unoptimized
+        <Text as="p">개발용 사진 준비 화면이에요. 아직 인증을 제출하지 않아요.</Text>
+        {isNative && photoTrigger}
+        {showFixture && (
+          <>
+            <ImageFrame
+              src={fixturePhotoUrl}
+              alt="개발용 JPEG 미리보기"
+              className={fixturePreview}
             />
-          ) : (
-            <>
-              <div className={uploadIconWrap}>
-                <IconCameraLine width={24} height={24} />
-              </div>
-              <p className={uploadPromptText}>사진 첨부하기</p>
-              <p className={uploadHintText}>10MB 이하의 사진만 업로드할 수 있어요</p>
-            </>
-          )}
-        </button>
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              onClick={() => setFixtureError((previous) => !previous)}
+            >
+              {fixtureError ? '오류 안내 닫기' : '오류 안내 보기'}
+            </ActionButton>
+          </>
+        )}
+        <p id={hintId} className={uploadHintText}>
+          {isNative
+            ? '앨범에서 고르거나 직접 촬영해 주세요.'
+            : '브라우저에서는 고정 JPEG로 화면만 확인해요. 사진 선택·변환은 앱에서 확인해 주세요.'}{' '}
+          변환한 사진은 10MiB 이하여야 해요.
+        </p>
+        {isNative && (
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            disabled={photo.isPending}
+            onClick={() => photo.pick('camera')}
+          >
+            사진 촬영하기
+          </ActionButton>
+        )}
+        {photo.isPending && <progress aria-label="사진 준비 중" />}
+        <output>
+          {showFixture && fixtureError
+            ? '사진을 준비하지 못했어요. 다시 시도해 주세요.'
+            : (photo.error ?? (photo.photo ? '사진을 준비했어요. 아직 제출하지 않았어요.' : ''))}
+        </output>
 
         {/* 팀원 선택 섹션 */}
         <VStack as="section" gap="x5" aria-label="참석 팀원 선택">
@@ -169,9 +199,10 @@ export function TeamAttendanceUploadPage({ simulateError = false }: { simulateEr
           variant="brandSolid"
           size="large"
           className={confirmButton}
-          onClick={handleSubmit}
+          type="button"
+          disabled
         >
-          확인
+          제출 기능 준비 중
         </ActionButton>
       </VStack>
     </VStack>
