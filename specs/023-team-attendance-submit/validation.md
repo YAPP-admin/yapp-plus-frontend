@@ -61,3 +61,42 @@ origin/main의 merge-base 대비 작업 트리와 새 파일을 포함해 463줄
 - 최종 `check` 통과: 모바일 lint·typecheck·테스트(185개)는 새 실행, 나머지 lint·typecheck 각 6개와 테스트 4개는 캐시 재사용. 직전 rebase 검증에서는 브리지·웹 검사도 새 실행으로 통과했다.
 - 최종 `build`는 3개 모두 캐시 재사용으로 통과했다. 직전 rebase 검증에서 웹 빌드는 새 실행, Expo Doctor는 20/20 통과했다. 실기기·development build 검증은 아직 수행하지 않았다.
 - 2b 검토 기준은 rebase된 2a 커밋 `69cafa0c`다. 650줄을 넘겨 후속 2c는 별도 브랜치·PR로 분리한다. 기존 2a 브랜치 정렬과 push·PR은 수행하지 않았다.
+
+### 2c — 개발 사진 입력·미리보기 구현
+
+- `DongjaJ/team-photo-preview`는 사용자 승인으로 2b `45726d9d`에서 생성했다. push·PR·추가 commit은 수행하지 않았다.
+- native 앨범·촬영 RPC와 브라우저 JPEG·PNG 변환을 연결했다. 미리보기는 전체 비율을 표시하고, 교체·이탈·계정 변경 시 Blob URL을 해제한다. 취소·실패는 이전 사진을 유지하며 늦은 응답은 폐기한다.
+- 진행 상태는 `useMutation`으로 관리한다. 사진·원본 파일·Base64를 mutation variables/data에 넣지 않고 화면 상태로만 보관하며 재시도·오프라인 대기를 사용하지 않는다. 원문 예외를 사용자 안내로 정규화한다.
+- 업로드 Activity 직접 진입은 `DEV && VITE_API_MOCKING === 'true'`에만 허용한다. 완료·오류로 이동하던 임시 제출을 제거하고 제출 버튼을 비활성화했다. 나머지 Activity 운영 차단과 제출 통합은 4단계에 남아 있다.
+- 화면 테스트는 URL 해제·취소·권한 안내·준비 중 입력 차단·이탈 후 늦은 응답·계정 변경·파일 재선택을 확인한다. 변환 테스트는 JPEG 품질·축소/비확대·최종 용량·해독 실패를 검증하고 라이브러리 내부 기능을 반복하지 않는다.
+- Chrome에서 초기 개발 화면·안내·비활성 제출 표시를 확인했다. 브라우저 도구의 `timeoutMs` 오류와 대상 창 불안정으로 실제 파일 선택·모바일 크기·다크 모드·터치·VoiceOver 검증과 유효한 스크린샷 저장은 완료하지 못했다.
+- development build 생성과 실제 iPhone 촬영·HEIC·방향·메모리 검증은 미실행이다. 따라서 T011과 2c 실기기 완료 판정은 보류한다. 모바일 설정·의존성 변경이 없어 Expo Doctor는 이번 단계에서 재실행하지 않았다.
+- 복구는 2c 화면·모델 변경을 되돌리되 업로드 Activity의 개발 전용 진입 조건과 제출 비활성화를 유지한다. 운영 데이터·API 변경은 없다.
+- Modern Web Guidance `accessibility`의 “Announce dynamic errors via live regions”에 따라 오류·완료 안내에 `output`, 진행에는 `progress`를 사용하고 사진 입력 버튼에 키보드 기본 동작과 설명을 유지했다.
+- 최종 `check` 통과: 웹 lint·typecheck·테스트 428개 새 실행, 나머지 lint·typecheck 각 6개 및 테스트 4개는 Turbo 캐시 재사용. `build`는 웹 새 실행·admin/Storybook 캐시 재사용으로 통과했다.
+
+### 2c 리뷰 — SEED 파일 입력 적용
+
+- 브라우저 파일 입력을 설치된 SEED `AttachmentInput.Root`·`HiddenInput`·`Trigger`로 교체했다. 직접 input ref·click·value 초기화와 숨김 스타일을 제거했다. 새 의존성·공용 스니펫은 추가하지 않았다.
+- `acceptedFileEntries`를 빈 목록으로 제어해 원본 파일을 중복 보관하지 않고, 단일 사진 선택 뒤에도 교체를 허용한다. 크기 상한은 원본이 아닌 최종 JPEG에 계속 적용한다. native 선택·촬영은 기존 RPC를 사용한다.
+- 같은 브라우저 파일을 재선택해 준비 훅에 다시 전달하는 연결 테스트만 추가했다. SEED 내부 파일 검증·이벤트 구현은 별도로 테스트하지 않는다.
+- 리뷰 후 `check` 통과: 웹 lint·typecheck·테스트 429개 새 실행, 나머지 lint·typecheck 각 6개 및 테스트 4개는 캐시 재사용. `build`는 웹 새 실행·나머지 2개 캐시로 통과했다. 브라우저·실기기 검증은 이번 리뷰에서 재실행하지 않았다.
+
+### 2c 리뷰 — SEED 이미지 미리보기 적용
+
+- 직접 작성한 `PhotoPreview`·`img`를 SEED `ImageFrame`으로 교체했다. URL 생성·교체·해제는 사진 준비 훅에 모으고, 기존 `contain` 표시를 유지해 팀원 사진이 잘리지 않게 했다.
+- 기존 URL 해제·취소·계정 변경·늦은 응답 테스트를 그대로 사용했다. `check` 통과: 웹 lint·typecheck·테스트 429개 새 실행, 나머지 lint·typecheck 각 6개 및 테스트 4개 캐시 재사용. 빌드는 웹 새 실행·나머지 2개 캐시 통과. 브라우저·실기기는 재검증하지 않았다.
+
+### 2c 리뷰 — 사진 변환을 native로 한정
+
+- 사용자 승인에 따라 `prepareBrowserPhoto`와 변환 테스트 4개, 브라우저 `AttachmentInput`·파일 ref·수락/거부 경로를 제거했다. `preventDocumentDrop` 옵션도 함께 제거됐다.
+- 브라우저에는 정적 JPEG 패턴 fixture와 오류 안내 토글만 제공한다. fixture는 실제 사진·개인정보가 없는 640×360 패턴이고, 업로드 초안·mutation·native RPC로 전달되지 않는다. JPEG 생성은 개발 자산 제작 시 한 번만 수행했으며 실행 중 변환 코드는 없다.
+- 웹의 `photo-blob.ts`는 검증된 native JPEG Base64를 Blob으로 옮길 뿐 해독·리사이즈·재압축을 하지 않는다. 실제 선택·촬영·변환 검증은 native development build에서 수행한다.
+- 브라우저 재선택·형식 오류 테스트는 fixture 화면·오류 안내·브리지 미호출 테스트로 대체했다. 기존 native 미리보기 수명·취소·권한·이탈 테스트는 유지한다.
+- 변경 후 `check` 통과: 웹 lint·typecheck·테스트 424개 새 실행, 나머지 lint·typecheck 각 6개 및 테스트 4개는 캐시 재사용. 빌드는 웹 새 실행·나머지 2개 캐시 통과. 브라우저·실기기 검증은 이번 변경에서 재실행하지 않았다.
+
+### 2c 리뷰 — 화면 컨텍스트와 사진 선택 버튼
+
+- `useScreenActiveContext`로 페이지의 컨텍스트 접근을 감쌌고 사진 선택 버튼을 공용 `ActionButton`으로 교체했다. `useId`는 화면별 안내 문구 연결을 위해 유지한다.
+- unmount 후 늦은 native 응답으로 해제되지 않는 Blob URL을 생성하지 않도록 mounted 검사를 유지하며, Blob 변환 전부터 반환한다. 해당 수명 정책과 접근성 연결 이유를 코드 주석으로 기록했다.
+- `check` 통과: 웹 lint·typecheck·테스트 424개 새 실행, 나머지 lint·typecheck 각 6개 및 테스트 4개 캐시 재사용. 빌드는 웹 새 실행·나머지 2개 캐시 통과. 브라우저·실기기 검증은 미실행이다.

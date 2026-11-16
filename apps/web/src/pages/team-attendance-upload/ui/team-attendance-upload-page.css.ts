@@ -1,5 +1,6 @@
+/** 사진 입력과 미리보기의 기존 화면 배치를 유지한다. */
 import { vars } from '@seed-design/css/vars';
-import { style } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 
 export const container = style({
   display: 'flex',
@@ -92,13 +93,13 @@ export const uploadHintText = style({
 export const imagePreview = style({
   width: '100%',
   height: '100%',
-  objectFit: 'cover',
   display: 'block',
 });
 
-export const fileInputHidden = style({
-  display: 'none',
-});
+export const fixturePreview = style([imagePreview, { height: '206px' }]);
+
+// ImageFrame의 기본 cover 대신 사진 전체를 보여줘 가장자리 팀원이 잘리지 않게 한다.
+globalStyle(`${imagePreview} img`, { objectFit: 'contain' });
 
 export const memberTitle = style({
   fontSize: '18px',

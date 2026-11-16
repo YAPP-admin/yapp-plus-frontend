@@ -197,10 +197,13 @@ export function SettingsActivity() {
 }
 
 export function TeamAttendanceUploadActivity() {
-  const { error } = useActivityParams<'TeamAttendanceUpload'>();
+  // 사진 입력은 개발 모의 환경에만 노출한다. 직접 URL 진입에도 같은 경계를 적용한다.
+  if (!import.meta.env.DEV || import.meta.env.VITE_API_MOCKING !== 'true') {
+    return <NotFoundActivity />;
+  }
   return (
     <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
-      <TeamAttendanceUploadPage simulateError={error === 'true'} />
+      <TeamAttendanceUploadPage />
     </ActivityScreen>
   );
 }

@@ -26,3 +26,11 @@ mise exec -- pnpm --filter @yapp-plus/app-bridge test
 | 운영   | production·mock 없는 개발 웹         | 팀 인증 직접 진입 차단·fixture 요청 없음        |
 
 실제 iPhone에서 촬영·HEIC·큰 이미지의 메모리·브리지 전달·사진 가독성·VoiceOver·터치를 확인한다. 실서버 제출·운영 배포는 포함하지 않는다.
+
+## 2c 사진 준비 확인
+
+- 개발 브라우저의 `/team-attendance/upload`에서는 고정 JPEG 패턴과 오류 안내 토글로 화면만 확인한다. 파일 선택·사진 변환은 제공하지 않고 fixture는 제출용 초안에 저장하지 않는다.
+- native에서 같은 사진 재선택·다른 사진 교체·취소·손상 파일을 확인한다. 취소·오류 시 기존 사진이 유지되고 이탈·계정 변경 뒤에는 폐기되어야 한다.
+- 이 화면의 제출 버튼은 비활성이다. `?error=true`도 완료·오류 화면으로 이동시키지 않는다. 팀원 선택 정책·제출 API는 후속 단계에서 연결한다.
+- native development build에는 새 사진 모듈이 포함되어야 하고 WebView가 모의 개발 서버를 열어야 한다. 앨범·촬영·HEIC·권한 거부·VoiceOver·큰 사진 메모리를 실제 기기에서 확인한다.
+- 모의 설정이 꺼진 개발 서버와 production에서는 업로드 URL이 404 안내를 표시해야 한다. 완료·오류 Activity 전체 진입 차단은 4단계 범위다.

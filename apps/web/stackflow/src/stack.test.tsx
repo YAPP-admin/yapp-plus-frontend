@@ -319,15 +319,14 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(await waitForTopHeading('출석 내역')).toBeTruthy();
   });
 
-  it('팀 출석 업로드는 swipe back을 차단하고 query에 따라 완료·오류로 이동한다', async () => {
-    const user = userEvent.setup();
+  it('팀 사진 준비는 swipe back을 차단하고 error query로 가짜 제출 결과를 만들지 않는다', async () => {
     window.history.replaceState({}, '', '/team-attendance/upload?error=true');
     renderStack();
 
     const uploadScreen = await waitForTopHeading('팀 세션 인증');
     expect(document.querySelector('[data-part="edge"]')).not.toBeInTheDocument();
-    await user.click(uploadScreen.getByRole('button', { name: '확인' }));
-    expect(await waitForTopHeading('인증 사진을 업로드하지 못했어요')).toBeTruthy();
+    expect(uploadScreen.getByRole('button', { name: '제출 기능 준비 중' })).toBeDisabled();
+    expect(uploadScreen.getByAltText('개발용 JPEG 미리보기')).toBeInTheDocument();
   });
 
   it('가입 상태 직접 진입은 Login fallback과 가입 입력 흐름을 유지한다', async () => {
@@ -527,4 +526,16 @@ it('일반 브라우저의 출석 시트 직접 진입에서는 로그인 안내
   renderStack();
   expect(await screen.findByText('앱에 로그인한 후 출석해 주세요.')).toBeVisible();
   expect(screen.getByRole('button', { name: '확인' })).toBeDisabled();
+});
+
+it.each([
+  { dev: true, mocking: 'false' },
+  { dev: false, mocking: 'true' },
+])('팀 사진 입력 직접 URL은 개발·모의 조건이 모두 필요하다: %j', async ({ dev, mocking }) => {
+  vi.stubEnv('DEV', dev);
+  vi.stubEnv('VITE_API_MOCKING', mocking);
+  window.history.replaceState({}, '', '/team-attendance/upload');
+  renderStack();
+  expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
+  expect(screen.queryByRole('button', { name: '인증 사진 선택' })).not.toBeInTheDocument();
 });

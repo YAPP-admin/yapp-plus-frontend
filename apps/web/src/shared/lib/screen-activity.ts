@@ -5,6 +5,11 @@ import { createContext, useContext, useEffect, useEffectEvent, useRef } from 're
 /** 화면 셸이 제공하는 활성 상태입니다. 셸 밖의 단독 화면은 활성 상태로 취급합니다. */
 export const ScreenActiveContext = createContext(true);
 
+/** 화면 셸의 활성 상태를 읽는다. Provider 밖에서는 활성 상태를 반환한다. */
+export function useScreenActiveContext() {
+  return useContext(ScreenActiveContext);
+}
+
 /**
  * 마운트가 유지된 탭·상세 탐색에서 돌아오면 stale 조회를 갱신합니다.
  * 최초 진입은 React Query에 맡기며, 복귀 요청은 진행 중인 조회와 공유합니다.
@@ -12,7 +17,7 @@ export const ScreenActiveContext = createContext(true);
 export function useRefetchOnScreenReturn(
   query: Pick<QueryObserverResult<unknown, unknown>, 'isStale' | 'refetch'>,
 ) {
-  const active = useContext(ScreenActiveContext);
+  const active = useScreenActiveContext();
   const wasActive = useRef(active);
   const refetchIfStale = useEffectEvent(() => {
     if (query.isStale) {
