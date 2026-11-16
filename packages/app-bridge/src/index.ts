@@ -3,6 +3,8 @@ import { z } from 'zod';
 import type { LocationPermissionResult, LocationResult, OpenAppSettingsResult } from './location';
 import type {
   NotificationSettingsResult,
+  NotificationOpen,
+  AcknowledgeNotificationOpenInput,
   NotificationPermissionResult,
   SetNotificationEnabledInput,
 } from './notifications';
@@ -142,6 +144,12 @@ export type RefreshSessionInput = z.infer<typeof refreshSessionInputSchema>;
 
 /** safe-area 공유 상태와 native 인증 RPC의 공개 계약입니다. */
 export type AppBridgeState = {
+  /** 최신 탭 한 건이며 웹 처리 확인 또는 세션 종료 후 null로 돌아갑니다. */
+  notificationOpen: NotificationOpen | null;
+  /** 수신 갱신 신호입니다. 읽지 않은 개수와 무관합니다. */
+  notificationRevision: number;
+  /** 현재 eventId와 일치할 때만 이동 대기를 지웁니다. 잘못된 입력은 무시합니다. */
+  acknowledgeNotificationOpen: (input: AcknowledgeNotificationOpenInput) => Promise<void>;
   safeAreaInsets: SafeAreaInsets;
   getSafeAreaInsets: () => Promise<SafeAreaInsets>;
   signIn: (input: SignInInput) => Promise<AuthResult>;

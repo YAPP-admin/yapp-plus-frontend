@@ -2,6 +2,7 @@
 
 import {
   INITIAL_SAFE_AREA_INSETS,
+  acknowledgeNotificationOpenInputSchema,
   normalizeSafeAreaInsets,
   completeSignupInputSchema,
   refreshSessionInputSchema,
@@ -16,6 +17,7 @@ import { initialWindowMetrics } from 'react-native-safe-area-context';
 
 import { authActions } from './auth/native-auth-runtime';
 import { locationActions } from './location/native-location-runtime';
+import { PushNotificationState } from './notifications/push-notification-state';
 import { notificationSettingsActions } from './notifications/native-registration-sync';
 
 const initialSafeAreaInsets = normalizeSafeAreaInsets(
@@ -29,7 +31,19 @@ const invalidInput = (): Promise<AuthResult> =>
     retryable: false,
   });
 
-export const nativeAppBridge = bridge<AppBridgeState>(({ get }) => ({
+/** 브리지와 SDK가 공유하며 WebView 재마운트에도 보존하는 프로세스 범위 상태입니다. */
+export const pushNotificationState = new PushNotificationState();
+
+export const nativeAppBridge = bridge<AppBridgeState>(({ get, set }) => ({
+  ...pushNotificationState.getNotificationBridgeState(),
+  acknowledgeNotificationOpen: (input) => {
+    const parsed = acknowledgeNotificationOpenInputSchema.safeParse(input);
+    if (parsed.success) {
+      pushNotificationState.acknowledgeNotificationOpen(parsed.data.eventId);
+      set(pushNotificationState.getNotificationBridgeState());
+    }
+    return Promise.resolve();
+  },
   safeAreaInsets: initialSafeAreaInsets,
   getSafeAreaInsets: () => Promise.resolve(get().safeAreaInsets),
   signIn: (input) => {

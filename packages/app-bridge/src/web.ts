@@ -83,6 +83,8 @@ export const bindSafeAreaCssVariables = (
 const createLinkedBridge = () =>
   linkBridge<AppBridgeStore>({
     initialBridge: {
+      notificationOpen: null,
+      notificationRevision: 0,
       safeAreaInsets: INITIAL_SAFE_AREA_INSETS,
     },
     timeout: BRIDGE_READY_TIMEOUT_MS,
