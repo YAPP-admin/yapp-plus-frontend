@@ -2,6 +2,8 @@ import type { BridgeStore } from '@webview-bridge/web';
 import { z } from 'zod';
 import type { LocationPermissionResult, LocationResult, OpenAppSettingsResult } from './location';
 
+export * from './notifications';
+
 export {
   locationPermissionSchema,
   locationSampleSchema,
