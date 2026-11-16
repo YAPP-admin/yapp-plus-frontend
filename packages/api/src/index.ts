@@ -4,4 +4,4 @@
  */
 export type ApiPackage = '@yapp-plus/api';
 
-export { ApiError, initializeApiErrorHandling } from './http-error';
+export { ApiError } from './http-error';

@@ -1,4 +1,4 @@
-import { initializeApiErrorHandling } from '@yapp-plus/api';
+import '@yapp-plus/api/setup';
 import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { client } from '@yapp-plus/api/generated';
@@ -25,5 +25,3 @@ afterEach(() => {
 afterAll(() => {
   server.close();
 });
-
-initializeApiErrorHandling();
