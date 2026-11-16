@@ -1,3 +1,5 @@
+import { initializeApiErrorHandling } from '@yapp-plus/api';
+
 import '@seed-design/css/base.css';
 import '@seed-design/css/recipes/app-bar.css';
 import '@seed-design/css/recipes/app-bar-main.css';
@@ -11,6 +13,8 @@ import { Providers, createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
 import { createStackflowApp } from './stack';
 import { detectPlatform, getReducedMotionPreference } from './platform';
+
+initializeApiErrorHandling();
 
 const root = document.getElementById('root');
 

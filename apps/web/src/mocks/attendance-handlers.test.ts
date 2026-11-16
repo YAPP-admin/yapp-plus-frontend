@@ -28,7 +28,7 @@ it('잘못된 코드·세션은 기록을 바꾸지 않고 정상 재입력만 �
   ] as const) {
     const result = await verify({ body, kyOptions: { throwHttpErrors: false } });
     expect(result.response?.status).toBe(status);
-    expect(result.error).toMatchObject({ code });
+    expect(result.error).toMatchObject({ status, body: { code } });
     expect((await find6()).data).toEqual(before);
   }
   const result = await verify({ body: { sessionId: 39902, code: 1234 } });
@@ -69,7 +69,7 @@ it('예정된 세션만 있으면 출석 요청을 거절하고 내역·집계�
     kyOptions: { throwHttpErrors: false },
   });
   expect(result.response?.status).toBe(409);
-  expect(result.error).toMatchObject({ code: 'ATTENDANCE_UNAVAILABLE' });
+  expect(result.error).toMatchObject({ status: 409, body: { code: 'ATTENDANCE_UNAVAILABLE' } });
   expect((await find6()).data).toMatchObject({
     items: [],
     summary: { totalSessionCount: 3, startedSessionCount: 0 },

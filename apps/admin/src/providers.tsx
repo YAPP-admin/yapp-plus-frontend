@@ -1,8 +1,12 @@
+import { initializeApiErrorHandling } from '@yapp-plus/api';
+
 import { QueryClientProvider } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
 import { configureAdminApiClient } from './features/login';
 import { MockApiBoundary } from './mocks/mock-api-boundary';
 import { createAdminQueryClient } from './query-client';
+
+initializeApiErrorHandling();
 
 configureAdminApiClient();
 
