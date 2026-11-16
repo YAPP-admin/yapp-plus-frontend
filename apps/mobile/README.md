@@ -184,6 +184,12 @@ eas submit --platform ios --profile testflight --path /tmp/yapp-plus.ipa
 ```
 
 이 명령은 macOS의 Xcode·CocoaPods·fastlane과 Apple 서명 준비가 필요하다.
+GitHub Actions의 repository secret `FIREBASE_IOS_GOOGLE_SERVICES_PLIST`에는 배포 환경에 맞는
+plist 전체 내용을 등록한다. 빌드 workflow는 이를 runner 임시 파일로 복원하고 plist 형식을 검사한 뒤
+`FIREBASE_IOS_GOOGLE_SERVICES_FILE` 환경 변수로 경로를 전달한다. 경로용 Secret은 별도로 등록하지 않는다.
+Secret 누락 또는 형식 오류는 빌드 전에 실패하며, 원본 plist는 별도 artifact로 업로드하지 않는다.
+잘못된 프로젝트 파일을 등록했다면 Secret을 올바른 파일로 교체한 후 새 빌드를 실행한다.
+
 GitHub에서는 **Actions → Mobile TestFlight manual → Run workflow**에서 branch `main`을 선택한다.
 
 1. `operation=build`: 선택된 main SHA의 push CI가 성공했을 때 macOS 로컬 빌드를 실행한다.
