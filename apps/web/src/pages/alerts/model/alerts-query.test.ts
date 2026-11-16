@@ -5,7 +5,7 @@ import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { alertSentDateLabel } from './alerts-display';
-import { alertsInfiniteQueryOptions } from './alerts-query';
+import { alertsInfiniteQueryOptions, invalidateAlertsForPush } from './alerts-query';
 
 const url = `${apiBaseUrl}/api/users/me/notifications`;
 const item = {
@@ -73,4 +73,30 @@ describe('alertsInfiniteQueryOptions', () => {
     expect(result.error).not.toBeNull();
     expect(result.data?.pages[0]?.items[0]).toMatchObject({ id: 1 });
   });
+});
+
+it.each([true, false])('푸시 갱신은 화면 활성=%s일 때만 즉시 재조회한다', async (active) => {
+  let requests = 0;
+  server.use(
+    http.get(url, () => {
+      requests += 1;
+      return HttpResponse.json(page(requests));
+    }),
+  );
+  const client = createAppQueryClient();
+  const observer = new InfiniteQueryObserver(client, alertsInfiniteQueryOptions());
+  const unsubscribe = observer.subscribe(() => {});
+  await observer.refetch();
+  expect(requests).toBe(1);
+
+  await invalidateAlertsForPush(client, active);
+  expect(requests).toBe(active ? 2 : 1);
+  expect(observer.getCurrentResult().isStale).toBe(!active);
+
+  if (!active) {
+    await observer.refetch({ cancelRefetch: false });
+  }
+  expect(requests).toBe(2);
+  unsubscribe();
+  client.clear();
 });

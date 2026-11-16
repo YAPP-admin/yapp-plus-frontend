@@ -9,6 +9,7 @@ import { type ComponentProps, type ReactNode } from 'react';
 import type { TabsState } from '@/app/navigation/tab';
 import type { QueryClient } from '@tanstack/react-query';
 import { accountBoundaryPlugin, nativeEntryGuard } from './account-boundary';
+import { notificationNavigationPlugin } from './notification-navigation';
 import type { StackflowInitialContext } from './platform';
 
 type TabsParams = ActivityBaseParams & TabsState;
@@ -434,6 +435,7 @@ export function createStackflowApp(
     plugins: [
       basicRendererPlugin(),
       accountBoundaryPlugin(),
+      notificationNavigationPlugin(),
       historySync,
       ...(options.queryClient ? [nativeEntryGuard(options.queryClient, config.activities)] : []),
       seedPlugin(({ initialContext }) => ({
