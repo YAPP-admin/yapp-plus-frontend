@@ -13,6 +13,7 @@ import { notificationNavigationPlugin } from './notification-navigation';
 import type { StackflowInitialContext } from './platform';
 
 type TabsParams = ActivityBaseParams & TabsState;
+type TeamPhotoParams = ActivityBaseParams & { stage?: 'upload' | 'complete'; error?: 'true' };
 type BooleanQueryParams = ActivityBaseParams & { error?: 'true' };
 type AlertsParams = ActivityBaseParams;
 type SignupParams = ActivityBaseParams & { step?: 'phone' };
@@ -34,9 +35,8 @@ declare module '@stackflow/config' {
     TeamAttendanceGuide: EmptyActivityParams;
     AttendanceComplete: EmptyActivityParams;
     Settings: EmptyActivityParams;
-    TeamAttendanceUpload: BooleanQueryParams;
+    TeamAttendanceUpload: TeamPhotoParams;
     TeamAttendanceError: EmptyActivityParams;
-    TeamAttendanceComplete: EmptyActivityParams;
     Login: BooleanQueryParams;
     LoginError: EmptyActivityParams;
     Error: EmptyActivityParams;
@@ -106,7 +106,7 @@ export const activityComponents = {
       default: SettingsActivity,
     })),
   ),
-  TeamAttendanceUpload: lazy<BooleanQueryParams>(() =>
+  TeamAttendanceUpload: lazy<TeamPhotoParams>(() =>
     import('./activities/activities').then(({ TeamAttendanceUploadActivity }) => ({
       default: TeamAttendanceUploadActivity,
     })),
@@ -116,11 +116,7 @@ export const activityComponents = {
       default: TeamAttendanceErrorActivity,
     })),
   ),
-  TeamAttendanceComplete: lazy<EmptyActivityParams>(() =>
-    import('./activities/activities').then(({ TeamAttendanceCompleteActivity }) => ({
-      default: TeamAttendanceCompleteActivity,
-    })),
-  ),
+
   Login: lazy<BooleanQueryParams>(() =>
     import('./activities/activities').then(({ LoginActivity }) => ({
       default: LoginActivity,
@@ -195,6 +191,14 @@ function initialHistory(history: NonNullable<Route<never>['defaultHistory']>): t
     };
   };
 }
+
+const teamPhotoRoute = {
+  path: '/team-attendance/:stage(upload|complete)',
+  encode: ({ stage = 'upload', error }) => ({ stage, error }),
+  defaultHistory: initialHistory(() => [
+    { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
+  ]),
+} satisfies Route<typeof activityComponents.TeamAttendanceUpload>;
 
 export const stackflowConfig = defineConfig({
   activities: [
@@ -286,26 +290,12 @@ export const stackflowConfig = defineConfig({
     },
     {
       name: 'TeamAttendanceUpload',
-      route: {
-        path: '/team-attendance/upload',
-        defaultHistory: initialHistory(() => [
-          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
-        ]),
-      },
+      route: teamPhotoRoute,
     },
     {
       name: 'TeamAttendanceError',
       route: {
         path: '/team-attendance/error',
-        defaultHistory: initialHistory(() => [
-          { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
-        ]),
-      },
-    },
-    {
-      name: 'TeamAttendanceComplete',
-      route: {
-        path: '/team-attendance/complete',
         defaultHistory: initialHistory(() => [
           { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
         ]),

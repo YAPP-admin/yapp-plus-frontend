@@ -1,9 +1,10 @@
 /** 제출 mutation과 소유 폼의 수명을 연결한다. 계정·대상 전환은 폼을 다시 마운트한다. */
 import { revalidateLogic, useForm } from '@tanstack/react-form';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useMutation } from '@tanstack/react-query';
 import {
   createTeamAttendanceFormSchema,
-  SubmissionError,
+  type SubmissionError,
   type TeamAttendanceTarget,
   type TeamAttendanceFormValues,
 } from './submission-input';
@@ -15,14 +16,37 @@ import {
 
 /**
  * 호출 화면은 이탈 시 폼을 unmount하고 계정·대상 변경 시 key를 바꿔 초안을 폐기해야 한다.
- * 진행 상태는 세 HTTP mutation에서 합산하며 체크섬 계산 중에도 중복 실행은 차단한다.
+ * 유효한 접수가 확인되고 화면이 활성일 때만 onSubmitted를 직접 호출한다.
+ * 상위 mutation이 체크섬부터 세 HTTP mutation까지의 진행·오류·접수 결과를 소유한다.
  */
-export function useTeamAttendance(target: TeamAttendanceTarget, apiOptions: SubmissionApiOptions) {
-  const { submitPhoto, isPending } = usePhotoSubmission(apiOptions);
+export function useTeamAttendance(
+  target: TeamAttendanceTarget,
+  apiOptions: SubmissionApiOptions,
+  onSubmitted: (receipt: TeamAttendanceReceipt) => void,
+) {
+  const { submitPhoto } = usePhotoSubmission(apiOptions);
   // 화면 이탈 시 HTTP와 후속 요청을 중단하고 성공·결과 불명 뒤 재전송을 막는다.
   const controllerRef = useRef<AbortController | null>(null);
-  const [receipt, setReceipt] = useState<TeamAttendanceReceipt | null>(null);
-  const [error, setError] = useState<SubmissionError | null>(null);
+  const submission = useMutation<
+    TeamAttendanceReceipt,
+    SubmissionError,
+    { request: Promise<TeamAttendanceReceipt>; signal: AbortSignal }
+  >({
+    retry: false,
+    networkMode: 'always',
+    gcTime: 0,
+    // 사진 파일 대신 onSubmit에서 시작한 제출의 완료만 기다린다.
+    mutationFn: async ({ request, signal }) => {
+      const receipt = await request;
+      signal.throwIfAborted();
+      return receipt;
+    },
+    onError: (error, { signal }) => {
+      if (!signal.aborted && error.kind !== 'unknown') {
+        controllerRef.current = null;
+      }
+    },
+  });
 
   useEffect(() => {
     controllerRef.current = null;
@@ -42,44 +66,36 @@ export function useTeamAttendance(target: TeamAttendanceTarget, apiOptions: Subm
     defaultValues,
     validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
     validators: { onDynamic: createTeamAttendanceFormSchema(target) },
-    onSubmit: async ({ value }) => {
-      // Standard Schema 검증은 onSubmit의 입력 타입을 좁혀주지 않으므로 null만 확인한다.
+    onSubmit: ({ value }) => {
       if (controllerRef.current) {
         return;
       }
+      // Standard Schema는 onSubmit 타입을 좁히지 않으므로 사진의 null 여부만 확정한다.
       if (!value.photo) {
         return;
       }
-      const input = {
-        target,
-        photo: value.photo,
-        selectedMembershipIds: value.selectedMembershipIds,
-      };
-
       const current = new AbortController();
       controllerRef.current = current;
-      setError(null);
 
-      try {
-        const result = await submitPhoto(input, current.signal);
-        if (!current.signal.aborted) {
-          setReceipt(result);
-        }
-      } catch (caughtError) {
-        if (current.signal.aborted) {
-          return;
-        }
-        const failure =
-          caughtError instanceof SubmissionError
-            ? caughtError
-            : new SubmissionError('failed', '사진을 제출하지 못했어요. 다시 시도해 주세요.');
-        setError(failure);
-        if (failure.kind !== 'unknown') {
-          controllerRef.current = null;
-        }
-      }
+      const request = submitPhoto(
+        { target, photo: value.photo, selectedMembershipIds: value.selectedMembershipIds },
+        current.signal,
+      );
+
+      submission.mutate(
+        { request, signal: current.signal },
+        {
+          // 호출별 콜백은 폼이 해제된 뒤 실행하지 않는다.
+          onSuccess: (receipt) => onSubmitted(receipt),
+        },
+      );
     },
   });
 
-  return { form, receipt, isPending, error };
+  return {
+    form,
+    receipt: submission.data ?? null,
+    isPending: submission.isPending,
+    error: submission.error,
+  };
 }

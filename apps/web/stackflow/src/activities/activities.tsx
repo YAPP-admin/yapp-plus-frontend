@@ -1,8 +1,11 @@
 /** URL·step params를 화면 슬라이스와 연결하며 탭의 선택과 패널 수명을 소유합니다. */
+import { useState } from 'react';
+import type { TeamAttendanceReceipt } from '@/features/team-attendance';
+import { useActivity, useActivityParams, useStepFlow } from '@stackflow/react';
+import { developmentTeamTarget, teamPhotoDevelopmentEnabled } from './team-photo-development';
 import { ActivityScreen } from './activity-screen';
 import { useSignupFunnel } from './use-signup-funnel';
 import { IconChevronLeftLine } from '@karrotmarket/react-monochrome-icon';
-import { useActivity, useActivityParams, useStepFlow } from '@stackflow/react';
 import { ActionButton, Icon } from '@yapp-plus/ui';
 import { AlertsPage } from '@/pages/alerts';
 import { AttendanceCompletePage } from '@/pages/attendance-complete';
@@ -197,29 +200,52 @@ export function SettingsActivity() {
 }
 
 export function TeamAttendanceUploadActivity() {
-  // 사진 입력은 개발 모의 환경에만 노출한다. 직접 URL 진입에도 같은 경계를 적용한다.
-  if (!import.meta.env.DEV || import.meta.env.VITE_API_MOCKING !== 'true') {
+  const activity = useActivity();
+  if (!teamPhotoDevelopmentEnabled() || !developmentTeamTarget) {
+    return <NotFoundActivity />;
+  }
+  return activity.isTop ? <TeamPhotoSubmissionFlow /> : null;
+}
+
+/** 입력·완료를 한 화면 수명으로 묶고 계정 변경 시 기존 인증 경계가 함께 폐기한다. */
+function TeamPhotoSubmissionFlow() {
+  const activity = useActivity();
+  const params = useActivityParams<'TeamAttendanceUpload'>();
+  const stepFlow = useStepFlow('TeamAttendanceUpload');
+  const step = activity.steps.filter((item) => item.id !== activity.id).at(-1);
+  const completed = (step?.params ?? params).stage === 'complete';
+  const [receipt, setReceipt] = useState<TeamAttendanceReceipt | null>(null);
+
+  if (!developmentTeamTarget || (completed && !receipt)) {
     return <NotFoundActivity />;
   }
   return (
-    <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
-      <TeamAttendanceUploadPage />
+    <ActivityScreen
+      title={completed ? '팀 세션 인증 완료' : '팀 세션 인증 사진 올리기'}
+      preventSwipeBack
+    >
+      {completed && receipt ? (
+        <TeamAttendanceCompletePage receipt={receipt} />
+      ) : (
+        <TeamAttendanceUploadPage
+          target={developmentTeamTarget}
+          onSubmitted={(result) => {
+            setReceipt(result);
+            stepFlow.replaceStep({ stage: 'complete' }, { targetActivityId: activity.id });
+          }}
+        />
+      )}
     </ActivityScreen>
   );
 }
 
 export function TeamAttendanceErrorActivity() {
+  if (!teamPhotoDevelopmentEnabled()) {
+    return <NotFoundActivity />;
+  }
   return (
     <ActivityScreen title="팀 세션 인증 오류">
       <TeamAttendanceErrorPage />
-    </ActivityScreen>
-  );
-}
-
-export function TeamAttendanceCompleteActivity() {
-  return (
-    <ActivityScreen title="팀 세션 인증 완료" showBack={false} preventSwipeBack>
-      <TeamAttendanceCompletePage />
     </ActivityScreen>
   );
 }

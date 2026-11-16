@@ -16,7 +16,7 @@ const { submitPhoto } = vi.hoisted(() => ({
     vi.fn<(input: SubmissionInput, signal: AbortSignal) => Promise<TeamAttendanceReceipt>>(),
 }));
 vi.mock('./use-photo-submission', () => ({
-  usePhotoSubmission: () => ({ submitPhoto, isPending: false }),
+  usePhotoSubmission: () => ({ submitPhoto }),
 }));
 const input: SubmissionInput = {
   target: teamAttendanceTargetSchema.parse({
@@ -35,9 +35,10 @@ const receipt: TeamAttendanceReceipt = {
   teamName: '팀',
   members: input.target.members,
 };
+const onSubmitted = vi.fn<(receipt: TeamAttendanceReceipt) => void>();
 function setup() {
   const client = new QueryClient();
-  const hook = renderHook(() => useTeamAttendance(input.target, {}), {
+  const hook = renderHook(() => useTeamAttendance(input.target, {}, onSubmitted), {
     wrapper: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     ),
@@ -57,19 +58,26 @@ beforeEach(() => vi.resetAllMocks());
 it('연속 클릭은 한 번만 실행하며 성공 뒤 재전송을 막는다', async () => {
   const deferred = pendingReceipt();
   vi.mocked(submitPhoto).mockReturnValue(deferred.promise);
-  const { result } = setup();
+  const { result, client } = setup();
   act(() => {
     void result.current.form.handleSubmit();
     void result.current.form.handleSubmit();
   });
   await waitFor(() => expect(submitPhoto).toHaveBeenCalledTimes(1));
+  expect(result.current.isPending).toBe(true);
+  expect(client.getMutationCache().getAll()[0]?.state.variables).toEqual({
+    request: deferred.promise,
+    signal: expect.any(AbortSignal),
+  });
 
   act(() => deferred.resolve(receipt));
   await waitFor(() => expect(result.current.receipt).toEqual(receipt));
+  expect(result.current.isPending).toBe(false);
   await act(async () => {
     await result.current.form.handleSubmit();
   });
   expect(submitPhoto).toHaveBeenCalledTimes(1);
+  expect(onSubmitted).toHaveBeenCalledExactlyOnceWith(receipt);
 });
 it.each(['failed', 'unknown'] as const)('%s 후 재제출 가능 여부를 구분한다', async (kind) => {
   vi.mocked(submitPhoto).mockRejectedValue(new SubmissionError(kind, '안내'));
@@ -99,6 +107,7 @@ it('폼 이탈 후 늦은 접수를 무시하고 새 폼에서는 다시 제출�
     await deferred.promise;
   });
   expect(hook.result.current.receipt).toBeNull();
+  expect(onSubmitted).not.toHaveBeenCalled();
   vi.mocked(submitPhoto).mockResolvedValue(receipt);
   const next = setup();
   await act(async () => {

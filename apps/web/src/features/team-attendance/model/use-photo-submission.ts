@@ -174,7 +174,5 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
     }
   }
 
-  const isPending = presign.isPending || upload.isPending || submit.isPending;
-
-  return { submitPhoto, isPending };
+  return { submitPhoto };
 }
