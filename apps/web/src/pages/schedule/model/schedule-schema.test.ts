@@ -64,6 +64,9 @@ it('재조회 오류는 기존 데이터를 지우지 않는다', async () => {
       HttpResponse.json({ code: 'FAILED' }, { status: 500 }),
     ),
   );
-  await expect(client.fetchQuery(options)).rejects.toEqual({ code: 'FAILED' });
+  await expect(client.fetchQuery(options)).rejects.toMatchObject({
+    status: 500,
+    body: { code: 'FAILED' },
+  });
   expect(client.getQueryData(options.queryKey)).toEqual(scheduleFixture);
 });

@@ -3,3 +3,5 @@
  * 이 루트 진입점은 직접 작성하는 API 유틸리티에 사용합니다.
  */
 export type ApiPackage = '@yapp-plus/api';
+
+export { ApiError, initializeApiErrorHandling } from './http-error';

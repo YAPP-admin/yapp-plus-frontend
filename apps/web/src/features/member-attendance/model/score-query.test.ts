@@ -52,7 +52,7 @@ it.each([
   [500, 'UNKNOWN'],
 ])('미대상이 아닌 오류는 조회 실패다 (%s, %s)', async (status, code) => {
   server.use(http.get(url, () => HttpResponse.json({ code, message: '조회 실패' }, { status })));
-  await expect(query()).rejects.toEqual({ code, message: '조회 실패' });
+  await expect(query()).rejects.toMatchObject({ status, body: { code, message: '조회 실패' } });
 });
 
 it('미대상 오류 본문도 검증한다', async () => {
@@ -61,7 +61,10 @@ it('미대상 오류 본문도 검증한다', async () => {
       HttpResponse.json({ code: 'ATTENDANCE_SCORE_NOT_ELIGIBLE' }, { status: 403 }),
     ),
   );
-  await expect(query()).rejects.toEqual({ code: 'ATTENDANCE_SCORE_NOT_ELIGIBLE' });
+  await expect(query()).rejects.toMatchObject({
+    status: 403,
+    body: { code: 'ATTENDANCE_SCORE_NOT_ELIGIBLE' },
+  });
 });
 
 it('응답 없는 네트워크 오류를 미대상으로 바꾸지 않는다', async () => {

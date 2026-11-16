@@ -1,3 +1,4 @@
+import { ApiError } from '@yapp-plus/api';
 import {
   onlineManager,
   useMutationState,
@@ -11,6 +12,7 @@ import {
   verifyMutation,
   verifyMutationKey,
   zVerifyAttendanceCodeResponse,
+  zErrorResponse,
 } from '@yapp-plus/api/generated';
 import { useNativeAuthSession } from '@/features/auth';
 import { currentWeekQueryOptions } from './current-week-query';
@@ -74,11 +76,15 @@ export function useCodeAttendance(onComplete: () => void) {
   const { reset, isPending: pending } = mutation;
   const available = session?.attendanceStatus === 'AVAILABLE' && confirmed !== session.sessionId;
   const queryError = week.error && '세션을 불러오지 못했어요. 다시 확인해 주세요.';
+  const parsedError = zErrorResponse
+    .pick({ code: true })
+    .safeParse(mutation.error instanceof ApiError ? mutation.error.body : mutation.error);
   const submissionError =
     mutation.error &&
     (mutation.error instanceof SubmissionError
       ? mutation.error.message
-      : (messages[mutation.error.code] ?? '출석 결과를 확인하지 못했어요. 다시 시도해 주세요.'));
+      : (messages[parsedError.success ? parsedError.data.code : ''] ??
+        '출석 결과를 확인하지 못했어요. 다시 시도해 주세요.'));
   const availabilityError = available ? null : '현재 출석할 수 있는 세션이 없어요.';
   return {
     pending,

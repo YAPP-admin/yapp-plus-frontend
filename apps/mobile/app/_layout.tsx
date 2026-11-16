@@ -1,3 +1,5 @@
+import { initializeApiErrorHandling } from '@yapp-plus/api';
+
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -6,6 +8,8 @@ import { initialWindowMetrics, SafeAreaProvider } from 'react-native-safe-area-c
 import pretendardVariable from '../assets/fonts/PretendardVariable.ttf';
 import { startNativeNotificationRuntime } from '../src/notifications/native-notification-runtime';
 import { startNativeNotificationRegistrationSync } from '../src/notifications/native-registration-sync';
+
+initializeApiErrorHandling();
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({ 'Pretendard Variable': pretendardVariable });

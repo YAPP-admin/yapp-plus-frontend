@@ -1,3 +1,4 @@
+import { ApiError } from '@yapp-plus/api';
 import { queryOptions } from '@tanstack/react-query';
 import {
   mineOptions,
@@ -32,7 +33,7 @@ export const memberScoreQueryOptions = (options?: Parameters<typeof mineOptions>
       try {
         return { status: 'available', score: scoreSchema.parse(await queryFn?.(context)) };
       } catch (cause) {
-        const error = zErrorResponse.safeParse(cause);
+        const error = zErrorResponse.safeParse(cause instanceof ApiError ? cause.body : cause);
         if (
           error.success &&
           (error.data.code === 'ATTENDANCE_SCORE_NOT_ELIGIBLE' ||
