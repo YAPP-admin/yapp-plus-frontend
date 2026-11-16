@@ -2,11 +2,45 @@
 
 import { expect, it, vi } from 'vitest';
 
-import { SessionManager, type RenewalResult } from './session';
+import { SessionManager, type RenewalResult, type RevocationResult } from './session';
 
 vi.mock('expo-crypto', async () => {
   const { randomUUID } = await import('node:crypto');
   return { randomUUID };
+});
+
+it('서버 로그아웃 성공 뒤 로컬 삭제 실패는 자격을 복원하지 않고 삭제만 재시도한다', async () => {
+  secureStore.setItemAsync.mockResolvedValue(undefined);
+  secureStore.deleteItemAsync.mockResolvedValue(undefined);
+  secureStore.getItemAsync.mockClear();
+  const manager = new SessionManager();
+  await expect(
+    manager.establish(
+      {
+        accessToken: 'fixture-access',
+        refreshToken: 'fixture-refresh',
+        expiresAt: Date.now() + 3_600_000,
+        userId: 1,
+      },
+      manager.captureGeneration(),
+    ),
+  ).resolves.toMatchObject({ status: 'SIGNED_IN' });
+  secureStore.deleteItemAsync.mockRejectedValue(new Error('storage'));
+  const revoke = vi
+    .fn<(token: string) => Promise<RevocationResult>>()
+    .mockResolvedValue({ ok: true });
+  await expect(manager.signOut(revoke)).resolves.toMatchObject({
+    status: 'ERROR',
+    code: 'STORAGE',
+  });
+  expect(manager.snapshot).toBeUndefined();
+  expect(manager.refreshToken).toBeUndefined();
+  secureStore.deleteItemAsync.mockResolvedValue(undefined);
+  const renew = vi.fn<() => Promise<RenewalResult>>();
+  await expect(manager.get(renew)).resolves.toEqual({ status: 'SIGNED_OUT' });
+  expect(renew).not.toHaveBeenCalled();
+  expect(secureStore.getItemAsync).not.toHaveBeenCalled();
+  expect(revoke).toHaveBeenCalledExactlyOnceWith('fixture-refresh');
 });
 
 const secureStore = vi.hoisted(() => ({

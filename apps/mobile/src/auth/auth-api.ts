@@ -18,7 +18,7 @@ import {
 } from '@yapp-plus/api/generated';
 
 import { toSessionTokens } from './credentials';
-import type { RenewalResult } from './session';
+import type { RenewalResult, RevocationResult } from './session';
 
 export type NativeAuthenticationApiResult = Readonly<{
   data?: AuthenticationResponse;
@@ -26,6 +26,8 @@ export type NativeAuthenticationApiResult = Readonly<{
 }>;
 
 export type NativeVoidApiResult = Readonly<{ error?: unknown }>;
+
+const authHttpStatus = { noContent: 204 } as const;
 
 const transportFailure = (error: unknown): RenewalResult => ({
   kind: 'temporary-failure',
@@ -91,10 +93,24 @@ export const nativeAuthApi = {
       return transportFailure(error);
     }
   },
-  revoke: async (input: Options<RevokeData, false>): Promise<NativeVoidApiResult> => {
-    const result = await revoke(input);
-
-    return result;
+  revoke: async (input: Options<RevokeData, false>): Promise<RevocationResult> => {
+    try {
+      const result = await revoke({
+        ...input,
+        throwOnError: false,
+        responseStyle: 'fields',
+        timeout: 20_000,
+        retry: 0,
+      });
+      return result.response?.status === authHttpStatus.noContent
+        ? { ok: true }
+        : { ok: false, code: result.response ? 'SERVER' : 'NETWORK' };
+    } catch (error) {
+      return {
+        ok: false,
+        code: error instanceof Error && error.name === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK',
+      };
+    }
   },
   withdraw: async (input: Options<WithdrawData, false>): Promise<NativeVoidApiResult> => {
     const result = await withdraw(input);

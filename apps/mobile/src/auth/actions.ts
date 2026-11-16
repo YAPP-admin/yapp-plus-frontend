@@ -118,6 +118,10 @@ export class AuthActions {
 
   /** 저장된 refresh token으로 현재 세션을 복구하거나 갱신합니다. */
   public getSession(): Promise<AuthResult> {
+    if (this.runtime.session.isSigningOut) {
+      const session = this.runtime.session.snapshot;
+      return Promise.resolve(session ? { status: 'SIGNED_IN', session } : this.busy());
+    }
     return this.runtime.session.get((refreshToken) =>
       this.runtime.renew({ body: { refreshToken } }),
     );
@@ -125,36 +129,44 @@ export class AuthActions {
 
   /** WebView의 401 대응 요청에 대해 최신 access token을 반환합니다. */
   public refreshSession(input: RefreshSessionInput): Promise<AuthResult> {
+    if (this.runtime.session.isSigningOut) {
+      return Promise.resolve(this.busy());
+    }
     return this.runtime.session.refresh(input, (refreshToken) =>
       this.runtime.renew({ body: { refreshToken } }),
     );
   }
 
-  /** 서버 응답을 기다리기 전에 로컬 세션을 무효화하고 삭제를 예약합니다. */
-  public async signOut(): Promise<AuthResult> {
-    const refreshToken = this.runtime.session.refreshToken;
-    this.registration = undefined;
-    const clearing = this.runtime.session.clear();
-    const generation = this.runtime.session.captureGeneration();
-    if (refreshToken) {
-      try {
-        await this.runtime.revoke({ body: { refreshToken } });
-      } catch {
-        // 서버 해제가 실패해도 기기에서 refresh token을 제거해 로그아웃을 완료합니다.
-      }
-    }
+  /** 시작한 요청에는 종료 대기 중에도 401 복구를 허용합니다. 새 요청은 실행하지 않습니다. */
+  public runSessionRequest<T>(
+    request: (refresh: (input: RefreshSessionInput) => Promise<AuthResult>) => Promise<T>,
+  ): Promise<T | undefined> {
+    return this.runtime.session.runRequest(() =>
+      request((input) =>
+        this.runtime.session.refresh(input, (refreshToken) =>
+          this.runtime.renew({ body: { refreshToken } }),
+        ),
+      ),
+    );
+  }
 
-    const result = await clearing;
-    // 새 로그인 진행·가입 대기도 이전 로그아웃 응답으로 덮지 않습니다.
-    return this.runtime.session.isCurrent(generation) &&
-      !this.isAuthenticating() &&
-      !this.registration
-      ? result
-      : { status: AUTH_STATUS.cancelled };
+  /** 서버 해제 성공 후 로컬 세션을 제거하며 실패하면 로그인 상태를 유지합니다. */
+  public async signOut(): Promise<AuthResult> {
+    this.registration = undefined;
+    return this.runtime.session.signOut(async (refreshToken) => {
+      try {
+        return await this.runtime.revoke({ body: { refreshToken } });
+      } catch {
+        return { ok: false, code: 'NETWORK' };
+      }
+    });
   }
 
   /** 현재 access token으로 탈퇴를 완료한 뒤 로컬 자격을 제거합니다. */
   public async withdraw(): Promise<AuthResult> {
+    if (this.runtime.session.isSigningOut) {
+      return this.busy();
+    }
     const accessToken = this.runtime.session.accessToken;
     if (!accessToken) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.authRequired, retryable: false };
@@ -213,9 +225,14 @@ export class AuthActions {
   /** 무효화된 이전 세대의 인증은 새 인증을 막지 않습니다. */
   private isAuthenticating(): boolean {
     return (
-      this.authenticatingGeneration !== undefined &&
-      this.runtime.session.isCurrent(this.authenticatingGeneration)
+      this.runtime.session.isSigningOut ||
+      (this.authenticatingGeneration !== undefined &&
+        this.runtime.session.isCurrent(this.authenticatingGeneration))
     );
+  }
+
+  private busy(): AuthResult {
+    return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.busy, retryable: true };
   }
 
   private finishAuthentication(generation: number): void {

@@ -168,7 +168,7 @@ it.each(['서버 실패 후 재시도', '로그아웃 후 재로그인'] as cons
       authenticateApple: vi.fn<NativeAuthRuntime['authenticateApple']>(),
       register: vi.fn<NativeAuthRuntime['register']>(),
       renew: vi.fn<NativeAuthRuntime['renew']>(),
-      revoke: vi.fn<NativeAuthRuntime['revoke']>().mockResolvedValue({}),
+      revoke: vi.fn<NativeAuthRuntime['revoke']>().mockResolvedValue({ ok: true }),
       withdraw: vi.fn<NativeAuthRuntime['withdraw']>(),
     };
     const actions = new AuthActions(runtime);

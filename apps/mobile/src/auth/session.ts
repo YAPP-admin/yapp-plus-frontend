@@ -30,6 +30,9 @@ export type RenewalResult =
 
 type Renew = (refreshToken: string) => Promise<RenewalResult>;
 
+/** 로그아웃은 명세의 204 응답을 확인한 경우에만 로컬 자격을 제거합니다. */
+export type RevocationResult = { ok: true } | { ok: false; code: 'NETWORK' | 'TIMEOUT' | 'SERVER' };
+
 const unexpectedRenewalResult = (_result: never): never => {
   throw new Error('알 수 없는 세션 갱신 결과예요.');
 };
@@ -43,6 +46,98 @@ type RestoreState = 'allowed' | 'blocked' | 'deletion-failed';
  * 저장소 접근은 직렬화하고, 복구·갱신 요청은 세대별로 공유합니다.
  */
 export class SessionManager {
+  private readonly requests = new Set<Promise<unknown>>();
+  private signingOut: Promise<AuthResult> | undefined;
+
+  /** 종료 중에는 새 인증·갱신·등록 요청을 시작하지 않습니다. */
+  public get isSigningOut(): boolean {
+    return this.signingOut !== undefined;
+  }
+
+  /** 이미 시작한 요청의 401 복구까지 기다립니다. 종료 중 새 요청은 실행하지 않습니다. */
+  public async runRequest<T>(request: () => Promise<T>): Promise<T | undefined> {
+    if (this.isSigningOut) {
+      return undefined;
+    }
+    const pending = request();
+    this.requests.add(pending);
+    try {
+      return await pending;
+    } finally {
+      this.requests.delete(pending);
+    }
+  }
+
+  /** 진행 중 작업의 토큰 회전을 기다린 뒤 서버 해제에 성공한 세션만 삭제합니다. */
+  public signOut(revoke: (token: string) => Promise<RevocationResult>): Promise<AuthResult> {
+    if (this.signingOut) {
+      return this.signingOut;
+    }
+    const pending = this.finishSignOut(revoke, this.generation).finally(() => {
+      if (this.signingOut === pending) {
+        this.signingOut = undefined;
+      }
+    });
+    this.signingOut = pending;
+    return pending;
+  }
+
+  private async finishSignOut(
+    revoke: (token: string) => Promise<RevocationResult>,
+    generation: number,
+  ): Promise<AuthResult> {
+    await Promise.allSettled(this.requests);
+    await Promise.allSettled([this.restoring, this.refreshing]);
+    if (!this.isCurrent(generation)) {
+      // 대기하던 갱신이 이미 자격 만료를 확정했다면 웹에도 종료 상태를 전달합니다.
+      if (!this.currentSession && this.restoreState === 'blocked') {
+        return { status: 'SIGNED_OUT' };
+      }
+      return { status: 'CANCELLED' };
+    }
+    if (!this.storedSession && this.restoreState === 'allowed') {
+      try {
+        await this.loadStoredSession(generation);
+      } catch {
+        return { status: 'ERROR', code: 'STORAGE', retryable: true };
+      }
+      if (!this.isCurrent(generation)) {
+        return { status: 'CANCELLED' };
+      }
+    }
+    const token = this.refreshToken;
+    if (token) {
+      const result = await revoke(token);
+      if (!this.isCurrent(generation)) {
+        return { status: 'CANCELLED' };
+      }
+      if (!result.ok) {
+        return { status: 'ERROR', code: result.code, retryable: true };
+      }
+    }
+    return this.clear();
+  }
+
+  private readonly listeners = new Set<() => void>();
+
+  /** I/O 없이 현재 메모리 세션을 읽어 비동기 작업의 계정 경계를 확인합니다. */
+  public get snapshot(): AuthSession | undefined {
+    return this.currentSession;
+  }
+
+  /** 세션 확정·갱신·삭제를 구독합니다. 반환 함수로 앱 수명 종료 시 해제합니다. */
+  public subscribe(listener: () => void): () => void {
+    this.listeners.add(listener);
+    return () => {
+      this.listeners.delete(listener);
+    };
+  }
+
+  private notify(): void {
+    for (const listener of this.listeners) {
+      listener();
+    }
+  }
   private readonly storageMutex = new Mutex();
   private restoring: Promise<AuthResult> | undefined;
   private restoreState: RestoreState = 'allowed';
@@ -121,15 +216,7 @@ export class SessionManager {
   private async restore(currentGeneration: number, renew: Renew): Promise<AuthResult> {
     if (!this.storedSession) {
       try {
-        await this.storageMutex.withLock(async () => {
-          if (!this.isCurrent(currentGeneration) || this.storedSession) {
-            return;
-          }
-          const session = await authStorage.getSession();
-          if (this.isCurrent(currentGeneration)) {
-            this.storedSession = session ?? undefined;
-          }
-        });
+        await this.loadStoredSession(currentGeneration);
       } catch {
         if (!this.isCurrent(currentGeneration)) {
           return { status: 'CANCELLED' };
@@ -141,6 +228,18 @@ export class SessionManager {
       return { status: 'CANCELLED' };
     }
     return this.refresh(undefined, renew);
+  }
+
+  private async loadStoredSession(currentGeneration: number): Promise<void> {
+    await this.storageMutex.withLock(async () => {
+      if (!this.isCurrent(currentGeneration) || this.storedSession) {
+        return;
+      }
+      const session = await authStorage.getSession();
+      if (this.isCurrent(currentGeneration)) {
+        this.storedSession = session ?? undefined;
+      }
+    });
   }
 
   /**
@@ -186,6 +285,7 @@ export class SessionManager {
     this.currentSession = undefined;
     this.storedSession = undefined;
     this.restoreState = 'blocked';
+    this.notify();
     return this.deleteSession(currentGeneration);
   }
 
@@ -306,6 +406,7 @@ export class SessionManager {
         this.advanceGeneration();
       }
       this.restoreState = 'allowed';
+      this.notify();
       return { status: 'SIGNED_IN', session: this.currentSession };
     });
   }
