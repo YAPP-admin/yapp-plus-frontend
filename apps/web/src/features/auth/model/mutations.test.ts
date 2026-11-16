@@ -175,22 +175,23 @@ it('중복 인증을 거절해도 첫 요청은 유지한다', async () => {
   expect(bridge.signInWithNative).toHaveBeenCalledTimes(1);
 });
 
-it('logout 진행은 로딩이고 실패는 조회 불가이며 onFailure를 호출한다', async () => {
+it('logout 진행 상태는 mutation이 소유하고 실패해도 세션과 계정 cache를 유지한다', async () => {
   const qc = client();
   qc.setQueryData(nativeSessionQueryKey, signedIn());
+  qc.setQueryData(['member-fixture'], { name: '기존 데이터' });
   const response = deferred<AuthResult>();
   const notify = vi.fn<() => void>();
   bridge.signOutNative.mockReturnValueOnce(response.promise);
   const pending = logout(qc, { onFailure: notify }).catch(() => undefined);
   await vi.waitFor(() => expect(bridge.signOutNative).toHaveBeenCalled());
-  expect(qc.getQueryData(nativeSessionQueryKey)).toEqual({ status: 'AUTHENTICATING' });
+  expect(qc.isMutating({ mutationKey: ['native-auth', 'logout'] })).toBe(1);
+  expect(qc.getQueryData(nativeSessionQueryKey)).toEqual(signedIn());
   response.reject(new Error('timeout'));
   await pending;
   expect(notify).toHaveBeenCalledTimes(1);
-  expect(qc.getQueryData(nativeSessionQueryKey)).toMatchObject({
-    status: 'UNAVAILABLE',
-    code: 'OUTCOME_UNKNOWN',
-  });
+  expect(qc.getQueryData(nativeSessionQueryKey)).toEqual(signedIn());
+  expect(qc.getQueryData(['member-fixture'])).toEqual({ name: '기존 데이터' });
+  expect(qc.isMutating()).toBe(0);
 });
 
 it('취소는 callback이나 현재 세션을 변경하지 않는다', async () => {
@@ -205,6 +206,22 @@ it('취소는 callback이나 현재 세션을 변경하지 않는다', async () 
   expect(notify).not.toHaveBeenCalled();
   expect(qc.getQueryData(nativeSessionQueryKey)).toEqual(signedIn());
 });
+
+it.each(['SERVER', 'NETWORK', 'STORAGE'] as const)(
+  'logout %s 결과를 세션 유지 또는 로컬 삭제 복구로 구분한다',
+  async (code) => {
+    const qc = client();
+    qc.setQueryData(nativeSessionQueryKey, signedIn());
+    const result: AuthResult = { status: 'ERROR', code, retryable: true };
+    bridge.signOutNative.mockResolvedValue(result);
+    const failure = vi.fn<() => void>();
+    await logout(qc, { onFailure: failure });
+    expect(failure).toHaveBeenCalledOnce();
+    expect(qc.getQueryData(nativeSessionQueryKey)).toEqual(
+      code === 'STORAGE' ? result : signedIn(),
+    );
+  },
+);
 
 it('다른 QueryClient의 작업은 서로 무효화하지 않는다', async () => {
   const qc = client();

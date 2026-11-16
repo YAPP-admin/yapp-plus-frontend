@@ -5,9 +5,12 @@ import { nativeAuthApi } from './auth-api';
 import { authenticateWithProvider } from './providers';
 import { SessionManager } from './session';
 
-/** WebView 브리지가 사용하는 유일한 운영 인증 흐름 인스턴스입니다. */
+/** 브리지와 알림이 구독하는 앱 범위의 유일한 세션 관리자입니다. */
+export const nativeSession = new SessionManager();
+
+/** 브리지와 네이티브 알림이 같은 세션 관리자와 single-flight를 공유합니다. */
 export const authActions = new AuthActions({
-  session: new SessionManager(),
+  session: nativeSession,
   authenticateWithProvider,
   authenticateApple: nativeAuthApi.authenticateApple,
   authenticateGoogle: nativeAuthApi.authenticateGoogle,

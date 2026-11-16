@@ -55,9 +55,6 @@ export const beginAuthOperation = (client: QueryClient, kind: AuthOperationKind)
   }
 
   void client.cancelQueries({ queryKey: nativeSessionQueryKey });
-  if (kind === 'logout') {
-    client.setQueryData(nativeSessionQueryKey, { status: 'AUTHENTICATING' });
-  }
 
   return operation;
 };
@@ -83,6 +80,16 @@ export const applyAuthResult = (
 
   const result =
     kind === 'logout' && (!response || response.status === 'CANCELLED') ? unavailable : response;
+  // 진행 상태는 mutation이 소유합니다. 서버 해제 실패로 로그인 cache를 지우지 않습니다.
+  const localDeletionFailed = result?.status === 'ERROR' && result.code === 'STORAGE';
+  if (
+    kind === 'logout' &&
+    result?.status !== 'SIGNED_OUT' &&
+    result?.status !== 'WITHDRAWN' &&
+    !localDeletionFailed
+  ) {
+    return result;
+  }
   if (
     result?.status === 'SIGNED_IN' ||
     result?.status === 'SIGNED_OUT' ||
