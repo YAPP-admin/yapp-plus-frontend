@@ -1,6 +1,11 @@
 import type { BridgeStore } from '@webview-bridge/web';
 import { z } from 'zod';
 import type { LocationPermissionResult, LocationResult, OpenAppSettingsResult } from './location';
+import type {
+  NotificationSettingsResult,
+  NotificationPermissionResult,
+  SetNotificationEnabledInput,
+} from './notifications';
 
 export * from './notifications';
 
@@ -151,6 +156,14 @@ export type AppBridgeState = {
   requestCurrentLocation: () => Promise<LocationResult>;
   /** 사용자가 선택했을 때 앱 설정을 연다. 권한 변경을 의미하지 않는다. */
   openAppSettings: () => Promise<OpenAppSettingsResult>;
+  /** 팝업 없이 저장된 수신 선택과 OS 권한을 조회합니다. */
+  getNotificationSettings: () => Promise<NotificationSettingsResult>;
+  /** 권한·서버 반영·저장에 성공한 경우에만 수신 선택을 확정합니다. */
+  setNotificationEnabled: (
+    input: SetNotificationEnabledInput,
+  ) => Promise<NotificationSettingsResult>;
+  /** OS 권한만 요청하며 저장된 수신 선택은 변경하지 않습니다. */
+  requestNotificationPermission: () => Promise<NotificationPermissionResult>;
 };
 
 export type AppBridgeStore = BridgeStore<AppBridgeState>;

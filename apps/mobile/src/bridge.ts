@@ -16,6 +16,7 @@ import { initialWindowMetrics } from 'react-native-safe-area-context';
 
 import { authActions } from './auth/native-auth-runtime';
 import { locationActions } from './location/native-location-runtime';
+import { notificationSettingsActions } from './notifications/native-registration-sync';
 
 const initialSafeAreaInsets = normalizeSafeAreaInsets(
   initialWindowMetrics?.insets ?? INITIAL_SAFE_AREA_INSETS,
@@ -49,6 +50,9 @@ export const nativeAppBridge = bridge<AppBridgeState>(({ get }) => ({
   getLocationPermission: () => locationActions.getLocationPermission(),
   requestCurrentLocation: () => locationActions.requestCurrentLocation(),
   openAppSettings: () => locationActions.openAppSettings(),
+  getNotificationSettings: () => notificationSettingsActions.getNotificationSettings(),
+  setNotificationEnabled: (input) => notificationSettingsActions.setNotificationEnabled(input),
+  requestNotificationPermission: () => notificationSettingsActions.requestNotificationPermission(),
 }));
 
 export const { WebView: BridgeWebView } = createWebView({
