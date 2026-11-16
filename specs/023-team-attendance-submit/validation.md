@@ -114,3 +114,31 @@ origin/main의 merge-base 대비 작업 트리와 새 파일을 포함해 463줄
 - 계정·대상 변경 시 폼 remount는 호출 화면의 계약이다. 시뮬레이터에서 picker 반환만 대체해 JPEG·PNG·HEIC 변환과 취소·손상 파일·캐시 정리를 확인했다. 실제 선택창·WebView 미리보기·실기기·실서버 제출은 미검증이다. 인증 갱신 timeout으로 화면 진입이 막혔으며 화면 연결은 4단계로 남긴다. 복구는 아직 화면에 연결하지 않은 feature를 제거하면 된다.
 - Modern Web Guidance에서 요청 진행 표시를 검색했으나 이번 상태 합산에 적용할 UI 가이드는 없었다. [TanStack Query 공식 문서](https://tanstack.com/query/latest/docs/framework/react/guides/mutations)의 mutation 상태와 순차 실행 방식을 따른다.
 - 최종 `check` 통과: 웹 lint·typecheck·456개 테스트(제출 관련 32개) 새 실행, 나머지 lint·typecheck 각 6개와 테스트 4개 캐시 재사용. 빌드는 웹 새 실행·나머지 2개 캐시 통과이며 기존 큰 청크 경고만 남았다.
+
+### 4단계 — 개발 제출 화면 통합
+
+- 사용자 승인으로 `a6e613b6` 위에 `DongjaJ/team-photo-integration`을 만들었다. 검토 base는 `DongjaJ/team-photo-submit`이며 commit·push·PR은 수행하지 않았다.
+- 사용자가 iPhone 15 Pro 시뮬레이터의 앨범 선택·미리보기 시나리오 완료를 확인했다. 카메라는 실기기에서 추후 점검하기로 했다. 이 기록을 모의 제출까지의 터치 검증으로 확대하지 않는다.
+- 본인만 기본 선택·잠금하고 다른 팀원은 폼으로 선택한다. native Blob은 재인코딩 없이 File로 연결한다. 제출 중 입력 잠금, 확정 실패의 입력 유지·재시도, 결과 불명의 재제출 차단·홈 복귀를 제공한다.
+- 접수 응답과 당시 명단을 Stack 범위 메모리에 전달한다. 완료 화면 이탈·계정 변경 시 폐기하고 URL·영구 저장소로 복원하지 않는다. 완료 직접 진입은 404 안내이며 모든 팀 인증 Activity는 개발·모의 환경 외에서 차단한다.
+- MSW 정상·PUT 실패·409·최종 응답 유실을 추가했다. 생성 SDK에는 같은 origin의 `/__team-photo-mock` base를 전달하므로 fixture가 실제 API로 나가지 않는다. 브라우저 고정 JPEG의 제출은 계속 차단한다. production 산출물에서 개발 명단·모의 imageKey 문자열이 제거됨을 확인했다.
+- 사진 미선택·명단 선택·실패 재시도·pending 잠금·결과 불명은 페이지 테스트에서, 완료 이동·계정 변경·홈 복귀·운영/직접 URL 차단은 Stackflow 연결 테스트에서 검증한다. 기존 제출 훅의 HTTP 실패 조합을 페이지에서 반복하지 않는다.
+- Modern Web Guidance `forms`의 의미 있는 form/submit 버튼, 입력 안내 연결, 오류 알림과 미선택 시 사진 버튼 포커스를 적용했다. 기존 SEED Checkbox·ActionButton·ImageFrame을 재사용했다.
+- 초기 전체 검사에서 새 브리지 mock이 위치 모듈 export를 가린 실패를 수정했다. 기존 탭 키보드 탐색 테스트는 한 번 URL 타이밍 실패 후 별도 재실행·전체 검사에서 통과했다.
+- 실제 앱 재시작 후 인증 복구 화면에 머물러 새 제출 흐름의 터치·VoiceOver·레이아웃 검증은 미완료다. Chrome 도구는 DOM 연결 오류와 검은 캡처를 반환해 화면 근거로 쓰지 않았다. 검증용 native 진입 경로 변경은 원복했고 모바일 제품 코드 변경은 없다.
+- 최종 `check` 통과: 웹 lint·typecheck·465개 테스트 새 실행, 나머지 lint·typecheck 각 6개 및 테스트 4개는 Turbo 캐시 재사용. `build`는 웹 새 실행·나머지 2개 캐시로 통과했다. 기존 큰 청크 경고가 남는다. 모바일 설정·의존성 변경이 없어 expo:doctor는 재실행하지 않았다.
+
+### 4단계 리뷰 — 기본 API 주소와 성공 콜백
+
+- 사용자 승인으로 개발 제출의 별도 base URL·props·주소 state를 제거했다. MSW에서는 두 팀 사진 POST만 passthrough하고 그 밖의 미정의 API 차단을 유지한다. 실행 앱의 모의 접수 응답은 제거하고 자동 테스트에서만 사용한다. 실제 사진 전송·서버 이미지 삭제는 실행하지 않았다. 운영 진입 차단과 개발 대상 명단은 유지한다.
+- `locked`를 `isPhotoSubmissionFormDisabled`로 변경했다. 사진 준비 성공 콜백에서 File을 폼에 넣고, 제출 훅은 성공 시 직접 onSubmitted를 호출한다. UploadPage의 사진 동기화·접수 감시 effect와 useEffectEvent를 제거했다. 화면 이탈 시 HTTP 취소·URL 해제, 완료 Activity의 이탈 감지 effect는 유지한다.
+- 성공 콜백은 네트워크 오류 처리 밖에서 호출하여 화면 이동 오류를 제출 실패로 오인하지 않는다. 한 번만 호출하고 이탈 후 늦은 결과에서는 호출하지 않는 것을 기존 훅 테스트에 추가했다.
+- 리뷰 후 `check` 통과: 웹 lint·typecheck·465개 테스트 새 실행, 다른 lint·typecheck 각 6개와 테스트 4개는 캐시 재사용. `build`는 웹 새 실행·다른 2개 캐시 통과. 실제 서버 요청·앱 터치 검증은 실행하지 않았다.
+
+### 4단계 리뷰 — 제출 mutation과 흐름 수명
+
+- 별도 error·receipt state와 try/catch를 상위 제출 mutation의 error·data·isPending 및 onError·호출별 onSuccess로 대체했다. 내부 presign·PUT·submit mutation은 유지한다. 입력 검증과 제출 시작은 onSubmit에서 처리하고 상위 mutation에는 제출 Promise와 AbortSignal만 전달한다. 입력 전달용 ref와 null 검사는 제거했으며 사진 파일은 mutation 변수에 보관하지 않는다. controllerRef는 즉시 중복 제출 차단·화면 이탈 취소와 성공·결과 불명 뒤 재전송 차단에 사용한다.
+- TeamPhotoFlowProvider·접수 Context·owner 문자열과 비교를 제거했다. 입력과 완료를 한 Activity의 단계로 묶고 접수 정보는 활성 흐름의 로컬 state에만 둔다. 기존 인증 경계의 key가 계정 변경 시 이를 초기화하고, 이탈 시 흐름을 unmount한다. 완료 Activity의 정리 effect도 제거했다. 기존 업로드·완료 URL은 유지하며 접수 정보 없는 완료 직접 진입은 404다.
+- 타입 검사와 관련 68개 테스트가 통과했다. 상위 mutation 대기 상태·사진을 캐시 변수에 넣지 않는 정책을 기존 중복 제출 테스트에 추가했다. 650줄에서 분리를 검토했으며 현재 리뷰의 상태·탐색 변경은 하나의 목적이고 총량은 800줄 미만이라 같은 브랜치에서 유지한다.
+- 추가 리뷰에 따라 mutation 내부의 사진 검증을 제거했다. 폼 스키마가 명단·사진을 검증하고 onSubmit에서 사진의 null 타입을 확정한다. mutation은 확정된 입력을 소비해 제출만 실행한다. 사용처가 없어진 내부 세 mutation의 pending 합산과 이를 반복하던 3개 테스트도 제거했다.
+- 최종 `check` 통과: 웹 lint·typecheck·462개 테스트 새 실행, 나머지 lint·typecheck 각 6개·테스트 4개 캐시 재사용. `build`는 웹 새 실행·나머지 2개 캐시 통과. 기존 큰 청크 경고만 남으며 실제 서버 전송·앱 터치 검증은 실행하지 않았다.
