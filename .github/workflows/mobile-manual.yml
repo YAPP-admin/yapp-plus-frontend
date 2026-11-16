@@ -98,6 +98,25 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Set up EAS CLI
         uses: ./.github/actions/setup-eas
+      - name: Prepare Firebase iOS configuration
+        env:
+          FIREBASE_IOS_GOOGLE_SERVICES_PLIST: ${{ secrets.FIREBASE_IOS_GOOGLE_SERVICES_PLIST }}
+        shell: bash
+        run: |
+          if [ -z "$FIREBASE_IOS_GOOGLE_SERVICES_PLIST" ]; then
+            echo "::error::Firebase iOS 설정 Secret이 없습니다."
+            exit 1
+          fi
+          # Secret 내용은 출력하지 않고 현재 빌드에서만 사용할 파일로 복원합니다.
+          firebase_plist_path="$RUNNER_TEMP/GoogleService-Info.plist"
+          umask 077
+          printf '%s' "$FIREBASE_IOS_GOOGLE_SERVICES_PLIST" > "$firebase_plist_path"
+          if ! plutil -lint "$firebase_plist_path" > /dev/null 2>&1; then
+            echo "::error::Firebase iOS 설정이 올바른 plist 형식이 아닙니다."
+            exit 1
+          fi
+          # 다음 빌드 단계의 app.config.ts에 파일 경로를 전달합니다.
+          printf 'FIREBASE_IOS_GOOGLE_SERVICES_FILE=%s\n' "$firebase_plist_path" >> "$GITHUB_ENV"
       # 원격 서명 자격 증명과 build number를 사용하지만 실제 빌드는 GitHub macOS에서 수행합니다.
       - name: Build local IPA
         env:
