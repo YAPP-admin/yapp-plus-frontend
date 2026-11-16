@@ -1,5 +1,5 @@
 /** 실제 생성 mutation과 SDK에서 공통 HTTP 오류 계약 및 본문 단일 소비를 검증한다. */
-import { ApiError, initializeApiErrorHandling } from '@yapp-plus/api';
+import { ApiError } from '@yapp-plus/api';
 import { client, renew, renewMutation } from '@yapp-plus/api/generated';
 import { MutationObserver, QueryClient } from '@tanstack/react-query';
 import { http, HttpResponse } from 'msw';
@@ -19,8 +19,6 @@ it.each([
   ['빈 본문', '', {}],
 ])('%s 오류의 상태·본문을 생성 mutation과 반환형 SDK 모두 보존한다', async (_, text, body) => {
   server.use(http.post(endpoint, () => new HttpResponse(text, { status: 403 })));
-  initializeApiErrorHandling();
-  initializeApiErrorHandling();
   const observer = vi.fn<(error: unknown) => unknown>((error) => error);
   const id = client.interceptors.error.use(observer);
   const queryClient = new QueryClient({

@@ -122,7 +122,7 @@ Zod 검증을 거치지 않으므로 생성 타입을 사용하고, 필요할 �
 
 ## HTTP 오류 계약
 
-각 앱 진입점은 `initializeApiErrorHandling()`을 호출한다. 기본 생성 client에 한 번 등록되며,
+각 앱 진입점은 `import '@yapp-plus/api/setup';`으로 기본 생성 client의 interceptor를 등록한다.
 생성 Query/Mutation과 직접 SDK 호출에 동일하게 적용된다. HTTP 오류는 `ApiError.status`와
 `ApiError.body`로 확인하고 body는 생성 Zod 스키마로 검증한다. 생성된 오류 타입은 여전히
 서버 본문 타입이므로 catch·mutation.error에서는 `instanceof ApiError`로 먼저 좁힌다.
@@ -138,3 +138,7 @@ Zod 검증을 거치지 않으므로 생성 타입을 사용하고, 필요할 �
 2026-11-16 공개 명세로 재생성했다. 엔드포인트 추가·삭제는 없으며 세션 생성·조회에
 roadAddress·latitude·longitude·detailAddress가 추가되고 SESSION_MANAGEMENT_DISABLED 및
 세션 생성·수정의 503 응답 정의가 제거됐다. 모의 legacy 세션은 새 nullable 필드를 null로 제공한다.
+
+setup은 생성 client와 ApiError 정의만 직접 참조하며 SDK barrel을 경유하지 않는다.
+ApiError만 import하면 등록 부수 효과가 없다. 현재 패키지는 sideEffects를 제한하지 않으므로
+setup이 제거되지 않는다. 추후 sideEffects를 제한하면 ./src/setup.ts를 반드시 보존 대상으로 지정한다.

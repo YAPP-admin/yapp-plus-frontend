@@ -4,7 +4,7 @@
 
 - Hey API 0.99.0·Ky 2·TanStack Query 생성 옵션을 유지한다. 생성 파일은 수정하지 않는다.
 - runtimeConfigPath에서 Ky의 throwHttpErrors를 끄고 생성 SDK가 본문 파싱·throw 여부를 소유한다.
-- 공통 초기화가 기본 client에 오류 interceptor를 한 번 등록한다. ApiError는 status와 unknown body만 보유한다.
+- 앱 진입점의 setup 모듈 import가 기본 client에 오류 interceptor를 등록한다. ApiError는 status와 unknown body만 보유한다.
 - 앱 초기화·테스트 환경에 적용하고 기존 본문 기반 오류 해석은 body를 읽도록 수정한다.
 - 최신 명세의 세션 주소·좌표 필드와 모의 데이터의 계약을 함께 갱신한다.
 
