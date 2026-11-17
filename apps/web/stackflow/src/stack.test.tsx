@@ -4,6 +4,10 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
+import { apiBaseUrl, server } from '@/mocks/server';
+import { currentWeekFixture } from '@/mocks/session-handlers';
+import { http, HttpResponse } from 'msw';
 import { createStackflowApp, stackflowConfig } from './stack';
 
 const popstateListeners: EventListenerOrEventListenerObject[] = [];
@@ -38,15 +42,36 @@ afterEach(async () => {
   window.history.replaceState({}, '', '/');
 });
 
-function renderStack() {
+const signedIn = {
+  status: 'SIGNED_IN' as const,
+  session: {
+    userId: 1,
+    sessionId: 'test-session',
+    tokenVersion: 1,
+    accessToken: 'test-token',
+    expiresAt: 9999999999,
+  },
+};
+
+function renderStack({ native = false } = {}) {
   const { Stack, actions } = createStackflowApp();
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  if (native) {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('YAPPPlusWebView');
+    queryClient.setQueryData(nativeSessionQueryOptions(true).queryKey, signedIn);
+  }
 
   const view = render(
     <QueryClientProvider client={queryClient}>
       <SnackbarProvider>
         <Suspense fallback={<div>로딩 중…</div>}>
-          <Stack />
+          {native ? (
+            <NativeAuthSessionProvider>
+              <Stack />
+            </NativeAuthSessionProvider>
+          ) : (
+            <Stack />
+          )}
         </Suspense>
       </SnackbarProvider>
     </QueryClientProvider>,
@@ -506,17 +531,40 @@ it('팀 안내 시트를 업로드 화면으로 교체해서 뒤로가면 홈으
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 }, 15000);
 
-it('출결 보고 시트에서 완료하면 홈으로 돌아가고 알림을 표시한다', async () => {
+it('출결 보고 시트에서 실제 제출하면 홈으로 돌아가고 알림을 표시한다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
+      HttpResponse.json({
+        ...currentWeekFixture,
+        weekStartDate: '2026-11-16',
+        weekEndDate: '2026-11-22',
+        session: {
+          ...currentWeekFixture.session,
+          date: '2026-11-18',
+          startTime: '13:30:00',
+        },
+      }),
+    ),
+  );
   window.history.replaceState({}, '', '/attendance/report');
-  renderStack();
+  renderStack({ native: true });
   fireEvent.click(await screen.findByRole('radio', { name: '결석' }));
-  fireEvent.click(screen.getByTestId('report-step1-submit'));
-  fireEvent.change(screen.getByRole('textbox', { name: '결석 사유' }), {
+  fireEvent.click(screen.getByRole('button', { name: '다음' }));
+  fireEvent.change(await screen.findByRole('textbox', { name: '사유' }), {
     target: { value: '개인 일정' },
   });
-  fireEvent.click(screen.getByTestId('report-step2-submit'));
+  fireEvent.click(screen.getByRole('button', { name: '제출하기' }));
   expect(await screen.findByText('출결 보고를 완료했어요')).toBeVisible();
   await waitFor(() => expect(window.location.pathname).toBe('/'));
+});
+
+it('일반 브라우저의 출결 보고 직접 진입은 목업 설정과 무관하게 로그인 안내를 표시한다', async () => {
+  window.history.replaceState({}, '', '/attendance/report');
+  renderStack();
+  expect(
+    await screen.findByText('YAPP+ 앱에 로그인한 후 사전 출결 보고를 할 수 있어요.'),
+  ).toBeVisible();
+  expect(screen.queryByRole('radio')).not.toBeInTheDocument();
 });
 
 it('일반 브라우저의 출석 시트 직접 진입에서는 로그인 안내와 비활성 제출을 제공한다', async () => {
