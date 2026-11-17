@@ -152,15 +152,15 @@ describe('HomePage', () => {
     expect(screen.getByRole('button', { name: '출석하기' })).toBeInTheDocument();
   });
 
-  it('일정 및 출결 보고 바로가기 카드와 툴팁을 제공한다', () => {
+  it('일정 및 출결 보고 바로가기 카드를 제공하고 일반 브라우저 보고를 막는다', () => {
     renderDemo();
-    expect(screen.getByText('세션 시작 전에 미리 보고해 주세요')).toBeInTheDocument();
     const navigation = within(screen.getByRole('navigation', { name: '홈 바로가기' }));
     expect(navigation.getByRole('link', { name: '전체 세션 확인하기' })).toHaveAttribute(
       'href',
       '/schedule',
     );
-    expect(navigation.getByRole('button', { name: '출결 보고 미리하기' })).toBeInTheDocument();
+    expect(navigation.getByRole('button', { name: '출결 보고 준비 중' })).toBeDisabled();
+    expect(screen.queryByText('세션 시작 전에 미리 보고해 주세요')).not.toBeInTheDocument();
   });
 
   it('출석하기 버튼 클릭 시 출석 코드 바텀시트가 열린다', () => {
@@ -171,12 +171,12 @@ describe('HomePage', () => {
     expect(mockPush).toHaveBeenCalledWith('AttendanceCode', {});
   });
 
-  it('출결 보고 버튼 클릭 시 출결 보고 바텀시트가 열린다', () => {
+  it('일반 브라우저의 출결 보고 버튼은 목업 설정과 무관하게 이동하지 않는다', () => {
     renderDemo();
-    const reportBtn = screen.getByRole('button', { name: '출결 보고 미리하기' });
+    const reportBtn = screen.getByRole('button', { name: '출결 보고 준비 중' });
     fireEvent.click(reportBtn);
 
-    expect(mockPush).toHaveBeenCalledWith('AttendanceReport', {});
+    expect(mockPush).not.toHaveBeenCalled();
   });
 
   it('이번 주 공지 목록을 제공한다', async () => {
@@ -295,7 +295,7 @@ it('일반 브라우저는 모의 URL 상태로 API나 성공 흐름을 실행�
   expect(mockPush).not.toHaveBeenCalled();
 });
 
-it('로그인 WebView는 실제 출석 진입을 허용하고 보고는 준비 중이며 모의 완료를 표시하지 않는다', async () => {
+it('로그인 WebView는 실제 출석과 출결 보고 진입을 허용한다', async () => {
   vi.stubEnv('VITE_API_MOCKING', 'false');
   let authorization: string | null = null;
   server.use(
@@ -308,13 +308,9 @@ it('로그인 WebView는 실제 출석 진입을 허용하고 보고는 준비 �
   expect(await screen.findByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
   expect(authorization).toBe('Bearer test-token');
   expect(screen.getByRole('button', { name: '출석하기' })).toBeEnabled();
-  expect(screen.getByRole('button', { name: '출결 보고 준비 중' })).toBeDisabled();
-  expect(
-    within(screen.getByRole('button', { name: '출결 보고 준비 중' })).getByText('준비 중'),
-  ).toBeVisible();
-  expect(screen.queryByText('출결 보고 기능은 준비 중이에요.')).not.toBeInTheDocument();
+  await userEvent.click(screen.getByRole('button', { name: '출결 보고하기' }));
+  expect(mockPush).toHaveBeenCalledWith('AttendanceReport', {});
   expect(screen.queryByText('출석했어요!')).not.toBeInTheDocument();
-  expect(mockPush).not.toHaveBeenCalled();
 });
 
 it('주 경계가 지나도 타이머로 조회하지 않고 화면 복귀 시 새 주를 조회한다', async () => {
