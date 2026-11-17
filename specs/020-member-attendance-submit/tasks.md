@@ -1,7 +1,8 @@
 # 작업 목록: 회원 코드 출석과 사전 출결 보고
 
-입력: [명세](spec.md)·[계획](plan.md). 총 14개 작업, US1 5개·US2 4개.
-이슈 #385 생성과 초안 리뷰를 승인받았다. 1단계 구현 후 리뷰받고 US2를 진행한다.
+입력: [명세](spec.md)·[계획](plan.md). 갱신일: 2026-11-17. 총 22개 작업.
+기존 준비·공통 4개, US1 5개, US2 11개, 종합 검증 2개다.
+사용자가 기존 #385의 후속 작업과 사전 보고 1단계 진행을 승인했다. T001~T009는 과거 기록이다.
 
 ## 준비
 
@@ -23,22 +24,43 @@
 - [x] T008 [US1] `apps/web/stackflow/src/activities/home-sheets.tsx`에 운영 출석 진입·대상 확인·완료 탐색을 연결하고 직접 진입·인증 복구·계정 변경·화면 이탈 회귀를 추가한다.
 - [ ] T009 [US1] `quickstart.md`의 출석 검증과 check/build·실제 base 대비 변경량을 확인해 정식 명세의 `validation.md`에 기록하고 사용자 리뷰를 받는다. 자동 검증 완료, 실기기 확인·리뷰 대기.
 
-## US2 — 사전 출결 보고, 두 번째 구현 리뷰 단위
+## US2 — 사전 보고 1단계: 문서
 
-목표: 코드 출석을 수행하지 않고 세 보고 유형을 독립적으로 제출한다. US1 리뷰 후 시작한다.
+목표: 확정된 정책과 구현·검증 경계를 문서로 검토한다. 과거 T009의 미확인 항목을 임의로 완료 처리하지 않는다.
 
-- [ ] T010 [US2] `apps/web/src/pages/home/ui`의 시트 테스트에 세 유형·빈 사유·30자·이모지·오류별 복구·중복 방지 사례를 작성하고 수정 전 실패를 확인한다.
-- [ ] T011 [US2] `apps/web/src/pages/home/model`과 `ui/home-demo-sheets.tsx`에 submit1·응답 검증·사유 길이·오류 매핑·수동 재시도를 연결한다.
-- [ ] T012 [US2] `apps/web/src/pages/home/ui/home-page.tsx`와 `apps/web/stackflow/src/activities/home-sheets.tsx`에 인증된 운영 보고 진입·서버 확인 후 완료 안내를 연결한다.
-- [ ] T013 [US2] `quickstart.md`의 보고·계정 변경·통신 단절 시나리오와 check/build를 실행하고 정식 명세의 `validation.md`에 기록해 리뷰받는다.
+- [x] T010 [US2] `specs/020-member-attendance-submit/`의 명세·계획·데이터·계약·조사·체크리스트·검증 절차를 인터뷰 결과로 갱신한다.
+- [ ] T011 [US2] `specs/020-member-attendance-submit/validation.md`에 문서 검증·변경량을 기록하고 사용자 리뷰 및 2단계 진행 확인을 받는다.
 
-## 종합 확인
+## US2 — 사전 보고 2단계: 제출·마감 처리
 
-- [ ] T014 정식 명세의 `validation.md`에 실서버·접근성 미검증, 캐시/새 실행, PR 분리 결과와 복구 방법을 최종 정리한다.
+목표: 운영 진입을 열지 않고 유효한 제출·마감·오류를 가까운 테스트에서 독립 검증한다.
+
+- [x] T012 [US2] `apps/web/src/pages/home/model/attendance-report.test.tsx`에 입력·시각 경계·요청·응답·오류·중복·계정 격리 회귀를 먼저 작성하고 기존 미연동 상태에서 실패를 확인한다. 제출 직전 추가 GET이 없음을 포함한다.
+- [x] T013 [US2] `apps/web/src/pages/home/model/attendance-report.ts`에 생성 SDK·주간 Query·시작 전 제한·submit1Mutation의 mutate·오류 복구를 구현한다. 현재 화면이 응답 본문을 소비하지 않으므로 별도 `responseValidator`는 두지 않는다. 입력은 필수, POST 자동 재실행과 제출 전 재조회는 금지한다.
+- [x] T014 [US2] `apps/web/src/mocks/session-handlers.ts`와 `apps/web/src/mocks/attendance-handlers.test.ts`에 생성 보고 핸들러의 요청 검증·성공을 추가하고 실패·지연은 인접 테스트에서 재정의한다. 별도 가짜 저장소는 만들지 않는다.
+- [x] T015 [US2] 인접 테스트·check와 실제 base 대비 변경량을 `specs/020-member-attendance-submit/validation.md`에 기록하고 2단계 리뷰·3단계 진행 확인을 받는다.
+
+## US2 — 사전 보고 3단계: 화면·운영 탐색
+
+목표: 홈에서 보고를 열어 입력·서버 제출·완료·홈 복귀까지 같은 운영 코드로 확인한다.
+
+- [ ] T016 [US2] `apps/web/src/pages/home/ui/attendance-report-sheet.tsx`로 보고 시트를 분리하고 `home-demo-sheets.tsx`의 시연을 교체한다. 필수 Form·유형 미선택·한 줄 사유·카운터·규정·세션·로딩·오류·마감·잠금과 인접 스타일을 연결한다.
+- [ ] T017 [US2] `apps/web/src/pages/home/index.ts`, `ui/home-page.tsx`, `apps/web/stackflow/src/activities/home-sheets.tsx`와 `stack.tsx`에 운영 인증 진입·보고 step·뒤로가기·완료 안내를 연결한다. 코드 출석·팀 사진·브라우저/정적 모드 제한을 보존한다.
+- [ ] T018 [US2] `apps/web/src/pages/home/ui/attendance-report-sheet.test.tsx`, `home-page.test.tsx`, `apps/web/stackflow/src/stack.test.tsx`에서 대표 흐름·직접 진입·입력 보존/폐기·마감·계정 변경·늦은 응답을 검증한다. 모델의 오류 조합은 중복하지 않는다.
+- [ ] T019 [US2] 관련 회귀·check/build·변경량을 `specs/020-member-attendance-submit/validation.md`에 기록하고 3단계 리뷰·4단계 진행 확인을 받는다.
+
+## US2 — 사전 보고 4단계: 통합·화면 검증
+
+목표: 자동 검증과 실제 브라우저 근거를 확보하고 실기기·실서버 미검증을 분리한다.
+
+- [ ] T020 [US2] `specs/020-member-attendance-submit/quickstart.md`에 따라 정상·실패·마감·키보드·모바일 크기·한국어 입력을 브라우저에서 확인하고 `.context/`에 익명 화면 근거를 보관한다. 발견 문제는 해당 소스·인접 테스트에서 수정한다.
+- [ ] T021 변경에 영향받은 테스트·품질 게이트 결과와 새 실행/캐시, 실기기·실서버 미검증을 `specs/020-member-attendance-submit/validation.md`에 정리한다.
+- [ ] T022 최종 변경량·PR 분리 여부·복구 방법·남은 검증을 `specs/020-member-attendance-submit/validation.md`에 기록하고 최종 리뷰를 받는다.
 
 ## 의존성과 실행 방식
 
-준비 → 공통 기반 → US1 검증·리뷰 → US2 검증·리뷰 → 종합 확인 순서다.
-MVP는 US1이다. 같은 홈·Activity 파일을 수정하므로 두 사용자 흐름을 병렬 구현하지 않는다.
-각 흐름 내부에서는 입력 검증 테스트와 화면 경로 조사만 독립적으로 진행할 수 있다.
+기존 코드 출석은 유지한다. 이번 순서는 T010–T011 → T012–T015 → T016–T019 → T020–T022다.
+각 화살표에서 사용자 리뷰와 다음 단계 진행 확인이 필요하다. 최소 완결 흐름은 3단계까지이며
+4단계 브라우저 검증 전에는 완료로 보고하지 않는다. 문서 링크 점검과 화면 근거 조회는 독립적으로
+확인할 수 있지만 같은 모델·UI·Activity의 구현 단계는 순차 진행한다.
 650줄에서 분리를 검토하고 800줄 이상이면 후속 구현 전에 검토 가능한 목적별 PR 분리 계획을 제출한다.

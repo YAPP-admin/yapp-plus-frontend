@@ -1,6 +1,9 @@
-# 1단계 검증: 코드 출석
+# 검증 기록: 코드 출석과 사전 보고
 
-먼저 구조 수정 전 결과를 기록하고, 마지막 절에 Suspense·Form·생성 키 적용 후 결과를 정리했다.
+코드 출석의 기존 실행 기록을 보존한다. 이 기록은 이번 사전 보고의 구현·검증 결과가 아니다.
+사전 보고 1단계 문서 갱신 결과는 마지막 절에 별도로 기록한다.
+
+## 기존 코드 출석 1단계
 
 - 이슈: [#385](https://github.com/YAPP-admin/yapp-plus-frontend/issues/385). 사전 출결 보고는 리뷰 후 별도로 구현한다.
 - Android 기준은 `develop`의 `2b837e3c`이며 2026-11-08 KST 커밋을 제외했다. 심사 빌드의 SHA는 확인되지 않았다.
@@ -28,3 +31,30 @@
 - 최신 리뷰 반영: 제출은 Activity의 `mutation.isPending`과 TanStack Form으로 관리하고 시트 닫기를 차단했다. 전역 pending 조회·닫힘 감시 Effect·초기 세션 ID state·출석 전용 계정 검사를 제거했다. `check`·`build` 통과: 웹 lint·typecheck·316개 테스트·빌드는 새 실행, 나머지 lint 6개·typecheck 6개·test 4개·build 2개 작업은 캐시 재사용이다. 실기기·실서버 검증은 미실행이며 홈 성공 결과 공유 방식은 후속 결정한다. 생성 키 브랜치 대비 추가 695줄·삭제 104줄, 합계 799줄이고 이번 수정은 아직 커밋·push하지 않았다.
 - 조회 경계 리뷰 반영: QueryBoundary를 분리해 출석 시트·홈 카드에 적용했고 mutateAsync를 mutate로 바꿨다. 시트의 로그인 상태 중복 검사를 제거하되 일반 브라우저 제한은 유지한다. 웹 316개 테스트를 포함한 check와 build가 통과했고 웹 작업만 새로 실행했다. 이 추가 리팩터링은 800줄 제한에 따라 출석 PR 이후의 별도 리뷰 단위로 준비하며 아직 커밋·push하지 않는다.
 - 제출 책임 리뷰 반영: 제출 직전 fetchQuery·세션 재검사·토큰 재조회는 제거하고 POST의 404·409 판정에 맡겼다. onSuccess는 조회 갱신, 제출 성공 콜백은 화면 이동, mutation.error는 오류 표시를 담당한다. onMutate에는 오프라인 차단과 홈 완료 표시용 대상 ID 전달만 남겼다. 최종 작업 트리의 check·build 통과: 웹 lint·typecheck·317개 테스트·빌드를 새로 실행했고 다른 작업은 캐시를 재사용했다. 실기기·실서버 검증과 커밋·push는 수행하지 않았다.
+
+## 사전 보고 1단계 — 문서 갱신, 2026-11-17
+
+- #385가 열린 상태임을 다시 확인했다. 사용자가 기존 이슈·명세의 후속 작업과 이번 문서 단계 진행을 승인했다.
+- `git fetch origin` 후 HEAD `3420a854`, `origin/main` `9851baf6`를 확인했다. main이 2커밋 앞서지만 대상 기능 문서·홈 코드에는 차이가 없다. 브랜치 `DongjaJ/wh3c0`와 기존 이력을 유지했다.
+- 이 디렉터리의 문서 9개만 수정했다. 사유 필수·시작 전 마감·일요일 전환·Hand off·뒤로가기·오류 복구·검증 범위를 일치시키고 제출 직전 재조회 없음과 `mutate` 사용을 명시했다.
+- 후속 리뷰에서 조회는 `useQuery`·`useSuspenseQuery`, 제출은 `useMutation`의 `mutate`만 사용하도록 명확히 했다. 보고 응답의 양의 안전한 정수 ID 검증과 예상 대상 ID 비교는 제거했고, 후속 구현 리뷰에서 화면이 응답 본문을 소비하지 않으므로 앱 측 응답 검증도 생략했다.
+- 기존 T001–T009의 상태는 보존했다. T010 문서 갱신은 완료, T011은 검증 결과 기록 후 사용자 리뷰·2단계 진행 확인 대기다. T012–T022 제품 구현·검증은 미착수다.
+- Spec Kit의 기존 기능 갱신으로 처리하여 새 feature·브랜치·전역 기능 포인터를 만들지 않았다. `.specify/extensions.yml`이 없어 전후 extension hook은 해당 없다.
+- 새 실행: 문서 9개의 상대 링크 7개·앵커, T001~T022의 고유·연속 번호, US1 5개/US2 11개, 완료 상태, 핵심 정책 정합성 검사 통과.
+- 기본 `mise exec -- node --run check`는 `node_modules` 부재로 `/bin/sh: oxfmt: command not found`에서 중단됐다. lint·typecheck·테스트·Turbo 작업은 실행되지 않았으며 캐시 통과도 없다.
+- 대체 문서 검사: 저장소 고정 버전과 같은 `mise exec -- pnpm dlx oxfmt@0.66.0 --check specs/020-member-attendance-submit`을 사용했다. 포맷 오류와 작업 범위의 취소선 오인 표기를 수정했고 최종 포맷 검사·`git diff --check`가 새 실행으로 통과했다.
+- 문서만 변경하여 build·브라우저·실기기·실서버 검증은 실행하지 않았다. 제품 동작 검증은 2~4단계에 남아 있다. 과거 코드 출석 검사 결과를 이번 실행으로 계산하지 않았다.
+- 변경량은 `origin/main`과 HEAD의 merge-base `3420a854` 대비 작업 트리 전체에서 추가 225줄·삭제 56줄, 합계 281줄이다. 650줄 미만이므로 이번 문서 단계의 추가 분리는 필요 없다. 커밋·push·PR 생성은 수행하지 않았다.
+- 복구는 이번 문서 변경만 되돌리는 것이며 서버 데이터나 제품 코드는 변경하지 않았다. 사용자 리뷰와 다음 단계 확인 전에는 2단계를 시작하지 않는다.
+
+## 사전 보고 2단계 — 제출·마감 처리, 2026-11-17
+
+- `pages/home/model/attendance-report.ts`에 사유 입력 검증, 한국 시간 세션 시작 전 마감, 기존 주간 Query 구독, `submit1Mutation`의 `mutate`와 오류 변환을 추가했다. 일반 브라우저·정적 콘텐츠 모드·오프라인에서는 POST를 막는다. 데이터 요청은 `useSuspenseQuery`, 제출은 `useMutation`만 사용하며 제출 직전 요청·자동 재실행·오프라인 예약을 추가하지 않았다.
+- 현재 화면은 보고 응답 본문을 소비하지 않아 앱 측 응답 검증을 추가하지 않는다. 응답 sessionId의 양의 안전한 정수 검증과 현재 주간 대상 ID 비교는 추가하지 않았다. 성공하면 주간 Query만 무효화하고, 화면 이탈 뒤 늦은 성공은 호출별 완료 콜백을 실행하지 않는다.
+- 생성 MSW `submit1` 핸들러는 세 유형의 필수·trim 사유와 30자 UTF-16 경계를 검증한다. 별도 저장소 없이 현재 주간 세션 ID와 제출 시각을 반환하며, 빈 사유는 `INVALID_ATTENDANCE_REPORT`로 거절한다.
+- 새 실행: `pnpm --filter @yapp-plus/web exec vitest run src/pages/home/model/attendance-report.test.tsx src/mocks/attendance-handlers.test.ts`에서 2개 파일·18개 테스트가 통과했다. 입력·시각 경계·요청 본문·400/403/404/409·일반 브라우저·오프라인·중복·화면 이탈과 MSW 세 유형·빈 사유를 확인했다.
+- 새 실행: `mise exec -- node --run check`가 통과했다. 포맷은 전체 1,042개 파일을 새로 검사했고, 웹 lint·typecheck·전체 테스트는 새로 실행했다. 다른 lint·typecheck·test 작업은 Turbo 캐시를 재사용했다. 빌드·브라우저·실기기·실서버 검증은 3~4단계에 남아 있다.
+- 리뷰 반영: native 인증 provider와 TanStack Query 기본값이 이미 POST 재시도를 막으므로 중복 `retry`·`networkMode` 설정을 제거했다. `submit1Mutation`이 반환값을 화면에서 사용하지 않는 현재 단계에서는 별도 `responseValidator`를 두지 않는다. 일반 브라우저·정적 콘텐츠·마감·오프라인 차단은 `submit`이 `mutate` 전에 안내 문구로 반환하고, `onMutate`는 제거했다. 오류 해석을 내부 함수로 분리하고, 오류 초기화와 주간 재조회를 함께 수행하던 `refresh`는 제거했다.
+- 후속 새 실행: 인접 보고·MSW 테스트 18개, 웹 lint·typecheck, 포맷·`git diff --check`가 통과했다. 첫 전체 `check`는 변경하지 않은 `stackflow/src/stack.test.tsx`의 코드 출석 전환 1건이 시간 초과로 실패했으나, 단독 29개 테스트와 두 번째 전체 `check`는 통과했다. 두 번째 전체 `check`에서 포맷은 1,042개 파일을 새로 검사했고 웹 전체 테스트 512개는 새로 실행했으며, lint·typecheck와 나머지 테스트는 Turbo 캐시를 재사용했다.
+- `origin/main` 대비 현재 작업 트리는 추가 622줄·삭제 145줄, 합계 767줄이다. 800줄 이하지만 650줄 검토 기준을 넘으므로 3단계 화면 변경은 별도 리뷰·PR 단위로 분리해야 한다. 커밋·push·PR 생성은 수행하지 않았다.
+- 현재 단계는 모델·MSW만 변경하며 운영 진입과 보고 시트는 열지 않았다. 3단계에서 Form·시트·Stackflow 탐색·성공 안내를 연결하기 전 사용자 리뷰를 기다린다.
