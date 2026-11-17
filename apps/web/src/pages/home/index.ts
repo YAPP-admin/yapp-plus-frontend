@@ -1,4 +1,5 @@
 export { HomePage } from './ui/home-page';
-export { AttendanceCodeSheet, AttendanceReportSheet, TeamGuideSheet } from './ui/home-demo-sheets';
+export { AttendanceReportSheet, type AttendanceReportStep } from './ui/attendance-report-sheet';
+export { AttendanceCodeSheet, TeamGuideSheet } from './ui/home-demo-sheets';
 
 export { useAttendanceConfirmation } from './model/code-attendance';

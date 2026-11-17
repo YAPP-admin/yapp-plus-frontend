@@ -543,41 +543,6 @@ export const codeErrorMessage = style({
   margin: 0,
 });
 
-export const textareaContainer = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '6px',
-  margin: 0,
-});
-
-export const reportTextFieldRoot = style({
-  width: '100%',
-  margin: 0,
-});
-
-export const reportTextFieldTextarea = style({
-  width: '100%',
-  minHeight: '100px',
-  borderRadius: '10px !important',
-  border: `1px solid ${vars.$color.stroke.neutralWeak} !important`,
-  padding: '12px 14px !important',
-  fontSize: '15px !important',
-  fontWeight: '500 !important',
-  color: `${vars.$color.fg.neutral} !important`,
-  backgroundColor: `${vars.$color.bg.layerDefault} !important`,
-  resize: 'none',
-  boxSizing: 'border-box',
-  outline: 'none',
-  '::placeholder': {
-    color: `${vars.$color.fg.placeholder} !important`,
-  },
-  selectors: {
-    '&:focus': {
-      borderColor: `${vars.$color.stroke.neutralSolid} !important`,
-    },
-  },
-});
-
 export const sessionButtonWrapper = style({
   position: 'relative',
   width: '100%',
