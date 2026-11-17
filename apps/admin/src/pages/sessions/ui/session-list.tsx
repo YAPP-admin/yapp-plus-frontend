@@ -1,5 +1,5 @@
 /** 결과 개수와 카드 또는 전체·필터 빈 상태를 표시합니다. */
-import type { Session } from '~/features/session-management';
+import type { SessionViewModel } from '../model/session-api-model';
 import { sessionFilterLabels, type SessionFilter } from '../model/session-search';
 import { SessionCard } from './session-card';
 import { list, count, placeholder } from './sessions-page.css';
@@ -8,12 +8,10 @@ export function SessionList({
   sessions,
   type,
   totalCount,
-  onEdit,
 }: {
-  sessions: Session[];
+  sessions: SessionViewModel[];
   type: SessionFilter;
   totalCount: number;
-  onEdit?: (session: Session) => void;
 }) {
   return (
     <>
@@ -28,7 +26,7 @@ export function SessionList({
         <ul className={list} aria-label="세션 목록">
           {sessions.map((session) => (
             <li key={session.id}>
-              <SessionCard session={session} onEdit={onEdit} />
+              <SessionCard session={session} />
             </li>
           ))}
         </ul>
