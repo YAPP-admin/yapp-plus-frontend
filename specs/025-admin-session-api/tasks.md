@@ -1,7 +1,7 @@
 # 작업 목록: 어드민 세션 API 연결
 
 **입력**: [명세](spec.md)·[계획](plan.md)·[모델](data-model.md)·[계약](contracts/session-api.md)
-**상태**: 4단계 공통 폼 구현·검증 완료, 사용자 리뷰 대기. 이후 단계는 리뷰·진행 확인 전 착수하지 않는다.
+**상태**: 5단계 생성 연결·리뷰 완료, 6단계 수정 연결 진행 승인.
 
 테스트는 합의된 수용 기준이다. 회귀 테스트는 가능한 경우 수정 전 실패를 확인한다.
 `[P]`는 같은 승인 단계 안에서 파일이 겹치지 않는 작업만 뜻하며 다음 단계 진행 승인이 아니다.
@@ -49,24 +49,24 @@
 - [x] T019 [US2] `apps/admin/src/pages/sessions/ui/session-form.test.tsx`, `session-location-recovery.test.tsx`에서 정규 필수 장소·팀 무입력·255자·좌표 0·저장 좌표 복원을 검증한다.
 - [x] T020 [US2] `apps/admin/src/pages/sessions/model/session-form.ts`를 전용 입력 모델·원본 시간 보존·유형별 요청 계약으로 바꾸고 팀 안내 초안을 제거한다.
 - [x] T021 [US2] `apps/admin/src/pages/sessions/ui/session-form.tsx`에서 팀 입력 제거·유형 왕복 초안을 처리하고 `session-dialogs.tsx`의 미사용 모의 저장 래퍼를 제거해 새 폼 계약과의 타입 충돌을 막는다.
-- [ ] T022 [US2] 기존 주소 경합 테스트와 폼 검증·화면 근거·4단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
+- [x] T022 [US2] 기존 주소 경합 테스트와 폼 검증·화면 근거·4단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 5단계 — US2 생성 연결 (P1)
 
 목표: 생성 결과와 목록 갱신을 분리한다. 독립 검증: 정상·날짜 충돌·지연·재조회 실패를 공급한다.
 
-- [ ] T023 [US2] `apps/admin/src/pages/sessions/model/session-api.test.ts`에 생성 전체 본문·201 ID·400/401/404/409·HTTP 재시도 없음 테스트를 추가한다.
-- [ ] T024 [US2] `apps/admin/src/pages/sessions/model/session-api.ts`, `session-queries.ts`에 create2와 기본 online 모드를 사용하는 Mutation·이전 목록 취소·무효화를 구현한다.
-- [ ] T025 [US2] `apps/admin/src/pages/sessions/ui/session-dialogs.tsx`, `sessions-page.tsx`에 `mutate` 콜백 기반 실제 생성·전체 필터·완료 안내·중복 방지·실패 시 초안 유지를 연결한다.
-- [ ] T026 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 최초 list 지연→create 성공→old list 완료, 저장 성공→refetch 실패, 오프라인·이동 후 완료를 회귀 검증한다.
-- [ ] T027 [US2] 검증·변경량·화면 근거·5단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
+- [x] T023 [US2] `apps/admin/src/pages/sessions/model/session-api.test.ts`에 생성 전체 본문·201 ID·400/401/404/409·HTTP 재시도 없음 테스트를 추가한다.
+- [x] T024 [US2] `apps/admin/src/pages/sessions/model/session-queries.ts`에서 생성 `create2Mutation`과 기본 online 모드를 그대로 사용하고 이전 목록 취소·무효화를 구현한다.
+- [x] T025 [US2] `apps/admin/src/pages/sessions/ui/session-dialogs.tsx`, `sessions-page.tsx`에 `mutate` 콜백 기반 실제 생성·전체 필터·완료 안내·중복 방지·실패 시 초안 유지를 연결한다.
+- [x] T026 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 최초 list 지연→create 성공→old list 완료, 저장 성공→refetch 실패, 오프라인·이동 후 완료를 회귀 검증한다.
+- [x] T027 [US2] 검증·변경량·화면 근거·5단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 6단계 — US3 수정 연결 (P2)
 
 목표: 저장값 보존과 수정 제한을 처리한다. 독립 검증: 기존 세션의 정규·팀 전환과 204·409를 확인한다.
 
 - [ ] T028 [US3] `apps/admin/src/pages/sessions/model/session-api.test.ts`에서 수정 ID·전체 본문·204·날짜/수정 충돌·대상 없음을 검증한다.
-- [ ] T029 [US3] `apps/admin/src/pages/sessions/model/session-api.ts`, `session-queries.ts`에 update1·캐시 무효화·저장/갱신 실패 분리를 연결한다.
+- [ ] T029 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 update1 Mutation 옵션·캐시 무효화·저장/갱신 실패 분리를 연결한다.
 - [ ] T030 [US3] `apps/admin/src/pages/sessions/ui/session-dialogs.tsx`, `session-card.tsx`에 `mutate` 콜백 기반 실제 수정·필터 유지·유형 변경 안내·페이지 수명을 연결한다.
 - [ ] T031 [US3] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 수정 장소·시간 복원, 갱신 실패와 이동 후 오래된 탐색·알림 방지를 검증한다.
 - [ ] T032 [US3] 검증·변경량·화면 근거·6단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
@@ -76,7 +76,7 @@
 목표: 출석 시작 전 확인된 세션만 삭제한다. 독립 검증: 취소·204·404·상태 경합 409를 공급한다.
 
 - [ ] T033 [US4] `apps/admin/src/pages/sessions/model/session-api.test.ts`에 DELETE 경로·무본문·204·404·409·자동 재시도 없음 테스트를 추가한다.
-- [ ] T034 [US4] `apps/admin/src/pages/sessions/model/session-api.ts`, `session-queries.ts`에 delete1·이전 조회 취소·확인된 삭제 항목과 네 개수 갱신·재조회를 구현한다.
+- [ ] T034 [US4] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 delete1 Mutation 옵션·이전 조회 취소·확인된 삭제 항목과 네 개수 갱신·재조회를 구현한다.
 - [ ] T035 [US4] `apps/admin/src/pages/sessions/ui/session-delete-dialog.tsx`에 SEED AlertDialog·세션명·취소 초기 포커스·요청 중 잠금·실패 안내를 구현한다.
 - [ ] T036 [US4] `apps/admin/src/pages/sessions/ui/session-card.tsx`, `session-list.tsx`, `sessions-page.tsx`에 `mutate` 콜백 기반 삭제 메뉴·STARTED 비활성 이유·완료 후 목록 제목 포커스를 연결한다.
 - [ ] T037 [US4] `apps/admin/src/pages/sessions/ui/session-delete-dialog.test.tsx`와 `sessions-page.test.tsx`에 취소 무요청·409 경합·404 구분·마지막 항목·count·포커스·삭제 후 refetch 실패를 책임별로 검증한다.

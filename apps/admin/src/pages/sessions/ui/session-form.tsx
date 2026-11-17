@@ -32,13 +32,21 @@ const SESSION_FIELDS = [
 
 type Props = {
   initialValues?: SessionInput;
+  submissionPending?: boolean;
+  submissionError?: string;
   onSubmit: (value: SessionInput) => void | Promise<void>;
   onClose: () => void;
 };
 
-export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
+export function SessionForm({
+  initialValues,
+  submissionPending = false,
+  submissionError = '',
+  onSubmit,
+  onClose,
+}: Props) {
   const [address, setAddress] = useState<AddressSearchItemViewModel | null>(null);
-  const [submitError, setSubmitError] = useState('');
+  const [localSubmissionError, setLocalSubmissionError] = useState('');
   const coordinates = useMutation(coordinatesMutationOptions);
   const stored = initialValues?.type === 'offline' ? initialValues.location : undefined;
   const form = useForm({
@@ -55,7 +63,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
       try {
         await onSubmit(result.data);
       } catch {
-        setSubmitError('저장하지 못했습니다. 입력을 유지했으니 다시 시도해 주세요.');
+        setLocalSubmissionError('저장하지 못했습니다. 입력을 유지했으니 다시 시도해 주세요.');
       }
     },
   });
@@ -71,7 +79,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
   }
 
   function close() {
-    if (!form.state.isSubmitting) {
+    if (!form.state.isSubmitting && !submissionPending) {
       onClose();
     }
   }
@@ -85,22 +93,23 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
       })}
     >
       {({ pending, type, location }) => {
+        const isPending = pending || submissionPending;
         const position = toCoordinatesViewModel(location);
         const initialPosition = address ? coordinates.data : stored;
 
         return (
           <SessionFormDialog
             title={initialValues ? '세션 수정' : '세션 추가'}
-            pending={pending}
+            pending={isPending}
             submitDisabled={type === 'offline' && coordinates.isPending}
-            submitError={submitError}
+            submitError={submissionError || localSubmissionError}
             onClose={close}
             onSubmit={(event) => {
               event.preventDefault();
-              if (form.state.isSubmitting) {
+              if (form.state.isSubmitting || submissionPending) {
                 return;
               }
-              setSubmitError('');
+              setLocalSubmissionError('');
               void form.handleSubmit();
             }}
           >
@@ -114,7 +123,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                         <SessionNameField
                           value={field.state.value}
                           error={error}
-                          disabled={pending}
+                          disabled={isPending}
                           onChange={field.handleChange}
                           onBlur={field.handleBlur}
                         />
@@ -123,7 +132,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                           type={inputType}
                           label={label}
                           value={field.state.value}
-                          disabled={pending}
+                          disabled={isPending}
                           error={error}
                           onChange={field.handleChange}
                           onBlur={field.handleBlur}
@@ -137,7 +146,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                 {(field) => (
                   <SessionTypeField
                     value={field.state.value}
-                    disabled={pending}
+                    disabled={isPending}
                     onChange={field.handleChange}
                   />
                 )}
@@ -150,7 +159,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                         value={address}
                         storedRoadAddress={stored?.roadAddress}
                         error={getFieldErrorMessage(field.state.meta.errors)}
-                        disabled={pending}
+                        disabled={isPending}
                         onSelect={(next) => {
                           if (next.roadAddress === field.state.value) {
                             return;
@@ -170,7 +179,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                       <SessionDetailAddressField
                         value={field.state.value}
                         error={getFieldErrorMessage(field.state.meta.errors)}
-                        disabled={pending}
+                        disabled={isPending}
                         onChange={field.handleChange}
                         onBlur={field.handleBlur}
                       />
@@ -181,7 +190,7 @@ export function SessionForm({ initialValues, onSubmit, onClose }: Props) {
                     position={position}
                     lookupPending={coordinates.isPending}
                     lookupError={coordinates.isError}
-                    disabled={pending}
+                    disabled={isPending}
                     onRetry={() => {
                       if (address) {
                         lookupSelectedAddressCoordinates(address);
