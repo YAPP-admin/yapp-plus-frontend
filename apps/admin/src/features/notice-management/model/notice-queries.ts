@@ -64,13 +64,13 @@ export function useNoticeMutations() {
   const create = useMutation({
     mutationFn: createNotice,
     retry: false,
-    onSuccess: () => client.invalidateQueries({ queryKey: noticesKey, refetchType: 'all' }),
+    onSuccess: () => client.invalidateQueries({ queryKey: noticesKey }),
   });
 
   const update = useMutation({
     mutationFn: ({ id, input }: { id: string; input: NoticeContent }) => updateNotice(id, input),
     retry: false,
-    onSuccess: () => client.invalidateQueries({ queryKey: noticesKey, refetchType: 'all' }),
+    onSuccess: () => client.invalidateQueries({ queryKey: noticesKey }),
   });
 
   const remove = useMutation({
