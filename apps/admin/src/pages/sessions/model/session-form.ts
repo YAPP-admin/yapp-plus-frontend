@@ -4,7 +4,45 @@ import {
   type CreateSessionInput,
   type SessionType,
 } from '~/features/session-management';
+import { z } from 'zod';
 import type { CoordinatesViewModel } from './location/location-view-model';
+
+const timeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, '시간을 HH:mm 형식으로 입력하세요.');
+
+const inputFields = {
+  name: z.string().trim().min(1, '세션명을 입력하세요.'),
+  date: z.iso.date('올바른 날짜를 입력하세요.'),
+  startTime: timeSchema,
+  endTime: timeSchema,
+};
+
+const regularSessionInputSchema = z.object({
+  ...inputFields,
+  type: z.literal('offline'),
+  location: z.object({
+    roadAddress: z.string().trim().min(1, '주소를 선택하세요.').max(255),
+    detailAddress: z.string().trim().max(255),
+    latitude: z.number().min(-90).max(90),
+    longitude: z.number().min(-180).max(180),
+  }),
+});
+
+const teamSessionInputSchema = z.object({
+  ...inputFields,
+  type: z.literal('team'),
+});
+
+/** API 연결용 폼 입력은 정규의 장소 필수와 팀의 장소 미입력을 구분한다. */
+export const sessionInputSchema = z
+  .discriminatedUnion('type', [regularSessionInputSchema, teamSessionInputSchema])
+  .refine(({ startTime, endTime }) => endTime > startTime, {
+    message: '종료 시간은 시작 시간보다 늦어야 합니다.',
+    path: ['endTime'],
+  });
+
+export type SessionInput = z.infer<typeof sessionInputSchema>;
 
 export type SessionFormValues = {
   name: string;
