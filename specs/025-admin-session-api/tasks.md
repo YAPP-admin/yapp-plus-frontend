@@ -1,7 +1,7 @@
 # 작업 목록: 어드민 세션 API 연결
 
 **입력**: [명세](spec.md)·[계획](plan.md)·[모델](data-model.md)·[계약](contracts/session-api.md)
-**상태**: 1단계 문서·검증 완료, 사용자 리뷰 대기. 이후 단계는 리뷰·진행 확인 전 착수하지 않는다.
+**상태**: 2단계 공통 경계 구현·검증 완료, 사용자 리뷰 대기. 이후 단계는 리뷰·진행 확인 전 착수하지 않는다.
 
 테스트는 합의된 수용 기준이다. 회귀 테스트는 가능한 경우 수정 전 실패를 확인한다.
 `[P]`는 같은 승인 단계 안에서 파일이 겹치지 않는 작업만 뜻하며 다음 단계 진행 승인이 아니다.
@@ -15,19 +15,19 @@
 - [x] T002 `specs/025-admin-session-api/plan.md`, `research.md`, `data-model.md`, `contracts/session-api.md`, `quickstart.md`에 계약·설계·복구를 작성한다.
 - [x] T003 `specs/025-admin-session-api/tasks.md`와 `checklists/requirements.md`에 단계별 수용 기준·문서 품질 검토를 기록한다.
 - [x] T004 문서 링크·작업 형식·변경량과 루트 check 결과를 `specs/025-admin-session-api/validation.md`에 기록한다.
-- [ ] T005 1단계 사용자 리뷰와 2단계 진행 확인을 `specs/025-admin-session-api/validation.md`에 기록한다.
+- [x] T005 1단계 사용자 리뷰와 2단계 진행 확인을 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 2단계 — 공통 경계
 
 목표: UI 연결 없이 기수 설정·조회/입력 모델·오류를 검증한다.
 독립 검증: 설정 누락, 초 단위 시간, 불완전한 집계와 유형별 요청을 모델에 공급한다.
 
-- [ ] T006 [P] `apps/admin/src/pages/sessions/model/session-config.test.ts`에 기수 설정 누락과 설정값 전달 테스트를 추가한다.
-- [ ] T007 [P] `apps/admin/src/pages/sessions/model/session-api-model.test.ts`에 시간 보존과 같은 분 안의 원본 일정·집계·시작 상태·유형별 요청 변환을 검증한다.
-- [ ] T008 `apps/admin/src/pages/sessions/model/session.ts`에 생성 타입 기반 조회/입력 모델과 변환을 구현한다.
-- [ ] T009 `apps/admin/src/pages/sessions/model/session-config.ts`와 `apps/admin/.env.example`에 기수 ID 검증·설정 안내를 추가한다.
-- [ ] T010 `apps/admin/src/pages/sessions/model/session-error.test.ts`에 ApiError·본문 검증 실패·401·400·404·409·전송 결과 불명확 사례를 추가한다.
-- [ ] T011 `apps/admin/src/pages/sessions/model/session-error.ts`에 원본 응답을 노출하지 않는 오류 변환과 공개 계약 주석을 작성한다.
+- [x] T006 [P] `apps/admin/src/pages/sessions/model/session-config.test.ts`에 기수 설정 누락과 설정값 전달 테스트를 추가한다.
+- [x] T007 [P] `apps/admin/src/pages/sessions/model/session-api-model.test.ts`에 시간 보존과 같은 분 안의 원본 일정·집계·시작 상태·유형별 요청 변환을 검증한다.
+- [x] T008 `apps/admin/src/pages/sessions/model/session-api-model.ts`에 생성 타입 기반 조회 ViewModel·요청 변환을, `session-form.ts`에 API 연결용 폼 입력 스키마를 구현한다.
+- [x] T009 `apps/admin/src/pages/sessions/model/session-config.ts`와 `apps/admin/.env.example`에 기수 ID 검증·설정 안내를 추가한다.
+- [x] T010 `apps/admin/src/pages/sessions/model/session-error.test.ts`에 ApiError·본문 검증 실패·401·400·404·409·전송 결과 불명확 사례를 추가한다.
+- [x] T011 `apps/admin/src/pages/sessions/model/session-error.ts`에 원본 응답을 노출하지 않는 오류 변환과 공개 계약 주석을 작성한다.
 - [ ] T012 검증·변경량·2단계 리뷰와 다음 단계 진행 확인을 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 3단계 — US1 목록 연결 (P1, 최소 기능)

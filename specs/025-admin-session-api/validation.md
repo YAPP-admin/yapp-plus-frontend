@@ -21,9 +21,32 @@
   의존성을 준비했으며 다운로드·lockfile 변경은 없었다. 영구 mise 설정은 변경하지 않았다.
 - `node --run build`: 미실행. 이번 단계는 문서만 변경해 실행 대상이 아니다.
 - UI·브라우저·실서버: 미실행. 제품 코드가 아직 연결되지 않았다.
-- 사용자 리뷰: 대기. 2단계 진행 승인 전 제품 파일을 수정하지 않는다.
+- 사용자 리뷰: 사용자 요청 “커밋하고 다음 진행해”로 1단계 리뷰와 2단계 진행을 확인했다.
 
-## 2~8단계와 후속 조건
+## 2단계 — 공통 경계
+
+- 기수 설정: `VITE_ADMIN_GENERATION_ID`를 숫자로만 변환하고, 누락·비숫자 값은 `null`로 반환한다.
+  양수·정수·안전 정수 같은 추가 ID 방어는 두지 않았다.
+- 조회 모델: `session-api-model.ts`에서 생성 `zAdminSessionResponse` 위에 REGULAR의 장소 필수와
+  TEAM의 장소 전체 `null` 제약을 추가했다. 초 단위 시간은 원본 그대로 보존하고, 출석 시작 여부와
+  API 집계를 화면 ViewModel에 옮긴다.
+- 역할 분리: `session-form.ts`는 API 연결용 폼 입력 Zod를, `session-api-model.ts`는 API 응답↔ViewModel·
+  API 요청 변환을 소유한다. 기존 모의 저장용 폼 흐름은 다음 폼 단계에서 교체한다.
+- 입력 모델: 정규 세션은 도로명주소·좌표와 선택 상세주소를, 팀 세션은 장소 입력 없이 모든 장소 필드를
+  `null`로 변환한다. `toCreateSessionRequest`가 폼 Zod를 다시 적용해 trim·유형별 제약을 보장한다.
+- 오류 모델: `ApiError`의 HTTP 상태와 생성 `zErrorResponse`로 검증된 세션 코드만 UI와 분리된
+  도메인 실패 코드로 바꾼다. 응답 원문·서버 메시지는 노출하지 않으며, UI 안내 문구는 화면 연결 단계에서
+  해당 실패 코드를 기준으로 정한다.
+- 테스트: 최초 실행에서 빈 기수 설정이 0으로 변환되는 문제와 변환 전 trim 누락을 확인했고 수정 후
+  `pnpm --filter @yapp-plus/admin test -- session-config.test.ts session-api-model.test.ts session-error.test.ts`가
+  74 파일·671 테스트 통과했다. Vitest의 파일 인자는 전체 admin 테스트를 실행했다.
+- 품질 게이트: `node --run format`, `node --run check`, `node --run build`를 실행해 통과했다.
+  check에서 admin lint·typecheck·test는 새 실행이고 나머지 6개 패키지는 Turbo 캐시 재사용이다.
+  build에서 admin은 새 실행, web·storybook은 Turbo 캐시 재사용이며 API·bridge·UI·mobile에는 build 작업이 없다.
+- UI·브라우저·실서버: 이 단계는 UI 연결 전이므로 미실행이다. 실제 기수 ID와 실서버 CRUD 검증은 후속이다.
+- 사용자 리뷰: 대기. T012와 3단계 진행은 이 단계의 변경·검증을 검토한 뒤 기록한다.
+
+## 3~8단계와 후속 조건
 
 아직 착수하지 않았다. 각 단계에 새 실행·Turbo 캐시·실패·미실행·화면 근거·실제 base 대비
 추가/삭제 줄 수와 리뷰 결과를 추가한다. 실제 기수 ID와 최신 서버 계약 확인, 실서버 테스트
