@@ -53,6 +53,13 @@ type AttendanceReportSheetProps = BottomSheetRootProps & {
   onComplete: () => void;
 };
 
+type AttendanceReportContentProps = BottomSheetRootProps & {
+  step: AttendanceReportStep;
+  onReasonStep: () => void;
+  onTypeStep: () => void;
+  onComplete: () => void;
+};
+
 function isAttendanceReportType(value: string): value is AttendanceReportInput['type'] {
   return reportTypes.some((type) => type.value === value);
 }
@@ -170,7 +177,7 @@ function AttendanceReportContent({
   onTypeStep,
   onComplete,
   ...props
-}: AttendanceReportSheetProps) {
+}: AttendanceReportContentProps) {
   const report = useAttendanceReport(onComplete);
   const [submissionMessage, setSubmissionMessage] = useState('');
   const reasonCharacterCountId = useId();
