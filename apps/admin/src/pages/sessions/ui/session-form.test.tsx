@@ -5,12 +5,12 @@ import userEvent from '@testing-library/user-event';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { createAdminQueryClient } from '../../../query-client';
-import type { CreateSessionInput } from '~/features/session-management';
 import { lookupCoordinates } from '../model/location/coordinates';
 import type {
   AddressSearchItemViewModel,
   CoordinatesViewModel,
 } from '../model/location/location-view-model';
+import { parseSessionForm, type SessionFormValues, type SessionInput } from '../model/session-form';
 import { SessionForm } from './session-form';
 
 // 폼·목록 테스트는 저장 계약에 집중하고 실제 Picker 조작은 별도 테스트에서 검증합니다.
@@ -108,17 +108,17 @@ vi.mock('./session-location-map', () => ({
   ),
 }));
 const lookup = vi.mocked(lookupCoordinates);
-const initial: CreateSessionInput = {
+const initial: SessionInput = {
   name: '기존 세션',
   date: '2020-01-01',
-  startTime: '13:00',
-  endTime: '17:00',
+  startTime: '13:00:10',
+  endTime: '17:00:20',
   type: 'offline',
   location: { roadAddress: '저장된 주소', detailAddress: '3층', latitude: 37, longitude: 127 },
 };
 function setup(
-  initialValues?: CreateSessionInput,
-  save = vi.fn<(value: CreateSessionInput) => Promise<void>>().mockResolvedValue(undefined),
+  initialValues?: SessionInput,
+  save = vi.fn<(value: SessionInput) => Promise<void>>().mockResolvedValue(undefined),
 ) {
   const close = vi.fn<() => void>();
   function Harness() {
@@ -188,27 +188,28 @@ it('저장 좌표 복원·초기 복귀는 편집한 상세주소를 덮어쓰�
     location: { ...initial.location, detailAddress: '새 상세주소' },
   });
 });
-it('유형별 초안을 보존하고 현재 유형의 값만 저장한다', async () => {
+it('정규 장소 초안을 보존하고 팀 세션에는 장소 입력과 값을 포함하지 않는다', async () => {
   const { user, save } = setup(initial);
   await user.click(screen.getByRole('button', { name: '마커 조정' }));
   await user.click(screen.getByRole('radio', { name: '팀 세션' }));
-  fill('장소 안내 (선택)', '  팀별 회의  ');
+  expect(screen.queryByLabelText(/장소/)).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: '저장' }));
   expect(save).toHaveBeenLastCalledWith({
-    ...initial,
+    name: initial.name,
+    date: initial.date,
+    startTime: initial.startTime,
+    endTime: initial.endTime,
     type: 'team',
-    location: { guide: '팀별 회의' },
   });
   await user.click(screen.getByRole('radio', { name: '오프라인' }));
   expect(screen.getByText('36, 128')).toBeInTheDocument();
   expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('3층');
   await user.click(screen.getByRole('button', { name: '초기 위치로 되돌리기' }));
   expect(screen.getByText('37, 127')).toBeInTheDocument();
-  await user.click(screen.getByRole('radio', { name: '팀 세션' }));
-  expect(screen.getByLabelText('장소 안내 (선택)')).toHaveValue('  팀별 회의  ');
 });
 it('제출 시 필수 입력과 종료 시간을 검증하고 이후 변경 시 오류를 갱신한다', async () => {
   const { user, save } = setup();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: '저장' }));
   expect(save).not.toHaveBeenCalled();
   expect(screen.getByText('세션명을 입력하세요.')).toBeInTheDocument();
@@ -226,11 +227,44 @@ it('제출 시 필수 입력과 종료 시간을 검증하고 이후 변경 시 
   expect(save).toHaveBeenCalledWith({
     name: '새 세션',
     date: '2020-01-01',
-    startTime: '14:00',
-    endTime: '15:00',
+    startTime: '14:00:00',
+    endTime: '15:00:00',
     type: 'team',
-    location: { guide: '' },
   });
+});
+it('같은 분의 수정 시간을 바꾸지 않으면 초 단위 원본을 보존한다', async () => {
+  const sameMinute = {
+    name: '같은 분 세션',
+    date: '2020-01-01',
+    startTime: '14:00:10',
+    endTime: '14:00:30',
+    type: 'team',
+  } satisfies SessionInput;
+  const { user, save } = setup(sameMinute);
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  expect(save).toHaveBeenCalledExactlyOnceWith(sameMinute);
+});
+it('도로명주소와 상세주소는 각각 255자까지만 허용한다', () => {
+  const values = {
+    name: '장소 길이 검증',
+    date: '2020-01-01',
+    startTime: '13:00',
+    endTime: '17:00',
+    type: 'offline',
+    location: {
+      roadAddress: '도'.repeat(255),
+      detailAddress: '상'.repeat(255),
+      latitude: 0,
+      longitude: 0,
+    },
+  } satisfies SessionFormValues;
+  expect(parseSessionForm(values).success).toBe(true);
+  expect(
+    parseSessionForm({
+      ...values,
+      location: { ...values.location, roadAddress: '도'.repeat(256) },
+    }).success,
+  ).toBe(false);
 });
 it('주소 변경 시 상세주소와 좌표를 비우고 늦은 이전 응답은 무시한다', async () => {
   const old = Promise.withResolvers<Awaited<ReturnType<typeof lookupCoordinates>>>();
@@ -252,6 +286,26 @@ it('주소 변경 시 상세주소와 좌표를 비우고 늦은 이전 응답�
     ...initial,
     location: { roadAddress: '주소 B', detailAddress: '', latitude: 38, longitude: 129 },
   });
+});
+it('좌표 0을 유효한 값으로 저장한다', async () => {
+  lookup.mockResolvedValueOnce({ status: 'success', data: { latitude: 0, longitude: 0 } });
+  const { user, save } = setup(initial);
+  await user.click(screen.getByRole('button', { name: '주소 A' }));
+  await screen.findByText('0, 0');
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  expect(save).toHaveBeenCalledWith({
+    ...initial,
+    location: { roadAddress: '주소 A', detailAddress: '', latitude: 0, longitude: 0 },
+  });
+});
+it('상세주소는 최대 255자로 제한한다', async () => {
+  const { user, save } = setup(initial);
+  const detailAddress = screen.getByLabelText('상세주소 (선택)');
+  expect(detailAddress).toHaveAttribute('maxlength', '255');
+  fill('상세주소 (선택)', '가'.repeat(256));
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  expect(save).not.toHaveBeenCalled();
+  expect(screen.getByText('상세주소는 255자 이하여야 합니다.')).toBeInTheDocument();
 });
 it('좌표 실패 후 상세주소를 보존하며 재시도하고 같은 주소 재선택은 조정값을 보존한다', async () => {
   lookup.mockRejectedValueOnce(new Error('secret'));
@@ -278,7 +332,13 @@ it('조회 중에도 팀 세션을 저장하고 오프라인 복귀 시 완료�
   fill('상세주소 (선택)', '남길 초안');
   await user.click(screen.getByRole('radio', { name: '팀 세션' }));
   await user.click(screen.getByRole('button', { name: '저장' }));
-  expect(save).toHaveBeenLastCalledWith({ ...initial, type: 'team', location: { guide: '' } });
+  expect(save).toHaveBeenLastCalledWith({
+    name: initial.name,
+    date: initial.date,
+    startTime: initial.startTime,
+    endTime: initial.endTime,
+    type: 'team',
+  });
   await act(async () => {
     pending.resolve({ status: 'success', data: { latitude: 38, longitude: 129 } });
     await pending.promise;
@@ -297,7 +357,7 @@ it('조회 중에도 팀 세션을 저장하고 오프라인 복귀 시 완료�
 it('저장 중 입력·닫기·Esc·중복 제출을 막고 실패 후 재시도한다', async () => {
   const pending = Promise.withResolvers<void>();
   const save = vi
-    .fn<(value: CreateSessionInput) => Promise<void>>()
+    .fn<(value: SessionInput) => Promise<void>>()
     .mockReturnValueOnce(pending.promise)
     .mockResolvedValue(undefined);
   const { user, close } = setup(initial, save);
@@ -345,12 +405,12 @@ it.each(['성공', '실패'])(
     const { user, client, save: previousSave } = setup(initial);
     await user.click(screen.getByRole('button', { name: '주소 A' }));
     await user.click(screen.getByRole('button', { name: '취소' }));
-    const next: CreateSessionInput = {
+    const next: SessionInput = {
       ...initial,
       name: '다른 세션',
       location: { roadAddress: '다른 주소', detailAddress: '', latitude: 35, longitude: 126 },
     };
-    const save = vi.fn<(value: CreateSessionInput) => Promise<void>>().mockResolvedValue(undefined);
+    const save = vi.fn<(value: SessionInput) => Promise<void>>().mockResolvedValue(undefined);
     render(
       <QueryClientProvider client={client}>
         <SessionForm initialValues={next} onSubmit={save} onClose={() => undefined} />
