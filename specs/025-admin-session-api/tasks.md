@@ -1,7 +1,7 @@
 # 작업 목록: 어드민 세션 API 연결
 
 **입력**: [명세](spec.md)·[계획](plan.md)·[모델](data-model.md)·[계약](contracts/session-api.md)
-**상태**: 7단계 삭제 연결·검증 완료, 사용자 리뷰 대기.
+**상태**: 8단계 통합·접근성·운영 검증 완료, 사용자 리뷰 대기.
 
 테스트는 합의된 수용 기준이다. 회귀 테스트는 가능한 경우 수정 전 실패를 확인한다.
 `[P]`는 같은 승인 단계 안에서 파일이 겹치지 않는 작업만 뜻하며 다음 단계 진행 승인이 아니다.
@@ -86,11 +86,11 @@
 
 목표: 네 흐름의 연결과 실서버 후속 조건을 검토한다.
 
-- [ ] T039 `apps/admin/src/router.test.tsx`에 실제 라우트의 기수 설정 안내와 대표 CRUD 연결·출석 mock 분리 사례를 추가한다.
-- [ ] T040 키보드·스크린 리더·터치에서 폼·오류·삭제 포커스를 확인하고 `.context/session-api/`에 합성 데이터 화면 근거를 남긴다.
-- [ ] T041 `apps/admin/README.md`와 `specs/025-admin-session-api/quickstart.md`에 설정·고정 MSW 한계·실서버 후속·복구 절차를 반영한다.
-- [ ] T042 관련 테스트·루트 check·build와 형식·주석·공개 경계·PR 크기를 검증하고 `specs/025-admin-session-api/validation.md`에 새 실행·캐시·미실행을 기록한다.
-- [ ] T043 최종 단계 리뷰와 실제 기수 ID 확보·실서버 검증의 후속 상태를 `specs/025-admin-session-api/validation.md`에 기록한다.
+- [x] T039 `apps/admin/src/router.test.tsx`에 실제 라우트의 기수 설정 안내와 대표 CRUD 연결·출석 mock 분리 사례를 추가한다.
+- [x] T040 키보드·스크린 리더·터치에서 폼·오류·삭제 포커스를 확인하고 `.context/session-api/`에 합성 데이터 화면 근거를 남긴다.
+- [x] T041 `apps/admin/README.md`와 `specs/025-admin-session-api/quickstart.md`에 설정·고정 MSW 한계·실서버 후속·복구 절차를 반영한다.
+- [x] T042 관련 테스트·루트 check·build와 형식·주석·공개 경계·PR 크기를 검증하고 `specs/025-admin-session-api/validation.md`에 새 실행·캐시·미실행을 기록한다.
+- [x] T043 최종 단계 리뷰와 실제 기수 ID 확보·실서버 검증의 후속 상태를 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 의존성과 실행 전략
 
