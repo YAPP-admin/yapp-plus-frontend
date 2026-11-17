@@ -1,5 +1,6 @@
 import { createAttendanceFixtures } from './attendance-fixtures';
 import { createSessionFixtures, type SessionFixtures } from './session-fixtures';
+import { zSubmitAttendanceReportRequest } from '@yapp-plus/api/generated';
 import { createMswHandlers } from '@yapp-plus/api/generated/msw';
 import { delay, HttpResponse } from 'msw';
 
@@ -31,6 +32,20 @@ export const createSessionHandlers = (
       }
       attendance.checkedInAt ??= new Date().toISOString();
       return HttpResponse.json({ verified: true, checkedInAt: attendance.checkedInAt });
+    }),
+    pick.submit1(async ({ request }) => {
+      const parsed = zSubmitAttendanceReportRequest.safeParse(await request.json());
+      const reason = parsed.success ? parsed.data.reason?.trim() : undefined;
+      if (!reason || reason.length > 30) {
+        return HttpResponse.json({ code: 'INVALID_ATTENDANCE_REPORT' }, { status: 400 });
+      }
+      if (attendance.sessionId === null) {
+        return HttpResponse.json({ code: 'ATTENDANCE_SESSION_NOT_FOUND' }, { status: 404 });
+      }
+      return HttpResponse.json({
+        sessionId: attendance.sessionId,
+        submittedAt: new Date().toISOString(),
+      });
     }),
     pick.find4(() => HttpResponse.json(currentWeek)),
     pick.find5(async () => {

@@ -1,4 +1,4 @@
-import { find4, find6, mine, verify } from '@yapp-plus/api/generated';
+import { find4, find6, mine, submit1, verify } from '@yapp-plus/api/generated';
 import { beforeEach, expect, it } from 'vitest';
 import { apiBaseUrl, server } from './server';
 import { createSessionFixtures, createUpcomingSessionFixtures } from './session-fixtures';
@@ -16,6 +16,25 @@ function startDemo() {
 }
 
 beforeEach(startDemo);
+
+it.each(['LATE', 'EARLY_LEAVE', 'ABSENT'] as const)(
+  '%s 사전 보고는 필수 사유와 함께 현재 세션에 접수한다',
+  async (type) => {
+    const result = await submit1({ body: { type, reason: '개인 사정' } });
+
+    expect(result.data).toMatchObject({ sessionId: 39902, submittedAt: expect.any(String) });
+  },
+);
+
+it('빈 사유 보고는 접수하지 않는다', async () => {
+  const result = await submit1({
+    body: { type: 'LATE', reason: ' ' },
+    kyOptions: { throwHttpErrors: false },
+  });
+
+  expect(result.response?.status).toBe(400);
+  expect(result.error).toMatchObject({ status: 400, body: { code: 'INVALID_ATTENDANCE_REPORT' } });
+});
 
 it('잘못된 코드·세션은 기록을 바꾸지 않고 정상 재입력만 내역에 반영한다', async () => {
   const { data: week } = await find4();
