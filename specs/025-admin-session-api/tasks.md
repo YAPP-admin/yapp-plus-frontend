@@ -1,7 +1,7 @@
 # 작업 목록: 어드민 세션 API 연결
 
 **입력**: [명세](spec.md)·[계획](plan.md)·[모델](data-model.md)·[계약](contracts/session-api.md)
-**상태**: 6단계 수정 연결·리뷰 완료, 7단계 삭제 연결 진행 승인.
+**상태**: 7단계 삭제 연결·검증 완료, 사용자 리뷰 대기.
 
 테스트는 합의된 수용 기준이다. 회귀 테스트는 가능한 경우 수정 전 실패를 확인한다.
 `[P]`는 같은 승인 단계 안에서 파일이 겹치지 않는 작업만 뜻하며 다음 단계 진행 승인이 아니다.
@@ -75,12 +75,12 @@
 
 목표: 출석 시작 전 확인된 세션만 삭제한다. 독립 검증: 취소·204·404·상태 경합 409를 공급한다.
 
-- [ ] T033 [US4] `apps/admin/src/pages/sessions/model/session-api.test.ts`에 DELETE 경로·무본문·204·404·409·자동 재시도 없음 테스트를 추가한다.
-- [ ] T034 [US4] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 delete1 Mutation 옵션·이전 조회 취소·확인된 삭제 항목과 네 개수 갱신·재조회를 구현한다.
-- [ ] T035 [US4] `apps/admin/src/pages/sessions/ui/session-delete-dialog.tsx`에 SEED AlertDialog·세션명·취소 초기 포커스·요청 중 잠금·실패 안내를 구현한다.
-- [ ] T036 [US4] `apps/admin/src/pages/sessions/ui/session-card.tsx`, `session-list.tsx`, `sessions-page.tsx`의 기존 `정보` 메뉴 옆에 `삭제` 항목을 추가하고, `mutate` 콜백 기반 STARTED 비활성 이유·완료 후 목록 제목 포커스를 연결한다.
-- [ ] T037 [US4] `apps/admin/src/pages/sessions/ui/session-delete-dialog.test.tsx`와 `sessions-page.test.tsx`에 취소 무요청·409 경합·404 구분·마지막 항목·count·포커스·삭제 후 refetch 실패를 책임별로 검증한다.
-- [ ] T038 [US4] 검증·변경량·화면 근거·7단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
+- [x] T033 [US4] `apps/admin/src/pages/sessions/model/session-api.test.ts`에 DELETE 경로·무본문·204·404·409·자동 재시도 없음 테스트를 추가한다.
+- [x] T034 [US4] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 delete1 Mutation 옵션을 그대로 사용하고 결과 뒤 전체 목록 무효화를 구현한다.
+- [x] T035 [US4] `apps/admin/src/pages/sessions/ui/session-delete-dialog.tsx`에 SEED AlertDialog·세션명·취소 초기 포커스·요청 중 잠금·실패 안내를 구현한다.
+- [x] T036 [US4] `apps/admin/src/pages/sessions/ui/session-card.tsx`, `session-list.tsx`, `sessions-page.tsx`의 기존 `정보` 메뉴 옆에 `삭제` 항목을 추가하고, `mutate` 콜백 기반 STARTED 비활성 이유·완료 후 목록 제목 포커스를 연결한다.
+- [x] T037 [US4] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에 취소 무요청·409 경합·404 구분·count·포커스·삭제 후 refetch 실패를 사용자 흐름으로 검증한다.
+- [x] T038 [US4] 검증·변경량·화면 근거·7단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 8단계 — 통합·접근성·운영 기록
 

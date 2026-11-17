@@ -199,6 +199,14 @@ async function openEdit(user: ReturnType<typeof userEvent.setup>, name: string) 
   return screen.findByRole('dialog', { name: '세션 수정' });
 }
 
+async function openDelete(user: ReturnType<typeof userEvent.setup>, name: string) {
+  const trigger = await screen.findByRole('button', { name: `${name} 관리` });
+  await user.click(trigger);
+  const menu = await screen.findByRole('menu', { name: `${name} 관리` });
+  await user.click(within(menu).getByRole('menuitem', { name: '삭제' }));
+  return screen.findByRole('alertdialog', { name: '세션을 삭제할까요?' });
+}
+
 it('기수 설정이 없으면 API를 호출하지 않고 설정 안내를 표시한다', async () => {
   let requestCount = 0;
   server.use(
@@ -537,4 +545,213 @@ it('수정 요청 중 페이지를 이동하면 이전 화면의 완료 알림�
   );
   await waitFor(() => expect(listRequestCount).toBe(2));
   expect(screen.queryByText('세션을 수정했습니다.')).not.toBeInTheDocument();
+});
+
+it('출석이 시작된 세션은 메뉴에서 삭제 사유와 함께 비활성화한다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+  );
+
+  const { user } = await setup(25);
+  await user.click(await screen.findByRole('button', { name: '정규 세션 관리' }));
+  const menu = await screen.findByRole('menu', { name: '정규 세션 관리' });
+  expect(within(menu).getByRole('menuitem', { name: /삭제/ })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  expect(within(menu).getByText('출석이 시작되어 삭제할 수 없습니다.')).toBeVisible();
+});
+
+it('삭제 취소에 초기 포커스를 두고 요청 없이 목록 메뉴로 돌아간다', async () => {
+  let deleteRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+    http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () => {
+      deleteRequestCount += 1;
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await waitFor(() => expect(dialog.getByRole('button', { name: '취소' })).toHaveFocus());
+  expect(dialog.getByText('“팀 세션” 세션이 삭제됩니다.')).toBeVisible();
+  await user.click(dialog.getByRole('button', { name: '취소' }));
+
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  expect(deleteRequestCount).toBe(0);
+});
+
+it('삭제 성공 뒤 재조회한 항목과 집계를 표시하고 완료를 안내한다', async () => {
+  let listRequestCount = 0;
+  let requestedPath = '';
+  const singleTeamList = {
+    ...SESSION_LIST,
+    totalCount: 1,
+    allCount: 1,
+    regularCount: 0,
+    sessions: [TEAM_SESSION],
+  };
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return listRequestCount === 1
+        ? HttpResponse.json(singleTeamList)
+        : HttpResponse.json({
+            ...SESSION_LIST,
+            totalCount: 0,
+            allCount: 0,
+            regularCount: 0,
+            teamCount: 0,
+            sessions: [],
+          });
+    }),
+    http.delete(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      ({ params }) => {
+        requestedPath = `${String(params.generationId)}/${String(params.sessionId)}`;
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '삭제' }));
+
+  expect(await screen.findByText('세션을 삭제했습니다.')).toBeVisible();
+  await waitFor(() => expect(screen.queryByRole('heading', { name: '팀 세션' })).toBeNull());
+  expect(within(screen.getByRole('main')).getByRole('status')).toHaveTextContent('전체 0개');
+  expect(screen.getByText('등록된 세션이 없습니다.')).toBeVisible();
+  await waitFor(() => expect(screen.getByRole('heading', { name: '세션 관리' })).toHaveFocus());
+  expect(listRequestCount).toBe(2);
+  expect(requestedPath).toBe('25/102');
+});
+
+it('삭제 요청 중에는 중복 실행과 다이얼로그 닫기를 막는다', async () => {
+  let deleteRequestCount = 0;
+  const deletePending = Promise.withResolvers<void>();
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+    http.delete(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      async () => {
+        deleteRequestCount += 1;
+        await deletePending.promise;
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  const deleteButton = dialog.getByRole('button', { name: '삭제' });
+  await user.click(deleteButton);
+  await waitFor(() => expect(deleteRequestCount).toBe(1));
+  expect(deleteButton).toBeDisabled();
+  expect(dialog.getByRole('button', { name: '취소' })).toBeDisabled();
+  await user.keyboard('{Escape}');
+  expect(screen.getByRole('alertdialog', { name: '세션을 삭제할까요?' })).toBeVisible();
+  await user.click(deleteButton);
+  expect(deleteRequestCount).toBe(1);
+
+  deletePending.resolve();
+  expect(await screen.findByText('세션을 삭제했습니다.')).toBeVisible();
+});
+
+it('삭제 성공 뒤 목록 재조회가 실패하면 기존 목록과 별도 경고를 유지한다', async () => {
+  let listRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return listRequestCount === 1
+        ? HttpResponse.json(SESSION_LIST)
+        : HttpResponse.json({ code: 'PRIVATE', message: 'private' }, { status: 500 });
+    }),
+    http.delete(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      () => new HttpResponse(null, { status: 204 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '삭제' }));
+
+  expect(await screen.findByText('세션을 삭제했습니다.')).toBeVisible();
+  expect(await screen.findByRole('alert')).toHaveTextContent('세션 목록을 새로고치지 못했습니다.');
+  expect(screen.getByRole('heading', { name: '팀 세션' })).toBeVisible();
+  expect(within(screen.getByRole('main')).getByRole('status')).toHaveTextContent('전체 2개');
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+});
+
+it('삭제 시점에 출석이 시작되면 확인 창을 유지하고 최신 목록을 조회한다', async () => {
+  let listRequestCount = 0;
+  const startedTeamSession = {
+    ...TEAM_SESSION,
+    attendanceSummary: { ...TEAM_SESSION.attendanceSummary, status: 'STARTED' as const },
+  };
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return HttpResponse.json(
+        listRequestCount === 1
+          ? SESSION_LIST
+          : { ...SESSION_LIST, sessions: [REGULAR_SESSION, startedTeamSession] },
+      );
+    }),
+    http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () =>
+      HttpResponse.json({ code: 'SESSION_DELETE_CONFLICT', message: 'private' }, { status: 409 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '삭제' }));
+
+  expect(await dialog.findByRole('alert')).toHaveTextContent('출석이 시작된 세션은');
+  expect(dialog.getByRole('button', { name: '삭제' })).toBeEnabled();
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+  await waitFor(() => expect(listRequestCount).toBe(2));
+});
+
+it('이미 사라진 세션은 확인 창을 닫고 목록 새로고침과 포커스 이동을 안내한다', async () => {
+  let listRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return HttpResponse.json(
+        listRequestCount === 1
+          ? SESSION_LIST
+          : {
+              ...SESSION_LIST,
+              totalCount: 1,
+              allCount: 1,
+              teamCount: 0,
+              sessions: [REGULAR_SESSION],
+            },
+      );
+    }),
+    http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () =>
+      HttpResponse.json({ code: 'SESSION_NOT_FOUND', message: 'private' }, { status: 404 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '삭제' }));
+
+  expect(
+    await screen.findByText('삭제할 세션을 찾을 수 없습니다. 목록을 새로고침했습니다.'),
+  ).toBeVisible();
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole('heading', { name: '세션 관리' })).toHaveFocus());
+  await waitFor(() => expect(listRequestCount).toBe(2));
+  expect(screen.queryByRole('heading', { name: '팀 세션' })).not.toBeInTheDocument();
 });

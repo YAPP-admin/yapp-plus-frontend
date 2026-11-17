@@ -16,9 +16,11 @@ const ATTENDANCE_FIELDS = [
 export function SessionCard({
   session,
   onEdit,
+  onDelete,
 }: {
   session: SessionViewModel;
   onEdit?: (session: SessionViewModel) => void;
+  onDelete?: (session: SessionViewModel) => void;
 }) {
   return (
     <article className={styles.card}>
@@ -26,7 +28,7 @@ export function SessionCard({
         <Badge variant="weak" tone={session.type === 'offline' ? 'informative' : 'neutral'}>
           {sessionFilterLabels[session.type]}
         </Badge>
-        {onEdit ? (
+        {onEdit || onDelete ? (
           <Menu.Root placement="bottom-end" gutter={4}>
             <Menu.Trigger asChild>
               <ActionButton
@@ -43,11 +45,28 @@ export function SessionCard({
               <Menu.Content>
                 <Menu.ScrollArea>
                   <Menu.Group>
-                    <Menu.Item onClick={() => onEdit(session)}>
-                      <Menu.ItemBody>
-                        <Menu.ItemLabel>정보</Menu.ItemLabel>
-                      </Menu.ItemBody>
-                    </Menu.Item>
+                    {onEdit ? (
+                      <Menu.Item onClick={() => onEdit(session)}>
+                        <Menu.ItemBody>
+                          <Menu.ItemLabel>정보</Menu.ItemLabel>
+                        </Menu.ItemBody>
+                      </Menu.Item>
+                    ) : null}
+                    {onDelete ? (
+                      <Menu.Item
+                        disabled={session.attendance.started}
+                        onClick={() => onDelete(session)}
+                      >
+                        <Menu.ItemBody>
+                          <Menu.ItemLabel>삭제</Menu.ItemLabel>
+                          {session.attendance.started ? (
+                            <Menu.ItemDescription>
+                              출석이 시작되어 삭제할 수 없습니다.
+                            </Menu.ItemDescription>
+                          ) : null}
+                        </Menu.ItemBody>
+                      </Menu.Item>
+                    ) : null}
                   </Menu.Group>
                 </Menu.ScrollArea>
               </Menu.Content>
