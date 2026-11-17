@@ -1,4 +1,5 @@
 /** 목록 조회 상태를 구분하며 필터는 라우터가 소유합니다. */
+import { useRef } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { find1Options } from '@yapp-plus/api/generated';
 import { ActionButton, Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
@@ -8,6 +9,7 @@ import { AttendanceQueryBoundary } from '~/features/session-management';
 import { toSessionViewModel, type SessionViewModel } from '../model/session-api-model';
 import type { SessionInput } from '../model/session-form';
 import { SessionCreateDialog, SessionEditDialog } from './session-dialogs';
+import { SessionDeleteDialog } from './session-delete-dialog';
 import { SessionTypeFilter } from './session-type-filter';
 import { SessionList } from './session-list';
 import { description, heading, page, placeholder, refreshError, title } from './sessions-page.css';
@@ -20,6 +22,11 @@ type Props = {
 
 export function SessionsPage({ type, generationId, onTypeChange }: Props) {
   const snackbar = useSnackbarAdapter();
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  function focusListTitle() {
+    window.setTimeout(() => titleRef.current?.focus(), 0);
+  }
 
   function openCreateDialog() {
     if (generationId === null) {
@@ -69,11 +76,45 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
     ));
   }
 
+  function openDeleteDialog(session: SessionViewModel) {
+    if (generationId === null) {
+      return;
+    }
+    overlay.open(({ unmount }) => (
+      <SessionDeleteDialog
+        generationId={generationId}
+        session={session}
+        onClose={unmount}
+        onDeleted={() => {
+          unmount();
+          snackbar.create({
+            render: () => <Snackbar variant="positive" message="세션을 삭제했습니다." />,
+          });
+          focusListTitle();
+        }}
+        onMissing={() => {
+          unmount();
+          snackbar.create({
+            render: () => (
+              <Snackbar
+                variant="critical"
+                message="삭제할 세션을 찾을 수 없습니다. 목록을 새로고침했습니다."
+              />
+            ),
+          });
+          focusListTitle();
+        }}
+      />
+    ));
+  }
+
   return (
     <main className={page}>
       <div className={heading}>
         <div>
-          <h1 className={title}>세션 관리</h1>
+          <h1 ref={titleRef} tabIndex={-1} className={title}>
+            세션 관리
+          </h1>
           <p className={description}>유형별 세션을 확인합니다.</p>
         </div>
         {generationId === null ? null : (
@@ -91,7 +132,12 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
           errorMessage="세션 목록을 불러오지 못했습니다."
           resetKey="session-management-list"
         >
-          <SessionListData type={type} generationId={generationId} onEdit={openEditDialog} />
+          <SessionListData
+            type={type}
+            generationId={generationId}
+            onEdit={openEditDialog}
+            onDelete={openDeleteDialog}
+          />
         </AttendanceQueryBoundary>
       )}
     </main>
@@ -102,10 +148,12 @@ function SessionListData({
   type,
   generationId,
   onEdit,
+  onDelete,
 }: {
   type: SessionFilter;
   generationId: number;
   onEdit: (session: SessionViewModel) => void;
+  onDelete: (session: SessionViewModel) => void;
 }) {
   const sessionList = useSuspenseQuery(
     find1Options({ path: { generationId }, query: { type: 'ALL' } }),
@@ -138,6 +186,7 @@ function SessionListData({
         type={type}
         totalCount={sessionData.allCount}
         onEdit={onEdit}
+        onDelete={onDelete}
       />
     </>
   );

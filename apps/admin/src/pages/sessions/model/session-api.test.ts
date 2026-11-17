@@ -4,7 +4,11 @@ import { HttpResponse, http } from 'msw';
 import { afterEach, expect, it } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { toCreateSessionRequest } from './session-api-model';
-import { createSessionMutationOptions, updateSessionMutationOptions } from './session-queries';
+import {
+  createSessionMutationOptions,
+  deleteSessionMutationOptions,
+  updateSessionMutationOptions,
+} from './session-queries';
 
 const CREATE_INPUT = {
   name: '정규 세션',
@@ -41,6 +45,14 @@ function executeUpdateRequest() {
       path: { generationId: 25, sessionId: 101 },
       body: CREATE_VARIABLES.body,
     });
+}
+
+function executeDeleteRequest() {
+  const queryClient = new QueryClient();
+  return queryClient
+    .getMutationCache()
+    .build(queryClient, deleteSessionMutationOptions)
+    .execute({ path: { generationId: 25, sessionId: 101 } });
 }
 
 afterEach(() => {
@@ -150,6 +162,43 @@ it.each([
   );
 
   const error = await executeUpdateRequest().catch((caught: unknown) => caught);
+  expect(error).toBeInstanceOf(ApiError);
+  expect(error).toMatchObject({ status, body: { code } });
+  expect(requestCount).toBe(1);
+});
+
+it('삭제할 기수와 세션 경로만 보내고 204 응답을 완료로 처리한다', async () => {
+  let requestedPath = '';
+  let requestedBody = '';
+  server.use(
+    http.delete(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      async ({ params, request }) => {
+        requestedPath = `${String(params.generationId)}/${String(params.sessionId)}`;
+        requestedBody = await request.text();
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
+  );
+
+  await executeDeleteRequest();
+  expect(requestedPath).toBe('25/101');
+  expect(requestedBody).toBe('');
+});
+
+it.each([
+  [404, 'SESSION_NOT_FOUND'],
+  [409, 'SESSION_DELETE_CONFLICT'],
+] as const)('삭제 HTTP %i %s 실패를 자동 재시도하지 않는다', async (status, code) => {
+  let requestCount = 0;
+  server.use(
+    http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () => {
+      requestCount += 1;
+      return HttpResponse.json({ code, message: 'private' }, { status });
+    }),
+  );
+
+  const error = await executeDeleteRequest().catch((caught: unknown) => caught);
   expect(error).toBeInstanceOf(ApiError);
   expect(error).toMatchObject({ status, body: { code } });
   expect(requestCount).toBe(1);
