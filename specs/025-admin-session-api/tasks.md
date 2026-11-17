@@ -1,7 +1,7 @@
 # 작업 목록: 어드민 세션 API 연결
 
 **입력**: [명세](spec.md)·[계획](plan.md)·[모델](data-model.md)·[계약](contracts/session-api.md)
-**상태**: 2단계 공통 경계 구현·검증 완료, 사용자 리뷰 대기. 이후 단계는 리뷰·진행 확인 전 착수하지 않는다.
+**상태**: 4단계 공통 폼 구현·검증 완료, 사용자 리뷰 대기. 이후 단계는 리뷰·진행 확인 전 착수하지 않는다.
 
 테스트는 합의된 수용 기준이다. 회귀 테스트는 가능한 경우 수정 전 실패를 확인한다.
 `[P]`는 같은 승인 단계 안에서 파일이 겹치지 않는 작업만 뜻하며 다음 단계 진행 승인이 아니다.
@@ -39,16 +39,16 @@
 - [x] T015 [US1] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에서 생성 `find1Options`를 직접 사용해 signal·key를 포함한 전체 조회를 구현한다.
 - [x] T016 [US1] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`, `session-list.tsx`, `session-card.tsx`를 전용 모델·상태에 연결하고 미연결 변경 액션을 노출하지 않는다.
 - [x] T017 [US1] `apps/admin/src/routes/_dashboard/sessions.tsx`와 `apps/admin/src/pages/sessions/index.ts`에 검증한 ID 주입을 연결하고 출석의 기존 모의 소비 경로를 유지한다.
-- [ ] T018 [US1] 검증·변경량·화면 근거·3단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
+- [x] T018 [US1] 검증·변경량·화면 근거·3단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 4단계 — US2 공통 폼 준비 (P1, US3에서도 재사용)
 
 목표: 저장 액션을 노출하기 전에 실제 요청 입력 계약을 완성한다.
 독립 검증: 폼 props로 정상 세션을 주입해 입력·복원·취소를 확인한다.
 
-- [ ] T019 [US2] `apps/admin/src/pages/sessions/ui/session-form.test.tsx`, `session-location-recovery.test.tsx`에서 정규 필수 장소·팀 무입력·255자·좌표 0·저장 좌표 복원을 검증한다.
-- [ ] T020 [US2] `apps/admin/src/pages/sessions/model/session-form.ts`를 전용 입력 모델·원본 시간 보존·유형별 요청 계약으로 바꾸고 팀 안내 초안을 제거한다.
-- [ ] T021 [US2] `apps/admin/src/pages/sessions/ui/session-form.tsx`에서 팀 입력 제거·유형 왕복 초안을 처리하고 `session-dialogs.tsx`의 미사용 모의 저장 래퍼를 제거해 새 폼 계약과의 타입 충돌을 막는다.
+- [x] T019 [US2] `apps/admin/src/pages/sessions/ui/session-form.test.tsx`, `session-location-recovery.test.tsx`에서 정규 필수 장소·팀 무입력·255자·좌표 0·저장 좌표 복원을 검증한다.
+- [x] T020 [US2] `apps/admin/src/pages/sessions/model/session-form.ts`를 전용 입력 모델·원본 시간 보존·유형별 요청 계약으로 바꾸고 팀 안내 초안을 제거한다.
+- [x] T021 [US2] `apps/admin/src/pages/sessions/ui/session-form.tsx`에서 팀 입력 제거·유형 왕복 초안을 처리하고 `session-dialogs.tsx`의 미사용 모의 저장 래퍼를 제거해 새 폼 계약과의 타입 충돌을 막는다.
 - [ ] T022 [US2] 기존 주소 경합 테스트와 폼 검증·화면 근거·4단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 5단계 — US2 생성 연결 (P1)
