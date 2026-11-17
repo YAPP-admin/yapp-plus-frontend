@@ -46,9 +46,8 @@ ID 확보와 실서버 쓰기 검증은 후속이다. 변경 성공과 목록 �
 apps/admin/src/pages/sessions/
 ├── model/
 │   ├── session-config.ts        # 기수 환경 설정 검증
-│   ├── session-api.ts           # SDK 호출과 응답 검증
-│   ├── session.ts               # 조회·입력 모델과 DTO 변환
-│   ├── session-queries.ts       # 목록과 변경 후 캐시 갱신
+│   ├── session-api-model.ts     # 조회 모델과 요청 DTO 변환
+│   ├── session-queries.ts       # 생성 Mutation 옵션과 변경 후 캐시 갱신
 │   ├── session-error.ts         # ApiError 본문 검증·화면 메시지
 │   ├── session-form.ts          # 기존 폼 초안 변환 갱신
 │   └── location/               # 기존 검색·좌표 기능 유지
@@ -90,7 +89,7 @@ apps/admin/src/pages/sessions/
 | 8    | 통합 검증·운영 문서           | 전체 check/build·접근성·후속 실서버 절차                   |
 
 4단계에서 폼 입력 계약을 바꿀 때 사용하지 않는 기존 모의 저장 모달 래퍼도 제거한다.
-타입 검사 대상인 래퍼를 단순히 숨겨 두지 않는다. 실제 생성·수정 래퍼는 각각 5·6단계에 연결한다.
+생성된 Mutation 옵션은 별도 SDK 래퍼 없이 직접 사용하고 화면 입력만 요청 DTO로 변환한다.
 매 단계는 해당 테스트와 변경량을 보고한 뒤 리뷰를 기다린다. 미구현 저장 동작을 모의 서비스에
 연결하거나 비활성 기능을 완성된 것처럼 노출하지 않는다. 상세 작업은 [tasks.md](tasks.md)를 따른다.
 

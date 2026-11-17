@@ -313,6 +313,9 @@ describe('세션 목록 탐색', () => {
 
     await user.tab();
     await user.tab();
+    expect(screen.getByRole('button', { name: '세션 추가' })).toHaveFocus();
+
+    await user.tab();
     expect(filter).toHaveFocus();
 
     await user.keyboard('{ArrowRight}');

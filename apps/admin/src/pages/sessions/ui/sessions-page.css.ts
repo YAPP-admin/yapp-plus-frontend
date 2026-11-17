@@ -8,6 +8,12 @@ export const page = style({
   marginInline: 'auto',
   padding: `${vars.$dimension.x12} ${vars.$dimension.x6}`,
 });
+export const heading = style({
+  display: 'flex',
+  alignItems: 'flex-start',
+  justifyContent: 'space-between',
+  gap: vars.$dimension.x4,
+});
 export const title = style({
   margin: 0,
   fontSize: vars.$fontSize.t8,
@@ -32,6 +38,15 @@ export const placeholder = style({
   borderTop: `1px solid ${vars.$color.stroke.neutralMuted}`,
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t4,
+});
+export const refreshError = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: vars.$dimension.x4,
+  padding: vars.$dimension.x4,
+  border: `1px solid ${vars.$color.stroke.criticalSolid}`,
+  color: vars.$color.fg.critical,
 });
 
 export const list = style({
