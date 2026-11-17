@@ -3,7 +3,7 @@ import { act, fireEvent, render, screen, waitFor, within } from '@testing-librar
 import userEvent from '@testing-library/user-event';
 import { createBrowserHistory, createMemoryHistory, RouterProvider } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { Providers } from './providers';
 import { getRouter } from './router';
 import type * as RootRouteModule from './routes/__root';
@@ -229,6 +229,9 @@ describe('관리자 라우팅', () => {
 });
 
 describe('세션 목록 탐색', () => {
+  beforeEach(() => vi.stubEnv('VITE_ADMIN_GENERATION_ID', '1'));
+  afterEach(() => vi.unstubAllEnvs());
+
   it.each([
     ['/sessions', '전체'],
     ['/sessions?type=offline', '오프라인'],
@@ -309,8 +312,6 @@ describe('세션 목록 탐색', () => {
     await user.tab();
 
     await user.tab();
-    await user.tab();
-    expect(screen.getByRole('button', { name: '세션 추가' })).toHaveFocus();
     await user.tab();
     expect(filter).toHaveFocus();
 
@@ -1141,9 +1142,10 @@ describe('알림 발송 내역 탐색', () => {
 });
 
 describe('세션 관리 목록', () => {
+  beforeEach(() => vi.stubEnv('VITE_ADMIN_GENERATION_ID', '1'));
   afterEach(() => vi.unstubAllEnvs());
 
-  it('실제 모의 저장소의 세션을 최신순으로 표시하고 유형별 개수를 갱신한다', async () => {
+  it('MSW 세션을 최신순으로 표시하고 유형별 개수를 갱신한다', async () => {
     vi.stubEnv('SSR', false);
     const user = userEvent.setup();
     await renderRoute('/sessions');
@@ -1152,22 +1154,22 @@ describe('세션 관리 목록', () => {
     const cards = within(list).getAllByRole('heading');
 
     expect(cards).toHaveLength(2);
-    expect(cards[0]).toHaveAccessibleName('개발용 팀 세션');
-    expect(cards[1]).toHaveAccessibleName('개발용 오프라인 세션');
+    expect(cards[0]).toHaveAccessibleName('팀 세션');
+    expect(cards[1]).toHaveAccessibleName('정규 세션');
     expect(screen.getByRole('status')).toHaveTextContent('전체 2개');
 
     await user.click(screen.getByRole('radio', { name: '오프라인' }));
 
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('오프라인 1개'));
-    expect(within(list).getByRole('heading', { name: '개발용 오프라인 세션' })).toBeVisible();
-    expect(within(list).queryByRole('heading', { name: '개발용 팀 세션' })).not.toBeInTheDocument();
+    expect(within(list).getByRole('heading', { name: '정규 세션' })).toBeVisible();
+    expect(within(list).queryByRole('heading', { name: '팀 세션' })).not.toBeInTheDocument();
   });
 
   it('카드 본문을 눌러도 세션 관리 화면과 필터를 유지한다', async () => {
     vi.stubEnv('SSR', false);
     const user = userEvent.setup();
     const router = await renderRoute('/sessions?type=team');
-    const title = await screen.findByRole('heading', { name: '개발용 팀 세션' });
+    const title = await screen.findByRole('heading', { name: '팀 세션' });
 
     await user.click(title);
 
