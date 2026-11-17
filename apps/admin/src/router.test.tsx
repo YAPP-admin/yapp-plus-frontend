@@ -2,8 +2,10 @@ import type * as SeedDesign from '@seed-design/react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createBrowserHistory, createMemoryHistory, RouterProvider } from '@tanstack/react-router';
+import { HttpResponse, http } from 'msw';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { apiBaseUrl, server } from './mocks/server';
 import { Providers } from './providers';
 import { getRouter } from './router';
 import type * as RootRouteModule from './routes/__root';
@@ -1148,6 +1150,24 @@ describe('세션 관리 목록', () => {
   beforeEach(() => vi.stubEnv('VITE_ADMIN_GENERATION_ID', '1'));
   afterEach(() => vi.unstubAllEnvs());
 
+  it('기수 ID가 없으면 세션 API를 호출하지 않고 설정 안내만 표시한다', async () => {
+    vi.stubEnv('VITE_ADMIN_GENERATION_ID', '');
+    let listRequestCount = 0;
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+        listRequestCount += 1;
+        return HttpResponse.json({});
+      }),
+    );
+
+    await renderRoute('/sessions');
+
+    expect(await screen.findByText('기수 ID 설정이 필요합니다.')).toBeVisible();
+    expect(screen.queryByRole('button', { name: '세션 추가' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('list', { name: '세션 목록' })).not.toBeInTheDocument();
+    expect(listRequestCount).toBe(0);
+  });
+
   it('MSW 세션을 최신순으로 표시하고 유형별 개수를 갱신한다', async () => {
     vi.stubEnv('SSR', false);
     const user = userEvent.setup();
@@ -1160,6 +1180,7 @@ describe('세션 관리 목록', () => {
     expect(cards[0]).toHaveAccessibleName('팀 세션');
     expect(cards[1]).toHaveAccessibleName('정규 세션');
     expect(screen.getByRole('status')).toHaveTextContent('전체 2개');
+    expect(screen.queryByText('개발용 오프라인 세션')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('radio', { name: '오프라인' }));
 
@@ -1180,5 +1201,52 @@ describe('세션 관리 목록', () => {
     expect(screen.getByRole('status')).toHaveTextContent('팀 세션 1개');
     expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
     expect(within(screen.getByRole('article')).queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('실제 라우트에서 추가 진입과 수정·삭제 API를 연결한다', async () => {
+    vi.stubEnv('SSR', false);
+    let updateRequestCount = 0;
+    let deleteRequestCount = 0;
+    server.use(
+      http.put(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () => {
+        updateRequestCount += 1;
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () => {
+        deleteRequestCount += 1;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    const user = userEvent.setup();
+    await renderRoute('/sessions');
+    await screen.findByRole('list', { name: '세션 목록' });
+
+    await user.click(screen.getByRole('button', { name: '세션 추가' }));
+    const createDialog = within(await screen.findByRole('dialog', { name: '세션 추가' }));
+    await user.click(createDialog.getByRole('button', { name: '취소' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '세션 추가' })).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: '팀 세션 관리' }));
+    let menu = within(await screen.findByRole('menu', { name: '팀 세션 관리' }));
+    await user.click(menu.getByRole('menuitem', { name: '정보' }));
+    const editDialog = within(await screen.findByRole('dialog', { name: '세션 수정' }));
+    expect(editDialog.getByRole('radio', { name: '팀 세션' })).toBeChecked();
+    await user.click(editDialog.getByRole('button', { name: '저장' }));
+    await waitFor(() => expect(updateRequestCount).toBe(1));
+    expect(await screen.findByText('세션을 수정했습니다.')).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: '팀 세션 관리' }));
+    menu = within(await screen.findByRole('menu', { name: '팀 세션 관리' }));
+    await user.click(menu.getByRole('menuitem', { name: '삭제' }));
+    const deleteDialog = within(
+      await screen.findByRole('alertdialog', { name: '세션을 삭제할까요?' }),
+    );
+    await user.click(deleteDialog.getByRole('button', { name: '삭제' }));
+
+    await waitFor(() => expect(deleteRequestCount).toBe(1));
+    expect(await screen.findByText('세션을 삭제했습니다.')).toBeVisible();
   });
 });
