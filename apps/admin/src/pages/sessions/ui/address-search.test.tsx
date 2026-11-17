@@ -268,13 +268,13 @@ it('두 번째 페이지 실패 후 검색어를 유지한 채 첫 페이지로 
     .mockResolvedValueOnce(result())
     .mockRejectedValueOnce(new Error('페이지 조회 실패'))
     .mockResolvedValue(result());
-  setup();
+  const { user } = setup();
   submit();
   await screen.findByText(/1페이지/);
-  fireEvent.click(screen.getByRole('button', { name: '다음' }));
+  await user.click(screen.getByRole('button', { name: '다음' }));
   await screen.findByRole('alert');
   expect(screen.queryByRole('list')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', { name: '첫 페이지로 돌아가기' }));
+  await user.click(screen.getByRole('button', { name: '첫 페이지로 돌아가기' }));
   expect(await screen.findByText(/1페이지/)).toBeVisible();
   expect(screen.getByRole('searchbox')).toHaveValue('세종대로');
   expect(search).toHaveBeenLastCalledWith({
