@@ -43,7 +43,7 @@ const config: ExpoConfig = {
   // Expo Router의 앱 URL과 iOS Bundle ID를 같은 안정 식별자로 유지합니다.
   scheme: 'org.yapp.yappplus',
   // 사진 네이티브 모듈을 포함한 새 바이너리와 OTA runtime을 함께 구분한다.
-  version: '1.0.7',
+  version: '1.0.8',
   runtimeVersion: {
     policy: 'appVersion',
   },
