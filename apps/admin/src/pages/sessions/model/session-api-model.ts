@@ -91,6 +91,26 @@ export function toSessionViewModel(response: unknown): SessionViewModel {
     : { ...base, type: 'team', location: null };
 }
 
+/** 조회 모델의 저장값을 초 단위 시간과 장소 좌표를 보존한 수정 폼 입력으로 변환한다. */
+export function toSessionInput(session: SessionViewModel): SessionInput {
+  const common = {
+    name: session.name,
+    date: session.date,
+    startTime: session.startTime,
+    endTime: session.endTime,
+  };
+  return session.type === 'offline'
+    ? {
+        ...common,
+        type: 'offline',
+        location: {
+          ...session.location,
+          detailAddress: session.location.detailAddress ?? '',
+        },
+      }
+    : { ...common, type: 'team' };
+}
+
 /** 폼 입력을 생성·수정 API가 요구하는 전체 본문으로 변환한다. */
 export function toCreateSessionRequest(input: SessionInput): CreateSessionRequest {
   const data = sessionInputSchema.parse(input);

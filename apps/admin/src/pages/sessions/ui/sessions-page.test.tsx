@@ -17,6 +17,7 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AdminOverlayProvider } from '../../../app/ui/admin-overlay-provider';
 import { createAdminQueryClient } from '../../../query-client';
 import { apiBaseUrl, server } from '../../../mocks/server';
+import type { SessionInput } from '../model/session-form';
 import type { SessionFilter } from '../model/session-search';
 import { SessionsPage } from './sessions-page';
 
@@ -24,38 +25,65 @@ vi.mock('./session-form', () => ({
   SessionForm: ({
     submissionPending,
     submissionError,
+    initialValues,
     onSubmit,
     onClose,
   }: {
     submissionPending?: boolean;
     submissionError?: string;
-    onSubmit: (input: {
-      name: string;
-      date: string;
-      startTime: string;
-      endTime: string;
-      type: 'team';
-    }) => void;
+    initialValues?: SessionInput;
+    onSubmit: (input: SessionInput) => void;
     onClose: () => void;
   }) => (
-    <dialog open aria-label="세션 추가">
-      <span>팀 세션 초안</span>
+    <dialog open aria-label={initialValues ? '세션 수정' : '세션 추가'}>
+      <span>
+        {initialValues
+          ? [
+              initialValues.name,
+              initialValues.date,
+              initialValues.startTime,
+              initialValues.endTime,
+              initialValues.type === 'offline' ? initialValues.location.roadAddress : '',
+            ].join('|')
+          : '팀 세션 초안'}
+      </span>
       {submissionError ? <p role="alert">{submissionError}</p> : null}
       <button
         type="button"
         disabled={submissionPending}
         onClick={() =>
-          onSubmit({
-            name: '팀 세션 초안',
-            date: '2026-11-21',
-            startTime: '14:00:00',
-            endTime: '18:00:00',
-            type: 'team',
-          })
+          onSubmit(
+            initialValues
+              ? { ...initialValues, name: `${initialValues.name} 수정` }
+              : {
+                  name: '팀 세션 초안',
+                  date: '2026-11-21',
+                  startTime: '14:00:00',
+                  endTime: '18:00:00',
+                  type: 'team',
+                },
+          )
         }
       >
         테스트 세션 저장
       </button>
+      {initialValues ? (
+        <button
+          type="button"
+          disabled={submissionPending}
+          onClick={() =>
+            onSubmit({
+              name: `${initialValues.name} 팀 전환`,
+              date: initialValues.date,
+              startTime: initialValues.startTime,
+              endTime: initialValues.endTime,
+              type: 'team',
+            })
+          }
+        >
+          팀으로 변경 저장
+        </button>
+      ) : null}
       <button type="button" disabled={submissionPending} onClick={onClose}>
         취소
       </button>
@@ -118,6 +146,14 @@ const CREATED_TEAM_SESSION = {
   name: '팀 세션 초안',
   date: '2026-11-21',
 };
+const UPDATED_TEAM_SESSION = {
+  ...TEAM_SESSION,
+  sessionId: 101,
+  name: '정규 세션 팀 전환',
+  date: REGULAR_SESSION.date,
+  startTime: REGULAR_SESSION.startTime,
+  endTime: REGULAR_SESSION.endTime,
+};
 
 beforeEach(() => {
   vi.stubEnv('SSR', false);
@@ -151,6 +187,16 @@ async function setup(generationId: number | null, initialType: SessionFilter = '
   const rendered = render(<RouterProvider router={router} />);
 
   return { user: userEvent.setup(), queryClient, router, ...rendered };
+}
+
+async function openEdit(user: ReturnType<typeof userEvent.setup>, name: string) {
+  const trigger = await screen.findByRole('button', { name: `${name} 관리` });
+  trigger.focus();
+  await user.keyboard('{Enter}');
+  const menu = await screen.findByRole('menu', { name: `${name} 관리` });
+  expect(within(menu).getByRole('menuitem', { name: '정보' })).toHaveFocus();
+  await user.keyboard('{Enter}');
+  return screen.findByRole('dialog', { name: '세션 수정' });
 }
 
 it('기수 설정이 없으면 API를 호출하지 않고 설정 안내를 표시한다', async () => {
@@ -191,7 +237,7 @@ it('생성 Query 옵션으로 기수 전체 목록을 조회하고 인증 헤더
   expect(requestedUrl).toBe(`${apiBaseUrl}/api/admin/generations/25/sessions?type=ALL`);
   expect(authorization).toBe('Bearer test-access-token');
   expect(screen.getByRole('button', { name: '세션 추가' })).toBeVisible();
-  expect(screen.queryByRole('button', { name: /정보/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '팀 세션 관리' })).toBeVisible();
 });
 
 it('빈 응답과 유형 필터 빈 상태를 구분한다', async () => {
@@ -359,4 +405,136 @@ it('제출 중 중복 요청을 막고 페이지 이동 뒤 완료 UI를 실행�
   await waitFor(() => expect(listRequestCount).toBe(2));
   expect(screen.queryByText('세션을 추가했습니다.')).not.toBeInTheDocument();
   expect(createRequestCount).toBe(1);
+});
+
+it('저장 장소·초 단위 시간을 복원하고 전체 본문으로 유형을 바꾼 뒤 현재 필터를 유지한다', async () => {
+  let updated = false;
+  let requestedPath = '';
+  let requestedBody: unknown;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(
+        updated
+          ? {
+              ...SESSION_LIST,
+              regularCount: 0,
+              teamCount: 2,
+              sessions: [UPDATED_TEAM_SESSION, TEAM_SESSION],
+            }
+          : SESSION_LIST,
+      ),
+    ),
+    http.put(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      async ({ params, request }) => {
+        requestedPath = `${String(params.generationId)}/${String(params.sessionId)}`;
+        requestedBody = await request.json();
+        updated = true;
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
+  );
+
+  const { user } = await setup(25, 'offline');
+  const dialog = within(await openEdit(user, '정규 세션'));
+  expect(
+    dialog.getByText('정규 세션|2026-10-31|14:00:10|18:00:20|서울특별시 중구 세종대로 110'),
+  ).toBeVisible();
+  await user.click(dialog.getByRole('button', { name: '팀으로 변경 저장' }));
+
+  expect(await screen.findByText(/변경한 유형은 전체 목록에서 확인/)).toBeVisible();
+  expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked();
+  expect(await screen.findByText('선택한 유형의 세션이 없습니다.')).toBeVisible();
+  expect(requestedPath).toBe('25/101');
+  expect(requestedBody).toEqual({
+    name: '정규 세션 팀 전환',
+    location: null,
+    date: '2026-10-31',
+    startTime: '14:00:10',
+    endTime: '18:00:20',
+    type: 'TEAM',
+    roadAddress: null,
+    detailAddress: null,
+    latitude: null,
+    longitude: null,
+  });
+});
+
+it('수정 성공과 목록 재조회 실패를 구분하고 기존 목록을 유지한다', async () => {
+  let listRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return listRequestCount === 1
+        ? HttpResponse.json(SESSION_LIST)
+        : HttpResponse.json({ code: 'PRIVATE', message: 'private' }, { status: 500 });
+    }),
+    http.put(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      () => new HttpResponse(null, { status: 204 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openEdit(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '테스트 세션 저장' }));
+
+  expect(await screen.findByText('세션을 수정했습니다.')).toBeVisible();
+  expect(await screen.findByRole('alert')).toHaveTextContent('세션 목록을 새로고치지 못했습니다.');
+  expect(screen.getByRole('heading', { name: '팀 세션' })).toBeVisible();
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+});
+
+it('수정 제한 충돌은 서버 메시지를 숨기고 수정 초안을 유지한다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+    http.put(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () =>
+      HttpResponse.json({ code: 'SESSION_UPDATE_CONFLICT', message: 'private' }, { status: 409 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openEdit(user, '정규 세션'));
+  await user.click(dialog.getByRole('button', { name: '테스트 세션 저장' }));
+
+  expect(await dialog.findByRole('alert')).toHaveTextContent('출석이 연결된 세션은');
+  expect(dialog.getByText(/정규 세션\|2026-10-31/)).toBeVisible();
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+});
+
+it('수정 요청 중 페이지를 이동하면 이전 화면의 완료 알림을 실행하지 않는다', async () => {
+  let listRequestCount = 0;
+  let updateRequestCount = 0;
+  const updatePending = Promise.withResolvers<void>();
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return HttpResponse.json(SESSION_LIST);
+    }),
+    http.put(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, async () => {
+      updateRequestCount += 1;
+      await updatePending.promise;
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+
+  const { user, queryClient, router } = await setup(25);
+  const dialog = within(await openEdit(user, '정규 세션'));
+  const saveButton = dialog.getByRole('button', { name: '테스트 세션 저장' });
+  await user.click(saveButton);
+  await waitFor(() => expect(updateRequestCount).toBe(1));
+  expect(saveButton).toBeDisabled();
+
+  router.history.push('/moved');
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { name: '세션 수정' })).not.toBeInTheDocument(),
+  );
+  updatePending.resolve();
+  await waitFor(() =>
+    expect(queryClient.getMutationCache().getAll().at(-1)?.state.status).toBe('success'),
+  );
+  await waitFor(() => expect(listRequestCount).toBe(2));
+  expect(screen.queryByText('세션을 수정했습니다.')).not.toBeInTheDocument();
 });

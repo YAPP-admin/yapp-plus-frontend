@@ -1,6 +1,6 @@
 import { fakeAdminSessionResponse } from '@yapp-plus/api/generated/faker';
 import { expect, it } from 'vitest';
-import { toCreateSessionRequest, toSessionViewModel } from './session-api-model';
+import { toCreateSessionRequest, toSessionInput, toSessionViewModel } from './session-api-model';
 
 const response = {
   ...fakeAdminSessionResponse(),
@@ -37,6 +37,22 @@ it('조회 응답의 초 단위 시간과 출석 상태를 보존한다', () => 
       pending: 2,
       late: 0,
       reported: 0,
+    },
+  });
+});
+
+it('수정 입력은 조회한 정규 장소와 초 단위 시간을 그대로 복원한다', () => {
+  expect(toSessionInput(toSessionViewModel(response))).toEqual({
+    name: '정규 세션',
+    date: '2026-11-20',
+    startTime: '14:00:10',
+    endTime: '14:00:30',
+    type: 'offline',
+    location: {
+      roadAddress: '서울특별시 중구 세종대로 110',
+      detailAddress: '예시 교육장',
+      latitude: 37.5665,
+      longitude: 126.978,
     },
   });
 });

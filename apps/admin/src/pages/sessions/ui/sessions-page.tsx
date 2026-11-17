@@ -5,8 +5,9 @@ import { ActionButton, Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
 import { overlay } from 'overlay-kit';
 import type { SessionFilter } from '../model/session-search';
 import { AttendanceQueryBoundary } from '~/features/session-management';
-import { toSessionViewModel } from '../model/session-api-model';
-import { SessionCreateDialog } from './session-dialogs';
+import { toSessionViewModel, type SessionViewModel } from '../model/session-api-model';
+import type { SessionInput } from '../model/session-form';
+import { SessionCreateDialog, SessionEditDialog } from './session-dialogs';
 import { SessionTypeFilter } from './session-type-filter';
 import { SessionList } from './session-list';
 import { description, heading, page, placeholder, refreshError, title } from './sessions-page.css';
@@ -39,6 +40,35 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
     ));
   }
 
+  function openEditDialog(session: SessionViewModel) {
+    if (generationId === null) {
+      return;
+    }
+    overlay.open(({ unmount }) => (
+      <SessionEditDialog
+        generationId={generationId}
+        session={session}
+        onClose={unmount}
+        onUpdated={(input: SessionInput) => {
+          unmount();
+          const changedType = type !== 'all' && input.type !== type;
+          snackbar.create({
+            render: () => (
+              <Snackbar
+                variant="positive"
+                message={
+                  changedType
+                    ? '세션을 수정했습니다. 변경한 유형은 전체 목록에서 확인할 수 있습니다.'
+                    : '세션을 수정했습니다.'
+                }
+              />
+            ),
+          });
+        }}
+      />
+    ));
+  }
+
   return (
     <main className={page}>
       <div className={heading}>
@@ -61,14 +91,22 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
           errorMessage="세션 목록을 불러오지 못했습니다."
           resetKey="session-management-list"
         >
-          <SessionListData type={type} generationId={generationId} />
+          <SessionListData type={type} generationId={generationId} onEdit={openEditDialog} />
         </AttendanceQueryBoundary>
       )}
     </main>
   );
 }
 
-function SessionListData({ type, generationId }: { type: SessionFilter; generationId: number }) {
+function SessionListData({
+  type,
+  generationId,
+  onEdit,
+}: {
+  type: SessionFilter;
+  generationId: number;
+  onEdit: (session: SessionViewModel) => void;
+}) {
   const sessionList = useSuspenseQuery(
     find1Options({ path: { generationId }, query: { type: 'ALL' } }),
   );
@@ -95,7 +133,12 @@ function SessionListData({ type, generationId }: { type: SessionFilter; generati
           </ActionButton>
         </div>
       ) : null}
-      <SessionList sessions={sessions} type={type} totalCount={sessionData.allCount} />
+      <SessionList
+        sessions={sessions}
+        type={type}
+        totalCount={sessionData.allCount}
+        onEdit={onEdit}
+      />
     </>
   );
 }

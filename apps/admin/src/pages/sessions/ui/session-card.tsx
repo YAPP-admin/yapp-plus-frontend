@@ -1,4 +1,6 @@
-import { Badge } from '@yapp-plus/ui';
+import { Menu } from '@seed-design/react';
+import { ActionButton, Badge } from '@yapp-plus/ui';
+import { Ellipsis } from 'lucide-react';
 import type { SessionViewModel } from '../model/session-api-model';
 import { sessionFilterLabels } from '../model/session-search';
 import * as styles from './session-card.css';
@@ -11,13 +13,47 @@ const ATTENDANCE_FIELDS = [
   { key: 'reported', label: '출결 보고' },
 ] satisfies { key: keyof SessionViewModel['attendance']; label: string }[];
 
-export function SessionCard({ session }: { session: SessionViewModel }) {
+export function SessionCard({
+  session,
+  onEdit,
+}: {
+  session: SessionViewModel;
+  onEdit?: (session: SessionViewModel) => void;
+}) {
   return (
     <article className={styles.card}>
       <div className={styles.heading}>
         <Badge variant="weak" tone={session.type === 'offline' ? 'informative' : 'neutral'}>
           {sessionFilterLabels[session.type]}
         </Badge>
+        {onEdit ? (
+          <Menu.Root placement="bottom-end" gutter={4}>
+            <Menu.Trigger asChild>
+              <ActionButton
+                type="button"
+                variant="neutralWeak"
+                size="small"
+                className={styles.menuButton}
+                aria-label={`${session.name} 관리`}
+              >
+                <Ellipsis size={18} aria-hidden="true" />
+              </ActionButton>
+            </Menu.Trigger>
+            <Menu.Positioner data-seed-color-mode="dark-only">
+              <Menu.Content>
+                <Menu.ScrollArea>
+                  <Menu.Group>
+                    <Menu.Item onClick={() => onEdit(session)}>
+                      <Menu.ItemBody>
+                        <Menu.ItemLabel>정보</Menu.ItemLabel>
+                      </Menu.ItemBody>
+                    </Menu.Item>
+                  </Menu.Group>
+                </Menu.ScrollArea>
+              </Menu.Content>
+            </Menu.Positioner>
+          </Menu.Root>
+        ) : null}
       </div>
       <h2 className={styles.name}>{session.name}</h2>
       <SessionDetails session={session} />
