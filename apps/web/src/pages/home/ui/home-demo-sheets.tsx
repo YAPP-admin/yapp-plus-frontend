@@ -9,13 +9,9 @@ import { useCodeAttendance } from '../model/code-attendance';
 import { IconExclamationmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import {
   ActionButton,
-  RadioGroup,
-  RadioGroupItem,
   BottomSheetContent,
   BottomSheetRoot,
   type BottomSheetRootProps,
-  TextField,
-  TextFieldTextarea,
 } from '@yapp-plus/ui';
 import { Image } from '@/app/navigation/image';
 import {
@@ -23,8 +19,6 @@ import {
   codeInput,
   codeInputError,
   codeInputsContainer,
-  reportTextFieldRoot,
-  reportTextFieldTextarea,
   sheetContainer,
   sheetContent,
   sheetDescription,
@@ -40,7 +34,6 @@ import {
   teamGraphicWrap,
   teamRuleItem,
   teamRulesList,
-  textareaContainer,
 } from './home-page.css';
 
 function OrangeCheckIcon() {
@@ -281,97 +274,6 @@ function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProp
         </VStack>
       </VStack>
     </CodeSheetShell>
-  );
-}
-export function AttendanceReportSheet({
-  onComplete,
-  ...props
-}: BottomSheetRootProps & { onComplete: () => void }) {
-  const layerIndex = useActivityZIndexBase();
-  const [reportStep, setReportStep] = useState<1 | 2>(1);
-  const [selectedReportType, setSelectedReportType] = useState('지각');
-  const [reportReason, setReportReason] = useState('');
-
-  return (
-    <BottomSheetRoot {...props}>
-      <BottomSheetContent
-        layerIndex={layerIndex}
-        aria-label={
-          reportStep === 1 ? '출결을 보고해 주세요' : `${selectedReportType} 사유를 입력해 주세요`
-        }
-        showHandle={false}
-        showCloseButton={false}
-        className={sheetContent}
-      >
-        <div className={sheetHandleArea} aria-hidden="true">
-          <div className={sheetHandleBar} />
-        </div>
-
-        <VStack gap="x5" className={sheetContainer}>
-          {reportStep === 1 ? (
-            <>
-              <VStack gap="x1_5" width="full">
-                <h2 className={sheetTitle}>출결을 보고해 주세요</h2>
-                <p className={sheetDescription}>미리 알려주시면 점수 차감이 줄어들어요</p>
-              </VStack>
-
-              <RadioGroup
-                label="출결 유형"
-                value={selectedReportType}
-                onValueChange={setSelectedReportType}
-              >
-                {['지각', '조퇴', '결석'].map((type) => (
-                  <RadioGroupItem key={type} value={type} label={type} />
-                ))}
-              </RadioGroup>
-
-              <ActionButton
-                variant="brandSolid"
-                size="large"
-                className={sheetPrimaryButton}
-                onClick={() => setReportStep(2)}
-                data-testid="report-step1-submit"
-              >
-                확인
-              </ActionButton>
-            </>
-          ) : (
-            <>
-              <VStack gap="x1_5" width="full">
-                <h2 className={sheetTitle}>{selectedReportType} 사유를 입력해 주세요</h2>
-              </VStack>
-
-              <div className={textareaContainer}>
-                <TextField
-                  className={reportTextFieldRoot}
-                  maxGraphemeCount={30}
-                  value={reportReason}
-                  onValueChange={(details) => setReportReason(details.value)}
-                >
-                  <TextFieldTextarea
-                    className={reportTextFieldTextarea}
-                    placeholder="사유를 입력해 주세요"
-                    maxLength={30}
-                    aria-label={`${selectedReportType} 사유`}
-                    data-testid="report-reason-input"
-                  />
-                </TextField>
-              </div>
-
-              <ActionButton
-                variant="brandSolid"
-                size="large"
-                className={sheetPrimaryButton}
-                onClick={onComplete}
-                data-testid="report-step2-submit"
-              >
-                확인
-              </ActionButton>
-            </>
-          )}
-        </VStack>
-      </BottomSheetContent>
-    </BottomSheetRoot>
   );
 }
 export function TeamGuideSheet({
