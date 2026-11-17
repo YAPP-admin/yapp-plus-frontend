@@ -25,51 +25,48 @@ const sessionResponseSchema = z.discriminatedUnion('type', [
   teamSessionResponseSchema,
 ]);
 
-/** 화면에 표시·편집할 수 있도록 정규·팀 세션을 통일한 ViewModel이다. */
-export type SessionViewModel = {
+type SessionAttendanceViewModel = {
+  started: boolean;
+  total: number;
+  present: number;
+  absent: number;
+  pending: number;
+  late: number;
+  reported: number;
+};
+
+type SessionViewModelBase = {
   id: number;
   name: string;
   date: string;
   startTime: string;
   endTime: string;
-  type: 'offline' | 'team';
-  location: {
-    roadAddress: string;
-    detailAddress: string | null;
-    latitude: number;
-    longitude: number;
-  } | null;
-  attendance: {
-    started: boolean;
-    total: number;
-    present: number;
-    absent: number;
-    pending: number;
-    late: number;
-    reported: number;
-  };
+  attendance: SessionAttendanceViewModel;
 };
+
+/** 유형에 따라 장소 존재 여부가 결정되는 세션 화면 모델이다. */
+export type SessionViewModel =
+  | (SessionViewModelBase & {
+      type: 'offline';
+      location: {
+        roadAddress: string;
+        detailAddress: string | null;
+        latitude: number;
+        longitude: number;
+      };
+    })
+  | (SessionViewModelBase & { type: 'team'; location: null });
 
 /** API 응답을 검증해 화면이 사용하는 세션 ViewModel로 변환한다. */
 export function toSessionViewModel(response: unknown): SessionViewModel {
   const data = sessionResponseSchema.parse(response);
 
-  return {
+  const base = {
     id: Number(data.sessionId),
     name: data.name,
     date: data.date,
     startTime: data.startTime,
     endTime: data.endTime,
-    type: data.type === 'REGULAR' ? 'offline' : 'team',
-    location:
-      data.type === 'REGULAR'
-        ? {
-            roadAddress: data.roadAddress,
-            detailAddress: data.detailAddress,
-            latitude: data.latitude,
-            longitude: data.longitude,
-          }
-        : null,
     attendance: {
       started: data.attendanceSummary.status === 'STARTED',
       total: data.attendanceSummary.totalCount,
@@ -80,6 +77,18 @@ export function toSessionViewModel(response: unknown): SessionViewModel {
       reported: 0,
     },
   };
+  return data.type === 'REGULAR'
+    ? {
+        ...base,
+        type: 'offline',
+        location: {
+          roadAddress: data.roadAddress,
+          detailAddress: data.detailAddress,
+          latitude: data.latitude,
+          longitude: data.longitude,
+        },
+      }
+    : { ...base, type: 'team', location: null };
 }
 
 /** 폼 입력을 생성·수정 API가 요구하는 전체 본문으로 변환한다. */
