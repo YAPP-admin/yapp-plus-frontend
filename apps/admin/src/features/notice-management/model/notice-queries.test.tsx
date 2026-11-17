@@ -1,6 +1,6 @@
 /** 저장 성공 시 캐시 무효화와 실패 시 기존 데이터 보존을 검증한다. */
 import { act, renderHook, waitFor } from '@testing-library/react';
-import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { type QueryClient, QueryClientProvider, useQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { noticeContentSchema, noticeSchema } from './notice';
@@ -68,23 +68,31 @@ afterEach(() => {
 
 describe('공지 변경 후 캐시 처리', () => {
   it.each(['create', 'update'] as const)(
-    '비활성 목록도 %s 성공 후 실제 앱 정책에서 최신 목록을 반환한다',
+    '비활성 목록은 %s 성공 뒤 목록 재진입 때 최신 결과를 조회한다',
     async (kind) => {
       const { client, wrapper } = setup();
       const changed = { ...saved, title: '새 제목' };
       vi.mocked(service.listNotices).mockResolvedValueOnce([saved]).mockResolvedValue([changed]);
       vi.mocked(service.createNotice).mockResolvedValue(changed);
       vi.mocked(service.updateNotice).mockResolvedValue(changed);
-      await client.fetchQuery(noticesQueryOptions);
-      const { result } = renderHook(useNoticeMutations, { wrapper });
+      const initialList = renderHook(() => useQuery(noticesQueryOptions), { wrapper });
+      await waitFor(() => expect(initialList.result.current.data).toEqual([saved]));
+      initialList.unmount();
+
+      const mutations = renderHook(useNoticeMutations, { wrapper });
       await act(async () => {
         if (kind === 'create') {
-          await result.current.create.mutateAsync(input);
+          await mutations.result.current.create.mutateAsync(input);
         } else {
-          await result.current.update.mutateAsync({ id: saved.id, input });
+          await mutations.result.current.update.mutateAsync({ id: saved.id, input });
         }
       });
-      expect(client.getQueryData(noticesQueryOptions.queryKey)).toEqual([changed]);
+
+      expect(client.getQueryData(noticesQueryOptions.queryKey)).toEqual([saved]);
+      expect(client.getQueryState(noticesQueryOptions.queryKey)?.isInvalidated).toBe(true);
+
+      const returnedList = renderHook(() => useQuery(noticesQueryOptions), { wrapper });
+      await waitFor(() => expect(returnedList.result.current.data).toEqual([changed]));
       expect(service.listNotices).toHaveBeenCalledTimes(2);
     },
   );
