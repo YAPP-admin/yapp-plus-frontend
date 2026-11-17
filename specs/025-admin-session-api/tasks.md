@@ -1,7 +1,7 @@
 # 작업 목록: 어드민 세션 API 연결
 
 **입력**: [명세](spec.md)·[계획](plan.md)·[모델](data-model.md)·[계약](contracts/session-api.md)
-**상태**: 5단계 생성 연결·리뷰 완료, 6단계 수정 연결 진행 승인.
+**상태**: 6단계 수정 연결·리뷰 완료, 7단계 삭제 연결 진행 승인.
 
 테스트는 합의된 수용 기준이다. 회귀 테스트는 가능한 경우 수정 전 실패를 확인한다.
 `[P]`는 같은 승인 단계 안에서 파일이 겹치지 않는 작업만 뜻하며 다음 단계 진행 승인이 아니다.
@@ -65,11 +65,11 @@
 
 목표: 저장값 보존과 수정 제한을 처리한다. 독립 검증: 기존 세션의 정규·팀 전환과 204·409를 확인한다.
 
-- [ ] T028 [US3] `apps/admin/src/pages/sessions/model/session-api.test.ts`에서 수정 ID·전체 본문·204·날짜/수정 충돌·대상 없음을 검증한다.
-- [ ] T029 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 update1 Mutation 옵션·캐시 무효화·저장/갱신 실패 분리를 연결한다.
-- [ ] T030 [US3] `apps/admin/src/pages/sessions/ui/session-dialogs.tsx`, `session-card.tsx`에 `mutate` 콜백 기반 실제 수정·필터 유지·유형 변경 안내·페이지 수명을 연결한다.
-- [ ] T031 [US3] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 수정 장소·시간 복원, 갱신 실패와 이동 후 오래된 탐색·알림 방지를 검증한다.
-- [ ] T032 [US3] 검증·변경량·화면 근거·6단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
+- [x] T028 [US3] `apps/admin/src/pages/sessions/model/session-api.test.ts`에서 수정 ID·전체 본문·204·날짜/수정 충돌·대상 없음을 검증한다.
+- [x] T029 [US3] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 update1 Mutation 옵션·캐시 무효화·저장/갱신 실패 분리를 연결한다.
+- [x] T030 [US3] `apps/admin/src/pages/sessions/ui/session-dialogs.tsx`, `session-card.tsx`의 `정보` 메뉴에 `mutate` 콜백 기반 실제 수정·필터 유지·유형 변경 안내·페이지 수명을 연결한다.
+- [x] T031 [US3] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 수정 장소·시간 복원, 갱신 실패와 이동 후 오래된 탐색·알림 방지를 검증한다.
+- [x] T032 [US3] 검증·변경량·화면 근거·6단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 7단계 — US4 삭제 연결 (P2)
 
@@ -78,7 +78,7 @@
 - [ ] T033 [US4] `apps/admin/src/pages/sessions/model/session-api.test.ts`에 DELETE 경로·무본문·204·404·409·자동 재시도 없음 테스트를 추가한다.
 - [ ] T034 [US4] `apps/admin/src/pages/sessions/model/session-queries.ts`에 생성 delete1 Mutation 옵션·이전 조회 취소·확인된 삭제 항목과 네 개수 갱신·재조회를 구현한다.
 - [ ] T035 [US4] `apps/admin/src/pages/sessions/ui/session-delete-dialog.tsx`에 SEED AlertDialog·세션명·취소 초기 포커스·요청 중 잠금·실패 안내를 구현한다.
-- [ ] T036 [US4] `apps/admin/src/pages/sessions/ui/session-card.tsx`, `session-list.tsx`, `sessions-page.tsx`에 `mutate` 콜백 기반 삭제 메뉴·STARTED 비활성 이유·완료 후 목록 제목 포커스를 연결한다.
+- [ ] T036 [US4] `apps/admin/src/pages/sessions/ui/session-card.tsx`, `session-list.tsx`, `sessions-page.tsx`의 기존 `정보` 메뉴 옆에 `삭제` 항목을 추가하고, `mutate` 콜백 기반 STARTED 비활성 이유·완료 후 목록 제목 포커스를 연결한다.
 - [ ] T037 [US4] `apps/admin/src/pages/sessions/ui/session-delete-dialog.test.tsx`와 `sessions-page.test.tsx`에 취소 무요청·409 경합·404 구분·마지막 항목·count·포커스·삭제 후 refetch 실패를 책임별로 검증한다.
 - [ ] T038 [US4] 검증·변경량·화면 근거·7단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
 

@@ -4,7 +4,7 @@ import { HttpResponse, http } from 'msw';
 import { afterEach, expect, it } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { toCreateSessionRequest } from './session-api-model';
-import { createSessionMutationOptions } from './session-queries';
+import { createSessionMutationOptions, updateSessionMutationOptions } from './session-queries';
 
 const CREATE_INPUT = {
   name: '정규 세션',
@@ -30,6 +30,17 @@ function executeCreate(variables = CREATE_VARIABLES) {
     .getMutationCache()
     .build(queryClient, createSessionMutationOptions)
     .execute(variables);
+}
+
+function executeUpdateRequest() {
+  const queryClient = new QueryClient();
+  return queryClient
+    .getMutationCache()
+    .build(queryClient, updateSessionMutationOptions)
+    .execute({
+      path: { generationId: 25, sessionId: 101 },
+      body: CREATE_VARIABLES.body,
+    });
 }
 
 afterEach(() => {
@@ -104,4 +115,42 @@ it('기본 online 모드에서는 오프라인 요청을 보류하고 연결 뒤
   await expect(result).resolves.toEqual({ sessionId: 301 });
   expect(requestCount).toBe(1);
   queryClient.unmount();
+});
+
+it('수정할 세션 ID와 전체 본문을 보내고 204 응답을 완료로 처리한다', async () => {
+  let requestedPath = '';
+  let requestedBody: unknown;
+  server.use(
+    http.put(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      async ({ params, request }) => {
+        requestedPath = `${String(params.generationId)}/${String(params.sessionId)}`;
+        requestedBody = await request.json();
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
+  );
+
+  await executeUpdateRequest();
+  expect(requestedPath).toBe('25/101');
+  expect(requestedBody).toEqual(CREATE_VARIABLES.body);
+});
+
+it.each([
+  [404, 'SESSION_NOT_FOUND'],
+  [409, 'SESSION_DATE_CONFLICT'],
+  [409, 'SESSION_UPDATE_CONFLICT'],
+] as const)('수정 HTTP %i %s 실패를 자동 재시도하지 않는다', async (status, code) => {
+  let requestCount = 0;
+  server.use(
+    http.put(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () => {
+      requestCount += 1;
+      return HttpResponse.json({ code, message: 'private' }, { status });
+    }),
+  );
+
+  const error = await executeUpdateRequest().catch((caught: unknown) => caught);
+  expect(error).toBeInstanceOf(ApiError);
+  expect(error).toMatchObject({ status, body: { code } });
+  expect(requestCount).toBe(1);
 });
