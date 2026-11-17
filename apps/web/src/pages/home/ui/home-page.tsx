@@ -20,6 +20,8 @@ import { ActionButton, Badge } from '@yapp-plus/ui';
 import { useFlow } from '@stackflow/react';
 import { Image } from '@/app/navigation/image';
 import { TabLink } from '@/app/navigation/tab-link';
+import { useNativeAuthSession } from '@/features/auth';
+import { staticContentEnabled } from '@/features/static-content';
 import { useState } from 'react';
 import {
   attendanceButton,
@@ -70,6 +72,13 @@ const weekSchedule = [
 
 type AttendanceState = 'available' | 'attended';
 
+function getReportCardCopy(canOpenReport: boolean) {
+  if (canOpenReport) {
+    return { actionLabel: '출결 보고하기', subtitle: '보고하기' };
+  }
+  return { actionLabel: '출결 보고 준비 중', subtitle: '준비 중' };
+}
+
 export function HomePage({
   initialSession,
   initialAttendance,
@@ -78,7 +87,10 @@ export function HomePage({
   initialAttendance?: 'attended';
 } = {}) {
   const flow = useFlow();
+  const { isNative } = useNativeAuthSession();
   const canPreview = import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true';
+  const canOpenReport = !staticContentEnabled() && isNative;
+  const reportCopy = getReportCardCopy(canOpenReport);
   const [internalSessionMode, setInternalSessionMode] = useState<'team' | 'offline' | null>(null);
   const showDemo =
     canPreview && Boolean(internalSessionMode ?? initialSession ?? initialAttendance);
@@ -95,7 +107,7 @@ export function HomePage({
   }
 
   function handleOpenReport() {
-    if (canPreview) {
+    if (canOpenReport) {
       flow.push('AttendanceReport', {});
     }
   }
@@ -254,7 +266,7 @@ export function HomePage({
             <VStack className={quickCardCol}>
               <HelpBubbleRoot
                 unmountOnExit
-                defaultOpen={canPreview && attendanceState !== 'attended'}
+                defaultOpen={canOpenReport && attendanceState !== 'attended'}
                 placement="bottom"
                 gutter={6}
               >
@@ -265,17 +277,15 @@ export function HomePage({
                       size="small"
                       type="button"
                       className={reportCardButton}
-                      disabled={!canPreview}
+                      disabled={!canOpenReport}
                       onClick={handleOpenReport}
-                      aria-label={canPreview ? '출결 보고 미리하기' : '출결 보고 준비 중'}
+                      aria-label={reportCopy.actionLabel}
                       data-testid="report-attendance-button"
                     >
                       <span className={quickCard}>
                         <span className={quickCardContent}>
                           <span className={quickCardTitle}>출결 보고</span>
-                          <span className={quickCardSubtitle}>
-                            {canPreview ? '미리하기' : '준비 중'}
-                          </span>
+                          <span className={quickCardSubtitle}>{reportCopy.subtitle}</span>
                         </span>
                         <Image
                           src="/images/home/graphic-spot-attendance.svg"
@@ -289,7 +299,7 @@ export function HomePage({
                   </HelpBubbleCloseButton>
                 </HelpBubbleAnchor>
 
-                {canPreview ? (
+                {canOpenReport ? (
                   <HelpBubblePositioner>
                     <HelpBubbleContent className={helpBubbleContent}>
                       <HelpBubbleArrow>

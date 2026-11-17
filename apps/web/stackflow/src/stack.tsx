@@ -17,6 +17,7 @@ type TeamPhotoParams = ActivityBaseParams & { stage?: 'upload' | 'complete'; err
 type BooleanQueryParams = ActivityBaseParams & { error?: 'true' };
 type AlertsParams = ActivityBaseParams;
 type SignupParams = ActivityBaseParams & { step?: 'phone' };
+type AttendanceReportParams = ActivityBaseParams & { step?: 'reason' };
 
 declare module '@stackflow/config' {
   // Stackflow의 module augmentation은 interface 병합이 필요합니다.
@@ -31,7 +32,7 @@ declare module '@stackflow/config' {
     Attendance: EmptyActivityParams;
     AttendanceRules: EmptyActivityParams;
     AttendanceCode: EmptyActivityParams;
-    AttendanceReport: EmptyActivityParams;
+    AttendanceReport: AttendanceReportParams;
     TeamAttendanceGuide: EmptyActivityParams;
     AttendanceComplete: EmptyActivityParams;
     Settings: EmptyActivityParams;
@@ -86,7 +87,7 @@ export const activityComponents = {
       default: module.AttendanceCodeActivity,
     })),
   ),
-  AttendanceReport: lazy<EmptyActivityParams>(() =>
+  AttendanceReport: lazy<AttendanceReportParams>(() =>
     import('./activities/home-sheets').then((module) => ({
       default: module.AttendanceReportActivity,
     })),

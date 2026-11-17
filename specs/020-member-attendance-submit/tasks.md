@@ -44,9 +44,9 @@
 
 목표: 홈에서 보고를 열어 입력·서버 제출·완료·홈 복귀까지 같은 운영 코드로 확인한다.
 
-- [ ] T016 [US2] `apps/web/src/pages/home/ui/attendance-report-sheet.tsx`로 보고 시트를 분리하고 `home-demo-sheets.tsx`의 시연을 교체한다. 필수 Form·유형 미선택·한 줄 사유·카운터·규정·세션·로딩·오류·마감·잠금과 인접 스타일을 연결한다.
-- [ ] T017 [US2] `apps/web/src/pages/home/index.ts`, `ui/home-page.tsx`, `apps/web/stackflow/src/activities/home-sheets.tsx`와 `stack.tsx`에 운영 인증 진입·보고 step·뒤로가기·완료 안내를 연결한다. 코드 출석·팀 사진·브라우저/정적 모드 제한을 보존한다.
-- [ ] T018 [US2] `apps/web/src/pages/home/ui/attendance-report-sheet.test.tsx`, `home-page.test.tsx`, `apps/web/stackflow/src/stack.test.tsx`에서 대표 흐름·직접 진입·입력 보존/폐기·마감·계정 변경·늦은 응답을 검증한다. 모델의 오류 조합은 중복하지 않는다.
+- [x] T016 [US2] `apps/web/src/pages/home/ui/attendance-report-sheet.tsx`로 보고 시트를 분리하고 `home-demo-sheets.tsx`의 시연을 교체한다. 필수 Form·유형 미선택·한 줄 사유·카운터·규정·세션·로딩·오류·마감·잠금과 인접 스타일을 연결한다.
+- [x] T017 [US2] `apps/web/src/pages/home/index.ts`, `ui/home-page.tsx`, `apps/web/stackflow/src/activities/home-sheets.tsx`와 `stack.tsx`에 운영 인증 진입·보고 step·뒤로가기·완료 안내를 연결한다. 코드 출석·팀 사진·브라우저/정적 모드 제한을 보존한다.
+- [x] T018 [US2] `apps/web/src/pages/home/ui/attendance-report-sheet.test.tsx`, `home-page.test.tsx`, `apps/web/stackflow/src/stack.test.tsx`에서 대표 흐름·직접 진입·입력 보존/폐기·마감·계정 변경·늦은 응답을 검증한다. 모델의 오류 조합은 중복하지 않는다.
 - [ ] T019 [US2] 관련 회귀·check/build·변경량을 `specs/020-member-attendance-submit/validation.md`에 기록하고 3단계 리뷰·4단계 진행 확인을 받는다.
 
 ## US2 — 사전 보고 4단계: 통합·화면 검증

@@ -7,8 +7,9 @@ import { createAppQueryClient } from '@/app/providers';
 import { apiBaseUrl, server } from '@/mocks/server';
 import { currentWeekFixture } from '@/mocks/session-handlers';
 import { http, HttpResponse } from 'msw';
+import { useState } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { AttendanceReportSheet } from './attendance-report-sheet';
+import { AttendanceReportSheet, type AttendanceReportStep } from './attendance-report-sheet';
 
 vi.mock('@seed-design/stackflow', () => ({ useActivityZIndexBase: () => 200 }));
 
@@ -39,7 +40,17 @@ function SheetFlow({
 }: {
   onOpenChange?: (open: boolean) => void;
 }) {
-  return <AttendanceReportSheet open onComplete={onComplete} onOpenChange={onOpenChange} />;
+  const [step, setStep] = useState<AttendanceReportStep>('type');
+  return (
+    <AttendanceReportSheet
+      open
+      step={step}
+      onReasonStep={() => setStep('reason')}
+      onTypeStep={() => setStep('type')}
+      onComplete={onComplete}
+      onOpenChange={onOpenChange}
+    />
+  );
 }
 
 function setup({ onOpenChange }: { onOpenChange?: (open: boolean) => void } = {}) {

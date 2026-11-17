@@ -50,6 +50,9 @@ type AttendanceReportFormValues = {
 const initialAttendanceReportFormValues: AttendanceReportFormValues = { type: '', reason: '' };
 
 type AttendanceReportSheetProps = BottomSheetRootProps & {
+  step: AttendanceReportStep;
+  onReasonStep: () => void;
+  onTypeStep: () => void;
   onComplete: () => void;
 };
 
@@ -74,9 +77,14 @@ function validateReportReason(value: string) {
 }
 
 /** 인증·정적 콘텐츠 제한과 현재 주간 조회 상태를 보고 시트 안에서 표시합니다. */
-export function AttendanceReportSheet({ onComplete, ...props }: AttendanceReportSheetProps) {
+export function AttendanceReportSheet({
+  step,
+  onReasonStep,
+  onTypeStep,
+  onComplete,
+  ...props
+}: AttendanceReportSheetProps) {
   const { isNative } = useNativeAuthSession();
-  const [step, setStep] = useState<AttendanceReportStep>('type');
 
   if (staticContentEnabled()) {
     return (
@@ -109,8 +117,8 @@ export function AttendanceReportSheet({ onComplete, ...props }: AttendanceReport
       <AttendanceReportContent
         {...props}
         step={step}
-        onReasonStep={() => setStep('reason')}
-        onTypeStep={() => setStep('type')}
+        onReasonStep={onReasonStep}
+        onTypeStep={onTypeStep}
         onComplete={onComplete}
       />
     </QueryBoundary>
