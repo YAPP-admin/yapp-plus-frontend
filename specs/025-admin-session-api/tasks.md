@@ -28,17 +28,17 @@
 - [x] T009 `apps/admin/src/pages/sessions/model/session-config.ts`와 `apps/admin/.env.example`에 기수 ID 검증·설정 안내를 추가한다.
 - [x] T010 `apps/admin/src/pages/sessions/model/session-error.test.ts`에 ApiError·본문 검증 실패·401·400·404·409·전송 결과 불명확 사례를 추가한다.
 - [x] T011 `apps/admin/src/pages/sessions/model/session-error.ts`에 원본 응답을 노출하지 않는 오류 변환과 공개 계약 주석을 작성한다.
-- [ ] T012 검증·변경량·2단계 리뷰와 다음 단계 진행 확인을 `specs/025-admin-session-api/validation.md`에 기록한다.
+- [x] T012 검증·변경량·2단계 리뷰와 다음 단계 진행 확인을 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 3단계 — US1 목록 연결 (P1, 최소 기능)
 
 목표: 실제 SDK 조회와 기존 필터를 연결한다. 독립 검증: MSW 정상·빈·오류 응답으로 목록을 확인한다.
 
-- [ ] T013 [P] [US1] `apps/admin/src/pages/sessions/model/session-api.test.ts`에서 SDK 요청 기수·인증 헤더·응답 검증과 401·404를 확인한다.
-- [ ] T014 [P] [US1] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`를 MSW 기반 조회·빈/오류·필터 테스트로 전환한다.
-- [ ] T015 [US1] `apps/admin/src/pages/sessions/model/session-api.ts`, `session-queries.ts`에 생성 find1Options·key·signal 기반 전체 조회를 구현한다.
-- [ ] T016 [US1] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`, `session-list.tsx`, `session-card.tsx`를 전용 모델·상태에 연결하고 미연결 변경 액션을 노출하지 않는다.
-- [ ] T017 [US1] `apps/admin/src/routes/_dashboard/sessions.tsx`와 `apps/admin/src/pages/sessions/index.ts`에 검증한 ID 주입을 연결하고 출석의 기존 모의 소비 경로를 유지한다.
+- [x] T013 [P] [US1] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`에서 생성 Query 옵션의 기수·전체 유형·인증 헤더와 404 재시도를 확인한다.
+- [x] T014 [P] [US1] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`를 MSW 기반 조회·빈/오류·필터 테스트로 전환한다.
+- [x] T015 [US1] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에서 생성 `find1Options`를 직접 사용해 signal·key를 포함한 전체 조회를 구현한다.
+- [x] T016 [US1] `apps/admin/src/pages/sessions/ui/sessions-page.tsx`, `session-list.tsx`, `session-card.tsx`를 전용 모델·상태에 연결하고 미연결 변경 액션을 노출하지 않는다.
+- [x] T017 [US1] `apps/admin/src/routes/_dashboard/sessions.tsx`와 `apps/admin/src/pages/sessions/index.ts`에 검증한 ID 주입을 연결하고 출석의 기존 모의 소비 경로를 유지한다.
 - [ ] T018 [US1] 검증·변경량·화면 근거·3단계 리뷰를 `specs/025-admin-session-api/validation.md`에 기록한다.
 
 ## 4단계 — US2 공통 폼 준비 (P1, US3에서도 재사용)
