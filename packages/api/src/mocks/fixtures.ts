@@ -18,10 +18,10 @@ export const sessions = {
   teamCount: 1,
   sessions: [
     {
-      roadAddress: null,
-      latitude: null,
-      longitude: null,
-      detailAddress: null,
+      roadAddress: '서울특별시 중구 세종대로 110',
+      latitude: 37.5665,
+      longitude: 126.978,
+      detailAddress: '개발용 교육장',
       sessionId: 101,
       name: '정규 세션',
       location: '개발용 교육장',
