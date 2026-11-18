@@ -2,7 +2,7 @@
 
 **입력**: [명세](./spec.md), [계획](./plan.md), [계약](./contracts/location-attendance.md)
 **검증**: 사용자와 합의한 경계·회귀 테스트를 구현 작업에 포함한다. 실패를 재현한 뒤 구현으로 통과시킨다.
-**현재 범위**: 1단계 문서 완료. 2단계 판정 기반 진행을 승인받았으며 제품 구현은 아직 시작하지 않았다.
+**현재 범위**: 2단계 판정 기반까지. 제출 흐름 연결과 화면 변경은 후속 리뷰 전 시작하지 않는다.
 
 ## 1단계 — 준비와 문서
 
@@ -17,9 +17,9 @@
 
 **독립 검증**: 합성 표본·좌표로 허용/차단만 확인한다. 아직 기존 제출 흐름에 연결하지 않는다.
 
-- [ ] T005 `pnpm-workspace.yaml`, `apps/web/package.json`, `pnpm-lock.yaml`에 geolib 4.0.2를 catalog로 고정한다.
-- [ ] T006 [US1] `apps/web/src/pages/home/model/location-attendance.test.ts`에 거리·오차 경계, 정밀 권한, 좌표·계산 오류 테스트를 작성한다.
-- [ ] T007 [US1] `apps/web/src/pages/home/model/location-attendance.ts`에 반올림 없는 거리 계산·정규화된 판정을 구현한다.
+- [x] T005 `pnpm-workspace.yaml`, `apps/web/package.json`, `pnpm-lock.yaml`에 geolib 4.0.2를 catalog로 고정한다.
+- [x] T006 [US1] `apps/web/src/pages/home/model/location-attendance.test.ts`에 거리·오차 경계, 정밀 권한, 좌표·계산 오류 테스트를 작성한다.
+- [x] T007 [US1] `apps/web/src/pages/home/model/location-attendance.ts`에 반올림 없는 거리 계산·정규화된 판정을 구현한다.
 
 **리뷰 지점**: 판정 결과와 테스트·변경량을 제출하고 3단계 진행 확인을 받는다.
 
