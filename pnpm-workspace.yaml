@@ -48,6 +48,7 @@ catalog:
   expo-doctor: 1.20.4
   lucide-react: 1.59.0
   happy-dom: 20.14.0
+  geolib: 4.0.2
   kakao.maps.d.ts: 0.1.40
   msw: 2.15.0
   ky: 2.1.0

@@ -1,8 +1,8 @@
 # 구현 계획: 위치 기반 코드 출석
 
 **브랜치**: `DongjaJ/akax9` · **작성일**: 2026-11-18 · **명세**: [spec.md](./spec.md)
-**상태**: 1단계 리뷰 완료. [GitHub #478](https://github.com/YAPP-admin/yapp-plus-frontend/issues/478)을
-기준으로 2단계 판정 기반 진행을 승인받았으며 제품 구현은 아직 시작하지 않았다.
+**상태**: 2단계 판정 기반 구현·검증 완료, 사용자 리뷰 대기. 기준 이슈는
+[GitHub #478](https://github.com/YAPP-admin/yapp-plus-frontend/issues/478)이며 아직 제출 흐름에는 연결하지 않았다.
 
 ## 요약
 
