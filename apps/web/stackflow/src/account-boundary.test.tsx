@@ -425,7 +425,7 @@ it('위치 응답 전에 계정이 바뀌면 이전 계정의 출석을 전송�
   screen.getAllByRole('textbox').forEach((input, index) => {
     fireEvent.change(input, { target: { value: String(index + 1) } });
   });
-  fireEvent.click(screen.getByRole('button', { name: '확인' }));
+  fireEvent.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
   await waitFor(() => expect(nativeLocation.request).toHaveBeenCalledOnce());
 
   await act(() => apply(client, session(2)));
