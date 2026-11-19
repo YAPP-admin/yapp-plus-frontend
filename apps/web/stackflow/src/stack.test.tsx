@@ -39,6 +39,7 @@ afterEach(async () => {
     window.removeEventListener('popstate', listener);
   }
   vi.restoreAllMocks();
+  vi.useRealTimers();
   vi.unstubAllEnvs();
   window.history.replaceState({}, '', '/');
 });
@@ -53,6 +54,10 @@ const signedIn = {
     expiresAt: 9999999999,
   },
 };
+
+function formatIsoDate(date: Date) {
+  return date.toISOString().slice(0, 10);
+}
 
 function renderStack({ native = false } = {}) {
   const { Stack, actions } = createStackflowApp();

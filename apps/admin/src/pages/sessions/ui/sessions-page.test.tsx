@@ -110,6 +110,8 @@ const REGULAR_SESSION = {
     presentCount: 1,
     absentCount: 1,
     undecidedCount: 1,
+    lateCount: 0,
+    reportCount: 0,
   },
 };
 const TEAM_SESSION = {
@@ -131,6 +133,8 @@ const TEAM_SESSION = {
     presentCount: 0,
     absentCount: 0,
     undecidedCount: 3,
+    lateCount: 0,
+    reportCount: 0,
   },
 };
 const SESSION_LIST = {

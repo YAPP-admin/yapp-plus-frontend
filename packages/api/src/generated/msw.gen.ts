@@ -68,6 +68,7 @@ import type {
   List4Responses,
   List5Responses,
   List6Responses,
+  List7Responses,
   ListResponses,
   LoginData,
   LoginResponses,
@@ -2884,6 +2885,40 @@ export function handleFindCandidates(
   );
 }
 
+export type HandleList2Response = {
+  body: List2Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations` operation.
+ */
+export function handleList2(
+  response?: HandleList2Response | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleCandidatesResponse = {
   body: CandidatesResponses[200];
   status?: 200;
@@ -2930,17 +2965,17 @@ export function handleCandidates(
   );
 }
 
-export type HandleList2Response = {
-  body: List2Responses[200];
+export type HandleList3Response = {
+  body: List3Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos` operation.
  */
-export function handleList2(
+export function handleList3(
   response?:
-    | HandleList2Response
+    | HandleList3Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -2978,17 +3013,17 @@ export function handleList2(
   );
 }
 
-export type HandleList3Response = {
-  body: List3Responses[200];
+export type HandleList4Response = {
+  body: List4Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance` operation.
  */
-export function handleList3(
+export function handleList4(
   response?:
-    | HandleList3Response
+    | HandleList4Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -3026,17 +3061,17 @@ export function handleList3(
   );
 }
 
-export type HandleList4Response = {
-  body: List4Responses[200];
+export type HandleList5Response = {
+  body: List5Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/generations/{generationId}/roster-entries` operation.
  */
-export function handleList4(
+export function handleList5(
   response?:
-    | HandleList4Response
+    | HandleList5Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -3168,17 +3203,17 @@ export function handleDetail3(
   );
 }
 
-export type HandleList5Response = {
-  body: List5Responses[200];
+export type HandleList6Response = {
+  body: List6Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/generations/{generationId}/members` operation.
  */
-export function handleList5(
+export function handleList6(
   response?:
-    | HandleList5Response
+    | HandleList6Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -3260,17 +3295,17 @@ export function handleTeamOptions(
   );
 }
 
-export type HandleList6Response = {
-  body: List6Responses[200];
+export type HandleList7Response = {
+  body: List7Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/generations/{generationId}/attendance-statistics` operation.
  */
-export function handleList6(
+export function handleList7(
   response?:
-    | HandleList6Response
+    | HandleList7Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -3640,21 +3675,25 @@ export type MswHandlerFactories = {
    */
   findCandidates: typeof handleFindCandidates;
   /**
+   * Handler for the `GET /api/admin/generations` operation.
+   */
+  list2: typeof handleList2;
+  /**
    * Handler for the `GET /api/admin/generations/{generationId}/team-member-candidates` operation.
    */
   candidates: typeof handleCandidates;
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos` operation.
    */
-  list2: typeof handleList2;
+  list3: typeof handleList3;
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance` operation.
    */
-  list3: typeof handleList3;
+  list4: typeof handleList4;
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/roster-entries` operation.
    */
-  list4: typeof handleList4;
+  list5: typeof handleList5;
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/posts/{postId}/recipients` operation.
    */
@@ -3666,7 +3705,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/members` operation.
    */
-  list5: typeof handleList5;
+  list6: typeof handleList6;
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/member-team-options` operation.
    */
@@ -3674,7 +3713,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/attendance-statistics` operation.
    */
-  list6: typeof handleList6;
+  list7: typeof handleList7;
   /**
    * Handler for the `DELETE /api/auth/sessions/current` operation.
    */
@@ -3768,15 +3807,16 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     findPending: wrap(handleFindPending),
     findDetail: wrap(handleFindDetail),
     findCandidates: wrap(handleFindCandidates),
-    candidates: wrap(handleCandidates),
     list2: wrap(handleList2),
+    candidates: wrap(handleCandidates),
     list3: wrap(handleList3),
     list4: wrap(handleList4),
+    list5: wrap(handleList5),
     recipients: wrap(handleRecipients),
     detail3: wrap(handleDetail3),
-    list5: wrap(handleList5),
-    teamOptions: wrap(handleTeamOptions),
     list6: wrap(handleList6),
+    teamOptions: wrap(handleTeamOptions),
+    list7: wrap(handleList7),
     revoke: wrap(handleRevoke),
     logout: wrap(handleLogout),
   };
@@ -3796,8 +3836,8 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.replaceMembers, overrides.replaceMembers),
       invoke(pick.get, overrides.get),
       invoke(pick.start, overrides.start),
-      invoke(pick.list2, overrides.list2),
       invoke(pick.list3, overrides.list3),
+      invoke(pick.list4, overrides.list4),
       invoke(pick.recipients, overrides.recipients),
       invoke(pick.detail3, overrides.detail3),
       invoke(pick.presign1, overrides.presign1),
@@ -3837,10 +3877,10 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.find7, overrides.find7),
       invoke(pick.findCandidates, overrides.findCandidates),
       invoke(pick.candidates, overrides.candidates),
-      invoke(pick.list4, overrides.list4),
       invoke(pick.list5, overrides.list5),
-      invoke(pick.teamOptions, overrides.teamOptions),
       invoke(pick.list6, overrides.list6),
+      invoke(pick.teamOptions, overrides.teamOptions),
+      invoke(pick.list7, overrides.list7),
       invoke(pick.presign, overrides.presign),
       invoke(pick.consumeHandoff, overrides.consumeHandoff),
       invoke(pick.login, overrides.login),
@@ -3858,6 +3898,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.find4, overrides.find4),
       invoke(pick.mine, overrides.mine),
       invoke(pick.findPending, overrides.findPending),
+      invoke(pick.list2, overrides.list2),
       invoke(pick.detail2, overrides.detail2),
       invoke(pick.register1, overrides.register1),
       invoke(pick.verify, overrides.verify),

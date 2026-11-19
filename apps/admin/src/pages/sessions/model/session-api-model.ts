@@ -73,8 +73,8 @@ export function toSessionViewModel(response: unknown): SessionViewModel {
       present: data.attendanceSummary.presentCount,
       absent: data.attendanceSummary.absentCount,
       pending: data.attendanceSummary.undecidedCount,
-      late: 0,
-      reported: 0,
+      late: data.attendanceSummary.lateCount,
+      reported: data.attendanceSummary.reportCount,
     },
   };
   return data.type === 'REGULAR'

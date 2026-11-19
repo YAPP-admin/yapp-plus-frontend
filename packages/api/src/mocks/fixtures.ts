@@ -1,4 +1,5 @@
 import type {
+  AdminGenerationListResponse,
   AdminPostRecipientListResponse,
   CurrentWeekSessionResponse,
   SessionListResponse,
@@ -10,6 +11,13 @@ export const staffLogin = {
   staff: { id: 1, displayName: '개발 운영진' },
   accessToken: 'mock-staff-access-token',
 } satisfies StaffLoginResponse;
+
+export const adminGenerations = {
+  generations: [
+    { generationId: 33, generationNumber: 33, generationName: '33기' },
+    { generationId: 32, generationNumber: 32, generationName: '32기' },
+  ],
+} satisfies AdminGenerationListResponse;
 
 export const sessions = {
   totalCount: 2,
@@ -35,6 +43,8 @@ export const sessions = {
         presentCount: 1,
         absentCount: 1,
         undecidedCount: 1,
+        lateCount: 0,
+        reportCount: 0,
       },
     },
     {
@@ -55,6 +65,8 @@ export const sessions = {
         presentCount: 0,
         absentCount: 0,
         undecidedCount: 3,
+        lateCount: 0,
+        reportCount: 0,
       },
     },
   ],

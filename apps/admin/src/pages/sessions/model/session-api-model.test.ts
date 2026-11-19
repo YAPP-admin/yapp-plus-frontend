@@ -17,6 +17,8 @@ const response = {
     presentCount: 7,
     absentCount: 1,
     undecidedCount: 2,
+    lateCount: 1,
+    reportCount: 3,
   },
   roadAddress: '서울특별시 중구 세종대로 110',
   detailAddress: '예시 교육장',
@@ -35,8 +37,8 @@ it('조회 응답의 초 단위 시간과 출석 상태를 보존한다', () => 
       present: 7,
       absent: 1,
       pending: 2,
-      late: 0,
-      reported: 0,
+      late: 1,
+      reported: 3,
     },
   });
 });
