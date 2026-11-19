@@ -2,7 +2,7 @@
 
 **입력**: [명세](./spec.md), [계획](./plan.md), [계약](./contracts/location-attendance.md)
 **검증**: 사용자와 합의한 경계·회귀 테스트를 구현 작업에 포함한다. 실패를 재현한 뒤 구현으로 통과시킨다.
-**현재 범위**: 4단계 오류 복구 화면까지. 통합·실기기 검증은 후속 리뷰 전 시작하지 않는다.
+**현재 범위**: 5단계 통합·출시 준비 검증. 실기기 결과와 PR 분리 전에는 출시 준비 완료로 판단하지 않는다.
 
 ## 1단계 — 준비와 문서
 
@@ -49,11 +49,11 @@
 
 ## 5단계 — 통합과 출시 준비
 
-- [ ] T018 `specs/026-location-attendance/validation.md`에 루트 check·build 결과를 새 실행/캐시/실패/미실행으로 구분해 기록한다.
+- [x] T018 `specs/026-location-attendance/validation.md`에 루트 check·build 결과를 새 실행/캐시/실패/미실행으로 구분해 기록한다.
 - [ ] T019 `specs/026-location-attendance/quickstart.md`에 따라 브라우저·미지원 환경·위치 원문 비보존을 확인하고 `validation.md`에 결과를 기록한다.
 - [ ] T020 `specs/026-location-attendance/validation.md`에 iOS 실기기·실제 장소·권한·설정·VoiceOver 결과와 출시 전 남은 위험을 기록한다.
-- [ ] T021 `specs/026-location-attendance/contracts/location-attendance.md`의 Android 공통 사례를 검토하고 `validation.md`에 별도 전달·적용·검증 상태를 구분해 기록한다. 메시지 발송·Android 수정은 포함하지 않는다.
-- [ ] T022 `specs/026-location-attendance/validation.md`에 최종 실제 base 변경량, PR 분리, 지원 앱 확인과 웹 복구 절차 검토 결과를 기록한다. 배포는 실행하지 않는다.
+- [x] T021 `specs/026-location-attendance/contracts/location-attendance.md`의 Android 공통 사례를 검토하고 `validation.md`에 별도 전달·적용·검증 상태를 구분해 기록한다. 메시지 발송·Android 수정은 포함하지 않는다.
+- [x] T022 `specs/026-location-attendance/validation.md`에 최종 실제 base 변경량, PR 분리, 지원 앱 확인과 웹 복구 절차 검토 결과를 기록한다. 배포는 실행하지 않는다.
 
 ## 의존성과 실행 순서
 
