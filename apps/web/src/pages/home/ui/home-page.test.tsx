@@ -202,7 +202,9 @@ it('주간 API만 조회하고 서버 이름·한국 날짜·분과 세션 날�
     }),
   );
   renderHome();
-  expect(await screen.findByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
+  expect(
+    await screen.findByRole('heading', { level: 2, name: '이번 주는 설계 리뷰 세션이에요' }),
+  ).toBeVisible();
   expect(screen.getByText('오후 1시 30분 시작')).toBeVisible();
   const date = screen.getByLabelText('2026-11-07 세션 예정');
   expect(date).toHaveAttribute('aria-current', 'date');
@@ -250,7 +252,9 @@ it('공지 조회 오류가 세션 카드를 막지 않고 재시도로 복구�
   );
   renderHome();
 
-  expect(await screen.findByRole('heading', { name: '오늘은 설계 리뷰' })).toBeVisible();
+  expect(
+    await screen.findByRole('heading', { name: '이번 주는 설계 리뷰 세션이에요' }),
+  ).toBeVisible();
   expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 공지를 불러오지 못했어요');
 
   server.use(
