@@ -12,6 +12,7 @@ import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
 import { AttendanceRulesPage } from '@/pages/attendance-rules';
 import { DevRoutesPage } from '@/pages/dev-routes';
+import { DiningPage } from '@/pages/dining';
 import { HomePage, useAttendanceConfirmation } from '@/pages/home';
 import { LoginErrorPage } from '@/pages/login-error';
 import { LoginPage } from '@/pages/login';
@@ -341,6 +342,26 @@ export function DevRoutesActivity() {
     <ActivityScreen title="개발 경로">
       <PageShell>
         <DevRoutesPage isActive={isActive} />
+      </PageShell>
+    </ActivityScreen>
+  );
+}
+
+export function DiningListActivity() {
+  return (
+    <ActivityScreen title="회식">
+      <PageShell>
+        <DiningPage />
+      </PageShell>
+    </ActivityScreen>
+  );
+}
+export function DiningDetailActivity() {
+  const { diningId } = useActivityParams<'DiningDetail'>();
+  return (
+    <ActivityScreen title="회식">
+      <PageShell>
+        <DiningPage diningId={diningId} />
       </PageShell>
     </ActivityScreen>
   );
