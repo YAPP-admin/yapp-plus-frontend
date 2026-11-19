@@ -20,8 +20,7 @@ export function useCreateSessionMutation(generationId: number) {
 
   return useMutation({
     ...createSessionMutationOptions,
-    onSuccess: async () => {
-      await queryClient.cancelQueries({ queryKey: listOptions.queryKey });
+    onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: listOptions.queryKey });
     },
   });
