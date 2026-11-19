@@ -2,7 +2,7 @@
 
 **입력**: [명세](./spec.md), [계획](./plan.md), [계약](./contracts/location-attendance.md)
 **검증**: 사용자와 합의한 경계·회귀 테스트를 구현 작업에 포함한다. 실패를 재현한 뒤 구현으로 통과시킨다.
-**현재 범위**: 3단계 제출·요청 수명까지. 오류 복구 화면은 후속 리뷰 전 시작하지 않는다.
+**현재 범위**: 4단계 오류 복구 화면까지. 통합·실기기 검증은 후속 리뷰 전 시작하지 않는다.
 
 ## 1단계 — 준비와 문서
 
@@ -40,10 +40,10 @@
 
 **독립 검증**: 각 실패 사유를 주입해 코드 유지·올바른 복구 버튼·복귀 자동 제출 금지를 확인한다.
 
-- [ ] T014 [US2] `apps/web/src/pages/home/ui/attendance-code.test.tsx`에 권한·오차·거리·좌표·설정 실패와 키보드/접근성 이름 검증을 추가한다.
-- [ ] T015 [US2] `apps/web/src/pages/home/ui/home-demo-sheets.tsx`에 목적·진행 상태·사유별 안내와 복구 버튼, 코드 오류와 위치 오류의 시맨틱 구분을 구현한다.
-- [ ] T016 [US2] `apps/web/src/pages/home/model/code-attendance.ts`에 출석 mutation과 분리한 설정 열기·지원 확인·실패 처리를 연결한다. 복귀는 자동 제출하지 않는다.
-- [ ] T017 [US2] `apps/web/src/pages/home/ui/home-page.css.ts`에서 기존 토큰으로 필요한 안내·액션 배치를 조정하고 작은 화면·키보드 가림을 확인한다.
+- [x] T014 [US2] `apps/web/src/pages/home/ui/attendance-code.test.tsx`에 권한·오차·거리·좌표·설정 실패와 키보드/접근성 이름 검증을 추가한다.
+- [x] T015 [US2] `apps/web/src/pages/home/ui/home-demo-sheets.tsx`에 목적·진행 상태·사유별 안내와 복구 버튼, 코드 오류와 위치 오류의 시맨틱 구분을 구현한다.
+- [x] T016 [US2] `apps/web/src/pages/home/model/code-attendance.ts`에 출석 mutation과 분리한 설정 열기·지원 확인·실패 처리를 연결한다. 복귀는 자동 제출하지 않는다.
+- [x] T017 [US2] `apps/web/src/pages/home/ui/home-page.css.ts`에서 기존 토큰으로 필요한 안내·액션 배치를 조정하고 작은 화면의 스크롤을 자동 검증한다. 실제 WebView 키보드는 5단계에서 확인한다.
 
 **리뷰 지점**: 화면 근거와 접근성·복구 시나리오 결과를 제출하고 통합 검증 진행을 확인받는다.
 

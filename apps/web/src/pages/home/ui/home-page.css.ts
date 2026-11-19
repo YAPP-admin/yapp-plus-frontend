@@ -424,14 +424,12 @@ export const sheetContent = style({
   height: 'auto !important',
   maxHeight: '85vh !important',
   overflowY: 'auto',
+  overscrollBehavior: 'contain',
+  scrollPaddingBottom: vars.$dimension.x4,
 });
 
 export const sheetHandleArea = style({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
   padding: '14px 10px 10px',
-  width: '100%',
   boxSizing: 'border-box',
 });
 
@@ -466,22 +464,6 @@ export const sheetDescription = style({
   textAlign: 'left',
 });
 
-export const codeInputsWrapper = style({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '10px',
-  width: '100%',
-});
-
-export const codeInputsContainer = style({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: '6px',
-});
-
 export const codeInput = style({
   width: '54px',
   height: '54px',
@@ -506,6 +488,10 @@ export const codeInput = style({
   selectors: {
     '&:focus': {
       borderColor: vars.$color.stroke.neutralSolid,
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.neutral}`,
+      outlineOffset: '2px',
     },
     '&:focus::placeholder': {
       color: 'transparent !important',
@@ -532,10 +518,6 @@ export const codeInputError = style([
 ]);
 
 export const codeErrorMessage = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '4px',
   fontSize: '13px',
   lineHeight: '18px',
   fontWeight: 500,
@@ -610,13 +592,9 @@ export const teamCheckIcon = style({
 });
 
 export const teamGraphicWrap = style({
-  width: '100%',
   aspectRatio: '337 / 158',
   borderRadius: '12px',
   overflow: 'hidden',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
   position: 'relative',
 });
 
