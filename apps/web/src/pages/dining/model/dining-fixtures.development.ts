@@ -137,14 +137,8 @@ export function getDiningDevelopmentFixtures() {
   return {
     now: koreanTimestamp('2026-03-19', '12:00'),
     currentMemberId,
-    // 일반 목록은 다섯 건만 표시하고, 상태별 개발 링크에서는 전체 시나리오를 참조합니다.
-    list: [
-      scenarios.openUnanswered,
-      scenarios.openAbsent,
-      scenarios.openRound1,
-      scenarios.openRound2,
-      scenarios.closedAnswered,
-    ],
+    // Figma 목록과 같은 세 건만 표시하고, 상태별 개발 링크에서는 전체 시나리오를 참조합니다.
+    list: [scenarios.openUnanswered, scenarios.openRound1, scenarios.closedAnswered],
     scenarios,
   } as const;
 }
