@@ -305,6 +305,7 @@ export const zErrorResponse = z.object({
     'CURRENT_WEEK_SESSION_CONFLICT',
     'EMPTY_POST_AUDIENCE',
     'GENERATION_NOT_FOUND',
+    'GENERATION_QUERY_FAILED',
     'INVALID_ATTENDANCE_CODE',
     'INVALID_ATTENDANCE_HISTORY_CURSOR',
     'INVALID_ATTENDANCE_REPORT',
@@ -1048,7 +1049,13 @@ export const zCurrentWeekSessionDetailResponse = z.object({
   date: z.iso.date(),
   startTime: z.string(),
   location: z.string().nullable(),
-  attendanceStatus: z.enum(['NOT_ELIGIBLE', 'NOT_OPEN', 'AVAILABLE']),
+  attendanceStatus: z.enum([
+    'NOT_ELIGIBLE',
+    'NOT_OPEN',
+    'AVAILABLE',
+    'CHECKED_IN',
+    'PENDING_APPROVAL',
+  ]),
   roadAddress: z.string().nullable(),
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
@@ -1384,6 +1391,26 @@ export const zRosterCandidateView = z.object({
     .nullable(),
 });
 
+export const zAdminGenerationListItemResponse = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  generationNumber: z
+    .int()
+    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  generationName: z.string(),
+});
+
+export const zAdminGenerationListResponse = z.object({
+  generations: z.array(zAdminGenerationListItemResponse),
+});
+
 export const zCurrentTeamResponse = z.object({
   teamId: z.coerce
     .bigint()
@@ -1426,19 +1453,27 @@ export const zAttendanceSummaryResponse = z.object({
   status: z.enum(['NOT_STARTED', 'STARTED']),
   totalCount: z
     .int()
-    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .gte(0)
     .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
   presentCount: z
     .int()
-    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .gte(0)
     .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
   absentCount: z
     .int()
-    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .gte(0)
     .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
   undecidedCount: z
     .int()
-    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  lateCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+  reportCount: z
+    .int()
+    .gte(0)
     .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
 });
 
@@ -2937,6 +2972,11 @@ export const zFindCandidatesQuery = z.object({
  */
 export const zFindCandidatesResponse = z.array(zRosterCandidateView);
 
+/**
+ * 전체 기수 목록 조회 성공
+ */
+export const zList2Response = zAdminGenerationListResponse;
+
 export const zCandidatesPath = z.object({
   generationId: z.coerce
     .bigint()
@@ -2957,7 +2997,7 @@ export const zCandidatesQuery = z.object({
  */
 export const zCandidatesResponse = z.array(zTeamMemberCandidateResponse);
 
-export const zList2Path = z.object({
+export const zList3Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -2979,9 +3019,9 @@ export const zList2Path = z.object({
 /**
  * OK
  */
-export const zList2Response = zTeamPhotoListResponse;
+export const zList3Response = zTeamPhotoListResponse;
 
-export const zList3Path = z.object({
+export const zList4Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -3000,7 +3040,7 @@ export const zList3Path = z.object({
     }),
 });
 
-export const zList3Query = z.object({
+export const zList4Query = z.object({
   cursor: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -3021,9 +3061,9 @@ export const zList3Query = z.object({
 /**
  * OK
  */
-export const zList3Response = zAdminAttendanceListResponse;
+export const zList4Response = zAdminAttendanceListResponse;
 
-export const zList4Path = z.object({
+export const zList5Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -3034,14 +3074,14 @@ export const zList4Path = z.object({
     }),
 });
 
-export const zList4Query = z.object({
+export const zList5Query = z.object({
   cursor: z.string().optional(),
 });
 
 /**
  * 조회 성공
  */
-export const zList4Response = zGenerationRosterListResponse;
+export const zList5Response = zGenerationRosterListResponse;
 
 export const zRecipientsPath = z.object({
   generationId: z.coerce
@@ -3095,7 +3135,7 @@ export const zDetail3Path = z.object({
  */
 export const zDetail3Response = zAdminAttendanceStatisticsDetailResponse;
 
-export const zList5Path = z.object({
+export const zList6Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -3106,7 +3146,7 @@ export const zList5Path = z.object({
     }),
 });
 
-export const zList5Query = z.object({
+export const zList6Query = z.object({
   name: z.string().optional(),
   position: z
     .enum(['PM', 'DESIGN', 'ANDROID', 'IOS', 'WEB', 'MOBILE', 'SERVER', 'AI_NATIVE'])
@@ -3126,7 +3166,7 @@ export const zList5Query = z.object({
 /**
  * 조회 성공
  */
-export const zList5Response = zAdminMemberListResponse;
+export const zList6Response = zAdminMemberListResponse;
 
 export const zTeamOptionsPath = z.object({
   generationId: z.coerce
@@ -3144,7 +3184,7 @@ export const zTeamOptionsPath = z.object({
  */
 export const zTeamOptionsResponse = z.array(zAdminMemberTeamOptionResponse);
 
-export const zList6Path = z.object({
+export const zList7Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -3155,7 +3195,7 @@ export const zList6Path = z.object({
     }),
 });
 
-export const zList6Query = z.object({
+export const zList7Query = z.object({
   position: z
     .enum(['PM', 'DESIGN', 'WEB', 'MOBILE', 'ANDROID', 'IOS', 'SERVER', 'AI_NATIVE'])
     .optional(),
@@ -3164,7 +3204,7 @@ export const zList6Query = z.object({
 /**
  * 조회 성공. 승인 회원이 없으면 items는 빈 배열
  */
-export const zList6Response = zAdminAttendanceStatisticsListResponse;
+export const zList7Response = zAdminAttendanceStatisticsListResponse;
 
 /**
  * Native refresh token. 해당 세션의 기기 등록을 해제하려면 전달해야 한다. Web cookie 흐름에서는 body를 생략할 수 있다.

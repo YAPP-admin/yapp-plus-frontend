@@ -447,6 +447,20 @@ it.each(['NOT_OPEN', 'NOT_ELIGIBLE'])(
 );
 
 it.each([
+  ['CHECKED_IN', '출석했어요!'],
+  ['PENDING_APPROVAL', '인증 사진 검토 중'],
+] as const)('서버 상태 %s에서는 완료 상태를 표시한다', async (attendanceStatus, label) => {
+  server.use(
+    http.get(weekUrl, () =>
+      HttpResponse.json({ ...week, session: { ...week.session, attendanceStatus } }),
+    ),
+  );
+  const { close } = setup();
+  close();
+  expect(await screen.findByRole('button', { name: label })).toBeDisabled();
+});
+
+it.each([
   ['ATTENDANCE_SESSION_NOT_FOUND', 404, '출석할 세션을 찾지 못했어요.'],
   ['ATTENDANCE_UNAVAILABLE', 409, '지금은 출석할 수 없어요.'],
 ] as const)('추가 GET 없이 제출하고 서버의 %s 거절을 표시한다', async (code, status, message) => {

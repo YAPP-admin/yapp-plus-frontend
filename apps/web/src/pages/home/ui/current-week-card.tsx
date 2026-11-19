@@ -166,6 +166,8 @@ function CurrentWeekContent() {
                   AVAILABLE: '출석하기',
                   NOT_ELIGIBLE: '출석 대상이 아니에요',
                   NOT_OPEN: '아직 출석할 수 없어요',
+                  CHECKED_IN: '출석했어요!',
+                  PENDING_APPROVAL: '인증 사진 검토 중',
                 }[session.attendanceStatus]}
           </ActionButton>
         </>
