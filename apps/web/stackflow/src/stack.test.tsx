@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
 import { apiBaseUrl, server } from '@/mocks/server';
 import { currentWeekFixture } from '@/mocks/session-handlers';
+import { koreanDateString } from '@/shared/lib/korean-date-time';
 import { http, HttpResponse } from 'msw';
 import { createStackflowApp, stackflowConfig } from './stack';
 
@@ -532,16 +533,18 @@ it('팀 안내 시트를 업로드 화면으로 교체해서 뒤로가면 홈으
 }, 15000);
 
 it('출결 보고 시트에서 실제 제출하면 홈으로 돌아가고 알림을 표시한다', async () => {
+  const sessionTimestamp = Date.now() + 86_400_000;
+  const weekStartDate = koreanDateString(sessionTimestamp);
   server.use(
     http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
       HttpResponse.json({
         ...currentWeekFixture,
-        weekStartDate: '2026-11-16',
-        weekEndDate: '2026-11-22',
+        weekStartDate,
+        weekEndDate: koreanDateString(sessionTimestamp + 6 * 86_400_000),
         session: {
           ...currentWeekFixture.session,
-          date: '2026-11-18',
-          startTime: '13:30:00',
+          date: weekStartDate,
+          startTime: '23:59:59',
         },
       }),
     ),
