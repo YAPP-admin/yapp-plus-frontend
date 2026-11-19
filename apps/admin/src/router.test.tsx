@@ -104,7 +104,7 @@ describe('관리자 라우팅', () => {
     expect(activeLinks).toHaveLength(1);
     expect(activeLinks[0]).toHaveTextContent(label);
     expect(screen.queryByRole('button', { name: '로그아웃' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /기수/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '기수 선택' })).toBeVisible();
   });
 
   it('대시보드 내용과 현재 메뉴, 키보드 탐색 순서를 유지한다', async () => {
@@ -124,6 +124,10 @@ describe('관리자 라우팅', () => {
     await user.tab();
 
     expect(screen.getByRole('link', { name: 'YAPP+ Admin' })).toHaveFocus();
+
+    await user.tab();
+
+    expect(screen.getByRole('combobox', { name: '기수 선택' })).toHaveFocus();
 
     await user.tab();
 
@@ -368,6 +372,7 @@ describe('세션 목록 탐색', () => {
     await user.tab();
     await user.tab();
     await user.tab();
+    await user.tab();
 
     expect(screen.getByRole('link', { name: '세션 관리' })).toHaveFocus();
 
@@ -503,6 +508,7 @@ describe('출석 화면 탐색', () => {
 
     await user.tab();
     await user.tab();
+    await user.tab();
     expect(backLink).toHaveFocus();
 
     await user.keyboard('{Enter}');
@@ -524,14 +530,14 @@ describe('출석 화면 탐색', () => {
 
     await waitFor(() => expect(router.state.location.href).toBe('/attendance'));
 
-    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByRole('combobox', { name: '직군' }));
     await user.click(await screen.findByRole('option', { name: '전체 직군 대상' }));
     await user.click(screen.getByRole('link', { name: '출석 총점' }));
 
     await waitFor(() => expect(router.state.location.href).toBe('/attendance/scores'));
-    expect(screen.getByRole('combobox')).toHaveTextContent(/모든 직군/);
+    expect(screen.getByRole('combobox', { name: '직군' })).toHaveTextContent(/모든 직군/);
 
-    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByRole('combobox', { name: '직군' }));
     await user.click(await screen.findByRole('option', { name: 'Web' }));
     await user.click(screen.getByRole('link', { name: '세션 관리' }));
 
@@ -620,7 +626,9 @@ describe('회원 목록 URL 상태', () => {
       await renderRoute(path);
 
       expect(await screen.findByRole('searchbox')).toHaveValue('');
-      for (const filter of screen.getAllByRole('combobox')) {
+      for (const filter of screen.getAllByRole('combobox').filter((combobox) => {
+        return combobox.getAttribute('aria-label') !== '기수 선택';
+      })) {
         expect(filter).toHaveTextContent(/모든 (직군|권한|상태)/);
       }
       expect(screen.getByRole('link', { name: '회원 목록' })).toHaveAttribute(
@@ -755,7 +763,7 @@ describe('명단 업로드 진입점', () => {
     );
 
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: '직군' })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: '회원 목록 구분' })).not.toBeInTheDocument();
     expect(router.state.matches.some((match) => match.routeId === '/_dashboard/members/')).toBe(
       false,
@@ -788,7 +796,7 @@ describe('명단 업로드 진입점', () => {
     await renderRoute('/members');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 11; index += 1) {
+    for (let index = 0; index < 12; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
@@ -881,7 +889,7 @@ describe('공지 목록 URL 상태', () => {
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveFocus();
@@ -917,7 +925,7 @@ describe('공지 상세 탐색', () => {
     expect(await screen.findByRole('heading', { name: '예시 세션 안내' })).toBeVisible();
     expect(screen.getByRole('link', { name: activeTab })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: '직군' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: '공지 목록' })).not.toBeInTheDocument();
   });
 
@@ -1183,7 +1191,7 @@ describe('알림 발송 내역 탐색', () => {
     );
 
     expect(screen.getByRole('link', { name: '공지 목록' })).not.toHaveAttribute('aria-current');
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: '직군' })).not.toBeInTheDocument();
   });
 
   it('메뉴 진입은 이전 쿼리를 제거하고 뒤로가기는 복원한다', async () => {
@@ -1208,7 +1216,7 @@ describe('알림 발송 내역 탐색', () => {
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 10; index += 1) {
+    for (let index = 0; index < 11; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveFocus();
