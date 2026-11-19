@@ -139,3 +139,33 @@
 
 기수 전환 UI와 세션 수명 경계를 검토한 뒤, 사용자 진행 확인이 있으면 5단계의 통합 검증·운영 문서를
 시작한다.
+
+## 5단계 — 2026-11-19
+
+- `apps/admin/README.md`에서 제거된 `VITE_ADMIN_GENERATION_ID` 설정 대신 로그인 후 기수 목록 조회,
+  최신 기수 자동 선택, 기수별 세션 수명과 복구 절차를 안내한다.
+- `packages/api/README.md`에 `list2` 기수 목록 Query와 `find1` 기수별 세션 목록 Query, 공용 기수
+  fixture를 기록했다. 생성 함수 이름은 명세 재생성에 따라 바뀔 수 있으므로 실제 경로는 생성 SDK를
+  기준으로 확인한다.
+- `quickstart.md`에서 서버가 보장하는 비어 있지 않은 기수 목록의 빈 상태 검증을 제거하고, 자동
+  검증 범위를 현재 요구와 맞췄다.
+
+### 검증 상태
+
+- `mise exec -- node --run check`: 통과. format:check는 새 실행했고, 문서 변경 영향으로 api·admin·
+  mobile·storybook·web의 lint와 typecheck, admin·mobile·web의 test를 새로 실행했다. app-bridge·ui의
+  lint·typecheck·test는 Turbo 캐시를 재사용했다.
+- `mise exec -- node --run build`: 통과. admin·web·storybook build는 Turbo 캐시를 재사용했다.
+- 승인된 테스트 로그인으로 `VITE_API_MOCKING=false`의 관리자 앱을 `http://localhost:3001`에서
+  확인했다. 실제 `GET /api/admin/generations`가 200으로 응답했고, 응답의
+  `Access-Control-Allow-Origin`은 `http://localhost:3001`이었다. 최신 기수 `YAPP 29기`가
+  자동 선택되어 대시보드가 렌더링됐다.
+- `http://127.0.0.1:3001`은 동일 origin이 아니며 서버 CORS 허용 목록에 없어서 브라우저 요청이
+  실패할 수 있다. 실서버 확인은 반드시 `http://localhost:3001`에서 수행한다.
+- 실서버 세션 CRUD와 실제 브라우저의 키보드·스크린 리더·터치 검증은 쓰기 대상·정리 범위를
+  승인받지 않아 미실행이다. 자동 테스트와 Storybook build로 이를 대체하지 않는다.
+
+### 완료
+
+운영 문서와 통합 검증 결과를 반영했다. 문서 변경은 별도 commit으로 관리하고, 관리자 기능 PR은 API
+PR을 기준으로 준비한다.

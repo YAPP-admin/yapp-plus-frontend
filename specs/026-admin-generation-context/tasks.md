@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 기수 선택과 세션 연결
 
 **입력**: [명세](spec.md), [계획](plan.md), [조사](research.md), [모델](data-model.md), [계약](contracts/generation-context.md)
-**상태**: 4단계 US2 구현·자동 검증 완료, 리뷰 대기.
+**상태**: 5단계 통합 검증·운영 문서 갱신 완료.
 테스트는 명세의 수용 조건과 저장소 규칙에 따라 포함한다. 단계마다 리뷰 후 진행한다.
 
 ## 1단계 — 준비와 문서
@@ -51,9 +51,9 @@
 
 ## 5단계 — 통합 검증과 운영 문서
 
-- [ ] T024 `apps/admin/README.md`와 `packages/api/README.md`에 최신 생성 계약·기수 조회·환경 설정 변경을 반영한다. 과거 명세의 검증 기록은 보존한다.
-- [ ] T025 `specs/026-admin-generation-context/quickstart.md`의 전체 흐름을 검증하고 `validation.md`에 새 실행·캐시 재사용·미실행을 구분한다.
-- [ ] T026 `specs/026-admin-generation-context/validation.md`에 승인된 실서버 확인 범위 또는 미실행 사유·복구 방법을 기록하고 최종 리뷰받는다.
+- [x] T024 `apps/admin/README.md`와 `packages/api/README.md`에 최신 생성 계약·기수 조회·환경 설정 변경을 반영한다. 과거 명세의 검증 기록은 보존한다.
+- [x] T025 `specs/026-admin-generation-context/quickstart.md`의 전체 흐름을 검증하고 `validation.md`에 새 실행·캐시 재사용·미실행을 구분한다.
+- [x] T026 `specs/026-admin-generation-context/validation.md`에 승인된 실서버 확인 범위 또는 미실행 사유·복구 방법을 기록하고 최종 리뷰받는다.
 
 ## 의존성과 실행 순서
 
