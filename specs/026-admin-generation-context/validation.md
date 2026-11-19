@@ -111,3 +111,31 @@
 - `mise exec -- pnpm --filter @yapp-plus/admin test`: 새 실행 연속 3회 통과, 매회 75개 파일·701건.
 - `mise exec -- node --run check`: 통과. format:check는 새 실행, admin lint·typecheck·test는 새
   실행했고, 다른 패키지 lint·typecheck·test는 Turbo 캐시를 재사용했다.
+
+## 4단계 — 2026-11-19
+
+- 사이드바의 기수 표시를 SEED Select로 바꾸고, 선택한 기수는 화면 이동과 모바일 메뉴를 닫지 않는
+  동안 유지한다. 모바일 테스트는 SidePanel 안의 portal 목록을 happy-dom이 열지 못하는 제약 때문에
+  SEED가 제공하는 native fallback `<select>`의 변경 이벤트로 선택 연결을 검증한다.
+- 세션 경로에 한정해 기수 ID를 Overlay·Snackbar Provider 수명 key에 포함했다. 기수를 바꾸면 열린
+  세션 모달과 알림을 제거하고, 세션 목록 오류 경계도 새 기수 ID로 다시 만든다.
+- 이전 기수 목록 요청이 늦게 끝나도 새 기수 목록을 덮어쓰지 않는 회귀 테스트와, 기수 전환 시 열린
+  모달이 제거되는 회귀 테스트를 추가했다. 기존 세션 CRUD 테스트는 기수별 경로와 무효화를 계속 검증한다.
+- Storybook에 정상·긴 이름·여러 기수 상태를 가진 독립 SEED Select 사례를 추가했다. 관리자 앱 코드는
+  import하지 않는다.
+
+### 검증 상태
+
+- `mise exec -- pnpm --filter @yapp-plus/admin exec vitest run src/app/ui/admin-shell.test.tsx src/app/ui/admin-overlay-provider.test.tsx src/pages/sessions/ui/sessions-page.test.tsx`: 새 실행 통과, 3개 파일·32건.
+- `mise exec -- pnpm --filter @yapp-plus/admin typecheck` 및 `mise exec -- pnpm --filter @yapp-plus/storybook typecheck`: 새 실행 통과.
+- `mise exec -- node --run check`: 통과. format:check는 새 실행했고, admin·storybook lint와 typecheck,
+  admin test는 새 실행했다. app-bridge·api·ui·web·mobile 작업은 Turbo 캐시를 재사용했다.
+- `mise exec -- node --run build`: 통과. admin·storybook build는 새 실행했고, web build는 Turbo 캐시를
+  재사용했다.
+- 실제 브라우저의 키보드·스크린 리더·터치 동작과 실서버 확인은 승인된 관리자 access token·테스트 데이터가
+  없어 미실행이다. Select의 aria label·native fallback과 메뉴 포커스 순환은 Testing Library로 확인했다.
+
+### 리뷰 대기
+
+기수 전환 UI와 세션 수명 경계를 검토한 뒤, 사용자 진행 확인이 있으면 5단계의 통합 검증·운영 문서를
+시작한다.
