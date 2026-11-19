@@ -30,6 +30,7 @@ import { TeamAttendanceCompletePage } from '@/pages/team-attendance-complete';
 import { TeamAttendanceErrorPage } from '@/pages/team-attendance-error';
 import { TeamAttendanceUploadPage } from '@/pages/team-attendance-upload';
 import { AuthLayout } from '@/app/layouts/auth-layout';
+import { BottomNavigation } from '@/app/layouts/bottom-navigation';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabPanel, TabsLayout } from '@/app/layouts/tabs-layout';
@@ -350,7 +351,14 @@ export function DevRoutesActivity() {
 export function DiningListActivity() {
   return (
     <ActivityScreen title="회식">
-      <PageShell>
+      <PageShell
+        header={null}
+        navigation={
+          import.meta.env.DEV ? (
+            <BottomNavigation activeTab="community" showDevelopmentCommunity />
+          ) : undefined
+        }
+      >
         <DiningPage />
       </PageShell>
     </ActivityScreen>

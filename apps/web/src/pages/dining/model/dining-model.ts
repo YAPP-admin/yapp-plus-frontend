@@ -85,14 +85,10 @@ export function selectDiningMembers(
   ];
 }
 
-/** 목록의 참여 인원은 어느 한 차수라도 참석한 고유 인원입니다. 차수별 집계를 합산하지 않습니다. */
+/** 목록의 참여 인원은 참석 여부와 관계없이 투표를 제출한 고유 인원입니다. */
 export function countDiningMembers(members: readonly DiningMember[]) {
   return {
-    ATTENDING: members.filter(({ attendance }) =>
-      attendance === null
-        ? false
-        : [attendance[DiningRound.FIRST], attendance[DiningRound.SECOND]].includes(true),
-    ).length,
+    RESPONDED: members.filter(({ attendance }) => attendance !== null).length,
     [DiningRound.FIRST]: members.filter((member) =>
       matchesDiningFilter(member.attendance, DiningRound.FIRST),
     ).length,

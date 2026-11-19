@@ -19,9 +19,11 @@ const publicActivities = new Set([
   'NotFound',
 ]);
 
-/** 개발 빌드의 브리지 검증만 로그인과 분리한다. 운영 보호 화면의 정책은 유지한다. */
+const developmentPublicActivities = new Set(['DevRoutes', 'DiningList', 'DiningDetail']);
+
+/** 개발 전용 경로는 WebView 인증 상태와 무관하게 fixture 화면을 확인할 수 있다. */
 const isPublicActivity = (name: string): boolean =>
-  publicActivities.has(name) || (import.meta.env.DEV && name === 'DevRoutes');
+  publicActivities.has(name) || (import.meta.env.DEV && developmentPublicActivities.has(name));
 
 /** 확정된 로그아웃의 새 진입은 화면을 만들기 전에 공식 가드가 로그인으로 바꿉니다. */
 export function nativeEntryGuard(client: QueryClient, activities: readonly { name: string }[]) {

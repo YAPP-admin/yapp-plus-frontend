@@ -1,65 +1,55 @@
-/** 개발 fixture를 목록·상세 읽기 화면으로 연결하며, API와 저장 상태를 소유하지 않습니다. */
+/** 개발 fixture의 목록과 기본 상세 정보를 연결하며, API와 저장 상태를 소유하지 않습니다. */
 import { ActivityLink } from '@/app/navigation/activity-link';
-import { countDiningMembers, getDiningDeadline } from '../model/dining-model';
+import { Text } from '@yapp-plus/ui';
 import { getDiningDevelopmentFixtures } from '../model/dining-fixtures.development';
+import { countDiningMembers, getDiningDeadline } from '../model/dining-model';
+import { DiningListPage } from './dining-list-page';
+import { page } from './dining-list-page.css';
 
-/** DEV fixture의 회식 목록 또는 선택한 상세를 렌더링합니다. */
+/** DEV fixture의 회식 목록 또는 선택한 기본 상세 정보를 렌더링합니다. */
 export function DiningPage({ diningId }: { diningId?: string }) {
   const fixtures = getDiningDevelopmentFixtures();
   if (!fixtures) {
-    return (
-      <main>
-        <h1>회식</h1>
-        <p>개발 환경에서만 회식 화면을 확인할 수 있어요.</p>
-      </main>
-    );
+    return <DiningMessage>개발 환경에서만 뒤풀이 화면을 확인할 수 있어요.</DiningMessage>;
   }
+
   const dining = diningId
     ? Object.values(fixtures.scenarios).find(({ id }) => id === diningId)
-    : null;
+    : undefined;
   if (diningId && !dining) {
-    return (
-      <main>
-        <h1>회식</h1>
-        <p>회식을 찾을 수 없어요.</p>
-      </main>
-    );
+    return <DiningMessage>뒤풀이를 찾을 수 없어요.</DiningMessage>;
   }
-  if (dining) {
-    const count = countDiningMembers(dining.members);
-    return (
-      <main>
-        <h1>{dining.title}</h1>
-        <p>{dining.description}</p>
-        <p>
-          {getDiningDeadline(dining.surveyClosesAt, fixtures.now).label} · 참여 {count.ATTENDING}명
-        </p>
-        <ActivityLink activityName="DiningList" activityParams={{}}>
-          목록으로
-        </ActivityLink>
-      </main>
-    );
+
+  if (!dining) {
+    return <DiningListPage items={fixtures.list} now={fixtures.now} />;
   }
+
+  const deadline = getDiningDeadline(dining.surveyClosesAt, fixtures.now);
+  const count = countDiningMembers(dining.members);
   return (
-    <main>
-      <h1>회식</h1>
-      <ul aria-label="회식 목록">
-        {fixtures.list.map((item) => (
-          <li key={item.id}>
-            <article>
-              <h2>
-                <ActivityLink activityName="DiningDetail" activityParams={{ diningId: item.id }}>
-                  {item.title}
-                </ActivityLink>
-              </h2>
-              <p>
-                {getDiningDeadline(item.surveyClosesAt, fixtures.now).label} · 참여{' '}
-                {countDiningMembers(item.members).ATTENDING}명
-              </p>
-            </article>
-          </li>
-        ))}
-      </ul>
+    <main className={page}>
+      <Text as="h1" textStyle="t8Bold">
+        {dining.title}
+      </Text>
+      <Text as="p" textStyle="t4Regular">
+        {dining.description}
+      </Text>
+      <Text as="p" textStyle="t3Medium">
+        {deadline.label} · 참여 {count.RESPONDED}명
+      </Text>
+      <ActivityLink activityName="DiningList" activityParams={{}}>
+        목록으로
+      </ActivityLink>
+    </main>
+  );
+}
+
+function DiningMessage({ children }: { children: string }) {
+  return (
+    <main className={page}>
+      <Text as="p" textStyle="t4Regular">
+        {children}
+      </Text>
     </main>
   );
 }

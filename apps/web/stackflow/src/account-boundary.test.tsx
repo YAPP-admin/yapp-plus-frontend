@@ -212,6 +212,21 @@ it('로그아웃 상태로 보호 화면에 직접 접근하면 내용을 표시
   await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
 });
 
+it('개발용 회식 목록은 WebView 세션을 복구할 수 없어도 표시한다', async () => {
+  const client = new QueryClient();
+  bridge.getSession.mockResolvedValue({
+    status: 'UNAVAILABLE',
+    code: 'NETWORK',
+    retryable: true,
+  });
+  window.history.replaceState(null, '', '/dining');
+  mount(client);
+
+  expect(await screen.findByRole('heading', { name: '커뮤니티' })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: '로그인 상태를 확인하지 못했어요' })).toBeNull();
+  expect(window.location.pathname).toBe('/dining');
+});
+
 it('조회 실패는 보호 URL을 유지하며 안내하고 수동 복구 후 원래 화면을 표시한다', async () => {
   vi.useFakeTimers({ toFake: ['Date'] });
   const client = new QueryClient();

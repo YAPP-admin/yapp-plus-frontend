@@ -82,9 +82,9 @@ const MEMBERS: readonly DiningMember[] = [
 ];
 
 describe('회식 명단과 집계', () => {
-  it('2차만 참석한 사람은 2차 명단과 고유 참여 인원에 포함한다', () => {
+  it('불참을 포함한 제출 응답만 참여 인원으로 센다', () => {
     expect(countDiningMembers(MEMBERS)).toEqual({
-      ATTENDING: 3,
+      RESPONDED: 4,
       [DiningRound.FIRST]: 2,
       [DiningRound.SECOND]: 2,
       ABSENT: 1,
