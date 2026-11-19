@@ -1,8 +1,8 @@
 # 구현 계획: 위치 기반 코드 출석
 
 **브랜치**: `DongjaJ/akax9-stage3` · **작성일**: 2026-11-18 · **명세**: [spec.md](./spec.md)
-**상태**: 3단계 제출·요청 수명 구현·검증 완료, 사용자 리뷰 대기. 기준 이슈는
-[GitHub #478](https://github.com/YAPP-admin/yapp-plus-frontend/issues/478)이며 오류 복구 화면은 아직 구현하지 않았다.
+**상태**: 4단계 오류 복구 화면 구현·검증 완료, 사용자 리뷰 대기. 기준 이슈는
+[GitHub #478](https://github.com/YAPP-admin/yapp-plus-frontend/issues/478)이며 통합·실기기 검증은 아직 진행하지 않았다.
 
 ## 요약
 
