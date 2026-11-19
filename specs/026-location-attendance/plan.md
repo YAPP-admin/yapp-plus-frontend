@@ -1,8 +1,8 @@
 # 구현 계획: 위치 기반 코드 출석
 
-**브랜치**: `DongjaJ/akax9` · **작성일**: 2026-11-18 · **명세**: [spec.md](./spec.md)
-**상태**: 2단계 판정 기반 구현·검증 완료, 사용자 리뷰 대기. 기준 이슈는
-[GitHub #478](https://github.com/YAPP-admin/yapp-plus-frontend/issues/478)이며 아직 제출 흐름에는 연결하지 않았다.
+**브랜치**: `DongjaJ/akax9-stage3` · **작성일**: 2026-11-18 · **명세**: [spec.md](./spec.md)
+**상태**: 3단계 제출·요청 수명 구현·검증 완료, 사용자 리뷰 대기. 기준 이슈는
+[GitHub #478](https://github.com/YAPP-admin/yapp-plus-frontend/issues/478)이며 오류 복구 화면은 아직 구현하지 않았다.
 
 ## 요약
 
@@ -40,7 +40,7 @@
 - 문서: 이 디렉터리의 spec·plan·tasks·research·data-model·quickstart·contracts·checklists·validation·issue-draft.
 - 판정: `apps/web/src/pages/home/model/location-attendance.ts`와 인접 테스트를 신설한다.
 - 연결: 기존 `model/code-attendance.ts`, `ui/home-demo-sheets.tsx`와 필요 시 `ui/home-page.css.ts`를 변경한다.
-- 탐색: `apps/web/stackflow/src/activities/home-sheets.tsx`에서 활성 상태를 전달하고 기존 stack·account-boundary 테스트를 보강한다.
+- 탐색: 기존 성공 완료 탐색을 유지하고 account-boundary 테스트로 계정 변경만 보강한다.
 - 의존성: `pnpm-workspace.yaml`, `apps/web/package.json`, `pnpm-lock.yaml`만 변경한다.
 - 실제 재사용자가 없는 shared·feature·공용 패키지, 범용 위치 상태 저장소는 만들지 않는다.
 
@@ -61,9 +61,10 @@ geolib를 고정하고 좌표·정밀 권한·오차·거리 판정 순수 함�
 
 유효한 사용자 제출에 대해 기존 mutation 실행 경로 안에서 위치 판정을 먼저 수행한다.
 기존 verify mutation key·성공 context의 sessionId·캐시 무효화를 보존하고 원문 위치는 지역 변수로만 사용한다.
-하나의 진행 상태가 위치 대기와 서버 전송을 포함하도록 하며 단계 안내는 위치 확인/출석 처리로 구분한다.
-화면 활성·계정·세션 스냅샷을 위치 응답 이후 다시 확인한다. 해제된 시도의 무효화를 별도로 보장한다.
-기존 BottomSheet open 상태가 화면 활성 기준임을 유지하고 강제 탐색·언마운트·계정 경계를 테스트한다.
+위치 확인과 서버 제출 mutation의 진행 상태를 조합하며 단계 안내는 위치 확인/출석 처리로 구분한다.
+위치 확인 mutation은 시작 시점 세션 ID·좌표와 코드를 받아 승인된 서버 제출 입력을 반환한다.
+계정 변경은 기존 account boundary의 화면 수명으로 중단하고, 최신 세션 Query를 별도로 다시 비교하지 않는다.
+기존 BottomSheet open 상태는 제출 시작 기준으로 사용하고 별도의 Activity 수명 처리는 추가하지 않는다.
 단순 화면 버튼 비활성만으로 중복을 막았다고 가정하지 않고 동기 연속 제출을 검증한다.
 
 ### 4단계 — 실패 안내와 설정 복구 (US2)

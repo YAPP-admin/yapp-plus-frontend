@@ -1,7 +1,9 @@
+/** 홈에서 사용하는 출석 코드·팀 확인 바텀시트와 입력 상호작용을 제공합니다. */
 import { HStack, VStack } from '@seed-design/react';
 import { useActivityZIndexBase } from '@seed-design/stackflow';
 import { useId, useRef, useState, type ReactNode } from 'react';
 import { revalidateLogic, useField, useForm } from '@tanstack/react-form';
+import { z } from 'zod';
 import { useErrorBoundary } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
 import { QueryBoundary } from '@/shared/ui/query-boundary';
@@ -59,6 +61,14 @@ function OrangeCheckIcon() {
 }
 
 type AttendanceCodeSheetProps = BottomSheetRootProps & { onComplete: () => void };
+
+const attendanceCodeSchema = z.string().regex(/^\d{4}$/, '출석 코드 네 자리를 입력해 주세요.');
+
+/** 네 자리 입력 배열을 하나의 출석 코드로 합쳐 형식 오류 문구를 반환합니다. */
+function validateAttendanceCode(digits: readonly string[]) {
+  const parsed = attendanceCodeSchema.safeParse(digits.join(''));
+  return parsed.success ? undefined : parsed.error.issues[0]?.message;
+}
 
 export function AttendanceCodeSheet({ onComplete, ...props }: AttendanceCodeSheetProps) {
   const { isNative } = useNativeAuthSession();
@@ -139,7 +149,8 @@ function CodeSheetMessage({ message, retry }: { message: string; retry?: () => v
 }
 
 function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProps) {
-  const attendance = useCodeAttendance(onComplete);
+  const isSheetOpen = props.open === true;
+  const attendance = useCodeAttendance(onComplete, isSheetOpen);
   const form = useForm({
     defaultValues: { code: ['', '', '', ''] },
     validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
@@ -149,17 +160,14 @@ function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProp
     form,
     name: 'code',
     validators: {
-      onDynamic: ({ value }) =>
-        value.every((digit) => /^\d$/.test(digit))
-          ? undefined
-          : '출석 코드 네 자리를 입력해 주세요.',
+      onDynamic: ({ value }) => validateAttendanceCode(value),
     },
   });
   const code = field.state.value;
   const error = field.state.meta.errors[0] ?? attendance.error;
   const errorId = useId();
   const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   // 코드 입력 핸들러
   function handleCodeChange(index: number, value: string) {
@@ -173,13 +181,13 @@ function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProp
 
     // 다음 칸으로 자동 포커스
     if (value && index < 3) {
-      inputRefs.current[index + 1]?.focus();
+      codeInputRefs.current[index + 1]?.focus();
     }
   }
 
   function handleCodeKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
     if (e.key === 'Backspace' && !code[index] && index > 0) {
-      inputRefs.current[index - 1]?.focus();
+      codeInputRefs.current[index - 1]?.focus();
     }
   }
 
@@ -190,7 +198,7 @@ function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProp
     const digits = text.slice(0, 4 - index).split('');
     field.handleChange((previous) => previous.map((digit, i) => digits[i - index] ?? digit));
     attendance.reset();
-    inputRefs.current[Math.min(index + digits.length, 3)]?.focus();
+    codeInputRefs.current[Math.min(index + digits.length, 3)]?.focus();
   }
 
   return (
@@ -213,7 +221,7 @@ function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProp
                 <input
                   key={index}
                   ref={(el) => {
-                    inputRefs.current[index] = el;
+                    codeInputRefs.current[index] = el;
                   }}
                   type="text"
                   inputMode="numeric"

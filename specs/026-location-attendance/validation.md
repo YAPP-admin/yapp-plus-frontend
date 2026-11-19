@@ -1,10 +1,10 @@
 # 단계별 검증 기록
 
-**작성일**: 2026-11-18 · **상태**: 2단계 구현·검증 완료 · 사용자 리뷰 대기
+**작성일**: 2026-11-18 · **상태**: 3단계 구현·검증 완료 · 사용자 리뷰 대기
 
 ## 작업 기준
 
-- 실제 브랜치: `DongjaJ/akax9`. 이름 변경·전환·이력 변경 없음.
+- 단계별 검토를 위해 1단계 `DongjaJ/akax9-stage1`, 2단계 `DongjaJ/akax9`, 3단계 `DongjaJ/akax9-stage3`으로 분리했다. 현재 브랜치는 3단계다.
 - 시작 HEAD: `4f96a09b86551a61129baf58187490c09d1c06fc`, fetch 후 origin/main: `ee7235a3`.
 - main 대비 14커밋 뒤이며 회원 홈·위치 브리지 관련 diff는 없다. 관리자 세션 작업을 자동 merge하지 않았다.
 - 원격에 025-admin-session-api가 있으므로 다음 번호 026을 선택했다.
@@ -50,3 +50,15 @@
 - 리뷰 반영 뒤 위치 판정 테스트 27개와 웹 lint·typecheck를 새로 실행해 통과했다. `node --run check` 재실행은 format과 웹 lint·typecheck·test를 새로 실행하고 나머지 lint·typecheck 6개와 test 4개는 캐시를 재사용했으며, 위와 같은 기존 Stackflow 테스트 1건만 실패했다.
 - 브라우저·iOS 실기기·현장 측정·expo:doctor는 이 단계가 순수 판정 기반이고 모바일 설정 변경이 없어 미실행했다.
 - origin/main merge-base 기준 tracked 추가 561줄과 신규 판정 파일 285줄로 추가 846줄·삭제 0줄이다. 800줄 제한을 넘어 1단계 문서와 2단계 코드·검증을 독립 PR로 분리해야 하며 후속 구현을 같은 변경에 누적하지 않는다.
+
+## 3단계 제출·요청 수명 검증
+
+- 구현 전 출석 코드 테스트 4건의 실패로 위치 요청·차단·재시도 연결이 없음을 확인한 뒤 구현했다.
+- 유효한 제출에서만 위치를 요청하고 정확한 위치·오차·100m 판정을 통과한 경우 기존 verify mutation을 호출한다. 위치 원문은 지역 변수에만 두고 HTTP body·query cache·mutation context에 넣지 않는다.
+- 위치 확인과 서버 제출을 순차 mutation으로 분리하고 두 `isPending`을 조합했다. 위치 mutation은 승인된 제출 입력을 반환하며 계정 변경은 기존 account boundary의 화면 수명으로 후속 전송을 중단한다. 최신 세션 Query 재검사는 추가하지 않았다.
+- 위치 판정·출석 코드·계정 경계 3개 파일의 68개 테스트를 새로 실행해 통과했다. 응답 스키마 오류와 `verified: false`는 mutation 실패로 처리하며, 최신 세션 Query 재검사 4개를 제거하고 계정 변경 중단은 account boundary 통합 테스트로 유지했다.
+- 웹 typecheck와 변경 파일 oxlint를 새로 실행해 통과했다.
+- `node --run check`에서 format과 웹 lint·typecheck·test는 새로 실행했고 나머지 lint·typecheck 6개와 test 4개는 Turbo 캐시를 재사용했다. web 테스트는 550개 중 549개가 통과했고 기존 Stackflow 출결 보고 1개만 `결석` radio를 찾지 못해 이전과 동일하게 실패했다.
+- `node --run build`는 web을 새로 실행하고 admin·storybook은 Turbo 캐시를 재사용해 모두 통과했다. web의 기존 500kB chunk 경고는 유지됐다.
+- Modern Web Guidance의 forms 지침에 따라 유효한 제출 직후 입력·확인을 비활성화해 중복 전송을 막고, Zod 네 자리 코드 검증과 서버 성공만 기존 완료 표시로 연결했다.
+- 3단계는 2단계 commit `114c1d64`를 base로 별도 브랜치에 구현했다. 추가 388줄·삭제 82줄·합계 470줄로 650줄 분리 검토 기준과 800줄 상한 아래다.

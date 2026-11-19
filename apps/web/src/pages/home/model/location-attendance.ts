@@ -21,6 +21,18 @@ export type AttendanceSessionLocation = Readonly<{
   longitude: number | null;
 }>;
 
+/**
+ * 서버 세션 좌표가 위치 요청을 시작할 수 있는 유효한 위도·경도인지 확인합니다.
+ *
+ * @param location 서버가 제공한 nullable 세션 좌표입니다.
+ * @returns 두 좌표가 모두 유효하면 숫자 좌표로 타입을 좁혀 `true`를 반환합니다.
+ */
+export function isValidAttendanceSessionLocation(
+  location: AttendanceSessionLocation,
+): location is Readonly<{ latitude: number; longitude: number }> {
+  return attendanceCoordinatesSchema.safeParse(location).success;
+}
+
 /** 브리지에서 신선도 검증을 마친 위치 표본 중 출석 판정에 필요한 필드입니다. */
 export type AttendanceLocationInput = Omit<LocationSample, 'timestamp'>;
 
