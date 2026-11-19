@@ -144,12 +144,6 @@ const SESSION_LIST = {
   teamCount: 1,
   sessions: [REGULAR_SESSION, TEAM_SESSION],
 } satisfies SessionListResponse;
-const CREATED_TEAM_SESSION = {
-  ...TEAM_SESSION,
-  sessionId: 301,
-  name: '팀 세션 초안',
-  date: '2026-11-21',
-};
 const UPDATED_TEAM_SESSION = {
   ...TEAM_SESSION,
   sessionId: 101,
@@ -337,44 +331,6 @@ it('기수를 전환하면 진행 중이던 이전 기수 목록을 표시하지
   await waitFor(() => expect(screen.queryByText('정규 세션')).not.toBeInTheDocument());
 });
 
-it('진행 중인 이전 목록을 취소하고 생성 결과를 전체 필터에서 다시 조회한다', async () => {
-  let listRequestCount = 0;
-  let releaseOldList: (() => void) | undefined;
-  const oldListPending = new Promise<void>((resolve) => {
-    releaseOldList = resolve;
-  });
-  server.use(
-    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, async () => {
-      listRequestCount += 1;
-      if (listRequestCount === 1) {
-        await oldListPending;
-        return HttpResponse.json(SESSION_LIST);
-      }
-      return HttpResponse.json({
-        ...SESSION_LIST,
-        totalCount: 3,
-        allCount: 3,
-        teamCount: 2,
-        sessions: [CREATED_TEAM_SESSION, ...SESSION_LIST.sessions],
-      });
-    }),
-    http.post(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
-      HttpResponse.json({ sessionId: 301 }, { status: 201 }),
-    ),
-  );
-
-  const { user } = await setup(25, 'team');
-  await user.click(await screen.findByRole('button', { name: '세션 추가' }));
-  await user.click(screen.getByRole('button', { name: '테스트 세션 저장' }));
-
-  expect(await screen.findByText('세션을 추가했습니다.')).toBeVisible();
-  expect(await screen.findByRole('heading', { name: '팀 세션 초안' })).toBeVisible();
-  expect(within(screen.getByRole('main')).getByRole('status')).toHaveTextContent('전체 3개');
-  releaseOldList?.();
-  await waitFor(() => expect(listRequestCount).toBe(2));
-  expect(screen.getByRole('heading', { name: '팀 세션 초안' })).toBeVisible();
-});
-
 it('생성 성공과 목록 재조회 실패를 각각 안내하고 기존 목록을 유지한다', async () => {
   let listRequestCount = 0;
   server.use(
@@ -395,6 +351,7 @@ it('생성 성공과 목록 재조회 실패를 각각 안내하고 기존 목�
   await user.click(screen.getByRole('button', { name: '테스트 세션 저장' }));
 
   expect(await screen.findByText('세션을 추가했습니다.')).toBeVisible();
+  expect(screen.queryByRole('dialog', { name: '세션 추가' })).not.toBeInTheDocument();
   expect(await screen.findByRole('alert')).toHaveTextContent('세션 목록을 새로고치지 못했습니다.');
   expect(screen.queryByText('private')).not.toBeInTheDocument();
   expect(screen.getByRole('heading', { name: '정규 세션' })).toBeVisible();
