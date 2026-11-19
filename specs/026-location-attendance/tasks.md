@@ -2,7 +2,7 @@
 
 **입력**: [명세](./spec.md), [계획](./plan.md), [계약](./contracts/location-attendance.md)
 **검증**: 사용자와 합의한 경계·회귀 테스트를 구현 작업에 포함한다. 실패를 재현한 뒤 구현으로 통과시킨다.
-**현재 범위**: 2단계 판정 기반까지. 제출 흐름 연결과 화면 변경은 후속 리뷰 전 시작하지 않는다.
+**현재 범위**: 3단계 제출·요청 수명까지. 오류 복구 화면은 후속 리뷰 전 시작하지 않는다.
 
 ## 1단계 — 준비와 문서
 
@@ -25,14 +25,14 @@
 
 ## 3단계 — 제출 US1·수명 US3 (P1)
 
-**독립 검증**: MSW 요청 횟수와 지연 응답으로 조건 통과·이탈·계정 변경의 전송/탐색을 확인한다.
+**독립 검증**: MSW 요청 횟수와 지연 응답으로 조건 통과·계정 변경의 전송을 확인한다.
 
-- [ ] T008 [US1] `apps/web/src/pages/home/ui/attendance-code.test.tsx`에 위치 검사 전 POST 0회, 성공 1회, 실패·미지원·오프라인 차단과 재시도 표본 교체를 검증한다.
-- [ ] T009 [US1] `apps/web/src/pages/home/model/code-attendance.ts`에 메서드 지원 검사·위치 판정 후 SDK 제출을 연결하고 verify mutation key/context·조회 무효화를 보존한다.
-- [ ] T010 [US3] `apps/web/src/pages/home/ui/attendance-code.test.tsx`에 동기 연속 제출, 세션 ID·좌표·가능 상태 변경, 재조회 오류와 pending 전체 잠금 회귀를 추가한다.
-- [ ] T011 [US3] `apps/web/src/pages/home/model/code-attendance.ts`, `ui/home-demo-sheets.tsx`에 활성 시도 무효화·시트 open 전달·최신 대상 재검사를 구현한다.
-- [ ] T012 [US3] `apps/web/stackflow/src/account-boundary.test.tsx`에 계정 변경 후 위치 응답의 전송 0회와 기존 계정 캐시 정리를 검증한다.
-- [ ] T013 [US3] `apps/web/stackflow/src/activities/home-sheets.tsx`, `apps/web/stackflow/src/stack.test.tsx`에 숨겨진 시트·재진입·서버 지연 성공의 잘못된 탐색 방지를 반영한다.
+- [x] T008 [US1] `apps/web/src/pages/home/ui/attendance-code.test.tsx`에 위치 검사 전 POST 0회, 성공 1회, 실패·미지원·오프라인 차단과 재시도 표본 교체를 검증한다.
+- [x] T009 [US1] `apps/web/src/pages/home/model/code-attendance.ts`에 메서드 지원 검사·위치 판정 후 SDK 제출을 연결하고 verify mutation key/context·조회 무효화를 보존한다.
+- [x] T010 [US3] `apps/web/src/pages/home/ui/attendance-code.test.tsx`에 동기 연속 제출과 pending 전체 잠금 회귀를 추가한다.
+- [x] T011 [US3] `apps/web/src/pages/home/model/code-attendance.ts`, `ui/home-demo-sheets.tsx`에 위치·출석 순차 mutation과 시트 open 제출 제한을 구현한다.
+- [x] T012 [US3] `apps/web/stackflow/src/account-boundary.test.tsx`에 계정 변경 후 위치 응답의 전송 0회와 기존 계정 캐시 정리를 검증한다.
+- [x] T013 [US3] 기존 성공 완료 탐색을 유지하고 별도의 Activity 수명 관리는 범위에 추가하지 않는다.
 
 **리뷰 지점**: US1·US3 수명 검증과 기존 완료 표시 회귀를 제출한다. 이 단계만으로 출시하지 않는다.
 

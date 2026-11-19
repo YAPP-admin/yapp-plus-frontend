@@ -3,6 +3,9 @@ import { createAttendanceFixtures } from '@/mocks/attendance-fixtures';
 import { createSessionHandlers, currentWeekFixture } from '@/mocks/session-handlers';
 import { createMemberAttendanceHandlers } from '@/mocks/member-attendance-handlers';
 import { find4QueryKey, find6Options } from '@yapp-plus/api/generated';
+import { getAppBridge } from '@yapp-plus/app-bridge/web';
+import type { LocationResult } from '@yapp-plus/app-bridge';
+import type { CurrentWeekSessionResponse } from '@yapp-plus/api/generated';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider, onlineManager } from '@tanstack/react-query';
@@ -14,13 +17,26 @@ import { apiBaseUrl, server } from '@/mocks/server';
 import { AttendanceCodeSheet } from './home-demo-sheets';
 import { CurrentWeekCard } from './current-week-card';
 
+const nativeLocation = vi.hoisted(() => ({
+  request: vi.fn<() => Promise<LocationResult>>(),
+}));
+vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  requestCurrentLocation: nativeLocation.request,
+}));
 vi.mock('@seed-design/stackflow', () => ({ useActivityZIndexBase: () => 200 }));
 vi.mock('@stackflow/react', () => ({ useFlow: () => ({ push: vi.fn<() => void>() }) }));
 const weekUrl = `${apiBaseUrl}/api/sessions/current-week`;
 const verifyUrl = `${apiBaseUrl}/api/attendance-verifications`;
 const week = {
   ...currentWeekFixture,
-  session: { ...currentWeekFixture.session, sessionId: 42, attendanceStatus: 'AVAILABLE' },
+  session: {
+    ...currentWeekFixture.session,
+    sessionId: 42,
+    attendanceStatus: 'AVAILABLE',
+    latitude: 0,
+    longitude: 0,
+  },
 };
 const signedIn = {
   status: 'SIGNED_IN' as const,
@@ -33,13 +49,30 @@ const signedIn = {
   },
 };
 const success = { verified: true, checkedInAt: '2026-11-07T05:00:00Z' };
+const locationSuccess = {
+  status: 'SUCCESS' as const,
+  location: {
+    latitude: 0,
+    longitude: 0,
+    accuracy: 10,
+    timestamp: 1,
+    precision: 'precise' as const,
+  },
+};
 const onComplete = vi.fn<() => void>();
 beforeEach(() => {
   vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('YAPPPlusWebView');
+  vi.stubGlobal('ReactNativeWebView', { postMessage: vi.fn<(message: string) => void>() });
+  const bridge = getAppBridge();
+  vi.spyOn(bridge, 'isNativeMethodAvailable').mockImplementation(
+    (method) => method === 'requestCurrentLocation',
+  );
+  nativeLocation.request.mockReset().mockResolvedValue(locationSuccess);
   server.use(http.get(weekUrl, () => HttpResponse.json(week)));
 });
 afterEach(() => {
   vi.restoreAllMocks();
+  vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   onComplete.mockReset();
   onlineManager.setOnline(true);
@@ -78,9 +111,15 @@ async function enter(code = '0123') {
 }
 
 it('앞자리 0을 붙여넣고 Enter로 실제 코드·인증을 전송한 뒤 홈 완료를 표시한다', async () => {
+  const order: string[] = [];
+  nativeLocation.request.mockImplementation(() => {
+    order.push('location');
+    return Promise.resolve(locationSuccess);
+  });
   const request = vi.fn<(body: unknown, authorization: string | null) => void>();
   server.use(
     http.post(verifyUrl, async ({ request: req }) => {
+      order.push('verify');
       request(await req.json(), req.headers.get('Authorization'));
       return HttpResponse.json(success);
     }),
@@ -90,12 +129,68 @@ it('앞자리 0을 붙여넣고 Enter로 실제 코드·인증을 전송한 뒤 
   expect(screen.getByRole('textbox', { name: '출석 코드 4번째 자리' })).toHaveValue('0');
   await user.keyboard('{Enter}');
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
+  expect(order).toEqual(['location', 'verify']);
   expect(request).toHaveBeenCalledWith({ sessionId: 42, code: 0 }, 'Bearer test-token');
   view.close();
   expect(await screen.findByRole('button', { name: '출석했어요!' })).toBeDisabled();
   view.unmount();
   setup();
   await enter();
+});
+
+it('위치 메서드를 지원하지 않으면 위치·출석 요청을 보내지 않는다', async () => {
+  vi.spyOn(getAppBridge(), 'isNativeMethodAvailable').mockReturnValue(false);
+  const request = vi.fn<() => Response>(() => HttpResponse.json(success));
+  server.use(http.post(verifyUrl, request));
+  setup();
+  const user = await enter();
+
+  await user.click(screen.getByRole('button', { name: '확인' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('위치 확인이 가능한 YAPP+ 앱');
+  expect(nativeLocation.request).not.toHaveBeenCalled();
+  expect(request).not.toHaveBeenCalled();
+});
+
+it('범위 밖 표본은 차단하고 수동 재시도에서 새 표본으로 출석한다', async () => {
+  nativeLocation.request
+    .mockResolvedValueOnce({
+      ...locationSuccess,
+      location: { ...locationSuccess.location, latitude: 1 },
+    })
+    .mockResolvedValueOnce(locationSuccess);
+  const request = vi.fn<() => Response>(() => HttpResponse.json(success));
+  server.use(http.post(verifyUrl, request));
+  setup();
+  const user = await enter();
+  const submit = screen.getByRole('button', { name: '확인' });
+
+  await user.click(submit);
+  expect(await screen.findByRole('alert')).toHaveTextContent('100m 이내');
+  expect(request).not.toHaveBeenCalled();
+
+  await user.click(submit);
+  await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
+  expect(nativeLocation.request).toHaveBeenCalledTimes(2);
+  expect(request).toHaveBeenCalledOnce();
+});
+
+it('세션 좌표가 없으면 위치 요청 전 제출을 차단한다', async () => {
+  server.use(
+    http.get(weekUrl, () =>
+      HttpResponse.json({ ...week, session: { ...week.session, latitude: null } }),
+    ),
+  );
+  const request = vi.fn<() => Response>(() => HttpResponse.json(success));
+  server.use(http.post(verifyUrl, request));
+  setup();
+  const user = await enter();
+
+  await user.click(screen.getByRole('button', { name: '확인' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('세션 장소 정보');
+  expect(nativeLocation.request).not.toHaveBeenCalled();
+  expect(request).not.toHaveBeenCalled();
 });
 
 it('네 자리 입력 검증은 제출 후 시작하고 수정 즉시 해제한다', async () => {
@@ -242,6 +337,7 @@ it('오프라인 제출은 연결 복구 후에도 자동으로 전송하지 않
   act(() => onlineManager.setOnline(false));
   await user.click(screen.getByRole('button', { name: '확인' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('인터넷 연결');
+  expect(nativeLocation.request).not.toHaveBeenCalled();
   act(() => onlineManager.setOnline(true));
   await user.click(screen.getByRole('button', { name: '세션 다시 확인' }));
   await waitFor(() => expect(screen.getByRole('button', { name: '확인' })).toBeEnabled());
@@ -283,6 +379,7 @@ it.each(['오류 후 닫기', '화면 제거'])(
     fireEvent.click(submit);
     fireEvent.click(submit);
     await waitFor(() => expect(received).toHaveBeenCalledOnce());
+    expect(nativeLocation.request).toHaveBeenCalledOnce();
     expect(submit).toBeDisabled();
     for (const input of screen.getAllByRole('textbox')) {
       expect(input).toBeDisabled();
@@ -307,9 +404,20 @@ it.each(['오류 후 닫기', '화면 제거'])(
 
 it('목업 출석 성공은 홈 완료 표시와 이미 조회한 출석 내역을 함께 갱신한다', async () => {
   const fixtures = createSessionFixtures(Date.parse('2026-11-07T13:30:00+09:00'));
+  const currentWeekWithLocation: CurrentWeekSessionResponse = {
+    ...fixtures.currentWeekFixture,
+    session: fixtures.currentWeekFixture.session
+      ? { ...fixtures.currentWeekFixture.session, latitude: 0, longitude: 0 }
+      : null,
+  };
   const attendance = createAttendanceFixtures(fixtures);
   server.use(
-    ...createSessionHandlers(apiBaseUrl, undefined, fixtures, attendance),
+    ...createSessionHandlers(
+      apiBaseUrl,
+      undefined,
+      { ...fixtures, currentWeekFixture: currentWeekWithLocation },
+      attendance,
+    ),
     ...createMemberAttendanceHandlers(apiBaseUrl, undefined, undefined, attendance),
   );
   const view = setup();
