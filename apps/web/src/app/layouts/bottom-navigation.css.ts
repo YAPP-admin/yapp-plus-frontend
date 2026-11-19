@@ -78,9 +78,8 @@ export const itemLabel = style({
 });
 
 export const homeIndicatorArea = style({
-  height: '34px',
-  paddingBottom: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
-  boxSizing: 'content-box',
+  // 네이티브 브리지가 iPhone 홈 인디케이터 영역을 전달한다. 고정 높이를 더하면 여백이 두 번 적용된다.
+  height: 'var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px))',
 });
 
 globalStyle('.seed-snackbar-region', {
