@@ -21,7 +21,7 @@
 - [x] T007 `packages/api/src/generated/`를 기존 생성 명령으로 갱신하고 수동 편집 없이 계약 diff를 검토한다.
 - [x] T008 `packages/api/src/mocks/handlers.ts`, `apps/admin/src/`, `apps/web/src/`의 변경된 생성 이름 소비자를 경로 기준으로 수정한다.
 - [x] T009 `packages/api/src/mocks/fixtures.ts`와 `handlers.ts`에 서로 다른 ID·번호를 가진 두 기수의 정상 목록 응답을 연결한다.
-- [ ] T010 `specs/026-admin-generation-context/validation.md`에 관련 테스트·check/build·변경량을 기록하고 리뷰받는다.
+- [x] T010 `specs/026-admin-generation-context/validation.md`에 관련 테스트·check/build·변경량을 기록하고 리뷰받는다.
 
 ## 3단계 — US1 최신 기수에서 시작 (P1)
 
@@ -35,7 +35,7 @@
 - [x] T014 [US1] `apps/admin/src/app/ui/admin-sidebar.tsx`에 실제 기수 표시와 상태 안내를 연결한다.
 - [x] T015 [US1] `apps/admin/src/routes/_dashboard/sessions.tsx`에서 Context가 보장한 유효한 ID를 세션 화면에 전달한다. `apps/admin/src/pages/sessions/`의 환경 설정 함수·테스트·공개 export와 `apps/admin/.env.example`의 기수 변수를 제거한다.
 - [x] T016 [US1] `apps/admin/src/router.test.tsx`에 로그인·재로그인 캐시 초기화·토큰 없음과 401의 access token 삭제 및 즉시 로그인 이동·미확정 요청 차단을 검증하고 기존 세션 테스트를 실제 기수 공급에 맞춘다.
-- [ ] T017 [US1] `specs/026-admin-generation-context/validation.md`에 관련 테스트·check/build·변경량·화면 근거를 기록하고 리뷰받는다.
+- [x] T017 [US1] `specs/026-admin-generation-context/validation.md`에 관련 테스트·check/build·변경량·화면 근거를 기록하고 리뷰받는다.
 
 ## 4단계 — US2 기수 전환 (P2)
 
@@ -47,7 +47,7 @@
 - [x] T020 [US2] `apps/admin/src/app/ui/admin-overlay-provider.tsx`와 `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 세션 경로의 기수별 초기화 경계를 연결한다.
 - [x] T021 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`와 `apps/admin/src/app/ui/admin-overlay-provider.test.tsx`에 지연 완료·모달 폐기·기수별 CRUD/무효화 회귀 테스트를 추가한다.
 - [x] T022 [US2] `apps/storybook/stories/admin-generation-select.stories.tsx`에 기수 선택에 사용하는 SEED Select의 정상·긴 이름·여러 기수 상태 사례를 추가한다. 다른 앱 코드를 import하지 않으며 실제 관리자 연결은 앱 테스트로 검증한다.
-- [ ] T023 [US2] `specs/026-admin-generation-context/validation.md`에 키보드·스크린 리더·터치·check/build·변경량을 기록하고 리뷰받는다.
+- [x] T023 [US2] `specs/026-admin-generation-context/validation.md`에 키보드·스크린 리더·터치·check/build·변경량을 기록하고 리뷰받는다.
 
 ## 5단계 — 통합 검증과 운영 문서
 
