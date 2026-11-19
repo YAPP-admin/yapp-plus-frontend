@@ -55,10 +55,6 @@ const signedIn = {
   },
 };
 
-function formatIsoDate(date: Date) {
-  return date.toISOString().slice(0, 10);
-}
-
 function renderStack({ native = false } = {}) {
   const { Stack, actions } = createStackflowApp();
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
