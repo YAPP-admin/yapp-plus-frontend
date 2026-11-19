@@ -102,3 +102,12 @@
 
 최신 기수 자동 선택과 세션 CRUD 연결을 구현했다. 다음 단계의 기수 전환 UI는 사용자 리뷰와 진행
 확인 전에는 시작하지 않는다.
+
+### 후속 검증 — 테스트 timeout 안정화
+
+- 관리자 Vitest를 최대 4개 worker와 10초 test timeout으로 제한하고, Testing Library의 비동기
+  대기 시간도 10초로 맞췄다. 라우터·오버레이 UI 테스트가 공유 개발 환경의 과도한 worker 경합으로
+  실패하지 않도록 한 테스트 실행 설정 변경이다.
+- `mise exec -- pnpm --filter @yapp-plus/admin test`: 새 실행 연속 3회 통과, 매회 75개 파일·701건.
+- `mise exec -- node --run check`: 통과. format:check는 새 실행, admin lint·typecheck·test는 새
+  실행했고, 다른 패키지 lint·typecheck·test는 Turbo 캐시를 재사용했다.
