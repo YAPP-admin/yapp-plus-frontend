@@ -480,6 +480,8 @@ describe('Stackflow FSD 화면 연결', () => {
       'SignupComplete',
       'SignupUnregistered',
       'DevRoutes',
+      'DiningList',
+      'DiningDetail',
       'NotFound',
     ]);
   });
