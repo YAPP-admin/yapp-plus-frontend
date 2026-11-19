@@ -543,6 +543,25 @@ export const codeErrorMessage = style({
   margin: 0,
 });
 
+export const attendanceFeedbackMessage = style({
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  fontWeight: vars.$fontWeight.medium,
+  color: vars.$color.fg.critical,
+  textAlign: 'center',
+  overflowWrap: 'anywhere',
+});
+
+export const attendanceProgressMessage = style({
+  minHeight: vars.$dimension.x5,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  fontWeight: vars.$fontWeight.medium,
+  color: vars.$color.fg.neutralMuted,
+  textAlign: 'center',
+  margin: 0,
+});
+
 export const sessionButtonWrapper = style({
   position: 'relative',
   width: '100%',

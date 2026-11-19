@@ -4,7 +4,7 @@ import { createSessionHandlers, currentWeekFixture } from '@/mocks/session-handl
 import { createMemberAttendanceHandlers } from '@/mocks/member-attendance-handlers';
 import { find4QueryKey, find6Options } from '@yapp-plus/api/generated';
 import { getAppBridge } from '@yapp-plus/app-bridge/web';
-import type { LocationResult } from '@yapp-plus/app-bridge';
+import type { LocationResult, OpenAppSettingsResult } from '@yapp-plus/app-bridge';
 import type { CurrentWeekSessionResponse } from '@yapp-plus/api/generated';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -19,10 +19,12 @@ import { CurrentWeekCard } from './current-week-card';
 
 const nativeLocation = vi.hoisted(() => ({
   request: vi.fn<() => Promise<LocationResult>>(),
+  openSettings: vi.fn<() => Promise<OpenAppSettingsResult>>(),
 }));
 vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
   ...(await importOriginal()),
   requestCurrentLocation: nativeLocation.request,
+  openAppSettings: nativeLocation.openSettings,
 }));
 vi.mock('@seed-design/stackflow', () => ({ useActivityZIndexBase: () => 200 }));
 vi.mock('@stackflow/react', () => ({ useFlow: () => ({ push: vi.fn<() => void>() }) }));
@@ -65,9 +67,10 @@ beforeEach(() => {
   vi.stubGlobal('ReactNativeWebView', { postMessage: vi.fn<(message: string) => void>() });
   const bridge = getAppBridge();
   vi.spyOn(bridge, 'isNativeMethodAvailable').mockImplementation(
-    (method) => method === 'requestCurrentLocation',
+    (method) => method === 'requestCurrentLocation' || method === 'openAppSettings',
   );
   nativeLocation.request.mockReset().mockResolvedValue(locationSuccess);
+  nativeLocation.openSettings.mockReset().mockResolvedValue({ status: 'SUCCESS' });
   server.use(http.get(weekUrl, () => HttpResponse.json(week)));
 });
 afterEach(() => {
@@ -101,7 +104,9 @@ function setup() {
   };
 }
 async function enter(code = '0123') {
-  await waitFor(() => expect(screen.getByRole('button', { name: '확인' })).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: '위치 확인 후 출석하기' })).toBeEnabled(),
+  );
   // happy-dom은 Drawer 전환의 기본 transform을 계산하지 않습니다.
   screen.getByRole('dialog').style.transform = 'none';
   const user = userEvent.setup();
@@ -145,7 +150,7 @@ it('위치 메서드를 지원하지 않으면 위치·출석 요청을 보내�
   setup();
   const user = await enter();
 
-  await user.click(screen.getByRole('button', { name: '확인' }));
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
 
   expect(await screen.findByRole('alert')).toHaveTextContent('위치 확인이 가능한 YAPP+ 앱');
   expect(nativeLocation.request).not.toHaveBeenCalled();
@@ -163,13 +168,17 @@ it('범위 밖 표본은 차단하고 수동 재시도에서 새 표본으로 �
   server.use(http.post(verifyUrl, request));
   setup();
   const user = await enter();
-  const submit = screen.getByRole('button', { name: '확인' });
+  const submit = screen.getByRole('button', { name: '위치 확인 후 출석하기' });
 
   await user.click(submit);
   expect(await screen.findByRole('alert')).toHaveTextContent('100m 이내');
+  expect(screen.getByRole('button', { name: '위치 다시 확인' })).toBeEnabled();
+  for (const input of screen.getAllByRole('textbox')) {
+    expect(input).toHaveAttribute('aria-invalid', 'false');
+  }
   expect(request).not.toHaveBeenCalled();
 
-  await user.click(submit);
+  await user.click(screen.getByRole('button', { name: '위치 다시 확인' }));
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
   expect(nativeLocation.request).toHaveBeenCalledTimes(2);
   expect(request).toHaveBeenCalledOnce();
@@ -186,11 +195,146 @@ it('세션 좌표가 없으면 위치 요청 전 제출을 차단한다', async 
   setup();
   const user = await enter();
 
-  await user.click(screen.getByRole('button', { name: '확인' }));
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
 
   expect(await screen.findByRole('alert')).toHaveTextContent('세션 장소 정보');
   expect(nativeLocation.request).not.toHaveBeenCalled();
   expect(request).not.toHaveBeenCalled();
+});
+
+it.each([
+  [
+    '권한 재요청 가능',
+    { status: 'ERROR', code: 'PERMISSION_DENIED', canAskAgain: true } as const,
+    '위치 권한을 허용해 주세요.',
+    false,
+  ],
+  [
+    '위치 서비스 꺼짐',
+    { status: 'ERROR', code: 'SERVICES_DISABLED' } as const,
+    '기기 위치 서비스를 켜 주세요.',
+    false,
+  ],
+  ['시간 초과', { status: 'ERROR', code: 'TIMEOUT' } as const, '위치 확인 시간이 지났어요.', false],
+  [
+    '정확도 부족',
+    {
+      ...locationSuccess,
+      location: { ...locationSuccess.location, accuracy: 50.01 },
+    } as const,
+    '현재 위치를 정확하게 확인하지 못했어요.',
+    false,
+  ],
+  [
+    '정밀 권한 부족',
+    {
+      ...locationSuccess,
+      location: { ...locationSuccess.location, precision: 'approximate' },
+    } as const,
+    '정확한 위치 권한을 허용해 주세요.',
+    true,
+  ],
+] as const)(
+  '%s 사유에 맞는 복구 행동을 표시하고 코드는 유효하게 유지한다',
+  async (_, result, message, settings) => {
+    nativeLocation.request.mockResolvedValue(result);
+    setup();
+    const user = await enter();
+
+    await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent(message);
+    expect(screen.queryByRole('button', { name: '앱 설정 열기' }) !== null).toBe(settings);
+    expect(screen.getByRole('textbox', { name: '출석 코드 1번째 자리' })).toHaveValue('0');
+    for (const input of screen.getAllByRole('textbox')) {
+      expect(input).toHaveAttribute('aria-invalid', 'false');
+      expect(input).not.toHaveAccessibleDescription(message);
+    }
+  },
+);
+
+it('재요청 불가 권한은 키보드로 설정을 열고 복귀 후 사용자 재시도만 제출한다', async () => {
+  nativeLocation.request
+    .mockResolvedValueOnce({
+      status: 'ERROR',
+      code: 'PERMISSION_DENIED',
+      canAskAgain: false,
+    })
+    .mockResolvedValueOnce(locationSuccess);
+  const request = vi.fn<() => Response>(() => HttpResponse.json(success));
+  server.use(http.post(verifyUrl, request));
+  setup();
+  const user = await enter();
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
+  const settings = await screen.findByRole('button', { name: '앱 설정 열기' });
+
+  settings.focus();
+  await user.keyboard('{Enter}');
+
+  expect(nativeLocation.openSettings).toHaveBeenCalledOnce();
+  expect(nativeLocation.request).toHaveBeenCalledOnce();
+  expect(request).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: '위치 다시 확인' }));
+  await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
+  expect(nativeLocation.request).toHaveBeenCalledTimes(2);
+  expect(request).toHaveBeenCalledOnce();
+});
+
+it('앱 설정 실행 실패를 안내하고 설정 열기 재시도를 유지한다', async () => {
+  nativeLocation.request.mockResolvedValue({
+    status: 'ERROR',
+    code: 'PERMISSION_DENIED',
+    canAskAgain: false,
+  });
+  nativeLocation.openSettings.mockResolvedValue({
+    status: 'ERROR',
+    code: 'LOCATION_UNAVAILABLE',
+  });
+  setup();
+  const user = await enter();
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
+
+  await user.click(await screen.findByRole('button', { name: '앱 설정 열기' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('앱 설정을 열지 못했어요.');
+  expect(screen.getByRole('button', { name: '앱 설정 열기' })).toBeEnabled();
+});
+
+it('위치 확인과 서버 출석 처리 진행 상태를 구분해 알린다', async () => {
+  let resolveLocation!: (result: LocationResult) => void;
+  const location = new Promise<LocationResult>((resolve) => {
+    resolveLocation = resolve;
+  });
+  let resolveAttendance!: () => void;
+  const attendance = new Promise<void>((resolve) => {
+    resolveAttendance = resolve;
+  });
+  nativeLocation.request.mockReturnValue(location);
+  server.use(
+    http.post(verifyUrl, async () => {
+      await attendance;
+      return HttpResponse.json(success);
+    }),
+  );
+  setup();
+  const user = await enter();
+
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
+  expect(await screen.findByRole('status')).toHaveTextContent('위치를 확인하고 있어요.');
+  expect(screen.getByRole('button', { name: /위치 확인 중/ })).toBeDisabled();
+
+  await act(async () => {
+    resolveLocation(locationSuccess);
+    await location;
+  });
+  expect(await screen.findByRole('status')).toHaveTextContent('출석을 처리하고 있어요.');
+  expect(screen.getByRole('button', { name: /출석 처리 중/ })).toBeDisabled();
+
+  await act(async () => {
+    resolveAttendance();
+    await attendance;
+  });
+  await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
 });
 
 it('네 자리 입력 검증은 제출 후 시작하고 수정 즉시 해제한다', async () => {
@@ -199,7 +343,7 @@ it('네 자리 입력 검증은 제출 후 시작하고 수정 즉시 해제한�
   setup();
   const user = await enter('123');
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  await user.click(screen.getByRole('button', { name: '확인' }));
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('출석 코드 네 자리를 입력해 주세요.');
   expect(request).not.toHaveBeenCalled();
   const last = screen.getByRole('textbox', { name: '출석 코드 4번째 자리' });
@@ -245,7 +389,7 @@ it('코드 오류 후 입력을 유지하고 수정하여 수동 재제출한다
   );
   setup();
   const user = await enter();
-  await user.click(screen.getByRole('button', { name: '확인' }));
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('출석 코드가 올바르지 않아요.');
   expect(screen.getByRole('textbox', { name: '출석 코드 1번째 자리' })).toHaveAttribute(
     'aria-invalid',
@@ -256,7 +400,7 @@ it('코드 오류 후 입력을 유지하고 수정하여 수동 재제출한다
   fireEvent.change(screen.getByRole('textbox', { name: '출석 코드 4번째 자리' }), {
     target: { value: '4' },
   });
-  await user.click(screen.getByRole('button', { name: '확인' }));
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
 });
 
@@ -282,7 +426,7 @@ it.each([
   server.use(http.post(verifyUrl, request));
   setup();
   const user = await enter();
-  await user.click(screen.getByRole('button', { name: '확인' }));
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
   expect(await screen.findByRole('alert')).toHaveTextContent(message);
   expect(onComplete).not.toHaveBeenCalled();
   expect(request).toHaveBeenCalledOnce();
@@ -298,7 +442,7 @@ it.each(['NOT_OPEN', 'NOT_ELIGIBLE'])(
     );
     setup();
     expect(await screen.findByText('현재 출석할 수 있는 세션이 없어요.')).toBeVisible();
-    expect(screen.getByRole('button', { name: '확인' })).toBeDisabled();
+    expect(screen.getByRole('button', { name: '위치 확인 후 출석하기' })).toBeDisabled();
   },
 );
 
@@ -317,7 +461,7 @@ it.each([
   );
   setup();
   const user = await enter();
-  await user.click(screen.getByRole('button', { name: '확인' }));
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
   expect(await screen.findByRole('alert')).toHaveTextContent(message);
   expect(lookup).toHaveBeenCalledOnce();
   expect(request).toHaveBeenCalledExactlyOnceWith({ sessionId: 42, code: 123 });
@@ -335,13 +479,16 @@ it('오프라인 제출은 연결 복구 후에도 자동으로 전송하지 않
   setup();
   const user = await enter();
   act(() => onlineManager.setOnline(false));
-  await user.click(screen.getByRole('button', { name: '확인' }));
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
   expect(await screen.findByRole('alert')).toHaveTextContent('인터넷 연결');
   expect(nativeLocation.request).not.toHaveBeenCalled();
   act(() => onlineManager.setOnline(true));
-  await user.click(screen.getByRole('button', { name: '세션 다시 확인' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: '확인' })).toBeEnabled());
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: '위치 확인 후 출석하기' })).toBeEnabled(),
+  );
   expect(request).not.toHaveBeenCalled();
+  await user.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
+  await waitFor(() => expect(request).toHaveBeenCalledOnce());
 });
 
 it('세션이 없었다가 조회되면 현재 세션으로 제출할 수 있다', async () => {
@@ -353,7 +500,7 @@ it('세션이 없었다가 조회되면 현재 세션으로 제출할 수 있다
     view.client.setQueryData(find4QueryKey(), week);
   });
   await enter();
-  expect(screen.getByRole('button', { name: '확인' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '위치 확인 후 출석하기' })).toBeEnabled();
 });
 
 it.each(['오류 후 닫기', '화면 제거'])(
@@ -375,8 +522,9 @@ it.each(['오류 후 닫기', '화면 제거'])(
     );
     const view = setup();
     const user = await enter();
-    const submit = screen.getByRole('button', { name: '확인' });
+    const submit = screen.getByRole('button', { name: '위치 확인 후 출석하기' });
     fireEvent.click(submit);
+    await waitFor(() => expect(submit).toBeDisabled());
     fireEvent.click(submit);
     await waitFor(() => expect(received).toHaveBeenCalledOnce());
     expect(nativeLocation.request).toHaveBeenCalledOnce();

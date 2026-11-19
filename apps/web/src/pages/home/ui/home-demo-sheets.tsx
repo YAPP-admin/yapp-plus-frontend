@@ -1,8 +1,8 @@
 /** 홈에서 사용하는 출석 코드·팀 확인 바텀시트와 입력 상호작용을 제공합니다. */
-import { HStack, VStack } from '@seed-design/react';
+import { Box, HStack, VStack } from '@seed-design/react';
 import { useActivityZIndexBase } from '@seed-design/stackflow';
-import { useId, useRef, useState, type ReactNode } from 'react';
-import { revalidateLogic, useField, useForm } from '@tanstack/react-form';
+import { useId, useRef, type ReactNode } from 'react';
+import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { z } from 'zod';
 import { useErrorBoundary } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
@@ -16,11 +16,13 @@ import {
   type BottomSheetRootProps,
 } from '@yapp-plus/ui';
 import { Image } from '@/app/navigation/image';
+import { getAttendanceSubmissionFeedback } from './attendance-code-feedback';
 import {
+  attendanceFeedbackMessage,
+  attendanceProgressMessage,
   codeErrorMessage,
   codeInput,
   codeInputError,
-  codeInputsContainer,
   sheetContainer,
   sheetContent,
   sheetDescription,
@@ -29,7 +31,6 @@ import {
   sheetPrimaryButton,
   sheetSecondaryButton,
   sheetTitle,
-  codeInputsWrapper,
   teamButtonsWrap,
   teamCheckIcon,
   teamGraphicImage,
@@ -62,13 +63,9 @@ function OrangeCheckIcon() {
 
 type AttendanceCodeSheetProps = BottomSheetRootProps & { onComplete: () => void };
 
-const attendanceCodeSchema = z.string().regex(/^\d{4}$/, '출석 코드 네 자리를 입력해 주세요.');
-
-/** 네 자리 입력 배열을 하나의 출석 코드로 합쳐 형식 오류 문구를 반환합니다. */
-function validateAttendanceCode(digits: readonly string[]) {
-  const parsed = attendanceCodeSchema.safeParse(digits.join(''));
-  return parsed.success ? undefined : parsed.error.issues[0]?.message;
-}
+const attendanceCodeSchema = z
+  .array(z.string())
+  .refine((digits) => /^\d{4}$/.test(digits.join('')), '출석 코드 네 자리를 입력해 주세요.');
 
 export function AttendanceCodeSheet({ onComplete, ...props }: AttendanceCodeSheetProps) {
   const { isNative } = useNativeAuthSession();
@@ -109,12 +106,18 @@ function CodeSheetShell({ children, ...props }: BottomSheetRootProps & { childre
         showCloseButton={false}
         className={sheetContent}
       >
-        <div className={sheetHandleArea} aria-hidden="true">
-          <div className={sheetHandleBar} />
-        </div>
+        <HStack
+          justify="center"
+          align="center"
+          width="full"
+          className={sheetHandleArea}
+          aria-hidden="true"
+        >
+          <Box className={sheetHandleBar} />
+        </HStack>
         <VStack gap="x1_5" className={sheetContainer}>
           <h2 className={sheetTitle}>출석 코드를 입력해 주세요</h2>
-          <p className={sheetDescription}>코드를 입력하면 출석이 완료돼요</p>
+          <p className={sheetDescription}>세션 장소 100m 이내에서만 출석할 수 있어요</p>
         </VStack>
         {children}
       </BottomSheetContent>
@@ -150,130 +153,106 @@ function CodeSheetMessage({ message, retry }: { message: string; retry?: () => v
 
 function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProps) {
   const isSheetOpen = props.open === true;
-  const attendance = useCodeAttendance(onComplete, isSheetOpen);
   const form = useForm({
     defaultValues: { code: ['', '', '', ''] },
     validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
-    onSubmit: ({ value }) => attendance.submit(value.code.join('')),
+    onSubmit: ({ value }) => submitAttendanceCode(value.code.join('')),
   });
-  const field = useField({
-    form,
-    name: 'code',
-    validators: {
-      onDynamic: ({ value }) => validateAttendanceCode(value),
-    },
+  const attendance = useCodeAttendance(onComplete, isSheetOpen);
+  const flowIssue = attendance.issue;
+
+  function submitAttendanceCode(code: string) {
+    attendance.submit(code, (message) => {
+      form.setFieldMeta('code', (meta) => ({
+        ...meta,
+        errorMap: { ...meta.errorMap, onSubmit: { message } },
+      }));
+    });
+  }
+  const { progressMessage, submitLabel } = getAttendanceSubmissionFeedback({
+    checkingLocation: attendance.checkingLocation,
+    submittingAttendance: attendance.submittingAttendance,
+    openingSettings: attendance.openingSettings,
+    hasLocationIssue: flowIssue?.kind === 'LOCATION',
   });
-  const code = field.state.value;
-  const error = field.state.meta.errors[0] ?? attendance.error;
-  const errorId = useId();
-  const [focusedIndex, setFocusedIndex] = useState<number | null>(null);
-  const codeInputRefs = useRef<(HTMLInputElement | null)[]>([]);
-
-  // 코드 입력 핸들러
-  function handleCodeChange(index: number, value: string) {
-    if (!/^\d*$/.test(value)) {
-      return;
-    }
-    const newCode = [...code];
-    newCode[index] = value.slice(-1);
-    field.handleChange(newCode);
-    attendance.reset();
-
-    // 다음 칸으로 자동 포커스
-    if (value && index < 3) {
-      codeInputRefs.current[index + 1]?.focus();
-    }
-  }
-
-  function handleCodeKeyDown(index: number, e: React.KeyboardEvent<HTMLInputElement>) {
-    if (e.key === 'Backspace' && !code[index] && index > 0) {
-      codeInputRefs.current[index - 1]?.focus();
-    }
-  }
-
-  function handlePaste(index: number, text: string) {
-    if (!/^\d+$/.test(text)) {
-      return;
-    }
-    const digits = text.slice(0, 4 - index).split('');
-    field.handleChange((previous) => previous.map((digit, i) => digits[i - index] ?? digit));
-    attendance.reset();
-    codeInputRefs.current[Math.min(index + digits.length, 3)]?.focus();
-  }
 
   return (
-    <CodeSheetShell {...props} dismissible={!attendance.pending}>
+    <CodeSheetShell {...props} dismissible={!attendance.isPending}>
       <VStack
         as="form"
         gap="x5"
         className={sheetContainer}
         onSubmit={(event) => {
           event.preventDefault();
-          if (!form.state.isSubmitting) {
-            void form.handleSubmit();
-          }
+          void form.handleSubmit();
         }}
       >
         <VStack gap="x6" width="full">
-          <div className={codeInputsWrapper}>
-            <div className={codeInputsContainer}>
-              {[0, 1, 2, 3].map((index) => (
-                <input
-                  key={index}
-                  ref={(el) => {
-                    codeInputRefs.current[index] = el;
-                  }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  autoComplete="off"
-                  disabled={attendance.pending}
-                  aria-invalid={!!error}
-                  aria-describedby={error ? errorId : undefined}
-                  onPaste={(event) => {
-                    event.preventDefault();
-                    handlePaste(index, event.clipboardData.getData('text'));
-                  }}
-                  placeholder={focusedIndex === index ? '' : '0'}
-                  value={code[index]}
-                  onFocus={() => setFocusedIndex(index)}
-                  onBlur={() => {
-                    field.handleBlur();
-                    setFocusedIndex(null);
-                  }}
-                  onChange={(e) => handleCodeChange(index, e.target.value)}
-                  onKeyDown={(e) => handleCodeKeyDown(index, e)}
-                  className={error ? codeInputError : codeInput}
-                  aria-label={`출석 코드 ${index + 1}번째 자리`}
-                />
-              ))}
-            </div>
-
-            {error && (
-              <div id={errorId} className={codeErrorMessage} role="alert">
-                <IconExclamationmarkCircleFill width={16} height={16} />
-                <span>{error}</span>
-              </div>
+          <VStack gap="x2_5" align="center" justify="center" width="full">
+            <form.Field name="code" validators={{ onDynamic: attendanceCodeSchema }}>
+              {(field) => {
+                const validationIssue = field.state.meta.errors[0];
+                const codeError = validationIssue?.message;
+                return (
+                  <AttendanceCodeInputGroup
+                    value={field.state.value}
+                    error={codeError}
+                    disabled={attendance.isPending}
+                    onBlur={field.handleBlur}
+                    onChange={(value) => {
+                      field.handleChange(value);
+                      attendance.reset();
+                    }}
+                  />
+                );
+              }}
+            </form.Field>
+            {flowIssue && (
+              <HStack
+                gap="x1"
+                align="flex-start"
+                justify="center"
+                width="full"
+                className={attendanceFeedbackMessage}
+                role="alert"
+              >
+                <IconExclamationmarkCircleFill width={16} height={16} aria-hidden="true" />
+                <span>{flowIssue.message}</span>
+              </HStack>
             )}
-          </div>
+            {progressMessage && (
+              <output className={attendanceProgressMessage}>{progressMessage}</output>
+            )}
+          </VStack>
         </VStack>
 
-        <VStack width="full">
+        <VStack width="full" gap="x2">
           <ActionButton
             variant="brandSolid"
             size="large"
             className={sheetPrimaryButton}
             type="submit"
-            loading={attendance.pending}
+            loading={attendance.isPending}
             disabled={attendance.disabled}
           >
-            확인
+            {submitLabel}
           </ActionButton>
-          {error && (
+          {flowIssue?.recovery === 'OPEN_SETTINGS' && (
             <ActionButton
               type="button"
               variant="ghost"
-              disabled={attendance.pending}
+              loading={attendance.openingSettings}
+              disabled={attendance.isPending}
+              onClick={attendance.openSettings}
+            >
+              앱 설정 열기
+            </ActionButton>
+          )}
+          {flowIssue?.recovery === 'REFRESH_SESSION' && (
+            <ActionButton
+              type="button"
+              variant="ghost"
+              disabled={attendance.isPending}
               onClick={attendance.refresh}
             >
               세션 다시 확인
@@ -282,6 +261,101 @@ function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProp
         </VStack>
       </VStack>
     </CodeSheetShell>
+  );
+}
+
+type AttendanceCodeInputGroupProps = Readonly<{
+  value: string[];
+  error?: string;
+  disabled: boolean;
+  onBlur: () => void;
+  onChange: (value: string[]) => void;
+}>;
+
+/** 네 자리 코드 입력의 값 변경·붙여넣기·DOM 포커스 이동만 담당합니다. */
+function AttendanceCodeInputGroup({
+  value,
+  error,
+  disabled,
+  onBlur,
+  onChange,
+}: AttendanceCodeInputGroupProps) {
+  const errorId = useId();
+  const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+
+  function handleChange(index: number, inputValue: string) {
+    if (!/^\d*$/.test(inputValue)) {
+      return;
+    }
+    const nextValue = [...value];
+    nextValue[index] = inputValue.slice(-1);
+    onChange(nextValue);
+    if (inputValue && index < 3) {
+      inputRefs.current[index + 1]?.focus();
+    }
+  }
+
+  function handleKeyDown(index: number, event: React.KeyboardEvent<HTMLInputElement>) {
+    if (event.key === 'Backspace' && !value[index] && index > 0) {
+      inputRefs.current[index - 1]?.focus();
+    }
+  }
+
+  function handlePaste(index: number, text: string) {
+    if (!/^\d+$/.test(text)) {
+      return;
+    }
+    const digits = text.slice(0, 4 - index).split('');
+    onChange(value.map((digit, position) => digits[position - index] ?? digit));
+    inputRefs.current[Math.min(index + digits.length, 3)]?.focus();
+  }
+
+  return (
+    <>
+      <HStack gap="x1_5" align="center" justify="center">
+        {[0, 1, 2, 3].map((index) => (
+          <input
+            key={index}
+            ref={(element) => {
+              inputRefs.current[index] = element;
+            }}
+            type="text"
+            inputMode="numeric"
+            maxLength={1}
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck={false}
+            disabled={disabled}
+            aria-invalid={!!error}
+            aria-describedby={error ? errorId : undefined}
+            onPaste={(event) => {
+              event.preventDefault();
+              handlePaste(index, event.clipboardData.getData('text'));
+            }}
+            placeholder="0"
+            value={value[index]}
+            onBlur={onBlur}
+            onChange={(event) => handleChange(index, event.target.value)}
+            onKeyDown={(event) => handleKeyDown(index, event)}
+            className={error ? codeInputError : codeInput}
+            aria-label={`출석 코드 ${index + 1}번째 자리`}
+          />
+        ))}
+      </HStack>
+      {error && (
+        <HStack
+          id={errorId}
+          gap="x1"
+          align="center"
+          justify="center"
+          className={codeErrorMessage}
+          role="alert"
+        >
+          <IconExclamationmarkCircleFill width={16} height={16} aria-hidden="true" />
+          <span>{error}</span>
+        </HStack>
+      )}
+    </>
   );
 }
 export function TeamGuideSheet({
@@ -298,9 +372,15 @@ export function TeamGuideSheet({
         showCloseButton={false}
         className={sheetContent}
       >
-        <div className={sheetHandleArea} aria-hidden="true">
-          <div className={sheetHandleBar} />
-        </div>
+        <HStack
+          justify="center"
+          align="center"
+          width="full"
+          className={sheetHandleArea}
+          aria-hidden="true"
+        >
+          <Box className={sheetHandleBar} />
+        </HStack>
 
         <VStack gap="x5" className={sheetContainer}>
           <VStack gap="x1_5" width="full">
@@ -308,7 +388,7 @@ export function TeamGuideSheet({
             <p className={sheetDescription}>팀원 중 한 명만 올리면 팀 전체에 반영돼요</p>
           </VStack>
 
-          <div className={teamGraphicWrap}>
+          <HStack align="center" justify="center" width="full" className={teamGraphicWrap}>
             <Image
               src="/images/home/graphic-team-session.svg"
               alt="팀 세션 인증 안내 일러스트"
@@ -316,7 +396,7 @@ export function TeamGuideSheet({
               height={158}
               className={teamGraphicImage}
             />
-          </div>
+          </HStack>
 
           <VStack as="ul" gap="x2" className={teamRulesList} aria-label="인증 사진 규칙">
             <HStack as="li" align="center" gap="x2" className={teamRuleItem}>
