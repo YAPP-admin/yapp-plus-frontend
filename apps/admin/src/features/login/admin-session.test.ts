@@ -3,6 +3,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../mocks/server';
 import {
+  clearAdminAccessToken,
   configureAdminApiClient,
   readAdminAccessToken,
   saveAdminAccessToken,
@@ -49,6 +50,13 @@ describe('관리자 세션', () => {
 
   it('빈 token은 저장하지 않는다', () => {
     expect(saveAdminAccessToken('')).toBe(false);
+    expect(readAdminAccessToken()).toBeUndefined();
+  });
+
+  it('저장한 token을 삭제한다', () => {
+    saveAdminAccessToken('synthetic-staff-token');
+
+    expect(clearAdminAccessToken()).toBe(true);
     expect(readAdminAccessToken()).toBeUndefined();
   });
 

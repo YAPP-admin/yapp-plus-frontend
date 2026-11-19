@@ -3,7 +3,8 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearAdminAccessToken, saveAdminAccessToken } from '~/features/login';
 import { Providers } from '~/providers';
 import { getRouter } from '~/router';
 import type * as RootRouteModule from '~/routes/__root';
@@ -36,6 +37,12 @@ async function renderShell() {
 
 beforeEach(() => {
   viewport.narrow = true;
+  localStorage.clear();
+  saveAdminAccessToken('admin-shell-test-token');
+});
+
+afterEach(() => {
+  clearAdminAccessToken();
 });
 
 describe('좁은 화면 관리자 메뉴', () => {

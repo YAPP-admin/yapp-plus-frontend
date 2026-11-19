@@ -16,7 +16,7 @@ import { description, heading, page, placeholder, refreshError, title } from './
 
 type Props = {
   type: SessionFilter;
-  generationId: number | null;
+  generationId: number;
   onTypeChange: (type: SessionFilter) => void;
 };
 
@@ -29,9 +29,6 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
   }
 
   function openCreateDialog() {
-    if (generationId === null) {
-      return;
-    }
     overlay.open(({ unmount }) => (
       <SessionCreateDialog
         generationId={generationId}
@@ -48,9 +45,6 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
   }
 
   function openEditDialog(session: SessionViewModel) {
-    if (generationId === null) {
-      return;
-    }
     overlay.open(({ unmount }) => (
       <SessionEditDialog
         generationId={generationId}
@@ -77,9 +71,6 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
   }
 
   function openDeleteDialog(session: SessionViewModel) {
-    if (generationId === null) {
-      return;
-    }
     overlay.open(({ unmount }) => (
       <SessionDeleteDialog
         generationId={generationId}
@@ -117,29 +108,23 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
           </h1>
           <p className={description}>유형별 세션을 확인합니다.</p>
         </div>
-        {generationId === null ? null : (
-          <ActionButton type="button" onClick={openCreateDialog}>
-            세션 추가
-          </ActionButton>
-        )}
+        <ActionButton type="button" onClick={openCreateDialog}>
+          세션 추가
+        </ActionButton>
       </div>
       <SessionTypeFilter value={type} onValueChange={onTypeChange} />
-      {generationId === null ? (
-        <p className={placeholder}>기수 ID 설정이 필요합니다.</p>
-      ) : (
-        <AttendanceQueryBoundary
-          fallback={<output className={placeholder}>세션 목록을 불러오는 중입니다.</output>}
-          errorMessage="세션 목록을 불러오지 못했습니다."
-          resetKey="session-management-list"
-        >
-          <SessionListData
-            type={type}
-            generationId={generationId}
-            onEdit={openEditDialog}
-            onDelete={openDeleteDialog}
-          />
-        </AttendanceQueryBoundary>
-      )}
+      <AttendanceQueryBoundary
+        fallback={<output className={placeholder}>세션 목록을 불러오는 중입니다.</output>}
+        errorMessage="세션 목록을 불러오지 못했습니다."
+        resetKey="session-management-list"
+      >
+        <SessionListData
+          type={type}
+          generationId={generationId}
+          onEdit={openEditDialog}
+          onDelete={openDeleteDialog}
+        />
+      </AttendanceQueryBoundary>
     </main>
   );
 }
