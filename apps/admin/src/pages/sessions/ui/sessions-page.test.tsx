@@ -193,6 +193,35 @@ async function setup(generationId: number, initialType: SessionFilter = 'all') {
   return { user: userEvent.setup(), queryClient, router, ...rendered };
 }
 
+async function setupGenerationSwitcher() {
+  const queryClient = createAdminQueryClient();
+
+  function Harness() {
+    const [generationId, setGenerationId] = useState(25);
+    const [type, setType] = useState<SessionFilter>('all');
+
+    return (
+      <QueryClientProvider client={queryClient}>
+        <AdminOverlayProvider>
+          <button type="button" onClick={() => setGenerationId(32)}>
+            32기로 전환
+          </button>
+          <SessionsPage type={type} generationId={generationId} onTypeChange={setType} />
+        </AdminOverlayProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  const router = createRouter({
+    routeTree: createRootRoute({ component: Harness }),
+    history: createMemoryHistory({ initialEntries: ['/sessions'] }),
+  });
+  await router.load();
+  const rendered = render(<RouterProvider router={router} />);
+
+  return { user: userEvent.setup(), ...rendered };
+}
+
 async function openEdit(user: ReturnType<typeof userEvent.setup>, name: string) {
   const trigger = await screen.findByRole('button', { name: `${name} 관리` });
   trigger.focus();
@@ -271,6 +300,41 @@ it('조회 오류를 노출하지 않고 재시도 후 목록을 복구한다', 
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
   await waitFor(() => expect(requestCount).toBe(2));
   expect(await screen.findByRole('list', { name: '세션 목록' })).toBeVisible();
+});
+
+it('기수를 전환하면 진행 중이던 이전 기수 목록을 표시하지 않는다', async () => {
+  const oldListRequested = Promise.withResolvers<void>();
+  const releaseOldList = Promise.withResolvers<void>();
+  const nextGenerationSession = {
+    ...REGULAR_SESSION,
+    sessionId: 3201,
+    name: '32기 정규 세션',
+  };
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, async ({ params }) => {
+      if (params.generationId === '25') {
+        oldListRequested.resolve();
+        await releaseOldList.promise;
+        return HttpResponse.json(SESSION_LIST);
+      }
+      return HttpResponse.json({
+        ...SESSION_LIST,
+        sessions: [nextGenerationSession],
+        totalCount: 1,
+        allCount: 1,
+        regularCount: 1,
+        teamCount: 0,
+      });
+    }),
+  );
+
+  const { user } = await setupGenerationSwitcher();
+  await oldListRequested.promise;
+  await user.click(screen.getByRole('button', { name: '32기로 전환' }));
+
+  expect(await screen.findByRole('heading', { name: '32기 정규 세션' })).toBeVisible();
+  releaseOldList.resolve();
+  await waitFor(() => expect(screen.queryByText('정규 세션')).not.toBeInTheDocument());
 });
 
 it('진행 중인 이전 목록을 취소하고 생성 결과를 전체 필터에서 다시 조회한다', async () => {

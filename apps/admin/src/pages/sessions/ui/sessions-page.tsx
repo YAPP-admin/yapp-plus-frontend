@@ -114,9 +114,10 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
       </div>
       <SessionTypeFilter value={type} onValueChange={onTypeChange} />
       <AttendanceQueryBoundary
+        key={generationId}
         fallback={<output className={placeholder}>세션 목록을 불러오는 중입니다.</output>}
         errorMessage="세션 목록을 불러오지 못했습니다."
-        resetKey="session-management-list"
+        resetKey={`session-management-list:${generationId}`}
       >
         <SessionListData
           type={type}

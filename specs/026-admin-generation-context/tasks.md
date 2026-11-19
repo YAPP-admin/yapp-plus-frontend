@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 기수 선택과 세션 연결
 
 **입력**: [명세](spec.md), [계획](plan.md), [조사](research.md), [모델](data-model.md), [계약](contracts/generation-context.md)
-**상태**: 3단계 US1 구현·검증 완료, 리뷰 대기. 4단계 기수 전환 UI는 미착수다.
+**상태**: 4단계 US2 구현·자동 검증 완료, 리뷰 대기.
 테스트는 명세의 수용 조건과 저장소 규칙에 따라 포함한다. 단계마다 리뷰 후 진행한다.
 
 ## 1단계 — 준비와 문서
@@ -42,11 +42,11 @@
 목표: 선택 기수를 바꿔도 세션 데이터와 이전 화면 작업이 섞이지 않는다.
 독립 검증: 두 기수 전환·메뉴 왕복·지연 완료와 모바일 패널 내 선택.
 
-- [ ] T018 [US2] `apps/admin/src/app/ui/admin-shell.test.tsx`에 기수 선택·화면 이동 유지·모바일 선택 테스트를 작성한다.
-- [ ] T019 [US2] `apps/admin/src/app/ui/admin-sidebar.tsx`에 기존 SEED Select 패턴으로 선택 UI를 구현한다.
-- [ ] T020 [US2] `apps/admin/src/app/ui/admin-overlay-provider.tsx`와 `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 세션 경로의 기수별 초기화 경계를 연결한다.
-- [ ] T021 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`와 `apps/admin/src/app/ui/admin-overlay-provider.test.tsx`에 지연 완료·모달 폐기·기수별 CRUD/무효화 회귀 테스트를 추가한다.
-- [ ] T022 [US2] `apps/storybook/stories/admin-generation-select.stories.tsx`에 기수 선택에 사용하는 SEED Select의 정상·긴 이름·여러 기수 상태 사례를 추가한다. 다른 앱 코드를 import하지 않으며 실제 관리자 연결은 앱 테스트로 검증한다.
+- [x] T018 [US2] `apps/admin/src/app/ui/admin-shell.test.tsx`에 기수 선택·화면 이동 유지·모바일 선택 테스트를 작성한다.
+- [x] T019 [US2] `apps/admin/src/app/ui/admin-sidebar.tsx`에 기존 SEED Select 패턴으로 선택 UI를 구현한다.
+- [x] T020 [US2] `apps/admin/src/app/ui/admin-overlay-provider.tsx`와 `apps/admin/src/pages/sessions/ui/sessions-page.tsx`에 세션 경로의 기수별 초기화 경계를 연결한다.
+- [x] T021 [US2] `apps/admin/src/pages/sessions/ui/sessions-page.test.tsx`와 `apps/admin/src/app/ui/admin-overlay-provider.test.tsx`에 지연 완료·모달 폐기·기수별 CRUD/무효화 회귀 테스트를 추가한다.
+- [x] T022 [US2] `apps/storybook/stories/admin-generation-select.stories.tsx`에 기수 선택에 사용하는 SEED Select의 정상·긴 이름·여러 기수 상태 사례를 추가한다. 다른 앱 코드를 import하지 않으며 실제 관리자 연결은 앱 테스트로 검증한다.
 - [ ] T023 [US2] `specs/026-admin-generation-context/validation.md`에 키보드·스크린 리더·터치·check/build·변경량을 기록하고 리뷰받는다.
 
 ## 5단계 — 통합 검증과 운영 문서
