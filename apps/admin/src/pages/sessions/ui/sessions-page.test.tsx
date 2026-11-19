@@ -169,7 +169,7 @@ afterEach(() => {
   client.setConfig({ auth: undefined });
 });
 
-async function setup(generationId: number | null, initialType: SessionFilter = 'all') {
+async function setup(generationId: number, initialType: SessionFilter = 'all') {
   const queryClient = createAdminQueryClient();
 
   function Harness() {
@@ -210,21 +210,6 @@ async function openDelete(user: ReturnType<typeof userEvent.setup>, name: string
   await user.click(within(menu).getByRole('menuitem', { name: '삭제' }));
   return screen.findByRole('alertdialog', { name: '세션을 삭제할까요?' });
 }
-
-it('기수 설정이 없으면 API를 호출하지 않고 설정 안내를 표시한다', async () => {
-  let requestCount = 0;
-  server.use(
-    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
-      requestCount += 1;
-      return HttpResponse.json(SESSION_LIST);
-    }),
-  );
-
-  await setup(null);
-
-  expect(await screen.findByText('기수 ID 설정이 필요합니다.')).toBeVisible();
-  expect(requestCount).toBe(0);
-});
 
 it('생성 Query 옵션으로 기수 전체 목록을 조회하고 인증 헤더를 전달한다', async () => {
   let requestedUrl = '';

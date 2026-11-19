@@ -2,6 +2,7 @@ import { SideNavigation, Text } from '@seed-design/react';
 import { Link } from '@tanstack/react-router';
 import { Badge } from '@yapp-plus/ui';
 import { Fragment } from 'react';
+import { useAdminGeneration } from '~/features/admin-generation';
 import type { MemberSearch } from '~/pages/members';
 import {
   navigationItems,
@@ -18,6 +19,8 @@ type AdminSidebarProps = {
 };
 
 export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: AdminSidebarProps) {
+  const { currentGeneration } = useAdminGeneration();
+
   return (
     <SideNavigation.Root className={styles.sidebar} asChild>
       <aside aria-label="관리자">
@@ -37,14 +40,14 @@ export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: Ad
         <div className={styles.generation}>
           <div className={styles.generationHeading}>
             <Text textStyle="t4Bold" color="fg.neutral">
-              {import.meta.env.DEV ? '33기' : '운영 기수'}
+              {currentGeneration.generationName}
             </Text>
             <Badge variant="weak" tone="neutral">
-              {import.meta.env.DEV ? '예시' : '미연결'}
+              현재 기수
             </Badge>
           </div>
           <Text textStyle="t2Regular" color="fg.neutralMuted">
-            현재 운영 워크스페이스
+            {currentGeneration.generationNumber}기 운영 워크스페이스
           </Text>
         </div>
         <SideNavigation.Content className={styles.navigation} asChild>

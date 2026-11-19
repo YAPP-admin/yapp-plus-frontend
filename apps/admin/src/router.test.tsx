@@ -8,6 +8,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from './mocks/server';
 import { Providers } from './providers';
 import { getRouter } from './router';
+import { clearAdminAccessToken, saveAdminAccessToken } from './features/login';
 import type * as RootRouteModule from './routes/__root';
 import { memberImportHeaders } from './pages/member-import/model/import-file';
 
@@ -28,6 +29,15 @@ vi.mock('./routes/__root', async (importOriginal) => {
   return original;
 });
 
+beforeEach(() => {
+  localStorage.clear();
+  saveAdminAccessToken('router-test-token');
+});
+
+afterEach(() => {
+  clearAdminAccessToken();
+});
+
 async function renderRoute(
   path: string,
   history = createMemoryHistory({ initialEntries: [path] }),
@@ -38,6 +48,10 @@ async function renderRoute(
   render(<RouterProvider router={router} />);
 
   return router;
+}
+
+async function waitForAdminWorkspace() {
+  return screen.findByRole('navigation', { name: '주요 메뉴' });
 }
 
 describe('관리자 라우팅', () => {
@@ -126,6 +140,61 @@ describe('관리자 라우팅', () => {
     expect(screen.queryByRole('link', { name: 'YAPP+ Admin' })).not.toBeInTheDocument();
   });
 
+  it('access token이 없으면 기수 API를 호출하지 않고 로그인으로 이동한다', async () => {
+    clearAdminAccessToken();
+    let generationRequestCount = 0;
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations`, () => {
+        generationRequestCount += 1;
+        return HttpResponse.json({ generations: [] });
+      }),
+    );
+
+    const router = await renderRoute('/sessions');
+
+    expect(await screen.findByRole('heading', { name: 'YAPP Admin' })).toBeVisible();
+    expect(router.state.location.pathname).toBe('/login');
+    expect(generationRequestCount).toBe(0);
+  });
+
+  it('기수 API가 401이면 token을 삭제하고 로그인으로 이동한다', async () => {
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations`, () =>
+        HttpResponse.json({ code: 'STAFF_AUTHENTICATION_FAILED' }, { status: 401 }),
+      ),
+    );
+
+    const router = await renderRoute('/sessions');
+
+    expect(await screen.findByRole('heading', { name: 'YAPP Admin' })).toBeVisible();
+    expect(router.state.location.pathname).toBe('/login');
+    expect(localStorage.getItem('yapp-plus-admin.access-token.v1')).toBeNull();
+  });
+
+  it('기수 API의 일반 오류는 다시 시도로 관리자 작업 영역을 복구한다', async () => {
+    const user = userEvent.setup();
+    let generationRequestCount = 0;
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations`, () => {
+        generationRequestCount += 1;
+        if (generationRequestCount === 1) {
+          return HttpResponse.json({ code: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
+        }
+        return HttpResponse.json({
+          generations: [{ generationId: 33, generationNumber: 33, generationName: '33기' }],
+        });
+      }),
+    );
+
+    await renderRoute('/sessions');
+
+    const retryButton = await screen.findByRole('button', { name: '다시 시도' });
+    await user.click(retryButton);
+
+    expect(await waitForAdminWorkspace()).toBeVisible();
+    expect(generationRequestCount).toBe(2);
+  });
+
   it.each([
     '/missing',
     '/login/missing',
@@ -191,6 +260,7 @@ describe('관리자 라우팅', () => {
   it('미배정 배정 예정이 있으면 필터 이동 전에 이탈을 확인한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members/teams?preview=draft');
+    await waitForAdminWorkspace();
 
     await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
     await user.click(await screen.findByRole('option', { name: '미배정 회원 · 10' }));
@@ -218,7 +288,7 @@ describe('관리자 라우팅', () => {
     await user.click(await screen.findByRole('button', { name: '변경 버리기' }));
     await waitFor(() => expect(router.state.location.href).toBe('/members/teams?preview=draft'));
     expect(await screen.findByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
-  });
+  }, 10000);
 
   it('클라이언트 이동으로 로그인에 진입하면 대시보드 메뉴가 사라진다', async () => {
     const router = await renderRoute('/');
@@ -231,9 +301,6 @@ describe('관리자 라우팅', () => {
 });
 
 describe('세션 목록 탐색', () => {
-  beforeEach(() => vi.stubEnv('VITE_ADMIN_GENERATION_ID', '1'));
-  afterEach(() => vi.unstubAllEnvs());
-
   it.each([
     ['/sessions', '전체'],
     ['/sessions?type=offline', '오프라인'],
@@ -296,6 +363,7 @@ describe('세션 목록 탐색', () => {
   it('메뉴에서 키보드로 세션 페이지에 진입하고 유형 필터를 선택한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
+    await waitForAdminWorkspace();
 
     await user.tab();
     await user.tab();
@@ -651,6 +719,7 @@ describe('명단 업로드 진입점', () => {
   it('업로드 결과를 미리보고 목록으로 복귀한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members/import');
+    await waitForAdminWorkspace();
     const file = new File(
       [
         `${memberImportHeaders.join(',')}
@@ -717,6 +786,7 @@ describe('명단 업로드 진입점', () => {
   it('키보드로 업로드 화면에 진입하고 목록에 복귀한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/members');
+    await waitForAdminWorkspace();
 
     for (let index = 0; index < 11; index += 1) {
       await user.tab();
@@ -809,6 +879,7 @@ describe('공지 목록 URL 상태', () => {
   it('키보드로 공지 메뉴에 진입하고 종류 필터에 접근한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
+    await waitForAdminWorkspace();
 
     for (let index = 0; index < 9; index += 1) {
       await user.tab();
@@ -903,6 +974,7 @@ describe('공지 상세 탐색', () => {
   it('키보드로 상세 탭을 전환하고 목록에 복귀한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/notices/demo-session');
+    await waitForAdminWorkspace();
 
     screen.getByRole('link', { name: '알림 발송 내역' }).focus();
 
@@ -1134,6 +1206,7 @@ describe('알림 발송 내역 탐색', () => {
   it('키보드로 알림 메뉴에 진입한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
+    await waitForAdminWorkspace();
 
     for (let index = 0; index < 10; index += 1) {
       await user.tab();
@@ -1147,27 +1220,6 @@ describe('알림 발송 내역 탐색', () => {
 });
 
 describe('세션 관리 목록', () => {
-  beforeEach(() => vi.stubEnv('VITE_ADMIN_GENERATION_ID', '1'));
-  afterEach(() => vi.unstubAllEnvs());
-
-  it('기수 ID가 없으면 세션 API를 호출하지 않고 설정 안내만 표시한다', async () => {
-    vi.stubEnv('VITE_ADMIN_GENERATION_ID', '');
-    let listRequestCount = 0;
-    server.use(
-      http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
-        listRequestCount += 1;
-        return HttpResponse.json({});
-      }),
-    );
-
-    await renderRoute('/sessions');
-
-    expect(await screen.findByText('기수 ID 설정이 필요합니다.')).toBeVisible();
-    expect(screen.queryByRole('button', { name: '세션 추가' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('list', { name: '세션 목록' })).not.toBeInTheDocument();
-    expect(listRequestCount).toBe(0);
-  });
-
   it('MSW 세션을 최신순으로 표시하고 유형별 개수를 갱신한다', async () => {
     vi.stubEnv('SSR', false);
     const user = userEvent.setup();

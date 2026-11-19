@@ -1,7 +1,7 @@
 # 작업 목록: 관리자 기수 선택과 세션 연결
 
 **입력**: [명세](spec.md), [계획](plan.md), [조사](research.md), [모델](data-model.md), [계약](contracts/generation-context.md)
-**상태**: 1단계 문서 초안. 제품 구현 작업은 모두 미착수다.
+**상태**: 3단계 US1 구현·검증 완료, 리뷰 대기. 4단계 기수 전환 UI는 미착수다.
 테스트는 명세의 수용 조건과 저장소 규칙에 따라 포함한다. 단계마다 리뷰 후 진행한다.
 
 ## 1단계 — 준비와 문서
@@ -17,24 +17,24 @@
 목표: 최신 계약을 생성하고 기존 기능을 유지한다. 기수 UI는 아직 연결하지 않는다.
 독립 검증: 생성 경로별 operation 대응과 기존 소비자 테스트·check/build.
 
-- [ ] T006 `.context/admin-generation-openapi.json`에 최신 명세를 확보하고 해시를 `specs/026-admin-generation-context/validation.md`에 기록한다.
-- [ ] T007 `packages/api/src/generated/`를 기존 생성 명령으로 갱신하고 수동 편집 없이 계약 diff를 검토한다.
-- [ ] T008 `packages/api/src/mocks/handlers.ts`, `apps/admin/src/`, `apps/web/src/`의 변경된 생성 이름 소비자를 경로 기준으로 수정한다.
-- [ ] T009 `packages/api/src/mocks/fixtures.ts`와 `handlers.ts`에 서로 다른 ID·번호를 가진 두 기수의 정상 목록 응답을 연결한다.
+- [x] T006 `.context/admin-generation-openapi.json`에 최신 명세를 확보하고 해시를 `specs/026-admin-generation-context/validation.md`에 기록한다.
+- [x] T007 `packages/api/src/generated/`를 기존 생성 명령으로 갱신하고 수동 편집 없이 계약 diff를 검토한다.
+- [x] T008 `packages/api/src/mocks/handlers.ts`, `apps/admin/src/`, `apps/web/src/`의 변경된 생성 이름 소비자를 경로 기준으로 수정한다.
+- [x] T009 `packages/api/src/mocks/fixtures.ts`와 `handlers.ts`에 서로 다른 ID·번호를 가진 두 기수의 정상 목록 응답을 연결한다.
 - [ ] T010 `specs/026-admin-generation-context/validation.md`에 관련 테스트·check/build·변경량을 기록하고 리뷰받는다.
 
 ## 3단계 — US1 최신 기수에서 시작 (P1)
 
 목표: 로그인 후 최신 기수의 세션 CRUD와 상태 안내를 사용할 수 있다.
-독립 검증: 토큰이 있는 진입부터 기수·세션 요청까지, 미로그인·빈 목록·오류에서는 전역 경계가
+독립 검증: 토큰이 있는 진입부터 기수·세션 요청까지, 미로그인·잘못된 응답·오류에서는 전역 경계가
 작업 영역을 대체하고 세션 요청을 차단.
 
-- [ ] T011 [US1] `apps/admin/src/features/admin-generation/model/admin-generation.test.tsx`에 기본 선택·응답 검증·오류 throw·재시도 회귀 테스트를 작성한다.
-- [ ] T012 [US1] `apps/admin/src/features/admin-generation/model/admin-generation.tsx`와 `index.ts`에 생성 옵션·응답 검증·Suspense Provider·공개 훅을 구현한다.
-- [ ] T013 [US1] `apps/admin/src/features/login/admin-session.ts`와 `index.ts`에 `clearAdminAccessToken` 공개 함수를 추가한다. `apps/admin/src/app/ui/admin-generation-boundary.tsx`에 ClientOnly·Suspense·일반 오류 재시도·401 전용 token 삭제/Query 제거/로그인 이동 경계를 만들고, `apps/admin/src/routes/_dashboard/route.tsx`에 연결한다. `apps/admin/src/routes/login.tsx`에는 로그인 성공 후 Query 취소·제거를 연결한다.
-- [ ] T014 [US1] `apps/admin/src/app/ui/admin-sidebar.tsx`에 실제 기수 표시와 상태 안내를 연결한다.
-- [ ] T015 [US1] `apps/admin/src/routes/_dashboard/sessions.tsx`에서 Context가 보장한 유효한 ID를 세션 화면에 전달한다. `apps/admin/src/pages/sessions/`의 환경 설정 함수·테스트·공개 export와 `apps/admin/.env.example`의 기수 변수를 제거한다.
-- [ ] T016 [US1] `apps/admin/src/router.test.tsx`에 로그인·재로그인 캐시 초기화·토큰 없음과 401의 access token 삭제 및 즉시 로그인 이동·미확정 요청 차단을 검증하고 기존 세션 테스트를 실제 기수 공급에 맞춘다.
+- [x] T011 [US1] `apps/admin/src/features/admin-generation/model/admin-generation.test.tsx`에 기본 선택·응답 검증·오류 throw·재시도 회귀 테스트를 작성한다.
+- [x] T012 [US1] `apps/admin/src/features/admin-generation/model/admin-generation.tsx`와 `index.ts`에 생성 옵션·응답 검증·Suspense Provider·공개 훅을 구현한다.
+- [x] T013 [US1] `apps/admin/src/features/login/admin-session.ts`와 `index.ts`에 `clearAdminAccessToken` 공개 함수를 추가한다. `apps/admin/src/app/ui/admin-generation-boundary.tsx`에 ClientOnly·Suspense·일반 오류 재시도·401 전용 token 삭제/Query 제거/로그인 이동 경계를 만들고, `apps/admin/src/routes/_dashboard/route.tsx`에 연결한다. `apps/admin/src/routes/login.tsx`에는 로그인 성공 후 Query 취소·제거를 연결한다.
+- [x] T014 [US1] `apps/admin/src/app/ui/admin-sidebar.tsx`에 실제 기수 표시와 상태 안내를 연결한다.
+- [x] T015 [US1] `apps/admin/src/routes/_dashboard/sessions.tsx`에서 Context가 보장한 유효한 ID를 세션 화면에 전달한다. `apps/admin/src/pages/sessions/`의 환경 설정 함수·테스트·공개 export와 `apps/admin/.env.example`의 기수 변수를 제거한다.
+- [x] T016 [US1] `apps/admin/src/router.test.tsx`에 로그인·재로그인 캐시 초기화·토큰 없음과 401의 access token 삭제 및 즉시 로그인 이동·미확정 요청 차단을 검증하고 기존 세션 테스트를 실제 기수 공급에 맞춘다.
 - [ ] T017 [US1] `specs/026-admin-generation-context/validation.md`에 관련 테스트·check/build·변경량·화면 근거를 기록하고 리뷰받는다.
 
 ## 4단계 — US2 기수 전환 (P2)

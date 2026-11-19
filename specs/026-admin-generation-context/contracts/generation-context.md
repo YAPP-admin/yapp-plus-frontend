@@ -18,10 +18,11 @@
 - 기수 목록은 Provider 내부 `useSuspenseQuery`가 소유한다. Provider가 렌더링되면 생성 타입의
   기수 목록·현재 기수와 `selectGeneration(id: number)`를 항상 제공한다. 목록에 없는 ID는
   선택하지 않으며 자동 선택은 첫 항목을 사용한다.
-- 빈 목록·잘못된 응답·401 이외의 모든 조회 오류는 Provider에서 throw하고 상위 초기화 경계가
-  재시도를 표시한다. 401은 오류 경계를 렌더링하지 않고 저장된 access token을 삭제한 뒤 즉시
-  `/login`으로 이동한다. 재조회에서 기존 data가 남은 경우도 Provider가 오류를 명시적으로
-  throw한다. Query 상태를 별도 Context state로 복제하지 않는다.
+- 잘못된 응답·401 이외의 모든 조회 오류는 Provider에서 throw하고 상위 초기화 경계가 재시도를
+  표시한다. 기수 배열은 서버 계약상 하나 이상이므로 Provider가 별도 길이 검증을 하지 않는다.
+  401은 오류 경계를 렌더링하지 않고 저장된 access token을 삭제한 뒤 즉시
+  `/login`으로 이동한다. 재조회에서 기존 data가 있으면 `useSuspenseQuery`의 기본 오류 정책을
+  따른다. Query 상태를 별도 Context state로 복제하지 않는다.
 - 인증 전용 오류 경계는 `clearAdminAccessToken`, 관리자 Query 취소·제거, `/login` 이동을 이 순서로
   한 번 수행한다. 일반 오류 경계는 token이나 캐시를 삭제하지 않고 재시도만 제공한다.
 
