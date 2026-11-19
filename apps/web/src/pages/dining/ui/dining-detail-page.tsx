@@ -1,10 +1,19 @@
-/** 회식 상세의 고정 정보를 표시하며, 응답 입력은 별도 기능으로 연결합니다. */
+/** 회식 상세 정보와 응답 화면 수명을 소유하며, 제출 결과는 공용 Snackbar로 알립니다. */
+'use client';
 
 import IconChevronLeftLine from '@karrotmarket/react-monochrome-icon/IconChevronLeftLine';
 import { ActivityLink } from '@/app/navigation/activity-link';
 import { koreanDateString } from '@/shared/lib/korean-date-time';
-import { Text } from '@yapp-plus/ui';
-import { getDiningDeadline, type Dining } from '../model/dining-model';
+import { Snackbar, Text, useSnackbarAdapter } from '@yapp-plus/ui';
+import { useState } from 'react';
+import {
+  getDiningDeadline,
+  toDiningAttendance,
+  type Dining,
+  type DiningAttendance,
+  type DiningDraft,
+} from '../model/dining-model';
+import { DiningAttendanceSection } from './dining-attendance-section';
 import {
   description,
   detailBackButton,
@@ -17,9 +26,34 @@ import {
   page,
 } from './dining-page.css';
 
-/** 하나의 회식의 제목·일정·조사 기한을 상세 화면에 표시합니다. */
-export function DiningDetailPage({ dining, now }: { dining: Dining; now: number }) {
+/** 하나의 회식에 대한 응답·수정 상태는 상세 화면을 떠날 때 함께 폐기됩니다. */
+export function DiningDetailPage({
+  dining,
+  now,
+  currentMemberId,
+}: {
+  dining: Dining;
+  now: number;
+  currentMemberId: string;
+}) {
+  const currentMember = dining.members.find(({ id }) => id === currentMemberId);
+  const [attendance, setAttendance] = useState<DiningAttendance | null>(
+    currentMember?.attendance ?? null,
+  );
+  const snackbar = useSnackbarAdapter();
   const deadline = getDiningDeadline(dining.surveyClosesAt, now);
+  const canRespond = deadline.status === 'open';
+
+  function submitAttendance(draft: DiningDraft, message: string) {
+    const nextAttendance = toDiningAttendance(draft);
+    if (nextAttendance === null) {
+      return;
+    }
+    setAttendance(nextAttendance);
+    snackbar.create({
+      render: () => <Snackbar variant="positive" message={message} />,
+    });
+  }
 
   return (
     <main className={[page, detailPage].join(' ')}>
@@ -59,6 +93,14 @@ export function DiningDetailPage({ dining, now }: { dining: Dining; now: number 
           </Text>
         </dl>
       </section>
+      <DiningAttendanceSection
+        dining={dining}
+        attendance={attendance}
+        canRespond={canRespond}
+        currentMemberId={currentMemberId}
+        onSubmit={(draft) => submitAttendance(draft, '참석 여부를 제출했어요.')}
+        onEditSubmit={(draft) => submitAttendance(draft, '참석 여부를 수정했어요.')}
+      />
     </main>
   );
 }

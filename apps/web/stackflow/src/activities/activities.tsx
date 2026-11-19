@@ -367,8 +367,8 @@ export function DiningListActivity() {
 export function DiningDetailActivity() {
   const { diningId } = useActivityParams<'DiningDetail'>();
   return (
-    <ActivityScreen title="회식">
-      <PageShell>
+    <ActivityScreen title="회식" snackbarPosition="safeArea">
+      <PageShell header={null} plain>
         <DiningPage diningId={diningId} />
       </PageShell>
     </ActivityScreen>
