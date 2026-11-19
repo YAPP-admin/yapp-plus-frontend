@@ -20,7 +20,11 @@ export function DiningPage({ diningId }: { diningId?: string }) {
   }
 
   return dining ? (
-    <DiningDetailPage dining={dining} now={fixtures.now} />
+    <DiningDetailPage
+      dining={dining}
+      now={fixtures.now}
+      currentMemberId={fixtures.currentMemberId}
+    />
   ) : (
     <DiningListPage items={fixtures.list} now={fixtures.now} />
   );

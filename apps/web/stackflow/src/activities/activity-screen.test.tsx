@@ -107,3 +107,27 @@ it('safeArea를 확보하고 실제 스크롤 영역의 시작점에 따라 tone
   unmount();
   expect(disconnect).toHaveBeenCalledOnce();
 });
+
+it('하단 메뉴가 없는 화면의 스낵바는 safe area 바로 위에 표시한다', () => {
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      observe() {}
+      disconnect() {}
+    },
+  );
+  render(
+    <ActivityScreen title="회식" snackbarPosition="safeArea">
+      회식 상세
+    </ActivityScreen>,
+  );
+
+  const snackbarRegion = document.querySelector('.seed-snackbar-region');
+  expect(snackbarRegion).toHaveStyle({
+    bottom: 'calc(env(safe-area-inset-bottom, 0px) + var(--seed-dimension-x4))',
+  });
+  expect(snackbarRegion).toHaveAttribute(
+    'style',
+    expect.stringContaining('--snackbar-region-offset: var(--seed-dimension-x4)'),
+  );
+});
