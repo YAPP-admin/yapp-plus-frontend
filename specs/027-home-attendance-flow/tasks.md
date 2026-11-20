@@ -25,22 +25,22 @@ T007 전에는 시작하지 않는다. 이 절은 사용자 스토리 구현에 
 
 독립 완료 기준: 상태 표·조회 상태·복귀 정책이 일치하고 팀 운영 진입은 준비 중이다.
 
-- [ ] T010 [P] [US1] `apps/web/src/pages/home/model/current-week-attendance.test.ts`(신규)에 다섯 상태·두 유형·null 세션·빈 장소·조회 잠금 회귀 사례를 작성한다.
-- [ ] T011 [P] [US1] `apps/web/src/pages/home/ui/home-page.test.tsx`에 신선한 캐시 복귀·과거 성공 이력·조회 실패·오프라인 대기 사례를 추가한다.
-- [ ] T012 [US1] `apps/web/src/pages/home/model/current-week-attendance.ts`(신규)에 임시 유형·표시·행동 정책을 구현하고 제거 조건 주석을 남긴다.
-- [ ] T013 [US1] `apps/web/src/pages/home/ui/current-week-card.tsx`에 정책·문구·조회 잠금·재시도·팀 준비 중 안내를 적용하고 과거 성공 우선 표시를 제거한다.
-- [ ] T014 [US1] `apps/web/src/shared/lib/screen-activity.ts`와 `apps/web/src/pages/home/ui/current-week-card.tsx`에 홈 전용 항상 재조회 정책을 연결하고 다른 소비자의 기본 동작을 유지한다.
-- [ ] T015 [US1] `apps/web/src/mocks/session-handlers.ts`의 코드 성공과 주간 응답 상태를 연결한다. 출석 비대상 상태를 임의로 체크인으로 바꾸지 않는다.
-- [ ] T016 [US1] `apps/web/src/pages/home/ui/home-page.test.tsx`와 `apps/web/stackflow/src/query-recovery.test.tsx`에서 복귀·오류 복구 및 기존 소비자 회귀를 검증한다.
+- [x] T010 [P] [US1] `apps/web/src/pages/home/model/current-week-attendance.test.ts`(신규)에 다섯 상태·두 유형·null 세션·빈 장소·조회 잠금 회귀 사례를 작성한다.
+- [x] T011 [P] [US1] `apps/web/src/pages/home/ui/home-page.test.tsx`에 신선한 캐시 복귀·과거 성공 이력·조회 실패·오프라인 대기 사례를 추가한다.
+- [x] T012 [US1] `apps/web/src/pages/home/model/current-week-attendance.ts`(신규)에 임시 유형·표시·행동 정책을 구현하고 제거 조건 주석을 남긴다.
+- [x] T013 [US1] `apps/web/src/pages/home/ui/current-week-card.tsx`에 정책·문구·조회 잠금·재시도·팀 준비 중 안내를 적용하고 과거 성공 우선 표시를 제거한다.
+- [x] T014 [US1] `apps/web/src/shared/lib/screen-activity.ts`와 `apps/web/src/pages/home/ui/current-week-card.tsx`에 홈 전용 항상 재조회 정책을 연결하고 다른 소비자의 기본 동작을 유지한다.
+- [x] T015 [US1] `apps/web/src/mocks/session-handlers.ts`의 코드 성공과 주간 응답 상태를 연결한다. 출석 비대상 상태를 임의로 체크인으로 바꾸지 않는다.
+- [x] T016 [US1] `apps/web/src/pages/home/ui/home-page.test.tsx`와 `apps/web/stackflow/src/query-recovery.test.tsx`에서 복귀·오류 복구 및 기존 소비자 회귀를 검증한다.
 - [ ] T017 [US1] 실제 WebView의 앱 복귀를 확인하고 `specs/027-home-attendance-flow/validation.md`에 플랫폼별 근거를 기록한다. 이벤트 누락 시 브리지 변경을 시작하지 말고 별도 설계·사용자 리뷰를 받는다.
 
 ## US2 — 정규 코드 출석 (2단계 후반, P1)
 
 독립 완료 기준: 제출 성공 즉시 완료 화면, 이후 홈 서버 상태 반영, 기존 위치·중복·직접 진입 방어 유지.
 
-- [ ] T018 [P] [US2] `apps/web/src/pages/home/ui/attendance-code.test.tsx`에 성공 후 재조회 지연·실패와 과거 성공 이력 회귀 사례를 추가한다.
+- [x] T018 [P] [US2] `apps/web/src/pages/home/ui/attendance-code.test.tsx`에 성공 후 재조회 지연·실패와 과거 성공 이력 회귀 사례를 추가한다.
 - [ ] T019 [P] [US2] `apps/web/stackflow/src/stack.test.tsx`에 현재 제출 완료와 완료 화면 직접 진입 방어 사례를 보강한다.
-- [ ] T020 [US2] `apps/web/src/pages/home/model/code-attendance.ts`의 진입 판단을 현재 서버 응답 기준으로 바꾸고 현재 요청 중복 방지·완료 화면용 성공 정보는 유지한다.
+- [x] T020 [US2] `apps/web/src/pages/home/model/code-attendance.ts`의 진입 판단을 현재 서버 응답 기준으로 바꾸고 현재 요청 중복 방지·완료 화면용 성공 정보는 유지한다.
 - [ ] T021 [US2] `apps/web/stackflow/src/activities/activities.tsx`와 `apps/web/src/pages/home/ui/attendance-code.test.tsx`에서 완료 이동이 재조회를 기다리지 않으며 위치·코드 회귀가 없는지 확인한다.
 - [ ] T022 [US2] 2단계 관련 테스트·접근성·화면 증거·check·build·변경량을 `specs/027-home-attendance-flow/validation.md`에 기록하고 사용자 리뷰를 받는다.
 
