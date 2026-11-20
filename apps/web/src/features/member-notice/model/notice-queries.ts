@@ -12,11 +12,11 @@ import {
 /** OpenAPI 공지 유형에 전체 목록을 위한 클라이언트 선택값을 더한 필터 계약이다. */
 export type NoticeCategory = 'ALL' | 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
 
-const safeInteger = (value: bigint) => Number.isSafeInteger(Number(value));
+const isSafeInteger = (value: bigint) => Number.isSafeInteger(Number(value));
 
 const noticeItemSchema = zUserPostListItemResponse.extend({
   postId: zUserPostListItemResponse.shape.postId
-    .refine(safeInteger, '정밀도를 보장할 수 없는 공지 ID입니다.')
+    .refine(isSafeInteger, '정밀도를 보장할 수 없는 공지 ID입니다.')
     .refine((id) => id > 0, '공지 ID는 양수여야 합니다.')
     .transform(Number),
   daysUntilDeadline: zUserPostListItemResponse.shape.daysUntilDeadline
@@ -28,7 +28,7 @@ const noticeItemSchema = zUserPostListItemResponse.extend({
 export const noticeListSchema = zUserPostListResponse
   .extend({
     totalPostCount: zUserPostListResponse.shape.totalPostCount
-      .refine(safeInteger, '정밀도를 보장할 수 없는 공지 수입니다.')
+      .refine(isSafeInteger, '정밀도를 보장할 수 없는 공지 수입니다.')
       .refine((count) => count >= 0, '공지 수는 음수가 될 수 없습니다.')
       .transform(Number),
     items: noticeItemSchema.array(),

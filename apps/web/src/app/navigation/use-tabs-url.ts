@@ -13,11 +13,11 @@ export function useTabsUrl(params: TabsState) {
     if (!isTop || transitionState !== 'enter-done') {
       return () => {};
     }
-    let active = true;
+    let isTabUrlUpdateActive = true;
     requestHistoryTick((resolve) => {
       // 예약 뒤 최상위에서 내려가거나 해제된 Tabs는 현재 화면의 URL을 덮지 않습니다.
       const pathname = window.location.pathname.replace(/\/+$/, '') || '/';
-      if (!active || !tabNames.some((tab) => tabPath(tab) === pathname)) {
+      if (!isTabUrlUpdateActive || !tabNames.some((tab) => tabPath(tab) === pathname)) {
         resolve();
         return;
       }
@@ -29,7 +29,7 @@ export function useTabsUrl(params: TabsState) {
       resolve();
     });
     return () => {
-      active = false;
+      isTabUrlUpdateActive = false;
     };
   }, [attendance, initialTab, noticeCategory, requestHistoryTick, session, isTop, transitionState]);
 }

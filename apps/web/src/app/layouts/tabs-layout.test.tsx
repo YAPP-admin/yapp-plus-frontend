@@ -38,10 +38,10 @@ vi.mock('@/app/navigation/activity-link', () => ({
 function PanelView({ active, children }: { active: 'home' | 'schedule'; children: ReactNode }) {
   return (
     <TabsLayout activeTab={active} onTabChange={vi.fn<() => void>()}>
-      <TabPanel tab="home" active={active === 'home'}>
+      <TabPanel tab="home" isActive={active === 'home'}>
         {children}
       </TabPanel>
-      <TabPanel tab="schedule" active={active === 'schedule'}>
+      <TabPanel tab="schedule" isActive={active === 'schedule'}>
         <main>일정</main>
       </TabPanel>
     </TabsLayout>
@@ -64,7 +64,7 @@ function TransitionView({
     <ScreenActiveContext value={screenActive}>
       <TabsLayout activeTab={active} onTabChange={vi.fn<() => void>()}>
         {tabNames.map((tab) => (
-          <TabPanel key={tab} tab={tab} active={tab === active}>
+          <TabPanel key={tab} tab={tab} isActive={tab === active}>
             <ActiveProbe tab={tab} />
           </TabPanel>
         ))}

@@ -14,7 +14,7 @@ type NoticeReadOptions = {
   owner?: NoticeReadOwner;
 };
 
-const ownsNotice = (queryClient: ReturnType<typeof useQueryClient>, owner?: NoticeReadOwner) => {
+const doesOwnNotice = (queryClient: ReturnType<typeof useQueryClient>, owner?: NoticeReadOwner) => {
   if (!owner) {
     return true;
   }
@@ -45,7 +45,7 @@ export function useNoticeRead({ apiOptions, postId, owner }: NoticeReadOptions) 
     onMutate: async () => {
       await queryClient.cancelQueries({ queryKey });
       const previous = queryClient.getQueryData<MemberNoticeDetail>(queryKey);
-      const canUpdate = ownsNotice(queryClient, owner);
+      const canUpdate = doesOwnNotice(queryClient, owner);
       if (!canUpdate) {
         return { canUpdate, previous };
       }
@@ -56,12 +56,12 @@ export function useNoticeRead({ apiOptions, postId, owner }: NoticeReadOptions) 
       return { canUpdate, previous };
     },
     onError: (_error, _variables, context) => {
-      if (context?.canUpdate && ownsNotice(queryClient, owner) && context.previous) {
+      if (context?.canUpdate && doesOwnNotice(queryClient, owner) && context.previous) {
         queryClient.setQueryData(queryKey, context.previous);
       }
     },
     onSuccess: () => {
-      if (ownsNotice(queryClient, owner)) {
+      if (doesOwnNotice(queryClient, owner)) {
         void queryClient.invalidateQueries({ queryKey, refetchType: 'active' });
       }
     },

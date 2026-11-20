@@ -35,11 +35,11 @@ export function nativeEntryGuard(client: QueryClient, activities: readonly { nam
           name,
           () => {
             const result = client.getQueryData(nativeSessionQueryOptions(true).queryKey);
-            const signedOut =
+            const isSignedOut =
               result?.status === 'SIGNED_OUT' ||
               result?.status === 'WITHDRAWN' ||
               result?.status === 'SIGNUP_REQUIRED';
-            return isNativeWebView() && signedOut ? redirect('Login', {}) : true;
+            return isNativeWebView() && isSignedOut ? redirect('Login', {}) : true;
           },
         ]),
     ),
@@ -64,26 +64,26 @@ function AccountScreen({
   children: ReactNode;
 }) {
   const { isNative, phase, session } = useNativeAuthSession();
-  const protectedScreen = !isPublicActivity(activity.name);
-  const blocked = isNative && protectedScreen && phase !== 'SIGNED_IN';
+  const isProtectedScreen = !isPublicActivity(activity.name);
+  const isBlocked = isNative && isProtectedScreen && phase !== 'SIGNED_IN';
   const flow = useFlow();
 
   useEffect(() => {
-    if (blocked && activity.isTop && phase === 'SIGNED_OUT') {
+    if (isBlocked && activity.isTop && phase === 'SIGNED_OUT') {
       flow.replace('Login', {});
     }
-  }, [blocked, activity.isTop, phase, flow]);
+  }, [isBlocked, activity.isTop, phase, flow]);
 
-  if (isNative && phase === 'UNAVAILABLE' && protectedScreen) {
+  if (isNative && phase === 'UNAVAILABLE' && isProtectedScreen) {
     return activity.isTop ? (
       <NativeSessionRecovery onGoToLogin={() => flow.replace('Login', {})} />
     ) : null;
   }
-  if (blocked) {
+  if (isBlocked) {
     return null;
   }
   // Stack은 유지하고 계정이 바뀐 보호 화면의 로컬 상태만 초기화합니다.
-  return protectedScreen ? (
+  return isProtectedScreen ? (
     <Fragment key={JSON.stringify([session?.userId, session?.sessionId])}>{children}</Fragment>
   ) : (
     children

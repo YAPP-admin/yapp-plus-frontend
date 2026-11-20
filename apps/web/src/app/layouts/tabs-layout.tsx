@@ -53,17 +53,17 @@ export function TabsLayout({ children, activeTab, onTabChange }: TabsLayoutProps
 /** 방문한 패널의 DOM·스크롤은 SEED가 유지하며, 활성 상태는 observer 제어에 제공합니다. */
 export function TabPanel({
   tab,
-  active,
+  isActive,
   children,
 }: {
   tab: TabName;
-  active: boolean;
+  isActive: boolean;
   children: ReactNode;
 }) {
-  const screenActive = useContext(ScreenActiveContext);
+  const isScreenActive = useContext(ScreenActiveContext);
   return (
-    <Tabs.Content value={tab} className={panel} inert={!active}>
-      <ScreenActiveContext value={screenActive && active}>{children}</ScreenActiveContext>
+    <Tabs.Content value={tab} className={panel} inert={!isActive}>
+      <ScreenActiveContext value={isScreenActive && isActive}>{children}</ScreenActiveContext>
     </Tabs.Content>
   );
 }

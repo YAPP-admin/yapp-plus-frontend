@@ -366,14 +366,14 @@ function reducedMotionPlugin() {
       const context = isStackflowInitialContext(initialContext)
         ? initialContext
         : { platform: 'web' as const, reducedMotion: false };
-      const reducedMotion = context.reducedMotion;
+      const isReducedMotionEnabled = context.reducedMotion;
 
       return (
         <div
           data-platform={context.platform}
-          data-reduced-motion={reducedMotion ? 'true' : 'false'}
+          data-reduced-motion={isReducedMotionEnabled ? 'true' : 'false'}
         >
-          {reducedMotion ? (
+          {isReducedMotionEnabled ? (
             stack.render()
           ) : (
             <Primitive.GlobalInteraction>{stack.render()}</Primitive.GlobalInteraction>
