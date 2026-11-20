@@ -169,7 +169,6 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
   const options = currentWeekQueryOptions(apiOptions);
   const week = useSuspenseQuery(options);
   const session = week.data.session;
-  const confirmed = useAttendanceConfirmation();
 
   const attendanceMutation = useMutation({
     ...verifyMutation({
@@ -252,7 +251,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
   });
   const isPending =
     locationCheckMutation.isPending || attendanceMutation.isPending || settingsMutation.isPending;
-  const available = session?.attendanceStatus === 'AVAILABLE' && confirmed !== session.sessionId;
+  const isAttendanceAvailable = session?.attendanceStatus === 'AVAILABLE';
   const queryIssue =
     week.error &&
     new AttendanceFlowError(
@@ -286,7 +285,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
           '앱 설정을 열지 못했어요. 기기 설정에서 위치 권한을 확인해 주세요.',
           'OPEN_SETTINGS',
         ));
-  const availabilityIssue = available
+  const availabilityIssue = isAttendanceAvailable
     ? null
     : new AttendanceFlowError('SESSION', '현재 출석할 수 있는 세션이 없어요.', 'REFRESH_SESSION');
 
@@ -305,7 +304,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
     checkingLocation: locationCheckMutation.isPending,
     submittingAttendance: attendanceMutation.isPending,
     openingSettings: settingsMutation.isPending,
-    disabled: !available || week.isFetching || !!week.error || isPending,
+    disabled: !isAttendanceAvailable || week.isFetching || !!week.error || isPending,
     issue,
     reset,
     refresh: () => {
@@ -317,7 +316,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
       settingsMutation.mutate();
     },
     submit: (code: string, onInvalidCode: (message: string) => void) => {
-      if (!session || !available || isPending || !isSheetOpen) {
+      if (!session || !isAttendanceAvailable || isPending || !isSheetOpen) {
         return;
       }
       const sessionSnapshot: AttendanceSessionSnapshot = {

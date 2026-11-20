@@ -117,15 +117,23 @@ async function enter(code = '0123') {
 
 it('앞자리 0을 붙여넣고 Enter로 실제 코드·인증을 전송한 뒤 홈 완료를 표시한다', async () => {
   const order: string[] = [];
+  let checkedIn = false;
   nativeLocation.request.mockImplementation(() => {
     order.push('location');
     return Promise.resolve(locationSuccess);
   });
   const request = vi.fn<(body: unknown, authorization: string | null) => void>();
   server.use(
+    http.get(weekUrl, () =>
+      HttpResponse.json({
+        ...week,
+        session: { ...week.session, attendanceStatus: checkedIn ? 'CHECKED_IN' : 'AVAILABLE' },
+      }),
+    ),
     http.post(verifyUrl, async ({ request: req }) => {
       order.push('verify');
       request(await req.json(), req.headers.get('Authorization'));
+      checkedIn = true;
       return HttpResponse.json(success);
     }),
   );
@@ -140,7 +148,8 @@ it('앞자리 0을 붙여넣고 Enter로 실제 코드·인증을 전송한 뒤 
   expect(await screen.findByRole('button', { name: '출석했어요!' })).toBeDisabled();
   view.unmount();
   setup();
-  await enter();
+  expect(await screen.findByText('현재 출석할 수 있는 세션이 없어요.')).toBeVisible();
+  expect(screen.getByRole('button', { name: '위치 확인 후 출석하기' })).toBeDisabled();
 });
 
 it('위치 메서드를 지원하지 않으면 위치·출석 요청을 보내지 않는다', async () => {
@@ -448,7 +457,7 @@ it.each(['NOT_OPEN', 'NOT_ELIGIBLE'])(
 
 it.each([
   ['CHECKED_IN', '출석했어요!'],
-  ['PENDING_APPROVAL', '인증 사진 검토 중'],
+  ['PENDING_APPROVAL', '출석 확인 중이에요'],
 ] as const)('서버 상태 %s에서는 완료 상태를 표시한다', async (attendanceStatus, label) => {
   server.use(
     http.get(weekUrl, () =>
@@ -525,13 +534,22 @@ it.each(['오류 후 닫기', '화면 제거'])(
     const response = new Promise<void>((resolve) => {
       finish = resolve;
     });
+    let checkedIn = false;
     server.use(
+      http.get(weekUrl, () =>
+        HttpResponse.json({
+          ...week,
+          session: { ...week.session, attendanceStatus: checkedIn ? 'CHECKED_IN' : 'AVAILABLE' },
+        }),
+      ),
       http.post(verifyUrl, async () => {
         received();
         await response;
-        return boundary === '오류 후 닫기'
-          ? HttpResponse.json({ code: 'INVALID_ATTENDANCE_CODE' }, { status: 400 })
-          : HttpResponse.json(success);
+        if (boundary === '오류 후 닫기') {
+          return HttpResponse.json({ code: 'INVALID_ATTENDANCE_CODE' }, { status: 400 });
+        }
+        checkedIn = true;
+        return HttpResponse.json(success);
       }),
     );
     const view = setup();
