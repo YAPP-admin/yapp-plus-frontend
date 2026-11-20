@@ -53,7 +53,7 @@ const response = {
   session: {
     ...currentWeekFixture.session,
     name: '설계 리뷰',
-    location: null,
+    location: '교육장 A',
     attendanceStatus: 'AVAILABLE',
   },
 };
@@ -399,20 +399,65 @@ it('주간 조회의 네트워크 오류 후 연결 복구 시 카드와 오류 
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
 
-it.each(['NOT_OPEN', 'NOT_ELIGIBLE'])(
-  '서버 상태 %s에서는 출석을 시작할 수 없다',
-  async (attendanceStatus) => {
-    server.use(
-      http.get(url, () =>
-        HttpResponse.json({ ...response, session: { ...response.session, attendanceStatus } }),
-      ),
-    );
-    renderHome({}, true);
-    await screen.findByRole('heading', { name: /설계 리뷰/ });
-    expect(screen.queryByRole('button', { name: '출석하기' })).not.toBeInTheDocument();
-    expect(mockPush).not.toHaveBeenCalled();
-  },
-);
+it.each([
+  ['NOT_OPEN', '아직 출석할 수 없어요'],
+  ['NOT_ELIGIBLE', '출석 대상이 아니에요'],
+  ['PENDING_APPROVAL', '출석 확인 중이에요'],
+  ['CHECKED_IN', '출석했어요!'],
+] as const)('서버 상태 %s에서는 출석을 시작할 수 없다', async (attendanceStatus, label) => {
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({ ...response, session: { ...response.session, attendanceStatus } }),
+    ),
+  );
+  renderHome({}, true);
+  await screen.findByRole('heading', { name: /설계 리뷰/ });
+  expect(screen.getByRole('button', { name: label })).toBeDisabled();
+  expect(mockPush).not.toHaveBeenCalled();
+});
+
+it('팀 세션은 사진 인증 안내를 열 수 있다', async () => {
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({ ...response, session: { ...response.session, location: null } }),
+    ),
+  );
+  renderHome({}, true);
+
+  await userEvent.click(await screen.findByRole('button', { name: '인증 사진 업로드하기' }));
+  expect(mockPush).toHaveBeenCalledWith('TeamAttendanceGuide', {});
+  expect(screen.getByText('팀 정보가 준비되면 사진 인증을 진행할 수 있어요')).toBeVisible();
+});
+
+it('출석 확인 중인 신선한 캐시는 홈 포커스 복귀 시 주간 세션을 다시 조회한다', async () => {
+  let calls = 0;
+  server.use(
+    http.get(url, () => {
+      calls += 1;
+      return HttpResponse.json({
+        ...response,
+        session: {
+          ...response.session,
+          attendanceStatus: calls === 1 ? 'PENDING_APPROVAL' : 'CHECKED_IN',
+          name: calls === 1 ? '첫 세션' : '갱신된 세션',
+        },
+      });
+    }),
+  );
+  renderHome();
+  await screen.findByRole('heading', { name: '이번 주는 첫 세션 세션이에요' });
+
+  act(() => {
+    focusManager.setFocused(false);
+    focusManager.setFocused(true);
+  });
+
+  expect(
+    await screen.findByRole('heading', { name: '이번 주는 갱신된 세션 세션이에요' }),
+  ).toBeVisible();
+  expect(screen.getByRole('button', { name: '출석했어요!' })).toBeDisabled();
+  expect(calls).toBe(2);
+});
 
 it('기본 목업은 정규 세션의 코드 출석으로 진입하고 팀 사진 진입점을 숨긴다', async () => {
   server.use(http.get(url, () => HttpResponse.json(currentWeekFixture)));

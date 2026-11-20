@@ -360,8 +360,9 @@ function AttendanceCodeInputGroup({
 }
 export function TeamGuideSheet({
   onComplete,
+  canStartSubmission = true,
   ...props
-}: BottomSheetRootProps & { onComplete: () => void }) {
+}: BottomSheetRootProps & { canStartSubmission?: boolean; onComplete: () => void }) {
   const layerIndex = useActivityZIndexBase();
   return (
     <BottomSheetRoot {...props}>
@@ -385,7 +386,11 @@ export function TeamGuideSheet({
         <VStack gap="x5" className={sheetContainer}>
           <VStack gap="x1_5" width="full">
             <h2 className={sheetTitle}>팀 세션 인증 사진을 업로드해 주세요</h2>
-            <p className={sheetDescription}>팀원 중 한 명만 올리면 팀 전체에 반영돼요</p>
+            <p className={sheetDescription}>
+              {canStartSubmission
+                ? '팀원 중 한 명만 올리면 팀 전체에 반영돼요'
+                : '팀 정보가 준비되면 사진 인증을 진행할 수 있어요'}
+            </p>
           </VStack>
 
           <HStack align="center" justify="center" width="full" className={teamGraphicWrap}>
@@ -414,24 +419,35 @@ export function TeamGuideSheet({
           </VStack>
 
           <VStack width="full">
-            <VStack gap="x2" className={teamButtonsWrap}>
-              <ActionButton
-                variant="neutralWeak"
-                size="large"
-                className={sheetSecondaryButton}
-                onClick={onComplete}
-              >
-                앨범에서 선택하기
-              </ActionButton>
+            {canStartSubmission ? (
+              <VStack gap="x2" className={teamButtonsWrap}>
+                <ActionButton
+                  variant="neutralWeak"
+                  size="large"
+                  className={sheetSecondaryButton}
+                  onClick={onComplete}
+                >
+                  앨범에서 선택하기
+                </ActionButton>
+                <ActionButton
+                  variant="brandSolid"
+                  size="large"
+                  className={sheetPrimaryButton}
+                  onClick={onComplete}
+                >
+                  직접 사진 찍기
+                </ActionButton>
+              </VStack>
+            ) : (
               <ActionButton
                 variant="brandSolid"
                 size="large"
                 className={sheetPrimaryButton}
-                onClick={onComplete}
+                onClick={() => props.onOpenChange?.(false)}
               >
-                직접 사진 찍기
+                확인
               </ActionButton>
-            </VStack>
+            )}
           </VStack>
         </VStack>
       </BottomSheetContent>

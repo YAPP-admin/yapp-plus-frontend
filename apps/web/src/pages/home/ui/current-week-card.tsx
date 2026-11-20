@@ -2,10 +2,10 @@ import { staticContentEnabled } from '@/features/static-content';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
+import type { CurrentWeekSessionResponse } from '@yapp-plus/api/generated';
 import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
 import { useFlow } from '@stackflow/react';
-import { useAttendanceConfirmation } from '../model/code-attendance';
 import { useErrorBoundary } from 'react-error-boundary';
 import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { useNativeAuthSession } from '@/features/auth';
@@ -16,6 +16,7 @@ import {
   nextKoreanMidnight,
 } from '@/shared/lib/korean-date-time';
 import { currentWeekQueryOptions } from '../model/current-week-query';
+import { getCurrentWeekAttendance } from '../model/current-week-attendance';
 import {
   calendarDateBadge,
   calendarDateBadgeActive,
@@ -47,6 +48,14 @@ export function CurrentWeekCard() {
         <output>세션은 YAPP+ 앱에 로그인한 후 확인할 수 있어요.</output>
       )}
     </section>
+  );
+}
+
+/** 팀 인증 대기와 주 경계만 신선한 캐시보다 최신 서버 상태를 우선합니다. */
+function shouldForceCurrentWeekRefetch(data: CurrentWeekSessionResponse) {
+  return (
+    data.session?.attendanceStatus === 'PENDING_APPROVAL' ||
+    nextKoreanMidnight(data.weekEndDate) <= Date.now()
   );
 }
 
@@ -85,20 +94,21 @@ function WeekError() {
 function CurrentWeekContent() {
   const { apiOptions } = useNativeAuthSession();
   const flow = useFlow();
-  const confirmed = useAttendanceConfirmation();
   const query = useSuspenseQuery({
     ...currentWeekQueryOptions(apiOptions),
     refetchOnMount: (cachedQuery) =>
-      cachedQuery.state.data && nextKoreanMidnight(cachedQuery.state.data.weekEndDate) <= Date.now()
+      cachedQuery.state.data && shouldForceCurrentWeekRefetch(cachedQuery.state.data)
         ? 'always'
         : true,
     refetchOnWindowFocus: (cachedQuery) =>
-      cachedQuery.state.data && nextKoreanMidnight(cachedQuery.state.data.weekEndDate) <= Date.now()
+      cachedQuery.state.data && shouldForceCurrentWeekRefetch(cachedQuery.state.data)
         ? 'always'
         : true,
   });
-  useRefetchOnScreenReturn(query);
   const { data, dataUpdatedAt, error, refetch } = query;
+  useRefetchOnScreenReturn(query, {
+    always: shouldForceCurrentWeekRefetch(data),
+  });
   const today = koreanDateString(dataUpdatedAt);
   const days = Array.from({ length: 7 }, (_, index) => {
     const timestamp = koreanTimestamp(data.weekStartDate) + index * 86_400_000;
@@ -110,6 +120,17 @@ function CurrentWeekContent() {
     };
   });
   const session = data.session;
+  const attendance = session ? getCurrentWeekAttendance(session) : null;
+  const canStartAttendance = attendance?.action === 'CODE' || attendance?.action === 'TEAM_GUIDE';
+  const startAttendance = () => {
+    if (attendance?.action === 'CODE') {
+      flow.push('AttendanceCode', {});
+      return;
+    }
+    if (attendance?.action === 'TEAM_GUIDE') {
+      flow.push('TeamAttendanceGuide', {});
+    }
+  };
   return (
     <>
       {error ? (
@@ -153,21 +174,12 @@ function CurrentWeekContent() {
           <ActionButton
             variant="neutralWeak"
             size="medium"
-            disabled={
-              !!error || confirmed === session.sessionId || session.attendanceStatus !== 'AVAILABLE'
-            }
-            onClick={() => flow.push('AttendanceCode', {})}
+            disabled={!!error || query.isFetching || !canStartAttendance}
+            onClick={canStartAttendance ? startAttendance : undefined}
           >
-            {confirmed === session.sessionId
-              ? '출석했어요!'
-              : {
-                  AVAILABLE: '출석하기',
-                  NOT_ELIGIBLE: '출석 대상이 아니에요',
-                  NOT_OPEN: '아직 출석할 수 없어요',
-                  CHECKED_IN: '출석했어요!',
-                  PENDING_APPROVAL: '인증 사진 검토 중',
-                }[session.attendanceStatus]}
+            {attendance?.label}
           </ActionButton>
+          {attendance?.description ? <p>{attendance.description}</p> : null}
         </>
       ) : null}
     </>

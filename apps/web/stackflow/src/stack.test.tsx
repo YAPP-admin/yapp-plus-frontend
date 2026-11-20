@@ -593,7 +593,7 @@ it.each([
   expect(screen.queryByRole('button', { name: '인증 사진 선택' })).not.toBeInTheDocument();
 });
 
-it.each(['/team-attendance/complete', '/team-attendance/error', '/team-attendance/guide'])(
+it.each(['/team-attendance/complete', '/team-attendance/error'])(
   '운영에서는 팀 인증 경로를 직접 열 수 없다: %s',
   async (path) => {
     vi.stubEnv('DEV', false);
@@ -602,6 +602,17 @@ it.each(['/team-attendance/complete', '/team-attendance/error', '/team-attendanc
     expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
   },
 );
+
+it('운영에서는 팀 인증 안내만 표시하고 사진 제출은 시작하지 않는다', async () => {
+  vi.stubEnv('DEV', false);
+  window.history.replaceState({}, '', '/team-attendance/guide');
+  renderStack();
+
+  expect(await screen.findByText('팀 정보가 준비되면 사진 인증을 진행할 수 있어요')).toBeVisible();
+  expect(screen.getByRole('button', { name: '확인' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: '앨범에서 선택하기' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '직접 사진 찍기' })).not.toBeInTheDocument();
+});
 
 it('접수 정보 없는 완료 URL은 성공을 표시하지 않는다', async () => {
   window.history.replaceState({}, '', '/team-attendance/complete');
