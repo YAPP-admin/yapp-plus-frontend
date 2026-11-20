@@ -121,6 +121,16 @@ function CurrentWeekContent() {
   });
   const session = data.session;
   const attendance = session ? getCurrentWeekAttendance(session) : null;
+  const canStartAttendance = attendance?.action === 'CODE' || attendance?.action === 'TEAM_GUIDE';
+  const startAttendance = () => {
+    if (attendance?.action === 'CODE') {
+      flow.push('AttendanceCode', {});
+      return;
+    }
+    if (attendance?.action === 'TEAM_GUIDE') {
+      flow.push('TeamAttendanceGuide', {});
+    }
+  };
   return (
     <>
       {error ? (
@@ -164,10 +174,8 @@ function CurrentWeekContent() {
           <ActionButton
             variant="neutralWeak"
             size="medium"
-            disabled={!!error || query.isFetching || attendance?.action !== 'CODE'}
-            onClick={
-              attendance?.action === 'CODE' ? () => flow.push('AttendanceCode', {}) : undefined
-            }
+            disabled={!!error || query.isFetching || !canStartAttendance}
+            onClick={canStartAttendance ? startAttendance : undefined}
           >
             {attendance?.label}
           </ActionButton>

@@ -6,7 +6,6 @@ import {
   TeamGuideSheet,
   type AttendanceReportStep,
 } from '@/pages/home';
-import { NotFoundActivity } from './activities';
 
 export function AttendanceCodeActivity() {
   const { isActive } = useActivity();
@@ -83,9 +82,7 @@ function readAttendanceReportStep(params: unknown): AttendanceReportStep {
 export function TeamAttendanceGuideActivity() {
   const { isActive } = useActivity();
   const flow = useFlow();
-  if (!import.meta.env.DEV || import.meta.env.VITE_API_MOCKING !== 'true') {
-    return <NotFoundActivity />;
-  }
+  const canStartSubmission = import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true';
   return (
     <TeamGuideSheet
       open={isActive}
@@ -94,6 +91,7 @@ export function TeamAttendanceGuideActivity() {
           flow.pop();
         }
       }}
+      canStartSubmission={canStartSubmission}
       onComplete={() => flow.replace('TeamAttendanceUpload', {})}
     />
   );

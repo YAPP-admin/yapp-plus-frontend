@@ -416,7 +416,7 @@ it.each([
   expect(mockPush).not.toHaveBeenCalled();
 });
 
-it('팀 세션은 준비 중 안내를 표시하고 사진 출석을 시작하지 않는다', async () => {
+it('팀 세션은 사진 인증 안내를 열 수 있다', async () => {
   server.use(
     http.get(url, () =>
       HttpResponse.json({ ...response, session: { ...response.session, location: null } }),
@@ -424,9 +424,9 @@ it('팀 세션은 준비 중 안내를 표시하고 사진 출석을 시작하�
   );
   renderHome({}, true);
 
-  expect(await screen.findByRole('button', { name: '인증 사진 업로드하기' })).toBeDisabled();
-  expect(screen.getByText('팀 출석 기능을 준비 중이에요')).toBeVisible();
-  expect(mockPush).not.toHaveBeenCalled();
+  await userEvent.click(await screen.findByRole('button', { name: '인증 사진 업로드하기' }));
+  expect(mockPush).toHaveBeenCalledWith('TeamAttendanceGuide', {});
+  expect(screen.getByText('팀 정보가 준비되면 사진 인증을 진행할 수 있어요')).toBeVisible();
 });
 
 it('출석 확인 중인 신선한 캐시는 홈 포커스 복귀 시 주간 세션을 다시 조회한다', async () => {

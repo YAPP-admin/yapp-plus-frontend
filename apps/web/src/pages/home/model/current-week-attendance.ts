@@ -4,7 +4,7 @@ type CurrentWeekSession = NonNullable<CurrentWeekSessionResponse['session']>;
 
 export type CurrentWeekSessionKind = 'REGULAR' | 'TEAM';
 
-type CurrentWeekAttendanceAction = 'CODE' | 'NONE';
+type CurrentWeekAttendanceAction = 'CODE' | 'TEAM_GUIDE' | 'NONE';
 
 type CurrentWeekAttendance = Readonly<{
   action: CurrentWeekAttendanceAction;
@@ -45,8 +45,8 @@ export function getCurrentWeekAttendance(session: CurrentWeekSession): CurrentWe
 
   if (sessionKind === 'TEAM') {
     return {
-      action: 'NONE',
-      description: '팀 출석 기능을 준비 중이에요',
+      action: 'TEAM_GUIDE',
+      description: '팀 정보가 준비되면 사진 인증을 진행할 수 있어요',
       label: '인증 사진 업로드하기',
       sessionKind,
     };

@@ -14,7 +14,13 @@ it.each([
 
 it.each([
   ['REGULAR', 'AVAILABLE', '출석하기', 'CODE', null],
-  ['TEAM', 'AVAILABLE', '인증 사진 업로드하기', 'NONE', '팀 출석 기능을 준비 중이에요'],
+  [
+    'TEAM',
+    'AVAILABLE',
+    '인증 사진 업로드하기',
+    'TEAM_GUIDE',
+    '팀 정보가 준비되면 사진 인증을 진행할 수 있어요',
+  ],
   ['REGULAR', 'NOT_OPEN', '아직 출석할 수 없어요', 'NONE', null],
   ['TEAM', 'NOT_ELIGIBLE', '출석 대상이 아니에요', 'NONE', null],
   ['REGULAR', 'PENDING_APPROVAL', '출석 확인 중이에요', 'NONE', null],
