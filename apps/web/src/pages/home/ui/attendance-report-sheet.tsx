@@ -211,7 +211,7 @@ function AttendanceReportContent({
       </ReportSheetShell>
     );
   }
-  if (!report.reportable) {
+  if (!report.isAttendanceReportable) {
     return (
       <ReportSheetShell {...props} step={step}>
         <VStack gap="x5" className={sheetContainer}>

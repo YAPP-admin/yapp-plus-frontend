@@ -199,7 +199,7 @@ function AbsenceWarning() {
   const { apiOptions } = useNativeAuthSession();
   const score = useSuspenseQuery(memberScoreQueryOptions(apiOptions));
   useRefetchOnScreenReturn(score);
-  const showWarning =
+  const shouldShowWarning =
     !score.error && score.data.status === 'available' && score.data.score.absentCount >= 10;
   return (
     <>
@@ -218,7 +218,7 @@ function AbsenceWarning() {
           </ActionButton>
         </VStack>
       )}
-      {showWarning && (
+      {shouldShowWarning && (
         <HStack mt="x2_5" className={warningBanner} role="alert">
           <Image src="/images/my/info.svg" alt="" width={18} height={18} />
           <p className={warningText}>10번 이상 결석하면 재적처리 될 수 있어요. </p>

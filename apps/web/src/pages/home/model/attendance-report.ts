@@ -60,12 +60,12 @@ function getAttendanceReportErrorMessage(error: unknown) {
 
 function getAttendanceReportSubmissionBlockMessage({
   isNative,
-  reportable,
+  isAttendanceReportable,
 }: {
   isNative: boolean;
-  reportable: boolean;
+  isAttendanceReportable: boolean;
 }): string | null {
-  if (!isNative || staticContentEnabled() || !reportable) {
+  if (!isNative || staticContentEnabled() || !isAttendanceReportable) {
     return '현재는 사전 출결 보고를 할 수 없어요.';
   }
   if (!onlineManager.isOnline() || !navigator.onLine) {
@@ -86,7 +86,7 @@ export function useAttendanceReport(onComplete: () => void) {
   const options = currentWeekQueryOptions(apiOptions);
   const week = useSuspenseQuery(options);
   const session = week.data.session;
-  const reportable = isAttendanceReportOpen(session);
+  const isAttendanceReportable = isAttendanceReportOpen(session);
   const mutation = useMutation({
     ...submit1Mutation(apiOptions),
     onSuccess: () => {
@@ -96,7 +96,7 @@ export function useAttendanceReport(onComplete: () => void) {
 
   return {
     target: session,
-    reportable,
+    isAttendanceReportable,
     pending: mutation.isPending,
     error: getAttendanceReportErrorMessage(mutation.error),
     reset: mutation.reset,
@@ -108,7 +108,10 @@ export function useAttendanceReport(onComplete: () => void) {
       if (!parsed.success) {
         return undefined;
       }
-      const blockMessage = getAttendanceReportSubmissionBlockMessage({ isNative, reportable });
+      const blockMessage = getAttendanceReportSubmissionBlockMessage({
+        isNative,
+        isAttendanceReportable,
+      });
       if (blockMessage) {
         return blockMessage;
       }
