@@ -46,16 +46,16 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
   });
   const keyword = useStore(form.store, (state) => state.values.keyword.trim());
   const searchKeyword = conditions.keyword;
-  const unavailable = !isAddressSearchAvailable();
+  const isAddressSearchUnavailable = !isAddressSearchAvailable();
   const options = addressSearchQueryOptions(conditions);
   const query = useQuery({ ...options, enabled: options.enabled && !!keyword && !disabled });
-  const loading = !!keyword && (keyword !== searchKeyword || query.isFetching);
+  const isAddressSearchLoading = !!keyword && (keyword !== searchKeyword || query.isFetching);
   // 새 결과가 올 때까지 목록을 유지하되 조회 중 선택과 페이지 이동은 막습니다.
   const data =
     keyword && !query.isError && query.data?.status === 'success' ? query.data.data : undefined;
   const serviceError = query.data?.status === 'service-error' ? query.data.code : undefined;
   const error =
-    !keyword || loading || query.isPlaceholderData
+    !keyword || isAddressSearchLoading || query.isPlaceholderData
       ? null
       : getAddressSearchError(query.error, serviceError);
 
@@ -64,7 +64,7 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
       <div className={styles.searchRow}>
         <form.Field name="keyword">
           {(field) => (
-            <Field.Root className={styles.field} disabled={disabled || unavailable}>
+            <Field.Root className={styles.field} disabled={disabled || isAddressSearchUnavailable}>
               <Field.Label>도로명주소 검색</Field.Label>
               <TextField.Root
                 value={field.state.value}
@@ -108,20 +108,20 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
         </div>
       )}
       <div className={styles.status}>
-        {unavailable || error ? (
+        {isAddressSearchUnavailable || error ? (
           <p role="alert" className={styles.statusMessage}>
-            {unavailable
+            {isAddressSearchUnavailable
               ? '주소 검색 설정이 준비되지 않았습니다. 관리자에게 문의해 주세요.'
               : error?.message}
           </p>
         ) : (
           <output aria-live="polite" className={styles.statusMessage}>
-            {loading && '주소를 검색하고 있습니다.'}
-            {!loading && !data && '검색 결과에서 세션 장소를 선택해 주세요.'}
-            {!loading &&
+            {isAddressSearchLoading && '주소를 검색하고 있습니다.'}
+            {!isAddressSearchLoading && !data && '검색 결과에서 세션 장소를 선택해 주세요.'}
+            {!isAddressSearchLoading &&
               data?.items.length === 0 &&
               '검색 결과가 없습니다. 검색어를 바꿔 다시 검색해 주세요.'}
-            {!loading &&
+            {!isAddressSearchLoading &&
               data &&
               data.items.length > 0 &&
               `“${searchKeyword}” 검색 결과 ${data.totalCount.toLocaleString('ko-KR')}개 · ${data.page}페이지`}
@@ -153,24 +153,29 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
       {data && (
         <>
           {data.items.length > 0 && (
-            <ul className={styles.results} aria-label="주소 검색 결과" aria-busy={loading}>
+            <ul
+              className={styles.results}
+              aria-label="주소 검색 결과"
+              aria-busy={isAddressSearchLoading}
+            >
               {data.items.map((item) => {
-                const selected = !!value && addressIdentity(value) === addressIdentity(item);
+                const isAddressSelected =
+                  !!value && addressIdentity(value) === addressIdentity(item);
                 return (
                   <li key={addressIdentity(item)}>
                     <button
                       type="button"
                       className={styles.result}
-                      disabled={disabled || loading || query.isPlaceholderData}
-                      aria-pressed={selected}
+                      disabled={disabled || isAddressSearchLoading || query.isPlaceholderData}
+                      aria-pressed={isAddressSelected}
                       onClick={() => {
-                        if (!selected) {
+                        if (!isAddressSelected) {
                           onSelect(item);
                         }
                       }}
                     >
                       <span>{item.roadAddress}</span>
-                      <span className={styles.badge}>{selected ? '선택됨' : '선택'}</span>
+                      <span className={styles.badge}>{isAddressSelected ? '선택됨' : '선택'}</span>
                     </button>
                   </li>
                 );
@@ -182,7 +187,12 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
               <ActionButton
                 type="button"
                 variant="neutralWeak"
-                disabled={disabled || loading || query.isPlaceholderData || !data.hasPreviousPage}
+                disabled={
+                  disabled ||
+                  isAddressSearchLoading ||
+                  query.isPlaceholderData ||
+                  !data.hasPreviousPage
+                }
                 onClick={() => setConditions({ keyword: searchKeyword, page: data.page - 1 })}
               >
                 이전
@@ -193,7 +203,9 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
               <ActionButton
                 type="button"
                 variant="neutralWeak"
-                disabled={disabled || loading || query.isPlaceholderData || !data.hasNextPage}
+                disabled={
+                  disabled || isAddressSearchLoading || query.isPlaceholderData || !data.hasNextPage
+                }
                 onClick={() => setConditions({ keyword: searchKeyword, page: data.page + 1 })}
               >
                 다음

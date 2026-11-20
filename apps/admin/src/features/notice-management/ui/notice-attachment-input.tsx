@@ -65,7 +65,7 @@ export function NoticeAttachmentInput({
   }
 
   /** 초과 선택을 SEED가 부분 수락하기 전에 입력 이벤트에서 차단한다. */
-  function checkSelection(count: number) {
+  function trySelectAttachments(count: number) {
     const error = getNoticeAttachmentCountError(entries.length, count);
 
     if (disabled || imageValidation.isPending || error || count === 0) {
@@ -98,7 +98,7 @@ export function NoticeAttachmentInput({
         readOnly={disabled}
         invalid={errors.length > 0}
       >
-        <NoticeAttachmentFileInput id={inputId} canSelect={checkSelection} />
+        <NoticeAttachmentFileInput id={inputId} canSelect={trySelectAttachments} />
         <AttachmentInput.Container>
           <AttachmentInput.Trigger
             aria-label="이미지 추가"

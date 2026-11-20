@@ -74,9 +74,9 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
       onChange: ({ formApi }) => setCreateDirty(!formApi.state.isDefaultValue),
     },
   });
-  const dirty = useStore(form.store, (state) => !state.isDefaultValue);
+  const isFormDirty = useStore(form.store, (state) => !state.isDefaultValue);
   const { requestLeave } = useTeamLeaveGuard({
-    dirty,
+    dirty: isFormDirty,
     onLeave: () => {
       setCreateDirty(false);
       onClose();

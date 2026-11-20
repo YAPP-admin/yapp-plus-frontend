@@ -289,13 +289,13 @@ export function createSessionStore(initialSessions: readonly Session[] = fixture
       }
       checkFailure('attendance', sessionId, edit.membershipId);
       const before = member.attendance;
-      const unchanged =
+      const isAttendanceUnchanged =
         before.explicitlyOverridden &&
         before.status === edit.status &&
         before.penaltyCategory === edit.penaltyCategory &&
         before.durationBand === edit.durationBand &&
         before.reason === edit.reason;
-      if (unchanged) {
+      if (isAttendanceUnchanged) {
         return structuredClone(member);
       }
       const after = attendanceResultSchema.parse({

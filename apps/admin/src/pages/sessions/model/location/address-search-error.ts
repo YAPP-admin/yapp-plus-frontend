@@ -22,12 +22,12 @@ export function getAddressSearchError(error: unknown, serviceCode?: string) {
     };
   }
   if (serviceCode) {
-    const refine = KEYWORD_ERROR_CODES.includes(serviceCode);
+    const shouldRefineAddress = KEYWORD_ERROR_CODES.includes(serviceCode);
     return {
-      message: refine
+      message: shouldRefineAddress
         ? '검색어를 확인하고 도로명과 건물번호를 구체적으로 입력해 주세요.'
         : '주소 검색을 처리하지 못했습니다. 잠시 후 다시 시도해 주세요.',
-      retry: !refine,
+      retry: !shouldRefineAddress,
     };
   }
   return null;
