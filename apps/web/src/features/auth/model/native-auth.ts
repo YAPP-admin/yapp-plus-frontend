@@ -19,11 +19,30 @@ export const isNativeWebView = (userAgent = getBrowserUserAgent()): boolean =>
 const getNativeBridge = (): LinkedAppBridge | undefined =>
   isNativeWebView() ? getAppBridge() : undefined;
 
+/** 개발 중 브릿지 연결 문제를 진단하되 인증 자격과 응답 본문은 기록하지 않습니다. */
+const traceNativeBridge = (method: string, outcome: 'requested' | 'received' | 'failed'): void => {
+  if (!import.meta.env.DEV) {
+    return;
+  }
+  // oxlint-disable-next-line no-console -- 개발 WebView의 브릿지 단계만 기록하고 인증 값은 출력하지 않습니다.
+  console.info(`[auth-bridge] ${method} ${outcome}`);
+};
+
 /** WebView에서만 native 로그인 RPC를 호출하고 일반 브라우저에서는 undefined를 반환합니다. */
 export const signInWithNative = async (provider: AuthProvider): Promise<AuthResult | undefined> => {
   const bridge = getNativeBridge();
-
-  return bridge ? bridge.signIn({ provider }) : undefined;
+  if (!bridge) {
+    return undefined;
+  }
+  traceNativeBridge('signIn', 'requested');
+  try {
+    const result = await bridge.signIn({ provider });
+    traceNativeBridge('signIn', 'received');
+    return result;
+  } catch (error) {
+    traceNativeBridge('signIn', 'failed');
+    throw error;
+  }
 };
 
 /** native가 보관한 가입 대기 자격으로 프로필 가입을 완료합니다. */
@@ -49,7 +68,15 @@ export const getNativeSession = async (): Promise<AuthResult | undefined> => {
   if (!bridge.isNativeMethodAvailable('getSession')) {
     return { status: 'UNAVAILABLE', code: 'UNSUPPORTED', retryable: false };
   }
-  return bridge.getSession();
+  traceNativeBridge('getSession', 'requested');
+  try {
+    const result = await bridge.getSession();
+    traceNativeBridge('getSession', 'received');
+    return result;
+  } catch (error) {
+    traceNativeBridge('getSession', 'failed');
+    throw error;
+  }
 };
 
 /** native 세션 관리자에 요청 당시 세션 버전을 전달해 access token을 갱신합니다. */

@@ -12,6 +12,7 @@ import type { AuthenticationResponse } from '@yapp-plus/api/generated';
 
 import type { nativeAuthApi, NativeAuthenticationApiResult } from './auth-api';
 import { NativeAuthenticationCancelledError, NativeAuthenticationError } from './errors';
+import { traceNativeAuth } from './diagnostics';
 import type { authenticateWithProvider } from './providers';
 import type { SessionManager } from './session';
 import { toCredentials } from './credentials';
@@ -56,10 +57,13 @@ export class AuthActions {
     this.authenticatingGeneration = generation;
     this.registration = undefined;
     try {
+      traceNativeAuth('provider', 'started');
       const identity = await this.runtime.authenticateWithProvider(input.provider);
+      traceNativeAuth('provider', 'succeeded');
       if (!this.runtime.session.isCurrent(generation)) {
         return { status: AUTH_STATUS.cancelled };
       }
+      traceNativeAuth('exchange', 'started');
       const result =
         identity.provider === 'apple'
           ? await this.runtime.authenticateApple({
@@ -73,8 +77,18 @@ export class AuthActions {
               body: { idToken: identity.idToken, nonce: identity.nonce },
             });
 
-      return await this.acceptAuthenticationResult(result, generation);
+      const accepted = await this.acceptAuthenticationResult(result, generation);
+      traceNativeAuth(
+        'exchange',
+        accepted.status === AUTH_STATUS.error ? 'failed' : 'succeeded',
+        result.response?.status,
+      );
+      return accepted;
     } catch (error) {
+      traceNativeAuth(
+        'provider',
+        error instanceof NativeAuthenticationCancelledError ? 'cancelled' : 'failed',
+      );
       if (!this.runtime.session.isCurrent(generation)) {
         return { status: AUTH_STATUS.cancelled };
       }
@@ -150,7 +164,7 @@ export class AuthActions {
     );
   }
 
-  /** 서버 해제 성공 후 로컬 세션을 제거하며 실패하면 로그인 상태를 유지합니다. */
+  /** 서버 해제를 시도한 뒤 결과와 무관하게 로컬 세션을 제거합니다. */
   public async signOut(): Promise<AuthResult> {
     this.registration = undefined;
     return this.runtime.session.signOut(async (refreshToken) => {
@@ -162,7 +176,7 @@ export class AuthActions {
     });
   }
 
-  /** 현재 access token으로 탈퇴를 완료한 뒤 로컬 자격을 제거합니다. */
+  /** 현재 access token으로 204 탈퇴를 확인한 뒤 현재 세션의 로컬 자격을 제거합니다. */
   public async withdraw(): Promise<AuthResult> {
     if (this.runtime.session.isSigningOut) {
       return this.busy();
@@ -171,15 +185,31 @@ export class AuthActions {
     if (!accessToken) {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.authRequired, retryable: false };
     }
-
+    const generation = this.runtime.session.captureGeneration();
     const result = await this.runtime.withdraw({
       headers: { Authorization: `Bearer ${accessToken}` },
     });
-    if (result.error !== undefined) {
-      return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.server, retryable: true };
+    if (!this.runtime.session.isCurrent(generation)) {
+      return { status: AUTH_STATUS.cancelled };
     }
-
+    if (result.kind !== 'success') {
+      const error = {
+        AUTH_REQUIRED: AUTH_ERROR_CODE.authRequired,
+        SERVER: AUTH_ERROR_CODE.server,
+        NETWORK: AUTH_ERROR_CODE.network,
+        TIMEOUT: AUTH_ERROR_CODE.timeout,
+        OUTCOME_UNKNOWN: AUTH_ERROR_CODE.outcomeUnknown,
+      }[result.code];
+      return {
+        status: AUTH_STATUS.error,
+        code: error,
+        retryable:
+          result.code === 'NETWORK' || result.code === 'TIMEOUT' || result.code === 'SERVER',
+      };
+    }
+    traceNativeAuth('storage', 'started');
     const cleared = await this.runtime.session.clear();
+    traceNativeAuth('storage', cleared.status === AUTH_STATUS.signedOut ? 'succeeded' : 'failed');
 
     return cleared.status === AUTH_STATUS.signedOut ? { status: AUTH_STATUS.withdrawn } : cleared;
   }
@@ -219,7 +249,13 @@ export class AuthActions {
 
     this.registration = undefined;
 
-    return this.runtime.session.establish(credentials, generation);
+    traceNativeAuth('storage', 'started');
+    const established = await this.runtime.session.establish(credentials, generation);
+    traceNativeAuth(
+      'storage',
+      established.status === AUTH_STATUS.signedIn ? 'succeeded' : 'failed',
+    );
+    return established;
   }
 
   /** 무효화된 이전 세대의 인증은 새 인증을 막지 않습니다. */

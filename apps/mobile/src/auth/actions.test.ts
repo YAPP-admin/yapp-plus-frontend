@@ -138,7 +138,7 @@ describe('AuthActions', () => {
     });
   });
 
-  it('로그아웃 서버 실패 시 세션을 유지하고 재시도 성공 후 삭제한다', async () => {
+  it('로그아웃 서버 실패에도 로컬 세션을 삭제한다', async () => {
     const runtime = createRuntime();
     await runtime.session.establish(
       {
@@ -152,15 +152,9 @@ describe('AuthActions', () => {
     vi.mocked(runtime.revoke).mockRejectedValue(new Error('network'));
     const actions = new AuthActions(runtime);
 
-    await expect(actions.signOut()).resolves.toMatchObject({ status: 'ERROR', code: 'NETWORK' });
-    expect(storage.clearSession).not.toHaveBeenCalled();
-    expect(runtime.session.refreshToken).toBe('refresh-1');
-    const retryRequest = vi.fn<() => Promise<string>>().mockResolvedValue('재시도');
-    await expect(actions.runSessionRequest(retryRequest)).resolves.toBe('재시도');
-    expect(retryRequest).toHaveBeenCalledOnce();
-    vi.mocked(runtime.revoke).mockResolvedValue({ ok: true });
     await expect(actions.signOut()).resolves.toEqual({ status: 'SIGNED_OUT' });
     expect(storage.clearSession).toHaveBeenCalledOnce();
+    expect(runtime.session.refreshToken).toBeUndefined();
   });
 
   it('메모리 복원 전 로그아웃도 저장된 토큰의 서버 해제를 먼저 확인한다', async () => {
@@ -172,6 +166,96 @@ describe('AuthActions', () => {
     });
     expect(runtime.renew).not.toHaveBeenCalled();
     expect(storage.clearSession).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    [{ kind: 'failure', code: 'AUTH_REQUIRED' }, 'AUTH_REQUIRED', false],
+    [{ kind: 'failure', code: 'SERVER' }, 'SERVER', true],
+    [{ kind: 'failure', code: 'TIMEOUT' }, 'TIMEOUT', true],
+    [{ kind: 'failure', code: 'OUTCOME_UNKNOWN' }, 'OUTCOME_UNKNOWN', false],
+  ] as const)('탈퇴 %o 결과는 로컬 세션을 삭제하지 않는다', async (withdrawal, code, retryable) => {
+    const { runtime, actions } = googleActions();
+    await actions.signIn({ provider: 'google' });
+    vi.mocked(runtime.withdraw).mockResolvedValue(withdrawal);
+
+    await expect(actions.withdraw()).resolves.toEqual({
+      status: 'ERROR',
+      code,
+      retryable,
+    });
+    expect(storage.clearSession).not.toHaveBeenCalled();
+  });
+
+  it('탈퇴 204 성공 뒤에만 로컬 세션을 삭제한다', async () => {
+    const { runtime, actions } = googleActions();
+    await actions.signIn({ provider: 'google' });
+    vi.mocked(runtime.withdraw).mockResolvedValue({ kind: 'success' });
+
+    await expect(actions.withdraw()).resolves.toEqual({ status: 'WITHDRAWN' });
+    expect(storage.clearSession).toHaveBeenCalledOnce();
+  });
+
+  it.each([
+    [204, { kind: 'success' }],
+    [401, { kind: 'failure', code: 'AUTH_REQUIRED' }],
+    [503, { kind: 'failure', code: 'SERVER' }],
+  ] as const)('탈퇴 HTTP %s를 adapter 경계에서 구분한다', async (status, expected) => {
+    const http = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status }));
+
+    await expect(
+      nativeAuthApi.withdraw({
+        headers: { Authorization: 'Bearer fixture' },
+        baseUrl: 'https://api.test',
+        kyOptions: { fetch: http },
+      }),
+    ).resolves.toEqual(expected);
+    expect(http).toHaveBeenCalledOnce();
+  });
+
+  it('탈퇴 timeout과 응답 유실을 자동 재시도하지 않고 구분한다', async () => {
+    const timeout = Object.assign(new Error('timeout'), { name: 'TimeoutError' });
+    const timeoutHttp = vi.fn<typeof fetch>().mockRejectedValue(timeout);
+    const missingHttp = vi.fn<typeof fetch>().mockRejectedValue(new Error('network'));
+
+    await expect(
+      nativeAuthApi.withdraw({
+        headers: { Authorization: 'Bearer fixture' },
+        baseUrl: 'https://api.test',
+        kyOptions: { fetch: timeoutHttp },
+      }),
+    ).resolves.toEqual({ kind: 'failure', code: 'TIMEOUT' });
+    await expect(
+      nativeAuthApi.withdraw({
+        headers: { Authorization: 'Bearer fixture' },
+        baseUrl: 'https://api.test',
+        kyOptions: { fetch: missingHttp },
+      }),
+    ).resolves.toEqual({ kind: 'failure', code: 'NETWORK' });
+    expect(timeoutHttp).toHaveBeenCalledOnce();
+    expect(missingHttp).toHaveBeenCalledOnce();
+  });
+
+  it('탈퇴 응답이 늦는 동안 새로 확정된 세션을 삭제하지 않는다', async () => {
+    const { runtime, actions } = googleActions();
+    await actions.signIn({ provider: 'google' });
+    const withdrawal = Promise.withResolvers<Awaited<ReturnType<NativeAuthRuntime['withdraw']>>>();
+    vi.mocked(runtime.withdraw).mockReturnValue(withdrawal.promise);
+    const pending = actions.withdraw();
+    await vi.waitFor(() => expect(runtime.withdraw).toHaveBeenCalledOnce());
+    await runtime.session.establish(
+      {
+        accessToken: 'new-access',
+        refreshToken: 'new-refresh',
+        expiresAt: Date.now() + 3_600_000,
+        userId: 8,
+      },
+      runtime.session.captureGeneration(),
+    );
+    withdrawal.resolve({ kind: 'success' });
+
+    await expect(pending).resolves.toEqual({ status: 'CANCELLED' });
+    expect(runtime.session.refreshToken).toBe('new-refresh');
+    expect(storage.clearSession).not.toHaveBeenCalled();
   });
 
   it.each(['login', 'signup'])('%s 요청 시작 세대를 세션 확정까지 전달한다', async (kind) => {
@@ -200,22 +284,19 @@ describe('AuthActions', () => {
     expect(storage.setSession).not.toHaveBeenCalled();
   });
 
-  it.each([204, 400, 401, 503])(
-    'revoke HTTP %s 응답은 204일 때만 세션을 삭제한다',
-    async (status) => {
-      const { runtime, actions } = googleActions();
-      await actions.signIn({ provider: 'google' });
-      const http = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status }));
-      vi.mocked(runtime.revoke).mockImplementation((input) =>
-        nativeAuthApi.revoke({ ...input, baseUrl: 'https://api.test', kyOptions: { fetch: http } }),
-      );
-      await expect(actions.signOut()).resolves.toMatchObject({
-        status: status === 204 ? 'SIGNED_OUT' : 'ERROR',
-      });
-      expect(storage.clearSession).toHaveBeenCalledTimes(status === 204 ? 1 : 0);
-      expect(http).toHaveBeenCalledTimes(1);
-    },
-  );
+  it.each([204, 400, 401, 503])('revoke HTTP %s 응답에도 로컬 세션을 삭제한다', async (status) => {
+    const { runtime, actions } = googleActions();
+    await actions.signIn({ provider: 'google' });
+    const http = vi.fn<typeof fetch>().mockResolvedValue(new Response(null, { status }));
+    vi.mocked(runtime.revoke).mockImplementation((input) =>
+      nativeAuthApi.revoke({ ...input, baseUrl: 'https://api.test', kyOptions: { fetch: http } }),
+    );
+    await expect(actions.signOut()).resolves.toMatchObject({
+      status: 'SIGNED_OUT',
+    });
+    expect(storage.clearSession).toHaveBeenCalledTimes(1);
+    expect(http).toHaveBeenCalledTimes(1);
+  });
 
   it('이미 시작한 등록의 401 갱신·재시도를 기다린 뒤 최신 토큰으로 한 번만 revoke한다', async () => {
     const { runtime, actions } = googleActions();
@@ -288,7 +369,7 @@ describe('AuthActions', () => {
   );
 
   it.each(['resolve', 'reject'])(
-    'revoke %s 대기 중 로그인과 갱신을 보류하고 세션을 유지한다',
+    'revoke %s 대기 중 로그인과 갱신을 보류하고 완료 뒤 로컬 세션을 삭제한다',
     async (end) => {
       const { runtime, actions } = googleActions();
       await actions.signIn({ provider: 'google' });
@@ -311,12 +392,10 @@ describe('AuthActions', () => {
       } else {
         revoke.reject(new Error('network'));
       }
-      await expect(logout).resolves.toMatchObject({
-        status: end === 'resolve' ? 'SIGNED_OUT' : 'ERROR',
-      });
+      await expect(logout).resolves.toEqual({ status: 'SIGNED_OUT' });
       expect(runtime.revoke).toHaveBeenCalledWith({ body: { refreshToken: 'refresh-1' } });
-      expect(runtime.session.refreshToken).toBe(end === 'resolve' ? undefined : 'refresh-1');
-      expect(storage.clearSession).toHaveBeenCalledTimes(end === 'resolve' ? 1 : 0);
+      expect(runtime.session.refreshToken).toBeUndefined();
+      expect(storage.clearSession).toHaveBeenCalledOnce();
     },
   );
 

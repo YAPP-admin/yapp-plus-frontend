@@ -30,7 +30,7 @@ export type RenewalResult =
 
 type Renew = (refreshToken: string) => Promise<RenewalResult>;
 
-/** 로그아웃은 명세의 204 응답을 확인한 경우에만 로컬 자격을 제거합니다. */
+/** 서버 revoke의 관찰 결과입니다. 로컬 로그아웃은 이 결과와 관계없이 진행합니다. */
 export type RevocationResult = { ok: true } | { ok: false; code: 'NETWORK' | 'TIMEOUT' | 'SERVER' };
 
 const unexpectedRenewalResult = (_result: never): never => {
@@ -68,7 +68,7 @@ export class SessionManager {
     }
   }
 
-  /** 진행 중 작업의 토큰 회전을 기다린 뒤 서버 해제에 성공한 세션만 삭제합니다. */
+  /** 진행 중 작업의 토큰 회전을 기다린 뒤 서버 해제를 시도하고 로컬 자격을 삭제합니다. */
   public signOut(revoke: (token: string) => Promise<RevocationResult>): Promise<AuthResult> {
     if (this.signingOut) {
       return this.signingOut;
@@ -107,13 +107,12 @@ export class SessionManager {
     }
     const token = this.refreshToken;
     if (token) {
-      const result = await revoke(token);
+      await revoke(token);
       if (!this.isCurrent(generation)) {
         return { status: 'CANCELLED' };
       }
-      if (!result.ok) {
-        return { status: 'ERROR', code: result.code, retryable: true };
-      }
+      // 서버 세션 해제 실패는 이 기기에서 로그아웃할 수 없는 이유가 아닙니다.
+      // 서버·푸시 등록의 잔존 여부는 운영 정책으로 추적합니다.
     }
     return this.clear();
   }
@@ -334,11 +333,16 @@ export class SessionManager {
       return { status: 'CANCELLED' };
     }
     switch (result.kind) {
-      case 'success':
-        return this.commit({ ...result.tokens, userId, name }, currentGeneration, {
+      case 'success': {
+        const committed = await this.commit({ ...result.tokens, userId, name }, currentGeneration, {
           kind: 'refresh',
           previousToken: refreshToken,
         });
+        // 회전한 refresh token을 저장하지 못하면 서버가 폐기한 이전 token을 다시 사용하지 않습니다.
+        return committed.status === 'ERROR' && committed.code === 'STORAGE'
+          ? this.clear()
+          : committed;
+      }
       case 'invalid-session':
         // 대상 검사와 clear의 즉시 무효화 사이에는 await를 두지 않습니다.
         return this.clear();

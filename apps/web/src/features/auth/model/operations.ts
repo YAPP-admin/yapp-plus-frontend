@@ -30,6 +30,13 @@ const stateFor = (client: QueryClient): OperationState => {
 const unavailable: AuthResult = { status: 'UNAVAILABLE', code: 'OUTCOME_UNKNOWN', retryable: true };
 const cancelled: AuthResult = { status: 'CANCELLED' };
 
+const traceSessionApplied = (status: AuthResult['status']): void => {
+  if (import.meta.env.DEV) {
+    // oxlint-disable-next-line no-console -- 개발 WebView에서 세션 반영 여부만 확인합니다.
+    console.info(`[auth-bridge] session ${status === 'SIGNED_IN' ? 'applied' : 'received'}`);
+  }
+};
+
 /** 같은 세션의 갱신된 토큰을 이전 응답으로 되돌리는지 검사합니다. */
 const isOlderSession = (client: QueryClient, result: AuthResult | undefined): boolean => {
   const current = client.getQueryData<AuthResult>(nativeSessionQueryKey);
@@ -103,6 +110,7 @@ export const applyAuthResult = (
   if (result && result.status !== 'CANCELLED') {
     applyAccountBoundary(client, result);
     client.setQueryData(nativeSessionQueryKey, result);
+    traceSessionApplied(result.status);
   }
 
   return result;
@@ -143,5 +151,6 @@ export const readAuthSession = async (
   }
 
   applyAccountBoundary(client, result);
+  traceSessionApplied(result.status);
   return result;
 };
