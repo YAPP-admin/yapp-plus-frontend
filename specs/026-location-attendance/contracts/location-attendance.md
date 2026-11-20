@@ -58,5 +58,8 @@ Android는 기존 distanceBetween의 반올림 전 값을 사용한다. 동일 W
 
 ## 완료 조회 후속 확인
 
-현재 current-week는 체크인 완료 여부를 제공하지 않고 제출 응답에만 checkedInAt이 있다.
+이 명세 작성 당시 current-week는 체크인 완료 여부를 제공하지 않고 제출 응답에만 checkedInAt이 있었다.
 앱 재시작 후 완료 복원은 제외한다. 별도 API·필드가 확인되면 완료 의미·null 의미·재조회 정책부터 합의한다.
+
+후속 API는 `CHECKED_IN`·`PENDING_APPROVAL`을 제공한다. 홈의 서버 상태 반영·복귀 재조회는
+[회원 홈 출석 명세](../../027-home-attendance-flow/spec.md)에서 다룬다. 위 제외는 당시 구현 범위의 기록이다.
