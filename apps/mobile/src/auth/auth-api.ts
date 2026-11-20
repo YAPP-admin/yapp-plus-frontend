@@ -23,9 +23,15 @@ import type { RenewalResult, RevocationResult } from './session';
 export type NativeAuthenticationApiResult = Readonly<{
   data?: AuthenticationResponse;
   error?: unknown;
+  response?: Response;
 }>;
 
-export type NativeVoidApiResult = Readonly<{ error?: unknown }>;
+export type WithdrawalResult =
+  | { kind: 'success' }
+  | {
+      kind: 'failure';
+      code: 'AUTH_REQUIRED' | 'SERVER' | 'NETWORK' | 'TIMEOUT' | 'OUTCOME_UNKNOWN';
+    };
 
 const authHttpStatus = { noContent: 204 } as const;
 
@@ -61,14 +67,22 @@ export const nativeAuthApi = {
   authenticateApple: async (
     input: Options<AuthenticateAppleData, false>,
   ): Promise<NativeAuthenticationApiResult> => {
-    const result = await authenticateApple(input);
+    const result = await authenticateApple({
+      ...input,
+      throwOnError: false,
+      responseStyle: 'fields',
+    });
 
     return result;
   },
   authenticateGoogle: async (
     input: Options<AuthenticateGoogleData, false>,
   ): Promise<NativeAuthenticationApiResult> => {
-    const result = await authenticateGoogle(input);
+    const result = await authenticateGoogle({
+      ...input,
+      throwOnError: false,
+      responseStyle: 'fields',
+    });
 
     return result;
   },
@@ -112,9 +126,39 @@ export const nativeAuthApi = {
       };
     }
   },
-  withdraw: async (input: Options<WithdrawData, false>): Promise<NativeVoidApiResult> => {
-    const result = await withdraw(input);
-
-    return result;
+  withdraw: async (input: Options<WithdrawData, false>): Promise<WithdrawalResult> => {
+    try {
+      const result = await withdraw({
+        ...input,
+        throwOnError: false,
+        responseStyle: 'fields',
+        timeout: 20_000,
+        retry: 0,
+      });
+      if (result.response?.status === authHttpStatus.noContent) {
+        return { kind: 'success' };
+      }
+      if (result.response?.status === 401) {
+        return { kind: 'failure', code: 'AUTH_REQUIRED' };
+      }
+      if (result.response) {
+        return { kind: 'failure', code: 'SERVER' };
+      }
+      if (result.error !== undefined) {
+        return {
+          kind: 'failure',
+          code:
+            result.error instanceof Error && result.error.name === 'TimeoutError'
+              ? 'TIMEOUT'
+              : 'NETWORK',
+        };
+      }
+      return { kind: 'failure', code: 'OUTCOME_UNKNOWN' };
+    } catch (error) {
+      return {
+        kind: 'failure',
+        code: error instanceof Error && error.name === 'TimeoutError' ? 'TIMEOUT' : 'NETWORK',
+      };
+    }
   },
 };

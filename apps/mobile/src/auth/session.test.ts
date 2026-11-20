@@ -369,14 +369,15 @@ describe('SessionManager', () => {
     expect(storage.setSession).not.toHaveBeenCalled();
   });
 
-  it('갱신 저장 실패를 네트워크 오류로 숨기지 않고 다음 저장을 허용한다', async () => {
+  it('갱신 저장 실패 뒤 이전 refresh token을 재사용하지 않고 로컬 세션을 정리한다', async () => {
     const manager = new SessionManager();
     const session = await signedInSession(manager);
     storage.setSession.mockRejectedValueOnce(new Error('storage'));
     const renew = vi.fn<() => Promise<RenewalResult>>().mockResolvedValue(renewed(2));
-    await expect(manager.refresh(session, renew)).resolves.toMatchObject({ code: 'STORAGE' });
-    expect(manager.refreshToken).toBe('refresh-1');
-    await expect(manager.refresh(session, renew)).resolves.toMatchObject({ status: 'SIGNED_IN' });
+    await expect(manager.refresh(session, renew)).resolves.toEqual({ status: 'SIGNED_OUT' });
+    expect(manager.refreshToken).toBeUndefined();
+    await expect(manager.refresh(session, renew)).resolves.toEqual({ status: 'SIGNED_OUT' });
+    expect(renew).toHaveBeenCalledOnce();
   });
 
   it('이름을 저장하고 토큰 갱신과 앱 재시작 뒤에도 유지한다', async () => {
