@@ -29,13 +29,16 @@ export function compareNative(base: NativeSnapshot, head: NativeSnapshot) {
   }
   const difference =
     next.map((part, index) => part - (previous[index] ?? 0)).find((part) => part !== 0) ?? 0;
-  const nativeChanged =
+  const hasNativeCodeChanged =
     base.fingerprint !== head.fingerprint || base.nativeBuildDigest !== head.nativeBuildDigest;
   if (difference < 0) {
     throw new Error('앱 버전을 감소시킬 수 없습니다.');
   }
-  if (nativeChanged && difference === 0) {
+  if (hasNativeCodeChanged && difference === 0) {
     throw new Error('네이티브 구성이 변경됐습니다. 앱 버전을 증가시키세요.');
   }
-  return { nativeChanged, needsBuild: nativeChanged || difference > 0 };
+  return {
+    nativeChanged: hasNativeCodeChanged,
+    needsBuild: hasNativeCodeChanged || difference > 0,
+  };
 }
