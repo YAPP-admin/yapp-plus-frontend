@@ -42,7 +42,7 @@ const acceptOpen = async (
     return;
   }
 
-  if (context.state.setPendingNotificationOpen(message)) {
+  if (context.state.setPendingNotificationOpenIfNew(message)) {
     context.publish();
   }
 };
@@ -86,20 +86,22 @@ export const createPushNotificationRuntime = (
   };
 
   return (): (() => void) => {
-    let active = true;
+    let isRuntimeActive = true;
     let sessionId = dependencies.getSessionId();
 
     const openContext: NotificationOpenContext = {
       getSession: dependencies.getSession,
       state,
       publish,
-      isActive: () => active,
+      isActive: () => isRuntimeActive,
       isCurrentOpen: (generation, openVersion) =>
-        active && generation === dependencies.captureGeneration() && openVersion === latestOpen,
+        isRuntimeActive &&
+        generation === dependencies.captureGeneration() &&
+        openVersion === latestOpen,
     };
 
     const handleSessionChange = () => {
-      if (!active) {
+      if (!isRuntimeActive) {
         return;
       }
       const nextSessionId = dependencies.getSessionId();
@@ -112,13 +114,13 @@ export const createPushNotificationRuntime = (
     };
 
     const handlePushReceived = (message: PushTargetInput) => {
-      if (active && state.recordReceivedPush(message)) {
+      if (isRuntimeActive && state.recordReceivedPushIfNew(message)) {
         publish();
       }
     };
 
     const handleNotificationOpened = (message: PushTargetInput) => {
-      if (!active) {
+      if (!isRuntimeActive) {
         return;
       }
       const openVersion = ++latestOpen;
@@ -136,7 +138,7 @@ export const createPushNotificationRuntime = (
     void consumeInitialNotification(getInitialNotificationOnce(), openContext);
 
     return () => {
-      active = false;
+      isRuntimeActive = false;
       unsubscribeReceived();
       unsubscribeOpened();
       unsubscribeSession();

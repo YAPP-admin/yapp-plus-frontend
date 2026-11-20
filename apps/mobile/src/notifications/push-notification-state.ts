@@ -19,7 +19,7 @@ export class PushNotificationState {
   }
 
   /** 수신만으로 탐색 대기를 만들지 않습니다. 중복 수신은 갱신 신호를 추가하지 않습니다. */
-  recordReceivedPush(input: PushTargetInput): boolean {
+  recordReceivedPushIfNew(input: PushTargetInput): boolean {
     const { deliveryKey } = parsePushTarget(input);
     if (!this.trackDeliveryIfNew(this.receivedDeliveryKeys, deliveryKey)) {
       return false;
@@ -30,7 +30,7 @@ export class PushNotificationState {
   }
 
   /** 새로운 탭은 이전 대기를 대체합니다. 식별자가 없으면 콜백마다 새 이벤트로 취급합니다. */
-  setPendingNotificationOpen(input: PushTargetInput): boolean {
+  setPendingNotificationOpenIfNew(input: PushTargetInput): boolean {
     const { destination, deliveryKey } = parsePushTarget(input);
     if (!this.trackDeliveryIfNew(this.openedDeliveryKeys, deliveryKey)) {
       return false;

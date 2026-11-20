@@ -27,19 +27,19 @@ export type NotificationRuntimeDependencies = {
 export const startNotificationRegistrationSync = (
   dependencies: NotificationRuntimeDependencies,
 ): (() => void) => {
-  let active = true;
+  let isSyncActive = true;
   let observedSessionId = dependencies.getSessionSnapshot()?.sessionId;
   if (!observedSessionId) {
     dependencies.clearRegistrationCache();
   }
 
   const synchronize = async () => {
-    if (!active) {
+    if (!isSyncActive) {
       return;
     }
 
     const result = await dependencies.getSession();
-    if (!active || result.status !== 'SIGNED_IN') {
+    if (!isSyncActive || result.status !== 'SIGNED_IN') {
       return;
     }
 
@@ -55,7 +55,9 @@ export const startNotificationRegistrationSync = (
       isSessionCurrent: () => {
         const current = dependencies.getSessionSnapshot();
         return (
-          active && current?.sessionId === session.sessionId && current.userId === session.userId
+          isSyncActive &&
+          current?.sessionId === session.sessionId &&
+          current.userId === session.userId
         );
       },
     });
@@ -84,7 +86,7 @@ export const startNotificationRegistrationSync = (
   schedule();
 
   return () => {
-    active = false;
+    isSyncActive = false;
     unsubscribeSession();
     unsubscribeToken();
     unsubscribeActive();

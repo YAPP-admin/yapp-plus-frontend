@@ -34,9 +34,9 @@ describe('알림 브리지 처리 확인', () => {
   });
 
   it('잘못된 입력과 오래된 ack는 새 대기를 지우지 않고 일치하는 ack만 반영한다', async () => {
-    pushNotificationState.setPendingNotificationOpen({ messageId: 'first' });
+    pushNotificationState.setPendingNotificationOpenIfNew({ messageId: 'first' });
     const first = pushNotificationState.getNotificationBridgeState().notificationOpen;
-    pushNotificationState.setPendingNotificationOpen({ messageId: 'second' });
+    pushNotificationState.setPendingNotificationOpenIfNew({ messageId: 'second' });
     nativeAppBridge.setState(pushNotificationState.getNotificationBridgeState());
     const current = nativeAppBridge.getState().notificationOpen;
     if (!first || !current) {
