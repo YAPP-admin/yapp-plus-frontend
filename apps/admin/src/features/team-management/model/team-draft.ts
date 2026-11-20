@@ -74,11 +74,11 @@ export function getCandidateMembers(
     if (normalizedQuery.length === 0) {
       return true;
     }
-    const nameMatches = normalize(member.name).includes(normalizedQuery);
-    const partMatches = searchAliases[member.part].some((alias) =>
+    const doesNameMatch = normalize(member.name).includes(normalizedQuery);
+    const doesPartMatch = searchAliases[member.part].some((alias) =>
       normalize(alias).includes(normalizedQuery),
     );
-    return nameMatches || partMatches;
+    return doesNameMatch || doesPartMatch;
   });
 }
 
