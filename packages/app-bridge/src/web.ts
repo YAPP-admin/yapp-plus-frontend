@@ -139,13 +139,13 @@ export const installSafeAreaBridge = (target?: CssVariableTarget): (() => void) 
 
   const cssTarget = target ?? document.documentElement.style;
   const bridge = getLinkedBridge();
-  let disposed = false;
+  let isDisposed = false;
   let unsubscribe = noop;
 
   applySafeAreaCssVariableFallbacks(cssTarget);
 
   void (async () => {
-    const isReady = await waitForNativeBridge(bridge, () => disposed);
+    const isReady = await waitForNativeBridge(bridge, () => isDisposed);
     if (!isReady) {
       return;
     }
@@ -157,7 +157,7 @@ export const installSafeAreaBridge = (target?: CssVariableTarget): (() => void) 
       // 핸드셰이크가 시간 초과되어도 공유 상태를 기준값으로 유지합니다.
     }
 
-    if (disposed) {
+    if (isDisposed) {
       return;
     }
 
@@ -171,7 +171,7 @@ export const installSafeAreaBridge = (target?: CssVariableTarget): (() => void) 
   })();
 
   return () => {
-    disposed = true;
+    isDisposed = true;
     unsubscribe();
   };
 };

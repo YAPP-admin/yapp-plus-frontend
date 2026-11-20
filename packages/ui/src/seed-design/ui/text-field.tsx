@@ -91,11 +91,12 @@ export const TextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
       maxGraphemeCount,
     });
 
-    const renderHeader = label ?? indicator;
-    const renderDescription = Boolean(description);
-    const renderErrorMessage = Boolean(errorMessage && invalid);
-    const renderGraphemeCount = !hideCharacterCount && maxGraphemeCount !== undefined;
-    const renderFooter = renderDescription || renderErrorMessage || renderGraphemeCount;
+    const headerContent = label ?? indicator;
+    const shouldRenderDescription = Boolean(description);
+    const shouldRenderErrorMessage = Boolean(errorMessage && invalid);
+    const shouldRenderGraphemeCount = !hideCharacterCount && maxGraphemeCount !== undefined;
+    const shouldRenderFooter =
+      shouldRenderDescription || shouldRenderErrorMessage || shouldRenderGraphemeCount;
 
     return (
       <SeedField.Root
@@ -106,7 +107,7 @@ export const TextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
         name={name}
         ref={fieldRef}
       >
-        {renderHeader && (
+        {headerContent && (
           <SeedField.Header>
             <SeedField.Label weight={labelWeight}>
               {label}
@@ -122,23 +123,23 @@ export const TextField = React.forwardRef<HTMLDivElement, TextFieldProps>(
           {suffix && <SeedTextField.SuffixText>{suffix}</SeedTextField.SuffixText>}
           {suffixIcon && <SeedTextField.SuffixIcon svg={suffixIcon} />}
         </SeedTextField.Root>
-        {renderFooter && (
+        {shouldRenderFooter && (
           <SeedField.Footer>
-            {renderDescription &&
-              (renderErrorMessage ? (
+            {shouldRenderDescription &&
+              (shouldRenderErrorMessage ? (
                 <VisuallyHidden asChild>
                   <SeedField.Description>{description}</SeedField.Description>
                 </VisuallyHidden>
               ) : (
                 <SeedField.Description>{description}</SeedField.Description>
               ))}
-            {renderErrorMessage && (
+            {shouldRenderErrorMessage && (
               <SeedField.ErrorMessage>
                 <PrefixIcon svg={<IconExclamationmarkCircleFill />} />
                 {errorMessage}
               </SeedField.ErrorMessage>
             )}
-            {renderGraphemeCount && <SeedField.CharacterCount {...counterProps} />}
+            {shouldRenderGraphemeCount && <SeedField.CharacterCount {...counterProps} />}
           </SeedField.Footer>
         )}
       </SeedField.Root>
