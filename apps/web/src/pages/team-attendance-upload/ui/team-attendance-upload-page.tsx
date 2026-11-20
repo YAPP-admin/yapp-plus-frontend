@@ -49,9 +49,9 @@ type Props = {
 
 /** 비활성 화면과 계정이 바뀐 화면의 사진 초안은 재사용하지 않는다. */
 export function TeamAttendanceUploadPage(props: Props) {
-  const active = useScreenActiveContext();
+  const isScreenActive = useScreenActiveContext();
   const { isNative, phase, session } = useNativeAuthSession();
-  return active ? (
+  return isScreenActive ? (
     <PhotoForm
       key={`${phase}:${session?.sessionId ?? 'browser'}:${session?.userId}:${props.target.sessionId}`}
       {...props}

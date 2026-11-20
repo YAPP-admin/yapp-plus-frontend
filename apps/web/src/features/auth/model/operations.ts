@@ -44,13 +44,13 @@ const isOlderSession = (client: QueryClient, result: AuthResult | undefined): bo
 /** 새 인증 의도로 이전 작업과 조회를 무효화합니다. 중복 로그인·가입은 기존 작업을 유지합니다. */
 export const beginAuthOperation = (client: QueryClient, kind: AuthOperationKind): AuthOperation => {
   const state = stateFor(client);
-  const authenticating = kind === 'authenticate' || kind === 'signup';
-  if (authenticating && state.authenticating?.generation === state.generation) {
+  const isAuthenticating = kind === 'authenticate' || kind === 'signup';
+  if (isAuthenticating && state.authenticating?.generation === state.generation) {
     throw new AuthBusyError(state.generation);
   }
 
   const operation = { generation: ++state.generation };
-  if (authenticating) {
+  if (isAuthenticating) {
     state.authenticating = operation;
   }
 
@@ -81,12 +81,12 @@ export const applyAuthResult = (
   const result =
     kind === 'logout' && (!response || response.status === 'CANCELLED') ? unavailable : response;
   // 진행 상태는 mutation이 소유합니다. 서버 해제 실패로 로그인 cache를 지우지 않습니다.
-  const localDeletionFailed = result?.status === 'ERROR' && result.code === 'STORAGE';
+  const hasLocalDeletionFailed = result?.status === 'ERROR' && result.code === 'STORAGE';
   if (
     kind === 'logout' &&
     result?.status !== 'SIGNED_OUT' &&
     result?.status !== 'WITHDRAWN' &&
-    !localDeletionFailed
+    !hasLocalDeletionFailed
   ) {
     return result;
   }

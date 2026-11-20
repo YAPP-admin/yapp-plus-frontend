@@ -22,8 +22,8 @@ export const createMemberAttendanceHandlers = (
   attendanceState?: string | null,
   attendance?: ReturnType<typeof createAttendanceFixtures>,
 ) => {
-  let failHistory = attendanceState === 'error' || attendanceState === 'next-error';
-  let failNextRequest = myState === 'error';
+  let shouldFailHistory = attendanceState === 'error' || attendanceState === 'next-error';
+  let shouldFailNextRequest = myState === 'error';
   const { pick } = createMswHandlers({ baseUrl });
   return [
     pick.find6(async ({ request }) => {
@@ -31,8 +31,8 @@ export const createMemberAttendanceHandlers = (
       if (attendanceState === 'loading') {
         await delay(5_000);
       }
-      if (failHistory && (attendanceState === 'error' || cursor !== null)) {
-        failHistory = false;
+      if (shouldFailHistory && (attendanceState === 'error' || cursor !== null)) {
+        shouldFailHistory = false;
         return HttpResponse.json(
           { code: 'HISTORY_UNAVAILABLE', message: '개발용 내역 조회 실패' },
           { status: 500 },
@@ -68,8 +68,8 @@ export const createMemberAttendanceHandlers = (
           { status: myState === 'ineligible' ? 403 : 404 },
         );
       }
-      if (failNextRequest) {
-        failNextRequest = false;
+      if (shouldFailNextRequest) {
+        shouldFailNextRequest = false;
         return HttpResponse.json(
           { code: 'ATTENDANCE_UNAVAILABLE', message: '개발용 조회 실패' },
           { status: 500 },

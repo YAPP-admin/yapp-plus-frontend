@@ -29,7 +29,7 @@ const teamInputSchema = z.object({
   location: z.object({ guide: z.string().trim() }),
 });
 
-const validSchedule = ({ startTime, endTime }: { startTime: string; endTime: string }) =>
+const isScheduleValid = ({ startTime, endTime }: { startTime: string; endTime: string }) =>
   endTime > startTime;
 const scheduleError = {
   message: '종료 시간은 시작 시간보다 늦어야 합니다.',
@@ -38,7 +38,7 @@ const scheduleError = {
 
 export const createSessionInputSchema = z
   .discriminatedUnion('type', [offlineInputSchema, teamInputSchema])
-  .refine(validSchedule, scheduleError);
+  .refine(isScheduleValid, scheduleError);
 
 export const sessionAttendanceSummarySchema = z.object({
   present: z.number().int().nonnegative(),
@@ -58,7 +58,7 @@ export const sessionSchema = z
     offlineInputSchema.extend(storedFields),
     teamInputSchema.extend(storedFields),
   ])
-  .refine(validSchedule, scheduleError);
+  .refine(isScheduleValid, scheduleError);
 
 export type SessionType = z.infer<typeof sessionTypeSchema>;
 export type CreateSessionInput = z.infer<typeof createSessionInputSchema>;

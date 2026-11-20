@@ -19,7 +19,7 @@ function EnabledMockApiBoundary({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<'pending' | 'ready' | 'failed'>('pending');
 
   useEffect(() => {
-    let active = true;
+    let isMockApiActive = true;
     async function start() {
       if (!import.meta.env.DEV || import.meta.env.MODE === 'test') {
         return;
@@ -27,11 +27,11 @@ function EnabledMockApiBoundary({ children }: { children: ReactNode }) {
       try {
         const { startMocking } = await import('./browser');
         await startMocking();
-        if (active) {
+        if (isMockApiActive) {
           setStatus('ready');
         }
       } catch {
-        if (active) {
+        if (isMockApiActive) {
           setStatus('failed');
         }
       }
@@ -39,7 +39,7 @@ function EnabledMockApiBoundary({ children }: { children: ReactNode }) {
     void start();
     // worker는 공유하므로 중단하지 않고 늦게 도착한 상태 갱신만 무시한다.
     return () => {
-      active = false;
+      isMockApiActive = false;
     };
   }, []);
 

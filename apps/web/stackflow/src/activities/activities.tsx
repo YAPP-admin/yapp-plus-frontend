@@ -80,7 +80,7 @@ export function TabsActivity() {
           tabsStep.replaceStep({ ...tabsState, initialTab }, { targetActivityId: activity.id });
         }}
       >
-        <TabPanel tab="home" active={activeTab === 'home'}>
+        <TabPanel tab="home" isActive={activeTab === 'home'}>
           <HomePage
             initialSession={
               import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true'
@@ -94,10 +94,10 @@ export function TabsActivity() {
             }
           />
         </TabPanel>
-        <TabPanel tab="schedule" active={activeTab === 'schedule'}>
+        <TabPanel tab="schedule" isActive={activeTab === 'schedule'}>
           <SchedulePage />
         </TabPanel>
-        <TabPanel tab="notices" active={activeTab === 'notices'}>
+        <TabPanel tab="notices" isActive={activeTab === 'notices'}>
           <NoticesPage
             category={tabsState.noticeCategory ?? 'ALL'}
             onCategoryChange={(noticeCategory: NoticeCategory) => {
@@ -108,7 +108,7 @@ export function TabsActivity() {
             }}
           />
         </TabPanel>
-        <TabPanel tab="my" active={activeTab === 'my'}>
+        <TabPanel tab="my" isActive={activeTab === 'my'}>
           <MyPage />
         </TabPanel>
       </TabsLayout>
@@ -215,18 +215,18 @@ function TeamPhotoSubmissionFlow() {
   const params = useActivityParams<'TeamAttendanceUpload'>();
   const stepFlow = useStepFlow('TeamAttendanceUpload');
   const step = activity.steps.filter((item) => item.id !== activity.id).at(-1);
-  const completed = (step?.params ?? params).stage === 'complete';
+  const isCompleted = (step?.params ?? params).stage === 'complete';
   const [receipt, setReceipt] = useState<TeamAttendanceReceipt | null>(null);
 
-  if (!developmentTeamTarget || (completed && !receipt)) {
+  if (!developmentTeamTarget || (isCompleted && !receipt)) {
     return <NotFoundActivity />;
   }
   return (
     <ActivityScreen
-      title={completed ? '팀 세션 인증 완료' : '팀 세션 인증 사진 올리기'}
+      title={isCompleted ? '팀 세션 인증 완료' : '팀 세션 인증 사진 올리기'}
       preventSwipeBack
     >
-      {completed && receipt ? (
+      {isCompleted && receipt ? (
         <TeamAttendanceCompletePage receipt={receipt} />
       ) : (
         <TeamAttendanceUploadPage

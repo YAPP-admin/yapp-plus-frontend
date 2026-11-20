@@ -11,11 +11,11 @@ import { ScreenActiveContext } from './screen-activity';
 export function useLoadMoreObserver(canLoad: boolean, load: () => void) {
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const { isActive } = useActivity();
-  const screenActive = useContext(ScreenActiveContext);
+  const isScreenActive = useContext(ScreenActiveContext);
 
   useEffect(() => {
     const target = loadMoreRef.current;
-    if (!isActive || !screenActive || !canLoad || !target) {
+    if (!isActive || !isScreenActive || !canLoad || !target) {
       return () => {};
     }
     const observer = new IntersectionObserver(
@@ -28,7 +28,7 @@ export function useLoadMoreObserver(canLoad: boolean, load: () => void) {
     );
     observer.observe(target);
     return () => observer.disconnect();
-  }, [canLoad, isActive, screenActive, load]);
+  }, [canLoad, isActive, isScreenActive, load]);
 
   return loadMoreRef;
 }

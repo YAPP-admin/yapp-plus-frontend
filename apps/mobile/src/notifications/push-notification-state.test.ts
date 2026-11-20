@@ -9,14 +9,14 @@ const message = (id: string) => ({
 describe('PushNotificationState', () => {
   it('같은 메시지를 수신한 뒤 탭할 수 있고 중복 수신·탭은 무시한다', () => {
     const state = new PushNotificationState();
-    expect(state.recordReceivedPush(message('a'))).toBe(true);
-    expect(state.recordReceivedPush(message('a'))).toBe(false);
+    expect(state.recordReceivedPushIfNew(message('a'))).toBe(true);
+    expect(state.recordReceivedPushIfNew(message('a'))).toBe(false);
     expect(state.getNotificationBridgeState()).toEqual({
       notificationOpen: null,
       notificationRevision: 1,
     });
-    expect(state.setPendingNotificationOpen(message('a'))).toBe(true);
-    expect(state.setPendingNotificationOpen(message('a'))).toBe(false);
+    expect(state.setPendingNotificationOpenIfNew(message('a'))).toBe(true);
+    expect(state.setPendingNotificationOpenIfNew(message('a'))).toBe(false);
     expect(state.getNotificationBridgeState().notificationOpen?.destination).toEqual({
       type: 'POST',
       postId: 42,
@@ -25,12 +25,12 @@ describe('PushNotificationState', () => {
 
   it('오래된 ack나 중복 탭이 최신 대기를 지우거나 덮어쓰지 않는다', () => {
     const state = new PushNotificationState();
-    state.setPendingNotificationOpen(message('a'));
+    state.setPendingNotificationOpenIfNew(message('a'));
     const first = state.getNotificationBridgeState().notificationOpen;
-    state.setPendingNotificationOpen(message('b'));
+    state.setPendingNotificationOpenIfNew(message('b'));
     const latest = state.getNotificationBridgeState().notificationOpen;
     state.acknowledgeNotificationOpen(first?.eventId ?? '');
-    state.setPendingNotificationOpen(message('a'));
+    state.setPendingNotificationOpenIfNew(message('a'));
     expect(state.getNotificationBridgeState().notificationOpen).toEqual(latest);
     state.acknowledgeNotificationOpen(latest?.eventId ?? '');
     state.acknowledgeNotificationOpen(latest?.eventId ?? '');
@@ -39,21 +39,21 @@ describe('PushNotificationState', () => {
 
   it('계정 경계는 대기를 폐기하고 이미 처리한 발송의 늦은 콜백은 무시한다', () => {
     const state = new PushNotificationState();
-    state.setPendingNotificationOpen(message('a'));
+    state.setPendingNotificationOpenIfNew(message('a'));
     state.clearPendingNotificationOpen();
-    expect(state.setPendingNotificationOpen(message('a'))).toBe(false);
+    expect(state.setPendingNotificationOpenIfNew(message('a'))).toBe(false);
     expect(state.getNotificationBridgeState().notificationOpen).toBeNull();
-    expect(state.setPendingNotificationOpen(message('b'))).toBe(true);
+    expect(state.setPendingNotificationOpenIfNew(message('b'))).toBe(true);
   });
 
   it('식별자가 없으면 별도 콜백을 같은 알림으로 추정하지 않는다', () => {
     const state = new PushNotificationState();
-    state.setPendingNotificationOpen({});
+    state.setPendingNotificationOpenIfNew({});
     const first = state.getNotificationBridgeState().notificationOpen;
-    state.setPendingNotificationOpen({});
+    state.setPendingNotificationOpenIfNew({});
     expect(state.getNotificationBridgeState().notificationOpen?.eventId).not.toBe(first?.eventId);
-    state.recordReceivedPush({});
-    state.recordReceivedPush({});
+    state.recordReceivedPushIfNew({});
+    state.recordReceivedPushIfNew({});
     expect(state.getNotificationBridgeState().notificationRevision).toBe(2);
   });
 });

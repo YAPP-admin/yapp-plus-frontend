@@ -50,7 +50,7 @@ export function createApiMockHandlers(
   baseUrl: string,
   options: { scenario?: 'default' | 'empty' } = {},
 ) {
-  const empty = options.scenario === 'empty';
+  const isEmptyScenario = options.scenario === 'empty';
   const factory = createMswHandlers({
     baseUrl: normalizeBaseUrl(baseUrl),
     responseFallback: 'error',
@@ -98,7 +98,7 @@ export function createApiMockHandlers(
           201,
         ),
         find1: fixedResponse(
-          empty ? fixtures.emptySessions : fixtures.sessions,
+          isEmptyScenario ? fixtures.emptySessions : fixtures.sessions,
           schemas.zSessionListResponse,
         ),
         create2: fakerResponse(
@@ -129,7 +129,7 @@ export function createApiMockHandlers(
         update1: () => new HttpResponse(null, { status: 204 }),
         update2: fakerResponse(generatedFaker.fakeUpdate2Response200, schemas.zUpdate2Response),
         find4: fixedResponse(
-          empty ? fixtures.emptyWeek : fixtures.currentWeek,
+          isEmptyScenario ? fixtures.emptyWeek : fixtures.currentWeek,
           schemas.zFind4Response,
         ),
         find5: fakerResponse(generatedFaker.fakeFind5Response200, schemas.zFind5Response),
@@ -152,7 +152,7 @@ export function createApiMockHandlers(
         ),
         list4: fakerResponse(generatedFaker.fakeList4Response200, schemas.zList4Response),
         recipients: fixedResponse(
-          empty ? fixtures.emptyRecipients : fixtures.postRecipients,
+          isEmptyScenario ? fixtures.emptyRecipients : fixtures.postRecipients,
           schemas.zAdminPostRecipientListResponse,
         ),
         revoke: () => new HttpResponse(null, { status: 204 }),

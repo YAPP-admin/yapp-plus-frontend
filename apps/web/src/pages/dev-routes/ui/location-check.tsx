@@ -20,7 +20,7 @@ export function LocationCheck() {
   );
   const mutation = useLocationCheck();
 
-  const disabled = !isNative || mutation.isPending;
+  const isLocationCheckDisabled = !isNative || mutation.isPending;
   const status = {
     idle: '아직 요청하지 않았습니다.',
     pending: '요청 처리 중입니다.',
@@ -42,7 +42,7 @@ export function LocationCheck() {
       <ActionButton
         type="button"
         variant="neutralWeak"
-        disabled={disabled}
+        disabled={isLocationCheckDisabled}
         onClick={() => mutation.mutate('permission')}
       >
         권한 조회
@@ -50,7 +50,7 @@ export function LocationCheck() {
       <ActionButton
         type="button"
         variant="brandSolid"
-        disabled={disabled}
+        disabled={isLocationCheckDisabled}
         onClick={() => mutation.mutate('location')}
       >
         현재 위치 요청
@@ -58,7 +58,7 @@ export function LocationCheck() {
       <ActionButton
         type="button"
         variant="neutralWeak"
-        disabled={disabled}
+        disabled={isLocationCheckDisabled}
         onClick={() => mutation.mutate('settings')}
       >
         앱 설정 열기

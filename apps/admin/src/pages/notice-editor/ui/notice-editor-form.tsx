@@ -32,8 +32,8 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
   const [entries, setEntries] = useState(() =>
     getNoticeAttachmentEntries(notice?.attachments ?? []),
   );
-  const pending = create.isPending || update.isPending;
-  const checkingImages = entries.some(({ status }) => status === 'pending');
+  const isNoticeSavePending = create.isPending || update.isPending;
+  const isNoticeImageCheckPending = entries.some(({ status }) => status === 'pending');
   const initialSnapshot = getNoticeDraftSnapshot(
     initialValues,
     initialBody,
@@ -44,7 +44,7 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
   function save(content: NoticeFormContent) {
     const result = noticeDocumentSchema.safeParse(body);
     setBodyError(!result.success);
-    if (!result.success || checkingImages || pending) {
+    if (!result.success || isNoticeImageCheckPending || isNoticeSavePending) {
       return;
     }
 
@@ -77,14 +77,14 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
     <NoticeForm
       initialValues={initialValues}
       onSubmit={save}
-      isPending={pending}
+      isPending={isNoticeSavePending}
       error={
         create.isError || update.isError
           ? '저장하지 못했습니다. 입력을 유지했으니 다시 시도하세요.'
           : undefined
       }
       submitLabel={notice ? '수정 저장' : '공지 등록'}
-      submitDisabled={checkingImages || pending}
+      submitDisabled={isNoticeImageCheckPending || isNoticeSavePending}
       renderFooter={(values) => (
         <NoticeLeaveDialog
           dirty={
@@ -99,7 +99,7 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
         />
       )}
     >
-      <section aria-labelledby={bodyId} inert={pending}>
+      <section aria-labelledby={bodyId} inert={isNoticeSavePending}>
         <h2 id={bodyId} className={styles.description}>
           공지 내용
         </h2>
@@ -122,7 +122,11 @@ export function NoticeEditorForm({ notice }: { notice?: Notice }) {
         )}
       </section>
 
-      <NoticeAttachmentInput entries={entries} onEntriesChange={setEntries} disabled={pending} />
+      <NoticeAttachmentInput
+        entries={entries}
+        onEntriesChange={setEntries}
+        disabled={isNoticeSavePending}
+      />
     </NoticeForm>
   );
 }

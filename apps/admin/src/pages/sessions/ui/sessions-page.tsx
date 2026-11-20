@@ -52,13 +52,13 @@ export function SessionsPage({ type, generationId, onTypeChange }: Props) {
         onClose={unmount}
         onUpdated={(input: SessionInput) => {
           unmount();
-          const changedType = type !== 'all' && input.type !== type;
+          const hasSessionTypeChanged = type !== 'all' && input.type !== type;
           snackbar.create({
             render: () => (
               <Snackbar
                 variant="positive"
                 message={
-                  changedType
+                  hasSessionTypeChanged
                     ? '세션을 수정했습니다. 변경한 유형은 전체 목록에서 확인할 수 있습니다.'
                     : '세션을 수정했습니다.'
                 }

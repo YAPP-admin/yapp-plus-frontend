@@ -16,7 +16,7 @@ export const createSessionHandlers = (
   attendance = createAttendanceFixtures(fixtures),
 ) => {
   const { currentWeekFixture: currentWeek, scheduleFixture: schedule } = fixtures;
-  let failNextScheduleRequest = scheduleState === 'error';
+  let shouldFailNextScheduleRequest = scheduleState === 'error';
   const { pick } = createMswHandlers({ baseUrl });
   return [
     pick.verify(async ({ request }) => {
@@ -52,8 +52,8 @@ export const createSessionHandlers = (
       if (scheduleState === 'loading') {
         await delay(5_000);
       }
-      if (failNextScheduleRequest) {
-        failNextScheduleRequest = false;
+      if (shouldFailNextScheduleRequest) {
+        shouldFailNextScheduleRequest = false;
         return HttpResponse.json(
           { code: 'CURRENT_GENERATION_NOT_FOUND', message: '개발용 조회 실패' },
           { status: 500 },

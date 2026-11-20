@@ -106,10 +106,10 @@ export function createMemberNoticeHandlers(
     })) ?? memberNoticeFixture;
   const detailFor = (postId: number) =>
     details ? details.find((notice) => notice.postId === postId) : memberNoticeDetail(postId);
-  let failNextRequest = noticeState === 'error' || noticeState === 'next-error';
+  let shouldFailNextRequest = noticeState === 'error' || noticeState === 'next-error';
   const readIds = new Set<number>();
   resetMemberNoticeHandlers.add(() => {
-    failNextRequest = noticeState === 'error' || noticeState === 'next-error';
+    shouldFailNextRequest = noticeState === 'error' || noticeState === 'next-error';
     readIds.clear();
   });
   const { pick } = createMswHandlers({ baseUrl });
@@ -121,8 +121,8 @@ export function createMemberNoticeHandlers(
       if (noticeState === 'loading') {
         await delay(5_000);
       }
-      if (failNextRequest && (noticeState === 'error' || cursor !== null)) {
-        failNextRequest = false;
+      if (shouldFailNextRequest && (noticeState === 'error' || cursor !== null)) {
+        shouldFailNextRequest = false;
         return HttpResponse.json(
           { code: 'NOTICE_UNAVAILABLE', message: '개발용 공지 조회 실패' },
           { status: 500 },

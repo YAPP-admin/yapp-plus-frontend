@@ -142,7 +142,7 @@ export class NotificationRegistration {
 
   private async updateSelection(
     input: NotificationRegistrationInput,
-    requestedEnabled?: boolean,
+    requestedNotificationEnabled?: boolean,
   ): Promise<NotificationRegistrationResult> {
     if (!input.isSessionCurrent()) {
       return { ok: false, code: 'CANCELLED' };
@@ -154,9 +154,13 @@ export class NotificationRegistration {
     } catch {
       return { ok: false, code: 'STORAGE' };
     }
-    const enabled = requestedEnabled ?? selection.enabled;
-    const changed = await this.apply(input, enabled, requestedEnabled === true);
-    if (!changed.ok || requestedEnabled === undefined) {
+    const isNotificationEnabled = requestedNotificationEnabled ?? selection.enabled;
+    const changed = await this.apply(
+      input,
+      isNotificationEnabled,
+      requestedNotificationEnabled === true,
+    );
+    if (!changed.ok || requestedNotificationEnabled === undefined) {
       return changed;
     }
     if (!input.isSessionCurrent()) {
@@ -164,7 +168,9 @@ export class NotificationRegistration {
     }
 
     try {
-      await this.storage.setSelection(input.firebaseProjectId, input.installationId, { enabled });
+      await this.storage.setSelection(input.firebaseProjectId, input.installationId, {
+        enabled: isNotificationEnabled,
+      });
     } catch {
       return { ok: false, code: 'STORAGE' };
     }
@@ -173,14 +179,14 @@ export class NotificationRegistration {
 
   private async apply(
     input: NotificationRegistrationInput,
-    enabled: boolean,
-    requirePermission = false,
+    isNotificationEnabled: boolean,
+    shouldReturnPermissionRequired = false,
   ): Promise<NotificationRegistrationResult> {
     if (!input.isSessionCurrent()) {
       return { ok: false, code: 'CANCELLED' };
     }
-    if (!enabled) {
-      return this.removeDevice(input, enabled);
+    if (!isNotificationEnabled) {
+      return this.removeDevice(input, isNotificationEnabled);
     }
 
     // 권한 요청도 서버 변경과 같은 잠금 안에서 처리해 중복 다이얼로그를 막습니다.
@@ -197,19 +203,21 @@ export class NotificationRegistration {
     }
 
     if (permission !== 'allowed') {
-      const removed = await this.removeDevice(input, enabled);
-      return removed.ok && requirePermission ? { ok: false, code: 'PERMISSION_REQUIRED' } : removed;
+      const removed = await this.removeDevice(input, isNotificationEnabled);
+      return removed.ok && shouldReturnPermissionRequired
+        ? { ok: false, code: 'PERMISSION_REQUIRED' }
+        : removed;
     }
     const registrationToken = await input.getToken();
     if (!input.isSessionCurrent()) {
       return { ok: false, code: 'CANCELLED' };
     }
 
-    const sameRegistration =
+    const isSameRegistration =
       this.registered?.sessionId === input.session.sessionId &&
       this.registered.installationId === input.installationId &&
       this.registered.registrationToken === registrationToken;
-    if (sameRegistration) {
+    if (isSameRegistration) {
       return { ok: true, enabled: true };
     }
     const result = await this.api.registerDevice({
@@ -233,7 +241,7 @@ export class NotificationRegistration {
 
   private async removeDevice(
     input: NotificationRegistrationInput,
-    enabled: boolean,
+    isNotificationEnabled: boolean,
   ): Promise<NotificationRegistrationResult> {
     // 응답이 유실돼도 서버는 삭제했을 수 있으므로 이전 등록 성공 기록을 무효화합니다.
     this.registered = undefined;
@@ -244,6 +252,6 @@ export class NotificationRegistration {
     if (!input.isSessionCurrent()) {
       return { ok: false, code: 'CANCELLED' };
     }
-    return result.ok ? { ok: true, enabled } : toFailure(result);
+    return result.ok ? { ok: true, enabled: isNotificationEnabled } : toFailure(result);
   }
 }

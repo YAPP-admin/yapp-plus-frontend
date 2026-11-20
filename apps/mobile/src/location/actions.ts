@@ -90,7 +90,7 @@ const measureLocation = async (
  * 앱에서는 한 번 생성해 재사용하며, 잠금은 이 인스턴스의 응답 대기 동안만 유효하다.
  */
 export const createLocationActions = (runtime: LocationRuntime) => {
-  let busy = false;
+  let isLocationRequestInProgress = false;
 
   /** 팝업 없이 권한을 조회한다. SUCCESS여도 권한이 거부된 상태일 수 있다. */
   const getLocationPermission = async (): Promise<LocationPermissionResult> => {
@@ -116,7 +116,7 @@ export const createLocationActions = (runtime: LocationRuntime) => {
    * 권한 선택에는 시간 제한이 없고, 측정 대기는 15초다. OS 측정 취소는 보장하지 않는다.
    */
   const requestCurrentLocation = async (): Promise<LocationResult> => {
-    if (busy) {
+    if (isLocationRequestInProgress) {
       return error('BUSY');
     }
 
@@ -124,7 +124,7 @@ export const createLocationActions = (runtime: LocationRuntime) => {
       return error('APP_INACTIVE');
     }
 
-    busy = true;
+    isLocationRequestInProgress = true;
 
     try {
       const permission = await resolvePermission(runtime);
@@ -145,7 +145,7 @@ export const createLocationActions = (runtime: LocationRuntime) => {
     } catch {
       return error('LOCATION_UNAVAILABLE');
     } finally {
-      busy = false;
+      isLocationRequestInProgress = false;
     }
   };
 

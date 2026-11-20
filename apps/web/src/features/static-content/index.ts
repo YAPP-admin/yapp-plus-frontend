@@ -39,8 +39,8 @@ export function getStaticNotice(postId: number, owner?: string) {
       Object.assign(new Error('공지를 찾지 못했어요.'), { code: 'POST_NOT_FOUND' }),
     );
   }
-  const read = readsFor(owner).has(postId);
-  return Promise.resolve({ ...notice, read, readCount: read ? 1 : 0 });
+  const isRead = readsFor(owner).has(postId);
+  return Promise.resolve({ ...notice, read: isRead, readCount: isRead ? 1 : 0 });
 }
 
 export function markStaticNoticeRead(postId: number, owner?: string): Promise<void> {

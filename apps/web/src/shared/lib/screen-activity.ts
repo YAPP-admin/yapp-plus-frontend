@@ -17,8 +17,8 @@ export function useScreenActiveContext() {
 export function useRefetchOnScreenReturn(
   query: Pick<QueryObserverResult<unknown, unknown>, 'isStale' | 'refetch'>,
 ) {
-  const active = useScreenActiveContext();
-  const wasActive = useRef(active);
+  const isScreenActive = useScreenActiveContext();
+  const wasScreenActive = useRef(isScreenActive);
   const refetchIfStale = useEffectEvent(() => {
     if (query.isStale) {
       void query.refetch({ cancelRefetch: false });
@@ -26,10 +26,10 @@ export function useRefetchOnScreenReturn(
   });
 
   useEffect(() => {
-    const returned = active && !wasActive.current;
-    wasActive.current = active;
-    if (returned) {
+    const hasReturnedToScreen = isScreenActive && !wasScreenActive.current;
+    wasScreenActive.current = isScreenActive;
+    if (hasReturnedToScreen) {
       refetchIfStale();
     }
-  }, [active]);
+  }, [isScreenActive]);
 }

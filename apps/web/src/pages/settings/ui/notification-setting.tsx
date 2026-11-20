@@ -26,17 +26,17 @@ export function NotificationSetting() {
   const { query, mutation, failure } = useNotificationSettings();
   const settingsMutation = useOpenAppSettingsMutation();
 
-  const unsupported = failure?.code === 'UNSUPPORTED';
+  const isNotificationUnsupported = failure?.code === 'UNSUPPORTED';
 
   // 권한 안내는 복귀 후 조회한 현재 OS 상태를 기준으로 합니다.
-  const denied = query.data?.permission === 'denied';
+  const isNotificationPermissionDenied = query.data?.permission === 'denied';
 
   const getMessage = () => {
-    if (denied) {
+    if (isNotificationPermissionDenied) {
       return '시스템에서 알림이 꺼져 있어요. 시스템 설정에서 허용해 주세요.';
     }
 
-    if (unsupported || failure?.code === 'PERMISSION_REQUIRED') {
+    if (isNotificationUnsupported || failure?.code === 'PERMISSION_REQUIRED') {
       return null;
     }
 
@@ -66,7 +66,7 @@ export function NotificationSetting() {
           <SwitchRoot
             className={switchRoot}
             checked={query.data?.enabled ?? false}
-            disabled={!query.data || unsupported || mutation.isPending}
+            disabled={!query.data || isNotificationUnsupported || mutation.isPending}
             onCheckedChange={(enabled) => mutation.mutate(enabled)}
           >
             <SwitchHiddenInput
@@ -97,7 +97,7 @@ export function NotificationSetting() {
         </ActionButton>
       )}
 
-      {denied && (
+      {isNotificationPermissionDenied && (
         <ActionButton
           type="button"
           size="small"

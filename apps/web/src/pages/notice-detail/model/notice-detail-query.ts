@@ -8,7 +8,7 @@ import {
 } from '@yapp-plus/api/generated';
 import { koreanDateString, koreanTimestamp } from '@/shared/lib/korean-date-time';
 
-const safeInteger = (value: bigint) => Number.isSafeInteger(Number(value));
+const isSafeInteger = (value: bigint) => Number.isSafeInteger(Number(value));
 
 /** 상세 화면 진입값을 양의 안전한 정수 ID로 제한한다. */
 export function noticeIdFromParam(value: string): number | undefined {
@@ -23,17 +23,17 @@ export function noticeIdFromParam(value: string): number | undefined {
 /** API bigint 식별자·집계를 number로 정규화하고 날짜·첨부 원본을 검증한다. */
 export const noticeDetailSchema = zUserPostDetailResponse.extend({
   postId: zUserPostDetailResponse.shape.postId
-    .refine(safeInteger, '정밀도를 보장할 수 없는 공지 ID입니다.')
+    .refine(isSafeInteger, '정밀도를 보장할 수 없는 공지 ID입니다.')
     .refine((id) => id > 0, '공지 ID는 양수여야 합니다.')
     .transform(Number),
   readCount: zUserPostDetailResponse.shape.readCount
-    .refine(safeInteger, '정밀도를 보장할 수 없는 읽음 수입니다.')
+    .refine(isSafeInteger, '정밀도를 보장할 수 없는 읽음 수입니다.')
     .refine((count) => count >= 0, '읽음 수는 음수가 될 수 없습니다.')
     .transform(Number),
   images: zUserPostImageResponse
     .extend({
       sizeBytes: zUserPostImageResponse.shape.sizeBytes
-        .refine(safeInteger, '정밀도를 보장할 수 없는 이미지 크기입니다.')
+        .refine(isSafeInteger, '정밀도를 보장할 수 없는 이미지 크기입니다.')
         .refine((size) => size >= 0, '이미지 크기는 음수가 될 수 없습니다.')
         .transform(Number),
     })

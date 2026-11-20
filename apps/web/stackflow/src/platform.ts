@@ -65,27 +65,27 @@ export function useReducedMotionPreference() {
 
 export function getAppScreenOptions(
   platform: StackflowPlatform,
-  reducedMotion: boolean,
+  isReducedMotionEnabled: boolean,
   screenPreventsSwipeBack = false,
 ): AppScreenOptions {
   let transitionStyle: AppScreenOptions['transitionStyle'] = 'fadeIn';
 
-  if (!reducedMotion && platform === 'ios') {
+  if (!isReducedMotionEnabled && platform === 'ios') {
     transitionStyle = 'slideFromRightIOS';
-  } else if (!reducedMotion && platform === 'android') {
+  } else if (!isReducedMotionEnabled && platform === 'android') {
     transitionStyle = 'fadeFromBottomAndroid';
   }
 
   return {
     theme: platform === 'android' ? 'android' : 'cupertino',
     transitionStyle,
-    preventSwipeBack: screenPreventsSwipeBack || reducedMotion || platform !== 'ios',
+    preventSwipeBack: screenPreventsSwipeBack || isReducedMotionEnabled || platform !== 'ios',
   };
 }
 
 export function useAppScreenOptions(screenPreventsSwipeBack = false): AppScreenOptions {
   const platform = detectPlatform();
-  const reducedMotion = useReducedMotionPreference();
+  const isReducedMotionEnabled = useReducedMotionPreference();
 
-  return getAppScreenOptions(platform, reducedMotion, screenPreventsSwipeBack);
+  return getAppScreenOptions(platform, isReducedMotionEnabled, screenPreventsSwipeBack);
 }

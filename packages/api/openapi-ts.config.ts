@@ -1,7 +1,7 @@
 import { defineConfig } from '@hey-api/openapi-ts';
 
 const input = process.env.OPENAPI_INPUT;
-const enableSdkValidation = process.env.HEY_API_SDK_VALIDATION === 'true';
+const isSdkValidationEnabled = process.env.HEY_API_SDK_VALIDATION === 'true';
 const mockCount = {
   fakerPath: ['number', 'int'] as const,
   defaultArgs: { min: 0, max: 100 },
@@ -34,7 +34,7 @@ export default defineConfig({
     {
       name: '@hey-api/sdk',
       transformer: false,
-      validator: enableSdkValidation,
+      validator: isSdkValidationEnabled,
     },
     {
       name: '@tanstack/react-query',

@@ -90,7 +90,7 @@ export function BottomNavigation({
 
   if (showDevelopmentCommunity) {
     const { label, Icon } = developmentCommunityDestination;
-    const current = activeTab === 'community';
+    const isCurrentTab = activeTab === 'community';
     links.splice(
       links.length - 1,
       0,
@@ -99,9 +99,9 @@ export function BottomNavigation({
           activityName="DiningList"
           activityParams={{}}
           className={item}
-          aria-current={current ? 'page' : undefined}
+          aria-current={isCurrentTab ? 'page' : undefined}
           onClick={(event) => {
-            if (current) {
+            if (isCurrentTab) {
               event.preventDefault();
             }
           }}
