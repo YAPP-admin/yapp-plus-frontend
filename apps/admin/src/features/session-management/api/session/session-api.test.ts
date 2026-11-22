@@ -2,7 +2,7 @@ import type { CreateSessionRequest, SessionListResponse } from '@yapp-plus/api/g
 import { QueryClient } from '@tanstack/react-query';
 import { HttpResponse, http } from 'msw';
 import { describe, expect, it } from 'vitest';
-import { apiBaseUrl, server } from '../../../mocks/server';
+import { apiBaseUrl, server } from '../../../../mocks/server';
 import {
   createSession,
   createSessionMutationOptions,

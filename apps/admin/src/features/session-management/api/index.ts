@@ -1,8 +1,8 @@
-export { createSession, deleteSession, listSessions, updateSession } from './session-api';
+export { createSession, deleteSession, listSessions, updateSession } from './session';
 export {
   createSessionMutationOptions,
   deleteSessionMutationOptions,
   sessionsQueryKey,
   sessionsQueryOptions,
   updateSessionMutationOptions,
-} from './session-queries';
+} from './session';
