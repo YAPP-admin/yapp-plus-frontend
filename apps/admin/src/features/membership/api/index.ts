@@ -2,19 +2,13 @@
 
 export {
   approveMembership,
-  getMember,
-  getMemberTeamOptions,
-  getMembers,
   getMembershipApproval,
   getMembershipApprovals,
   getRosterCandidates,
-  getRosterEntries,
-  registerRoster,
   rejectMembership,
-  updateMember,
-} from './membership';
-export type {
-  MemberListQuery,
-  MembershipApprovalListQuery,
-  RosterEntryListQuery,
-} from './membership';
+} from './approval/approval-api';
+export { getMember, getMemberTeamOptions, getMembers, updateMember } from './member/member-api';
+export { getRosterEntries, registerRoster } from './roster/roster-api';
+export type { MemberListQuery } from './member/member-api';
+export type { MembershipApprovalListQuery } from './approval/approval-api';
+export type { RosterEntryListQuery } from './roster/roster-api';
