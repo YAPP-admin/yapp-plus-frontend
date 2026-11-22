@@ -1,8 +1,8 @@
 /** 관리자 로그아웃 adapter가 서버 세션 폐기와 인증 헤더를 보존하는지 검증합니다. */
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiBaseUrl, server } from '../../../mocks/server';
-import { configureAdminApiClient } from '../admin-session';
+import { apiBaseUrl, server } from '../../../../mocks/server';
+import { configureAdminApiClient } from '../../admin-session';
 import { logout } from './logout';
 
 describe('관리자 로그아웃 API', () => {

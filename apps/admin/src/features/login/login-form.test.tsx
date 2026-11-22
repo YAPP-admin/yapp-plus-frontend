@@ -3,7 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { LoginForm } from './login-form';
-import type { Login, LoginResult } from './login';
+import type { Login, LoginResult } from './api/login';
 
 const invalid: LoginResult = { status: 'invalid-credentials' };
 

@@ -1,4 +1,4 @@
-import type { LoginInput } from './login';
+import type { LoginInput } from './api/login';
 
 type LoginField = {
   name: keyof LoginInput;

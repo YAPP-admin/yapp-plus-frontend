@@ -3,7 +3,7 @@ import { useMutation } from '@tanstack/react-query';
 import { ActionButton } from '@yapp-plus/ui';
 import { useRef } from 'react';
 import { LOGIN_FIELDS, UNAVAILABLE_MESSAGE } from './login-form.constants';
-import type { Login, LoginInput, LoginResult } from './login';
+import type { Login, LoginInput, LoginResult } from './api/login';
 import * as styles from './login-form.css';
 
 type LoginFormProps = {

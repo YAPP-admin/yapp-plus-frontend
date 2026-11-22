@@ -1,7 +1,7 @@
 import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { apiBaseUrl, server } from '../../mocks/server';
-import { readAdminAccessToken } from './admin-session';
+import { apiBaseUrl, server } from '../../../../mocks/server';
+import { readAdminAccessToken } from '../../admin-session';
 import { login } from './login';
 
 const successResponse = {
