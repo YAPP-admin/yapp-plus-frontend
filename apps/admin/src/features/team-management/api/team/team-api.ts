@@ -1,15 +1,11 @@
-/** 생성 Team SDK와 관리자 기능 사이의 요청 경계를 감싼다. 화면 모델 변환은 소비 계층의 책임이다. */
+/** 생성 Team SDK와 관리자 기능 사이의 팀 요청 경계를 감싼다. 화면 모델 변환은 소비 계층의 책임이다. */
 import {
-  candidates,
   create1,
   delete_,
   find,
   findAll,
-  replaceMembers,
   update,
   type CreateTeamRequest,
-  type ReplaceTeamMembersRequest,
-  type TeamMemberCandidateResponse,
   type TeamResponse,
   type UpdateTeamRequest,
 } from '@yapp-plus/api/generated';
@@ -74,31 +70,4 @@ export async function deleteTeam(generationId: number, teamId: number): Promise<
     path: { generationId, teamId },
     throwOnError: true,
   });
-}
-
-/** 팀원을 전체 교체하고 갱신된 Team DTO를 반환한다. */
-export async function replaceTeamMembers(
-  generationId: number,
-  teamId: number,
-  body: ReplaceTeamMembersRequest,
-): Promise<TeamResponse> {
-  const result = await replaceMembers({
-    path: { generationId, teamId },
-    body,
-    throwOnError: true,
-  });
-  return requireData(result, '팀원 교체');
-}
-
-/** 기수의 팀원 후보를 조회하며 assigned가 없으면 서버의 전체 후보 기본값을 사용한다. */
-export async function listTeamMemberCandidates(
-  generationId: number,
-  assigned?: boolean,
-): Promise<TeamMemberCandidateResponse[]> {
-  const result = await candidates({
-    path: { generationId },
-    ...(assigned === undefined ? {} : { query: { assigned } }),
-    throwOnError: true,
-  });
-  return requireData(result, '팀원 후보 조회');
 }
