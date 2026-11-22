@@ -1,7 +1,7 @@
 import type { DecideResponse, TeamPhotoListResponse } from '@yapp-plus/api/generated';
 import { http, HttpResponse } from 'msw';
 import { expect, it } from 'vitest';
-import { apiBaseUrl, server } from '../../../mocks/server';
+import { apiBaseUrl, server } from '../../../../mocks/server';
 import { decideTeamAttendancePhoto, getTeamAttendancePhotos } from './team-photo-api';
 
 const photos = { items: [] } satisfies TeamPhotoListResponse;
