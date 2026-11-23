@@ -12,6 +12,7 @@ import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
 import { AttendanceRulesPage } from '@/pages/attendance-rules';
 import { DevRoutesPage } from '@/pages/dev-routes';
+import { DiningPage } from '@/pages/dining';
 import { HomePage, useAttendanceConfirmation } from '@/pages/home';
 import { LoginErrorPage } from '@/pages/login-error';
 import { LoginPage } from '@/pages/login';
@@ -29,6 +30,7 @@ import { TeamAttendanceCompletePage } from '@/pages/team-attendance-complete';
 import { TeamAttendanceErrorPage } from '@/pages/team-attendance-error';
 import { TeamAttendanceUploadPage } from '@/pages/team-attendance-upload';
 import { AuthLayout } from '@/app/layouts/auth-layout';
+import { BottomNavigation } from '@/app/layouts/bottom-navigation';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabPanel, TabsLayout } from '@/app/layouts/tabs-layout';
@@ -341,6 +343,33 @@ export function DevRoutesActivity() {
     <ActivityScreen title="개발 경로">
       <PageShell>
         <DevRoutesPage isActive={isActive} />
+      </PageShell>
+    </ActivityScreen>
+  );
+}
+
+export function DiningListActivity() {
+  return (
+    <ActivityScreen title="회식">
+      <PageShell
+        header={null}
+        navigation={
+          import.meta.env.DEV ? (
+            <BottomNavigation activeTab="community" showDevelopmentCommunity />
+          ) : undefined
+        }
+      >
+        <DiningPage />
+      </PageShell>
+    </ActivityScreen>
+  );
+}
+export function DiningDetailActivity() {
+  const { diningId } = useActivityParams<'DiningDetail'>();
+  return (
+    <ActivityScreen title="회식" snackbarPosition="safeArea">
+      <PageShell header={null} plain>
+        <DiningPage diningId={diningId} />
       </PageShell>
     </ActivityScreen>
   );

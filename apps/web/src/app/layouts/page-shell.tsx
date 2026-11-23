@@ -37,7 +37,7 @@ function getGridRows(
   navigation: ReactNode | undefined,
 ) {
   if (customHeader === null) {
-    return '1fr';
+    return navigation ? '1fr auto' : '1fr';
   }
   if (navigation && !plain) {
     return 'auto 1fr auto';

@@ -1,9 +1,10 @@
 import type * as SeedDesign from '@seed-design/react';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createMemoryHistory, RouterProvider } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { clearAdminAccessToken, saveAdminAccessToken } from '~/features/login';
 import { Providers } from '~/providers';
 import { getRouter } from '~/router';
 import type * as RootRouteModule from '~/routes/__root';
@@ -34,11 +35,60 @@ async function renderShell() {
   return { router, ...view };
 }
 
+async function findVisibleOption(name: string) {
+  const options = await screen.findAllByRole('option', { name });
+  const option = options.find((candidate) => candidate.closest('[data-hidden]') === null);
+  if (option === undefined) {
+    throw new Error(`${name} 옵션을 찾을 수 없습니다.`);
+  }
+  return option;
+}
+
 beforeEach(() => {
   viewport.narrow = true;
+  localStorage.clear();
+  saveAdminAccessToken('admin-shell-test-token');
+});
+
+afterEach(() => {
+  clearAdminAccessToken();
 });
 
 describe('좁은 화면 관리자 메뉴', () => {
+  it('기수를 전환해도 화면 이동 동안 선택을 유지한다', async () => {
+    const user = userEvent.setup();
+    const { router } = await renderShell();
+    const generationSelect = await screen.findByRole('combobox', { name: '기수 선택' });
+
+    await user.click(generationSelect);
+    await user.click(await findVisibleOption('32기 · ID 32'));
+
+    expect(screen.getByText('32기 운영 워크스페이스')).toBeVisible();
+
+    await act(async () => router.navigate({ to: '/attendance' }));
+
+    expect(await screen.findByRole('heading', { name: '출석부', level: 1 })).toBeVisible();
+    expect(screen.getByText('32기 운영 워크스페이스')).toBeVisible();
+  });
+
+  it('모바일 메뉴에서 기수를 전환해도 패널을 유지한다', async () => {
+    const user = userEvent.setup();
+    await renderShell();
+    await user.click(await screen.findByRole('button', { name: '메뉴' }));
+    const dialog = await screen.findByRole('dialog', { name: '관리자 메뉴' });
+    const hiddenSelect = dialog.querySelector('select');
+
+    if (hiddenSelect === null) {
+      throw new Error('기수 선택의 native fallback을 찾을 수 없습니다.');
+    }
+
+    // SidePanel 안의 portal Select는 happy-dom에서 목록을 열지 못하므로 native fallback으로 변경 이벤트를 검증한다.
+    fireEvent.change(hiddenSelect, { target: { value: '32' } });
+
+    expect(dialog).toBeVisible();
+    expect(within(dialog).getByText('32기 운영 워크스페이스')).toBeVisible();
+  });
+
   it.each(['Escape', '닫기 버튼'])(
     '%s로 닫으면 메뉴 버튼으로 포커스가 돌아온다',
     async (method) => {

@@ -3,23 +3,23 @@
 import {
   correct,
   detail,
-  list5,
+  list6,
   teamOptions,
   type CorrectData,
   type DetailData,
-  type List5Data,
+  type List6Data,
   type TeamOptionsData,
 } from '@yapp-plus/api/generated';
 
 /** 회원 목록의 이름·직군·팀·커서 필터다. */
-export type MemberListQuery = List5Data['query'];
+export type MemberListQuery = List6Data['query'];
 
 /** generationId로 회원 목록을 필터와 함께 조회한다. */
 export function getMembers(
-  generationId: List5Data['path']['generationId'],
+  generationId: List6Data['path']['generationId'],
   query?: MemberListQuery,
 ) {
-  return list5({
+  return list6({
     path: { generationId },
     query,
     throwOnError: true,

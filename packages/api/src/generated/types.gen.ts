@@ -203,6 +203,7 @@ export type ErrorResponse = {
     | 'CURRENT_WEEK_SESSION_CONFLICT'
     | 'EMPTY_POST_AUDIENCE'
     | 'GENERATION_NOT_FOUND'
+    | 'GENERATION_QUERY_FAILED'
     | 'INVALID_ATTENDANCE_CODE'
     | 'INVALID_ATTENDANCE_HISTORY_CURSOR'
     | 'INVALID_ATTENDANCE_REPORT'
@@ -725,9 +726,9 @@ export type CurrentWeekSessionDetailResponse = {
    */
   location: string | null;
   /**
-   * 출석 UI 상태. 현재 기수 PLAYER 아님, 시간 전/종료 후, 출석 가능
+   * 출석 UI 상태. PLAYER 아님(NOT_ELIGIBLE)을 먼저 판정하고, 현재 체크인 기록이 있으면 시간과 관계없이 CHECKED_IN, TEAM의 본인 선택 사진이 심사 중이고 개인 수동 정정이 없으면 PENDING_APPROVAL이며 REGULAR에서는 반환하지 않는다. 그 외 미인증이면 NOT_OPEN 또는 AVAILABLE이다. CHECKED_IN은 인증 완료이며 정상 출석·점수 판정과는 다르다.
    */
-  attendanceStatus: 'NOT_ELIGIBLE' | 'NOT_OPEN' | 'AVAILABLE';
+  attendanceStatus: 'NOT_ELIGIBLE' | 'NOT_OPEN' | 'AVAILABLE' | 'CHECKED_IN' | 'PENDING_APPROVAL';
   /**
    * 도로명주소. legacy/TEAM이면 null
    */
@@ -967,6 +968,28 @@ export type RosterCandidateView = {
   role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | null;
 };
 
+export type AdminGenerationListItemResponse = {
+  /**
+   * 다른 어드민 API에 전달할 기수 식별자
+   */
+  generationId: number;
+  /**
+   * 기수 번호
+   */
+  generationNumber: number;
+  /**
+   * 기수 표시 이름
+   */
+  generationName: string;
+};
+
+export type AdminGenerationListResponse = {
+  /**
+   * 기수 번호 내림차순의 전체 기수. 없으면 빈 배열
+   */
+  generations: Array<AdminGenerationListItemResponse>;
+};
+
 export type CurrentTeamResponse = {
   teamId: number;
   name: string;
@@ -1008,11 +1031,34 @@ export type AdminSessionResponse = {
 };
 
 export type AttendanceSummaryResponse = {
+  /**
+   * REGULAR은 출석 코드 발급, TEAM은 미정이 아닌 출결 판정이 있으면 STARTED. 인원 집계와 독립적이다.
+   */
   status: 'NOT_STARTED' | 'STARTED';
+  /**
+   * 저장된 전체 출결 기록 수. NOT_STARTED여도 실제 값을 반환한다.
+   */
   totalCount: number;
+  /**
+   * 현재 저장 상태가 PRESENT인 인원
+   */
   presentCount: number;
+  /**
+   * 현재 저장 상태가 ABSENT인 인원
+   */
   absentCount: number;
+  /**
+   * 현재 저장 상태가 UNDECIDED인 인원
+   */
   undecidedCount: number;
+  /**
+   * 현재 저장 상태가 LATE_ONE_HOUR 또는 LATE_THREE_HOUR인 인원 합계
+   */
+  lateCount: number;
+  /**
+   * 해당 기수·세션의 보고 제출 인원. 반복·여러 종류는 1명, 감점 기한과 무관하며 출석 시작 전에도 집계한다.
+   */
+  reportCount: number;
 };
 
 export type SessionListResponse = {
@@ -3602,6 +3648,35 @@ export type FindCandidatesResponses = {
 
 export type FindCandidatesResponse = FindCandidatesResponses[keyof FindCandidatesResponses];
 
+export type List2Data = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/admin/generations';
+};
+
+export type List2Errors = {
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * GENERATION_QUERY_FAILED
+   */
+  500: ErrorResponse;
+};
+
+export type List2Error = List2Errors[keyof List2Errors];
+
+export type List2Responses = {
+  /**
+   * 전체 기수 목록 조회 성공
+   */
+  200: AdminGenerationListResponse;
+};
+
+export type List2Response = List2Responses[keyof List2Responses];
+
 export type CandidatesData = {
   body?: never;
   path: {
@@ -3638,7 +3713,7 @@ export type CandidatesResponses = {
 
 export type CandidatesResponse = CandidatesResponses[keyof CandidatesResponses];
 
-export type List2Data = {
+export type List3Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3648,7 +3723,7 @@ export type List2Data = {
   url: '/api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos';
 };
 
-export type List2Errors = {
+export type List3Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -3663,18 +3738,18 @@ export type List2Errors = {
   503: ErrorResponse;
 };
 
-export type List2Error = List2Errors[keyof List2Errors];
+export type List3Error = List3Errors[keyof List3Errors];
 
-export type List2Responses = {
+export type List3Responses = {
   /**
    * OK
    */
   200: TeamPhotoListResponse;
 };
 
-export type List2Response = List2Responses[keyof List2Responses];
+export type List3Response = List3Responses[keyof List3Responses];
 
-export type List3Data = {
+export type List4Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3687,7 +3762,7 @@ export type List3Data = {
   url: '/api/admin/generations/{generationId}/sessions/{sessionId}/attendance';
 };
 
-export type List3Errors = {
+export type List4Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -3698,18 +3773,18 @@ export type List3Errors = {
   404: ErrorResponse;
 };
 
-export type List3Error = List3Errors[keyof List3Errors];
+export type List4Error = List4Errors[keyof List4Errors];
 
-export type List3Responses = {
+export type List4Responses = {
   /**
    * OK
    */
   200: AdminAttendanceListResponse;
 };
 
-export type List3Response = List3Responses[keyof List3Responses];
+export type List4Response = List4Responses[keyof List4Responses];
 
-export type List4Data = {
+export type List5Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3723,7 +3798,7 @@ export type List4Data = {
   url: '/api/admin/generations/{generationId}/roster-entries';
 };
 
-export type List4Errors = {
+export type List5Errors = {
   /**
    * INVALID_ROSTER_LIST_REQUEST
    */
@@ -3742,16 +3817,16 @@ export type List4Errors = {
   500: ErrorResponse;
 };
 
-export type List4Error = List4Errors[keyof List4Errors];
+export type List5Error = List5Errors[keyof List5Errors];
 
-export type List4Responses = {
+export type List5Responses = {
   /**
    * 조회 성공
    */
   200: GenerationRosterListResponse;
 };
 
-export type List4Response = List4Responses[keyof List4Responses];
+export type List5Response = List5Responses[keyof List5Responses];
 
 export type RecipientsData = {
   body?: never;
@@ -3831,7 +3906,7 @@ export type Detail3Responses = {
 
 export type Detail3Response = Detail3Responses[keyof Detail3Responses];
 
-export type List5Data = {
+export type List6Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3845,7 +3920,7 @@ export type List5Data = {
   url: '/api/admin/generations/{generationId}/members';
 };
 
-export type List5Errors = {
+export type List6Errors = {
   /**
    * INVALID_MEMBER_REQUEST|INVALID_MEMBER_CURSOR
    */
@@ -3868,16 +3943,16 @@ export type List5Errors = {
   503: ErrorResponse;
 };
 
-export type List5Error = List5Errors[keyof List5Errors];
+export type List6Error = List6Errors[keyof List6Errors];
 
-export type List5Responses = {
+export type List6Responses = {
   /**
    * 조회 성공
    */
   200: AdminMemberListResponse;
 };
 
-export type List5Response = List5Responses[keyof List5Responses];
+export type List6Response = List6Responses[keyof List6Responses];
 
 export type TeamOptionsData = {
   body?: never;
@@ -3914,7 +3989,7 @@ export type TeamOptionsResponses = {
 
 export type TeamOptionsResponse = TeamOptionsResponses[keyof TeamOptionsResponses];
 
-export type List6Data = {
+export type List7Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3928,7 +4003,7 @@ export type List6Data = {
   url: '/api/admin/generations/{generationId}/attendance-statistics';
 };
 
-export type List6Errors = {
+export type List7Errors = {
   /**
    * INVALID_REQUEST
    */
@@ -3951,16 +4026,16 @@ export type List6Errors = {
   503: ErrorResponse;
 };
 
-export type List6Error = List6Errors[keyof List6Errors];
+export type List7Error = List7Errors[keyof List7Errors];
 
-export type List6Responses = {
+export type List7Responses = {
   /**
    * 조회 성공. 승인 회원이 없으면 items는 빈 배열
    */
   200: AdminAttendanceStatisticsListResponse;
 };
 
-export type List6Response = List6Responses[keyof List6Responses];
+export type List7Response = List7Responses[keyof List7Responses];
 
 export type RevokeData = {
   /**

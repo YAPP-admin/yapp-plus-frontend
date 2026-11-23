@@ -6,9 +6,9 @@ import userEvent from '@testing-library/user-event';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { expect, it, vi } from 'vitest';
 import { createAdminQueryClient } from '../../../query-client';
+import type { SessionInput } from '../model/session-form';
 import { SessionScheduleField } from './session-schedule-field';
 import { SessionForm } from './session-form';
-import type { CreateSessionInput } from '~/features/session-management';
 
 function setup(type: 'date' | 'time', initial: string, disabled = false) {
   const change = vi.fn<(value: string) => void>();
@@ -100,7 +100,7 @@ it.each(['date', 'time'] as const)(
 );
 
 it('수정 폼에서 날짜·시간을 바꿔도 부모 폼을 유지하고 새 일정으로 저장한다', async () => {
-  const save = vi.fn<(value: CreateSessionInput) => void>();
+  const save = vi.fn<(value: SessionInput) => void>();
   const close = vi.fn<() => void>();
   render(
     <QueryClientProvider client={createAdminQueryClient()}>
@@ -114,9 +114,8 @@ it('수정 폼에서 날짜·시간을 바꿔도 부모 폼을 유지하고 새 
                   name: '수정 세션',
                   type: 'team',
                   date: '2020-01-01',
-                  startTime: '14:07',
-                  endTime: '17:00',
-                  location: { guide: '' },
+                  startTime: '14:07:35',
+                  endTime: '17:00:40',
                 }}
                 onSubmit={save}
                 onClose={() => {
@@ -157,8 +156,7 @@ it('수정 폼에서 날짜·시간을 바꿔도 부모 폼을 유지하고 새 
     name: '수정 세션',
     type: 'team',
     date: '2020-01-02',
-    startTime: '14:08',
-    endTime: '17:00',
-    location: { guide: '' },
+    startTime: '14:08:00',
+    endTime: '17:00:40',
   });
 });

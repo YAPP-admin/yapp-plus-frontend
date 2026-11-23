@@ -145,11 +145,12 @@ export function createApiMockHandlers(
           generatedFaker.fakeFindCandidatesResponse200,
           schemas.zFindCandidatesResponse,
         ),
+        list2: fixedResponse(fixtures.adminGenerations, schemas.zAdminGenerationListResponse),
         candidates: fakerResponse(
           generatedFaker.fakeCandidatesResponse200,
           schemas.zCandidatesResponse,
         ),
-        list3: fakerResponse(generatedFaker.fakeList3Response200, schemas.zList3Response),
+        list4: fakerResponse(generatedFaker.fakeList4Response200, schemas.zList4Response),
         recipients: fixedResponse(
           empty ? fixtures.emptyRecipients : fixtures.postRecipients,
           schemas.zAdminPostRecipientListResponse,

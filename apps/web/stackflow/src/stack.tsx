@@ -46,6 +46,8 @@ declare module '@stackflow/config' {
     SignupComplete: EmptyActivityParams;
     SignupUnregistered: EmptyActivityParams;
     DevRoutes: EmptyActivityParams;
+    DiningList: EmptyActivityParams;
+    DiningDetail: { diningId: string };
   }
 }
 
@@ -156,6 +158,16 @@ export const activityComponents = {
   DevRoutes: lazy<EmptyActivityParams>(() =>
     import('./activities/activities').then(({ DevRoutesActivity }) => ({
       default: DevRoutesActivity,
+    })),
+  ),
+  DiningList: lazy<EmptyActivityParams>(() =>
+    import('./activities/activities').then(({ DiningListActivity }) => ({
+      default: DiningListActivity,
+    })),
+  ),
+  DiningDetail: lazy<{ diningId: string }>(() =>
+    import('./activities/activities').then(({ DiningDetailActivity }) => ({
+      default: DiningDetailActivity,
     })),
   ),
 };
@@ -334,6 +346,8 @@ export const stackflowConfig = defineConfig({
     { name: 'SignupComplete', route: '/signup/complete' },
     { name: 'SignupUnregistered', route: '/signup/unregistered' },
     { name: 'DevRoutes', route: '/dev/routes' },
+    { name: 'DiningList', route: '/dining' },
+    { name: 'DiningDetail', route: '/dining/:diningId' },
     { name: 'NotFound', route: '*' },
   ],
   transitionDuration: 350,
