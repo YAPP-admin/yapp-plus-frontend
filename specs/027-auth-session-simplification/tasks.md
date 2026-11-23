@@ -10,3 +10,6 @@
 - [x] T008 `apps/mobile/src/auth/*.test.ts`와 웹 모델 테스트에 회귀 사례 추가
 - [x] T009 `specs/027-auth-session-simplification/validation.md`에 실행·수동 검증·미검증 항목 기록
 - [x] T010 `node --run check`, `node --run build` 실행
+- [x] T011 native WebView bootstrap 실험 및 제거 결정
+- [x] T012 세션 복원 자동 polling·복귀 재조회를 수동 재시도로 단순화
+- [x] T013 getSession 웹·native 왕복 진단 로그 추가

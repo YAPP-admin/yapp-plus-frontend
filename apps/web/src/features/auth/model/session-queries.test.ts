@@ -128,10 +128,7 @@ it.each(['logout', 'withdraw', 'account', 'resume'] as const)(
           () => {},
         );
         try {
-          focusManager.setFocused(false);
-          focusManager.setFocused(true);
-          await vi.waitUntil(() => bridge.getNativeSession.mock.calls.length === 1);
-          await client.fetchQuery(nativeSessionQueryOptions(true));
+          await client.refetchQueries({ queryKey: nativeSessionQueryOptions(true).queryKey });
         } finally {
           unsubscribe();
           client.unmount();

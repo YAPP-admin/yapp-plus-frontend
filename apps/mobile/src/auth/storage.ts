@@ -1,6 +1,8 @@
 import { sessionNameSchema } from '@yapp-plus/app-bridge';
 import * as SecureStore from 'expo-secure-store';
 
+import { traceNativeSessionStorage } from './diagnostics';
+
 export type StoredSession = Readonly<{ refreshToken: string; userId: number; name?: string }>;
 
 const sessionKey = 'org.yapp.yappplus.auth.session';
@@ -38,14 +40,37 @@ const parseSession = (value: string): StoredSession | null => {
 export class AuthStorage {
   public async getSession(): Promise<StoredSession | null> {
     // 사용자 ID가 없는 이전 저장 형식은 갱신하지 않고 재로그인합니다.
-    await SecureStore.deleteItemAsync(legacyTokenKey);
-    const value = await SecureStore.getItemAsync(sessionKey);
+    const deleteLegacySession = SecureStore.deleteItemAsync(legacyTokenKey);
+    traceNativeSessionStorage('legacy-delete', 'started');
+    try {
+      await deleteLegacySession;
+      traceNativeSessionStorage('legacy-delete', 'succeeded');
+    } catch (error) {
+      traceNativeSessionStorage('legacy-delete', 'failed', error);
+    }
+
+    traceNativeSessionStorage('session-read', 'started');
+    let value: string | null;
+    try {
+      value = await SecureStore.getItemAsync(sessionKey);
+      traceNativeSessionStorage('session-read', 'succeeded');
+    } catch (error) {
+      traceNativeSessionStorage('session-read', 'failed', error);
+      throw error;
+    }
     if (value === null) {
       return null;
     }
     const session = parseSession(value);
     if (!session) {
-      await SecureStore.deleteItemAsync(sessionKey);
+      traceNativeSessionStorage('invalid-session-delete', 'started');
+      try {
+        await SecureStore.deleteItemAsync(sessionKey);
+        traceNativeSessionStorage('invalid-session-delete', 'succeeded');
+      } catch (error) {
+        traceNativeSessionStorage('invalid-session-delete', 'failed', error);
+        throw error;
+      }
     }
     return session;
   }

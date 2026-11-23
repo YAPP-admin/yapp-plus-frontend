@@ -45,6 +45,21 @@ it('이전 토큰 단독 저장은 삭제하고 재로그인으로 전환한다'
   expect(values.has(legacyKey)).toBe(false);
 });
 
+it('레거시 키 삭제가 실패해도 현재 세션을 계속 읽는다', async () => {
+  const session = { refreshToken: 'refresh-test', userId: 7 };
+  values.set(sessionKey, JSON.stringify({ version: 1, ...session }));
+  vi.mocked(SecureStore.deleteItemAsync).mockImplementation((key) => {
+    if (key === legacyKey) {
+      return Promise.reject(new Error('legacy storage'));
+    }
+    values.delete(key);
+    return Promise.resolve();
+  });
+
+  await expect(storage.getSession()).resolves.toEqual(session);
+  expect(SecureStore.getItemAsync).toHaveBeenCalledWith(sessionKey);
+});
+
 it.each([
   'broken-json',
   'null',
