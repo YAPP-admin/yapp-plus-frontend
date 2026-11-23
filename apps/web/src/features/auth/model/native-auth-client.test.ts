@@ -1,10 +1,10 @@
 import {
   detail2,
   detail2Options,
-  find4,
-  find5,
-  find4Options,
-  find5Options,
+  find6,
+  find7,
+  find6Options,
+  find7Options,
 } from '@yapp-plus/api/generated';
 import type { AuthResult, AuthSession } from '@yapp-plus/app-bridge';
 import { http, HttpResponse } from 'msw';
@@ -28,7 +28,7 @@ beforeEach(() => {
   controller = new AbortController();
 });
 
-it.each([find4, find5])(
+it.each([find6, find7])(
   '401에서 native 갱신 후 원래 SDK 조회만 한 번 재시도한다',
   async (request) => {
     const tokens: (string | null)[] = [];
@@ -98,7 +98,7 @@ it.each([401, 403, 500])('HTTP %i에서 재시도 상한을 지킨다', async (s
     session: { ...session, tokenVersion: 2 },
   });
   await expect(
-    find4({ ...nativeAuthClientOptions(session), signal: controller.signal, throwOnError: true }),
+    find6({ ...nativeAuthClientOptions(session), signal: controller.signal, throwOnError: true }),
   ).rejects.toMatchObject({
     status,
   });
@@ -136,7 +136,7 @@ it.each(['account', 'cancel', 'older', 'signed-out', 'unavailable'] as const)(
       });
     });
     await expect(
-      find4({ ...nativeAuthClientOptions(session), signal: controller.signal, throwOnError: true }),
+      find6({ ...nativeAuthClientOptions(session), signal: controller.signal, throwOnError: true }),
     ).rejects.toMatchObject(scenario === 'cancel' ? { name: 'AbortError' } : { status: 401 });
     expect(count).toBe(1);
   },
@@ -145,7 +145,7 @@ it.each(['account', 'cancel', 'older', 'signed-out', 'unavailable'] as const)(
 it('이미 취소된 조회는 HTTP 요청이나 갱신을 시작하지 않는다', async () => {
   controller.abort();
   await expect(
-    find4({ ...nativeAuthClientOptions(session), signal: controller.signal, throwOnError: true }),
+    find6({ ...nativeAuthClientOptions(session), signal: controller.signal, throwOnError: true }),
   ).rejects.toMatchObject({
     name: 'AbortError',
   });
@@ -167,7 +167,7 @@ it('생성 queryOptions가 401 갱신 후 응답을 성공 데이터로 저장�
   });
   const queryClient = new QueryClient();
   await expect(
-    queryClient.fetchQuery({ ...find4Options(nativeAuthClientOptions(session)), retry: false }),
+    queryClient.fetchQuery({ ...find6Options(nativeAuthClientOptions(session)), retry: false }),
   ).resolves.toEqual({ session: null });
   expect(count).toBe(2);
 });
@@ -181,7 +181,7 @@ it('네트워크 오류는 자동 재시도하거나 native 갱신하지 않는�
     }),
   );
   await expect(
-    find4({ ...nativeAuthClientOptions(session), throwOnError: true }),
+    find6({ ...nativeAuthClientOptions(session), throwOnError: true }),
   ).rejects.toBeInstanceOf(Error);
   expect(count).toBe(1);
   expect(refreshNativeSession).not.toHaveBeenCalled();
@@ -190,19 +190,19 @@ it('네트워크 오류는 자동 재시도하거나 native 갱신하지 않는�
 const sessionQueries = [
   {
     name: '홈',
-    options: find4Options,
+    options: find6Options,
     fetch: (client: QueryClient, auth: AuthSession) =>
-      client.fetchQuery(find4Options(nativeAuthClientOptions(auth))),
+      client.fetchQuery(find6Options(nativeAuthClientOptions(auth))),
   },
   {
     name: '일정',
-    options: find5Options,
+    options: find7Options,
     fetch: (client: QueryClient, auth: AuthSession) =>
-      client.fetchQuery(find5Options(nativeAuthClientOptions(auth))),
+      client.fetchQuery(find7Options(nativeAuthClientOptions(auth))),
   },
   {
     name: '공지 상세',
-    options: (config: Parameters<typeof find4Options>[0]) =>
+    options: (config: Parameters<typeof find6Options>[0]) =>
       detail2Options({ ...config, path: { postId: 2 } }),
     fetch: (client: QueryClient, auth: AuthSession) =>
       client.fetchQuery(detail2Options({ ...nativeAuthClientOptions(auth), path: { postId: 2 } })),

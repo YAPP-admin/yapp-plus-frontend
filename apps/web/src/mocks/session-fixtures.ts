@@ -43,6 +43,8 @@ export function createSessionFixtures(now: number) {
         name: currentSession.name,
         date: currentSession.date,
         startTime: currentSession.startTime,
+        endTime: currentSession.endTime,
+        type: currentSession.type,
         location: currentSession.location,
         // 시연은 실제 요일·시간에 관계없이 코드 입력을 확인할 수 있다.
         attendanceStatus: 'AVAILABLE',

@@ -1,6 +1,6 @@
 import { QueryClient } from '@tanstack/react-query';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { find4Options, find5Options } from '@yapp-plus/api/generated';
+import { find6Options, find7Options } from '@yapp-plus/api/generated';
 import { currentWeekQueryOptions } from '@/pages/home/model/current-week-query';
 import { scheduleQueryOptions } from '@/pages/schedule/model/schedule-query';
 import {
@@ -17,8 +17,8 @@ it('생성 키를 유지하며 네트워크 없이 세션·일정·공지 상세
   const fetch = vi.spyOn(globalThis, 'fetch');
   const client = new QueryClient();
   try {
-    expect(currentWeekQueryOptions().queryKey).toEqual(find4Options().queryKey);
-    expect(scheduleQueryOptions().queryKey).toEqual(find5Options().queryKey);
+    expect(currentWeekQueryOptions().queryKey).toEqual(find6Options().queryKey);
+    expect(scheduleQueryOptions().queryKey).toEqual(find7Options().queryKey);
     const week = await client.fetchQuery(currentWeekQueryOptions());
     expect(week.session).toBeNull();
     await client.fetchQuery(scheduleQueryOptions());

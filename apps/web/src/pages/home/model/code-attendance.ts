@@ -8,7 +8,7 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import {
-  find6QueryKey,
+  find8QueryKey,
   mineQueryKey,
   verifyMutation,
   verifyMutationKey,
@@ -182,7 +182,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
     networkMode: 'always',
     onMutate: ({ body }) => body.sessionId,
     onSuccess: () => {
-      for (const queryKey of [options.queryKey, find6QueryKey(), mineQueryKey()]) {
+      for (const queryKey of [options.queryKey, find8QueryKey(), mineQueryKey()]) {
         void client.invalidateQueries({ queryKey });
       }
     },

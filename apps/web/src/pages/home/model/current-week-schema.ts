@@ -11,6 +11,9 @@ const sessionSchema = zCurrentWeekSessionDetailResponse.extend({
   startTime: zCurrentWeekSessionDetailResponse.shape.startTime.regex(
     /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/,
   ),
+  endTime: zCurrentWeekSessionDetailResponse.shape.endTime.regex(
+    /^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/,
+  ),
 });
 
 export const currentWeekSchema = zCurrentWeekSessionResponse

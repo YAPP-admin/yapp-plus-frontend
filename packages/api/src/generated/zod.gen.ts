@@ -1045,9 +1045,11 @@ export const zCurrentWeekSessionDetailResponse = z.object({
     .max(BigInt('9223372036854775807'), {
       error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
     }),
+  type: z.enum(['REGULAR', 'TEAM']),
   name: z.string(),
   date: z.iso.date(),
   startTime: z.string(),
+  endTime: z.string(),
   location: z.string().nullable(),
   attendanceStatus: z.enum([
     'NOT_ELIGIBLE',
@@ -2826,7 +2828,7 @@ export const zFind3Response = zUserNotificationListResponse;
 /**
  * 조회 성공. 토요일 세션이 없으면 session은 null
  */
-export const zFind4Response = zCurrentWeekSessionResponse;
+export const zFind6Response = zCurrentWeekSessionResponse;
 
 export const zList1Query = z.object({
   type: z.enum(['ALL', 'SESSION', 'ASSIGNMENT', 'OPERATION']).optional(),
@@ -2857,7 +2859,7 @@ export const zDetail2Response = zUserPostDetailResponse;
 /**
  * 조회 성공
  */
-export const zFind5Response = zCurrentGenerationSessionsResponse;
+export const zFind7Response = zCurrentGenerationSessionsResponse;
 
 export const zCompleteKakaoAuthorizationQuery = z.object({
   code: z.string(),
@@ -2878,16 +2880,16 @@ export const zStartAppleAuthorizationQuery = z.object({
  */
 export const zMineResponse = zMyAttendanceScoreResponse;
 
-export const zFind6Query = z.object({
+export const zFind8Query = z.object({
   cursor: z.string().optional(),
 });
 
 /**
  * 조회 성공
  */
-export const zFind6Response = zAttendanceHistoryResponse;
+export const zFind8Response = zAttendanceHistoryResponse;
 
-export const zFind7Path = z.object({
+export const zFind9Path = z.object({
   userId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -2898,7 +2900,7 @@ export const zFind7Path = z.object({
     }),
 });
 
-export const zFind7Query = z.object({
+export const zFind9Query = z.object({
   cursor: z.string().optional(),
   size: z
     .int()
@@ -2911,7 +2913,7 @@ export const zFind7Query = z.object({
 /**
  * 조회 성공; 이력이 없으면 빈 목록
  */
-export const zFind7Response = zRetainedHistoryPage;
+export const zFind9Response = zRetainedHistoryPage;
 
 export const zFindPendingQuery = z.object({
   size: z

@@ -710,6 +710,10 @@ export type CurrentWeekSessionDetailResponse = {
    */
   sessionId: number;
   /**
+   * 세션 유형: REGULAR은 정규 세션, TEAM은 팀 세션
+   */
+  type: 'REGULAR' | 'TEAM';
+  /**
    * 세션 이름
    */
   name: string;
@@ -721,6 +725,10 @@ export type CurrentWeekSessionDetailResponse = {
    * 세션 시작 시간
    */
   startTime: string;
+  /**
+   * 세션 종료 시간. 한국 시간 기준이며 startTime과 동일한 형식
+   */
+  endTime: string;
   /**
    * 세션 장소. 팀 세션이면 null
    */
@@ -3141,14 +3149,14 @@ export type Find3Responses = {
 
 export type Find3Response = Find3Responses[keyof Find3Responses];
 
-export type Find4Data = {
+export type Find6Data = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/sessions/current-week';
 };
 
-export type Find4Errors = {
+export type Find6Errors = {
   /**
    * AUTHENTICATION_FAILED
    */
@@ -3163,16 +3171,16 @@ export type Find4Errors = {
   409: ErrorResponse;
 };
 
-export type Find4Error = Find4Errors[keyof Find4Errors];
+export type Find6Error = Find6Errors[keyof Find6Errors];
 
-export type Find4Responses = {
+export type Find6Responses = {
   /**
    * 조회 성공. 토요일 세션이 없으면 session은 null
    */
   200: CurrentWeekSessionResponse;
 };
 
-export type Find4Response = Find4Responses[keyof Find4Responses];
+export type Find6Response = Find6Responses[keyof Find6Responses];
 
 export type List1Data = {
   body?: never;
@@ -3251,14 +3259,14 @@ export type Detail2Responses = {
 
 export type Detail2Response = Detail2Responses[keyof Detail2Responses];
 
-export type Find5Data = {
+export type Find7Data = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/generations/current/sessions';
 };
 
-export type Find5Errors = {
+export type Find7Errors = {
   /**
    * AUTHENTICATION_FAILED
    */
@@ -3273,16 +3281,16 @@ export type Find5Errors = {
   409: ErrorResponse;
 };
 
-export type Find5Error = Find5Errors[keyof Find5Errors];
+export type Find7Error = Find7Errors[keyof Find7Errors];
 
-export type Find5Responses = {
+export type Find7Responses = {
   /**
    * 조회 성공
    */
   200: CurrentGenerationSessionsResponse;
 };
 
-export type Find5Response = Find5Responses[keyof Find5Responses];
+export type Find7Response = Find7Responses[keyof Find7Responses];
 
 export type CompleteKakaoAuthorizationData = {
   body?: never;
@@ -3457,7 +3465,7 @@ export type MineResponses = {
 
 export type MineResponse = MineResponses[keyof MineResponses];
 
-export type Find6Data = {
+export type Find8Data = {
   body?: never;
   path?: never;
   query?: {
@@ -3466,7 +3474,7 @@ export type Find6Data = {
   url: '/api/attendance-history';
 };
 
-export type Find6Errors = {
+export type Find8Errors = {
   /**
    * INVALID_ATTENDANCE_HISTORY_CURSOR
    */
@@ -3481,18 +3489,18 @@ export type Find6Errors = {
   409: ErrorResponse;
 };
 
-export type Find6Error = Find6Errors[keyof Find6Errors];
+export type Find8Error = Find8Errors[keyof Find8Errors];
 
-export type Find6Responses = {
+export type Find8Responses = {
   /**
    * 조회 성공
    */
   200: AttendanceHistoryResponse;
 };
 
-export type Find6Response = Find6Responses[keyof Find6Responses];
+export type Find8Response = Find8Responses[keyof Find8Responses];
 
-export type Find7Data = {
+export type Find9Data = {
   body?: never;
   path: {
     userId: number;
@@ -3504,7 +3512,7 @@ export type Find7Data = {
   url: '/api/admin/users/{userId}/retained-history';
 };
 
-export type Find7Errors = {
+export type Find9Errors = {
   /**
    * INVALID_HISTORY_REQUEST
    */
@@ -3523,16 +3531,16 @@ export type Find7Errors = {
   503: ErrorResponse;
 };
 
-export type Find7Error = Find7Errors[keyof Find7Errors];
+export type Find9Error = Find9Errors[keyof Find9Errors];
 
-export type Find7Responses = {
+export type Find9Responses = {
   /**
    * 조회 성공; 이력이 없으면 빈 목록
    */
   200: RetainedHistoryPage;
 };
 
-export type Find7Response = Find7Responses[keyof Find7Responses];
+export type Find9Response = Find9Responses[keyof Find9Responses];
 
 export type FindPendingData = {
   body?: never;

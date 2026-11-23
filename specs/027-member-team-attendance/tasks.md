@@ -11,7 +11,7 @@
 - [x] T002 specs/027-member-team-attendance/spec.md와 checklists/requirements.md에 확정 정책·품질 검토를 작성한다.
 - [x] T003 specs/027-member-team-attendance/plan.md·data-model.md·contracts/team-attendance.md·quickstart.md·tasks.md를 작성한다.
 - [x] T004 문서 링크·작업 형식·check·변경량을 확인해 specs/027-member-team-attendance/validation.md에 기록한다.
-- [ ] T005 specs/027-member-team-attendance/validation.md에 사용자 문서 리뷰와 1A 진행 확인을 기록한다.
+- [x] T005 specs/027-member-team-attendance/validation.md에 사용자 문서 리뷰와 1A 진행 확인을 기록한다.
 
 ## 1단계 — 공용 계약 기반
 
@@ -19,7 +19,7 @@
 
 ### 1A — 주간 필드·후반 조회 이름
 
-- [ ] T006 packages/api/openapi-ts.config.ts의 임시 필터·이름 변환으로 src/generated를 재생성하고 apps/web/src/mocks/session-fixtures.ts·공용 fixture·관련 소비자·테스트에 type·endTime 및 후반 조회 이름을 이관한다.
+- [x] T006 packages/api/openapi-ts.config.ts의 임시 필터·이름 변환으로 src/generated를 재생성하고 apps/web/src/mocks/session-fixtures.ts·공용 fixture·관련 소비자·테스트에 type·endTime 및 후반 조회 이름을 이관한다.
 - [ ] T007 apps/admin/src/mocks/api-contract.test.ts와 해당 웹 회귀 테스트로 HTTP 경로·Query key 의미를 검증하고 specs/027-member-team-attendance/validation.md에 1A 결과·리뷰를 기록한다.
 
 ### 1B — 나머지 기존 조회 이름
