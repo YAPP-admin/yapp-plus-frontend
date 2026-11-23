@@ -84,6 +84,8 @@ export const currentWeek = {
     name: '정규 세션',
     date: '2026-10-31',
     startTime: '14:00:00',
+    endTime: '18:00:00',
+    type: 'REGULAR',
     location: '개발용 교육장',
     attendanceStatus: 'AVAILABLE',
   },

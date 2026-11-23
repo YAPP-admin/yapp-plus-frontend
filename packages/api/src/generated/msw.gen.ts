@@ -51,10 +51,10 @@ import type {
   Find1Responses,
   Find2Responses,
   Find3Responses,
-  Find4Responses,
-  Find5Responses,
   Find6Responses,
   Find7Responses,
+  Find8Responses,
+  Find9Responses,
   FindAllResponses,
   FindCandidatesResponses,
   FindDetailResponses,
@@ -2327,16 +2327,16 @@ export function handleFind3(
   );
 }
 
-export type HandleFind4Response = {
-  body: Find4Responses[200];
+export type HandleFind6Response = {
+  body: Find6Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/sessions/current-week` operation.
  */
-export function handleFind4(
-  response?: HandleFind4Response | HttpResponseResolver<never, never>,
+export function handleFind6(
+  response?: HandleFind6Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2441,16 +2441,16 @@ export function handleDetail2(
   );
 }
 
-export type HandleFind5Response = {
-  body: Find5Responses[200];
+export type HandleFind7Response = {
+  body: Find7Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/generations/current/sessions` operation.
  */
-export function handleFind5(
-  response?: HandleFind5Response | HttpResponseResolver<never, never>,
+export function handleFind7(
+  response?: HandleFind7Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2679,16 +2679,16 @@ export function handleMine(
   );
 }
 
-export type HandleFind6Response = {
-  body: Find6Responses[200];
+export type HandleFind8Response = {
+  body: Find8Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/attendance-history` operation.
  */
-export function handleFind6(
-  response?: HandleFind6Response | HttpResponseResolver<never, never>,
+export function handleFind8(
+  response?: HandleFind8Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2713,17 +2713,17 @@ export function handleFind6(
   );
 }
 
-export type HandleFind7Response = {
-  body: Find7Responses[200];
+export type HandleFind9Response = {
+  body: Find9Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/users/{userId}/retained-history` operation.
  */
-export function handleFind7(
+export function handleFind9(
   response?:
-    | HandleFind7Response
+    | HandleFind9Response
     | HttpResponseResolver<
         {
           userId: string;
@@ -3617,7 +3617,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/sessions/current-week` operation.
    */
-  find4: typeof handleFind4;
+  find6: typeof handleFind6;
   /**
    * Handler for the `GET /api/posts` operation.
    */
@@ -3629,7 +3629,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/generations/current/sessions` operation.
    */
-  find5: typeof handleFind5;
+  find7: typeof handleFind7;
   /**
    * Handler for the `GET /api/auth/oidc/kakao/callback` operation.
    */
@@ -3657,11 +3657,11 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/attendance-history` operation.
    */
-  find6: typeof handleFind6;
+  find8: typeof handleFind8;
   /**
    * Handler for the `GET /api/admin/users/{userId}/retained-history` operation.
    */
-  find7: typeof handleFind7;
+  find9: typeof handleFind9;
   /**
    * Handler for the `GET /api/admin/membership-approvals` operation.
    */
@@ -3792,18 +3792,18 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     withdraw: wrap(handleWithdraw),
     find2: wrap(handleFind2),
     find3: wrap(handleFind3),
-    find4: wrap(handleFind4),
+    find6: wrap(handleFind6),
     list1: wrap(handleList1),
     detail2: wrap(handleDetail2),
-    find5: wrap(handleFind5),
+    find7: wrap(handleFind7),
     completeKakaoAuthorization: wrap(handleCompleteKakaoAuthorization),
     startKakaoAuthorization: wrap(handleStartKakaoAuthorization),
     completeGoogleAuthorization: wrap(handleCompleteGoogleAuthorization),
     startGoogleAuthorization: wrap(handleStartGoogleAuthorization),
     startAppleAuthorization: wrap(handleStartAppleAuthorization),
     mine: wrap(handleMine),
-    find6: wrap(handleFind6),
-    find7: wrap(handleFind7),
+    find8: wrap(handleFind8),
+    find9: wrap(handleFind9),
     findPending: wrap(handleFindPending),
     findDetail: wrap(handleFindDetail),
     findCandidates: wrap(handleFindCandidates),
@@ -3874,7 +3874,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.register2, overrides.register2),
       invoke(pick.list, overrides.list),
       invoke(pick.create3, overrides.create3),
-      invoke(pick.find7, overrides.find7),
+      invoke(pick.find9, overrides.find9),
       invoke(pick.findCandidates, overrides.findCandidates),
       invoke(pick.candidates, overrides.candidates),
       invoke(pick.list5, overrides.list5),
@@ -3885,7 +3885,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.consumeHandoff, overrides.consumeHandoff),
       invoke(pick.login, overrides.login),
       invoke(pick.find3, overrides.find3),
-      invoke(pick.find5, overrides.find5),
+      invoke(pick.find7, overrides.find7),
       invoke(pick.revoke, overrides.revoke),
       invoke(pick.findDetail, overrides.findDetail),
       invoke(pick.acknowledge, overrides.acknowledge),
@@ -3895,7 +3895,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.create, overrides.create),
       invoke(pick.withdraw, overrides.withdraw),
       invoke(pick.find2, overrides.find2),
-      invoke(pick.find4, overrides.find4),
+      invoke(pick.find6, overrides.find6),
       invoke(pick.mine, overrides.mine),
       invoke(pick.findPending, overrides.findPending),
       invoke(pick.list2, overrides.list2),
@@ -3904,7 +3904,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.verify, overrides.verify),
       invoke(pick.submit1, overrides.submit1),
       invoke(pick.list1, overrides.list1),
-      invoke(pick.find6, overrides.find6),
+      invoke(pick.find8, overrides.find8),
     ];
   };
   return { all, pick };

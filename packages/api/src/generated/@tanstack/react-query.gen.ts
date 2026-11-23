@@ -40,10 +40,10 @@ import {
   find1,
   find2,
   find3,
-  find4,
-  find5,
   find6,
   find7,
+  find8,
+  find9,
   findAll,
   findCandidates,
   findDetail,
@@ -174,18 +174,18 @@ import type {
   Find3Data,
   Find3Error,
   Find3Response,
-  Find4Data,
-  Find4Error,
-  Find4Response,
-  Find5Data,
-  Find5Error,
-  Find5Response,
   Find6Data,
   Find6Error,
   Find6Response,
   Find7Data,
   Find7Error,
   Find7Response,
+  Find8Data,
+  Find8Error,
+  Find8Response,
+  Find9Data,
+  Find9Error,
+  Find9Response,
   FindAllData,
   FindAllError,
   FindAllResponse,
@@ -1813,17 +1813,17 @@ export const find3InfiniteOptions = (options?: Options<Find3Data>) => {
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
-export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('find4', options);
+export const find6QueryKey = (options?: Options<Find6Data>) => createQueryKey('find6', options);
 
 /**
  * 이번 주 세션 조회
  *
  * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다. 현재 기수 PLAYER가 아니면 NOT_ELIGIBLE, 본인의 현재 체크인 기록이 있으면 CHECKED_IN을 우선 반환하며 세션 종료 후에도 유지한다. TEAM 최종 제출 사진에 본인이 참석자로 선택되어 PENDING 심사 중이면 PENDING_APPROVAL을 반환하며 종료 후에도 유지한다. REGULAR에는 적용하지 않는다. 개인 STAFF 정정과 CHECKED_IN이 확인 중보다 우선한다. 사진 제출만으로 체크인이 완료되지는 않으며 운영진 승인 등으로 체크인 기록이 생성되어야 한다.
  */
-export const find4Options = (options?: Options<Find4Data>) =>
-  queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
+export const find6Options = (options?: Options<Find6Data>) =>
+  queryOptions<Find6Response, Find6Error, Find6Response, ReturnType<typeof find6QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find4({
+      const { data } = await find6({
         ...options,
         ...queryKey[0],
         signal,
@@ -1831,7 +1831,7 @@ export const find4Options = (options?: Options<Find4Data>) =>
       });
       return data;
     },
-    queryKey: find4QueryKey(options),
+    queryKey: find6QueryKey(options),
   });
 
 export const list1QueryKey = (options?: Options<List1Data>) => createQueryKey('list1', options);
@@ -1920,17 +1920,17 @@ export const detail2Options = (options: Options<Detail2Data>) =>
     queryKey: detail2QueryKey(options),
   });
 
-export const find5QueryKey = (options?: Options<Find5Data>) => createQueryKey('find5', options);
+export const find7QueryKey = (options?: Options<Find7Data>) => createQueryKey('find7', options);
 
 /**
  * 현재 기수 전체 세션 일정 조회
  *
  * 로그인 사용자의 소속 기수와 무관하게 현재 활동 중인 기수의 세션 일정을 모두 조회한다.
  */
-export const find5Options = (options?: Options<Find5Data>) =>
-  queryOptions<Find5Response, Find5Error, Find5Response, ReturnType<typeof find5QueryKey>>({
+export const find7Options = (options?: Options<Find7Data>) =>
+  queryOptions<Find7Response, Find7Error, Find7Response, ReturnType<typeof find7QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find5({
+      const { data } = await find7({
         ...options,
         ...queryKey[0],
         signal,
@@ -1938,7 +1938,7 @@ export const find5Options = (options?: Options<Find5Data>) =>
       });
       return data;
     },
-    queryKey: find5QueryKey(options),
+    queryKey: find7QueryKey(options),
   });
 
 export const completeKakaoAuthorizationQueryKey = (
@@ -2101,17 +2101,17 @@ export const mineOptions = (options?: Options<MineData>) =>
     queryKey: mineQueryKey(options),
   });
 
-export const find6QueryKey = (options?: Options<Find6Data>) => createQueryKey('find6', options);
+export const find8QueryKey = (options?: Options<Find8Data>) => createQueryKey('find8', options);
 
 /**
  * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
  *
  * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find6Options = (options?: Options<Find6Data>) =>
-  queryOptions<Find6Response, Find6Error, Find6Response, ReturnType<typeof find6QueryKey>>({
+export const find8Options = (options?: Options<Find8Data>) =>
+  queryOptions<Find8Response, Find8Error, Find8Response, ReturnType<typeof find8QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find6({
+      const { data } = await find8({
         ...options,
         ...queryKey[0],
         signal,
@@ -2119,30 +2119,30 @@ export const find6Options = (options?: Options<Find6Data>) =>
       });
       return data;
     },
-    queryKey: find6QueryKey(options),
+    queryKey: find8QueryKey(options),
   });
 
-export const find6InfiniteQueryKey = (options?: Options<Find6Data>): QueryKey<Options<Find6Data>> =>
-  createQueryKey('find6', options, true);
+export const find8InfiniteQueryKey = (options?: Options<Find8Data>): QueryKey<Options<Find8Data>> =>
+  createQueryKey('find8', options, true);
 
 /**
  * 현재 기수 본인 출석 이력과 세션 진행 요약 조회
  *
  * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find6InfiniteOptions = (options?: Options<Find6Data>) => {
+export const find8InfiniteOptions = (options?: Options<Find8Data>) => {
   const opts = infiniteQueryOptions<
-    Find6Response,
-    Find6Error,
-    InfiniteData<Find6Response>,
-    QueryKey<Options<Find6Data>>,
-    string | Pick<QueryKey<Options<Find6Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+    Find8Response,
+    Find8Error,
+    InfiniteData<Find8Response>,
+    QueryKey<Options<Find8Data>>,
+    string | Pick<QueryKey<Options<Find8Data>>[0], 'body' | 'headers' | 'path' | 'query'>
   >(
     // @ts-ignore
     {
       queryFn: async ({ pageParam, queryKey, signal }) => {
         // @ts-ignore
-        const page: Pick<QueryKey<Options<Find6Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+        const page: Pick<QueryKey<Options<Find8Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
           typeof pageParam === 'object'
             ? pageParam
             : {
@@ -2151,7 +2151,7 @@ export const find6InfiniteOptions = (options?: Options<Find6Data>) => {
                 },
               };
         const params = createInfiniteParams(queryKey, page);
-        const { data } = await find6({
+        const { data } = await find8({
           ...options,
           ...params,
           signal,
@@ -2159,23 +2159,23 @@ export const find6InfiniteOptions = (options?: Options<Find6Data>) => {
         });
         return data;
       },
-      queryKey: find6InfiniteQueryKey(options),
+      queryKey: find8InfiniteQueryKey(options),
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;
 };
 
-export const find7QueryKey = (options: Options<Find7Data>) => createQueryKey('find7', options);
+export const find9QueryKey = (options: Options<Find9Data>) => createQueryKey('find9', options);
 
 /**
  * 탈퇴 사용자 보존 사유 이력 조회
  *
  * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
  */
-export const find7Options = (options: Options<Find7Data>) =>
-  queryOptions<Find7Response, Find7Error, Find7Response, ReturnType<typeof find7QueryKey>>({
+export const find9Options = (options: Options<Find9Data>) =>
+  queryOptions<Find9Response, Find9Error, Find9Response, ReturnType<typeof find9QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find7({
+      const { data } = await find9({
         ...options,
         ...queryKey[0],
         signal,
@@ -2183,30 +2183,30 @@ export const find7Options = (options: Options<Find7Data>) =>
       });
       return data;
     },
-    queryKey: find7QueryKey(options),
+    queryKey: find9QueryKey(options),
   });
 
-export const find7InfiniteQueryKey = (options: Options<Find7Data>): QueryKey<Options<Find7Data>> =>
-  createQueryKey('find7', options, true);
+export const find9InfiniteQueryKey = (options: Options<Find9Data>): QueryKey<Options<Find9Data>> =>
+  createQueryKey('find9', options, true);
 
 /**
  * 탈퇴 사용자 보존 사유 이력 조회
  *
  * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
  */
-export const find7InfiniteOptions = (options: Options<Find7Data>) => {
+export const find9InfiniteOptions = (options: Options<Find9Data>) => {
   const opts = infiniteQueryOptions<
-    Find7Response,
-    Find7Error,
-    InfiniteData<Find7Response>,
-    QueryKey<Options<Find7Data>>,
-    string | Pick<QueryKey<Options<Find7Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+    Find9Response,
+    Find9Error,
+    InfiniteData<Find9Response>,
+    QueryKey<Options<Find9Data>>,
+    string | Pick<QueryKey<Options<Find9Data>>[0], 'body' | 'headers' | 'path' | 'query'>
   >(
     // @ts-ignore
     {
       queryFn: async ({ pageParam, queryKey, signal }) => {
         // @ts-ignore
-        const page: Pick<QueryKey<Options<Find7Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+        const page: Pick<QueryKey<Options<Find9Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
           typeof pageParam === 'object'
             ? pageParam
             : {
@@ -2215,7 +2215,7 @@ export const find7InfiniteOptions = (options: Options<Find7Data>) => {
                 },
               };
         const params = createInfiniteParams(queryKey, page);
-        const { data } = await find7({
+        const { data } = await find9({
           ...options,
           ...params,
           signal,
@@ -2223,7 +2223,7 @@ export const find7InfiniteOptions = (options: Options<Find7Data>) => {
         });
         return data;
       },
-      queryKey: find7InfiniteQueryKey(options),
+      queryKey: find9InfiniteQueryKey(options),
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;

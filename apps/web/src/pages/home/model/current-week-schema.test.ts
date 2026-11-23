@@ -1,12 +1,12 @@
 import { QueryClient } from '@tanstack/react-query';
-import { find4Options } from '@yapp-plus/api/generated';
+import { find6Options } from '@yapp-plus/api/generated';
 import { http, HttpResponse } from 'msw';
 import { expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { currentWeekFixture } from '../../../mocks/session-handlers';
 import { currentWeekSchema } from './current-week-schema';
 
-const options = find4Options({
+const options = find6Options({
   baseUrl: apiBaseUrl,
   responseValidator: (data) => currentWeekSchema.parseAsync(data),
   retry: 0,
@@ -44,6 +44,8 @@ it.each([
   { weekEndDate: '2026-11-01' },
   { weekStartDate: '2026-02-30' },
   { session: { ...currentWeekFixture.session, startTime: '12:99' } },
+  { session: { ...currentWeekFixture.session, endTime: '12:99' } },
+  { session: { ...currentWeekFixture.session, type: 'UNKNOWN' } },
   { session: { ...currentWeekFixture.session, date: '2026-11-08' } },
   { session: { ...currentWeekFixture.session, sessionId: Number.MAX_SAFE_INTEGER + 1 } },
 ])('잘못된 주간 응답 %j를 Zod로 거부한다', async (change) => {

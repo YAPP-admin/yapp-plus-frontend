@@ -106,14 +106,14 @@ import type {
   Find2Responses,
   Find3Errors,
   Find3Responses,
-  Find4Errors,
-  Find4Responses,
-  Find5Errors,
-  Find5Responses,
   Find6Errors,
   Find6Responses,
   Find7Errors,
   Find7Responses,
+  Find8Errors,
+  Find8Responses,
+  Find9Errors,
+  Find9Responses,
   FindAllErrors,
   FindAllResponses,
   FindCandidatesErrors,
@@ -1258,9 +1258,11 @@ export const fakeCurrentWeekSessionDetailResponse = (
   const f = options?.faker ?? faker;
   return {
     sessionId: f.number.int(),
+    type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
     name: f.string.sample(),
     date: f.date.recent().toISOString().slice(0, 10),
     startTime: f.string.sample(),
+    endTime: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
     attendanceStatus: f.helpers.arrayElement([
       'NOT_ELIGIBLE',
@@ -2568,16 +2570,16 @@ export const fakeFind3Response401 = (options?: Options): Find3Errors[401] =>
 export const fakeFind3Response503 = (options?: Options): Find3Errors[503] =>
   fakeErrorResponse(options);
 
-export const fakeFind4Response200 = (options?: Options): Find4Responses[200] =>
+export const fakeFind6Response200 = (options?: Options): Find6Responses[200] =>
   fakeCurrentWeekSessionResponse(options);
 
-export const fakeFind4Response401 = (options?: Options): Find4Errors[401] =>
+export const fakeFind6Response401 = (options?: Options): Find6Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeFind4Response404 = (options?: Options): Find4Errors[404] =>
+export const fakeFind6Response404 = (options?: Options): Find6Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeFind4Response409 = (options?: Options): Find4Errors[409] =>
+export const fakeFind6Response409 = (options?: Options): Find6Errors[409] =>
   fakeErrorResponse(options);
 
 export const fakeList1Response200 = (options?: Options): List1Responses[200] =>
@@ -2604,16 +2606,16 @@ export const fakeDetail2Response404 = (options?: Options): Detail2Errors[404] =>
 export const fakeDetail2Response503 = (options?: Options): Detail2Errors[503] =>
   fakeErrorResponse(options);
 
-export const fakeFind5Response200 = (options?: Options): Find5Responses[200] =>
+export const fakeFind7Response200 = (options?: Options): Find7Responses[200] =>
   fakeCurrentGenerationSessionsResponse(options);
 
-export const fakeFind5Response401 = (options?: Options): Find5Errors[401] =>
+export const fakeFind7Response401 = (options?: Options): Find7Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeFind5Response404 = (options?: Options): Find5Errors[404] =>
+export const fakeFind7Response404 = (options?: Options): Find7Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeFind5Response409 = (options?: Options): Find5Errors[409] =>
+export const fakeFind7Response409 = (options?: Options): Find7Errors[409] =>
   fakeErrorResponse(options);
 
 export const fakeCompleteKakaoAuthorizationResponse400 = (
@@ -2678,31 +2680,31 @@ export const fakeMineResponse409 = (options?: Options): MineErrors[409] =>
 export const fakeMineResponse500 = (options?: Options): MineErrors[500] =>
   fakeErrorResponse(options);
 
-export const fakeFind6Response200 = (options?: Options): Find6Responses[200] =>
+export const fakeFind8Response200 = (options?: Options): Find8Responses[200] =>
   fakeAttendanceHistoryResponse(options);
 
-export const fakeFind6Response400 = (options?: Options): Find6Errors[400] =>
+export const fakeFind8Response400 = (options?: Options): Find8Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeFind6Response401 = (options?: Options): Find6Errors[401] =>
+export const fakeFind8Response401 = (options?: Options): Find8Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeFind6Response409 = (options?: Options): Find6Errors[409] =>
+export const fakeFind8Response409 = (options?: Options): Find8Errors[409] =>
   fakeErrorResponse(options);
 
-export const fakeFind7Response200 = (options?: Options): Find7Responses[200] =>
+export const fakeFind9Response200 = (options?: Options): Find9Responses[200] =>
   fakeRetainedHistoryPage(options);
 
-export const fakeFind7Response400 = (options?: Options): Find7Errors[400] =>
+export const fakeFind9Response400 = (options?: Options): Find9Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeFind7Response401 = (options?: Options): Find7Errors[401] =>
+export const fakeFind9Response401 = (options?: Options): Find9Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeFind7Response404 = (options?: Options): Find7Errors[404] =>
+export const fakeFind9Response404 = (options?: Options): Find9Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeFind7Response503 = (options?: Options): Find7Errors[503] =>
+export const fakeFind9Response503 = (options?: Options): Find9Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeFindPendingResponse200 = (options?: Options): FindPendingResponses[200] =>

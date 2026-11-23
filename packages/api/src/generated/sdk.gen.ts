@@ -97,18 +97,18 @@ import type {
   Find3Data,
   Find3Errors,
   Find3Responses,
-  Find4Data,
-  Find4Errors,
-  Find4Responses,
-  Find5Data,
-  Find5Errors,
-  Find5Responses,
   Find6Data,
   Find6Errors,
   Find6Responses,
   Find7Data,
   Find7Errors,
   Find7Responses,
+  Find8Data,
+  Find8Errors,
+  Find8Responses,
+  Find9Data,
+  Find9Errors,
+  Find9Responses,
   FindAllData,
   FindAllErrors,
   FindAllResponses,
@@ -1311,10 +1311,10 @@ export const find3 = <ThrowOnError extends boolean = false>(
  *
  * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다. 현재 기수 PLAYER가 아니면 NOT_ELIGIBLE, 본인의 현재 체크인 기록이 있으면 CHECKED_IN을 우선 반환하며 세션 종료 후에도 유지한다. TEAM 최종 제출 사진에 본인이 참석자로 선택되어 PENDING 심사 중이면 PENDING_APPROVAL을 반환하며 종료 후에도 유지한다. REGULAR에는 적용하지 않는다. 개인 STAFF 정정과 CHECKED_IN이 확인 중보다 우선한다. 사진 제출만으로 체크인이 완료되지는 않으며 운영진 승인 등으로 체크인 기록이 생성되어야 한다.
  */
-export const find4 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find4Data, ThrowOnError>,
-): RequestResult<Find4Responses, Find4Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find4Responses, Find4Errors, ThrowOnError>({
+export const find6 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find6Data, ThrowOnError>,
+): RequestResult<Find6Responses, Find6Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find6Responses, Find6Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1371,10 +1371,10 @@ export const detail2 = <ThrowOnError extends boolean = false>(
  *
  * 로그인 사용자의 소속 기수와 무관하게 현재 활동 중인 기수의 세션 일정을 모두 조회한다.
  */
-export const find5 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find5Data, ThrowOnError>,
-): RequestResult<Find5Responses, Find5Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find5Responses, Find5Errors, ThrowOnError>({
+export const find7 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find7Data, ThrowOnError>,
+): RequestResult<Find7Responses, Find7Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find7Responses, Find7Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1474,10 +1474,10 @@ export const mine = <ThrowOnError extends boolean = false>(
  *
  * 현재 기수 PLAYER의 시작된 세션만 최신순으로 조회한다. 현재 기수 또는 PLAYER 자격이 없으면 빈 이력과 0/0 요약을 반환한다. 수동 PRESENT 정정이어도 지각·조퇴 시각이 모두 남아 있으면 LATE_AND_EARLY_LEAVE로 표시한다.
  */
-export const find6 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find6Data, ThrowOnError>,
-): RequestResult<Find6Responses, Find6Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find6Responses, Find6Errors, ThrowOnError>({
+export const find8 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find8Data, ThrowOnError>,
+): RequestResult<Find8Responses, Find8Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find8Responses, Find8Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1494,10 +1494,10 @@ export const find6 = <ThrowOnError extends boolean = false>(
  *
  * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
  */
-export const find7 = <ThrowOnError extends boolean = false>(
-  options: Options<Find7Data, ThrowOnError>,
-): RequestResult<Find7Responses, Find7Errors, ThrowOnError> =>
-  (options.client ?? client).get<Find7Responses, Find7Errors, ThrowOnError>({
+export const find9 = <ThrowOnError extends boolean = false>(
+  options: Options<Find9Data, ThrowOnError>,
+): RequestResult<Find9Responses, Find9Errors, ThrowOnError> =>
+  (options.client ?? client).get<Find9Responses, Find9Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',

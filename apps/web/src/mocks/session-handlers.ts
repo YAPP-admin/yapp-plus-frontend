@@ -47,8 +47,8 @@ export const createSessionHandlers = (
         submittedAt: new Date().toISOString(),
       });
     }),
-    pick.find4(() => HttpResponse.json(currentWeek)),
-    pick.find5(async () => {
+    pick.find6(() => HttpResponse.json(currentWeek)),
+    pick.find7(async () => {
       if (scheduleState === 'loading') {
         await delay(5_000);
       }

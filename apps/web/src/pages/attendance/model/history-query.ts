@@ -1,5 +1,5 @@
 import {
-  find6InfiniteOptions,
+  find8InfiniteOptions,
   zAttendanceHistoryResponse,
   zAttendanceHistoryItemResponse,
   type AttendanceHistoryResponse,
@@ -27,8 +27,8 @@ const historySchema = zAttendanceHistoryResponse
   )
   .refine(({ nextCursor }) => nextCursor === null || nextCursor.length > 0, '빈 커서입니다.');
 
-export function historyQueryOptions(options?: Parameters<typeof find6InfiniteOptions>[0]) {
-  const generated = find6InfiniteOptions({
+export function historyQueryOptions(options?: Parameters<typeof find8InfiniteOptions>[0]) {
+  const generated = find8InfiniteOptions({
     ...options,
     responseTransformer: (data) => historySchema.parseAsync(data),
   });
