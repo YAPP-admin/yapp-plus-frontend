@@ -169,7 +169,7 @@ it('서버에서는 수정과 이력 조회를 실행하지 않는다', async ()
 
 it('사전 보고가 있는 회원의 실제 출결을 바꿔도 보고 내용은 유지한다', async () => {
   const service = await import('./index');
-  const { session, members } = await service.getSessionAttendance('demo-offline-session');
+  const { session, members } = await service.getSessionAttendance('demo-regular-session');
   const reported = members.find((member) => member.latestReport !== null);
   if (!reported) {
     throw new Error('사전 보고가 있는 수정 대상이 필요합니다.');

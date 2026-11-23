@@ -17,7 +17,7 @@ const input = {
   date: '2028-02-29',
   startTime: '09:00',
   endTime: '10:00',
-  type: 'offline',
+  type: 'regular',
 };
 
 const attendance = { present: 0, late: 0, earlyLeave: 0, absent: 0, pending: 0, reported: 0 };
@@ -254,7 +254,7 @@ describe('유형별 장소 경계', () => {
       }).success,
     ).toBe(true);
   });
-  it('팀 안내 공백은 빈 값으로 저장하고 오프라인 필드는 제거한다', () => {
+  it('팀 안내 공백은 빈 값으로 저장하고 정규 세션 필드는 제거한다', () => {
     const result = createSessionInputSchema.parse({
       ...input,
       type: 'team',
@@ -262,7 +262,7 @@ describe('유형별 장소 경계', () => {
     });
     expect(result.location).toEqual({ guide: '' });
   });
-  it('오프라인 장소만 가진 팀 입력을 거부한다', () => {
+  it('정규 세션 장소만 가진 팀 입력을 거부한다', () => {
     expect(createSessionInputSchema.safeParse({ ...input, type: 'team' }).success).toBe(false);
   });
   it.each([undefined, '', '37.5', NaN, Infinity, -Infinity, -90.1, 90.1])(

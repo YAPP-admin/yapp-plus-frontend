@@ -49,7 +49,7 @@ it('수정 입력은 조회한 정규 장소와 초 단위 시간을 그대로 �
     date: '2026-11-20',
     startTime: '14:00:10',
     endTime: '14:00:30',
-    type: 'offline',
+    type: 'regular',
     location: {
       roadAddress: '서울특별시 중구 세종대로 110',
       detailAddress: '예시 교육장',
@@ -66,7 +66,7 @@ it('정규 세션은 장소 전체를 API 요청으로 변환한다', () => {
       date: '2026-11-20',
       startTime: '14:00',
       endTime: '15:00',
-      type: 'offline',
+      type: 'regular',
       location: {
         roadAddress: '서울특별시 중구 세종대로 110',
         detailAddress: ' 예시 교육장 ',

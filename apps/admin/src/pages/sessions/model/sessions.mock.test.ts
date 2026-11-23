@@ -11,12 +11,12 @@ const input = createSessionInputSchema.parse({
   type: 'team',
 });
 
-const offlineInput = {
-  name: '수정 오프라인 세션',
+const regularInput = {
+  name: '수정 정규 세션',
   date: '2026-12-01',
   startTime: '15:00',
   endTime: '18:00',
-  type: 'offline',
+  type: 'regular',
   location: {
     roadAddress: '서울특별시 중구 세종대로 110',
     detailAddress: '변경한 교육장',
@@ -62,7 +62,7 @@ describe('세션 메모리 저장소', () => {
 
     for (const session of seed) {
       session.attendance.present = 999;
-      if (session.type === 'offline') {
+      if (session.type === 'regular') {
         session.location.roadAddress = '외부 변경';
       } else {
         session.location.guide = '외부 변경';
@@ -72,7 +72,7 @@ describe('세션 메모리 저장소', () => {
     const listed = store.listSessions();
     for (const session of listed) {
       session.attendance.present = 888;
-      if (session.type === 'offline') {
+      if (session.type === 'regular') {
         session.location.latitude = 0;
       } else {
         session.location.guide = '조회값 변경';
@@ -107,7 +107,7 @@ describe('세션 메모리 저장소', () => {
     expect(first.listSessions()).toHaveLength(original.length + 1);
   });
 
-  it.each([input, offlineInput])(
+  it.each([input, regularInput])(
     '$type으로 변경해도 ID·집계를 유지하고 이전 유형의 장소를 제거한다',
     (fields) => {
       const store = createSessionStore();
@@ -138,24 +138,24 @@ describe('세션 메모리 저장소', () => {
     const before = store.listSessions();
 
     expect(() => store.updateSession('missing', input)).toThrow('수정할 세션을 찾을 수 없습니다.');
-    expect(() => store.updateSession('demo-offline-session', { ...input, name: '' })).toThrow(
+    expect(() => store.updateSession('demo-regular-session', { ...input, name: '' })).toThrow(
       '세션명을 입력하세요.',
     );
     expect(() =>
-      store.updateSession('demo-offline-session', { ...input, endTime: '13:00' }),
+      store.updateSession('demo-regular-session', { ...input, endTime: '13:00' }),
     ).toThrow('종료 시간은 시작 시간보다 늦어야 합니다.');
     expect(store.listSessions()).toEqual(before);
   });
 
   it('수정 입력과 반환값의 중첩 객체를 바꿔도 저장값이 변하지 않는다', () => {
     const store = createSessionStore();
-    const edited = { ...offlineInput, location: { ...offlineInput.location } };
-    const updated = store.updateSession('demo-offline-session', edited);
+    const edited = { ...regularInput, location: { ...regularInput.location } };
+    const updated = store.updateSession('demo-regular-session', edited);
     const saved = store.listSessions();
 
     edited.location.detailAddress = '입력 외부 변경';
     updated.attendance.present = 999;
-    if (updated.type === 'offline') {
+    if (updated.type === 'regular') {
       updated.location.latitude = 0;
     }
     expect(store.listSessions()).toEqual(saved);
