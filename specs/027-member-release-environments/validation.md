@@ -76,8 +76,8 @@ T006은 완료했다. T007과 T008은 실제 개발 alias·EAS/Firebase 조합 �
   생성했다. 값은 조회·출력하지 않았으며 Vercel 수동 변수로 중복 등록하지 않았다.
 - GitHub `member-development`·`member-production` environment는 존재하지만, 두 environment의
   Secret·Variable 목록은 비어 있다. 환경별 Firebase Secret은 아직 등록 증빙이 없다.
-- 로컬 Vercel 계정 `dongjaj`는 YAPP Vercel scope에 접근할 수 없어 프로젝트·공개 QA alias·Git 자동
-  배포 중지·대상 Preview deployment ID를 확인하지 못했다.
+- 초기 로컬 Vercel 계정 `dongjaj`에는 YAPP scope 접근 권한이 없었다. 이후 환경 소유자가 YAPP 팀
+  계정으로 CLI 로그인을 완료해 아래 alias·접근·Git 연결 상태를 확인했다.
 - CI와 같은 격리 설치 정책에서 `eas-cli@27.4.1`의 `testflight` 프로필을 해석했다. profile의
   channel은 `testflight`지만, EAS `production` 환경에는 Plain text·Sensitive 변수가 없다고
   응답했다. `preview`/`production` 환경, `testflight`/`production` 채널의 실제 연결과 Firebase·APNs
@@ -85,12 +85,22 @@ T006은 완료했다. T007과 T008은 실제 개발 alias·EAS/Firebase 조합 �
 
 | 미완료 항목     | 완료를 위한 소유자 증빙                                                                                     |
 | --------------- | ----------------------------------------------------------------------------------------------------------- |
-| Vercel alias    | 공개 `yapp-plus-web-dev.vercel.app`의 대상 Preview deployment ID, Git 자동 배포 중지와 공개 QA 접근 확인    |
 | GitHub·Firebase | 두 environment의 환경별 Firebase Secret 연결 성공과 개발·운영 프로젝트·Bundle ID·APNs 조합                  |
 | EAS             | `preview`·`production` 환경과 `testflight`·`production` channel-branch 연결, 기존 운영 웹·OTA·IPA 복구 기준 |
 
-이 근거로 T006은 완료 처리하고 T007~T009는 완료 처리하지 않는다. 웹 코드 단계는 로컬 검증까지 완료했지만, 실제
+이 근거로 T006과 T007은 완료 처리하고 T008~T009는 완료 처리하지 않는다. 웹 코드 단계는 로컬 검증까지 완료했지만, 실제
 Preview 배포 검증(T014)과 모바일·릴리스 자동화 단계는 외부 준비 및 웹 단계 리뷰 이후에만 진행한다.
+
+## 개발 alias 연결 확인 — 2026-11-23
+
+- Vercel 팀 `yapp-plus`의 `yapp-plus-web` 프로젝트는 `apps/web`을 root directory로 사용한다.
+- `yapp-plus-web-dev.vercel.app`을 Ready 상태인 Preview deployment
+  `dpl_GZAAMvVUGeks8AJD2XyDmDypp55q`에 연결했다. 대상의 고유 URL은
+  `yapp-plus-gxfqivza0-yapp-plus.vercel.app`이며, alias와 대상 URL 모두 HTTP 200을 반환했다.
+- 프로젝트의 Git Repository는 `Not connected` 상태다. 따라서 Vercel Git 자동 배포가 alias 또는
+  운영 배포 정책을 우회하지 않는다. alias 갱신은 검증된 CLI Preview 배포에만 수행한다.
+- alias는 현재 대상 deployment의 보존 예외이지만, QA·WebView에는 고유 Preview URL이 아니라
+  `yapp-plus-web-dev.vercel.app`만 사용한다. 다음 검증된 개발 배포 때 alias를 새 대상에 갱신한다.
 
 ## 2단계 회원 웹 API 환경 입력 — 2026-11-23
 
@@ -104,8 +114,8 @@ Preview 배포 검증(T014)과 모바일·릴리스 자동화 단계는 외부 �
 - CI는 실제 API를 호출하지 않도록 예약된 비실재 URL `https://example.invalid`만 빌드 입력으로 공급한다.
   `.env.example`에는 실제·예시 호스트를 넣지 않고 빈 변수만 둔다. 기존 가짜 호스트 이름은 저장소와
   문서에서 제거했다.
-- Vercel alias·접근 보호·Git 자동 배포, EAS·Firebase·OAuth 조합은 환경 소유자의 증빙을 아직 받지
-  못했다. 외부 상태를 추측하지 않아 T007~T009와 배포·PR Preview는 미완료다.
+- EAS·Firebase·OAuth 조합은 환경 소유자의 증빙을 아직 받지 못했다. 외부 상태를 추측하지 않아
+  T008~T009와 배포·PR Preview는 미완료다.
 
 | 검증                                                         | 결과                                                                                                           |
 | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
