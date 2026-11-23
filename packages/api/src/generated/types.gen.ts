@@ -2384,7 +2384,7 @@ export type Create1Responses = {
 
 export type Create1Response = Create1Responses[keyof Create1Responses];
 
-export type Find1Data = {
+export type Find2Data = {
   body?: never;
   path: {
     generationId: number;
@@ -2398,7 +2398,7 @@ export type Find1Data = {
   url: '/api/admin/generations/{generationId}/sessions';
 };
 
-export type Find1Errors = {
+export type Find2Errors = {
   /**
    * INVALID_SESSION_REQUEST
    */
@@ -2413,16 +2413,16 @@ export type Find1Errors = {
   404: ErrorResponse;
 };
 
-export type Find1Error = Find1Errors[keyof Find1Errors];
+export type Find2Error = Find2Errors[keyof Find2Errors];
 
-export type Find1Responses = {
+export type Find2Responses = {
   /**
    * 조회 성공
    */
   200: SessionListResponse;
 };
 
-export type Find1Response = Find1Responses[keyof Find1Responses];
+export type Find2Response = Find2Responses[keyof Find2Responses];
 
 export type Create2Data = {
   body: CreateSessionRequest;
@@ -3078,14 +3078,14 @@ export type WithdrawResponses = {
 
 export type WithdrawResponse = WithdrawResponses[keyof WithdrawResponses];
 
-export type Find2Data = {
+export type Find3Data = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/users/me';
 };
 
-export type Find2Errors = {
+export type Find3Errors = {
   /**
    * AUTHENTICATION_FAILED
    */
@@ -3100,18 +3100,18 @@ export type Find2Errors = {
   503: ErrorResponse;
 };
 
-export type Find2Error = Find2Errors[keyof Find2Errors];
+export type Find3Error = Find3Errors[keyof Find3Errors];
 
-export type Find2Responses = {
+export type Find3Responses = {
   /**
    * 조회 성공
    */
   200: UserProfileResponse;
 };
 
-export type Find2Response = Find2Responses[keyof Find2Responses];
+export type Find3Response = Find3Responses[keyof Find3Responses];
 
-export type Find3Data = {
+export type Find4Data = {
   body?: never;
   path?: never;
   query?: {
@@ -3123,7 +3123,7 @@ export type Find3Data = {
   url: '/api/users/me/notifications';
 };
 
-export type Find3Errors = {
+export type Find4Errors = {
   /**
    * INVALID_USER_NOTIFICATION_CURSOR
    */
@@ -3138,16 +3138,16 @@ export type Find3Errors = {
   503: ErrorResponse;
 };
 
-export type Find3Error = Find3Errors[keyof Find3Errors];
+export type Find4Error = Find4Errors[keyof Find4Errors];
 
-export type Find3Responses = {
+export type Find4Responses = {
   /**
    * 조회 성공
    */
   200: UserNotificationListResponse;
 };
 
-export type Find3Response = Find3Responses[keyof Find3Responses];
+export type Find4Response = Find4Responses[keyof Find4Responses];
 
 export type Find6Data = {
   body?: never;

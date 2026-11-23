@@ -1,6 +1,6 @@
 import { InfiniteQueryObserver } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
-import { find3InfiniteQueryKey, type UserNotificationListResponse } from '@yapp-plus/api/generated';
+import { find4InfiniteQueryKey, type UserNotificationListResponse } from '@yapp-plus/api/generated';
 import { http, HttpResponse } from 'msw';
 import { describe, expect, it } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
@@ -28,7 +28,7 @@ describe('alertsInfiniteQueryOptions', () => {
         return HttpResponse.json(page(42));
       }),
     );
-    expect(alertsInfiniteQueryOptions().queryKey).toEqual(find3InfiniteQueryKey());
+    expect(alertsInfiniteQueryOptions().queryKey).toEqual(find4InfiniteQueryKey());
     const data = await createAppQueryClient().fetchInfiniteQuery(alertsInfiniteQueryOptions());
     expect(data.pages[0]?.items[0]?.id).toBe(42);
     expect(alertSentDateLabel('2026-11-07')).toBe('11월 7일');

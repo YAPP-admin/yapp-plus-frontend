@@ -1,7 +1,7 @@
 /** 목록 조회 상태를 구분하며 필터는 라우터가 소유합니다. */
 import { useRef } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { find1Options } from '@yapp-plus/api/generated';
+import { find2Options } from '@yapp-plus/api/generated';
 import { ActionButton, Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
 import { overlay } from 'overlay-kit';
 import type { SessionFilter } from '../model/session-search';
@@ -142,7 +142,7 @@ function SessionListData({
   onDelete: (session: SessionViewModel) => void;
 }) {
   const sessionList = useSuspenseQuery(
-    find1Options({ path: { generationId }, query: { type: 'ALL' } }),
+    find2Options({ path: { generationId }, query: { type: 'ALL' } }),
   );
   const sessionData = sessionList.data;
   const sessions = sessionData.sessions

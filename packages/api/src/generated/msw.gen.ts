@@ -48,9 +48,9 @@ import type {
   Detail2Responses,
   Detail3Responses,
   DetailResponses,
-  Find1Responses,
   Find2Responses,
   Find3Responses,
+  Find4Responses,
   Find6Responses,
   Find7Responses,
   Find8Responses,
@@ -1381,17 +1381,17 @@ export function handleCreate1(
   );
 }
 
-export type HandleFind1Response = {
-  body: Find1Responses[200];
+export type HandleFind2Response = {
+  body: Find2Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/admin/generations/{generationId}/sessions` operation.
  */
-export function handleFind1(
+export function handleFind2(
   response?:
-    | HandleFind1Response
+    | HandleFind2Response
     | HttpResponseResolver<
         {
           generationId: string;
@@ -2259,16 +2259,16 @@ export function handleWithdraw(
   );
 }
 
-export type HandleFind2Response = {
-  body: Find2Responses[200];
+export type HandleFind3Response = {
+  body: Find3Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/users/me` operation.
  */
-export function handleFind2(
-  response?: HandleFind2Response | HttpResponseResolver<never, never>,
+export function handleFind3(
+  response?: HandleFind3Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -2293,16 +2293,16 @@ export function handleFind2(
   );
 }
 
-export type HandleFind3Response = {
-  body: Find3Responses[200];
+export type HandleFind4Response = {
+  body: Find4Responses[200];
   status?: 200;
 };
 
 /**
  * Handler for the `GET /api/users/me/notifications` operation.
  */
-export function handleFind3(
-  response?: HandleFind3Response | HttpResponseResolver<never, never>,
+export function handleFind4(
+  response?: HandleFind4Response | HttpResponseResolver<never, never>,
   options?: RequestHandlerOptions,
 ): HttpHandler {
   return http.get<never, never>(
@@ -3533,7 +3533,7 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/admin/generations/{generationId}/sessions` operation.
    */
-  find1: typeof handleFind1;
+  find2: typeof handleFind2;
   /**
    * Handler for the `POST /api/admin/generations/{generationId}/sessions` operation.
    */
@@ -3609,11 +3609,11 @@ export type MswHandlerFactories = {
   /**
    * Handler for the `GET /api/users/me` operation.
    */
-  find2: typeof handleFind2;
+  find3: typeof handleFind3;
   /**
    * Handler for the `GET /api/users/me/notifications` operation.
    */
-  find3: typeof handleFind3;
+  find4: typeof handleFind4;
   /**
    * Handler for the `GET /api/sessions/current-week` operation.
    */
@@ -3771,7 +3771,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     approve: wrap(handleApprove),
     findAll: wrap(handleFindAll),
     create1: wrap(handleCreate1),
-    find1: wrap(handleFind1),
+    find2: wrap(handleFind2),
     create2: wrap(handleCreate2),
     decide: wrap(handleDecide),
     close: wrap(handleClose),
@@ -3790,8 +3790,8 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     detail1: wrap(handleDetail1),
     update2: wrap(handleUpdate2),
     withdraw: wrap(handleWithdraw),
-    find2: wrap(handleFind2),
     find3: wrap(handleFind3),
+    find4: wrap(handleFind4),
     find6: wrap(handleFind6),
     list1: wrap(handleList1),
     detail2: wrap(handleDetail2),
@@ -3869,7 +3869,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.approve, overrides.approve),
       invoke(pick.findAll, overrides.findAll),
       invoke(pick.create1, overrides.create1),
-      invoke(pick.find1, overrides.find1),
+      invoke(pick.find2, overrides.find2),
       invoke(pick.create2, overrides.create2),
       invoke(pick.register2, overrides.register2),
       invoke(pick.list, overrides.list),
@@ -3884,7 +3884,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.presign, overrides.presign),
       invoke(pick.consumeHandoff, overrides.consumeHandoff),
       invoke(pick.login, overrides.login),
-      invoke(pick.find3, overrides.find3),
+      invoke(pick.find4, overrides.find4),
       invoke(pick.find7, overrides.find7),
       invoke(pick.revoke, overrides.revoke),
       invoke(pick.findDetail, overrides.findDetail),
@@ -3894,7 +3894,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.history, overrides.history),
       invoke(pick.create, overrides.create),
       invoke(pick.withdraw, overrides.withdraw),
-      invoke(pick.find2, overrides.find2),
+      invoke(pick.find3, overrides.find3),
       invoke(pick.find6, overrides.find6),
       invoke(pick.mine, overrides.mine),
       invoke(pick.findPending, overrides.findPending),

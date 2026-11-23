@@ -97,7 +97,7 @@ export function createApiMockHandlers(
           schemas.zCreate1Response,
           201,
         ),
-        find1: fixedResponse(
+        find2: fixedResponse(
           empty ? fixtures.emptySessions : fixtures.sessions,
           schemas.zSessionListResponse,
         ),

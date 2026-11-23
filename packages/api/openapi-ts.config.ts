@@ -6,11 +6,6 @@ const deferredOperations = [
   'GET /api/sessions/{sessionId}/team-attendance-photos',
   'GET /api/sessions/{sessionId}/team-members',
 ];
-const preservedOperationIds: Record<string, string> = {
-  '/api/admin/generations/{generationId}/sessions': 'find_1',
-  '/api/users/me': 'find_2',
-  '/api/users/me/notifications': 'find_3',
-};
 const mockCount = {
   fakerPath: ['number', 'int'] as const,
   defaultArgs: { min: 0, max: 100 },
@@ -28,18 +23,6 @@ export default defineConfig({
     filters: {
       operations: {
         exclude: deferredOperations,
-      },
-    },
-    patch: {
-      operations: (method, path, operation) => {
-        if (method !== 'get') {
-          return;
-        }
-
-        const operationId = preservedOperationIds[path];
-        if (operationId) {
-          operation.operationId = operationId;
-        }
       },
     },
   },

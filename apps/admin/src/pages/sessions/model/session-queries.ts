@@ -3,7 +3,7 @@ import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
   create2Mutation,
   delete1Mutation,
-  find1Options,
+  find2Options,
   update1Mutation,
 } from '@yapp-plus/api/generated';
 
@@ -13,7 +13,7 @@ export const deleteSessionMutationOptions = delete1Mutation();
 
 export function useCreateSessionMutation(generationId: number) {
   const queryClient = useQueryClient();
-  const listOptions = find1Options({
+  const listOptions = find2Options({
     path: { generationId },
     query: { type: 'ALL' },
   });
@@ -28,7 +28,7 @@ export function useCreateSessionMutation(generationId: number) {
 
 export function useUpdateSessionMutation(generationId: number) {
   const queryClient = useQueryClient();
-  const listOptions = find1Options({
+  const listOptions = find2Options({
     path: { generationId },
     query: { type: 'ALL' },
   });
@@ -43,7 +43,7 @@ export function useUpdateSessionMutation(generationId: number) {
 
 export function useDeleteSessionMutation(generationId: number) {
   const queryClient = useQueryClient();
-  const listOptions = find1Options({
+  const listOptions = find2Options({
     path: { generationId },
     query: { type: 'ALL' },
   });

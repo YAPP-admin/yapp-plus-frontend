@@ -6,7 +6,7 @@ import {
   isCancelledError,
 } from '@tanstack/react-query';
 import {
-  find2Options,
+  find3Options,
   find6Options,
   find7Options,
   mineOptions,
@@ -270,7 +270,7 @@ it('계정 전환은 이전 프로필·점수·내역 지연 응답을 새 계�
       return HttpResponse.json(historyFixture);
     }),
   );
-  const profile = find2Options(nativeAuthClientOptions(first, client));
+  const profile = find3Options(nativeAuthClientOptions(first, client));
   const score = mineOptions(nativeAuthClientOptions(first, client));
   const history = {
     ...find8InfiniteOptions(nativeAuthClientOptions(first, client)),

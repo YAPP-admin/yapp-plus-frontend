@@ -37,9 +37,9 @@ import {
   detail2,
   detail3,
   find,
-  find1,
   find2,
   find3,
+  find4,
   find6,
   find7,
   find8,
@@ -165,15 +165,15 @@ import type {
   DetailData,
   DetailError,
   DetailResponse,
-  Find1Data,
-  Find1Error,
-  Find1Response,
   Find2Data,
   Find2Error,
   Find2Response,
   Find3Data,
   Find3Error,
   Find3Response,
+  Find4Data,
+  Find4Error,
+  Find4Response,
   Find6Data,
   Find6Error,
   Find6Response,
@@ -1239,17 +1239,17 @@ export const create1Mutation = (
   return mutationOptions;
 };
 
-export const find1QueryKey = (options: Options<Find1Data>) => createQueryKey('find1', options);
+export const find2QueryKey = (options: Options<Find2Data>) => createQueryKey('find2', options);
 
 /**
  * 기수 세션 목록 조회
  *
  * 기수의 세션을 유형별로 페이지네이션 없이 조회한다.
  */
-export const find1Options = (options: Options<Find1Data>) =>
-  queryOptions<Find1Response, Find1Error, Find1Response, ReturnType<typeof find1QueryKey>>({
+export const find2Options = (options: Options<Find2Data>) =>
+  queryOptions<Find2Response, Find2Error, Find2Response, ReturnType<typeof find2QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find1({
+      const { data } = await find2({
         ...options,
         ...queryKey[0],
         signal,
@@ -1257,7 +1257,7 @@ export const find1Options = (options: Options<Find1Data>) =>
       });
       return data;
     },
-    queryKey: find1QueryKey(options),
+    queryKey: find2QueryKey(options),
   });
 
 export const create2MutationKey = (options?: Partial<Options<Create2Data>>) =>
@@ -1728,33 +1728,12 @@ export const withdrawMutation = (
   return mutationOptions;
 };
 
-export const find2QueryKey = (options?: Options<Find2Data>) => createQueryKey('find2', options);
+export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
 
 /**
  * 본인 프로필 조회
  *
  * 현재 활동 기수 소속을 우선하고, 없으면 가장 높은 번호의 유효 기수 소속을 보여준다. 소속이 없으면 사용자 ID와 이름 외 필드는 null이다.
- */
-export const find2Options = (options?: Options<Find2Data>) =>
-  queryOptions<Find2Response, Find2Error, Find2Response, ReturnType<typeof find2QueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await find2({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: find2QueryKey(options),
-  });
-
-export const find3QueryKey = (options?: Options<Find3Data>) => createQueryKey('find3', options);
-
-/**
- * 본인 알림 목록 조회
- *
- * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
  */
 export const find3Options = (options?: Options<Find3Data>) =>
   queryOptions<Find3Response, Find3Error, Find3Response, ReturnType<typeof find3QueryKey>>({
@@ -1770,27 +1749,48 @@ export const find3Options = (options?: Options<Find3Data>) =>
     queryKey: find3QueryKey(options),
   });
 
-export const find3InfiniteQueryKey = (options?: Options<Find3Data>): QueryKey<Options<Find3Data>> =>
-  createQueryKey('find3', options, true);
+export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('find4', options);
 
 /**
  * 본인 알림 목록 조회
  *
  * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
  */
-export const find3InfiniteOptions = (options?: Options<Find3Data>) => {
+export const find4Options = (options?: Options<Find4Data>) =>
+  queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find4({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find4QueryKey(options),
+  });
+
+export const find4InfiniteQueryKey = (options?: Options<Find4Data>): QueryKey<Options<Find4Data>> =>
+  createQueryKey('find4', options, true);
+
+/**
+ * 본인 알림 목록 조회
+ *
+ * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
+ */
+export const find4InfiniteOptions = (options?: Options<Find4Data>) => {
   const opts = infiniteQueryOptions<
-    Find3Response,
-    Find3Error,
-    InfiniteData<Find3Response>,
-    QueryKey<Options<Find3Data>>,
-    string | Pick<QueryKey<Options<Find3Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+    Find4Response,
+    Find4Error,
+    InfiniteData<Find4Response>,
+    QueryKey<Options<Find4Data>>,
+    string | Pick<QueryKey<Options<Find4Data>>[0], 'body' | 'headers' | 'path' | 'query'>
   >(
     // @ts-ignore
     {
       queryFn: async ({ pageParam, queryKey, signal }) => {
         // @ts-ignore
-        const page: Pick<QueryKey<Options<Find3Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+        const page: Pick<QueryKey<Options<Find4Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
           typeof pageParam === 'object'
             ? pageParam
             : {
@@ -1799,7 +1799,7 @@ export const find3InfiniteOptions = (options?: Options<Find3Data>) => {
                 },
               };
         const params = createInfiniteParams(queryKey, page);
-        const { data } = await find3({
+        const { data } = await find4({
           ...options,
           ...params,
           signal,
@@ -1807,7 +1807,7 @@ export const find3InfiniteOptions = (options?: Options<Find3Data>) => {
         });
         return data;
       },
-      queryKey: find3InfiniteQueryKey(options),
+      queryKey: find4InfiniteQueryKey(options),
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;

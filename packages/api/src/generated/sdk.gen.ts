@@ -88,15 +88,15 @@ import type {
   DetailData,
   DetailErrors,
   DetailResponses,
-  Find1Data,
-  Find1Errors,
-  Find1Responses,
   Find2Data,
   Find2Errors,
   Find2Responses,
   Find3Data,
   Find3Errors,
   Find3Responses,
+  Find4Data,
+  Find4Errors,
+  Find4Responses,
   Find6Data,
   Find6Errors,
   Find6Responses,
@@ -888,10 +888,10 @@ export const create1 = <ThrowOnError extends boolean = false>(
  *
  * 기수의 세션을 유형별로 페이지네이션 없이 조회한다.
  */
-export const find1 = <ThrowOnError extends boolean = false>(
-  options: Options<Find1Data, ThrowOnError>,
-): RequestResult<Find1Responses, Find1Errors, ThrowOnError> =>
-  (options.client ?? client).get<Find1Responses, Find1Errors, ThrowOnError>({
+export const find2 = <ThrowOnError extends boolean = false>(
+  options: Options<Find2Data, ThrowOnError>,
+): RequestResult<Find2Responses, Find2Errors, ThrowOnError> =>
+  (options.client ?? client).get<Find2Responses, Find2Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1271,10 +1271,10 @@ export const withdraw = <ThrowOnError extends boolean = false>(
  *
  * 현재 활동 기수 소속을 우선하고, 없으면 가장 높은 번호의 유효 기수 소속을 보여준다. 소속이 없으면 사용자 ID와 이름 외 필드는 null이다.
  */
-export const find2 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find2Data, ThrowOnError>,
-): RequestResult<Find2Responses, Find2Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find2Responses, Find2Errors, ThrowOnError>({
+export const find3 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find3Data, ThrowOnError>,
+): RequestResult<Find3Responses, Find3Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find3Responses, Find3Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1291,10 +1291,10 @@ export const find2 = <ThrowOnError extends boolean = false>(
  *
  * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
  */
-export const find3 = <ThrowOnError extends boolean = false>(
-  options?: Options<Find3Data, ThrowOnError>,
-): RequestResult<Find3Responses, Find3Errors, ThrowOnError> =>
-  (options?.client ?? client).get<Find3Responses, Find3Errors, ThrowOnError>({
+export const find4 = <ThrowOnError extends boolean = false>(
+  options?: Options<Find4Data, ThrowOnError>,
+): RequestResult<Find4Responses, Find4Errors, ThrowOnError> =>
+  (options?.client ?? client).get<Find4Responses, Find4Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',

@@ -1,10 +1,10 @@
 /** 알림 목록 조회와 푸시 수신에 따른 캐시 무효화 정책을 정의합니다. */
 import type { QueryClient } from '@tanstack/react-query';
-import { find3InfiniteOptions, type UserNotificationListResponse } from '@yapp-plus/api/generated';
+import { find4InfiniteOptions, type UserNotificationListResponse } from '@yapp-plus/api/generated';
 
 /** 생성된 알림 목록 cursor query에 첫 페이지 cursor 생략을 명시한다. */
-export function alertsInfiniteQueryOptions(options?: Parameters<typeof find3InfiniteOptions>[0]) {
-  const generated = find3InfiniteOptions(options);
+export function alertsInfiniteQueryOptions(options?: Parameters<typeof find4InfiniteOptions>[0]) {
+  const generated = find4InfiniteOptions(options);
   return {
     ...generated,
     // 생성 타입에는 skipToken도 포함되지만 Suspense는 함수만 허용한다.
