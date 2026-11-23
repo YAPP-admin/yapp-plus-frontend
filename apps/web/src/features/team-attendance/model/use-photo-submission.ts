@@ -10,7 +10,12 @@ import {
   type CreateClientConfig,
   type TeamPhotoUploadUrl,
 } from '@yapp-plus/api/generated';
-import { SubmissionError, type SubmissionInput, type TeamMember } from './submission-input';
+import {
+  SubmissionError,
+  toSubmitTeamPhotoRequest,
+  type SubmissionInput,
+  type TeamMember,
+} from './submission-input';
 
 /** 인증 Provider가 제공하는 SDK 설정. PUT에는 전달하지 않는다. */
 export type SubmissionApiOptions = ReturnType<CreateClientConfig>;
@@ -145,7 +150,7 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
       const submitted = await submit.mutateAsync({
         signal,
         path: { sessionId: input.target.sessionId },
-        body: { imageKey, selectedMembershipIds: input.selectedMembershipIds },
+        body: toSubmitTeamPhotoRequest(imageKey, input.selectedMembershipIds),
       });
       const receipt = zTeamPhotoSubmitted.parse(submitted);
       const photoId = Number(receipt.photoId);
