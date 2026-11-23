@@ -48,9 +48,11 @@ import type {
   Detail2Responses,
   Detail3Responses,
   DetailResponses,
+  Find1Responses,
   Find2Responses,
   Find3Responses,
   Find4Responses,
+  Find5Responses,
   Find6Responses,
   Find7Responses,
   Find8Responses,
@@ -657,6 +659,52 @@ export function handleRegister1(
 ): HttpHandler {
   return http.post<never, Register1Data['body']>(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/users`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleFind1Response = {
+  body: Find1Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/sessions/{sessionId}/team-attendance-photos` operation.
+ */
+export function handleFind1(
+  response?:
+    | HandleFind1Response
+    | HttpResponseResolver<
+        {
+          sessionId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      sessionId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/sessions/:sessionId/team-attendance-photos`,
     (info) => {
       if (typeof response === 'function') {
         return response(info);
@@ -2327,6 +2375,52 @@ export function handleFind4(
   );
 }
 
+export type HandleFind5Response = {
+  body: Find5Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/sessions/{sessionId}/team-members` operation.
+ */
+export function handleFind5(
+  response?:
+    | HandleFind5Response
+    | HttpResponseResolver<
+        {
+          sessionId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      sessionId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/sessions/:sessionId/team-members`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleFind6Response = {
   body: Find6Responses[200];
   status?: 200;
@@ -3459,6 +3553,10 @@ export type MswHandlerFactories = {
    */
   register1: typeof handleRegister1;
   /**
+   * Handler for the `GET /api/sessions/{sessionId}/team-attendance-photos` operation.
+   */
+  find1: typeof handleFind1;
+  /**
    * Handler for the `POST /api/sessions/{sessionId}/team-attendance-photos` operation.
    */
   submit: typeof handleSubmit;
@@ -3615,6 +3713,10 @@ export type MswHandlerFactories = {
    */
   find4: typeof handleFind4;
   /**
+   * Handler for the `GET /api/sessions/{sessionId}/team-members` operation.
+   */
+  find5: typeof handleFind5;
+  /**
    * Handler for the `GET /api/sessions/current-week` operation.
    */
   find6: typeof handleFind6;
@@ -3753,6 +3855,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     detail: wrap(handleDetail),
     correct: wrap(handleCorrect),
     register1: wrap(handleRegister1),
+    find1: wrap(handleFind1),
     submit: wrap(handleSubmit),
     presign: wrap(handlePresign),
     renew: wrap(handleRenew),
@@ -3792,6 +3895,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     withdraw: wrap(handleWithdraw),
     find3: wrap(handleFind3),
     find4: wrap(handleFind4),
+    find5: wrap(handleFind5),
     find6: wrap(handleFind6),
     list1: wrap(handleList1),
     detail2: wrap(handleDetail2),
@@ -3889,7 +3993,9 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.revoke, overrides.revoke),
       invoke(pick.findDetail, overrides.findDetail),
       invoke(pick.acknowledge, overrides.acknowledge),
+      invoke(pick.find1, overrides.find1),
       invoke(pick.submit, overrides.submit),
+      invoke(pick.find5, overrides.find5),
       invoke(pick.renew, overrides.renew),
       invoke(pick.history, overrides.history),
       invoke(pick.create, overrides.create),

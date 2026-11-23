@@ -1036,6 +1036,91 @@ export const zUserNotificationListResponse = z.object({
   nextCursor: z.string().nullable(),
 });
 
+export const zUserTeamMemberResponse = z.object({
+  membershipId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  name: z.string(),
+  position: z
+    .union([
+      z.literal('PM'),
+      z.literal('DESIGN'),
+      z.literal('ANDROID'),
+      z.literal('IOS'),
+      z.literal('WEB'),
+      z.literal('MOBILE'),
+      z.literal('SERVER'),
+      z.literal('AI_NATIVE'),
+    ])
+    .nullable(),
+  isMe: z.boolean(),
+});
+
+export const zUserTeamMembersResponse = z.object({
+  teamId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  teamName: z.string(),
+  members: z.array(zUserTeamMemberResponse),
+});
+
+export const zUserTeamPhotoUploaderResponse = z.object({
+  userId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  name: z.string().nullable(),
+});
+
+export const zUserTeamPhotoDetailResponse = z.object({
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  teamId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  teamName: z.string(),
+  status: z.enum(['PENDING', 'APPROVED', 'REJECTED']),
+  imageUrl: z.string().nullable(),
+  imageUrlExpiresAt: z.iso.datetime().nullable(),
+  uploadedAt: z.iso.datetime(),
+  uploadedTime: z.string().regex(/^(?:[01][0-9]|2[0-3]):[0-5][0-9]$/),
+  submittedAt: z.iso.datetime(),
+  uploader: zUserTeamPhotoUploaderResponse,
+  selectedMemberCount: z
+    .int()
+    .gte(0)
+    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+});
+
+export const zUserTeamPhotoResponse = z.object({
+  photo: zUserTeamPhotoDetailResponse.nullable(),
+});
+
 export const zCurrentWeekSessionDetailResponse = z.object({
   sessionId: z.coerce
     .bigint()
@@ -2193,6 +2278,22 @@ export const zRegister1Body = zRegisterUserRequest;
  */
 export const zRegister1Response = zAuthenticationResponse;
 
+export const zFind1Path = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * 조회 성공. 사진 미제출이면 photo:null
+ */
+export const zFind1Response = zUserTeamPhotoResponse;
+
 export const zSubmitBody = zSubmitTeamPhotoRequest;
 
 export const zSubmitPath = z.object({
@@ -2824,6 +2925,22 @@ export const zFind4Query = z.object({
  * 조회 성공
  */
 export const zFind4Response = zUserNotificationListResponse;
+
+export const zFind5Path = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * 현재 본인 팀의 참석 선택 가능 명단
+ */
+export const zFind5Response = zUserTeamMembersResponse;
 
 /**
  * 조회 성공. 토요일 세션이 없으면 session은 null

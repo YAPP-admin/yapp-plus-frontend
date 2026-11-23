@@ -2,10 +2,6 @@ import { defineConfig } from '@hey-api/openapi-ts';
 
 const input = process.env.OPENAPI_INPUT;
 const enableSdkValidation = process.env.HEY_API_SDK_VALIDATION === 'true';
-const deferredOperations = [
-  'GET /api/sessions/{sessionId}/team-attendance-photos',
-  'GET /api/sessions/{sessionId}/team-members',
-];
 const mockCount = {
   fakerPath: ['number', 'int'] as const,
   defaultArgs: { min: 0, max: 100 },
@@ -19,13 +15,6 @@ if (!input) {
 
 export default defineConfig({
   input,
-  parser: {
-    filters: {
-      operations: {
-        exclude: deferredOperations,
-      },
-    },
-  },
   output: {
     path: 'src/generated',
     postProcess: ['oxfmt'],

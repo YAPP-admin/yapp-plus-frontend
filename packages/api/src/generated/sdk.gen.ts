@@ -88,6 +88,9 @@ import type {
   DetailData,
   DetailErrors,
   DetailResponses,
+  Find1Data,
+  Find1Errors,
+  Find1Responses,
   Find2Data,
   Find2Errors,
   Find2Responses,
@@ -97,6 +100,9 @@ import type {
   Find4Data,
   Find4Errors,
   Find4Responses,
+  Find5Data,
+  Find5Errors,
+  Find5Responses,
   Find6Data,
   Find6Errors,
   Find6Responses,
@@ -509,6 +515,26 @@ export const register1 = <ThrowOnError extends boolean = false>(
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  });
+
+/**
+ * 본인 팀의 최신 출석 사진과 제출 정보 조회
+ *
+ * 해당 세션 기수의 현재 PLAYER이며 제출 당시 팀원 명단에 포함된 사용자만 조회한다. 미선택자도 허용하고 팀 이동 후에도 스냅샷 권한을 유지한다. 팀별 최신 사진 선정 후 권한을 검사하며 REPLACED는 제외한다. PENDING·APPROVED·REJECTED 모두 조회 가능하다. 업로드 URL 예약/S3 PUT만 완료한 미제출은 photo:null. URL은 최대 5분이며 업로드 6개월 또는 객체 삭제 후에는 URL만 null이다. 응답은 Cache-Control: no-store.
+ */
+export const find1 = <ThrowOnError extends boolean = false>(
+  options: Options<Find1Data, ThrowOnError>,
+): RequestResult<Find1Responses, Find1Errors, ThrowOnError> =>
+  (options.client ?? client).get<Find1Responses, Find1Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/sessions/{sessionId}/team-attendance-photos',
+    ...options,
   });
 
 /**
@@ -1303,6 +1329,26 @@ export const find4 = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/users/me/notifications',
+    ...options,
+  });
+
+/**
+ * 팀 사진 참석자 선택용 본인 팀원 조회
+ *
+ * 대상 TEAM 세션 기수의 현재 PLAYER이며 삭제되지 않은 팀에 소속된 사용자만 조회한다. 현재 같은 팀의 활성 PLAYER를 membershipId 오름차순으로 반환한다. 본인만 isMe=true이며 직군 미지정은 null이다. 다른 역할과 탈퇴·soft delete 사용자는 선택 대상에서 제외한다. 사진 제출 시간 제한은 이 조회에 적용하지 않는다. 최종 사진 제출에서 현재 팀·선택 명단을 다시 검증한다. Cache-Control: no-store.
+ */
+export const find5 = <ThrowOnError extends boolean = false>(
+  options: Options<Find5Data, ThrowOnError>,
+): RequestResult<Find5Responses, Find5Errors, ThrowOnError> =>
+  (options.client ?? client).get<Find5Responses, Find5Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/sessions/{sessionId}/team-members',
     ...options,
   });
 

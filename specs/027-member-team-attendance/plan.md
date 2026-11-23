@@ -56,8 +56,7 @@
 | 0       | 요구사항·계약·작업·검증 절차 작성           | 정책 일치, 문서 검증, 사용자 리뷰              |
 | 1A      | 주간 type·endTime와 후반 조회 이름 이관     | 원래 HTTP 경로·fixture·소비자 유지             |
 | 1B      | 나머지 기존 조회 이름 이관                  | 관리자 세션·프로필·알림 회귀 유지              |
-| 1C      | 회원 팀원 조회 생성                         | 타입·SDK·Zod·Query·MSW·Faker 일관성            |
-| 1D      | 회원 사진 조회 생성, 임시 생성 설정 제거    | 전체 원본 재생성과 일치                        |
+| 1C·1D   | 회원 팀원·사진 조회를 함께 생성             | 타입·SDK·Zod·Query·MSW·Faker와 원본 일치       |
 | 2 / US1 | 실제 팀원·사진 조회 및 실패 정책            | 사진 조회 실패만 미제출, 다른 오류 차단        |
 | 3 / US2 | 실제 대상·일회성 앨범/카메라·동적 안내 시간 | 도구 1회 실행, 취소·직접 진입 검증             |
 | 4 / US2 | 사진 준비 직후 업로드·교체·재시도           | 이전 키 폐기, 업로드 성공 전 제출 금지         |
@@ -71,11 +70,10 @@
 
 ## 생성 분할과 기존 PR
 
-1A는 사진·팀원 신규 GET을 제외하고 관리자 세션·프로필·알림 operation 이름만 기존 값으로
-임시 유지한다. 주간 find4→find6, 일정 find5→find7, 내역 find6→find8, 보존 이력 find7→find9를 이관한다.
-1B는 임시 이름 변환을 제거해 관리자 세션 find1→find2, 프로필 find2→find3, 알림 find3→find4를 이관한다.
-1C는 팀원 GET(find5), 1D는 사진 GET(find1)을 포함한다. 원본 파일은 편집하지 않는다.
-parser.patch.operations와 parser.filters.operations는 중간 생성 설정에만 사용하고 최종 삭제한다.
+1A는 주간 find4→find6, 일정 find5→find7, 내역 find6→find8, 보존 이력 find7→find9를 이관한다.
+1B는 관리자 세션 find1→find2, 프로필 find2→find3, 알림 find3→find4를 이관한다.
+사용자 요청으로 1C·1D는 분할하지 않고 팀원 GET(find5)·사진 GET(find1)을 한 번에 포함한다.
+최종 생성 설정에는 operation 필터·이름 변환을 남기지 않는다. 원본 파일은 편집하지 않는다.
 
 기존 [PR #503](https://github.com/YAPP-admin/yapp-plus-frontend/pull/503)은 참고·재사용 대상이다.
 서버 상태 표시·복귀 훅 확장은 겹치지만 장소 판별, 코드 제출의 유형 제한 누락,

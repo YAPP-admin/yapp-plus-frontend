@@ -42,4 +42,35 @@
 
 ## 다음 리뷰
 
-1A diff와 검증을 검토한 뒤, 1B 진행 확인을 받는다. 1B 전에는 관리자 세션·프로필·알림의 생성 이름 변환을 제거하지 않는다.
+사용자가 1A 커밋과 다음 단계 진행을 승인해 1B를 시작했다.
+
+## 1단계 1B — 진행 중
+
+- 임시 operationId 변환을 제거한 뒤 동일 OpenAPI 원본으로 재생성했다. 새 팀원·사진 GET 제외는 유지한다.
+- 관리자 기수 세션은 `find1`에서 `find2`, 프로필은 `find2`에서 `find3`, 알림은 `find3`에서 `find4`로 이관했다. 앱 호출·MSW pick·공용 API mock과 Query key 검증이 모두 같은 HTTP 경로를 계속 가리킨다.
+
+## 1B 검증 결과
+
+- `pnpm --filter @yapp-plus/api typecheck`, `pnpm --filter @yapp-plus/admin typecheck`, `pnpm --filter @yapp-plus/web typecheck`, `git diff --check`: 새로 실행해 통과.
+- 관리자 세션 회귀 18개 파일 229건, 웹 프로필·알림·세션 경계 회귀 5개 파일 33건: 새로 실행해 통과. 관리자 테스트의 의도된 404 오류 경계 로그는 기존 수용 사례이며 실패가 아니다.
+- 현재 1B 변경은 17개 파일, +134/-151줄이다. 전체 check·build·실제 기기 확인은 이 단계 범위에서 아직 미실행이다.
+
+## 다음 리뷰
+
+사용자가 최신 API 전체 생성을 요청해 1C·1D를 통합 실행했다.
+
+## 1단계 1C·1D — 전체 생성 완료
+
+- 사용자 요청에 따라 팀원·사진 GET을 별도 단계로 나누지 않았다. `openapi-ts.config.ts`에서 모든 임시 parser filter·patch를 제거하고 같은 OpenAPI 원본으로 전체 생성했다.
+- `find1`은 팀 사진 조회, `find5`는 팀원 조회로 생성됐다. SDK·Zod·TanStack Query·MSW export를 확인했고 `packages/api/README.md`의 현재 생성 함수명과 MSW 예시를 갱신했다.
+
+## 1C·1D 검증 결과
+
+- 같은 `.context/api-027-openapi.json`으로 재생성 전후의 전체 diff SHA-256이 일치했다.
+- `find1`·`find5`의 SDK·Query key/options, `zFind1Response`·`zFind5Response`, `handleFind1`·`handleFind5`와 MSW `pick` 연결을 생성물에서 확인했다.
+- API·관리자·웹 타입 검사와 `git diff --check`: 새로 실행해 통과.
+- 팀 사진 기능 UI·실제 HTTP 성공 시나리오는 다음 US1 단계에서 생성 API를 소비하며 검증한다. build·실기기는 아직 미실행이다.
+
+## 다음 리뷰
+
+최신 API 전체 생성과 1B 소비자 이관을 함께 검토한 뒤, US1(실제 팀·기존 사진 확인) 진행 확인을 받는다.
