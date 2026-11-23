@@ -2,7 +2,7 @@
 
 **이슈**: [#512](https://github.com/YAPP-admin/yapp-plus-frontend/issues/512)
 **브랜치**: `DongjaJ/expo-ci/cd-plan` | **작성일**: 2026-11-23 | **명세**: [spec.md](spec.md)
-**상태**: 문서 리뷰 대기. 환경 준비·제품 구현·배포 활성화는 미실행이다.
+**상태**: 1B 외부 증빙 대기. 웹 API 환경 입력 검증은 구현·로컬 검증을 마쳤고 배포 활성화는 미실행이다.
 
 ## 요약
 
@@ -27,7 +27,7 @@ appVersion·수동 macOS IPA를 유지하고 Doppler를 웹 환경 설정의 원
 
 ## 헌법 확인
 
-확인 기준: `origin/main`의 `cc90b35e`와 [AGENTS.md](../../AGENTS.md),
+확인 기준: `origin/main`의 `7c92b994`와 [AGENTS.md](../../AGENTS.md),
 [프로젝트 헌법](../../.specify/memory/constitution.md), [제품 맥락](../../docs/mission.md).
 
 | 원칙                | 판정과 근거                                                           |
@@ -62,7 +62,8 @@ appVersion·수동 macOS IPA를 유지하고 Doppler를 웹 환경 설정의 원
 ### 2 — US1: 웹 설정
 
 - 웹 초기화·빌드에서 VITE_API_BASE_URL을 검증하고 첫 요청 전에 client에 적용한다.
-- Doppler 로컬 실행 안내와 Turbo env·캐시 입력을 갱신한다. CI에는 명시적 테스트 URL을 공급한다.
+- Doppler 로컬 실행 안내와 Turbo env·캐시 입력을 갱신한다. CI에는 외부 요청을 만들지 않는 예약된
+  비실재 HTTPS URL을 공급한다.
 - PR Preview로 검증한다. 아직 main 운영 배포를 개발로 전환하지 않는다.
 - 완료 기준: 주소 누락·오류·설정만 변경한 재빌드·관리자 회귀 검증. 리뷰 후 3단계.
 

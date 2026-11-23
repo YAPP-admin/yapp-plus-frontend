@@ -84,7 +84,10 @@ mise exec -- pnpm --filter @yapp-plus/web test
 
 ```sh
 mise exec -- node --run check
-mise exec -- node --run build
+# Doppler 개발 설정으로 실제 배포와 같은 입력을 공급합니다.
+mise exec -- doppler run --project yapp-plus-web --config dev -- node --run build
+# 외부 API를 호출하지 않는 빌드 검증에는 예약된 비실재 URL을 사용합니다.
+VITE_API_BASE_URL=https://example.invalid mise exec -- node --run build
 ```
 
 미구현 응답은 501, 미등록 대상 API는 오류로 차단되며 실서버로 우회하지 않습니다.

@@ -21,6 +21,8 @@ jobs:
     timeout-minutes: 20
     env:
       TURBO_TEAM: yapp-plus
+      # 실제 API를 호출하지 않는 빌드 검증용 공개 URL입니다.
+      VITE_API_BASE_URL: https://example.invalid
     # Turbo가 각 명령 안에서 앱과 패키지 태스크를 병렬 실행합니다.
     # Matrix를 사용하지 않아 도구 체인과 의존성 설치가 중복되지 않도록 합니다.
     steps:

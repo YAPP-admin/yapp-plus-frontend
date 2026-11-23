@@ -66,3 +66,26 @@ T006은 완료했다. T007과 T008은 실제 개발 alias·EAS/Firebase 조합 �
 - 도메인을 구매하거나 임의 Preview에 수동 연결하지 않는다. T027에서 main CI가 검증한 Preview READY
   배포에만 alias를 연결하고 deployment ID까지 확인한다.
 - PR·운영 tag·수동 운영 배포는 이 alias를 변경하지 않는다.
+
+## 2단계 회원 웹 API 환경 입력 — 2026-11-23
+
+- 사용자 요청으로 브랜치 `DongjaJ/expo-ci/cd-plan`의 `5fdeea6d`를 최신 `origin/main`
+  `7c92b994`에 rebase했다. 충돌·미해결 파일 없이 완료 HEAD는 `66f160cb`이며 시작·대상 SHA는
+  `.context/rebase-2026-11-23.md`에 기록했다.
+- `apps/web/src/app/api-environment.ts`가 `VITE_API_BASE_URL`을 `URL`로 검증한다. 누락·비문자열·형식
+  오류·HTTP·사용자 정보 포함 입력은 즉시 실패하며, 검증된 값만 생성 API client에 적용한다.
+- Vite도 같은 검증 함수를 사용하므로 빌드 입력 누락은 설정 로드 단계에서 실패한다. Stackflow 진입점은
+  QueryClient·화면 생성 전에 client를 초기화한다. 생성 SDK와 관리자 초기화는 변경하지 않았다.
+- CI는 실제 API를 호출하지 않도록 예약된 비실재 URL `https://example.invalid`만 빌드 입력으로 공급한다.
+  `.env.example`에는 실제·예시 호스트를 넣지 않고 빈 변수만 둔다. 기존 가짜 호스트 이름은 저장소와
+  문서에서 제거했다.
+- Vercel alias·접근 보호·Git 자동 배포, Doppler 동기화의 실제 결과, EAS·Firebase·OAuth 조합은 환경
+  소유자의 증빙을 아직 받지 못했다. 외부 상태를 추측하지 않아 T007~T009와 배포·PR Preview는 미완료다.
+
+| 검증                                                         | 결과                                                                                                           |
+| ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
+| `apps/web` API 환경 테스트                                   | 71개 파일·585개 테스트 통과. URL 정규화·누락·비 HTTPS·사용자 정보·client 적용을 포함한다.                      |
+| 누락 입력 빌드                                               | `VITE_API_BASE_URL` 없이 웹 빌드가 `VITE_API_BASE_URL을 설정해야 합니다.`로 실패함을 확인했다.                 |
+| `VITE_API_BASE_URL=https://example.invalid node --run check` | 통과. 포맷 신규 실행, lint는 5개 Turbo 캐시 재사용·2개 신규 실행, typecheck 7개 신규 실행, test 5개 신규 실행. |
+| `VITE_API_BASE_URL=https://example.invalid node --run build` | 통과. admin·storybook·web build 3개 모두 신규 실행. 기존 500 kB 이상 chunk 경고는 유지됐다.                    |
+| 미실행                                                       | 실제 Doppler/Vercel/EAS 조회·변경, PR Preview, 실기기·IPA·`expo:doctor`는 이번 웹 설정 단계 범위 밖이다.       |

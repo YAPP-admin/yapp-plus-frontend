@@ -23,10 +23,10 @@
 
 **목표·독립 검증**: PR Preview에서 개발 API를 사용하고 운영 설정·관리자에는 영향을 주지 않는다.
 
-- [ ] T010 [P] [US1] apps/web/src/app/api-environment.test.ts에 누락·잘못된 URL·초기화 순서 회귀 테스트를 작성한다. (FR-005)
-- [ ] T011 [US1] apps/web/src/app/api-environment.ts와 apps/web/stackflow/src/main.tsx에 환경 검증·공개 client 초기화를 구현한다. (FR-005)
-- [ ] T012 [US1] apps/web/vite.config.ts, turbo.json, .github/workflows/ci.yml에 빌드 입력 검증·캐시·테스트용 URL을 연결한다. (FR-004)
-- [ ] T013 [US1] package.json, apps/web/.env.example, apps/web/README.md에 Doppler 로컬 실행·설정 재빌드 절차를 반영한다. (FR-004)
+- [x] T010 [P] [US1] apps/web/src/app/api-environment.test.ts에 누락·잘못된 URL·초기화 순서 회귀 테스트를 작성한다. (FR-005)
+- [x] T011 [US1] apps/web/src/app/api-environment.ts와 apps/web/stackflow/src/main.tsx에 환경 검증·공개 client 초기화를 구현한다. (FR-005)
+- [x] T012 [US1] apps/web/vite.config.ts, turbo.json, .github/workflows/ci.yml에 빌드 입력 검증·캐시·테스트용 URL을 연결한다. (FR-004)
+- [x] T013 [US1] package.json, apps/web/.env.example, apps/web/README.md에 Doppler 로컬 실행·설정 재빌드 절차를 반영한다. (FR-004)
 - [ ] T014 [US1] quickstart.md의 웹 설정·캐시·관리자 회귀와 check/build를 수행하고 validation.md에 결과·리뷰를 기록한다. (FR-003, FR-014)
 
 ## 3 — US2: iOS 환경과 세션 (P1)

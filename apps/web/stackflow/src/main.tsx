@@ -11,6 +11,7 @@ import { ProgressCircle, VStack } from '@seed-design/react';
 import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Providers, createAppQueryClient } from '@/app/providers';
+import { configureWebApiClient } from '@/app/api-environment';
 import { NativeAuthSessionProvider } from '@/features/auth';
 import { createStackflowApp } from './stack';
 import { detectPlatform, getReducedMotionPreference } from './platform';
@@ -21,7 +22,7 @@ if (!root) {
   throw new Error('YAPP+ 웹 앱의 root 요소를 찾을 수 없습니다.');
 }
 
-client.setConfig({ baseUrl: import.meta.env.VITE_API_BASE_URL });
+configureWebApiClient(client, import.meta.env.VITE_API_BASE_URL);
 
 const initialContext = {
   platform: detectPlatform(),

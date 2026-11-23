@@ -16,7 +16,8 @@ node --run check
 설치는 문서 검증용으로 lifecycle을 실행하지 않는다. 실제 제품 빌드는 저장소의 필요한 설치 절차를 따른다.
 배포 앱·빌드 설정을 변경한 단계는 `node --run build`, 모바일 설정 변경은 `node --run expo:doctor`와
 기존 CI 네이티브 검사를 추가한다. 실행 로그에서 cache hit와 새 실행을 구분한다.
-외부 API를 호출하지 않는 CI 빌드에는 명시적 HTTPS 테스트 URL을 공급한다.
+외부 API를 호출하지 않는 CI 빌드에는 `VITE_API_BASE_URL=https://example.invalid`처럼 예약된 비실재
+HTTPS URL을 공급한다.
 
 ## 2. 외부 준비 확인
 
