@@ -2,17 +2,17 @@
 
 import {
   decide,
-  list2,
+  list3,
   type DecideData,
   type DecideResponse,
-  type List2Data,
-  type List2Response,
+  type List3Data,
+  type List3Response,
   type Options,
 } from '@yapp-plus/api/generated';
 
 export type TeamAttendancePhotoListInput = Readonly<{
-  generationId: List2Data['path']['generationId'];
-  sessionId: List2Data['path']['sessionId'];
+  generationId: List3Data['path']['generationId'];
+  sessionId: List3Data['path']['sessionId'];
 }>;
 
 export type TeamAttendancePhotoDecisionInput = Readonly<{
@@ -25,11 +25,11 @@ export type TeamAttendancePhotoDecisionInput = Readonly<{
 /** 제출된 팀 사진과 사진에 포함된 전체 팀원 보고를 조회합니다. */
 export async function getTeamAttendancePhotos(
   input: TeamAttendancePhotoListInput,
-): Promise<List2Response> {
-  const { data } = await list2({
+): Promise<List3Response> {
+  const { data } = await list3({
     path: { generationId: input.generationId, sessionId: input.sessionId },
     throwOnError: true,
-  } satisfies Options<List2Data, true>);
+  } satisfies Options<List3Data, true>);
   return data;
 }
 

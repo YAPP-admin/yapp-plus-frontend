@@ -4,21 +4,21 @@ import {
   badge,
   cancel1,
   close,
-  list3,
+  list4,
   override,
   type AdminAttendanceListResponse,
   type BadgeData,
   type CloseData,
-  type List3Data,
+  type List4Data,
   type Options,
   type OverrideData,
 } from '@yapp-plus/api/generated';
 
 export type AttendanceListInput = Readonly<{
-  generationId: List3Data['path']['generationId'];
-  sessionId: List3Data['path']['sessionId'];
-  cursor?: NonNullable<List3Data['query']>['cursor'];
-  size?: NonNullable<List3Data['query']>['size'];
+  generationId: List4Data['path']['generationId'];
+  sessionId: List4Data['path']['sessionId'];
+  cursor?: NonNullable<List4Data['query']>['cursor'];
+  size?: NonNullable<List4Data['query']>['size'];
 }>;
 
 export type AttendanceOverrideInput = Readonly<{
@@ -48,11 +48,11 @@ export async function getAttendance(
     input.cursor === undefined && input.size === undefined
       ? undefined
       : { cursor: input.cursor, size: input.size };
-  const { data } = await list3({
+  const { data } = await list4({
     path: { generationId: input.generationId, sessionId: input.sessionId },
     ...(query ? { query } : {}),
     throwOnError: true,
-  } satisfies Options<List3Data, true>);
+  } satisfies Options<List4Data, true>);
   return data;
 }
 

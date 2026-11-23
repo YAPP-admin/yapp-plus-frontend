@@ -10,6 +10,9 @@ export default defineConfig({
   },
   test: {
     environment: 'happy-dom',
+    // 라우터·오버레이 UI 테스트가 공유 개발 환경의 과도한 worker 경합으로 timeout 나지 않도록 제한한다.
+    maxWorkers: 4,
+    testTimeout: 10_000,
     server: { deps: { inline: ['@seed-design/react', '@seed-design/css'] } },
     setupFiles: ['./vitest.setup.ts'],
   },

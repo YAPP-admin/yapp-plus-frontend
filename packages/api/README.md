@@ -38,12 +38,13 @@ SDK 요청·응답 검증과 응답 변환은 기본적으로 비활성화되어
 
 일반 `generated` 진입점에는 Faker·MSW·고정 응답을 export하지 않습니다.
 제품 코드는 SDK를 사용하고, 모킹 진입점은 개발 초기화나 테스트에서만 사용합니다.
-현재 이번 주 세션 조회 함수는 `find4`이며, 실제 API 경로는 생성 SDK의 주석에서 확인할 수 있습니다.
+현재 관리자 기수 목록 조회 함수는 `list2`(`GET /api/admin/generations`)이고, 기수별 세션 목록 조회
+함수는 `find1`이다. 실제 API 경로는 생성 SDK의 주석에서 확인할 수 있다.
 
 ```ts
-import { find4 } from '@yapp-plus/api/generated';
+import { list2Options } from '@yapp-plus/api/generated';
 
-const { data } = await find4({ throwOnError: true });
+const options = list2Options();
 ```
 
 ## 모의 응답 구성
@@ -52,7 +53,7 @@ const { data } = await find4({ throwOnError: true });
 base URL은 인증 정보·query·hash가 없는 절대 HTTP(S) URL이어야 합니다.
 브라우저는 생성 client 설정의 URL, Vitest는 `https://api.yapp.test`를 사용합니다.
 
-- [fixtures.ts](src/mocks/fixtures.ts): 운영진 로그인·세션 목록·이번 주 세션·공지 수신자와 빈 결과
+- [fixtures.ts](src/mocks/fixtures.ts): 운영진 로그인·기수 목록·세션 목록·이번 주 세션·공지 수신자와 빈 결과
 - [handlers.ts](src/mocks/handlers.ts): Faker 연결, 고정 응답 선택, 204, Zod 검증과 요청 차단
 - `createApiMockHandlers(baseUrl, { scenario: 'empty' })`: 대표 목록을 비우고 이번 주 session을 null로 반환
 
@@ -135,9 +136,9 @@ Zod 검증을 거치지 않으므로 생성 타입을 사용하고, 필요할 �
 요청에서 kyOptions를 직접 덮어쓸 때는 기본 옵션을 보존하거나 `throwHttpErrors: false`를 포함한다.
 별도 createClient 인스턴스에는 기본 client의 interceptor가 자동 전파되지 않는다.
 
-2026-11-16 공개 명세로 재생성했다. 엔드포인트 추가·삭제는 없으며 세션 생성·조회에
-roadAddress·latitude·longitude·detailAddress가 추가되고 SESSION_MANAGEMENT_DISABLED 및
-세션 생성·수정의 503 응답 정의가 제거됐다. 모의 legacy 세션은 새 nullable 필드를 null로 제공한다.
+2026-11-19 공개 명세로 재생성했다. 관리자 기수 목록 조회와 해당 타입·Zod 스키마·TanStack Query
+옵션이 추가됐고, 기존 목록 operation 이름이 변경됐다. 세션 생성·조회에는
+roadAddress·latitude·longitude·detailAddress가 추가되며 모의 legacy 세션은 새 nullable 필드를 null로 제공한다.
 
 setup은 생성 client와 ApiError 정의만 직접 참조하며 SDK barrel을 경유하지 않는다.
 ApiError만 import하면 등록 부수 효과가 없다. 현재 패키지는 sideEffects를 제한하지 않으므로

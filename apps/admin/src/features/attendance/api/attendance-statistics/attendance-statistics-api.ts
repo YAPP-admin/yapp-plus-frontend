@@ -2,17 +2,17 @@
 
 import {
   detail3,
-  list6,
+  list7,
   type AdminAttendanceStatisticsDetailResponse,
   type AdminAttendanceStatisticsListResponse,
   type Detail3Data,
-  type List6Data,
+  type List7Data,
   type Options,
 } from '@yapp-plus/api/generated';
 
 export type AttendanceStatisticsInput = Readonly<{
-  generationId: List6Data['path']['generationId'];
-  position?: NonNullable<List6Data['query']>['position'];
+  generationId: List7Data['path']['generationId'];
+  position?: NonNullable<List7Data['query']>['position'];
 }>;
 
 export type MembershipAttendanceStatisticsInput = Readonly<{
@@ -25,11 +25,11 @@ export async function getAttendanceStatistics(
   input: AttendanceStatisticsInput,
 ): Promise<AdminAttendanceStatisticsListResponse> {
   const query = input.position === undefined ? undefined : { position: input.position };
-  const { data } = await list6({
+  const { data } = await list7({
     path: { generationId: input.generationId },
     ...(query ? { query } : {}),
     throwOnError: true,
-  } satisfies Options<List6Data, true>);
+  } satisfies Options<List7Data, true>);
   return data;
 }
 
