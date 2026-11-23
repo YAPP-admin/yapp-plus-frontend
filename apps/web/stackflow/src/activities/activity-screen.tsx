@@ -1,11 +1,17 @@
 import { useActivity } from '@stackflow/react';
+import { vars } from '@seed-design/css/vars';
 import { SnackbarProvider } from '@yapp-plus/ui';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 import { AppBar } from '../../../seed-design/ui/app-bar';
 import { AppScreen, AppScreenContent } from '../../../seed-design/ui/app-screen';
 import { useAppScreenOptions } from '../platform';
 import { screen, screenBasement, scrollLayer, scrollStart, statusBar } from './activity-screen.css';
+
+const SAFE_AREA_SNACKBAR_REGION_STYLE = {
+  bottom: `calc(var(--safe-area-inset-bottom, env(safe-area-inset-bottom, 0px)) + ${vars.$dimension.x4})`,
+  '--snackbar-region-offset': vars.$dimension.x4,
+} as CSSProperties;
 
 export function ActivityScreen({
   children,
@@ -13,12 +19,14 @@ export function ActivityScreen({
   showBack: _showBack = true,
   title,
   background = 'layerDefault',
+  snackbarPosition = 'aboveBottomNavigation',
 }: {
   children: ReactNode;
   preventSwipeBack?: boolean;
   showBack?: boolean;
   title: string;
   background?: 'layerDefault' | 'layerBasement';
+  snackbarPosition?: 'aboveBottomNavigation' | 'safeArea';
 }) {
   const appScreenOptions = useAppScreenOptions(preventSwipeBack);
   const { isTop, isActive } = useActivity();
@@ -49,7 +57,9 @@ export function ActivityScreen({
   return (
     <>
       {isTop ? <title>{`${title} | YAPP+`}</title> : null}
-      <SnackbarProvider>
+      <SnackbarProvider
+        regionStyle={snackbarPosition === 'safeArea' ? SAFE_AREA_SNACKBAR_REGION_STYLE : undefined}
+      >
         <AppScreen
           {...appScreenOptions}
           layerOffsetTop="safeArea"

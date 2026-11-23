@@ -1,7 +1,9 @@
-import { SideNavigation, Text } from '@seed-design/react';
+import { Select, SideNavigation, Text } from '@seed-design/react';
 import { Link } from '@tanstack/react-router';
 import { Badge } from '@yapp-plus/ui';
+import { Check, ChevronDown } from 'lucide-react';
 import { Fragment } from 'react';
+import { useAdminGeneration } from '~/features/admin-generation';
 import type { MemberSearch } from '~/pages/members';
 import {
   navigationItems,
@@ -18,6 +20,8 @@ type AdminSidebarProps = {
 };
 
 export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: AdminSidebarProps) {
+  const { generations, currentGeneration, selectGeneration } = useAdminGeneration();
+
   return (
     <SideNavigation.Root className={styles.sidebar} asChild>
       <aside aria-label="관리자">
@@ -35,16 +39,41 @@ export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: Ad
           </Link>
         </SideNavigation.Header>
         <div className={styles.generation}>
-          <div className={styles.generationHeading}>
-            <Text textStyle="t4Bold" color="fg.neutral">
-              {import.meta.env.DEV ? '33기' : '운영 기수'}
-            </Text>
-            <Badge variant="weak" tone="neutral">
-              {import.meta.env.DEV ? '예시' : '미연결'}
-            </Badge>
-          </div>
+          <Select.Root
+            value={[String(currentGeneration.generationId)]}
+            onValueChange={(values) => {
+              const generationId = Number(values[0]);
+              selectGeneration(generationId);
+            }}
+          >
+            <Select.Trigger className={styles.generationSelect} aria-label="기수 선택">
+              <Select.Value>{currentGeneration.generationName}</Select.Value>
+              <Select.SuffixIcon svg={<ChevronDown aria-hidden="true" size={18} />} />
+            </Select.Trigger>
+            <Select.Positioner>
+              <Select.Content data-seed-color-mode="dark-only">
+                <Select.ScrollArea>
+                  <Select.Group>
+                    {generations.map((generation) => (
+                      <Select.Item
+                        key={generation.generationId}
+                        value={String(generation.generationId)}
+                        label={`${generation.generationName} · ID ${generation.generationId}`}
+                      >
+                        <Select.ItemBody>
+                          <Select.ItemLabel />
+                        </Select.ItemBody>
+                        <Select.ItemIndicator selected={<Check aria-hidden="true" size={16} />} />
+                      </Select.Item>
+                    ))}
+                  </Select.Group>
+                </Select.ScrollArea>
+              </Select.Content>
+            </Select.Positioner>
+            <Select.HiddenSelect />
+          </Select.Root>
           <Text textStyle="t2Regular" color="fg.neutralMuted">
-            현재 운영 워크스페이스
+            {currentGeneration.generationNumber}기 운영 워크스페이스
           </Text>
         </div>
         <SideNavigation.Content className={styles.navigation} asChild>

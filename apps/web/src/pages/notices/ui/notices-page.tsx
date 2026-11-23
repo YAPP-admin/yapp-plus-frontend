@@ -6,6 +6,7 @@ import { staticContentEnabled } from '@/features/static-content';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { ActionButton } from '@yapp-plus/ui';
+import { ActivityLink } from '@/app/navigation/activity-link';
 import { HStack, ProgressCircle, Skeleton, VStack } from '@seed-design/react';
 import { Suspense } from 'react';
 import { useNativeAuthSession } from '@/features/auth';
@@ -43,6 +44,11 @@ export function NoticesPage({ category = 'ALL', onCategoryChange = () => {} }: N
       <h1 className={srOnly}>게시판</h1>
 
       <VStack pt="x2_5" px="x5" pb="x10" width="full">
+        {import.meta.env.DEV && (
+          <ActivityLink activityName="DiningList" activityParams={{}}>
+            회식
+          </ActivityLink>
+        )}
         {canQuery ? (
           <NoticeListBoundary>
             <Suspense fallback={<NoticeListLoading />}>

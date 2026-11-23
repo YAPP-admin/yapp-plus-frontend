@@ -1,7 +1,7 @@
 import { render, screen } from '@testing-library/react';
 import { describe, expect, it, vi } from 'vitest';
 import { HomePage } from '../../pages/home';
-import { shell } from './page-shell.css';
+import { shell, shellWithNavigation } from './page-shell.css';
 import { PageShell } from './page-shell';
 
 vi.mock('@stackflow/react', () => ({
@@ -61,5 +61,17 @@ describe('PageShell', () => {
     expect(screen.getAllByRole('banner')).toHaveLength(1);
     expect(screen.getAllByRole('main')).toHaveLength(1);
     expect(screen.queryByText('YAPP+')).not.toBeInTheDocument();
+  });
+
+  it('헤더를 숨긴 화면도 navigation을 별도 grid 행에 배치한다', () => {
+    render(
+      <PageShell header={null} navigation={<nav aria-label="주요 메뉴">메뉴</nav>}>
+        <main>본문</main>
+      </PageShell>,
+    );
+
+    expect(screen.queryByRole('banner')).not.toBeInTheDocument();
+    expect(screen.getByRole('main').parentElement).toHaveClass(shellWithNavigation);
+    expect(screen.getByRole('navigation', { name: '주요 메뉴' })).toBeInTheDocument();
   });
 });

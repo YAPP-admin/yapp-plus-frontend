@@ -129,9 +129,7 @@ function CurrentWeekContent() {
       <div className={sessionHeader}>
         <span className={locationText}>{session?.location ?? '이번 주 세션'}</span>
         <h2 className={sessionTitle}>
-          {session
-            ? `${session.date === today ? '오늘은' : '이번 주는'} ${session.name}`
-            : '이번 주 예정된 세션이 없어요'}
+          {session ? `이번 주는 ${session.name} 세션이에요` : '이번 주 예정된 세션이 없어요'}
         </h2>
         {session ? <p>{formatKoreanTime(session.startTime)} 시작</p> : null}
       </div>
@@ -166,6 +164,8 @@ function CurrentWeekContent() {
                   AVAILABLE: '출석하기',
                   NOT_ELIGIBLE: '출석 대상이 아니에요',
                   NOT_OPEN: '아직 출석할 수 없어요',
+                  CHECKED_IN: '출석했어요!',
+                  PENDING_APPROVAL: '인증 사진 검토 중',
                 }[session.attendanceStatus]}
           </ActionButton>
         </>

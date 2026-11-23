@@ -57,6 +57,7 @@ import {
   list4,
   list5,
   list6,
+  list7,
   login,
   logout,
   mine,
@@ -224,6 +225,9 @@ import type {
   List6Data,
   List6Error,
   List6Response,
+  List7Data,
+  List7Error,
+  List7Response,
   ListData,
   ListError,
   ListResponse,
@@ -974,6 +978,8 @@ export const submit1MutationKey = (options?: Partial<Options<Submit1Data>>) =>
 
 /**
  * 이번 주 세션 사전 출결 보고
+ *
+ * 지각·조퇴·결석 보고는 서버 DB 시각이 세션 시작 시각보다 이전이고 출석 미마감일 때만 접수한다. 시작 정각부터 또는 조기 마감 후에는 409 ATTENDANCE_REPORT_UNAVAILABLE이다. 토요일 종료 시각까지는 당일 세션을 대상으로 하므로 시작 이후 요청을 다음 주로 넘기지 않는다. 종료 후에만 다음 토요일로 연결한다. 결석 보고 접수 기한과 감점 인정은 별개이며, 일반 결석 감점은 시작 48시간 전까지 제출한 보고만 인정한다.
  */
 export const submit1Mutation = (
   options?: Partial<Options<Submit1Data>>,
@@ -1366,6 +1372,8 @@ export const startMutationKey = (options?: Partial<Options<StartData>>) =>
 
 /**
  * 세션 출석 코드 발급 및 출석 대상 생성
+ *
+ * 발급 당시 PLAYER의 출결 행을 생성합니다. 기존 출결 행과 운영진 수동 판정은 보존하고 없는 행만 추가합니다.
  */
 export const startMutation = (
   options?: Partial<Options<StartData>>,
@@ -1810,7 +1818,7 @@ export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('f
 /**
  * 이번 주 세션 조회
  *
- * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
+ * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다. 현재 기수 PLAYER가 아니면 NOT_ELIGIBLE, 본인의 현재 체크인 기록이 있으면 CHECKED_IN을 우선 반환하며 세션 종료 후에도 유지한다. TEAM 최종 제출 사진에 본인이 참석자로 선택되어 PENDING 심사 중이면 PENDING_APPROVAL을 반환하며 종료 후에도 유지한다. REGULAR에는 적용하지 않는다. 개인 STAFF 정정과 CHECKED_IN이 확인 중보다 우선한다. 사진 제출만으로 체크인이 완료되지는 않으며 운영진 승인 등으로 체크인 기록이 생성되어야 한다.
  */
 export const find4Options = (options?: Options<Find4Data>) =>
   queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
@@ -2347,6 +2355,27 @@ export const findCandidatesOptions = (options: Options<FindCandidatesData>) =>
     queryKey: findCandidatesQueryKey(options),
   });
 
+export const list2QueryKey = (options?: Options<List2Data>) => createQueryKey('list2', options);
+
+/**
+ * 관리 가능한 전체 기수 목록 조회
+ *
+ * STAFF는 별도 기수 소속 제한 없이 과거·현재·미래 전체 기수를 조회한다. 기수 번호·ID 내림차순이며 생성일 및 활동 여부로 제한하지 않는다. 페이지네이션 없이 반환하고, 등록된 기수가 없으면 빈 배열을 반환한다. 클라이언트는 첫 항목을 기본 기수로 선택할 수 있다.
+ */
+export const list2Options = (options?: Options<List2Data>) =>
+  queryOptions<List2Response, List2Error, List2Response, ReturnType<typeof list2QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list2({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list2QueryKey(options),
+  });
+
 export const candidatesQueryKey = (options: Options<CandidatesData>) =>
   createQueryKey('candidates', options);
 
@@ -2374,29 +2403,10 @@ export const candidatesOptions = (options: Options<CandidatesData>) =>
     queryKey: candidatesQueryKey(options),
   });
 
-export const list2QueryKey = (options: Options<List2Data>) => createQueryKey('list2', options);
-
-/**
- * 팀 출석 사진 및 전체 팀원 보고 조회
- */
-export const list2Options = (options: Options<List2Data>) =>
-  queryOptions<List2Response, List2Error, List2Response, ReturnType<typeof list2QueryKey>>({
-    queryFn: async ({ queryKey, signal }) => {
-      const { data } = await list2({
-        ...options,
-        ...queryKey[0],
-        signal,
-        throwOnError: true,
-      });
-      return data;
-    },
-    queryKey: list2QueryKey(options),
-  });
-
 export const list3QueryKey = (options: Options<List3Data>) => createQueryKey('list3', options);
 
 /**
- * 세션 출석 현황 조회
+ * 팀 출석 사진 및 전체 팀원 보고 조회
  */
 export const list3Options = (options: Options<List3Data>) =>
   queryOptions<List3Response, List3Error, List3Response, ReturnType<typeof list3QueryKey>>({
@@ -2412,53 +2422,10 @@ export const list3Options = (options: Options<List3Data>) =>
     queryKey: list3QueryKey(options),
   });
 
-export const list3InfiniteQueryKey = (options: Options<List3Data>): QueryKey<Options<List3Data>> =>
-  createQueryKey('list3', options, true);
-
-/**
- * 세션 출석 현황 조회
- */
-export const list3InfiniteOptions = (options: Options<List3Data>) => {
-  const opts = infiniteQueryOptions<
-    List3Response,
-    List3Error,
-    InfiniteData<List3Response>,
-    QueryKey<Options<List3Data>>,
-    number | Pick<QueryKey<Options<List3Data>>[0], 'body' | 'headers' | 'path' | 'query'>
-  >(
-    // @ts-ignore
-    {
-      queryFn: async ({ pageParam, queryKey, signal }) => {
-        // @ts-ignore
-        const page: Pick<QueryKey<Options<List3Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
-          typeof pageParam === 'object'
-            ? pageParam
-            : {
-                query: {
-                  cursor: pageParam,
-                },
-              };
-        const params = createInfiniteParams(queryKey, page);
-        const { data } = await list3({
-          ...options,
-          ...params,
-          signal,
-          throwOnError: true,
-        });
-        return data;
-      },
-      queryKey: list3InfiniteQueryKey(options),
-    },
-  );
-  return opts as Omit<typeof opts, 'initialData'>;
-};
-
 export const list4QueryKey = (options: Options<List4Data>) => createQueryKey('list4', options);
 
 /**
- * 기수의 사용 가능한 사전 명단 조회
- *
- * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
+ * 세션 출석 현황 조회
  */
 export const list4Options = (options: Options<List4Data>) =>
   queryOptions<List4Response, List4Error, List4Response, ReturnType<typeof list4QueryKey>>({
@@ -2478,9 +2445,7 @@ export const list4InfiniteQueryKey = (options: Options<List4Data>): QueryKey<Opt
   createQueryKey('list4', options, true);
 
 /**
- * 기수의 사용 가능한 사전 명단 조회
- *
- * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
+ * 세션 출석 현황 조회
  */
 export const list4InfiniteOptions = (options: Options<List4Data>) => {
   const opts = infiniteQueryOptions<
@@ -2488,7 +2453,7 @@ export const list4InfiniteOptions = (options: Options<List4Data>) => {
     List4Error,
     InfiniteData<List4Response>,
     QueryKey<Options<List4Data>>,
-    string | Pick<QueryKey<Options<List4Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+    number | Pick<QueryKey<Options<List4Data>>[0], 'body' | 'headers' | 'path' | 'query'>
   >(
     // @ts-ignore
     {
@@ -2512,6 +2477,70 @@ export const list4InfiniteOptions = (options: Options<List4Data>) => {
         return data;
       },
       queryKey: list4InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
+export const list5QueryKey = (options: Options<List5Data>) => createQueryKey('list5', options);
+
+/**
+ * 기수의 사용 가능한 사전 명단 조회
+ *
+ * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
+ */
+export const list5Options = (options: Options<List5Data>) =>
+  queryOptions<List5Response, List5Error, List5Response, ReturnType<typeof list5QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await list5({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: list5QueryKey(options),
+  });
+
+export const list5InfiniteQueryKey = (options: Options<List5Data>): QueryKey<Options<List5Data>> =>
+  createQueryKey('list5', options, true);
+
+/**
+ * 기수의 사용 가능한 사전 명단 조회
+ *
+ * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
+ */
+export const list5InfiniteOptions = (options: Options<List5Data>) => {
+  const opts = infiniteQueryOptions<
+    List5Response,
+    List5Error,
+    InfiniteData<List5Response>,
+    QueryKey<Options<List5Data>>,
+    string | Pick<QueryKey<Options<List5Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<List5Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await list5({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: list5InfiniteQueryKey(options),
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;
@@ -2613,17 +2642,17 @@ export const detail3Options = (options: Options<Detail3Data>) =>
     queryKey: detail3QueryKey(options),
   });
 
-export const list5QueryKey = (options: Options<List5Data>) => createQueryKey('list5', options);
+export const list6QueryKey = (options: Options<List6Data>) => createQueryKey('list6', options);
 
 /**
  * 기수 회원 목록
  *
  * 승인되고 탈퇴하지 않은 회원. 이름은 완전 일치, 필터는 AND. 가입 시각·회원 ID 역순, 20개 커서 페이지. 출석 점수는 해당 기수 PLAYER 이력이 없으면 null.
  */
-export const list5Options = (options: Options<List5Data>) =>
-  queryOptions<List5Response, List5Error, List5Response, ReturnType<typeof list5QueryKey>>({
+export const list6Options = (options: Options<List6Data>) =>
+  queryOptions<List6Response, List6Error, List6Response, ReturnType<typeof list6QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await list5({
+      const { data } = await list6({
         ...options,
         ...queryKey[0],
         signal,
@@ -2631,30 +2660,30 @@ export const list5Options = (options: Options<List5Data>) =>
       });
       return data;
     },
-    queryKey: list5QueryKey(options),
+    queryKey: list6QueryKey(options),
   });
 
-export const list5InfiniteQueryKey = (options: Options<List5Data>): QueryKey<Options<List5Data>> =>
-  createQueryKey('list5', options, true);
+export const list6InfiniteQueryKey = (options: Options<List6Data>): QueryKey<Options<List6Data>> =>
+  createQueryKey('list6', options, true);
 
 /**
  * 기수 회원 목록
  *
  * 승인되고 탈퇴하지 않은 회원. 이름은 완전 일치, 필터는 AND. 가입 시각·회원 ID 역순, 20개 커서 페이지. 출석 점수는 해당 기수 PLAYER 이력이 없으면 null.
  */
-export const list5InfiniteOptions = (options: Options<List5Data>) => {
+export const list6InfiniteOptions = (options: Options<List6Data>) => {
   const opts = infiniteQueryOptions<
-    List5Response,
-    List5Error,
-    InfiniteData<List5Response>,
-    QueryKey<Options<List5Data>>,
-    string | Pick<QueryKey<Options<List5Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+    List6Response,
+    List6Error,
+    InfiniteData<List6Response>,
+    QueryKey<Options<List6Data>>,
+    string | Pick<QueryKey<Options<List6Data>>[0], 'body' | 'headers' | 'path' | 'query'>
   >(
     // @ts-ignore
     {
       queryFn: async ({ pageParam, queryKey, signal }) => {
         // @ts-ignore
-        const page: Pick<QueryKey<Options<List5Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+        const page: Pick<QueryKey<Options<List6Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
           typeof pageParam === 'object'
             ? pageParam
             : {
@@ -2663,7 +2692,7 @@ export const list5InfiniteOptions = (options: Options<List5Data>) => {
                 },
               };
         const params = createInfiniteParams(queryKey, page);
-        const { data } = await list5({
+        const { data } = await list6({
           ...options,
           ...params,
           signal,
@@ -2671,7 +2700,7 @@ export const list5InfiniteOptions = (options: Options<List5Data>) => {
         });
         return data;
       },
-      queryKey: list5InfiniteQueryKey(options),
+      queryKey: list6InfiniteQueryKey(options),
     },
   );
   return opts as Omit<typeof opts, 'initialData'>;
@@ -2704,17 +2733,17 @@ export const teamOptionsOptions = (options: Options<TeamOptionsData>) =>
     queryKey: teamOptionsQueryKey(options),
   });
 
-export const list6QueryKey = (options: Options<List6Data>) => createQueryKey('list6', options);
+export const list7QueryKey = (options: Options<List7Data>) => createQueryKey('list7', options);
 
 /**
  * 기수별 출석 통계 조회
  *
  * 승인된 비탈퇴 회원 전체 또는 일치 Position을 페이지 없이 조회한다. 현재 저장된 마감 감점만 반영한다.
  */
-export const list6Options = (options: Options<List6Data>) =>
-  queryOptions<List6Response, List6Error, List6Response, ReturnType<typeof list6QueryKey>>({
+export const list7Options = (options: Options<List7Data>) =>
+  queryOptions<List7Response, List7Error, List7Response, ReturnType<typeof list7QueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
-      const { data } = await list6({
+      const { data } = await list7({
         ...options,
         ...queryKey[0],
         signal,
@@ -2722,7 +2751,7 @@ export const list6Options = (options: Options<List6Data>) =>
       });
       return data;
     },
-    queryKey: list6QueryKey(options),
+    queryKey: list7QueryKey(options),
   });
 
 export const revokeMutationKey = (options?: Partial<Options<RevokeData>>) =>

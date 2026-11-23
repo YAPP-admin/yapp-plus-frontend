@@ -1,4 +1,5 @@
 import type {
+  AdminGenerationListResponse,
   AdminPostRecipientListResponse,
   CurrentWeekSessionResponse,
   SessionListResponse,
@@ -11,6 +12,13 @@ export const staffLogin = {
   accessToken: 'mock-staff-access-token',
 } satisfies StaffLoginResponse;
 
+export const adminGenerations = {
+  generations: [
+    { generationId: 33, generationNumber: 33, generationName: '33기' },
+    { generationId: 32, generationNumber: 32, generationName: '32기' },
+  ],
+} satisfies AdminGenerationListResponse;
+
 export const sessions = {
   totalCount: 2,
   allCount: 2,
@@ -18,10 +26,10 @@ export const sessions = {
   teamCount: 1,
   sessions: [
     {
-      roadAddress: null,
-      latitude: null,
-      longitude: null,
-      detailAddress: null,
+      roadAddress: '서울특별시 중구 세종대로 110',
+      latitude: 37.5665,
+      longitude: 126.978,
+      detailAddress: '개발용 교육장',
       sessionId: 101,
       name: '정규 세션',
       location: '개발용 교육장',
@@ -35,6 +43,8 @@ export const sessions = {
         presentCount: 1,
         absentCount: 1,
         undecidedCount: 1,
+        lateCount: 0,
+        reportCount: 0,
       },
     },
     {
@@ -55,6 +65,8 @@ export const sessions = {
         presentCount: 0,
         absentCount: 0,
         undecidedCount: 3,
+        lateCount: 0,
+        reportCount: 0,
       },
     },
   ],

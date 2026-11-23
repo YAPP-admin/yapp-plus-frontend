@@ -1,70 +1,159 @@
-/** 편집 중인 유형별 초안을 저장 계약으로 변환하고 공통 검증 규칙을 적용합니다. */
-import {
-  createSessionInputSchema,
-  type CreateSessionInput,
-  type SessionType,
-} from '~/features/session-management';
+/** 편집 중인 유형별 초안을 API 저장 입력으로 변환하고 공통 검증 규칙을 적용합니다. */
+import { z } from 'zod';
 import type { CoordinatesViewModel } from './location/location-view-model';
 
-export type SessionFormValues = {
-  name: string;
-  date: string;
-  startTime: string;
-  endTime: string;
-  type: SessionType;
-  detailAddress: string;
-  guide: string;
+const minuteTimeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d$/, '시간을 HH:mm 형식으로 입력하세요.');
+const apiTimeSchema = z
+  .string()
+  .regex(/^([01]\d|2[0-3]):[0-5]\d(?::[0-5]\d(?:\.\d+)?)?$/, '시간을 HH:mm 형식으로 입력하세요.');
+
+const inputFields = {
+  name: z.string().trim().min(1, '세션명을 입력하세요.'),
+  date: z.iso.date('올바른 날짜를 입력하세요.'),
+  startTime: apiTimeSchema,
+  endTime: apiTimeSchema,
 };
 
-export function sessionFormDefaults(initial?: CreateSessionInput): SessionFormValues {
+const regularSessionLocationSchema = z.object({
+  roadAddress: z
+    .string()
+    .trim()
+    .min(1, '주소를 선택하고 좌표 조회를 완료해 주세요.')
+    .max(255, '도로명주소는 255자 이하여야 합니다.'),
+  detailAddress: z.string().trim().max(255, '상세주소는 255자 이하여야 합니다.'),
+  latitude: z.number().min(-90).max(90),
+  longitude: z.number().min(-180).max(180),
+});
+
+const regularSessionInputSchema = z.object({
+  ...inputFields,
+  type: z.literal('offline'),
+  location: regularSessionLocationSchema,
+});
+
+const teamSessionInputSchema = z.object({
+  ...inputFields,
+  type: z.literal('team'),
+});
+
+/** API 연결용 폼 입력은 정규의 장소 필수와 팀의 장소 미입력을 구분한다. */
+export const sessionInputSchema = z
+  .discriminatedUnion('type', [regularSessionInputSchema, teamSessionInputSchema])
+  .refine(({ startTime, endTime }) => endTime > startTime, {
+    message: '종료 시간은 시작 시간보다 늦어야 합니다.',
+    path: ['endTime'],
+  });
+
+export type SessionInput = z.infer<typeof sessionInputSchema>;
+
+const sessionFormValueSchema = z.object({
+  name: z.string().trim().min(1, '세션명을 입력하세요.'),
+  date: z.iso.date('올바른 날짜를 입력하세요.'),
+  startTime: minuteTimeSchema,
+  endTime: minuteTimeSchema,
+  type: z.enum(['offline', 'team']),
+  location: z.object({
+    roadAddress: z.string(),
+    detailAddress: z.string(),
+    latitude: z.number().optional(),
+    longitude: z.number().optional(),
+  }),
+});
+
+export type SessionFormValues = z.input<typeof sessionFormValueSchema>;
+
+export function sessionFormDefaults(initial?: SessionInput): SessionFormValues {
   return {
     name: initial?.name ?? '',
     date: initial?.date ?? '',
-    startTime: initial?.startTime ?? '',
-    endTime: initial?.endTime ?? '',
+    startTime: initial?.startTime.slice(0, 5) ?? '',
+    endTime: initial?.endTime.slice(0, 5) ?? '',
     type: initial?.type ?? 'offline',
-    detailAddress: initial?.type === 'offline' ? initial.location.detailAddress : '',
-    guide: initial?.type === 'team' ? initial.location.guide : '',
+    location:
+      initial?.type === 'offline'
+        ? initial.location
+        : { roadAddress: '', detailAddress: '', latitude: undefined, longitude: undefined },
   };
 }
 
-/** 숨겨진 유형의 초안은 제출하지 않고, 스키마에서 공백과 일정·좌표를 검증합니다. */
-export function parseSessionForm(
-  value: SessionFormValues,
-  roadAddress: string,
-  position: CoordinatesViewModel | undefined,
-) {
-  return createSessionInputSchema.safeParse({
-    name: value.name,
-    date: value.date,
-    startTime: value.startTime,
-    endTime: value.endTime,
-    type: value.type,
-    location:
-      value.type === 'team'
-        ? { guide: value.guide }
-        : {
-            roadAddress,
-            detailAddress: value.detailAddress,
-            latitude: position?.latitude,
-            longitude: position?.longitude,
-          },
-  });
+function toSubmittedTime(value: string, initial: string | undefined) {
+  if (!minuteTimeSchema.safeParse(value).success) {
+    return value;
+  }
+  return initial?.slice(0, 5) === value ? initial : `${value}:00`;
 }
 
-/** 장소 오류는 장소 영역에, 일정 오류는 해당 입력에 연결합니다. */
-export function sessionFormErrors(result: ReturnType<typeof parseSessionForm>) {
-  if (result.success) {
+/** 폼 값 전체를 검증하고 제출할 세션 입력으로 변환하는 Standard Schema를 만듭니다. */
+export function createSessionFormSchema(initial?: SessionInput) {
+  return sessionFormValueSchema
+    .superRefine((value, context) => {
+      const startTime = toSubmittedTime(value.startTime, initial?.startTime);
+      const endTime = toSubmittedTime(value.endTime, initial?.endTime);
+      if (endTime <= startTime) {
+        context.addIssue({
+          code: 'custom',
+          message: '종료 시간은 시작 시간보다 늦어야 합니다.',
+          path: ['endTime'],
+        });
+      }
+
+      if (value.type !== 'offline') {
+        return;
+      }
+
+      const location = regularSessionLocationSchema.safeParse(value.location);
+      if (location.success) {
+        return;
+      }
+
+      const issues = new Map<string, { message: string; path: PropertyKey[] }>();
+      for (const issue of location.error.issues) {
+        const field = issue.path[0];
+        const path = ['location', field === 'detailAddress' ? 'detailAddress' : 'roadAddress'];
+        const message =
+          field === 'latitude' || field === 'longitude'
+            ? '주소를 선택하고 좌표 조회를 완료해 주세요.'
+            : issue.message;
+        issues.set(`${path.join('.')}:${message}`, { message, path });
+      }
+      for (const issue of issues.values()) {
+        context.addIssue({ code: 'custom', ...issue });
+      }
+    })
+    .transform((value): SessionInput => {
+      const common = {
+        name: value.name,
+        date: value.date,
+        startTime: toSubmittedTime(value.startTime, initial?.startTime),
+        endTime: toSubmittedTime(value.endTime, initial?.endTime),
+      };
+      if (value.type === 'team') {
+        return { ...common, type: 'team' };
+      }
+      return {
+        ...common,
+        type: 'offline',
+        location: regularSessionLocationSchema.parse(value.location),
+      };
+    });
+}
+
+/** 폼 스키마를 제출 경계에서도 다시 적용해 변환된 세션 입력을 반환합니다. */
+export function parseSessionForm(value: SessionFormValues, initial?: SessionInput) {
+  return createSessionFormSchema(initial).safeParse(value);
+}
+
+/** 좌표 폼 값을 지도 화면 모델로 변환합니다. */
+export function toCoordinatesViewModel(
+  location: SessionFormValues['location'],
+): CoordinatesViewModel | undefined {
+  if (location.latitude === undefined || location.longitude === undefined) {
     return undefined;
   }
-  const fields: Record<string, string> = {};
-  for (const issue of result.error.issues) {
-    const field = String(issue.path[0]);
-    if (field === 'location') {
-      fields.detailAddress = '주소를 선택하고 좌표 조회를 완료해 주세요.';
-    } else {
-      fields[field] = issue.message;
-    }
-  }
-  return { fields };
+  return {
+    latitude: location.latitude,
+    longitude: location.longitude,
+  };
 }

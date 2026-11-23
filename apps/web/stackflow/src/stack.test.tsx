@@ -6,7 +6,8 @@ import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
 import { apiBaseUrl, server } from '@/mocks/server';
-import { createSessionFixtures } from '@/mocks/session-fixtures';
+import { currentWeekFixture } from '@/mocks/session-handlers';
+import { koreanDateString } from '@/shared/lib/korean-date-time';
 import { http, HttpResponse } from 'msw';
 import { createStackflowApp, stackflowConfig } from './stack';
 
@@ -38,6 +39,7 @@ afterEach(async () => {
     window.removeEventListener('popstate', listener);
   }
   vi.restoreAllMocks();
+  vi.useRealTimers();
   vi.unstubAllEnvs();
   window.history.replaceState({}, '', '/');
 });
@@ -478,6 +480,8 @@ describe('Stackflow FSD 화면 연결', () => {
       'SignupComplete',
       'SignupUnregistered',
       'DevRoutes',
+      'DiningList',
+      'DiningDetail',
       'NotFound',
     ]);
   });
@@ -532,9 +536,21 @@ it('팀 안내 시트를 업로드 화면으로 교체해서 뒤로가면 홈으
 }, 15000);
 
 it('출결 보고 시트에서 실제 제출하면 홈으로 돌아가고 알림을 표시한다', async () => {
-  const futureWeek = createSessionFixtures(Date.now() + 2 * 86_400_000).currentWeekFixture;
+  const sessionTimestamp = Date.now() + 86_400_000;
+  const weekStartDate = koreanDateString(sessionTimestamp);
   server.use(
-    http.get(`${apiBaseUrl}/api/sessions/current-week`, () => HttpResponse.json(futureWeek)),
+    http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
+      HttpResponse.json({
+        ...currentWeekFixture,
+        weekStartDate,
+        weekEndDate: koreanDateString(sessionTimestamp + 6 * 86_400_000),
+        session: {
+          ...currentWeekFixture.session,
+          date: weekStartDate,
+          startTime: '23:59:59',
+        },
+      }),
+    ),
   );
   window.history.replaceState({}, '', '/attendance/report');
   renderStack({ native: true });

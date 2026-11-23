@@ -1,399 +1,767 @@
-/** 실제 Query·폼과 메모리 저장소로 목록 상태와 생성·수정 흐름을 검증합니다. */
+/** 생성 SDK 요청과 세션 목록의 정상·빈·오류 상태를 MSW로 검증한다. */
 import { useState } from 'react';
-import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { onlineManager, QueryClientProvider } from '@tanstack/react-query';
 import {
   createMemoryHistory,
   createRootRoute,
   createRouter,
   RouterProvider,
 } from '@tanstack/react-router';
+import { client } from '@yapp-plus/api/generated';
+import type { SessionListResponse } from '@yapp-plus/api/generated';
+import { fakeAdminSessionResponse } from '@yapp-plus/api/generated/faker';
+import { HttpResponse, http } from 'msw';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { createAdminQueryClient } from '../../../query-client';
-import type { SessionFilter } from '../model/session-search';
-import { sessionsQueryOptions } from '~/features/session-management';
-import { createSession, listSessions, updateSession } from '~/features/session-management/service';
-import type { listMemberScores } from '~/features/session-management/service';
-import { lookupCoordinates } from '../model/location/coordinates';
-import { createSessionStore } from '~/features/session-management/testing';
 import { AdminOverlayProvider } from '../../../app/ui/admin-overlay-provider';
+import { createAdminQueryClient } from '../../../query-client';
+import { apiBaseUrl, server } from '../../../mocks/server';
+import type { SessionInput } from '../model/session-form';
+import type { SessionFilter } from '../model/session-search';
 import { SessionsPage } from './sessions-page';
 
-// 폼·목록 테스트는 저장 계약에 집중하고 실제 Picker 조작은 별도 테스트에서 검증합니다.
-vi.mock('./session-schedule-field', () => ({
-  SessionScheduleField: ({
-    label,
-    value,
-    disabled,
-    error,
-    onChange,
+vi.mock('./session-form', () => ({
+  SessionForm: ({
+    submissionPending,
+    submissionError,
+    initialValues,
+    onSubmit,
+    onClose,
   }: {
-    label: string;
-    value: string;
-    disabled: boolean;
-    error?: string;
-    onChange: (value: string) => void;
+    submissionPending?: boolean;
+    submissionError?: string;
+    initialValues?: SessionInput;
+    onSubmit: (input: SessionInput) => void;
+    onClose: () => void;
   }) => (
-    <label>
-      {label}
-      <input
-        aria-label={label}
-        value={value}
-        disabled={disabled}
-        onChange={(event) => onChange(event.target.value)}
-      />
-      {error && <span role="alert">{error}</span>}
-    </label>
+    <dialog open aria-label={initialValues ? '세션 수정' : '세션 추가'}>
+      <span>
+        {initialValues
+          ? [
+              initialValues.name,
+              initialValues.date,
+              initialValues.startTime,
+              initialValues.endTime,
+              initialValues.type === 'offline' ? initialValues.location.roadAddress : '',
+            ].join('|')
+          : '팀 세션 초안'}
+      </span>
+      {submissionError ? <p role="alert">{submissionError}</p> : null}
+      <button
+        type="button"
+        disabled={submissionPending}
+        onClick={() =>
+          onSubmit(
+            initialValues
+              ? { ...initialValues, name: `${initialValues.name} 수정` }
+              : {
+                  name: '팀 세션 초안',
+                  date: '2026-11-21',
+                  startTime: '14:00:00',
+                  endTime: '18:00:00',
+                  type: 'team',
+                },
+          )
+        }
+      >
+        테스트 세션 저장
+      </button>
+      {initialValues ? (
+        <button
+          type="button"
+          disabled={submissionPending}
+          onClick={() =>
+            onSubmit({
+              name: `${initialValues.name} 팀 전환`,
+              date: initialValues.date,
+              startTime: initialValues.startTime,
+              endTime: initialValues.endTime,
+              type: 'team',
+            })
+          }
+        >
+          팀으로 변경 저장
+        </button>
+      ) : null}
+      <button type="button" disabled={submissionPending} onClick={onClose}>
+        취소
+      </button>
+    </dialog>
   ),
 }));
 
-vi.mock('~/features/session-management/service', () => ({
-  listMemberScores: vi.fn<typeof listMemberScores>(),
-  listSessions: vi.fn<typeof listSessions>(),
-  createSession: vi.fn<typeof createSession>(),
-  updateSession: vi.fn<typeof updateSession>(),
-}));
-vi.mock('../model/location/coordinates', () => ({
-  lookupCoordinates: vi.fn<typeof lookupCoordinates>(),
-}));
-// 지도 대신 저장 좌표의 복원과 외부 좌표 재조회 여부를 검증합니다.
-vi.mock('./session-location-map', () => ({
-  SessionLocationMap: ({ position }: { position: { latitude: number; longitude: number } }) => (
-    <p>
-      저장 좌표: {position.latitude}, {position.longitude}
-    </p>
-  ),
-}));
-const update = vi.mocked(updateSession);
-const list = vi.mocked(listSessions);
-const create = vi.mocked(createSession);
-const fixtures = createSessionStore().listSessions();
+const REGULAR_SESSION = {
+  ...fakeAdminSessionResponse(),
+  sessionId: 101,
+  name: '정규 세션',
+  location: '서울특별시 중구 세종대로 110 예시 교육장',
+  date: '2026-10-31',
+  startTime: '14:00:10',
+  endTime: '18:00:20',
+  type: 'REGULAR' as const,
+  roadAddress: '서울특별시 중구 세종대로 110',
+  detailAddress: '예시 교육장',
+  latitude: 37.5665,
+  longitude: 126.978,
+  attendanceSummary: {
+    status: 'STARTED' as const,
+    totalCount: 3,
+    presentCount: 1,
+    absentCount: 1,
+    undecidedCount: 1,
+    lateCount: 0,
+    reportCount: 0,
+  },
+};
+const TEAM_SESSION = {
+  ...fakeAdminSessionResponse(),
+  sessionId: 102,
+  name: '팀 세션',
+  location: null,
+  date: '2026-11-07',
+  startTime: '14:00:00',
+  endTime: '18:00:00',
+  type: 'TEAM' as const,
+  roadAddress: null,
+  detailAddress: null,
+  latitude: null,
+  longitude: null,
+  attendanceSummary: {
+    status: 'NOT_STARTED' as const,
+    totalCount: 3,
+    presentCount: 0,
+    absentCount: 0,
+    undecidedCount: 3,
+    lateCount: 0,
+    reportCount: 0,
+  },
+};
+const SESSION_LIST = {
+  totalCount: 2,
+  allCount: 2,
+  regularCount: 1,
+  teamCount: 1,
+  sessions: [REGULAR_SESSION, TEAM_SESSION],
+} satisfies SessionListResponse;
+const UPDATED_TEAM_SESSION = {
+  ...TEAM_SESSION,
+  sessionId: 101,
+  name: '정규 세션 팀 전환',
+  date: REGULAR_SESSION.date,
+  startTime: REGULAR_SESSION.startTime,
+  endTime: REGULAR_SESSION.endTime,
+};
 
 beforeEach(() => {
-  vi.stubEnv('DEV', true);
-  list.mockResolvedValue(fixtures);
-});
-afterEach(() => {
-  vi.unstubAllEnvs();
-  list.mockReset();
-  create.mockReset();
-  update.mockReset();
-  vi.mocked(lookupCoordinates).mockReset();
+  vi.stubEnv('SSR', false);
 });
 
-async function setup(type: SessionFilter = 'all', cached = false) {
-  const client = createAdminQueryClient();
-  if (cached) {
-    client.setQueryData(sessionsQueryOptions.queryKey, fixtures);
-  }
+afterEach(() => {
+  vi.unstubAllEnvs();
+  onlineManager.setOnline(true);
+  client.setConfig({ auth: undefined });
+});
+
+async function setup(generationId: number, initialType: SessionFilter = 'all') {
+  const queryClient = createAdminQueryClient();
+
   function Harness() {
-    const [filter, setFilter] = useState(type);
+    const [type, setType] = useState(initialType);
     return (
-      <QueryClientProvider client={client}>
+      <QueryClientProvider client={queryClient}>
         <AdminOverlayProvider>
-          <SessionsPage type={filter} onTypeChange={setFilter} />
+          <SessionsPage type={type} generationId={generationId} onTypeChange={setType} />
         </AdminOverlayProvider>
       </QueryClientProvider>
     );
   }
+
   const router = createRouter({
     routeTree: createRootRoute({ component: Harness }),
     history: createMemoryHistory({ initialEntries: ['/'] }),
   });
   await router.load();
-  render(<RouterProvider router={router} />);
-  return userEvent.setup();
+  const rendered = render(<RouterProvider router={router} />);
+
+  return { user: userEvent.setup(), queryClient, router, ...rendered };
 }
 
-it('조회 중에는 빈 목록이나 0개를 표시하지 않는다', async () => {
-  list.mockReturnValue(new Promise(() => undefined));
-  await setup();
-  expect(await screen.findByRole('status')).toHaveTextContent('세션 목록을 불러오는 중입니다.');
-  expect(screen.queryByText(/0개|등록된 세션이 없습니다/)).not.toBeInTheDocument();
-  expect(screen.queryByRole('list')).not.toBeInTheDocument();
-});
+async function setupGenerationSwitcher() {
+  const queryClient = createAdminQueryClient();
 
-it('실패 안내에서 키보드로 재시도하고 선택한 필터의 목록을 복구한다', async () => {
-  list.mockRejectedValueOnce(new Error('secret-response'));
-  const user = await setup('team');
-  expect(await screen.findByRole('alert')).toHaveTextContent('세션 목록을 불러오지 못했습니다.');
-  expect(screen.queryByText(/secret-response/)).not.toBeInTheDocument();
-  const pending = Promise.withResolvers<Awaited<ReturnType<typeof listSessions>>>();
-  list.mockReturnValueOnce(pending.promise);
-  screen.getByRole('button', { name: '다시 시도' }).focus();
-  await user.keyboard('{Enter}');
-  expect(screen.getByRole('status')).toHaveTextContent('불러오는 중');
-  expect(list).toHaveBeenCalledTimes(2);
-  await act(async () => {
-    pending.resolve(fixtures);
-    await pending.promise;
-  });
-  expect(await screen.findByRole('list', { name: '세션 목록' })).toBeVisible();
-  expect(screen.getByRole('status')).toHaveTextContent('팀 세션 1개');
-  expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
-});
+  function Harness() {
+    const [generationId, setGenerationId] = useState(25);
+    const [type, setType] = useState<SessionFilter>('all');
 
-it('어떤 필터에서도 전체 데이터가 없으면 전체 빈 상태를 안내한다', async () => {
-  list.mockResolvedValue([]);
-  await setup('offline');
-  expect(await screen.findByText('등록된 세션이 없습니다.')).toBeVisible();
-  expect(screen.getByRole('status')).toHaveTextContent('오프라인 0개');
-  expect(screen.queryByRole('list')).not.toBeInTheDocument();
-});
-
-it('필터 결과만 비어 있으면 유형 안내를 표시하고 전체 필터로 돌아갈 수 있다', async () => {
-  list.mockResolvedValue(fixtures.filter((session) => session.type === 'team'));
-  const user = await setup('offline');
-  expect(await screen.findByText('선택한 유형의 세션이 없습니다.')).toBeVisible();
-  expect(screen.queryByText('등록된 세션이 없습니다.')).not.toBeInTheDocument();
-  await user.click(screen.getByRole('radio', { name: '전체' }));
-  expect(await screen.findByRole('list', { name: '세션 목록' })).toBeVisible();
-  expect(screen.getByRole('status')).toHaveTextContent('전체 1개');
-  expect(list).toHaveBeenCalledOnce();
-});
-
-it('목록을 최신순으로 표시하고 필터 변경 시 개수를 갱신한다', async () => {
-  const user = await setup();
-  const rows = await screen.findByRole('list', { name: '세션 목록' });
-  expect(
-    within(rows)
-      .getAllByRole('heading')
-      .map((heading) => heading.textContent),
-  ).toEqual(['개발용 팀 세션', '개발용 오프라인 세션']);
-  await user.click(screen.getByRole('radio', { name: '오프라인' }));
-  expect(screen.getByRole('status')).toHaveTextContent('오프라인 1개');
-  expect(screen.getAllByRole('article')).toHaveLength(1);
-});
-
-it.each([false, true])(
-  '배포 환경에서도 캐시 유무(%s)와 무관하게 예시 목록과 초기화 안내를 표시한다',
-  async (cached) => {
-    vi.stubEnv('DEV', false);
-    await setup('all', cached);
-    expect(await screen.findByRole('list', { name: '세션 목록' })).toBeVisible();
-    expect(screen.getAllByRole('article')).toHaveLength(2);
-    expect(
-      screen.getByText('예시 데이터입니다. 변경사항은 새로고침하면 초기화됩니다.'),
-    ).toBeVisible();
-    expect(screen.queryByRole('button', { name: '다시 시도' })).not.toBeInTheDocument();
-  },
-);
-
-/** 서비스 경계만 대체하고 생성·조회에는 실제 저장소를 사용합니다. */
-function mockStore(empty = false) {
-  const store = createSessionStore(empty ? [] : fixtures);
-  list.mockImplementation(() => Promise.resolve(store.listSessions()));
-  create.mockImplementation((input) => Promise.resolve(store.createSession(input)));
-  update.mockImplementation((id, input) => Promise.resolve(store.updateSession(id, input)));
-  return store;
-}
-
-async function fillTeamSession(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(screen.getByRole('button', { name: '세션 추가' }));
-  const dialog = within(screen.getByRole('dialog'));
-  expect(screen.getByRole('dialog')).toHaveAttribute('data-seed-color-mode', 'dark-only');
-  await user.click(dialog.getByRole('radio', { name: '팀 세션' }));
-  for (const [label, value] of [
-    ['세션명', '새 팀 세션'],
-    ['날짜 (한국 시간)', '2026-11-01'],
-    ['시작 시간', '14:00'],
-    ['종료 시간', '17:00'],
-  ] as const) {
-    fireEvent.change(dialog.getByLabelText(label), { target: { value } });
+    return (
+      <QueryClientProvider client={queryClient}>
+        <AdminOverlayProvider>
+          <button type="button" onClick={() => setGenerationId(32)}>
+            32기로 전환
+          </button>
+          <SessionsPage type={type} generationId={generationId} onTypeChange={setType} />
+        </AdminOverlayProvider>
+      </QueryClientProvider>
+    );
   }
+
+  const router = createRouter({
+    routeTree: createRootRoute({ component: Harness }),
+    history: createMemoryHistory({ initialEntries: ['/sessions'] }),
+  });
+  await router.load();
+  const rendered = render(<RouterProvider router={router} />);
+
+  return { user: userEvent.setup(), ...rendered };
 }
 
-it.each([true, false])(
-  '개발 환경 여부(%s)와 무관하게 생성 후 전체 목록·개수를 갱신한다',
-  async (dev) => {
-    vi.stubEnv('DEV', dev);
-    const store = mockStore();
-    const user = await setup('offline');
-    await screen.findByRole('list');
-    await fillTeamSession(user);
-    await user.click(screen.getByRole('button', { name: '저장' }));
-    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-    expect(screen.getByRole('radio', { name: '전체' })).toBeChecked();
-    expect(screen.getByRole('status')).toHaveTextContent('전체 3개');
-    expect(screen.getAllByRole('article')[0]).toHaveTextContent('새 팀 세션');
-    expect(screen.getAllByRole('article')[0]).toHaveTextContent('팀별 자율 장소');
-    expect(store.listSessions()[0]?.attendance).toEqual({
-      present: 0,
-      late: 0,
-      earlyLeave: 0,
-      absent: 0,
-      pending: 40,
-      reported: 0,
-    });
-    expect(screen.getAllByRole('article')[0]).toHaveTextContent(/미처리\s*40\s*명/);
-    expect(create).toHaveBeenCalledOnce();
-    expect(list).toHaveBeenCalledTimes(2);
-  },
-);
-
-it('빈 목록에서도 생성할 수 있고 취소 후 재진입하면 입력을 초기화한다', async () => {
-  mockStore(true);
-  const user = await setup();
-  await screen.findByText('등록된 세션이 없습니다.');
-  await fillTeamSession(user);
-  await user.click(screen.getByRole('button', { name: '취소' }));
-  expect(create).not.toHaveBeenCalled();
-  expect(list).toHaveBeenCalledOnce();
-  await user.click(screen.getByRole('button', { name: '세션 추가' }));
-  expect(screen.getByLabelText('세션명')).toHaveValue('');
-  await user.keyboard('{Escape}');
-  await fillTeamSession(user);
-  await user.click(screen.getByRole('button', { name: '저장' }));
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  expect(screen.getByRole('status')).toHaveTextContent('전체 1개');
-  expect(screen.queryByText('등록된 세션이 없습니다.')).not.toBeInTheDocument();
-});
-
-it('생성 Mutation 실패 시 입력·필터를 보존하고 재시도 성공을 반영한다', async () => {
-  mockStore();
-  const pending = Promise.withResolvers<Awaited<ReturnType<typeof createSession>>>();
-  create.mockReturnValueOnce(pending.promise);
-  const user = await setup('offline');
-  await screen.findByRole('list');
-  await fillTeamSession(user);
-  await user.click(screen.getByRole('button', { name: '저장' }));
-  await act(async () => {
-    pending.reject(new Error('secret-response'));
-    await expect(pending.promise).rejects.toThrow('secret-response');
-  });
-  expect(await screen.findByText(/저장하지 못했습니다/)).toBeVisible();
-  expect(screen.getByLabelText('세션명')).toHaveValue('새 팀 세션');
-  expect(screen.queryByText('secret-response')).not.toBeInTheDocument();
-  expect(list).toHaveBeenCalledOnce();
-  expect(
-    within(screen.getByRole('main', { hidden: true })).getByRole('radio', {
-      name: '오프라인',
-      hidden: true,
-    }),
-  ).toBeChecked();
-  await user.click(screen.getByRole('button', { name: '저장' }));
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  expect(screen.getByRole('status')).toHaveTextContent('전체 3개');
-  expect(create).toHaveBeenCalledTimes(2);
-});
-
-/** 정보 메뉴부터 실제 수정 폼까지 키보드로 진입합니다. */
 async function openEdit(user: ReturnType<typeof userEvent.setup>, name: string) {
-  const trigger = await screen.findByLabelText(`${name} 정보`);
+  const trigger = await screen.findByRole('button', { name: `${name} 관리` });
   trigger.focus();
   await user.keyboard('{Enter}');
-  const menu = await screen.findByRole('menu', { name: `${name} 정보` });
-  expect(within(menu).getByRole('menuitem', { name: '수정' })).toHaveFocus();
+  const menu = await screen.findByRole('menu', { name: `${name} 관리` });
+  expect(within(menu).getByRole('menuitem', { name: '정보' })).toHaveFocus();
   await user.keyboard('{Enter}');
-  expect(await screen.findByRole('dialog', { name: '세션 수정' })).toBeVisible();
+  return screen.findByRole('dialog', { name: '세션 수정' });
 }
 
-it('저장된 오프라인 일정·주소·좌표를 복원하고 ID·집계·필터를 보존해 수정한다', async () => {
-  const store = mockStore();
-  const previous = fixtures.find((session) => session.type === 'offline');
-  if (!previous) {
-    throw new Error('오프라인 예시 세션이 필요합니다.');
-  }
-  const user = await setup('offline');
-  await openEdit(user, previous.name);
-  expect(screen.getByLabelText('날짜 (한국 시간)')).toHaveValue(previous.date);
-  expect(screen.getByLabelText('시작 시간')).toHaveValue(previous.startTime);
-  expect(screen.getByLabelText('종료 시간')).toHaveValue(previous.endTime);
-  expect(screen.getByText(`선택한 주소: ${previous.location.roadAddress}`)).toBeVisible();
-  expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue(previous.location.detailAddress);
-  expect(screen.getByText('저장 좌표: 37.5665, 126.978')).toBeVisible();
-  expect(lookupCoordinates).not.toHaveBeenCalled();
-  fireEvent.change(screen.getByLabelText('세션명'), { target: { value: '수정한 오프라인' } });
-  await user.click(screen.getByRole('button', { name: '저장' }));
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+async function openDelete(user: ReturnType<typeof userEvent.setup>, name: string) {
+  const trigger = await screen.findByRole('button', { name: `${name} 관리` });
+  await user.click(trigger);
+  const menu = await screen.findByRole('menu', { name: `${name} 관리` });
+  await user.click(within(menu).getByRole('menuitem', { name: '삭제' }));
+  return screen.findByRole('alertdialog', { name: '세션을 삭제할까요?' });
+}
+
+it('생성 Query 옵션으로 기수 전체 목록을 조회하고 인증 헤더를 전달한다', async () => {
+  let requestedUrl = '';
+  let authorization = '';
+  client.setConfig({ auth: () => 'test-access-token' });
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, ({ request }) => {
+      requestedUrl = request.url;
+      authorization = request.headers.get('authorization') ?? '';
+      return HttpResponse.json(SESSION_LIST);
+    }),
+  );
+
+  await setup(25);
+
+  const list = await screen.findByRole('list', { name: '세션 목록' });
+  expect(
+    within(list)
+      .getAllByRole('heading')
+      .map((heading) => heading.textContent),
+  ).toEqual(['팀 세션', '정규 세션']);
+  expect(requestedUrl).toBe(`${apiBaseUrl}/api/admin/generations/25/sessions?type=ALL`);
+  expect(authorization).toBe('Bearer test-access-token');
+  expect(screen.getByRole('button', { name: '세션 추가' })).toBeVisible();
+  expect(screen.getByRole('button', { name: '팀 세션 관리' })).toBeVisible();
+});
+
+it('빈 응답과 유형 필터 빈 상태를 구분한다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json({
+        ...SESSION_LIST,
+        totalCount: 0,
+        allCount: 0,
+        regularCount: 0,
+        teamCount: 0,
+        sessions: [],
+      }),
+    ),
+  );
+  await setup(25, 'offline');
+  expect(await screen.findByText('등록된 세션이 없습니다.')).toBeVisible();
+  expect(screen.getByRole('status')).toHaveTextContent('오프라인 0개');
+});
+
+it('조회 오류를 노출하지 않고 재시도 후 목록을 복구한다', async () => {
+  let requestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      requestCount += 1;
+      return requestCount === 1
+        ? HttpResponse.json({ code: 'GENERATION_NOT_FOUND', message: 'private' }, { status: 404 })
+        : HttpResponse.json(SESSION_LIST);
+    }),
+  );
+  const { user } = await setup(25);
+  expect(await screen.findByRole('alert')).toHaveTextContent('세션 목록을 불러오지 못했습니다.');
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  await waitFor(() => expect(requestCount).toBe(2));
+  expect(await screen.findByRole('list', { name: '세션 목록' })).toBeVisible();
+});
+
+it('기수를 전환하면 진행 중이던 이전 기수 목록을 표시하지 않는다', async () => {
+  const oldListRequested = Promise.withResolvers<void>();
+  const releaseOldList = Promise.withResolvers<void>();
+  const nextGenerationSession = {
+    ...REGULAR_SESSION,
+    sessionId: 3201,
+    name: '32기 정규 세션',
+  };
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, async ({ params }) => {
+      if (params.generationId === '25') {
+        oldListRequested.resolve();
+        await releaseOldList.promise;
+        return HttpResponse.json(SESSION_LIST);
+      }
+      return HttpResponse.json({
+        ...SESSION_LIST,
+        sessions: [nextGenerationSession],
+        totalCount: 1,
+        allCount: 1,
+        regularCount: 1,
+        teamCount: 0,
+      });
+    }),
+  );
+
+  const { user } = await setupGenerationSwitcher();
+  await oldListRequested.promise;
+  await user.click(screen.getByRole('button', { name: '32기로 전환' }));
+
+  expect(await screen.findByRole('heading', { name: '32기 정규 세션' })).toBeVisible();
+  releaseOldList.resolve();
+  await waitFor(() => expect(screen.queryByText('정규 세션')).not.toBeInTheDocument());
+});
+
+it('생성 성공과 목록 재조회 실패를 각각 안내하고 기존 목록을 유지한다', async () => {
+  let listRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return listRequestCount === 1
+        ? HttpResponse.json(SESSION_LIST)
+        : HttpResponse.json({ code: 'PRIVATE', message: 'private' }, { status: 500 });
+    }),
+    http.post(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json({ sessionId: 301 }, { status: 201 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  expect(await screen.findByRole('list', { name: '세션 목록' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '세션 추가' }));
+  await user.click(screen.getByRole('button', { name: '테스트 세션 저장' }));
+
+  expect(await screen.findByText('세션을 추가했습니다.')).toBeVisible();
+  expect(screen.queryByRole('dialog', { name: '세션 추가' })).not.toBeInTheDocument();
+  expect(await screen.findByRole('alert')).toHaveTextContent('세션 목록을 새로고치지 못했습니다.');
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: '정규 세션' })).toBeVisible();
+});
+
+it('날짜 충돌 시 서버 메시지를 숨기고 입력 초안을 유지한다', async () => {
+  let createRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+    http.post(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      createRequestCount += 1;
+      return HttpResponse.json(
+        { code: 'SESSION_DATE_CONFLICT', message: 'private' },
+        { status: 409 },
+      );
+    }),
+  );
+
+  const { user } = await setup(25);
+  expect(await screen.findByRole('list', { name: '세션 목록' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '세션 추가' }));
+  await user.click(screen.getByRole('button', { name: '테스트 세션 저장' }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('같은 날짜에 세션이 이미 있습니다.');
+  expect(screen.getByText('팀 세션 초안')).toBeVisible();
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+  expect(createRequestCount).toBe(1);
+});
+
+it('제출 중 중복 요청을 막고 페이지 이동 뒤 완료 UI를 실행하지 않는다', async () => {
+  let createRequestCount = 0;
+  let listRequestCount = 0;
+  let releaseCreate: (() => void) | undefined;
+  const createPending = new Promise<void>((resolve) => {
+    releaseCreate = resolve;
+  });
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return HttpResponse.json(SESSION_LIST);
+    }),
+    http.post(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, async () => {
+      createRequestCount += 1;
+      await createPending;
+      return HttpResponse.json({ sessionId: 301 }, { status: 201 });
+    }),
+  );
+
+  const { user, queryClient, router } = await setup(25, 'team');
+  expect(await screen.findByRole('list', { name: '세션 목록' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '세션 추가' }));
+  const saveButton = screen.getByRole('button', { name: '테스트 세션 저장' });
+  await user.click(saveButton);
+  await waitFor(() => expect(createRequestCount).toBe(1));
+  expect(saveButton).toBeDisabled();
+  await user.click(saveButton);
+  expect(createRequestCount).toBe(1);
+
+  router.history.push('/moved');
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { name: '세션 추가' })).not.toBeInTheDocument(),
+  );
+  releaseCreate?.();
+  await waitFor(() =>
+    expect(queryClient.getMutationCache().getAll()[0]?.state.status).toBe('success'),
+  );
+  await waitFor(() => expect(listRequestCount).toBe(2));
+  expect(screen.queryByText('세션을 추가했습니다.')).not.toBeInTheDocument();
+  expect(createRequestCount).toBe(1);
+});
+
+it('저장 장소·초 단위 시간을 복원하고 전체 본문으로 유형을 바꾼 뒤 현재 필터를 유지한다', async () => {
+  let updated = false;
+  let requestedPath = '';
+  let requestedBody: unknown;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(
+        updated
+          ? {
+              ...SESSION_LIST,
+              regularCount: 0,
+              teamCount: 2,
+              sessions: [UPDATED_TEAM_SESSION, TEAM_SESSION],
+            }
+          : SESSION_LIST,
+      ),
+    ),
+    http.put(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      async ({ params, request }) => {
+        requestedPath = `${String(params.generationId)}/${String(params.sessionId)}`;
+        requestedBody = await request.json();
+        updated = true;
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
+  );
+
+  const { user } = await setup(25, 'offline');
+  const dialog = within(await openEdit(user, '정규 세션'));
+  expect(
+    dialog.getByText('정규 세션|2026-10-31|14:00:10|18:00:20|서울특별시 중구 세종대로 110'),
+  ).toBeVisible();
+  await user.click(dialog.getByRole('button', { name: '팀으로 변경 저장' }));
+
+  expect(await screen.findByText(/변경한 유형은 전체 목록에서 확인/)).toBeVisible();
   expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked();
-  expect(screen.getByText('오프라인 1개')).toBeVisible();
-  expect(screen.getByRole('heading', { name: '수정한 오프라인' })).toBeVisible();
-  expect(store.listSessions().find((session) => session.id === previous.id)).toEqual({
-    ...previous,
-    name: '수정한 오프라인',
+  expect(await screen.findByText('선택한 유형의 세션이 없습니다.')).toBeVisible();
+  expect(requestedPath).toBe('25/101');
+  expect(requestedBody).toEqual({
+    name: '정규 세션 팀 전환',
+    location: null,
+    date: '2026-10-31',
+    startTime: '14:00:10',
+    endTime: '18:00:20',
+    type: 'TEAM',
+    roadAddress: null,
+    detailAddress: null,
+    latitude: null,
+    longitude: null,
   });
-  expect(update).toHaveBeenCalledOnce();
-  expect(create).not.toHaveBeenCalled();
+});
+
+it('수정 성공과 목록 재조회 실패를 구분하고 기존 목록을 유지한다', async () => {
+  let listRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return listRequestCount === 1
+        ? HttpResponse.json(SESSION_LIST)
+        : HttpResponse.json({ code: 'PRIVATE', message: 'private' }, { status: 500 });
+    }),
+    http.put(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      () => new HttpResponse(null, { status: 204 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openEdit(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '테스트 세션 저장' }));
+
+  expect(await screen.findByText('세션을 수정했습니다.')).toBeVisible();
+  expect(await screen.findByRole('alert')).toHaveTextContent('세션 목록을 새로고치지 못했습니다.');
+  expect(screen.getByRole('heading', { name: '팀 세션' })).toBeVisible();
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+});
+
+it('수정 제한 충돌은 서버 메시지를 숨기고 수정 초안을 유지한다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+    http.put(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () =>
+      HttpResponse.json({ code: 'SESSION_UPDATE_CONFLICT', message: 'private' }, { status: 409 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openEdit(user, '정규 세션'));
+  await user.click(dialog.getByRole('button', { name: '테스트 세션 저장' }));
+
+  expect(await dialog.findByRole('alert')).toHaveTextContent('출석이 연결된 세션은');
+  expect(dialog.getByText(/정규 세션\|2026-10-31/)).toBeVisible();
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+});
+
+it('수정 요청 중 페이지를 이동하면 이전 화면의 완료 알림을 실행하지 않는다', async () => {
+  let listRequestCount = 0;
+  let updateRequestCount = 0;
+  const updatePending = Promise.withResolvers<void>();
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return HttpResponse.json(SESSION_LIST);
+    }),
+    http.put(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, async () => {
+      updateRequestCount += 1;
+      await updatePending.promise;
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+
+  const { user, queryClient, router } = await setup(25);
+  const dialog = within(await openEdit(user, '정규 세션'));
+  const saveButton = dialog.getByRole('button', { name: '테스트 세션 저장' });
+  await user.click(saveButton);
+  await waitFor(() => expect(updateRequestCount).toBe(1));
+  expect(saveButton).toBeDisabled();
+
+  router.history.push('/moved');
+  await waitFor(() =>
+    expect(screen.queryByRole('dialog', { name: '세션 수정' })).not.toBeInTheDocument(),
+  );
+  updatePending.resolve();
+  await waitFor(() =>
+    expect(queryClient.getMutationCache().getAll().at(-1)?.state.status).toBe('success'),
+  );
+  await waitFor(() => expect(listRequestCount).toBe(2));
+  expect(screen.queryByText('세션을 수정했습니다.')).not.toBeInTheDocument();
+});
+
+it('출석이 시작된 세션은 메뉴에서 삭제 사유와 함께 비활성화한다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+  );
+
+  const { user } = await setup(25);
+  await user.click(await screen.findByRole('button', { name: '정규 세션 관리' }));
+  const menu = await screen.findByRole('menu', { name: '정규 세션 관리' });
+  expect(within(menu).getByRole('menuitem', { name: /삭제/ })).toHaveAttribute(
+    'aria-disabled',
+    'true',
+  );
+  expect(within(menu).getByText('출석이 시작되어 삭제할 수 없습니다.')).toBeVisible();
+});
+
+it('삭제 취소에 초기 포커스를 두고 요청 없이 목록 메뉴로 돌아간다', async () => {
+  let deleteRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+    http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () => {
+      deleteRequestCount += 1;
+      return new HttpResponse(null, { status: 204 });
+    }),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await waitFor(() => expect(dialog.getByRole('button', { name: '취소' })).toHaveFocus());
+  expect(dialog.getByText('“팀 세션” 세션이 삭제됩니다.')).toBeVisible();
+  await user.click(dialog.getByRole('button', { name: '취소' }));
+
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  expect(deleteRequestCount).toBe(0);
+});
+
+it('삭제 성공 뒤 재조회한 항목과 집계를 표시하고 완료를 안내한다', async () => {
+  let listRequestCount = 0;
+  let requestedPath = '';
+  const singleTeamList = {
+    ...SESSION_LIST,
+    totalCount: 1,
+    allCount: 1,
+    regularCount: 0,
+    sessions: [TEAM_SESSION],
+  };
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return listRequestCount === 1
+        ? HttpResponse.json(singleTeamList)
+        : HttpResponse.json({
+            ...SESSION_LIST,
+            totalCount: 0,
+            allCount: 0,
+            regularCount: 0,
+            teamCount: 0,
+            sessions: [],
+          });
+    }),
+    http.delete(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      ({ params }) => {
+        requestedPath = `${String(params.generationId)}/${String(params.sessionId)}`;
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '삭제' }));
+
+  expect(await screen.findByText('세션을 삭제했습니다.')).toBeVisible();
+  await waitFor(() => expect(screen.queryByRole('heading', { name: '팀 세션' })).toBeNull());
+  expect(within(screen.getByRole('main')).getByRole('status')).toHaveTextContent('전체 0개');
+  expect(screen.getByText('등록된 세션이 없습니다.')).toBeVisible();
+  await waitFor(() => expect(screen.getByRole('heading', { name: '세션 관리' })).toHaveFocus());
+  expect(listRequestCount).toBe(2);
+  expect(requestedPath).toBe('25/102');
+});
+
+it('삭제 요청 중에는 중복 실행과 다이얼로그 닫기를 막는다', async () => {
+  let deleteRequestCount = 0;
+  const deletePending = Promise.withResolvers<void>();
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () =>
+      HttpResponse.json(SESSION_LIST),
+    ),
+    http.delete(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      async () => {
+        deleteRequestCount += 1;
+        await deletePending.promise;
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  const deleteButton = dialog.getByRole('button', { name: '삭제' });
+  await user.click(deleteButton);
+  await waitFor(() => expect(deleteRequestCount).toBe(1));
+  expect(deleteButton).toBeDisabled();
+  expect(dialog.getByRole('button', { name: '취소' })).toBeDisabled();
+  await user.keyboard('{Escape}');
+  expect(screen.getByRole('alertdialog', { name: '세션을 삭제할까요?' })).toBeVisible();
+  await user.click(deleteButton);
+  expect(deleteRequestCount).toBe(1);
+
+  deletePending.resolve();
+  expect(await screen.findByText('세션을 삭제했습니다.')).toBeVisible();
+});
+
+it('삭제 성공 뒤 목록 재조회가 실패하면 기존 목록과 별도 경고를 유지한다', async () => {
+  let listRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return listRequestCount === 1
+        ? HttpResponse.json(SESSION_LIST)
+        : HttpResponse.json({ code: 'PRIVATE', message: 'private' }, { status: 500 });
+    }),
+    http.delete(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`,
+      () => new HttpResponse(null, { status: 204 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '삭제' }));
+
+  expect(await screen.findByText('세션을 삭제했습니다.')).toBeVisible();
+  expect(await screen.findByRole('alert')).toHaveTextContent('세션 목록을 새로고치지 못했습니다.');
+  expect(screen.getByRole('heading', { name: '팀 세션' })).toBeVisible();
+  expect(within(screen.getByRole('main')).getByRole('status')).toHaveTextContent('전체 2개');
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+});
+
+it('삭제 시점에 출석이 시작되면 확인 창을 유지하고 최신 목록을 조회한다', async () => {
+  let listRequestCount = 0;
+  const startedTeamSession = {
+    ...TEAM_SESSION,
+    attendanceSummary: { ...TEAM_SESSION.attendanceSummary, status: 'STARTED' as const },
+  };
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return HttpResponse.json(
+        listRequestCount === 1
+          ? SESSION_LIST
+          : { ...SESSION_LIST, sessions: [REGULAR_SESSION, startedTeamSession] },
+      );
+    }),
+    http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () =>
+      HttpResponse.json({ code: 'SESSION_DELETE_CONFLICT', message: 'private' }, { status: 409 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '삭제' }));
+
+  expect(await dialog.findByRole('alert')).toHaveTextContent('출석이 시작된 세션은');
+  expect(dialog.getByRole('button', { name: '삭제' })).toBeEnabled();
+  expect(screen.queryByText('private')).not.toBeInTheDocument();
+  await waitFor(() => expect(listRequestCount).toBe(2));
+});
+
+it('이미 사라진 세션은 확인 창을 닫고 목록 새로고침과 포커스 이동을 안내한다', async () => {
+  let listRequestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/sessions`, () => {
+      listRequestCount += 1;
+      return HttpResponse.json(
+        listRequestCount === 1
+          ? SESSION_LIST
+          : {
+              ...SESSION_LIST,
+              totalCount: 1,
+              allCount: 1,
+              teamCount: 0,
+              sessions: [REGULAR_SESSION],
+            },
+      );
+    }),
+    http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () =>
+      HttpResponse.json({ code: 'SESSION_NOT_FOUND', message: 'private' }, { status: 404 }),
+    ),
+  );
+
+  const { user } = await setup(25);
+  const dialog = within(await openDelete(user, '팀 세션'));
+  await user.click(dialog.getByRole('button', { name: '삭제' }));
+
   expect(
-    within(screen.getByRole('region', { name: '어드민 알림' })).getByRole('status'),
-  ).toHaveTextContent('세션을 수정했습니다.');
-});
-
-it('수정 취소 후 다시 열면 저장값을 복원한다', async () => {
-  mockStore();
-  const user = await setup();
-  await openEdit(user, '개발용 팀 세션');
-  fireEvent.change(screen.getByLabelText('장소 안내 (선택)'), {
-    target: { value: '미저장 초안' },
-  });
-  await user.click(screen.getByRole('button', { name: '취소' }));
-  expect(update).not.toHaveBeenCalled();
-  await openEdit(user, '개발용 팀 세션');
-  expect(screen.getByLabelText('장소 안내 (선택)')).toHaveValue('');
-});
-
-it('유형 변경으로 필터에서 사라지면 현재 필터와 빈 상태·완료 안내를 유지한다', async () => {
-  const store = mockStore();
-  const user = await setup('offline');
-  await openEdit(user, '개발용 오프라인 세션');
-  await user.click(screen.getByRole('radio', { name: '팀 세션' }));
-  fireEvent.change(screen.getByLabelText('장소 안내 (선택)'), {
-    target: { value: '변경한 팀 장소' },
-  });
-  await user.click(screen.getByRole('button', { name: '저장' }));
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked();
-  expect(screen.getByText('오프라인 0개')).toBeVisible();
-  expect(screen.getByText('선택한 유형의 세션이 없습니다.')).toBeVisible();
-  const notification = within(screen.getByRole('region', { name: '어드민 알림' }));
-  expect(notification.getByRole('status')).toHaveTextContent('변경한 유형은 전체 목록');
-  expect(
-    within(screen.getByRole('main')).queryByText(/변경한 유형은 전체 목록/),
-  ).not.toBeInTheDocument();
-  await user.click(screen.getByRole('radio', { name: '전체' }));
-  expect(screen.getByText('전체 2개')).toBeVisible();
-  expect(
-    store.listSessions().find((session) => session.id === 'demo-offline-session')?.location,
-  ).toEqual({ guide: '변경한 팀 장소' });
-  await openEdit(user, '개발용 오프라인 세션');
-  expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
-  expect(screen.getByLabelText('장소 안내 (선택)')).toHaveValue('변경한 팀 장소');
-});
-
-it('수정한 날짜로 목록을 다시 정렬하고 재진입 시 마지막 저장값을 표시한다', async () => {
-  mockStore();
-  const user = await setup();
-  await openEdit(user, '개발용 오프라인 세션');
-  fireEvent.change(screen.getByLabelText('날짜 (한국 시간)'), { target: { value: '2026-12-31' } });
-  await user.click(screen.getByRole('button', { name: '저장' }));
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  expect(screen.getAllByRole('article')[0]).toHaveTextContent('개발용 오프라인 세션');
-  await openEdit(user, '개발용 오프라인 세션');
-  expect(screen.getByLabelText('날짜 (한국 시간)')).toHaveValue('2026-12-31');
-});
-
-it('수정 Mutation 실패 시 목록·필터를 유지하고 재시도 성공을 반영한다', async () => {
-  mockStore();
-  const pending = Promise.withResolvers<Awaited<ReturnType<typeof updateSession>>>();
-  update.mockReturnValueOnce(pending.promise);
-  const user = await setup('team');
-  await openEdit(user, '개발용 팀 세션');
-  fireEvent.change(screen.getByLabelText('장소 안내 (선택)'), {
-    target: { value: '재시도할 장소' },
-  });
-  await user.click(screen.getByRole('button', { name: '저장' }));
-  await act(async () => {
-    pending.reject(new Error('수정할 세션을 찾을 수 없습니다.'));
-    await expect(pending.promise).rejects.toThrow('수정할 세션을 찾을 수 없습니다.');
-  });
-  expect(await screen.findByText(/저장하지 못했습니다/)).toBeVisible();
-  expect(screen.getByLabelText('장소 안내 (선택)')).toHaveValue('재시도할 장소');
-  expect(list).toHaveBeenCalledOnce();
-  await user.click(screen.getByRole('button', { name: '저장' }));
-  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
-  expect(screen.getByText('재시도할 장소')).toBeVisible();
-  expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
-  expect(update).toHaveBeenCalledTimes(2);
+    await screen.findByText('삭제할 세션을 찾을 수 없습니다. 목록을 새로고침했습니다.'),
+  ).toBeVisible();
+  expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+  await waitFor(() => expect(screen.getByRole('heading', { name: '세션 관리' })).toHaveFocus());
+  await waitFor(() => expect(listRequestCount).toBe(2));
+  expect(screen.queryByRole('heading', { name: '팀 세션' })).not.toBeInTheDocument();
 });

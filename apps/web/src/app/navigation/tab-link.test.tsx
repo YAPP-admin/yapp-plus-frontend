@@ -37,6 +37,21 @@ vi.mock('@stackflow/plugin-history-sync', () => ({
     return { requestHistoryTick: (callback: Tick) => state.queues.get(scope)?.push(callback) };
   },
 }));
+vi.mock('@/app/navigation/activity-link', () => ({
+  ActivityLink: ({
+    activityName: _activityName,
+    activityParams: _activityParams,
+    children,
+    ...props
+  }: React.AnchorHTMLAttributes<HTMLAnchorElement> & {
+    activityName: string;
+    activityParams: object;
+  }) => (
+    <a {...props} href="/dining">
+      {children}
+    </a>
+  ),
+}));
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -126,6 +141,19 @@ it('SEED 탭 클릭은 step을 한 번만 교체하고 현재 탭 재선택은 �
     noticeCategory: 'ASSIGNMENT',
   });
   expect(onValueChange).not.toHaveBeenCalled();
+});
+
+it('개발용 커뮤니티 메뉴는 기존 하단 navigation 안에서 다섯 번째 항목으로 표시한다', () => {
+  render(
+    <Tabs.Root value="home">
+      <BottomNavigation activeTab="community" showDevelopmentCommunity />
+    </Tabs.Root>,
+  );
+
+  expect(screen.getByRole('link', { name: '커뮤니티' })).toHaveAttribute('aria-current', 'page');
+  expect(screen.getByRole('navigation', { name: '주요 메뉴' })).toHaveTextContent(
+    '홈일정게시판커뮤니티MY',
+  );
 });
 
 it.each(['Control', 'Meta', 'Shift', 'Alt'])(

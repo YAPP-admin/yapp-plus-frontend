@@ -1,6 +1,6 @@
 /** 실제 SEED 모달과 Overlay Kit으로 열기·콜백·페이지 수명을 검증합니다. */
 import { useState } from 'react';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Dialog, Portal } from '@seed-design/react';
 import { useQueryClient } from '@tanstack/react-query';
@@ -14,7 +14,7 @@ import {
 import { expect, it, vi } from 'vitest';
 import { overlay } from 'overlay-kit';
 import { Providers } from '../../providers';
-import { AdminOverlayProvider } from './admin-overlay-provider';
+import { AdminOverlayProvider, SessionGenerationOverlayProvider } from './admin-overlay-provider';
 
 function TestDialog({
   onConfirm,
@@ -67,6 +67,34 @@ function TestDialog({
   );
 }
 
+function GenerationScopedLauncher() {
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        overlay.open(({ unmount }) => <TestDialog onClose={unmount} onConfirm={unmount} />);
+      }}
+    >
+      모달 열기
+    </button>
+  );
+}
+
+function GenerationScopedHarness() {
+  const [generationId, setGenerationId] = useState(33);
+
+  return (
+    <Providers>
+      <SessionGenerationOverlayProvider generationId={generationId}>
+        <button type="button" onClick={() => setGenerationId(32)}>
+          기수 전환
+        </button>
+        <GenerationScopedLauncher />
+      </SessionGenerationOverlayProvider>
+    </Providers>
+  );
+}
+
 async function setup() {
   const onConfirm = vi.fn<(value: string) => void>();
   function Launcher() {
@@ -108,6 +136,16 @@ async function setup() {
   return { user: userEvent.setup(), router, onConfirm };
 }
 
+async function setupGenerationScoped() {
+  const router = createRouter({
+    routeTree: createRootRoute({ component: GenerationScopedHarness }),
+    history: createMemoryHistory({ initialEntries: ['/sessions'] }),
+  });
+  await router.load();
+  render(<RouterProvider router={router} />);
+  return userEvent.setup();
+}
+
 it('모달이 Query·Router 컨텍스트를 공유하고 확인값을 콜백으로 전달한 뒤 제거된다', async () => {
   const { user, onConfirm } = await setup();
   await user.click(screen.getByRole('button', { name: '모달 열기' }));
@@ -133,4 +171,15 @@ it('검색 조건만 바뀌면 초안을 유지하고 pathname이 바뀌면 모�
   });
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(onConfirm).not.toHaveBeenCalled();
+});
+
+it('세션 경로에서 기수를 전환하면 열린 모달을 제거한다', async () => {
+  const user = await setupGenerationScoped();
+  await user.click(screen.getByRole('button', { name: '모달 열기' }));
+  await user.type(await screen.findByLabelText('선택값'), '기수별 초안');
+
+  // 열린 모달은 배경을 inert 처리하므로 Provider 재생성만 검증하도록 상태 변경을 직접 전달한다.
+  fireEvent.click(screen.getByText('기수 전환'));
+
+  await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
 });
