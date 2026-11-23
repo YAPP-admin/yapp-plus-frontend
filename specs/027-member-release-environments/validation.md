@@ -71,9 +71,9 @@ T006은 완료했다. T007과 T008은 실제 개발 alias·EAS/Firebase 조합 �
 
 - 외부 환경은 소유자가 설정한다. 이 확인은 읽기 전용이며, 비밀값·API URL·OAuth·Firebase 값을
   조회하거나 출력하지 않았다.
-- Doppler `yapp-plus-web`에는 `dev`·`prd` config가 존재한다. `prd`에는
-  `VITE_API_BASE_URL` 이름이 있으나 `dev`에는 아직 없다. Vercel Preview·Production 동기화와
-  override 상태는 확인하지 못했다.
+- 환경 소유자 확인으로 Doppler `yapp-plus-web`의 `dev`·`prd` config에 각각
+  `VITE_API_BASE_URL`을 등록하고, Vercel sync를 `dev` → Preview, `prd` → Production으로 각각
+  생성했다. 값은 조회·출력하지 않았으며 Vercel 수동 변수로 중복 등록하지 않았다.
 - GitHub `member-development`·`member-production` environment는 존재하지만, 두 environment의
   Secret·Variable 목록은 비어 있다. 환경별 Firebase Secret은 아직 등록 증빙이 없다.
 - 로컬 Vercel 계정 `dongjaj`는 YAPP Vercel scope에 접근할 수 없어 프로젝트·공개 QA alias·Git 자동
@@ -83,13 +83,13 @@ T006은 완료했다. T007과 T008은 실제 개발 alias·EAS/Firebase 조합 �
   응답했다. `preview`/`production` 환경, `testflight`/`production` 채널의 실제 연결과 Firebase·APNs
   조합은 환경 소유자 증빙이 필요하다.
 
-| 미완료 항목     | 완료를 위한 소유자 증빙                                                                                              |
-| --------------- | -------------------------------------------------------------------------------------------------------------------- |
-| Doppler·Vercel  | `dev`·`prd`의 연결 성공, Preview·Production 동기화, 공개 `yapp-plus-web-dev.vercel.app`의 대상 Preview deployment ID |
-| GitHub·Firebase | 두 environment의 환경별 Firebase Secret 연결 성공과 개발·운영 프로젝트·Bundle ID·APNs 조합                           |
-| EAS             | `preview`·`production` 환경과 `testflight`·`production` channel-branch 연결, 기존 운영 웹·OTA·IPA 복구 기준          |
+| 미완료 항목     | 완료를 위한 소유자 증빙                                                                                     |
+| --------------- | ----------------------------------------------------------------------------------------------------------- |
+| Vercel alias    | 공개 `yapp-plus-web-dev.vercel.app`의 대상 Preview deployment ID, Git 자동 배포 중지와 공개 QA 접근 확인    |
+| GitHub·Firebase | 두 environment의 환경별 Firebase Secret 연결 성공과 개발·운영 프로젝트·Bundle ID·APNs 조합                  |
+| EAS             | `preview`·`production` 환경과 `testflight`·`production` channel-branch 연결, 기존 운영 웹·OTA·IPA 복구 기준 |
 
-이 근거로 T006~T009는 완료 처리하지 않는다. 웹 코드 단계는 로컬 검증까지 완료했지만, 실제
+이 근거로 T006은 완료 처리하고 T007~T009는 완료 처리하지 않는다. 웹 코드 단계는 로컬 검증까지 완료했지만, 실제
 Preview 배포 검증(T014)과 모바일·릴리스 자동화 단계는 외부 준비 및 웹 단계 리뷰 이후에만 진행한다.
 
 ## 2단계 회원 웹 API 환경 입력 — 2026-11-23
@@ -104,8 +104,8 @@ Preview 배포 검증(T014)과 모바일·릴리스 자동화 단계는 외부 �
 - CI는 실제 API를 호출하지 않도록 예약된 비실재 URL `https://example.invalid`만 빌드 입력으로 공급한다.
   `.env.example`에는 실제·예시 호스트를 넣지 않고 빈 변수만 둔다. 기존 가짜 호스트 이름은 저장소와
   문서에서 제거했다.
-- Vercel alias·접근 보호·Git 자동 배포, Doppler 동기화의 실제 결과, EAS·Firebase·OAuth 조합은 환경
-  소유자의 증빙을 아직 받지 못했다. 외부 상태를 추측하지 않아 T007~T009와 배포·PR Preview는 미완료다.
+- Vercel alias·접근 보호·Git 자동 배포, EAS·Firebase·OAuth 조합은 환경 소유자의 증빙을 아직 받지
+  못했다. 외부 상태를 추측하지 않아 T007~T009와 배포·PR Preview는 미완료다.
 
 | 검증                                                         | 결과                                                                                                           |
 | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------- |
