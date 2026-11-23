@@ -11,6 +11,8 @@ import type {
   AdminAttendanceStatisticsDetailResponse,
   AdminAttendanceStatisticsItemResponse,
   AdminAttendanceStatisticsListResponse,
+  AdminGenerationListItemResponse,
+  AdminGenerationListResponse,
   AdminMemberChangeResponse,
   AdminMemberDetailResponse,
   AdminMemberItemResponse,
@@ -147,6 +149,8 @@ import type {
   List5Responses,
   List6Errors,
   List6Responses,
+  List7Errors,
+  List7Responses,
   ListErrors,
   ListResponses,
   LoginErrors,
@@ -525,6 +529,7 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'CURRENT_WEEK_SESSION_CONFLICT',
       'EMPTY_POST_AUDIENCE',
       'GENERATION_NOT_FOUND',
+      'GENERATION_QUERY_FAILED',
       'INVALID_ATTENDANCE_CODE',
       'INVALID_ATTENDANCE_HISTORY_CURSOR',
       'INVALID_ATTENDANCE_REPORT',
@@ -1257,7 +1262,13 @@ export const fakeCurrentWeekSessionDetailResponse = (
     date: f.date.recent().toISOString().slice(0, 10),
     startTime: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
-    attendanceStatus: f.helpers.arrayElement(['NOT_ELIGIBLE', 'NOT_OPEN', 'AVAILABLE']),
+    attendanceStatus: f.helpers.arrayElement([
+      'NOT_ELIGIBLE',
+      'NOT_OPEN',
+      'AVAILABLE',
+      'CHECKED_IN',
+      'PENDING_APPROVAL',
+    ]),
     roadAddress: f.datatype.boolean() ? f.string.sample() : null,
     latitude: f.datatype.boolean() ? f.number.float() : null,
     longitude: f.datatype.boolean() ? f.number.float() : null,
@@ -1527,6 +1538,24 @@ export const fakeRosterCandidateView = (options?: Options): RosterCandidateView 
   };
 };
 
+export const fakeAdminGenerationListItemResponse = (
+  options?: Options,
+): AdminGenerationListItemResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    generationId: f.number.int(),
+    generationNumber: f.number.int({ min: 1, max: 100 }),
+    generationName: f.string.sample(),
+  };
+};
+
+export const fakeAdminGenerationListResponse = (options?: Options): AdminGenerationListResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    generations: f.helpers.multiple(() => fakeAdminGenerationListItemResponse(options)),
+  };
+};
+
 export const fakeCurrentTeamResponse = (options?: Options): CurrentTeamResponse => {
   const f = options?.faker ?? faker;
   return {
@@ -1564,6 +1593,8 @@ export const fakeAttendanceSummaryResponse = (options?: Options): AttendanceSumm
     presentCount: f.number.int({ min: 0, max: 100 }),
     absentCount: f.number.int({ min: 0, max: 100 }),
     undecidedCount: f.number.int({ min: 0, max: 100 }),
+    lateCount: f.number.int({ min: 0 }),
+    reportCount: f.number.int({ min: 0 }),
   };
 };
 
@@ -2709,6 +2740,15 @@ export const fakeFindCandidatesResponse401 = (options?: Options): FindCandidates
 export const fakeFindCandidatesResponse404 = (options?: Options): FindCandidatesErrors[404] =>
   fakeErrorResponse(options);
 
+export const fakeList2Response200 = (options?: Options): List2Responses[200] =>
+  fakeAdminGenerationListResponse(options);
+
+export const fakeList2Response401 = (options?: Options): List2Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList2Response500 = (options?: Options): List2Errors[500] =>
+  fakeErrorResponse(options);
+
 export const fakeCandidatesResponse200 = (options?: Options): CandidatesResponses[200] => {
   const f = options?.faker ?? faker;
   return f.helpers.multiple(() => fakeTeamMemberCandidateResponse(options));
@@ -2720,20 +2760,8 @@ export const fakeCandidatesResponse401 = (options?: Options): CandidatesErrors[4
 export const fakeCandidatesResponse404 = (options?: Options): CandidatesErrors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList2Response200 = (options?: Options): List2Responses[200] =>
-  fakeTeamPhotoListResponse(options);
-
-export const fakeList2Response401 = (options?: Options): List2Errors[401] =>
-  fakeErrorResponse(options);
-
-export const fakeList2Response404 = (options?: Options): List2Errors[404] =>
-  fakeErrorResponse(options);
-
-export const fakeList2Response503 = (options?: Options): List2Errors[503] =>
-  fakeErrorResponse(options);
-
 export const fakeList3Response200 = (options?: Options): List3Responses[200] =>
-  fakeAdminAttendanceListResponse(options);
+  fakeTeamPhotoListResponse(options);
 
 export const fakeList3Response401 = (options?: Options): List3Errors[401] =>
   fakeErrorResponse(options);
@@ -2741,11 +2769,11 @@ export const fakeList3Response401 = (options?: Options): List3Errors[401] =>
 export const fakeList3Response404 = (options?: Options): List3Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList4Response200 = (options?: Options): List4Responses[200] =>
-  fakeGenerationRosterListResponse(options);
-
-export const fakeList4Response400 = (options?: Options): List4Errors[400] =>
+export const fakeList3Response503 = (options?: Options): List3Errors[503] =>
   fakeErrorResponse(options);
+
+export const fakeList4Response200 = (options?: Options): List4Responses[200] =>
+  fakeAdminAttendanceListResponse(options);
 
 export const fakeList4Response401 = (options?: Options): List4Errors[401] =>
   fakeErrorResponse(options);
@@ -2753,7 +2781,19 @@ export const fakeList4Response401 = (options?: Options): List4Errors[401] =>
 export const fakeList4Response404 = (options?: Options): List4Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList4Response500 = (options?: Options): List4Errors[500] =>
+export const fakeList5Response200 = (options?: Options): List5Responses[200] =>
+  fakeGenerationRosterListResponse(options);
+
+export const fakeList5Response400 = (options?: Options): List5Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeList5Response401 = (options?: Options): List5Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList5Response404 = (options?: Options): List5Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList5Response500 = (options?: Options): List5Errors[500] =>
   fakeErrorResponse(options);
 
 export const fakeRecipientsResponse200 = (options?: Options): RecipientsResponses[200] =>
@@ -2783,22 +2823,22 @@ export const fakeDetail3Response500 = (options?: Options): Detail3Errors[500] =>
 export const fakeDetail3Response503 = (options?: Options): Detail3Errors[503] =>
   fakeErrorResponse(options);
 
-export const fakeList5Response200 = (options?: Options): List5Responses[200] =>
+export const fakeList6Response200 = (options?: Options): List6Responses[200] =>
   fakeAdminMemberListResponse(options);
 
-export const fakeList5Response400 = (options?: Options): List5Errors[400] =>
+export const fakeList6Response400 = (options?: Options): List6Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeList5Response401 = (options?: Options): List5Errors[401] =>
+export const fakeList6Response401 = (options?: Options): List6Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeList5Response404 = (options?: Options): List5Errors[404] =>
+export const fakeList6Response404 = (options?: Options): List6Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList5Response500 = (options?: Options): List5Errors[500] =>
+export const fakeList6Response500 = (options?: Options): List6Errors[500] =>
   fakeErrorResponse(options);
 
-export const fakeList5Response503 = (options?: Options): List5Errors[503] =>
+export const fakeList6Response503 = (options?: Options): List6Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeTeamOptionsResponse200 = (options?: Options): TeamOptionsResponses[200] => {
@@ -2815,22 +2855,22 @@ export const fakeTeamOptionsResponse404 = (options?: Options): TeamOptionsErrors
 export const fakeTeamOptionsResponse503 = (options?: Options): TeamOptionsErrors[503] =>
   fakeErrorResponse(options);
 
-export const fakeList6Response200 = (options?: Options): List6Responses[200] =>
+export const fakeList7Response200 = (options?: Options): List7Responses[200] =>
   fakeAdminAttendanceStatisticsListResponse(options);
 
-export const fakeList6Response400 = (options?: Options): List6Errors[400] =>
+export const fakeList7Response400 = (options?: Options): List7Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeList6Response401 = (options?: Options): List6Errors[401] =>
+export const fakeList7Response401 = (options?: Options): List7Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeList6Response404 = (options?: Options): List6Errors[404] =>
+export const fakeList7Response404 = (options?: Options): List7Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList6Response500 = (options?: Options): List6Errors[500] =>
+export const fakeList7Response500 = (options?: Options): List7Errors[500] =>
   fakeErrorResponse(options);
 
-export const fakeList6Response503 = (options?: Options): List6Errors[503] =>
+export const fakeList7Response503 = (options?: Options): List7Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeRevokeResponse400 = (options?: Options): RevokeErrors[400] =>

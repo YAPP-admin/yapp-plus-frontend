@@ -9,7 +9,6 @@ export function createAdminQueryClient() {
         retry: false,
         refetchOnWindowFocus: false,
         refetchOnReconnect: false,
-        refetchOnMount: false,
       },
     },
   });

@@ -113,8 +113,9 @@ function renderStack() {
 
 it('수신만으로 이동하지 않고 탭은 알림함으로 이동한 뒤 ack한다', async () => {
   renderStack();
-  publish(null, 1);
   await waitFor(() => expect(native.listeners.size).toBe(1));
+
+  publish(null, 1);
   expect(window.location.pathname).toBe('/');
   expect(native.ack).not.toHaveBeenCalled();
 

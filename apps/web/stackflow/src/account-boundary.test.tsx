@@ -1,12 +1,14 @@
 import { apiBaseUrl, server } from '@/mocks/server';
 import { createTeamPhotoHandlers } from '@/mocks/team-photo-handlers';
-import { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
+import { currentWeekFixture } from '@/mocks/session-handlers';
+import { getAppBridge, pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
 import { MutationObserver, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import type { AuthResult } from '@yapp-plus/app-bridge';
+import type { AuthResult, LocationResult } from '@yapp-plus/app-bridge';
+import { http, HttpResponse } from 'msw';
 import {
   NativeAuthSessionProvider,
   nativeSignInMutationOptions,
@@ -19,6 +21,9 @@ import { createStackflowApp } from './stack';
 const bridge = vi.hoisted(() => ({
   result: { status: 'SIGNED_OUT' } as AuthResult,
   getSession: vi.fn<() => Promise<AuthResult | undefined>>(),
+}));
+const nativeLocation = vi.hoisted(() => ({
+  request: vi.fn<() => Promise<LocationResult>>(),
 }));
 const replaceDocument = vi.fn<(url: string | URL) => void>();
 const historyListeners: EventListenerOrEventListenerObject[] = [];
@@ -64,6 +69,7 @@ afterEach(async () => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   bridge.getSession.mockReset();
+  nativeLocation.request.mockReset();
   vi.useRealTimers();
 });
 vi.mock('@/features/auth/model/native-auth', () => ({
@@ -204,6 +210,21 @@ it('로그아웃 상태로 보호 화면에 직접 접근하면 내용을 표시
   expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
   expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
   await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+});
+
+it('개발용 회식 목록은 WebView 세션을 복구할 수 없어도 표시한다', async () => {
+  const client = new QueryClient();
+  bridge.getSession.mockResolvedValue({
+    status: 'UNAVAILABLE',
+    code: 'NETWORK',
+    retryable: true,
+  });
+  window.history.replaceState(null, '', '/dining');
+  mount(client);
+
+  expect(await screen.findByRole('heading', { name: '커뮤니티' })).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: '로그인 상태를 확인하지 못했어요' })).toBeNull();
+  expect(window.location.pathname).toBe('/dining');
 });
 
 it('조회 실패는 보호 URL을 유지하며 안내하고 수동 복구 후 원래 화면을 표시한다', async () => {
@@ -381,7 +402,65 @@ it('계정 전환 후 MY는 세션 이름을 표시하지 않는다', async () =
 vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
   ...(await importOriginal()),
   pickAttendancePhoto: vi.fn<typeof pickAttendancePhoto>(),
+  requestCurrentLocation: nativeLocation.request,
 }));
+
+it('위치 응답 전에 계정이 바뀌면 이전 계정의 출석을 전송하지 않는다', async () => {
+  let respond!: (value: LocationResult) => void;
+  nativeLocation.request.mockReturnValue(
+    new Promise((resolve) => {
+      respond = resolve;
+    }),
+  );
+  vi.spyOn(getAppBridge(), 'isNativeMethodAvailable').mockImplementation(
+    (method) => method === 'requestCurrentLocation',
+  );
+  const verify = vi.fn<() => Response>(() =>
+    HttpResponse.json({ verified: true, checkedInAt: '2026-11-07T05:00:00Z' }),
+  );
+  server.use(
+    http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
+      HttpResponse.json({
+        ...currentWeekFixture,
+        session: {
+          ...currentWeekFixture.session,
+          attendanceStatus: 'AVAILABLE',
+          latitude: 0,
+          longitude: 0,
+        },
+      }),
+    ),
+    http.post(`${apiBaseUrl}/api/attendance-verifications`, verify),
+  );
+  const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  await apply(client, session(1));
+  window.history.replaceState(null, '', '/attendance/code');
+  const view = mount(client);
+  await screen.findByRole('textbox', { name: '출석 코드 1번째 자리' });
+  screen.getAllByRole('textbox').forEach((input, index) => {
+    fireEvent.change(input, { target: { value: String(index + 1) } });
+  });
+  fireEvent.click(screen.getByRole('button', { name: '위치 확인 후 출석하기' }));
+  await waitFor(() => expect(nativeLocation.request).toHaveBeenCalledOnce());
+
+  await act(() => apply(client, session(2)));
+  act(() => {
+    respond({
+      status: 'SUCCESS',
+      location: {
+        latitude: 0,
+        longitude: 0,
+        accuracy: 10,
+        timestamp: 1,
+        precision: 'precise',
+      },
+    });
+  });
+
+  await waitFor(() => expect(verify).not.toHaveBeenCalled());
+  view.unmount();
+  client.clear();
+});
 
 it.each(['계정 변경', '홈 복귀'])(
   '사진 접수 완료 뒤 %s 시 완료 정보를 폐기한다',

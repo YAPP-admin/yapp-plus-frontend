@@ -49,6 +49,21 @@ export function saveAdminAccessToken(token: string): boolean {
   }
 }
 
+/** 브라우저에 남은 관리자 access token을 삭제하고 삭제 성공 여부를 반환한다. */
+export function clearAdminAccessToken(): boolean {
+  const storage = getBrowserStorage();
+  if (!storage) {
+    return false;
+  }
+
+  try {
+    storage.removeItem(ACCESS_TOKEN_KEY);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function configureAdminApiClient(): void {
   client.setConfig({
     auth: (auth) => (auth.key === 'staffBearerAuth' ? readAdminAccessToken() : undefined),

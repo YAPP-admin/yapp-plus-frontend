@@ -81,10 +81,13 @@ export const generation = style({
   background: vars.$color.bg.layerDefault,
 });
 
-export const generationHeading = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
+export const generationSelect = style({
+  selectors: {
+    '&&': {
+      width: '100%',
+      justifyContent: 'space-between',
+    },
+  },
 });
 
 export const navigation = style({
