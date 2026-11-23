@@ -25,7 +25,12 @@ export const resolveMobileWebUrl = (): string => {
     return configuredWebUrl;
   }
 
-  const host = readMetroHost() ?? (Platform.OS === 'android' ? '10.0.2.2' : 'localhost');
+  // iOS Simulator의 WebView는 API가 허용한 localhost origin으로 웹을 열어야 합니다.
+  // Metro host(예: 127.0.0.1)는 번들 연결에만 쓰고 WebView origin으로는 사용하지 않습니다.
+  const host =
+    Platform.OS === 'ios'
+      ? 'localhost'
+      : (readMetroHost() ?? (Platform.OS === 'android' ? '10.0.2.2' : 'localhost'));
 
   return `http://${host}:${WEB_DEV_PORT}`;
 };
