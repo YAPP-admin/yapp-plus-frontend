@@ -1,36 +1,19 @@
 /** 생성 client와 관리자 기수 도메인 사이의 요청·응답 경계를 감쌉니다. */
-import { client } from '@yapp-plus/api/generated';
-import { z } from 'zod';
+import {
+  list2,
+  zAdminGenerationListResponse,
+  type AdminGenerationListItemResponse,
+  type AdminGenerationListResponse,
+} from '@yapp-plus/api/generated';
 
-const generationListItemSchema = z.object({
-  generationId: z.number(),
-  generationNumber: z.number(),
-  generationName: z.string(),
-});
-
-const generationListResponseSchema = z.object({
-  generations: generationListItemSchema.array(),
-});
-
-export type GenerationListItem = z.infer<typeof generationListItemSchema>;
-export type GenerationListResponse = z.infer<typeof generationListResponseSchema>;
-
-type GenerationListResponses = { 200: GenerationListResponse };
-type GenerationListErrors = { 401: unknown; 500: unknown };
+export type GenerationListItem = AdminGenerationListItemResponse;
+export type GenerationListResponse = AdminGenerationListResponse;
 
 /** 관리 가능한 전체 기수 목록을 생성 client의 DTO 그대로 반환합니다. */
 export async function listGenerations(signal?: AbortSignal): Promise<GenerationListResponse> {
-  const { data } = await client.get<GenerationListResponses, GenerationListErrors, true>({
-    security: [
-      {
-        key: 'staffBearerAuth',
-        scheme: 'bearer',
-        type: 'http',
-      },
-    ],
-    url: '/api/admin/generations',
+  const { data } = await list2({
     signal,
-    responseValidator: (value) => generationListResponseSchema.parseAsync(value),
+    responseValidator: (value) => zAdminGenerationListResponse.parseAsync(value),
     throwOnError: true,
   });
 
