@@ -9,6 +9,7 @@ export const teamPhotoDevelopmentEnabled = () =>
 export const developmentTeamTarget = import.meta.env.DEV
   ? teamAttendanceTargetSchema.parse({
       sessionId: 1,
+      teamId: 1,
       teamName: '개발용 Web 팀',
       selfMembershipId: 2,
       members: [
