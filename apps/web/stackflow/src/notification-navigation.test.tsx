@@ -95,7 +95,15 @@ const publish = (notificationOpen: NotificationOpen | null, notificationRevision
   });
 };
 
-function renderStack() {
+async function waitForNativeAuthSubscription() {
+  await waitFor(() => expect(native.authListeners.size).toBeGreaterThan(0));
+}
+
+async function waitForNotificationSubscription() {
+  await waitFor(() => expect(native.listeners.size).toBe(1));
+}
+
+async function renderStack({ waitForNotification = true }: { waitForNotification?: boolean } = {}) {
   const client = createAppQueryClient();
   const { Stack, actions } = createStackflowApp({ reducedMotion: true });
   const tree = () => (
@@ -108,12 +116,17 @@ function renderStack() {
     </QueryClientProvider>
   );
   const view = render(tree());
+
+  await waitForNativeAuthSubscription();
+  if (waitForNotification) {
+    await waitForNotificationSubscription();
+  }
+
   return { ...view, actions, client };
 }
 
 it('수신만으로 이동하지 않고 탭은 알림함으로 이동한 뒤 ack한다', async () => {
-  renderStack();
-  await waitFor(() => expect(native.listeners.size).toBe(1));
+  await renderStack();
 
   publish(null, 1);
   expect(window.location.pathname).toBe('/');
@@ -130,7 +143,7 @@ it('인증 복원 전 탭을 보존하고 준비 후 공지 상세로 이동한�
     eventId: 'cold',
     destination: { type: 'POST', postId: 1 },
   };
-  renderStack();
+  await renderStack({ waitForNotification: false });
   expect(native.listeners.size).toBe(0);
   expect(native.ack).not.toHaveBeenCalled();
 
@@ -140,12 +153,13 @@ it('인증 복원 전 탭을 보존하고 준비 후 공지 상세로 이동한�
       listener();
     }
   });
+  await waitForNotificationSubscription();
   await waitFor(() => expect(native.ack).toHaveBeenCalledWith({ eventId: 'cold' }));
   expect(window.location.pathname).toBe('/notices/1');
 });
 
 it('같은 대상의 새 탭은 중복 push 없이 ack하고 뒤로가기는 기존 부모로 돌아간다', async () => {
-  const { actions } = renderStack();
+  const { actions } = await renderStack();
   publish({ eventId: 'first', destination: { type: 'ALERTS' } });
   await waitFor(() => expect(native.ack).toHaveBeenCalledWith({ eventId: 'first' }));
   publish({ eventId: 'second', destination: { type: 'ALERTS' } });
@@ -157,7 +171,7 @@ it('같은 대상의 새 탭은 중복 push 없이 ack하고 뒤로가기는 기
 
 it('이전 ack가 대기 중이어도 새 탭을 이동하고 새 eventId로 확인한다', async () => {
   native.ack.mockImplementation(() => new Promise<void>(() => {}));
-  renderStack();
+  await renderStack();
   publish({ eventId: 'first', destination: { type: 'ALERTS' } });
   await waitFor(() => expect(native.ack).toHaveBeenCalledWith({ eventId: 'first' }));
   publish({ eventId: 'second', destination: { type: 'POST', postId: 1 } });
@@ -165,16 +179,16 @@ it('이전 ack가 대기 중이어도 새 탭을 이동하고 새 eventId로 확
   expect(window.location.pathname).toBe('/notices/1');
 });
 
-it('구버전 앱은 알림 메서드를 호출하거나 상태를 구독하지 않는다', () => {
+it('구버전 앱은 알림 메서드를 호출하거나 상태를 구독하지 않는다', async () => {
   native.supported = false;
   native.snapshot.notificationOpen = { eventId: 'old', destination: { type: 'ALERTS' } };
-  renderStack();
+  await renderStack({ waitForNotification: false });
   expect(native.listeners.size).toBe(0);
   expect(native.ack).not.toHaveBeenCalled();
 });
 
 it('수신 revision은 숨겨진 알림 목록을 stale로 만들고 재진입할 때 갱신한다', async () => {
-  const { client, actions } = renderStack();
+  const { client, actions } = await renderStack();
   const options = alertsInfiniteQueryOptions();
   await client.fetchInfiniteQuery(options);
   expect(client.getQueryState(options.queryKey)?.isInvalidated).toBe(false);
@@ -188,9 +202,8 @@ it('수신 revision은 숨겨진 알림 목록을 stale로 만들고 재진입�
 });
 
 it('잘못된 이동 대상은 무시하고 로그아웃하면 브리지 구독을 해제한다', async () => {
-  const view = renderStack();
+  const view = await renderStack();
   publish({ eventId: 'invalid', destination: { type: 'POST', postId: -1 } });
-  await waitFor(() => expect(native.listeners.size).toBe(1));
   expect(native.ack).not.toHaveBeenCalled();
   expect(window.location.pathname).toBe('/');
 
@@ -212,7 +225,7 @@ it('로그인 경로의 콜드 스타트는 기존 Tabs 복원을 기다린 뒤 
     eventId: 'login-cold',
     destination: { type: 'POST', postId: 1 },
   };
-  const { actions } = renderStack();
+  const { actions } = await renderStack();
   await waitFor(() => expect(native.ack).toHaveBeenCalledWith({ eventId: 'login-cold' }));
   expect(window.location.pathname).toBe('/notices/1');
   publish(null);
