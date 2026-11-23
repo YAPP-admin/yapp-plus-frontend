@@ -131,7 +131,7 @@ function AttendanceSessionsData() {
           >
             <strong>{session.name}</strong>
             <span>
-              {session.type === 'offline' ? '정규 세션' : '팀 세션'} ·{' '}
+              {session.type === 'regular' ? '정규 세션' : '팀 세션'} ·{' '}
               {session.date.replaceAll('-', '.')} · {session.startTime}
             </span>
             <span>

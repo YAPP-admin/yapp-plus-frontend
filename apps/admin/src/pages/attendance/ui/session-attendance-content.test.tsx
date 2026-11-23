@@ -68,8 +68,8 @@ void updateTeamPhotoReview;
 void issueAttendanceCode;
 void reissueAttendanceCode;
 
-it('열린 오프라인 세션에서 출석 마감 요청을 보낸다', async () => {
-  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+it('열린 정규 세션에서 출석 마감 요청을 보낸다', async () => {
+  const data = createSessionStore().getSessionAttendance('demo-regular-session');
   vi.mocked(getSessionAttendance).mockResolvedValue(data);
   vi.mocked(getAttendanceCode).mockResolvedValue({
     state: 'notIssued',
@@ -88,7 +88,7 @@ it('열린 오프라인 세션에서 출석 마감 요청을 보낸다', async (
 });
 
 it('출석 코드를 발급하고 재발급하면 코드 조회를 갱신한다', async () => {
-  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  const data = createSessionStore().getSessionAttendance('demo-regular-session');
   vi.mocked(getSessionAttendance).mockResolvedValue(data);
   vi.mocked(getAttendanceCode)
     .mockResolvedValueOnce({ state: 'notIssued', code: null, expiresAt: null })
@@ -118,7 +118,7 @@ it('출석 코드를 발급하고 재발급하면 코드 조회를 갱신한다'
 });
 
 it('직군을 바꿔도 세션 전체 집계는 유지하고 사전 보고와 실제 출결을 별도로 표시한다', async () => {
-  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  const data = createSessionStore().getSessionAttendance('demo-regular-session');
   vi.mocked(getSessionAttendance).mockResolvedValue(data);
   const client = new QueryClient();
   const view = (part: 'all' | 'web') => (
@@ -151,7 +151,7 @@ it('직군을 바꿔도 세션 전체 집계는 유지하고 사전 보고와 �
 });
 
 it('회원별 변경 이력을 열고 이력이 없는 상태를 구분한다', async () => {
-  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  const data = createSessionStore().getSessionAttendance('demo-regular-session');
   vi.mocked(getSessionAttendance).mockResolvedValue(data);
   vi.mocked(getAttendanceHistory).mockResolvedValue([]);
   render(
@@ -171,7 +171,7 @@ it('회원별 변경 이력을 열고 이력이 없는 상태를 구분한다', 
 });
 
 it('변경 이력 조회 실패 후 다시 시도할 수 있다', async () => {
-  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  const data = createSessionStore().getSessionAttendance('demo-regular-session');
   const member = data.members[0];
   if (!member) {
     throw new Error('mock 회원이 없습니다.');
@@ -197,7 +197,7 @@ it('변경 이력 조회 실패 후 다시 시도할 수 있다', async () => {
 });
 
 it('조회 실패 후 다시 시도하면 빈 목록을 표시한다', async () => {
-  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  const data = createSessionStore().getSessionAttendance('demo-regular-session');
   vi.mocked(getSessionAttendance)
     .mockRejectedValueOnce(new Error('조회 실패'))
     .mockResolvedValueOnce({ ...data, members: [] });
@@ -212,7 +212,7 @@ it('조회 실패 후 다시 시도하면 빈 목록을 표시한다', async () 
 });
 
 it('출결 상태와 명찰 확인은 서로 독립적으로 mock mutation을 호출한다', async () => {
-  const data = createSessionStore().getSessionAttendance('demo-offline-session');
+  const data = createSessionStore().getSessionAttendance('demo-regular-session');
   const member = data.members[0];
   if (!member) {
     throw new Error('mock 회원이 없습니다.');

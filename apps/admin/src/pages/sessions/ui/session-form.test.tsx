@@ -113,7 +113,7 @@ const initial: SessionInput = {
   date: '2020-01-01',
   startTime: '13:00:10',
   endTime: '17:00:20',
-  type: 'offline',
+  type: 'regular',
   location: { roadAddress: '저장된 주소', detailAddress: '3층', latitude: 37, longitude: 127 },
 };
 function setup(
@@ -201,7 +201,7 @@ it('정규 장소 초안을 보존하고 팀 세션에는 장소 입력과 값�
     endTime: initial.endTime,
     type: 'team',
   });
-  await user.click(screen.getByRole('radio', { name: '오프라인' }));
+  await user.click(screen.getByRole('radio', { name: '정규 세션' }));
   expect(screen.getByText('36, 128')).toBeInTheDocument();
   expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('3층');
   await user.click(screen.getByRole('button', { name: '초기 위치로 되돌리기' }));
@@ -250,7 +250,7 @@ it('도로명주소와 상세주소는 각각 255자까지만 허용한다', () 
     date: '2020-01-01',
     startTime: '13:00',
     endTime: '17:00',
-    type: 'offline',
+    type: 'regular',
     location: {
       roadAddress: '도'.repeat(255),
       detailAddress: '상'.repeat(255),
@@ -324,7 +324,7 @@ it('좌표 실패 후 상세주소를 보존하며 재시도하고 같은 주소
   expect(screen.getByText('36, 128')).toBeInTheDocument();
   expect(lookup).toHaveBeenCalledTimes(2);
 });
-it('조회 중에도 팀 세션을 저장하고 오프라인 복귀 시 완료된 좌표를 재사용한다', async () => {
+it('조회 중에도 팀 세션을 저장하고 정규 세션 복귀 시 완료된 좌표를 재사용한다', async () => {
   const pending = Promise.withResolvers<Awaited<ReturnType<typeof lookupCoordinates>>>();
   lookup.mockReturnValueOnce(pending.promise);
   const { user, save } = setup(initial);
@@ -343,7 +343,7 @@ it('조회 중에도 팀 세션을 저장하고 오프라인 복귀 시 완료�
     pending.resolve({ status: 'success', data: { latitude: 38, longitude: 129 } });
     await pending.promise;
   });
-  await user.click(screen.getByRole('radio', { name: '오프라인' }));
+  await user.click(screen.getByRole('radio', { name: '정규 세션' }));
   await screen.findByText('38, 129');
   expect(screen.queryByRole('button', { name: '좌표 다시 조회' })).not.toBeInTheDocument();
   expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('남길 초안');

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-export const sessionTypeSchema = z.enum(['offline', 'team']);
+export const sessionTypeSchema = z.enum(['regular', 'team']);
 
 const timeSchema = z
   .string()
@@ -13,9 +13,9 @@ const commonFields = {
   endTime: timeSchema,
 };
 
-const offlineInputSchema = z.object({
+const regularInputSchema = z.object({
   ...commonFields,
-  type: z.literal('offline'),
+  type: z.literal('regular'),
   location: z.object({
     roadAddress: z.string().trim().min(1, '주소를 선택하세요.'),
     detailAddress: z.string().trim(),
@@ -37,7 +37,7 @@ const scheduleError = {
 };
 
 export const createSessionInputSchema = z
-  .discriminatedUnion('type', [offlineInputSchema, teamInputSchema])
+  .discriminatedUnion('type', [regularInputSchema, teamInputSchema])
   .refine(validSchedule, scheduleError);
 
 export const sessionAttendanceSummarySchema = z.object({
@@ -55,7 +55,7 @@ const storedFields = {
 };
 export const sessionSchema = z
   .discriminatedUnion('type', [
-    offlineInputSchema.extend(storedFields),
+    regularInputSchema.extend(storedFields),
     teamInputSchema.extend(storedFields),
   ])
   .refine(validSchedule, scheduleError);

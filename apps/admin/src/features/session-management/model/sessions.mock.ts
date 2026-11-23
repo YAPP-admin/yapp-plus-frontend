@@ -26,11 +26,11 @@ import {
 } from './session';
 
 // 실제 운영 일정이나 회원 정보가 아닌 화면 검증용 예시입니다.
-// 오프라인 위치는 서울시청 테스트 좌표이며 실제 세션 장소가 아닙니다.
+// 정규 세션 위치는 서울시청 테스트 좌표이며 실제 세션 장소가 아닙니다.
 const fixtures: Session[] = [
   {
-    id: 'demo-offline-session',
-    name: '개발용 오프라인 세션',
+    id: 'demo-regular-session',
+    name: '개발용 정규 세션',
     location: {
       roadAddress: '서울특별시 중구 세종대로 110',
       detailAddress: '예시 교육장',
@@ -40,7 +40,7 @@ const fixtures: Session[] = [
     date: '2026-10-17',
     startTime: '14:00',
     endTime: '17:00',
-    type: 'offline',
+    type: 'regular',
     attendance: { present: 30, late: 2, earlyLeave: 0, absent: 1, pending: 5, reported: 3 },
   },
   {

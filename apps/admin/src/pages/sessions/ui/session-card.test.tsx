@@ -8,7 +8,7 @@ it('정규 세션의 장소와 초 단위 일정을 표시 형식으로 변환�
       session={{
         id: 1,
         name: '정규 세션',
-        type: 'offline',
+        type: 'regular',
         date: '2026-12-31',
         startTime: '09:05:10',
         endTime: '18:30:20',

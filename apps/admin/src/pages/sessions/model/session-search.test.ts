@@ -13,6 +13,10 @@ describe('세션 유형 쿼리', () => {
     },
   );
 
+  it('기존 오프라인 필터 URL은 정규 세션 필터로 복원한다', () => {
+    expect(sessionSearchSchema.parse({ type: 'offline' })).toEqual({ type: 'regular' });
+  });
+
   it('예전 직군 조건을 무시하고 유효한 유형만 사용한다', () => {
     expect(sessionSearchSchema.parse({ part: 'web', page: 2 })).toEqual({ type: 'all' });
     expect(sessionSearchSchema.parse({ type: 'team', part: 'web' })).toEqual({ type: 'team' });

@@ -15,7 +15,7 @@ export type AttendanceSessionViewModel = {
   id: string;
   generationId: string;
   title: string;
-  type: 'offline' | 'team';
+  type: 'regular' | 'team';
   startsAt: string;
   endsAt: string;
   phase: 'open' | 'closed' | 'unknown';
