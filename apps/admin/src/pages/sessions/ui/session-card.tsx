@@ -1,24 +1,26 @@
-import { Ellipsis } from 'lucide-react';
-import { ActionButton, Badge } from '@yapp-plus/ui';
 import { Menu } from '@seed-design/react';
-import type { Session, SessionAttendanceSummary } from '~/features/session-management';
+import { ActionButton, Badge } from '@yapp-plus/ui';
+import { Ellipsis } from 'lucide-react';
+import type { SessionViewModel } from '../model/session-api-model';
 import { sessionFilterLabels } from '../model/session-search';
 import * as styles from './session-card.css';
 
-const attendanceFields = [
+const ATTENDANCE_FIELDS = [
   { key: 'present', label: '출석' },
   { key: 'late', label: '지각' },
   { key: 'absent', label: '결석' },
   { key: 'pending', label: '미처리' },
   { key: 'reported', label: '출결 보고' },
-] satisfies { key: keyof SessionAttendanceSummary; label: string }[];
+] satisfies { key: keyof SessionViewModel['attendance']; label: string }[];
 
 export function SessionCard({
   session,
   onEdit,
+  onDelete,
 }: {
-  session: Session;
-  onEdit?: (session: Session) => void;
+  session: SessionViewModel;
+  onEdit?: (session: SessionViewModel) => void;
+  onDelete?: (session: SessionViewModel) => void;
 }) {
   return (
     <article className={styles.card}>
@@ -26,7 +28,7 @@ export function SessionCard({
         <Badge variant="weak" tone={session.type === 'offline' ? 'informative' : 'neutral'}>
           {sessionFilterLabels[session.type]}
         </Badge>
-        {onEdit && (
+        {onEdit || onDelete ? (
           <Menu.Root placement="bottom-end" gutter={4}>
             <Menu.Trigger asChild>
               <ActionButton
@@ -34,7 +36,7 @@ export function SessionCard({
                 variant="neutralWeak"
                 size="small"
                 className={styles.menuButton}
-                aria-label={`${session.name} 정보`}
+                aria-label={`${session.name} 관리`}
               >
                 <Ellipsis size={18} aria-hidden="true" />
               </ActionButton>
@@ -43,17 +45,34 @@ export function SessionCard({
               <Menu.Content>
                 <Menu.ScrollArea>
                   <Menu.Group>
-                    <Menu.Item onClick={() => onEdit(session)}>
-                      <Menu.ItemBody>
-                        <Menu.ItemLabel>수정</Menu.ItemLabel>
-                      </Menu.ItemBody>
-                    </Menu.Item>
+                    {onEdit ? (
+                      <Menu.Item onClick={() => onEdit(session)}>
+                        <Menu.ItemBody>
+                          <Menu.ItemLabel>정보</Menu.ItemLabel>
+                        </Menu.ItemBody>
+                      </Menu.Item>
+                    ) : null}
+                    {onDelete ? (
+                      <Menu.Item
+                        disabled={session.attendance.started}
+                        onClick={() => onDelete(session)}
+                      >
+                        <Menu.ItemBody>
+                          <Menu.ItemLabel>삭제</Menu.ItemLabel>
+                          {session.attendance.started ? (
+                            <Menu.ItemDescription>
+                              출석이 시작되어 삭제할 수 없습니다.
+                            </Menu.ItemDescription>
+                          ) : null}
+                        </Menu.ItemBody>
+                      </Menu.Item>
+                    ) : null}
                   </Menu.Group>
                 </Menu.ScrollArea>
               </Menu.Content>
             </Menu.Positioner>
           </Menu.Root>
-        )}
+        ) : null}
       </div>
       <h2 className={styles.name}>{session.name}</h2>
       <SessionDetails session={session} />
@@ -62,21 +81,23 @@ export function SessionCard({
   );
 }
 
-function SessionDetails({ session }: { session: Session }) {
+function SessionDetails({ session }: { session: SessionViewModel }) {
   const locationLabel =
     session.type === 'offline'
       ? [session.location.roadAddress, session.location.detailAddress].filter(Boolean).join(' ')
-      : session.location.guide || '팀별 자율 장소';
+      : '팀별 자율 장소';
   return (
     <dl className={styles.details}>
       <div className={styles.detail}>
         <dt className={styles.term}>일정</dt>
         <dd className={styles.value}>
           <time dateTime={`${session.date}T${session.startTime}+09:00`}>
-            {session.date.replaceAll('-', '.')} · {session.startTime}
+            {session.date.replaceAll('-', '.')} · {session.startTime.slice(0, 5)}
           </time>
           {' – '}
-          <time dateTime={`${session.date}T${session.endTime}+09:00`}>{session.endTime}</time>
+          <time dateTime={`${session.date}T${session.endTime}+09:00`}>
+            {session.endTime.slice(0, 5)}
+          </time>
         </dd>
       </div>
       <div className={styles.detail}>
@@ -87,10 +108,10 @@ function SessionDetails({ session }: { session: Session }) {
   );
 }
 
-function SessionAttendance({ attendance }: { attendance: SessionAttendanceSummary }) {
+function SessionAttendance({ attendance }: { attendance: SessionViewModel['attendance'] }) {
   return (
     <dl className={styles.attendance} aria-label="출석 현황">
-      {attendanceFields.map(({ key, label }) => (
+      {ATTENDANCE_FIELDS.map(({ key, label }) => (
         <div key={key} className={styles.stat}>
           <dt>{label}</dt>
           <dd className={styles.count}>

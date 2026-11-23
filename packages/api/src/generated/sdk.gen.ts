@@ -148,6 +148,9 @@ import type {
   List6Data,
   List6Errors,
   List6Responses,
+  List7Data,
+  List7Errors,
+  List7Responses,
   ListData,
   ListErrors,
   ListResponses,
@@ -708,6 +711,8 @@ export const verify = <ThrowOnError extends boolean = false>(
 
 /**
  * 이번 주 세션 사전 출결 보고
+ *
+ * 지각·조퇴·결석 보고는 서버 DB 시각이 세션 시작 시각보다 이전이고 출석 미마감일 때만 접수한다. 시작 정각부터 또는 조기 마감 후에는 409 ATTENDANCE_REPORT_UNAVAILABLE이다. 토요일 종료 시각까지는 당일 세션을 대상으로 하므로 시작 이후 요청을 다음 주로 넘기지 않는다. 종료 후에만 다음 토요일로 연결한다. 결석 보고 접수 기한과 감점 인정은 별개이며, 일반 결석 감점은 시작 48시간 전까지 제출한 보고만 인정한다.
  */
 export const submit1 = <ThrowOnError extends boolean = false>(
   options: Options<Submit1Data, ThrowOnError>,
@@ -994,6 +999,8 @@ export const get = <ThrowOnError extends boolean = false>(
 
 /**
  * 세션 출석 코드 발급 및 출석 대상 생성
+ *
+ * 발급 당시 PLAYER의 출결 행을 생성합니다. 기존 출결 행과 운영진 수동 판정은 보존하고 없는 행만 추가합니다.
  */
 export const start = <ThrowOnError extends boolean = false>(
   options: Options<StartData, ThrowOnError>,
@@ -1302,7 +1309,7 @@ export const find3 = <ThrowOnError extends boolean = false>(
 /**
  * 이번 주 세션 조회
  *
- * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다.
+ * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다. 현재 기수 PLAYER가 아니면 NOT_ELIGIBLE, 본인의 현재 체크인 기록이 있으면 CHECKED_IN을 우선 반환하며 세션 종료 후에도 유지한다. TEAM 최종 제출 사진에 본인이 참석자로 선택되어 PENDING 심사 중이면 PENDING_APPROVAL을 반환하며 종료 후에도 유지한다. REGULAR에는 적용하지 않는다. 개인 STAFF 정정과 CHECKED_IN이 확인 중보다 우선한다. 사진 제출만으로 체크인이 완료되지는 않으며 운영진 승인 등으로 체크인 기록이 생성되어야 한다.
  */
 export const find4 = <ThrowOnError extends boolean = false>(
   options?: Options<Find4Data, ThrowOnError>,
@@ -1561,6 +1568,26 @@ export const findCandidates = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 관리 가능한 전체 기수 목록 조회
+ *
+ * STAFF는 별도 기수 소속 제한 없이 과거·현재·미래 전체 기수를 조회한다. 기수 번호·ID 내림차순이며 생성일 및 활동 여부로 제한하지 않는다. 페이지네이션 없이 반환하고, 등록된 기수가 없으면 빈 배열을 반환한다. 클라이언트는 첫 항목을 기본 기수로 선택할 수 있다.
+ */
+export const list2 = <ThrowOnError extends boolean = false>(
+  options?: Options<List2Data, ThrowOnError>,
+): RequestResult<List2Responses, List2Errors, ThrowOnError> =>
+  (options?.client ?? client).get<List2Responses, List2Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations',
+    ...options,
+  });
+
+/**
  * Team member 후보 조회
  *
  * 해당 기수의 탈퇴하지 않은 Membership을 현재 소속 여부로 필터링한다.
@@ -1583,10 +1610,10 @@ export const candidates = <ThrowOnError extends boolean = false>(
 /**
  * 팀 출석 사진 및 전체 팀원 보고 조회
  */
-export const list2 = <ThrowOnError extends boolean = false>(
-  options: Options<List2Data, ThrowOnError>,
-): RequestResult<List2Responses, List2Errors, ThrowOnError> =>
-  (options.client ?? client).get<List2Responses, List2Errors, ThrowOnError>({
+export const list3 = <ThrowOnError extends boolean = false>(
+  options: Options<List3Data, ThrowOnError>,
+): RequestResult<List3Responses, List3Errors, ThrowOnError> =>
+  (options.client ?? client).get<List3Responses, List3Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1601,10 +1628,10 @@ export const list2 = <ThrowOnError extends boolean = false>(
 /**
  * 세션 출석 현황 조회
  */
-export const list3 = <ThrowOnError extends boolean = false>(
-  options: Options<List3Data, ThrowOnError>,
-): RequestResult<List3Responses, List3Errors, ThrowOnError> =>
-  (options.client ?? client).get<List3Responses, List3Errors, ThrowOnError>({
+export const list4 = <ThrowOnError extends boolean = false>(
+  options: Options<List4Data, ThrowOnError>,
+): RequestResult<List4Responses, List4Errors, ThrowOnError> =>
+  (options.client ?? client).get<List4Responses, List4Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1621,10 +1648,10 @@ export const list3 = <ThrowOnError extends boolean = false>(
  *
  * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
  */
-export const list4 = <ThrowOnError extends boolean = false>(
-  options: Options<List4Data, ThrowOnError>,
-): RequestResult<List4Responses, List4Errors, ThrowOnError> =>
-  (options.client ?? client).get<List4Responses, List4Errors, ThrowOnError>({
+export const list5 = <ThrowOnError extends boolean = false>(
+  options: Options<List5Data, ThrowOnError>,
+): RequestResult<List5Responses, List5Errors, ThrowOnError> =>
+  (options.client ?? client).get<List5Responses, List5Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1681,10 +1708,10 @@ export const detail3 = <ThrowOnError extends boolean = false>(
  *
  * 승인되고 탈퇴하지 않은 회원. 이름은 완전 일치, 필터는 AND. 가입 시각·회원 ID 역순, 20개 커서 페이지. 출석 점수는 해당 기수 PLAYER 이력이 없으면 null.
  */
-export const list5 = <ThrowOnError extends boolean = false>(
-  options: Options<List5Data, ThrowOnError>,
-): RequestResult<List5Responses, List5Errors, ThrowOnError> =>
-  (options.client ?? client).get<List5Responses, List5Errors, ThrowOnError>({
+export const list6 = <ThrowOnError extends boolean = false>(
+  options: Options<List6Data, ThrowOnError>,
+): RequestResult<List6Responses, List6Errors, ThrowOnError> =>
+  (options.client ?? client).get<List6Responses, List6Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1721,10 +1748,10 @@ export const teamOptions = <ThrowOnError extends boolean = false>(
  *
  * 승인된 비탈퇴 회원 전체 또는 일치 Position을 페이지 없이 조회한다. 현재 저장된 마감 감점만 반영한다.
  */
-export const list6 = <ThrowOnError extends boolean = false>(
-  options: Options<List6Data, ThrowOnError>,
-): RequestResult<List6Responses, List6Errors, ThrowOnError> =>
-  (options.client ?? client).get<List6Responses, List6Errors, ThrowOnError>({
+export const list7 = <ThrowOnError extends boolean = false>(
+  options: Options<List7Data, ThrowOnError>,
+): RequestResult<List7Responses, List7Errors, ThrowOnError> =>
+  (options.client ?? client).get<List7Responses, List7Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',

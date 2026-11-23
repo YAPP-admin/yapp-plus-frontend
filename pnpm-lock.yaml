@@ -114,6 +114,9 @@ catalogs:
     expo-doctor:
       specifier: 1.20.4
       version: 1.20.4
+    geolib:
+      specifier: 4.0.2
+      version: 4.0.2
     happy-dom:
       specifier: 20.14.0
       version: 20.14.0
@@ -596,6 +599,9 @@ importers:
       '@yapp-plus/ui':
         specifier: workspace:*
         version: link:../../packages/ui
+      geolib:
+        specifier: 'catalog:'
+        version: 4.0.2
       ky:
         specifier: 'catalog:'
         version: 2.1.0
@@ -5670,6 +5676,9 @@ packages:
   gensync@1.0.0-beta.2:
     resolution: {integrity: sha512-3hN7NaskYvMDLQY55gnW3NQ+mesEAepTqlg+VEbj7zzqEMBVNhzcGYYeqFo/TlYz6eQiFcp1HcsCZO+nGgS8zg==}
     engines: {node: '>=6.9.0'}
+
+  geolib@4.0.2:
+    resolution: {integrity: sha512-QvBQvSO03XO8TV+/Dk6UOgAolqZlXDOs2ebvLg6Qd6WDulbpdcutjYLXo90GzUjF2rr7NAZMENk+MAKHjShoVw==}
 
   get-caller-file@2.0.5:
     resolution: {integrity: sha512-DyFP3BM/3YHTQOCUL/w0OZHR0lpKeGrxotcHWcqNEdnltqFwXVfhEBQ94eIo34AfQpo0rGki4cyIiftY06h2Fg==}
@@ -13213,6 +13222,8 @@ snapshots:
   function-bind@1.1.2: {}
 
   gensync@1.0.0-beta.2: {}
+
+  geolib@4.0.2: {}
 
   get-caller-file@2.0.5: {}
 
