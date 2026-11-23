@@ -6,7 +6,7 @@ import { afterEach, expect, it, vi } from 'vitest';
 import type * as KakaoMapsSdk from 'react-kakao-maps-sdk';
 import { useKakaoLoader } from 'react-kakao-maps-sdk';
 import { createAdminQueryClient } from '../../../query-client';
-import type { CreateSessionInput } from '~/features/session-management';
+import type { SessionInput } from '../model/session-form';
 import { SessionForm } from './session-form';
 
 vi.mock('react-kakao-maps-sdk', async (importOriginal) => ({
@@ -28,7 +28,7 @@ it.each(['로딩', '실패'])(
     vi.mocked(useKakaoLoader).mockReturnValue(
       state === '로딩' ? [true, undefined] : [false, new ErrorEvent('error')],
     );
-    const initial: CreateSessionInput = {
+    const initial: SessionInput = {
       name: '외부 장애 중 수정',
       date: '2020-01-01',
       startTime: '13:00',
@@ -36,7 +36,7 @@ it.each(['로딩', '실패'])(
       type: 'offline',
       location: { roadAddress: '저장된 주소', detailAddress: '', latitude: 36, longitude: 128 },
     };
-    const save = vi.fn<(value: CreateSessionInput) => Promise<void>>().mockResolvedValue(undefined);
+    const save = vi.fn<(value: SessionInput) => Promise<void>>().mockResolvedValue(undefined);
     render(
       <QueryClientProvider client={createAdminQueryClient()}>
         <SessionForm initialValues={initial} onSubmit={save} onClose={() => undefined} />

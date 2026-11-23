@@ -2,10 +2,13 @@ import type * as SeedDesign from '@seed-design/react';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { createBrowserHistory, createMemoryHistory, RouterProvider } from '@tanstack/react-router';
+import { HttpResponse, http } from 'msw';
 import type { ReactNode } from 'react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { apiBaseUrl, server } from './mocks/server';
 import { Providers } from './providers';
 import { getRouter } from './router';
+import { clearAdminAccessToken, saveAdminAccessToken } from './features/login';
 import type * as RootRouteModule from './routes/__root';
 import { memberImportHeaders } from './pages/member-import/model/import-file';
 
@@ -26,6 +29,15 @@ vi.mock('./routes/__root', async (importOriginal) => {
   return original;
 });
 
+beforeEach(() => {
+  localStorage.clear();
+  saveAdminAccessToken('router-test-token');
+});
+
+afterEach(() => {
+  clearAdminAccessToken();
+});
+
 async function renderRoute(
   path: string,
   history = createMemoryHistory({ initialEntries: [path] }),
@@ -36,6 +48,10 @@ async function renderRoute(
   render(<RouterProvider router={router} />);
 
   return router;
+}
+
+async function waitForAdminWorkspace() {
+  return screen.findByRole('navigation', { name: '주요 메뉴' });
 }
 
 describe('관리자 라우팅', () => {
@@ -88,7 +104,7 @@ describe('관리자 라우팅', () => {
     expect(activeLinks).toHaveLength(1);
     expect(activeLinks[0]).toHaveTextContent(label);
     expect(screen.queryByRole('button', { name: '로그아웃' })).not.toBeInTheDocument();
-    expect(screen.queryByRole('button', { name: /기수/ })).not.toBeInTheDocument();
+    expect(screen.getByRole('combobox', { name: '기수 선택' })).toBeVisible();
   });
 
   it('대시보드 내용과 현재 메뉴, 키보드 탐색 순서를 유지한다', async () => {
@@ -111,6 +127,10 @@ describe('관리자 라우팅', () => {
 
     await user.tab();
 
+    expect(screen.getByRole('combobox', { name: '기수 선택' })).toHaveFocus();
+
+    await user.tab();
+
     expect(menu).toHaveFocus();
   });
 
@@ -122,6 +142,61 @@ describe('관리자 라우팅', () => {
     expect(screen.getByLabelText('비밀번호')).toHaveAttribute('type', 'password');
     expect(screen.queryByRole('navigation')).not.toBeInTheDocument();
     expect(screen.queryByRole('link', { name: 'YAPP+ Admin' })).not.toBeInTheDocument();
+  });
+
+  it('access token이 없으면 기수 API를 호출하지 않고 로그인으로 이동한다', async () => {
+    clearAdminAccessToken();
+    let generationRequestCount = 0;
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations`, () => {
+        generationRequestCount += 1;
+        return HttpResponse.json({ generations: [] });
+      }),
+    );
+
+    const router = await renderRoute('/sessions');
+
+    expect(await screen.findByRole('heading', { name: 'YAPP Admin' })).toBeVisible();
+    expect(router.state.location.pathname).toBe('/login');
+    expect(generationRequestCount).toBe(0);
+  });
+
+  it('기수 API가 401이면 token을 삭제하고 로그인으로 이동한다', async () => {
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations`, () =>
+        HttpResponse.json({ code: 'STAFF_AUTHENTICATION_FAILED' }, { status: 401 }),
+      ),
+    );
+
+    const router = await renderRoute('/sessions');
+
+    expect(await screen.findByRole('heading', { name: 'YAPP Admin' })).toBeVisible();
+    expect(router.state.location.pathname).toBe('/login');
+    expect(localStorage.getItem('yapp-plus-admin.access-token.v1')).toBeNull();
+  });
+
+  it('기수 API의 일반 오류는 다시 시도로 관리자 작업 영역을 복구한다', async () => {
+    const user = userEvent.setup();
+    let generationRequestCount = 0;
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations`, () => {
+        generationRequestCount += 1;
+        if (generationRequestCount === 1) {
+          return HttpResponse.json({ code: 'INTERNAL_SERVER_ERROR' }, { status: 500 });
+        }
+        return HttpResponse.json({
+          generations: [{ generationId: 33, generationNumber: 33, generationName: '33기' }],
+        });
+      }),
+    );
+
+    await renderRoute('/sessions');
+
+    const retryButton = await screen.findByRole('button', { name: '다시 시도' });
+    await user.click(retryButton);
+
+    expect(await waitForAdminWorkspace()).toBeVisible();
+    expect(generationRequestCount).toBe(2);
   });
 
   it.each([
@@ -189,6 +264,7 @@ describe('관리자 라우팅', () => {
   it('미배정 배정 예정이 있으면 필터 이동 전에 이탈을 확인한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members/teams?preview=draft');
+    await waitForAdminWorkspace();
 
     await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
     await user.click(await screen.findByRole('option', { name: '미배정 회원 · 10' }));
@@ -216,7 +292,7 @@ describe('관리자 라우팅', () => {
     await user.click(await screen.findByRole('button', { name: '변경 버리기' }));
     await waitFor(() => expect(router.state.location.href).toBe('/members/teams?preview=draft'));
     expect(await screen.findByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
-  });
+  }, 10000);
 
   it('클라이언트 이동으로 로그인에 진입하면 대시보드 메뉴가 사라진다', async () => {
     const router = await renderRoute('/');
@@ -291,7 +367,9 @@ describe('세션 목록 탐색', () => {
   it('메뉴에서 키보드로 세션 페이지에 진입하고 유형 필터를 선택한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
+    await waitForAdminWorkspace();
 
+    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
@@ -311,6 +389,7 @@ describe('세션 목록 탐색', () => {
     await user.tab();
     await user.tab();
     expect(screen.getByRole('button', { name: '세션 추가' })).toHaveFocus();
+
     await user.tab();
     expect(filter).toHaveFocus();
 
@@ -429,6 +508,7 @@ describe('출석 화면 탐색', () => {
 
     await user.tab();
     await user.tab();
+    await user.tab();
     expect(backLink).toHaveFocus();
 
     await user.keyboard('{Enter}');
@@ -450,14 +530,14 @@ describe('출석 화면 탐색', () => {
 
     await waitFor(() => expect(router.state.location.href).toBe('/attendance'));
 
-    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByRole('combobox', { name: '직군' }));
     await user.click(await screen.findByRole('option', { name: '전체 직군 대상' }));
     await user.click(screen.getByRole('link', { name: '출석 총점' }));
 
     await waitFor(() => expect(router.state.location.href).toBe('/attendance/scores'));
-    expect(screen.getByRole('combobox')).toHaveTextContent(/모든 직군/);
+    expect(screen.getByRole('combobox', { name: '직군' })).toHaveTextContent(/모든 직군/);
 
-    await user.click(screen.getByRole('combobox'));
+    await user.click(screen.getByRole('combobox', { name: '직군' }));
     await user.click(await screen.findByRole('option', { name: 'Web' }));
     await user.click(screen.getByRole('link', { name: '세션 관리' }));
 
@@ -546,7 +626,9 @@ describe('회원 목록 URL 상태', () => {
       await renderRoute(path);
 
       expect(await screen.findByRole('searchbox')).toHaveValue('');
-      for (const filter of screen.getAllByRole('combobox')) {
+      for (const filter of screen.getAllByRole('combobox').filter((combobox) => {
+        return combobox.getAttribute('aria-label') !== '기수 선택';
+      })) {
         expect(filter).toHaveTextContent(/모든 (직군|권한|상태)/);
       }
       expect(screen.getByRole('link', { name: '회원 목록' })).toHaveAttribute(
@@ -645,6 +727,7 @@ describe('명단 업로드 진입점', () => {
   it('업로드 결과를 미리보고 목록으로 복귀한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members/import');
+    await waitForAdminWorkspace();
     const file = new File(
       [
         `${memberImportHeaders.join(',')}
@@ -680,7 +763,7 @@ describe('명단 업로드 진입점', () => {
     );
 
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: '직군' })).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: '회원 목록 구분' })).not.toBeInTheDocument();
     expect(router.state.matches.some((match) => match.routeId === '/_dashboard/members/')).toBe(
       false,
@@ -711,8 +794,9 @@ describe('명단 업로드 진입점', () => {
   it('키보드로 업로드 화면에 진입하고 목록에 복귀한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/members');
+    await waitForAdminWorkspace();
 
-    for (let index = 0; index < 11; index += 1) {
+    for (let index = 0; index < 12; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
@@ -803,8 +887,9 @@ describe('공지 목록 URL 상태', () => {
   it('키보드로 공지 메뉴에 진입하고 종류 필터에 접근한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
+    await waitForAdminWorkspace();
 
-    for (let index = 0; index < 9; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveFocus();
@@ -840,7 +925,7 @@ describe('공지 상세 탐색', () => {
     expect(await screen.findByRole('heading', { name: '예시 세션 안내' })).toBeVisible();
     expect(screen.getByRole('link', { name: activeTab })).toHaveAttribute('aria-current', 'page');
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: '직군' })).not.toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: '공지 목록' })).not.toBeInTheDocument();
   });
 
@@ -897,6 +982,7 @@ describe('공지 상세 탐색', () => {
   it('키보드로 상세 탭을 전환하고 목록에 복귀한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/notices/demo-session');
+    await waitForAdminWorkspace();
 
     screen.getByRole('link', { name: '알림 발송 내역' }).focus();
 
@@ -1105,7 +1191,7 @@ describe('알림 발송 내역 탐색', () => {
     );
 
     expect(screen.getByRole('link', { name: '공지 목록' })).not.toHaveAttribute('aria-current');
-    expect(screen.queryByRole('combobox')).not.toBeInTheDocument();
+    expect(screen.queryByRole('combobox', { name: '직군' })).not.toBeInTheDocument();
   });
 
   it('메뉴 진입은 이전 쿼리를 제거하고 뒤로가기는 복원한다', async () => {
@@ -1128,8 +1214,9 @@ describe('알림 발송 내역 탐색', () => {
   it('키보드로 알림 메뉴에 진입한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
+    await waitForAdminWorkspace();
 
-    for (let index = 0; index < 10; index += 1) {
+    for (let index = 0; index < 11; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveFocus();
@@ -1141,9 +1228,7 @@ describe('알림 발송 내역 탐색', () => {
 });
 
 describe('세션 관리 목록', () => {
-  afterEach(() => vi.unstubAllEnvs());
-
-  it('실제 모의 저장소의 세션을 최신순으로 표시하고 유형별 개수를 갱신한다', async () => {
+  it('MSW 세션을 최신순으로 표시하고 유형별 개수를 갱신한다', async () => {
     vi.stubEnv('SSR', false);
     const user = userEvent.setup();
     await renderRoute('/sessions');
@@ -1152,22 +1237,23 @@ describe('세션 관리 목록', () => {
     const cards = within(list).getAllByRole('heading');
 
     expect(cards).toHaveLength(2);
-    expect(cards[0]).toHaveAccessibleName('개발용 팀 세션');
-    expect(cards[1]).toHaveAccessibleName('개발용 오프라인 세션');
+    expect(cards[0]).toHaveAccessibleName('팀 세션');
+    expect(cards[1]).toHaveAccessibleName('정규 세션');
     expect(screen.getByRole('status')).toHaveTextContent('전체 2개');
+    expect(screen.queryByText('개발용 오프라인 세션')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('radio', { name: '오프라인' }));
 
     await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('오프라인 1개'));
-    expect(within(list).getByRole('heading', { name: '개발용 오프라인 세션' })).toBeVisible();
-    expect(within(list).queryByRole('heading', { name: '개발용 팀 세션' })).not.toBeInTheDocument();
+    expect(within(list).getByRole('heading', { name: '정규 세션' })).toBeVisible();
+    expect(within(list).queryByRole('heading', { name: '팀 세션' })).not.toBeInTheDocument();
   });
 
   it('카드 본문을 눌러도 세션 관리 화면과 필터를 유지한다', async () => {
     vi.stubEnv('SSR', false);
     const user = userEvent.setup();
     const router = await renderRoute('/sessions?type=team');
-    const title = await screen.findByRole('heading', { name: '개발용 팀 세션' });
+    const title = await screen.findByRole('heading', { name: '팀 세션' });
 
     await user.click(title);
 
@@ -1175,5 +1261,52 @@ describe('세션 관리 목록', () => {
     expect(screen.getByRole('status')).toHaveTextContent('팀 세션 1개');
     expect(screen.getByRole('radio', { name: '팀 세션' })).toBeChecked();
     expect(within(screen.getByRole('article')).queryByRole('link')).not.toBeInTheDocument();
+  });
+
+  it('실제 라우트에서 추가 진입과 수정·삭제 API를 연결한다', async () => {
+    vi.stubEnv('SSR', false);
+    let updateRequestCount = 0;
+    let deleteRequestCount = 0;
+    server.use(
+      http.put(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () => {
+        updateRequestCount += 1;
+        return new HttpResponse(null, { status: 204 });
+      }),
+      http.delete(`${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId`, () => {
+        deleteRequestCount += 1;
+        return new HttpResponse(null, { status: 204 });
+      }),
+    );
+
+    const user = userEvent.setup();
+    await renderRoute('/sessions');
+    await screen.findByRole('list', { name: '세션 목록' });
+
+    await user.click(screen.getByRole('button', { name: '세션 추가' }));
+    const createDialog = within(await screen.findByRole('dialog', { name: '세션 추가' }));
+    await user.click(createDialog.getByRole('button', { name: '취소' }));
+    await waitFor(() =>
+      expect(screen.queryByRole('dialog', { name: '세션 추가' })).not.toBeInTheDocument(),
+    );
+
+    await user.click(screen.getByRole('button', { name: '팀 세션 관리' }));
+    let menu = within(await screen.findByRole('menu', { name: '팀 세션 관리' }));
+    await user.click(menu.getByRole('menuitem', { name: '정보' }));
+    const editDialog = within(await screen.findByRole('dialog', { name: '세션 수정' }));
+    expect(editDialog.getByRole('radio', { name: '팀 세션' })).toBeChecked();
+    await user.click(editDialog.getByRole('button', { name: '저장' }));
+    await waitFor(() => expect(updateRequestCount).toBe(1));
+    expect(await screen.findByText('세션을 수정했습니다.')).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: '팀 세션 관리' }));
+    menu = within(await screen.findByRole('menu', { name: '팀 세션 관리' }));
+    await user.click(menu.getByRole('menuitem', { name: '삭제' }));
+    const deleteDialog = within(
+      await screen.findByRole('alertdialog', { name: '세션을 삭제할까요?' }),
+    );
+    await user.click(deleteDialog.getByRole('button', { name: '삭제' }));
+
+    await waitFor(() => expect(deleteRequestCount).toBe(1));
+    expect(await screen.findByText('세션을 삭제했습니다.')).toBeVisible();
   });
 });

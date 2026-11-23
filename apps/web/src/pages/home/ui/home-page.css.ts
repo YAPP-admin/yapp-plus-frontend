@@ -421,17 +421,12 @@ export const sheetContent = style({
   backgroundColor: `${vars.$color.bg.layerFloating} !important`,
   padding: '0 !important',
   boxSizing: 'border-box',
-  height: 'auto !important',
-  maxHeight: '85vh !important',
-  overflowY: 'auto',
+  // 높이와 키보드 위치는 SEED 바텀시트가 조정한다. 외곽을 스크롤하면 배경 확장용 ::after까지
+  // 스크롤되어 키보드가 열린 뒤 헤더와 입력 영역의 위치가 어긋난다.
 });
 
 export const sheetHandleArea = style({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
   padding: '14px 10px 10px',
-  width: '100%',
   boxSizing: 'border-box',
 });
 
@@ -466,22 +461,6 @@ export const sheetDescription = style({
   textAlign: 'left',
 });
 
-export const codeInputsWrapper = style({
-  display: 'flex',
-  flexDirection: 'column',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '10px',
-  width: '100%',
-});
-
-export const codeInputsContainer = style({
-  display: 'flex',
-  justifyContent: 'center',
-  alignItems: 'center',
-  gap: '6px',
-});
-
 export const codeInput = style({
   width: '54px',
   height: '54px',
@@ -506,6 +485,10 @@ export const codeInput = style({
   selectors: {
     '&:focus': {
       borderColor: vars.$color.stroke.neutralSolid,
+    },
+    '&:focus-visible': {
+      outline: `2px solid ${vars.$color.fg.neutral}`,
+      outlineOffset: '2px',
     },
     '&:focus::placeholder': {
       color: 'transparent !important',
@@ -532,14 +515,29 @@ export const codeInputError = style([
 ]);
 
 export const codeErrorMessage = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  gap: '4px',
   fontSize: '13px',
   lineHeight: '18px',
   fontWeight: 500,
   color: vars.$color.fg.critical,
+  margin: 0,
+});
+
+export const attendanceFeedbackMessage = style({
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  fontWeight: vars.$fontWeight.medium,
+  color: vars.$color.fg.critical,
+  textAlign: 'center',
+  overflowWrap: 'anywhere',
+});
+
+export const attendanceProgressMessage = style({
+  minHeight: vars.$dimension.x5,
+  fontSize: vars.$fontSize.t3,
+  lineHeight: vars.$lineHeight.t3,
+  fontWeight: vars.$fontWeight.medium,
+  color: vars.$color.fg.neutralMuted,
+  textAlign: 'center',
   margin: 0,
 });
 
@@ -591,13 +589,9 @@ export const teamCheckIcon = style({
 });
 
 export const teamGraphicWrap = style({
-  width: '100%',
   aspectRatio: '337 / 158',
   borderRadius: '12px',
   overflow: 'hidden',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
   position: 'relative',
 });
 
