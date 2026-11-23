@@ -1,5 +1,8 @@
 # 기능 명세: 팀 세션 사진 제출 준비
 
+후속 운영 연결과 사진 선택 즉시 업로드는 [027 명세](../027-member-team-attendance/spec.md)에서
+정의한다. 아래 내용은 당시 개발 준비 범위의 기록이며 새 단계의 적용 상태는 후속 검증 기록을 따른다.
+
 **브랜치**: `DongjaJ/team-session-auth-develop` | **작성일**: 2026-11-12 | **상태**: 1단계 명세 확정 · [#428](https://github.com/YAPP-admin/yapp-plus-frontend/issues/428)
 
 ## 사용자 시나리오와 검증
