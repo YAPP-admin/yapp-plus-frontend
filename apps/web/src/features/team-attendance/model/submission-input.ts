@@ -1,6 +1,7 @@
 /** 공급부의 제출 대상과 폼 입력을 검증한다. API 요청 형식과 별도로 화면 입력 정책만 정의한다. */
 import { z } from 'zod';
 import { ATTENDANCE_PHOTO_MAX_BYTES } from '@yapp-plus/app-bridge';
+import { zSubmitTeamPhotoRequest, type SubmitTeamPhotoRequest } from '@yapp-plus/api/generated';
 
 const membershipId = z.int().positive();
 const memberSchema = z.object({
@@ -40,6 +41,16 @@ export type SubmissionInput = {
   photo: File;
   selectedMembershipIds: number[];
 };
+
+/** 업로드 완료 화면 상태에서 생성된 팀 사진 제출 요청 본문만 만든다. */
+export function toSubmitTeamPhotoRequest(
+  imageKey: string,
+  selectedMembershipIds: number[],
+): SubmitTeamPhotoRequest {
+  const body = { imageKey, selectedMembershipIds } satisfies SubmitTeamPhotoRequest;
+  zSubmitTeamPhotoRequest.parse(body);
+  return body;
+}
 
 /** 검증된 대상 명단에 맞춰 사용자 입력만 검증하는 TanStack Form용 스키마다. */
 export function createTeamAttendanceFormSchema(target: TeamAttendanceTarget) {
