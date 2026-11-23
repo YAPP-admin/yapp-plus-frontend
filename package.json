@@ -8,7 +8,7 @@
     "commitlint": "commitlint",
     "dev": "turbo run dev",
     "dev:admin": "doppler run --project yapp-plus-admin --config dev -- pnpm --filter @yapp-plus/admin dev",
-    "dev:web": "turbo run dev --filter=@yapp-plus/web",
+    "dev:web": "doppler run --project yapp-plus-web --config dev -- turbo run dev --filter=@yapp-plus/web",
     "expo:doctor": "expo-doctor apps/mobile",
     "format": "oxfmt .",
     "format:check": "oxfmt --check .",

@@ -10,6 +10,7 @@
     ".github/workflows/mobile-manual.yml",
     ".github/actions/setup-eas/**"
   ],
+  "globalEnv": ["VITE_API_BASE_URL"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
@@ -17,7 +18,7 @@
     },
     "dev": {
       "cache": false,
-      "env": ["MOBILE_WEB_URL", "VITE_API_MOCKING"],
+      "env": ["MOBILE_WEB_URL", "VITE_API_BASE_URL", "VITE_API_MOCKING"],
       "persistent": true
     },
     "lint": {

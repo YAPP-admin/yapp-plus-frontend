@@ -13,7 +13,16 @@ mise exec -- node --run dev:web
 직접 mock 서비스로 회원 기능을 제공하지 않습니다. 생성 API를 사용하는 브라우저 요청에는
 아래 설정으로 MSW를 적용할 수 있습니다. 모킹 활성화가 미구현 화면을 구현하지는 않습니다.
 
-## 배포 API 연결
+## API 주소와 배포 연결
+
+회원 웹은 `VITE_API_BASE_URL`을 반드시 HTTPS URL로 받아 앱을 렌더링하기 전에 생성 API client에 적용합니다.
+로컬 개발은 `yapp-plus-web/dev` Doppler config를 사용하는 `node --run dev:web`를 실행합니다. 배포는
+Doppler의 `dev`→Vercel Preview, `prd`→Vercel Production 동기화가 같은 값을 공급합니다. 이 공개 값은
+Vercel이나 GitHub Secret에 중복 등록하지 않습니다.
+
+로컬에서 Doppler를 사용하지 않는 경우에만 `.env.local`에 `VITE_API_BASE_URL`을 설정합니다. 값은
+[.env.example](.env.example)을 참고하되 실제 개발 API 주소로 바꾸고, 파일을 저장소에 추가하지 않습니다.
+`VITE_API_BASE_URL`을 바꾸면 반드시 새 빌드·배포가 필요합니다.
 
 배포 빌드는 `VITE_STATIC_CONTENT=false`로 일정·공지·이번 주 세션·공지 읽음을 실제 API에서
 조회하고 저장합니다. 로그인한 앱 WebView는 네이티브 세션의 토큰을 기존 SDK 요청에 전달합니다.

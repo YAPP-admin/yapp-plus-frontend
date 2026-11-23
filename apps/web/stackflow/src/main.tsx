@@ -6,6 +6,7 @@ import '@seed-design/css/recipes/app-bar-main.css';
 import '@seed-design/css/recipes/app-screen.css';
 import '@yapp-plus/ui/styles';
 import './styles.css';
+import { client } from '@yapp-plus/api/generated';
 import { ProgressCircle, VStack } from '@seed-design/react';
 import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -19,6 +20,8 @@ const root = document.getElementById('root');
 if (!root) {
   throw new Error('YAPP+ 웹 앱의 root 요소를 찾을 수 없습니다.');
 }
+
+client.setConfig({ baseUrl: import.meta.env.VITE_API_BASE_URL });
 
 const initialContext = {
   platform: detectPlatform(),
