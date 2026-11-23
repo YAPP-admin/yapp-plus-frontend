@@ -14,7 +14,7 @@
 
 ## 1B — 공통 외부 준비
 
-- [x] T006 Doppler yapp-plus-web dev/prd와 Vercel sync·override를 준비하고 validation.md에 값 없이 기록한다. (FR-004)
+- [ ] T006 Doppler yapp-plus-web dev/prd와 Vercel sync·override를 준비하고 validation.md에 값 없이 기록한다. (FR-004)
 - [ ] T007 개발 전용 alias·WebView 접근·Git 자동 배포 설정을 확인해 validation.md에 기록한다. (FR-003)
 - [ ] T008 GitHub 환경·EAS 환경/채널·API·OAuth·Firebase 조합과 복구 기준을 validation.md에 기록한다. (FR-005, FR-013)
 - [ ] T009 contracts/delivery.md의 입력 준비 결과를 검토하고 웹 단계 진행 확인을 validation.md에 기록한다.

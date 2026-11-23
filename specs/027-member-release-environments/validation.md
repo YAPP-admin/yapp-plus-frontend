@@ -67,6 +67,31 @@ T006은 완료했다. T007과 T008은 실제 개발 alias·EAS/Firebase 조합 �
   배포에만 alias를 연결하고 deployment ID까지 확인한다.
 - PR·운영 tag·수동 운영 배포는 이 alias를 변경하지 않는다.
 
+## 1B 외부 준비 상태 재확인 — 2026-11-23
+
+- 외부 환경은 소유자가 설정한다. 이 확인은 읽기 전용이며, 비밀값·API URL·OAuth·Firebase 값을
+  조회하거나 출력하지 않았다.
+- Doppler `yapp-plus-web`에는 `dev`·`prd` config가 존재한다. `prd`에는
+  `VITE_API_BASE_URL` 이름이 있으나 `dev`에는 아직 없다. Vercel Preview·Production 동기화와
+  override 상태는 확인하지 못했다.
+- GitHub `member-development`·`member-production` environment는 존재하지만, 두 environment의
+  Secret·Variable 목록은 비어 있다. 환경별 Firebase Secret은 아직 등록 증빙이 없다.
+- 로컬 Vercel 계정 `dongjaj`는 YAPP Vercel scope에 접근할 수 없어 프로젝트·공개 QA alias·Git 자동
+  배포 중지·대상 Preview deployment ID를 확인하지 못했다.
+- CI와 같은 격리 설치 정책에서 `eas-cli@27.4.1`의 `testflight` 프로필을 해석했다. profile의
+  channel은 `testflight`지만, EAS `production` 환경에는 Plain text·Sensitive 변수가 없다고
+  응답했다. `preview`/`production` 환경, `testflight`/`production` 채널의 실제 연결과 Firebase·APNs
+  조합은 환경 소유자 증빙이 필요하다.
+
+| 미완료 항목     | 완료를 위한 소유자 증빙                                                                                              |
+| --------------- | -------------------------------------------------------------------------------------------------------------------- |
+| Doppler·Vercel  | `dev`·`prd`의 연결 성공, Preview·Production 동기화, 공개 `yapp-plus-web-dev.vercel.app`의 대상 Preview deployment ID |
+| GitHub·Firebase | 두 environment의 환경별 Firebase Secret 연결 성공과 개발·운영 프로젝트·Bundle ID·APNs 조합                           |
+| EAS             | `preview`·`production` 환경과 `testflight`·`production` channel-branch 연결, 기존 운영 웹·OTA·IPA 복구 기준          |
+
+이 근거로 T006~T009는 완료 처리하지 않는다. 웹 코드 단계는 로컬 검증까지 완료했지만, 실제
+Preview 배포 검증(T014)과 모바일·릴리스 자동화 단계는 외부 준비 및 웹 단계 리뷰 이후에만 진행한다.
+
 ## 2단계 회원 웹 API 환경 입력 — 2026-11-23
 
 - 사용자 요청으로 브랜치 `DongjaJ/expo-ci/cd-plan`의 `5fdeea6d`를 최신 `origin/main`
