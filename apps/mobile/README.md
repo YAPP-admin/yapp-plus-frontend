@@ -247,8 +247,10 @@ GitHub에서는 **Actions → Mobile TestFlight manual → Run workflow**에서 
 2026-11-08에 앱 **1.0.1 / 빌드 20**의 빌드·제출이 성공했고 사용자가 사용 가능 메일 수신을 확인했다.
 이는 실기기 실행 확인과는 다르다. 실행 ID와 완료·미완료 항목은 [검증 이력](../../specs/019-mobile-testflight-delivery/validation.md)을 따른다.
 
-표준 `macos-26` runner에서 Xcode 26.6·Ruby 3.4.12·CocoaPods 1.17.0·fastlane 2.241.2를 확인한다.
+표준 `macos-26` runner에서 Xcode 26.6·Ruby 3.4.12·CocoaPods 1.17.0·fastlane 2.242.0을 확인한다.
+검사 로그에 실제·기대 버전을 표시하며, Xcode 출력은 끝까지 받은 뒤 비교한다.
 이미지 갱신으로 버전이 달라지면 검사에서 실패하므로 workflow의 도구 버전을 검토한다.
+기대 버전은 runner에 설치된 도구를 검사하는 값이며, 도구를 해당 버전으로 설치하는 설정은 아니다.
 EAS에 iOS 배포 인증서·프로비저닝 프로필·원격 build number·제출용 App Store Connect API 키를
 사전에 준비하고 GitHub에 `EXPO_TOKEN`을 제공해야 한다. 비밀 파일을 artifact에 추가하지 않는다.
 공개 저장소의 artifact로 IPA가 공개되므로 앱에 비밀을 포함하지 않는다. 서명 키는 업로드하지 않는다.
