@@ -89,11 +89,21 @@ jobs:
           install_args: --locked
       # runner 업데이트로 버전이 바뀌면 묵인하지 않고 도구체인 검토를 요구합니다.
       - name: Verify native toolchain
+        shell: bash
         run: |
-          xcodebuild -version | grep -qx 'Xcode 26.6'
-          test "$(ruby -e 'print RUBY_VERSION')" = '3.4.12'
-          test "$(pod --version)" = '1.17.0'
-          test "$(ruby -e "require 'rubygems'; print Gem::Specification.find_by_name('fastlane').version")" = '2.241.2'
+          # 출력을 끝까지 받은 뒤 검사하여 grep의 조기 종료로 인한 Broken pipe를 방지합니다.
+          xcode_version="$(xcodebuild -version)"
+          printf 'Xcode (expected: 26.6):\n%s\n' "$xcode_version"
+          grep -Fx 'Xcode 26.6' <<< "$xcode_version"
+          ruby_version="$(ruby -e 'print RUBY_VERSION')"
+          printf 'Ruby: %s (expected: 3.4.12)\n' "$ruby_version"
+          test "$ruby_version" = '3.4.12'
+          pod_version="$(pod --version)"
+          printf 'CocoaPods: %s (expected: 1.17.0)\n' "$pod_version"
+          test "$pod_version" = '1.17.0'
+          fastlane_version="$(ruby -e "require 'rubygems'; print Gem::Specification.find_by_name('fastlane').version")"
+          printf 'fastlane: %s (expected: 2.242.0)\n' "$fastlane_version"
+          test "$fastlane_version" = '2.242.0'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Set up EAS CLI
