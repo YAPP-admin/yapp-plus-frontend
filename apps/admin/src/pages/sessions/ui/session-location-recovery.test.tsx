@@ -33,7 +33,7 @@ it.each(['로딩', '실패'])(
       date: '2020-01-01',
       startTime: '13:00',
       endTime: '17:00',
-      type: 'offline',
+      type: 'regular',
       location: { roadAddress: '저장된 주소', detailAddress: '', latitude: 36, longitude: 128 },
     };
     const save = vi.fn<(value: SessionInput) => Promise<void>>().mockResolvedValue(undefined);

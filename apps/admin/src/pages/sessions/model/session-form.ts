@@ -29,7 +29,7 @@ const regularSessionLocationSchema = z.object({
 
 const regularSessionInputSchema = z.object({
   ...inputFields,
-  type: z.literal('offline'),
+  type: z.literal('regular'),
   location: regularSessionLocationSchema,
 });
 
@@ -53,7 +53,7 @@ const sessionFormValueSchema = z.object({
   date: z.iso.date('올바른 날짜를 입력하세요.'),
   startTime: minuteTimeSchema,
   endTime: minuteTimeSchema,
-  type: z.enum(['offline', 'team']),
+  type: z.enum(['regular', 'team']),
   location: z.object({
     roadAddress: z.string(),
     detailAddress: z.string(),
@@ -70,9 +70,9 @@ export function sessionFormDefaults(initial?: SessionInput): SessionFormValues {
     date: initial?.date ?? '',
     startTime: initial?.startTime.slice(0, 5) ?? '',
     endTime: initial?.endTime.slice(0, 5) ?? '',
-    type: initial?.type ?? 'offline',
+    type: initial?.type ?? 'regular',
     location:
-      initial?.type === 'offline'
+      initial?.type === 'regular'
         ? initial.location
         : { roadAddress: '', detailAddress: '', latitude: undefined, longitude: undefined },
   };
@@ -99,7 +99,7 @@ export function createSessionFormSchema(initial?: SessionInput) {
         });
       }
 
-      if (value.type !== 'offline') {
+      if (value.type !== 'regular') {
         return;
       }
 
@@ -134,7 +134,7 @@ export function createSessionFormSchema(initial?: SessionInput) {
       }
       return {
         ...common,
-        type: 'offline',
+        type: 'regular',
         location: regularSessionLocationSchema.parse(value.location),
       };
     });

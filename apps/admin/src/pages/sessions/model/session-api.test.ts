@@ -15,7 +15,7 @@ const CREATE_INPUT = {
   date: '2026-11-21',
   startTime: '14:00:00',
   endTime: '18:00:00',
-  type: 'offline',
+  type: 'regular',
   location: {
     roadAddress: '서울특별시 중구 세종대로 110',
     detailAddress: '예시 교육장',

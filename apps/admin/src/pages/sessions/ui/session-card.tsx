@@ -25,7 +25,7 @@ export function SessionCard({
   return (
     <article className={styles.card}>
       <div className={styles.heading}>
-        <Badge variant="weak" tone={session.type === 'offline' ? 'informative' : 'neutral'}>
+        <Badge variant="weak" tone={session.type === 'regular' ? 'informative' : 'neutral'}>
           {sessionFilterLabels[session.type]}
         </Badge>
         {onEdit || onDelete ? (
@@ -83,7 +83,7 @@ export function SessionCard({
 
 function SessionDetails({ session }: { session: SessionViewModel }) {
   const locationLabel =
-    session.type === 'offline'
+    session.type === 'regular'
       ? [session.location.roadAddress, session.location.detailAddress].filter(Boolean).join(' ')
       : '팀별 자율 장소';
   return (

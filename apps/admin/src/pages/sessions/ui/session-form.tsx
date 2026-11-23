@@ -48,7 +48,7 @@ export function SessionForm({
   const [address, setAddress] = useState<AddressSearchItemViewModel | null>(null);
   const [localSubmissionError, setLocalSubmissionError] = useState('');
   const coordinates = useMutation(coordinatesMutationOptions);
-  const stored = initialValues?.type === 'offline' ? initialValues.location : undefined;
+  const stored = initialValues?.type === 'regular' ? initialValues.location : undefined;
   const form = useForm({
     defaultValues: sessionFormDefaults(initialValues),
     validationLogic: revalidateLogic(),
@@ -101,7 +101,7 @@ export function SessionForm({
           <SessionFormDialog
             title={initialValues ? '세션 수정' : '세션 추가'}
             pending={isPending}
-            submitDisabled={type === 'offline' && coordinates.isPending}
+            submitDisabled={type === 'regular' && coordinates.isPending}
             submitError={submissionError || localSubmissionError}
             onClose={close}
             onSubmit={(event) => {
@@ -151,8 +151,8 @@ export function SessionForm({
                   />
                 )}
               </form.Field>
-              {type === 'offline' ? (
-                <section className={styles.fields} aria-label="오프라인 장소">
+              {type === 'regular' ? (
+                <section className={styles.fields} aria-label="정규 세션 장소">
                   <form.Field name="location.roadAddress">
                     {(field) => (
                       <SessionAddressField

@@ -47,7 +47,7 @@ type SessionViewModelBase = {
 /** 유형에 따라 장소 존재 여부가 결정되는 세션 화면 모델이다. */
 export type SessionViewModel =
   | (SessionViewModelBase & {
-      type: 'offline';
+      type: 'regular';
       location: {
         roadAddress: string;
         detailAddress: string | null;
@@ -80,7 +80,7 @@ export function toSessionViewModel(response: unknown): SessionViewModel {
   return data.type === 'REGULAR'
     ? {
         ...base,
-        type: 'offline',
+        type: 'regular',
         location: {
           roadAddress: data.roadAddress,
           detailAddress: data.detailAddress,
@@ -99,10 +99,10 @@ export function toSessionInput(session: SessionViewModel): SessionInput {
     startTime: session.startTime,
     endTime: session.endTime,
   };
-  return session.type === 'offline'
+  return session.type === 'regular'
     ? {
         ...common,
-        type: 'offline',
+        type: 'regular',
         location: {
           ...session.location,
           detailAddress: session.location.detailAddress ?? '',

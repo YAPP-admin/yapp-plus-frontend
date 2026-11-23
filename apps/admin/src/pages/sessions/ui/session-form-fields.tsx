@@ -64,21 +64,21 @@ export function SessionTypeField({
       value={value}
       disabled={disabled}
       onValueChange={(next) => {
-        if (next === 'offline' || next === 'team') {
+        if (next === 'regular' || next === 'team') {
           onChange(next);
         }
       }}
     >
       <RadioGroupField.Label>세션 유형</RadioGroupField.Label>
       <RadioGroup.Root className={styles.choices}>
-        {(['offline', 'team'] as const).map((type) => (
+        {(['regular', 'team'] as const).map((type) => (
           <RadioGroup.Item key={type} value={type}>
             <RadioGroup.ItemHiddenInput />
             <RadioGroup.ItemControl>
               <RadioGroup.ItemIndicator />
             </RadioGroup.ItemControl>
             <RadioGroup.ItemLabel>
-              {type === 'offline' ? '오프라인' : '팀 세션'}
+              {type === 'regular' ? '정규 세션' : '팀 세션'}
             </RadioGroup.ItemLabel>
           </RadioGroup.Item>
         ))}

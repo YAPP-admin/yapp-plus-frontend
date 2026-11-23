@@ -43,7 +43,7 @@ vi.mock('./session-form', () => ({
               initialValues.date,
               initialValues.startTime,
               initialValues.endTime,
-              initialValues.type === 'offline' ? initialValues.location.roadAddress : '',
+              initialValues.type === 'regular' ? initialValues.location.roadAddress : '',
             ].join('|')
           : '팀 세션 초안'}
       </span>
@@ -273,9 +273,9 @@ it('빈 응답과 유형 필터 빈 상태를 구분한다', async () => {
       }),
     ),
   );
-  await setup(25, 'offline');
+  await setup(25, 'regular');
   expect(await screen.findByText('등록된 세션이 없습니다.')).toBeVisible();
-  expect(screen.getByRole('status')).toHaveTextContent('오프라인 0개');
+  expect(screen.getByRole('status')).toHaveTextContent('정규 세션 0개');
 });
 
 it('조회 오류를 노출하지 않고 재시도 후 목록을 복구한다', async () => {
@@ -328,7 +328,9 @@ it('기수를 전환하면 진행 중이던 이전 기수 목록을 표시하지
 
   expect(await screen.findByRole('heading', { name: '32기 정규 세션' })).toBeVisible();
   releaseOldList.resolve();
-  await waitFor(() => expect(screen.queryByText('정규 세션')).not.toBeInTheDocument());
+  await waitFor(() =>
+    expect(screen.queryByRole('heading', { name: '정규 세션' })).not.toBeInTheDocument(),
+  );
 });
 
 it('생성 성공과 목록 재조회 실패를 각각 안내하고 기존 목록을 유지한다', async () => {
@@ -453,7 +455,7 @@ it('저장 장소·초 단위 시간을 복원하고 전체 본문으로 유형�
     ),
   );
 
-  const { user } = await setup(25, 'offline');
+  const { user } = await setup(25, 'regular');
   const dialog = within(await openEdit(user, '정규 세션'));
   expect(
     dialog.getByText('정규 세션|2026-10-31|14:00:10|18:00:20|서울특별시 중구 세종대로 110'),
@@ -461,7 +463,7 @@ it('저장 장소·초 단위 시간을 복원하고 전체 본문으로 유형�
   await user.click(dialog.getByRole('button', { name: '팀으로 변경 저장' }));
 
   expect(await screen.findByText(/변경한 유형은 전체 목록에서 확인/)).toBeVisible();
-  expect(screen.getByRole('radio', { name: '오프라인' })).toBeChecked();
+  expect(screen.getByRole('radio', { name: '정규 세션' })).toBeChecked();
   expect(await screen.findByText('선택한 유형의 세션이 없습니다.')).toBeVisible();
   expect(requestedPath).toBe('25/101');
   expect(requestedBody).toEqual({
