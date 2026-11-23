@@ -31,7 +31,7 @@ export const memberNotificationFixture = [
 export function createMemberNotificationHandlers(baseUrl: string) {
   const { pick } = createMswHandlers({ baseUrl });
   return [
-    pick.find3(({ request }) => {
+    pick.find4(({ request }) => {
       const cursor = new URL(request.url).searchParams.get('cursor');
       const start = cursor === null ? 0 : Number(cursor);
       if (!Number.isSafeInteger(start) || start < 0) {

@@ -2406,7 +2406,7 @@ export const zCreate1Path = z.object({
  */
 export const zCreate1Response = zTeamResponse;
 
-export const zFind1Path = z.object({
+export const zFind2Path = z.object({
   generationId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -2417,14 +2417,14 @@ export const zFind1Path = z.object({
     }),
 });
 
-export const zFind1Query = z.object({
+export const zFind2Query = z.object({
   type: z.enum(['ALL', 'REGULAR', 'TEAM']).optional().default('ALL'),
 });
 
 /**
  * 조회 성공
  */
-export const zFind1Response = zSessionListResponse;
+export const zFind2Response = zSessionListResponse;
 
 export const zCreate2Body = zCreateSessionRequest;
 
@@ -2814,16 +2814,16 @@ export const zWithdrawResponse = z.void();
 /**
  * 조회 성공
  */
-export const zFind2Response = zUserProfileResponse;
+export const zFind3Response = zUserProfileResponse;
 
-export const zFind3Query = z.object({
+export const zFind4Query = z.object({
   cursor: z.string().optional(),
 });
 
 /**
  * 조회 성공
  */
-export const zFind3Response = zUserNotificationListResponse;
+export const zFind4Response = zUserNotificationListResponse;
 
 /**
  * 조회 성공. 토요일 세션이 없으면 session은 null

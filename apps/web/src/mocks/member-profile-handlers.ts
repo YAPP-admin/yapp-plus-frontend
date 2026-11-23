@@ -15,5 +15,5 @@ export const profileFixture = {
 /** 생성 handler를 이용해 본인 프로필 경로를 명세와 같은 base URL에 연결합니다. */
 export function createMemberProfileHandlers(baseUrl: string) {
   const { pick } = createMswHandlers({ baseUrl });
-  return [pick.find2(() => HttpResponse.json(profileFixture))];
+  return [pick.find3(() => HttpResponse.json(profileFixture))];
 }

@@ -1,5 +1,5 @@
 /** 생성한 프로필 조회에 화면 전용 입력 검증을 더합니다. */
-import { find2Options, zUserProfileResponse } from '@yapp-plus/api/generated';
+import { find3Options, zUserProfileResponse } from '@yapp-plus/api/generated';
 
 const profileSchema = zUserProfileResponse.extend({
   userId: zUserProfileResponse.shape.userId.refine(
@@ -13,8 +13,8 @@ const profileSchema = zUserProfileResponse.extend({
 });
 
 /** 생성 요청·key·AbortSignal을 유지하며, 성공 캐시에 저장하기 전에 응답을 검증합니다. */
-export function profileQueryOptions(options?: Parameters<typeof find2Options>[0]) {
-  return find2Options({
+export function profileQueryOptions(options?: Parameters<typeof find3Options>[0]) {
+  return find3Options({
     ...options,
     responseValidator: (value) => profileSchema.parseAsync(value),
   });
