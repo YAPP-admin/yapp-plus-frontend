@@ -5,4 +5,4 @@ export {
   type GenerationListItem,
   type GenerationListResponse,
 } from './generation-api';
-export { generationsQueryKey, generationsQueryOptions } from './generation-queries';
+export { generationsQueryOptions } from './generation-queries';

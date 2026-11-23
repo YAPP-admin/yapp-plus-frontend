@@ -14,7 +14,7 @@ const AdminGenerationContext = createContext<AdminGenerationContextValue | null>
 
 /** 인증된 관리자 작업 영역에서 기수 목록과 현재 선택을 제공한다. */
 export function AdminGenerationProvider({ children }: { children: ReactNode }) {
-  const { data } = useSuspenseQuery(generationsQueryOptions());
+  const { data } = useSuspenseQuery(generationsQueryOptions);
   // OpenAPI 생성 타입은 최소 길이를 표현하지 않지만 서버 계약상 목록에는 항상 기수가 하나 이상이다.
   // oxlint-disable-next-line typescript/no-non-null-assertion -- 서버 계약의 non-empty 배열을 보존한다.
   const firstGeneration = data.generations[0]!;

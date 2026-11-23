@@ -4,7 +4,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../../mocks/server';
 import { configureAdminApiClient } from '../../../login/admin-session';
-import { generationsQueryKey, generationsQueryOptions, listGenerations } from './index';
+import { generationsQueryOptions, listGenerations } from './index';
 
 const generations = {
   generations: [
@@ -45,9 +45,9 @@ describe('관리자 기수 API', () => {
       }),
     );
 
-    const options = generationsQueryOptions();
+    const options = generationsQueryOptions;
 
-    expect(options.queryKey).toEqual(generationsQueryKey());
+    expect(options.queryKey).toEqual(generationsQueryOptions.queryKey);
     await expect(new QueryClient().fetchQuery(options)).resolves.toEqual(generations);
     expect(requestCount).toBe(1);
   });
