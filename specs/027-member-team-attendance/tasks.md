@@ -36,9 +36,9 @@
 
 독립 검증: 응답 입력만으로 유효한 대상·기존 사진·사진 조회 실패·다른 조회 실패의 차이를 확인한다.
 
-- [ ] T014 [US1] apps/web/src/features/team-attendance/model/team-attendance-query.test.tsx에 명단 검증·사진 오류만 미제출·이전 캐시·취소 후 쓰기 0회 회귀를 작성한다.
-- [ ] T015 [US1] apps/web/src/features/team-attendance/model/submission-input.ts에 teamId·안전한 ID와 본인 검증을 연결하고 model/team-attendance-query.ts에서 생성 응답을 변환한다.
-- [ ] T016 [US1] apps/web/src/features/team-attendance/model/team-attendance-query.ts에 생성 조회·계정 수명·사진 실패 한정 정책을 연결하고 index.ts에 필요한 계약만 공개한다.
+- [ ] T014 [US1] apps/web/src/features/team-attendance/model/team-attendance-query.test.tsx에 명단 검증·사진 오류만 미제출·이전 캐시·취소 후 쓰기 0회 회귀를 작성한다. 생성 Query 옵션을 직접 소비하기로 해 화면 연결 단계에서 다시 검토한다.
+- [x] T015 [US1] apps/web/src/features/team-attendance/model/submission-input.ts에 teamId를 연결하고 기존 fixture·제출 테스트 입력을 갱신한다. 생성 응답 화면 모델 변환은 생성 Query 옵션 직접 소비 정책에 따라 추가하지 않는다.
+- [ ] T016 [US1] apps/web/src/features/team-attendance/model/team-attendance-query.ts에 생성 조회·계정 수명·사진 실패 한정 정책을 연결하고 index.ts에 필요한 계약만 공개한다. 생성 Query 옵션 직접 소비 정책에 따라 별도 공개 계약을 추가하지 않는다.
 - [ ] T017 [US1] specs/027-member-team-attendance/validation.md에 US1 검증과 2단계 리뷰를 기록한다.
 
 ## 3~4단계 — US2 사진 입력과 즉시 업로드 (P1)

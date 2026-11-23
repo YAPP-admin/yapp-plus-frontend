@@ -4,7 +4,8 @@
 
 TeamAttendanceTarget은 sessionId·teamId·teamName·selfMembershipId·members를 소유한다.
 members는 membershipId·name·positionLabel을 갖고, 생성 응답의 isMe로 본인을 정한다.
-경계에서 안전한 양의 정수 ID, 중복 없는 명단, 정확히 한 명의 본인을 확인한다.
+서버가 팀 ID·membership ID 범위와 본인 한 명 조건을 보장하며, 화면 경계는 기존 제출 대상 스키마의
+중복 명단·본인 포함 조건만 적용한다.
 position null은 ‘—’로 표시한다. 원본 ID를 이름·userId로 보정하지 않는다.
 
 명단 비교는 membershipId로 정렬한 membershipId·name·position·isMe 값으로 한다.

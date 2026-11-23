@@ -74,3 +74,15 @@
 ## 다음 리뷰
 
 최신 API 전체 생성과 1B 소비자 이관을 함께 검토한 뒤, US1(실제 팀·기존 사진 확인) 진행 확인을 받는다.
+
+## 2단계 US1 — 생성 Query 옵션 직접 소비로 조정
+
+- `TeamAttendanceTarget`의 `teamId`와 기존 fixture·제출 테스트 입력만 갱신했다.
+- 별도 조회 모델·상태 축소·Query 래퍼는 추가하지 않는다. 이후 화면 연결에서 생성 `find5Options`·`find1Options`를 직접 소비한다.
+- 그러므로 T014·T016은 미완료로 되돌렸고, 이 단계의 팀원·사진 조회 전용 테스트도 유지하지 않는다.
+- `mise exec -- node --run check`: 통과. format과 web lint·typecheck·test는 새로 실행했으며, web 테스트는 70개 파일 579건 통과했다. 나머지 패키지 작업은 Turbo 캐시를 재사용했다.
+- `mise exec -- node --run build`, `git diff --check`: 통과. web build는 새로 실행했고 admin·storybook build는 Turbo 캐시를 재사용했다. Vite의 기존 500KiB chunk 경고는 실패가 아니다.
+
+## 다음 리뷰
+
+생성 Query 옵션을 실제 화면에서 소비할 때 필요한 상태 변환과 오류 정책을 함께 검토한다.

@@ -45,6 +45,7 @@ let urlIndex = 0;
 const createUrl = vi.fn<() => string>(() => `blob:photo-${++urlIndex}`);
 const target = teamAttendanceTargetSchema.parse({
   sessionId: 1,
+  teamId: 1,
   teamName: '검증 팀',
   selfMembershipId: 2,
   members: [
