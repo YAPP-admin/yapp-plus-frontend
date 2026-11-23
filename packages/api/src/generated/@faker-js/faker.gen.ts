@@ -100,12 +100,16 @@ import type {
   DetailErrors,
   DetailResponses,
   ErrorResponse,
+  Find1Errors,
+  Find1Responses,
   Find2Errors,
   Find2Responses,
   Find3Errors,
   Find3Responses,
   Find4Errors,
   Find4Responses,
+  Find5Errors,
+  Find5Responses,
   Find6Errors,
   Find6Responses,
   Find7Errors,
@@ -252,6 +256,11 @@ import type {
   UserPostListResponse,
   UserProfileResponse,
   UserResponse,
+  UserTeamMemberResponse,
+  UserTeamMembersResponse,
+  UserTeamPhotoDetailResponse,
+  UserTeamPhotoResponse,
+  UserTeamPhotoUploaderResponse,
   VerifyAttendanceCodeRequest,
   VerifyAttendanceCodeResponse,
   VerifyErrors,
@@ -1252,6 +1261,69 @@ export const fakeUserNotificationListResponse = (
   };
 };
 
+export const fakeUserTeamMemberResponse = (options?: Options): UserTeamMemberResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    membershipId: f.number.int(),
+    name: f.string.sample(),
+    position: f.helpers.arrayElement([
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'WEB',
+      'MOBILE',
+      'SERVER',
+      'AI_NATIVE',
+      null,
+    ]) as any,
+    isMe: f.datatype.boolean(),
+  };
+};
+
+export const fakeUserTeamMembersResponse = (options?: Options): UserTeamMembersResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    teamId: f.number.int(),
+    teamName: f.string.sample(),
+    members: f.helpers.multiple(() => fakeUserTeamMemberResponse(options)),
+  };
+};
+
+export const fakeUserTeamPhotoUploaderResponse = (
+  options?: Options,
+): UserTeamPhotoUploaderResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    userId: f.number.int(),
+    name: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
+export const fakeUserTeamPhotoDetailResponse = (options?: Options): UserTeamPhotoDetailResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    photoId: f.number.int(),
+    teamId: f.number.int(),
+    teamName: f.string.sample(),
+    status: f.helpers.arrayElement(['PENDING', 'APPROVED', 'REJECTED']),
+    imageUrl: f.datatype.boolean() ? f.image.url() : null,
+    imageUrlExpiresAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    uploadedAt: f.date.recent().toISOString(),
+    uploadedTime: f.helpers.fromRegExp('^(?:[01][0-9]|2[0-3]):[0-5][0-9]$'),
+    submittedAt: f.date.recent().toISOString(),
+    uploader: fakeUserTeamPhotoUploaderResponse(options),
+    selectedMemberCount: f.number.int({ min: 0 }),
+  };
+};
+
+export const fakeUserTeamPhotoResponse = (options?: Options): UserTeamPhotoResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    photo: f.datatype.boolean() ? fakeUserTeamPhotoDetailResponse(options) : null,
+  };
+};
+
 export const fakeCurrentWeekSessionDetailResponse = (
   options?: Options,
 ): CurrentWeekSessionDetailResponse => {
@@ -2066,6 +2138,24 @@ export const fakeRegister1Response500 = (options?: Options): Register1Errors[500
 export const fakeRegister1Response503 = (options?: Options): Register1Errors[503] =>
   fakeErrorResponse(options);
 
+export const fakeFind1Response200 = (options?: Options): Find1Responses[200] =>
+  fakeUserTeamPhotoResponse(options);
+
+export const fakeFind1Response401 = (options?: Options): Find1Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeFind1Response403 = (options?: Options): Find1Errors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeFind1Response404 = (options?: Options): Find1Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeFind1Response409 = (options?: Options): Find1Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeFind1Response503 = (options?: Options): Find1Errors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeSubmitResponse201 = (options?: Options): SubmitResponses[201] =>
   fakeTeamPhotoSubmitted(options);
 
@@ -2568,6 +2658,24 @@ export const fakeFind4Response401 = (options?: Options): Find4Errors[401] =>
   fakeErrorResponse(options);
 
 export const fakeFind4Response503 = (options?: Options): Find4Errors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeFind5Response200 = (options?: Options): Find5Responses[200] =>
+  fakeUserTeamMembersResponse(options);
+
+export const fakeFind5Response401 = (options?: Options): Find5Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeFind5Response403 = (options?: Options): Find5Errors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeFind5Response404 = (options?: Options): Find5Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeFind5Response409 = (options?: Options): Find5Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeFind5Response503 = (options?: Options): Find5Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeFind6Response200 = (options?: Options): Find6Responses[200] =>

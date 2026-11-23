@@ -37,9 +37,11 @@ import {
   detail2,
   detail3,
   find,
+  find1,
   find2,
   find3,
   find4,
+  find5,
   find6,
   find7,
   find8,
@@ -165,6 +167,9 @@ import type {
   DetailData,
   DetailError,
   DetailResponse,
+  Find1Data,
+  Find1Error,
+  Find1Response,
   Find2Data,
   Find2Error,
   Find2Response,
@@ -174,6 +179,9 @@ import type {
   Find4Data,
   Find4Error,
   Find4Response,
+  Find5Data,
+  Find5Error,
+  Find5Response,
   Find6Data,
   Find6Error,
   Find6Response,
@@ -691,6 +699,27 @@ export const register1Mutation = (
   };
   return mutationOptions;
 };
+
+export const find1QueryKey = (options: Options<Find1Data>) => createQueryKey('find1', options);
+
+/**
+ * 본인 팀의 최신 출석 사진과 제출 정보 조회
+ *
+ * 해당 세션 기수의 현재 PLAYER이며 제출 당시 팀원 명단에 포함된 사용자만 조회한다. 미선택자도 허용하고 팀 이동 후에도 스냅샷 권한을 유지한다. 팀별 최신 사진 선정 후 권한을 검사하며 REPLACED는 제외한다. PENDING·APPROVED·REJECTED 모두 조회 가능하다. 업로드 URL 예약/S3 PUT만 완료한 미제출은 photo:null. URL은 최대 5분이며 업로드 6개월 또는 객체 삭제 후에는 URL만 null이다. 응답은 Cache-Control: no-store.
+ */
+export const find1Options = (options: Options<Find1Data>) =>
+  queryOptions<Find1Response, Find1Error, Find1Response, ReturnType<typeof find1QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find1({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find1QueryKey(options),
+  });
 
 export const submitMutationKey = (options?: Partial<Options<SubmitData>>) =>
   createMutationKey('submit', options);
@@ -1812,6 +1841,27 @@ export const find4InfiniteOptions = (options?: Options<Find4Data>) => {
   );
   return opts as Omit<typeof opts, 'initialData'>;
 };
+
+export const find5QueryKey = (options: Options<Find5Data>) => createQueryKey('find5', options);
+
+/**
+ * 팀 사진 참석자 선택용 본인 팀원 조회
+ *
+ * 대상 TEAM 세션 기수의 현재 PLAYER이며 삭제되지 않은 팀에 소속된 사용자만 조회한다. 현재 같은 팀의 활성 PLAYER를 membershipId 오름차순으로 반환한다. 본인만 isMe=true이며 직군 미지정은 null이다. 다른 역할과 탈퇴·soft delete 사용자는 선택 대상에서 제외한다. 사진 제출 시간 제한은 이 조회에 적용하지 않는다. 최종 사진 제출에서 현재 팀·선택 명단을 다시 검증한다. Cache-Control: no-store.
+ */
+export const find5Options = (options: Options<Find5Data>) =>
+  queryOptions<Find5Response, Find5Error, Find5Response, ReturnType<typeof find5QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await find5({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: find5QueryKey(options),
+  });
 
 export const find6QueryKey = (options?: Options<Find6Data>) => createQueryKey('find6', options);
 

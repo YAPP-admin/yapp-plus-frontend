@@ -24,18 +24,13 @@
 
 ### 1B — 나머지 기존 조회 이름
 
-- [ ] T008 packages/api/openapi-ts.config.ts의 임시 이름 변환을 제거해 재생성하고 관리자 세션·프로필·알림의 앱 호출·타입·Query key·packages/api/src/mocks/handlers.ts·관련 테스트를 경로 기준으로 이관한다.
+- [x] T008 packages/api/openapi-ts.config.ts의 임시 이름 변환을 제거해 재생성하고 관리자 세션·프로필·알림의 앱 호출·타입·Query key·packages/api/src/mocks/handlers.ts·관련 테스트를 경로 기준으로 이관한다.
 - [ ] T009 specs/027-member-team-attendance/validation.md에 1B 회귀·check/build·변경량과 사용자 리뷰를 기록한다.
 
-### 1C — 팀원 조회
+### 1C·1D — 팀원·사진 조회 전체 생성
 
-- [ ] T010 packages/api/openapi-ts.config.ts에서 팀원 GET 제외를 해제해 src/generated 전체를 재생성하고 packages/api/README.md에 계약을 갱신한다.
-- [ ] T011 specs/027-member-team-attendance/validation.md에 팀원 SDK·Zod·Query·MSW·Faker 연결과 1C 검증·리뷰를 기록한다.
-
-### 1D — 사진 조회·전체 생성 일치
-
-- [ ] T012 packages/api/openapi-ts.config.ts의 남은 필터를 제거해 사진 GET 포함 전체 생성물을 재생성하고 packages/api/README.md를 갱신한다.
-- [ ] T013 동일 원본의 전체 재생성 일치와 HTTP 경로 회귀를 확인해 specs/027-member-team-attendance/validation.md에 1D 검증·리뷰를 기록한다.
+- [x] T010 packages/api/openapi-ts.config.ts의 임시 필터를 제거해 팀원·사진 GET을 포함한 src/generated 전체를 재생성하고 packages/api/README.md에 계약을 갱신한다.
+- [x] T011 동일 원본의 전체 재생성 일치와 팀원·사진 SDK·Zod·Query·MSW·Faker HTTP 경로를 검증하고 specs/027-member-team-attendance/validation.md에 결과·리뷰를 기록한다.
 
 ## 2단계 — US1 실제 팀·기존 사진 확인 (P1)
 

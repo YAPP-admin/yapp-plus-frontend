@@ -704,6 +704,57 @@ export type UserNotificationListResponse = {
   nextCursor: string | null;
 };
 
+export type UserTeamMemberResponse = {
+  membershipId: number;
+  name: string;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  /**
+   * 로그인한 본인이면 true
+   */
+  isMe: boolean;
+};
+
+export type UserTeamMembersResponse = {
+  teamId: number;
+  teamName: string;
+  members: Array<UserTeamMemberResponse>;
+};
+
+export type UserTeamPhotoDetailResponse = {
+  photoId: number;
+  teamId: number;
+  teamName: string;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  /**
+   * 최대 5분 버전 고정 URL. 6개월 보관 만료/객체 삭제 시 null
+   */
+  imageUrl: string | null;
+  imageUrlExpiresAt: string | null;
+  uploadedAt: string;
+  /**
+   * 실제 S3 업로드 시각, 한국 시간 HH:mm
+   */
+  uploadedTime: string;
+  submittedAt: string;
+  uploader: UserTeamPhotoUploaderResponse;
+  /**
+   * 제출 당시 참석자로 선택한 인원 수
+   */
+  selectedMemberCount: number;
+};
+
+export type UserTeamPhotoResponse = {
+  /**
+   * 최신 제출 사진. 미제출이면 null
+   */
+  photo: UserTeamPhotoDetailResponse | null;
+};
+
+export type UserTeamPhotoUploaderResponse = {
+  userId: number;
+  name: string | null;
+};
+
 export type CurrentWeekSessionDetailResponse = {
   /**
    * 세션 식별자
@@ -1712,6 +1763,49 @@ export type Register1Responses = {
 };
 
 export type Register1Response = Register1Responses[keyof Register1Responses];
+
+export type Find1Data = {
+  body?: never;
+  path: {
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/sessions/{sessionId}/team-attendance-photos';
+};
+
+export type Find1Errors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_ELIGIBLE
+   */
+  403: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_UNAVAILABLE
+   */
+  409: ErrorResponse;
+  /**
+   * TEAM_PHOTO_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type Find1Error = Find1Errors[keyof Find1Errors];
+
+export type Find1Responses = {
+  /**
+   * 조회 성공. 사진 미제출이면 photo:null
+   */
+  200: UserTeamPhotoResponse;
+};
+
+export type Find1Response = Find1Responses[keyof Find1Responses];
 
 export type SubmitData = {
   body: SubmitTeamPhotoRequest;
@@ -3148,6 +3242,49 @@ export type Find4Responses = {
 };
 
 export type Find4Response = Find4Responses[keyof Find4Responses];
+
+export type Find5Data = {
+  body?: never;
+  path: {
+    sessionId: number;
+  };
+  query?: never;
+  url: '/api/sessions/{sessionId}/team-members';
+};
+
+export type Find5Errors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_ELIGIBLE
+   */
+  403: ErrorResponse;
+  /**
+   * TEAM_PHOTO_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * TEAM_PHOTO_UNAVAILABLE
+   */
+  409: ErrorResponse;
+  /**
+   * TEAM_PHOTO_STORAGE_FAILED
+   */
+  503: ErrorResponse;
+};
+
+export type Find5Error = Find5Errors[keyof Find5Errors];
+
+export type Find5Responses = {
+  /**
+   * 현재 본인 팀의 참석 선택 가능 명단
+   */
+  200: UserTeamMembersResponse;
+};
+
+export type Find5Response = Find5Responses[keyof Find5Responses];
 
 export type Find6Data = {
   body?: never;

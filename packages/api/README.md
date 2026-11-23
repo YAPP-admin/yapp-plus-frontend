@@ -39,7 +39,8 @@ SDK 요청·응답 검증과 응답 변환은 기본적으로 비활성화되어
 일반 `generated` 진입점에는 Faker·MSW·고정 응답을 export하지 않습니다.
 제품 코드는 SDK를 사용하고, 모킹 진입점은 개발 초기화나 테스트에서만 사용합니다.
 현재 관리자 기수 목록 조회 함수는 `list2`(`GET /api/admin/generations`)이고, 기수별 세션 목록 조회
-함수는 `find1`이다. 실제 API 경로는 생성 SDK의 주석에서 확인할 수 있다.
+함수는 `find2`이다. 회원 팀 사진 조회는 `find1`, 팀원 조회는 `find5`, 이번 주 세션 조회는 `find6`이다.
+실제 API 경로는 생성 SDK의 주석에서 확인할 수 있다.
 
 ```ts
 import { list2Options } from '@yapp-plus/api/generated';
@@ -94,7 +95,7 @@ Faker는 요청마다 seed 107과 기준 날짜 `2026-10-26T00:00:00Z`의 독립
 
 ```ts
 import type { CurrentWeekSessionResponse } from '@yapp-plus/api/generated';
-import { handleFind2 } from '@yapp-plus/api/generated/msw';
+import { handleFind6 } from '@yapp-plus/api/generated/msw';
 
 const emptyWeek = {
   weekStartDate: '2026-10-25',
@@ -102,7 +103,7 @@ const emptyWeek = {
   session: null,
 } satisfies CurrentWeekSessionResponse;
 
-server.use(handleFind2({ body: emptyWeek }, { baseUrl: apiBaseUrl }));
+server.use(handleFind6({ body: emptyWeek }, { baseUrl: apiBaseUrl }));
 ```
 
 생성 핸들러에는 테스트용 `baseUrl`을 명시해야 합니다. 생략하면 명세의 서버 주소를 사용합니다.
