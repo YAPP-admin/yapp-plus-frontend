@@ -228,7 +228,6 @@ it('개발용 회식 목록은 WebView 세션을 복구할 수 없어도 표시�
 });
 
 it('조회 실패는 보호 URL을 유지하며 안내하고 수동 복구 후 원래 화면을 표시한다', async () => {
-  vi.useFakeTimers({ toFake: ['Date'] });
   const client = new QueryClient();
   bridge.getSession.mockResolvedValueOnce(undefined).mockResolvedValue(session(1));
   window.history.replaceState(null, '', '/team-attendance/upload');
@@ -239,16 +238,12 @@ it('조회 실패는 보호 URL을 유지하며 안내하고 수동 복구 후 �
   expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
   expect(window.location.pathname).toBe('/team-attendance/upload');
   fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
-  expect(bridge.getSession).toHaveBeenCalledTimes(1);
-  vi.setSystemTime(Date.now() + 5001);
-  fireEvent.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(await screen.findByRole('checkbox', { name: /강야뿌/ })).toBeInTheDocument();
   expect(window.location.pathname).toBe('/team-attendance/upload');
   expect(bridge.getSession).toHaveBeenCalledTimes(2);
 });
 
 it('세션 삭제 실패 후 수동 재시도로 정리되면 보호 내용을 노출하지 않고 로그인으로 이동한다', async () => {
-  vi.useFakeTimers({ toFake: ['Date'] });
   const user = userEvent.setup();
   const client = new QueryClient();
   let resolveSession: ((result: AuthResult) => void) | undefined;
@@ -267,8 +262,6 @@ it('세션 삭제 실패 후 수동 재시도로 정리되면 보호 내용을 �
   expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
   expect(window.location.pathname).toBe('/team-attendance/upload');
 
-  // Date만 이동시켜 자동 재조회 타이머와 수동 버튼의 효과를 구분합니다.
-  vi.setSystemTime(Date.now() + 5001);
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(bridge.getSession).toHaveBeenCalledTimes(2);
   expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();

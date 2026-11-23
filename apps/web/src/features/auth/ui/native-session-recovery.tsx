@@ -17,7 +17,7 @@ export function NativeSessionRecovery({ onGoToLogin }: { onGoToLogin: () => void
         <Text textStyle="t4Regular">
           {unsupported
             ? '최신 버전의 YAPP+ 앱에서 다시 이용해 주세요.'
-            : '앱 연결을 확인하고 있어요. 잠시 후 다시 시도해 주세요.'}
+            : '앱 연결을 확인하지 못했어요. 다시 시도하거나 로그인 화면으로 이동해 주세요.'}
         </Text>
       </output>
       {canRetry && (

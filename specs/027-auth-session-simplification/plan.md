@@ -17,10 +17,11 @@
 
 ## 설계 결정
 
-1. 개발 로그는 각 앱 내부 인증 모듈에만 둔다. 토큰·nonce·사용자 ID·응답 본문은 인자로도 전달하지 않는다.
+1. 개발 로그는 각 앱 내부 인증 모듈에만 둔다. `getSession`은 웹 요청·native 진입·native 반환·웹 수신을 결과 상태와 오류 코드로만 구분한다. 토큰·nonce·사용자 ID·응답 본문은 인자로도 전달하지 않는다.
 2. 로그아웃은 revoke 결과를 관찰만 하고 `clear()`를 항상 호출한다. `clear()`의 저장소 실패는 기존 재시도로 남긴다.
 3. 탈퇴 API adapter는 204와 transport/HTTP 실패를 구분한다. `AuthActions`가 요청 전 세대를 기록하고 응답 후 다시 검사한다.
 4. refresh의 `commit()` 저장 실패는 lock 밖에서 `clear()`를 호출한다. 이전 토큰을 보관하거나 갱신 재시도를 만들지 않는다.
+5. native WebView bootstrap은 RPC 응답 문제를 해결하지 못해 제거한다. 세션 복원은 웹의 최초 `getSession()`과 사용자의 명시적 재시도만 수행한다.
 
 ## 헌법 점검
 
@@ -35,4 +36,4 @@
 1. `apps/mobile/src/auth`와 `apps/web/src/features/auth/model`의 단위 테스트
 2. `mise exec -- node --run check`
 3. `mise exec -- node --run build`
-4. 개발 빌드에서 Apple·Google 성공/취소, 로그아웃, 재로그인, 앱 재시작을 수동 확인
+4. 개발 빌드에서 native 세션 복원 뒤 WebView가 마운트되는지, Apple·Google 성공/취소, 로그아웃, 재로그인, 앱 재시작을 수동 확인

@@ -15,6 +15,7 @@ import { bridge, createWebView } from '@webview-bridge/react-native';
 import { useEffect } from 'react';
 import { initialWindowMetrics } from 'react-native-safe-area-context';
 
+import { traceNativeSessionBridge } from './auth/diagnostics';
 import { authActions } from './auth/native-auth-runtime';
 import { locationActions } from './location/native-location-runtime';
 import { PushNotificationState } from './notifications/push-notification-state';
@@ -55,7 +56,17 @@ export const nativeAppBridge = bridge<AppBridgeState>(({ get, set }) => ({
     const parsed = completeSignupInputSchema.safeParse(input);
     return parsed.success ? authActions.completeSignup(parsed.data) : invalidInput();
   },
-  getSession: () => authActions.getSession(),
+  getSession: async () => {
+    traceNativeSessionBridge('entered');
+    try {
+      const result = await authActions.getSession();
+      traceNativeSessionBridge('returned', result);
+      return result;
+    } catch (error) {
+      traceNativeSessionBridge('failed');
+      throw error;
+    }
+  },
   refreshSession: (input) => {
     const parsed = refreshSessionInputSchema.safeParse(input);
     return parsed.success ? authActions.refreshSession(parsed.data) : invalidInput();

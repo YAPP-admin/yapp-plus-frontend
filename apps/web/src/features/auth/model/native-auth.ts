@@ -20,12 +20,18 @@ const getNativeBridge = (): LinkedAppBridge | undefined =>
   isNativeWebView() ? getAppBridge() : undefined;
 
 /** 개발 중 브릿지 연결 문제를 진단하되 인증 자격과 응답 본문은 기록하지 않습니다. */
-const traceNativeBridge = (method: string, outcome: 'requested' | 'received' | 'failed'): void => {
+const traceNativeBridge = (
+  method: string,
+  outcome: 'requested' | 'received' | 'failed',
+  result?: AuthResult,
+): void => {
   if (!import.meta.env.DEV) {
     return;
   }
+  const status = result ? ` status=${result.status}` : '';
+  const code = result && 'code' in result ? ` code=${result.code}` : '';
   // oxlint-disable-next-line no-console -- 개발 WebView의 브릿지 단계만 기록하고 인증 값은 출력하지 않습니다.
-  console.info(`[auth-bridge] ${method} ${outcome}`);
+  console.info(`[auth-bridge] ${method} ${outcome}${status}${code}`);
 };
 
 /** WebView에서만 native 로그인 RPC를 호출하고 일반 브라우저에서는 undefined를 반환합니다. */
@@ -61,17 +67,10 @@ export const getNativeSession = async (): Promise<AuthResult | undefined> => {
   if (!bridge) {
     return undefined;
   }
-  // 메서드 목록은 hydration 후 도착합니다. onReady는 준비 완료 알림이 아닙니다.
-  if (!bridge.isWebViewBridgeAvailable) {
-    return { status: 'UNAVAILABLE', code: 'OUTCOME_UNKNOWN', retryable: true };
-  }
-  if (!bridge.isNativeMethodAvailable('getSession')) {
-    return { status: 'UNAVAILABLE', code: 'UNSUPPORTED', retryable: false };
-  }
   traceNativeBridge('getSession', 'requested');
   try {
     const result = await bridge.getSession();
-    traceNativeBridge('getSession', 'received');
+    traceNativeBridge('getSession', 'received', result);
     return result;
   } catch (error) {
     traceNativeBridge('getSession', 'failed');
