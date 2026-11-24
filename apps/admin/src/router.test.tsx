@@ -242,7 +242,7 @@ describe('관리자 라우팅', () => {
 
   it('팀 매핑 필터를 URL에 남기고 뒤로가기에서 원래 필터를 복원한다', async () => {
     const user = userEvent.setup();
-    const router = await renderRoute('/members/teams');
+    const router = await renderRoute('/members/teams?preview=draft');
 
     expect(await screen.findByRole('heading', { name: '팀 목록', level: 2 })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
@@ -250,7 +250,7 @@ describe('관리자 라우팅', () => {
     await user.click(screen.getByRole('radio', { name: '미배정 회원 · 10' }));
 
     await waitFor(() =>
-      expect(router.state.location.href).toBe('/members/teams?filter=unassigned'),
+      expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned'),
     );
     expect(screen.getByRole('heading', { name: '미배정 회원 10명', level: 3 })).toBeVisible();
 
@@ -262,7 +262,7 @@ describe('관리자 라우팅', () => {
 
   it('미배정 배정 예정이 있으면 필터 이동 전에 이탈을 확인한다', async () => {
     const user = userEvent.setup();
-    const router = await renderRoute('/members/teams');
+    const router = await renderRoute('/members/teams?preview=draft');
     await waitForAdminWorkspace();
 
     await user.click(screen.getByRole('radio', { name: '미배정 회원 · 10' }));
@@ -278,15 +278,15 @@ describe('관리자 라우팅', () => {
 
     await user.click(screen.getByRole('radio', { name: '전체 팀 · 8' }));
     expect(await screen.findByRole('alertdialog')).toHaveTextContent('변경을 버리고 나갈까요?');
-    expect(router.state.location.href).toBe('/members/teams?filter=unassigned');
+    expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned');
 
     await user.click(screen.getByRole('button', { name: '계속 편집' }));
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
-    expect(router.state.location.href).toBe('/members/teams?filter=unassigned');
+    expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned');
 
     await user.click(screen.getByRole('radio', { name: '전체 팀 · 8' }));
     await user.click(await screen.findByRole('button', { name: '변경 버리기' }));
-    await waitFor(() => expect(router.state.location.href).toBe('/members/teams'));
+    await waitFor(() => expect(router.state.location.href).toBe('/members/teams?preview=draft'));
     expect(await screen.findByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
   }, 10000);
 

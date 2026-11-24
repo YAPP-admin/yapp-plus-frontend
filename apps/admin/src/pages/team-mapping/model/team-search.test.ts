@@ -3,18 +3,23 @@ import { describe, expect, it } from 'vitest';
 import { teamMappingSearchDefaults, teamMappingSearchSchema } from './team-search';
 
 describe('team mapping search', () => {
-  it('uses all when the search is empty', () => {
+  it('uses before and all when the search is empty', () => {
     expect(teamMappingSearchSchema.parse({})).toEqual(teamMappingSearchDefaults);
   });
 
-  it.each(['complete', 'needs-check', 'unassigned'] as const)(
+  it.each(['all', 'complete', 'needs-check', 'unassigned'] as const)(
     'keeps the %s filter value from the URL',
     (filter) => {
-      expect(teamMappingSearchSchema.parse({ filter })).toEqual({ filter });
+      expect(teamMappingSearchSchema.parse({ preview: 'confirmed', filter })).toEqual({
+        preview: 'confirmed',
+        filter,
+      });
     },
   );
 
   it('restores invalid values to the safe defaults', () => {
-    expect(teamMappingSearchSchema.parse({ filter: 'unknown' })).toEqual(teamMappingSearchDefaults);
+    expect(teamMappingSearchSchema.parse({ preview: 'unknown', filter: 'unknown' })).toEqual(
+      teamMappingSearchDefaults,
+    );
   });
 });

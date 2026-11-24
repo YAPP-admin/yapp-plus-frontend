@@ -9,6 +9,7 @@ import {
 } from './team-mapping';
 
 const GENERATION = 12;
+const CONFIRMED_AT = '2026-10-17T09:00:00.000Z';
 
 function member(
   activityId: string,
@@ -148,31 +149,45 @@ const draftTeams: readonly TeamMappingTeam[] = [
   team('team-08', '혼자서 준비하는 아주 긴 이름의 팀', null, ['member-40']),
 ];
 
+const confirmedTeams: readonly TeamMappingTeam[] = [
+  ...draftTeams.slice(0, 7),
+  team('team-08', 'Swell', 'Swell', ['member-40', 'member-45']),
+];
+
 function snapshot(
   status: TeamMappingStatus,
   teams: readonly TeamMappingTeam[],
+  confirmation: TeamMappingSnapshot['confirmation'],
 ): TeamMappingSnapshot {
   return teamMappingSnapshotSchema.parse({
     generation: GENERATION,
     status,
     members,
     teams,
+    confirmation,
   });
 }
 
 /** 팀 빌딩 전 상태는 팀 없이 모든 후보가 미배정이다. */
-export const teamMappingBeforeFixture = snapshot('before', []);
+export const teamMappingBeforeFixture = snapshot('before', [], null);
 
 /** 배정 중 상태는 8팀·42명 배정·10명 미배정 사례를 담는다. */
-export const teamMappingDraftFixture = snapshot('draft', draftTeams);
+export const teamMappingDraftFixture = snapshot('draft', draftTeams, null);
 
-/** 모든 환경에서 같은 팀 매핑 상태를 재현할 수 있는 읽기 전용 fixture 묶음이다. */
+/** 확정됨 상태는 고정된 합성 확정 이력과 팀원 관계를 담는다. */
+export const teamMappingConfirmedFixture = snapshot('confirmed', confirmedTeams, {
+  confirmedAt: CONFIRMED_AT,
+  actorName: '운영자 김관리',
+});
+
+/** 모든 환경에서 같은 preview 입력을 사용할 수 있는 읽기 전용 fixture 묶음이다. */
 export const teamMappingFixtures: Readonly<Record<TeamMappingStatus, TeamMappingSnapshot>> = {
   before: teamMappingBeforeFixture,
   draft: teamMappingDraftFixture,
+  confirmed: teamMappingConfirmedFixture,
 };
 
-/** 팀 매핑 상태에 해당하는 합성 snapshot을 반환한다. 실제 저장이나 API 요청은 하지 않는다. */
+/** URL preview에 해당하는 합성 snapshot을 반환한다. 실제 저장이나 API 요청은 하지 않는다. */
 export function getTeamMappingFixture(status: TeamMappingStatus = 'before'): TeamMappingSnapshot {
   return teamMappingFixtures[status];
 }

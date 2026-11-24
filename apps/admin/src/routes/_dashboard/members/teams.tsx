@@ -39,9 +39,12 @@ function TeamMappingRouteContent() {
   return (
     <>
       <TeamMappingPage
-        key={search.filter}
-        snapshot={getTeamMappingFixture('draft')}
+        key={search.preview}
+        snapshot={getTeamMappingFixture(search.preview)}
         search={search}
+        onPreviewChange={(preview) => {
+          void navigate({ search: (previous) => ({ ...previous, preview }), resetScroll: false });
+        }}
         onFilterChange={(filter) => {
           void navigate({ search: (previous) => ({ ...previous, filter }), resetScroll: false });
         }}
