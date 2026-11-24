@@ -1,9 +1,24 @@
 import { z } from 'zod';
 import { memberPhoneNumberSchema } from './phone-number';
 
-// 화면 전용 값이며 OpenAPI의 PLAYER/OB나 공지용 합성 회원과 매핑하지 않는다.
-export const memberPartSchema = z.enum(['pm', 'design', 'android', 'ios', 'web', 'server']);
-export const memberRoleSchema = z.enum(['admin', 'active-member', 'regular-member']);
+// 화면·CSV 전용 값이며 API 경계에서는 생성 SDK 계약에 맞춰 매핑한다.
+export const memberPartSchema = z.enum([
+  'pm',
+  'design',
+  'android',
+  'ios',
+  'web',
+  'server',
+  'mobile',
+  'ai-native',
+]);
+export const memberRoleSchema = z.enum([
+  'admin',
+  'active-member',
+  'regular-member',
+  'completed-member',
+  'deferred-member',
+]);
 export const memberStatusSchema = z.enum(['active', 'inactive']);
 
 const identifier = z.string().trim().min(1);

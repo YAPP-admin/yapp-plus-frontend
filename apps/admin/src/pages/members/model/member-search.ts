@@ -1,7 +1,8 @@
 import { z } from 'zod';
+import { memberPartSchema as memberDomainPartSchema } from '~/features/member-management';
 
 export const memberTabSchema = z.enum(['all', 'pending']);
-export const memberPartSchema = z.enum(['all', 'pm', 'design', 'android', 'ios', 'web', 'server']);
+export const memberPartSchema = z.enum(['all', ...memberDomainPartSchema.options]);
 
 export const memberSearchSchema = z.object({
   tab: memberTabSchema.default('all').catch('all'),
@@ -27,4 +28,6 @@ export const partLabels = {
   ios: 'iOS',
   web: 'Web',
   server: 'Server',
+  mobile: 'Mobile',
+  'ai-native': 'AI Native',
 };

@@ -7,6 +7,18 @@ export const memberPhoneNumberSchema = z
   .regex(/^(?:010[0-9]{8}|010-[0-9]{4}-[0-9]{4})$/, '전화번호 형식을 확인해 주세요.')
   .transform((value) => value.replaceAll('-', ''));
 
+/** API 응답의 E.164 전화번호를 CSV 비교에 사용하는 010 형식으로 변환한다. */
+export function normalizeMemberPhoneNumber(value: string): string | null {
+  const normalized = value.trim().replaceAll('-', '');
+  if (/^010[0-9]{8}$/.test(normalized)) {
+    return normalized;
+  }
+  if (/^\+8210[0-9]{8}$/.test(normalized)) {
+    return `0${normalized.slice(3)}`;
+  }
+  return null;
+}
+
 /** 검증되지 않은 값은 표시 단계에서도 거절한다. */
 export function formatMemberPhoneNumber(value: string): string {
   const phone = memberPhoneNumberSchema.parse(value);

@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router';
-import { HStack, Text } from '@seed-design/react';
+import { HStack } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
 import type { Member } from '~/features/member-management';
 import { useMemberImportUpload } from '../model/use-member-import-upload';
@@ -9,11 +9,16 @@ import { MemberImportUpload } from './member-import-upload';
 import { ImportPreview } from './import-preview';
 
 type MemberImportPageProps = {
+  generationId?: number;
   members?: readonly Member[];
   currentGeneration?: number;
 };
 
-export function MemberImportPage({ members, currentGeneration }: MemberImportPageProps) {
+export function MemberImportPage({
+  generationId,
+  members,
+  currentGeneration,
+}: MemberImportPageProps) {
   const upload = useMemberImportUpload();
 
   return (
@@ -35,6 +40,7 @@ export function MemberImportPage({ members, currentGeneration }: MemberImportPag
         <ImportPreview
           key={upload.result?.fileName ?? 'empty'}
           result={upload.result}
+          generationId={generationId}
           members={members}
           currentGeneration={currentGeneration}
         />
@@ -48,12 +54,6 @@ export function MemberImportPage({ members, currentGeneration }: MemberImportPag
           )}
         </HStack>
       </section>
-
-      {!import.meta.env.DEV && (
-        <Text as="p" className={description}>
-          회원 명단 조회와 중복 판정 API 연결을 준비 중입니다.
-        </Text>
-      )}
 
       <Link className={returnLink} to="/members" search={{}}>
         회원 목록으로 돌아가기

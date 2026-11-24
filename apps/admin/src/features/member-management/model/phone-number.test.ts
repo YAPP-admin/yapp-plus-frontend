@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { formatMemberPhoneNumber, memberPhoneNumberSchema } from '../index';
+import {
+  formatMemberPhoneNumber,
+  memberPhoneNumberSchema,
+  normalizeMemberPhoneNumber,
+} from '../index';
 
 describe('회원 전화번호', () => {
   it.each(['01000000000', '010-0000-0000', ' 010-0000-0000 '])(
@@ -18,4 +22,18 @@ describe('회원 전화번호', () => {
   it('표시할 때도 유실된 앞자리를 복구하지 않는다', () => {
     expect(() => formatMemberPhoneNumber('1000000000')).toThrow('전화번호 형식을 확인해 주세요.');
   });
+
+  it.each(['+821000000000', '+82-10-0000-0000', '01000000000'])(
+    'API 전화번호 %s를 CSV 비교 형식으로 정규화한다',
+    (input) => {
+      expect(normalizeMemberPhoneNumber(input)).toBe('01000000000');
+    },
+  );
+
+  it.each(['+82100000000', '821000000000', '010-000-0000'])(
+    '지원하지 않는 API 전화번호 %s는 복구하지 않는다',
+    (input) => {
+      expect(normalizeMemberPhoneNumber(input)).toBeNull();
+    },
+  );
 });

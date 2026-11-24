@@ -10,6 +10,8 @@ const roleLabels: Record<MemberRole, string> = {
   admin: '운영진',
   'active-member': '활동회원',
   'regular-member': '정회원',
+  'completed-member': '수료 회원',
+  'deferred-member': '유예 회원',
 };
 
 const joinedDate = new Intl.DateTimeFormat('ko-KR', {

@@ -10,4 +10,8 @@ export {
   type MemberRole,
   type MemberStatus,
 } from './model/member';
-export { memberPhoneNumberSchema, formatMemberPhoneNumber } from './model/phone-number';
+export {
+  formatMemberPhoneNumber,
+  memberPhoneNumberSchema,
+  normalizeMemberPhoneNumber,
+} from './model/phone-number';

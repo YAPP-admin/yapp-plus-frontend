@@ -1,6 +1,7 @@
 import type * as Papa from 'papaparse';
 
 export const MAX_IMPORT_FILE_BYTES = 10 * 1024 * 1024;
+export const MAX_IMPORT_ROWS = 1000;
 export const memberImportHeaders = ['이름', '전화번호', '기수', '직군', '권한'] as const;
 
 export type MemberImportHeader = (typeof memberImportHeaders)[number];

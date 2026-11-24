@@ -6,7 +6,16 @@ import { FilterSelect } from '~/shared/ui/filter-select';
 import { getMemberFormValues, memberFormErrors } from '../model/member-form';
 import * as styles from './member-edit-form.css';
 
-const partOptions: readonly MemberPart[] = ['pm', 'design', 'android', 'ios', 'web', 'server'];
+const partOptions: readonly MemberPart[] = [
+  'pm',
+  'design',
+  'android',
+  'ios',
+  'web',
+  'server',
+  'mobile',
+  'ai-native',
+];
 const partLabels: Record<MemberPart, string> = {
   pm: 'PM',
   design: '디자인',
@@ -14,12 +23,22 @@ const partLabels: Record<MemberPart, string> = {
   ios: 'iOS',
   web: 'Web',
   server: 'Server',
+  mobile: 'Mobile',
+  'ai-native': 'AI Native',
 };
-const roleOptions: readonly MemberRole[] = ['admin', 'active-member', 'regular-member'];
+const roleOptions: readonly MemberRole[] = [
+  'admin',
+  'active-member',
+  'regular-member',
+  'completed-member',
+  'deferred-member',
+];
 const roleLabels: Record<MemberRole, string> = {
   admin: '운영진',
   'active-member': '활동회원',
   'regular-member': '정회원',
+  'completed-member': '수료 회원',
+  'deferred-member': '유예 회원',
 };
 
 function FieldError({ errors }: { errors: readonly unknown[] }) {
