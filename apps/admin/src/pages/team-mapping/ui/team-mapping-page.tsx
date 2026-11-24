@@ -89,12 +89,14 @@ function updateTeamSnapshot(
 export function TeamMappingPage({
   snapshot,
   search,
+  generationId,
   onFilterChange,
   onTeamSelect,
   onCreateTeam,
 }: {
   snapshot: TeamMappingSnapshot;
   search: TeamMappingSearch;
+  generationId?: number;
   onFilterChange?: (filter: TeamMappingSearch['filter']) => void;
   onTeamSelect?: (team: TeamMappingTeam) => void;
   onCreateTeam?: () => void;
@@ -144,6 +146,7 @@ export function TeamMappingPage({
           <TeamDetailPanel
             snapshot={workingSnapshot}
             team={team}
+            generationId={generationId}
             onClose={unmount}
             readOnly
             onEdit={() => {

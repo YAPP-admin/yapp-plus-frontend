@@ -14,6 +14,16 @@ export const body = style({
   overflowY: 'auto',
 });
 
+export const detailStatus = style({
+  display: 'grid',
+  justifyItems: 'start',
+  gap: vars.$dimension.x3,
+  padding: vars.$dimension.x4,
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r3,
+  background: vars.$color.bg.layerDefault,
+});
+
 export const summary = style({
   display: 'grid',
   gap: vars.$dimension.x2,

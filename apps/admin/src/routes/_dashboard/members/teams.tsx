@@ -1,5 +1,6 @@
 /** 팀 매핑 URL과 환경 공통 합성 fixture를 팀 매핑 페이지에 연결한다. */
 import { createFileRoute, stripSearchParams, useBlocker } from '@tanstack/react-router';
+import { useAdminGeneration } from '~/features/admin-generation';
 import { getTeamMappingFixture } from '~/features/team-management';
 import {
   TeamMappingPage,
@@ -29,6 +30,7 @@ function TeamMappingRoute() {
 function TeamMappingRouteContent() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  const { currentGeneration } = useAdminGeneration();
   const { hasDirtyDraft, resetDraft } = useTeamMappingDraft();
   const blocker = useBlocker({
     shouldBlockFn: () => hasDirtyDraft,
@@ -40,6 +42,7 @@ function TeamMappingRouteContent() {
     <>
       <TeamMappingPage
         key={search.filter}
+        generationId={currentGeneration.generationId}
         snapshot={getTeamMappingFixture('draft')}
         search={search}
         onFilterChange={(filter) => {

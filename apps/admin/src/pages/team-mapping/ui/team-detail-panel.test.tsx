@@ -1,9 +1,13 @@
 /** 팀 상세 패널의 원본 보존·회원 변경 예정·최소 인원 차단을 검증한다. */
+import { QueryClientProvider } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { OverlayProvider } from 'overlay-kit';
+import { HttpResponse, http } from 'msw';
 import { expect, it, vi } from 'vitest';
 import { teamMappingDraftFixture } from '~/features/team-management';
+import { apiBaseUrl, server } from '~/mocks/server';
+import { createAdminQueryClient } from '~/query-client';
 import { TeamDetailPanel } from './team-detail-panel';
 
 function renderPanel(teamId = 'team-01') {
@@ -42,6 +46,49 @@ it('원본 팀 정보와 직군별 구성·팀원을 표시한다', () => {
   expect(screen.getByText('PM 1')).toBeVisible();
   expect(screen.getByText('김민서 · PM')).toBeVisible();
   expect(screen.getByRole('button', { name: '변경 반영 (준비 중)' })).toBeDisabled();
+});
+
+it('사이드바를 열 때 팀 상세 API의 최신 팀 정보와 팀원을 표시한다', async () => {
+  let requestCount = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/admin/generations/33/teams/1`, () => {
+      requestCount += 1;
+      return HttpResponse.json({
+        teamId: 1,
+        name: 'Orbit API',
+        serviceName: 'API Service',
+        totalMemberCount: 2,
+        version: 4,
+        members: [
+          { membershipId: 901, name: 'API PM', position: 'PM' },
+          { membershipId: 902, name: 'API Design', position: 'DESIGN' },
+        ],
+      });
+    }),
+  );
+  const team = teamMappingDraftFixture.teams[0];
+  if (team === undefined) {
+    throw new Error('테스트 팀을 찾을 수 없습니다.');
+  }
+
+  render(
+    <QueryClientProvider client={createAdminQueryClient()}>
+      <OverlayProvider>
+        <TeamDetailPanel
+          generationId={33}
+          snapshot={teamMappingDraftFixture}
+          team={team}
+          onClose={() => undefined}
+        />
+      </OverlayProvider>
+    </QueryClientProvider>,
+  );
+
+  expect(await screen.findByRole('heading', { name: 'Orbit API' })).toBeVisible();
+  expect(screen.getByText('API Service')).toBeVisible();
+  expect(screen.getByText('API PM · PM')).toBeVisible();
+  expect(screen.getByText('API Design · Design')).toBeVisible();
+  expect(requestCount).toBe(1);
 });
 
 it('패널 내부 검색으로 회원을 추가하고 예정 취소로 원복한다', async () => {
