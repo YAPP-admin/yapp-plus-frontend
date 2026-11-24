@@ -29,10 +29,7 @@ export type TeamDraftIssue = Readonly<{
 }>;
 
 /** 팀 생성·수정 입력을 TanStack Form에 연결하는 Standard Schema를 만든다. */
-export function createTeamDraftSchema(
-  snapshot: TeamMappingSnapshot,
-  editingTeamId?: string,
-) {
+export function createTeamDraftSchema(snapshot: TeamMappingSnapshot, editingTeamId?: string) {
   return z
     .object({
       name: z.string(),

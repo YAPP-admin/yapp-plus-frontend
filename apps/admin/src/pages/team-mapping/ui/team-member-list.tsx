@@ -72,7 +72,9 @@ export function TeamMemberList({
                             <Select.ItemBody>
                               <Select.ItemLabel />
                             </Select.ItemBody>
-                            <Select.ItemIndicator selected={<Check aria-hidden="true" size={16} />} />
+                            <Select.ItemIndicator
+                              selected={<Check aria-hidden="true" size={16} />}
+                            />
                           </Select.Item>
                           {snapshot.teams
                             .filter((candidateTeam) => candidateTeam.id !== team.id)
@@ -97,7 +99,9 @@ export function TeamMemberList({
                             <Select.ItemBody>
                               <Select.ItemLabel />
                             </Select.ItemBody>
-                            <Select.ItemIndicator selected={<Check aria-hidden="true" size={16} />} />
+                            <Select.ItemIndicator
+                              selected={<Check aria-hidden="true" size={16} />}
+                            />
                           </Select.Item>
                         </Select.Group>
                       </Select.ScrollArea>

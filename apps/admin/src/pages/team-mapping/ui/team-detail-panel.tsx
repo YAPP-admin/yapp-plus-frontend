@@ -120,7 +120,12 @@ export function TeamDetailPanel({
                     팀원
                   </h3>
                   {!readOnly && (
-                    <ActionButton type="button" variant="neutralWeak" size="small" onClick={toggleAdd}>
+                    <ActionButton
+                      type="button"
+                      variant="neutralWeak"
+                      size="small"
+                      onClick={toggleAdd}
+                    >
                       {isAddOpen ? '회원 추가 닫기' : '회원 추가'}
                     </ActionButton>
                   )}
@@ -166,7 +171,12 @@ export function TeamDetailPanel({
                   <ActionButton type="button" variant="neutralWeak" onClick={onEdit}>
                     수정하기
                   </ActionButton>
-                  <ActionButton type="button" variant="neutralWeak" disabled={onDelete === undefined} onClick={onDelete}>
+                  <ActionButton
+                    type="button"
+                    variant="neutralWeak"
+                    disabled={onDelete === undefined}
+                    onClick={onDelete}
+                  >
                     삭제하기
                   </ActionButton>
                 </>

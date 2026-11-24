@@ -73,9 +73,11 @@ export function TeamMemberSearch({
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [isComposing, setIsComposing] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [resultPosition, setResultPosition] = useState<
-    Readonly<{ top: number; left: number; width: number }> | null
-  >(null);
+  const [resultPosition, setResultPosition] = useState<Readonly<{
+    top: number;
+    left: number;
+    width: number;
+  }> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const searchFieldRef = useRef<HTMLDivElement>(null);
   const resultListRef = useRef<HTMLUListElement>(null);
@@ -193,7 +195,11 @@ export function TeamMemberSearch({
           setIsOpen(true);
         }}
       >
-        <TextField label="회원 검색" value={query} onValueChange={({ value }) => updateQuery(value)}>
+        <TextField
+          label="회원 검색"
+          value={query}
+          onValueChange={({ value }) => updateQuery(value)}
+        >
           <TextFieldInput
             ref={inputRef}
             type="search"
@@ -207,7 +213,8 @@ export function TeamMemberSearch({
           />
         </TextField>
 
-        {isOpen && resultPosition !== null &&
+        {isOpen &&
+          resultPosition !== null &&
           (candidates.length > 0 ? (
             <Portal>
               <ul
