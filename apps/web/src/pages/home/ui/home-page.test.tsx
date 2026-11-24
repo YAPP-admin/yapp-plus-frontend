@@ -17,6 +17,7 @@ import { act, fireEvent, render, screen, within, waitFor } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomePage } from './home-page';
+import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 
 const mockPush = vi.fn<(activityName: string, params: object) => void>();
 vi.mock('@stackflow/react', () => ({ useFlow: () => ({ push: mockPush }) }));
@@ -350,6 +351,54 @@ it('로그인 WebView는 실제 출석과 출결 보고 진입을 허용한다',
   expect(mockPush).toHaveBeenCalledWith('AttendanceReport', {});
   expect(screen.queryByText('출석했어요!')).not.toBeInTheDocument();
 });
+
+it.each(['화면 복귀', '앱 복귀'])(
+  'fresh 주간 캐시도 %s 시 서버 정정을 반영한다',
+  async (trigger) => {
+    let calls = 0;
+    server.use(
+      http.get(url, () => {
+        calls += 1;
+        return HttpResponse.json({
+          ...response,
+          session: {
+            ...response.session,
+            attendanceStatus: calls === 1 ? 'CHECKED_IN' : 'AVAILABLE',
+          },
+        });
+      }),
+    );
+    const client = new QueryClient({
+      defaultOptions: { queries: { staleTime: Infinity, retry: false } },
+    });
+    const tree = (active: boolean) => (
+      <QueryClientProvider client={client}>
+        <SnackbarProvider>
+          <ScreenActiveContext value={active}>
+            <HomePage />
+          </ScreenActiveContext>
+        </SnackbarProvider>
+      </QueryClientProvider>
+    );
+    const view = render(tree(true));
+    expect(await screen.findByRole('button', { name: '출석했어요!' })).toBeDisabled();
+    if (trigger === '화면 복귀') {
+      view.rerender(tree(false));
+      act(() => {
+        focusManager.setFocused(false);
+        focusManager.setFocused(true);
+      });
+      view.rerender(tree(true));
+    } else {
+      act(() => {
+        focusManager.setFocused(false);
+        focusManager.setFocused(true);
+      });
+    }
+    expect(await screen.findByRole('button', { name: '출석하기' })).toBeEnabled();
+    expect(calls).toBe(2);
+  },
+);
 
 it('주 경계가 지나도 타이머로 조회하지 않고 화면 복귀 시 새 주를 조회한다', async () => {
   vi.useFakeTimers({ toFake: ['Date'] });

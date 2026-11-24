@@ -13,14 +13,16 @@ export function useScreenActiveContext() {
 /**
  * 마운트가 유지된 탭·상세 탐색에서 돌아오면 stale 조회를 갱신합니다.
  * 최초 진입은 React Query에 맡기며, 복귀 요청은 진행 중인 조회와 공유합니다.
+ * always를 지정한 화면은 캐시 신선도와 관계없이 복귀 때 갱신합니다.
  */
 export function useRefetchOnScreenReturn(
   query: Pick<QueryObserverResult<unknown, unknown>, 'isStale' | 'refetch'>,
+  mode: 'stale' | 'always' = 'stale',
 ) {
   const active = useScreenActiveContext();
   const wasActive = useRef(active);
-  const refetchIfStale = useEffectEvent(() => {
-    if (query.isStale) {
+  const refetchOnReturn = useEffectEvent(() => {
+    if (mode === 'always' || query.isStale) {
       void query.refetch({ cancelRefetch: false });
     }
   });
@@ -29,7 +31,7 @@ export function useRefetchOnScreenReturn(
     const returned = active && !wasActive.current;
     wasActive.current = active;
     if (returned) {
-      refetchIfStale();
+      refetchOnReturn();
     }
   }, [active]);
 }

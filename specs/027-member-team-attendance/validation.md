@@ -1,5 +1,17 @@
 # 검증 기록
 
+## T033 — 홈·앱 복귀 시 주간 출석 갱신
+
+- T032 리뷰 반영분은 사용자 승인으로 9759af31에 커밋했다.
+- useRefetchOnScreenReturn의 기본 stale 정책을 유지하고 홈 주간 조회만 always를 지정했다.
+  홈 화면이 활성화된 상태의 앱 복귀도 refetchOnWindowFocus로 강제 갱신한다.
+- 최초 마운트의 기존 주 경계 처리는 유지한다. polling·별도 타이머·사진 조회 정책 변경은 없다.
+- staleTime이 Infinity인 캐시에서도 홈 복귀와 앱 복귀 각각 CHECKED_IN → AVAILABLE
+  서버 정정을 반영하는 회귀 테스트를 추가했다. 기존 일정·MY의 stale 복귀 테스트도 통과했다.
+- node --run check, node --run build, git diff --check 통과. 웹 lint·typecheck·테스트
+  70개 파일 568건과 웹 build는 새 실행, 다른 패키지 및 admin·storybook build는 캐시 재사용이다.
+- 실제 기기의 앱 백그라운드 복귀 검증은 미실행이다. 이번 변경은 사용자 리뷰를 위해 미커밋 상태로 둔다.
+
 ## T032 — 정규 코드 출석 경계·서버 정정 반영
 
 - 앞선 홈 연결·확인 사항은 b85661a1에 커밋했다. 사용자 지시로 이어서 T032를 구현했다.
