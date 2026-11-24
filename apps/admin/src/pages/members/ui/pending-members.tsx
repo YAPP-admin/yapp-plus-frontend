@@ -9,12 +9,14 @@ import {
   getMembershipReviewErrorMessage,
 } from '../model/membership-review';
 import { pendingMembershipsQueryOptions } from '../model/membership-review-queries';
-import { MembershipReviewPanel } from './membership-review-panel';
+import { MembershipReviewDialog, type MembershipReviewAction } from './membership-review-dialog';
 import * as styles from './pending-members.css';
 
 export function PendingMembers() {
   const snackbar = useSnackbarAdapter();
-  const [selectedMemberId, setSelectedMemberId] = useState<number>();
+  const [reviewRequest, setReviewRequest] = useState<
+    { memberId: number; action: MembershipReviewAction } | undefined
+  >();
   const listQuery = useInfiniteQuery(pendingMembershipsQueryOptions());
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const members =
@@ -45,7 +47,7 @@ export function PendingMembers() {
   }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   function closeReviewPanel() {
-    setSelectedMemberId(undefined);
+    setReviewRequest(undefined);
   }
 
   function showReviewCompleted(action: 'approve' | 'reject') {
@@ -54,7 +56,7 @@ export function PendingMembers() {
       render: () => (
         <Snackbar
           variant="positive"
-          message={action === 'approve' ? '가입 승인을 완료했어요.' : '가입 반려를 완료했어요.'}
+          message={action === 'approve' ? '가입 승인을 완료했어요.' : '가입 거절을 완료했어요.'}
         />
       ),
     });
@@ -130,7 +132,12 @@ export function PendingMembers() {
       );
     }
 
-    return <PendingMemberTable members={members} onSelect={setSelectedMemberId} />;
+    return (
+      <PendingMemberTable
+        members={members}
+        onSelect={(memberId, action) => setReviewRequest({ memberId, action })}
+      />
+    );
   }
 
   return (
@@ -157,25 +164,13 @@ export function PendingMembers() {
 
         {renderMembersContent()}
 
-        {hasNextPage ? (
-          <div className={styles.loadMore}>
-            <ActionButton
-              type="button"
-              variant="neutralWeak"
-              loading={isFetchingNextPage}
-              disabled={isFetchingNextPage}
-              onClick={() => void fetchNextPage()}
-            >
-              다음 가입 신청 불러오기
-            </ActionButton>
-          </div>
-        ) : null}
         <div ref={loadMoreRef} aria-hidden="true" />
       </section>
 
-      {selectedMemberId === undefined ? null : (
-        <MembershipReviewPanel
-          memberId={selectedMemberId}
+      {reviewRequest === undefined ? null : (
+        <MembershipReviewDialog
+          memberId={reviewRequest.memberId}
+          action={reviewRequest.action}
           onClose={closeReviewPanel}
           onMissing={showMissingMember}
           onConflict={showReviewConflict}
@@ -191,7 +186,7 @@ function PendingMemberTable({
   onSelect,
 }: {
   members: readonly PendingMember[];
-  onSelect: (memberId: number) => void;
+  onSelect: (memberId: number, action: MembershipReviewAction) => void;
 }) {
   return (
     // oxlint-disable-next-line jsx-a11y/no-noninteractive-tabindex -- 좁은 화면에서 키보드로 표를 가로 스크롤하는 진입점입니다.
@@ -207,10 +202,7 @@ function PendingMemberTable({
               전화번호
             </th>
             <th scope="col" className={styles.dateColumn}>
-              가입일
-            </th>
-            <th scope="col" className={styles.statusColumn}>
-              상태
+              신청일
             </th>
             <th scope="col" className={styles.actionColumn}>
               <span className={styles.visuallyHidden}>회원 작업</span>
@@ -227,17 +219,27 @@ function PendingMemberTable({
                   {formatMembershipReviewDate(member.signedUpAt)}
                 </time>
               </td>
-              <td>{member.reviewStatus}</td>
               <td>
-                <ActionButton
-                  type="button"
-                  size="small"
-                  variant="neutralWeak"
-                  aria-label={`${member.name} 가입 심사 상세`}
-                  onClick={() => onSelect(member.memberId)}
-                >
-                  상세 보기
-                </ActionButton>
+                <div className={styles.actionGroup}>
+                  <ActionButton
+                    type="button"
+                    size="small"
+                    variant="neutralSolid"
+                    aria-label={`${member.name} 승인`}
+                    onClick={() => onSelect(member.memberId, 'approve')}
+                  >
+                    승인
+                  </ActionButton>
+                  <ActionButton
+                    type="button"
+                    size="small"
+                    variant="neutralWeak"
+                    aria-label={`${member.name} 거절`}
+                    onClick={() => onSelect(member.memberId, 'reject')}
+                  >
+                    거절
+                  </ActionButton>
+                </div>
               </td>
             </tr>
           ))}

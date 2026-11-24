@@ -63,8 +63,7 @@ export const table = style({
 export const nameColumn = style({ width: '18rem' });
 export const phoneColumn = style({ width: '14rem' });
 export const dateColumn = style({ width: '12rem' });
-export const statusColumn = style({ width: '10rem' });
-export const actionColumn = style({ width: '9rem' });
+export const actionColumn = style({ width: '12rem' });
 
 export const visuallyHidden = style({
   position: 'absolute',
@@ -96,10 +95,9 @@ export const error = style({
   color: vars.$color.fg.critical,
 });
 
-export const loadMore = style({
+export const actionGroup = style({
   display: 'flex',
-  justifyContent: 'center',
-  paddingBlock: vars.$dimension.x2,
+  gap: vars.$dimension.x2,
 });
 
 export const panel = style({
