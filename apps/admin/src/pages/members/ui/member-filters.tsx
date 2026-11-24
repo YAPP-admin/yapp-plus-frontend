@@ -41,7 +41,7 @@ export function MemberFilters({
         <MemberTeamFilter
           members={members}
           currentGeneration={currentGeneration}
-          value={search.team}
+          value={search.team === undefined ? undefined : String(search.team)}
           onChange={(team) => onFilterChange({ team })}
         />
       )}

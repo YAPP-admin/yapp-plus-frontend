@@ -49,10 +49,12 @@ export function ApiMemberFilters({
       />
       <FilterSelect
         label="팀"
-        value={search.team ?? allTeamValue}
+        value={search.team === undefined ? allTeamValue : String(search.team)}
         options={teamOptions}
         labels={teamLabels}
-        onChange={(team) => onFilterChange({ team: team === allTeamValue ? undefined : team })}
+        onChange={(team) =>
+          onFilterChange({ team: team === allTeamValue ? undefined : Number(team) })
+        }
       />
     </div>
   );
