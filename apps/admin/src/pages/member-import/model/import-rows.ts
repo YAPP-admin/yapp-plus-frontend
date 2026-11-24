@@ -6,10 +6,12 @@ import {
   memberPartSchema,
   memberRoleSchema,
   memberPhoneNumberSchema,
+  normalizeMemberPhoneNumber,
   type Member,
   type MemberPart,
   type MemberRole,
 } from '~/features/member-management';
+import type { GenerationRosterListEntryResponse } from '@yapp-plus/api/generated';
 import type { MemberImportRow } from './import-file';
 
 /** 행 검증에서 사용자에게 안내할 오류의 종류다. */
@@ -78,10 +80,14 @@ export type ClassifiedMemberImportRow =
       ValidMemberImportRowFields & {
         status: 'duplicate';
         classification: 'existing-activity';
-        duplicate: {
-          memberId: string;
-          activityId: string;
-        };
+        duplicate:
+          | {
+              memberId: string;
+              activityId: string;
+            }
+          | {
+              rosterEntryId: number;
+            };
       });
 
 /** 기존 활동 중복 행에 적용할 처리 방법이다. 기본값은 skip이다. */
@@ -160,10 +166,10 @@ function validateRow(row: MemberImportRow, values: readonly string[]): Validated
   }
 
   const parsedRole = memberRoleSchema.safeParse(role);
-  if (!parsedRole.success) {
+  if (!parsedRole.success || parsedRole.data === 'admin') {
     return errorRow(row.sourceRow, values, {
       code: 'invalid-role',
-      message: '권한 값을 확인해 주세요.',
+      message: '명단 등록에서는 활동회원·정회원·수료 회원·유예 회원만 지원해요.',
     });
   }
 
@@ -246,6 +252,38 @@ export function classifyMemberImportRows(
       status: 'normal',
       classification: 'new-generation',
       memberId: member.id,
+    };
+  });
+}
+
+/** 생성 SDK의 현재 기수 사전 명단과 비교해 신규·중복 행을 분류한다. */
+export function classifyMemberImportRowsByRosterEntries(
+  rows: readonly ValidatedMemberImportRow[],
+  rosterEntries: readonly GenerationRosterListEntryResponse[],
+): readonly ClassifiedMemberImportRow[] {
+  const rosterEntriesByPhone = new Map<string, GenerationRosterListEntryResponse>();
+  for (const entry of rosterEntries) {
+    const phoneNumber = normalizeMemberPhoneNumber(entry.phoneNumber);
+    if (phoneNumber !== null) {
+      rosterEntriesByPhone.set(phoneNumber, entry);
+    }
+  }
+
+  return rows.map((row) => {
+    if (row.status === 'error') {
+      return row;
+    }
+
+    const entry = rosterEntriesByPhone.get(row.phoneNumber);
+    if (entry === undefined) {
+      return { ...row, status: 'normal', classification: 'new-member' };
+    }
+
+    return {
+      ...row,
+      status: 'duplicate',
+      classification: 'existing-activity',
+      duplicate: { rosterEntryId: entry.rosterEntryId },
     };
   });
 }

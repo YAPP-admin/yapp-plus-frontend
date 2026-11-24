@@ -2,6 +2,7 @@ import { expect, it } from 'vitest';
 import type { MemberImportRow } from './import-file';
 import {
   classifyMemberImportRows,
+  classifyMemberImportRowsByRosterEntries,
   summarizeMemberImportRows,
   validateMemberImportRows,
 } from './import-rows';
@@ -42,6 +43,30 @@ it('빈 행을 제외하고 값을 정리해 필드 오류와 원본 행을 반�
     'invalid-part',
     'invalid-role',
   ]);
+});
+
+it.each(['mobile', 'ai-native'] as const)('새 API 직군 %s을 유효한 CSV 값으로 허용한다', (part) => {
+  const rows = validateMemberImportRows([
+    row(2, ['이름', '01012345678', '33', part, 'active-member']),
+  ]);
+
+  expect(rows[0]).toMatchObject({ status: 'valid', part });
+});
+
+it('수료 회원 역할을 유효한 CSV 값으로 허용한다', () => {
+  const rows = validateMemberImportRows([
+    row(2, ['이름', '01012345678', '33', 'pm', 'completed-member']),
+  ]);
+
+  expect(rows[0]).toMatchObject({ status: 'valid', role: 'completed-member' });
+});
+
+it('유예 회원 역할을 유효한 CSV 값으로 허용한다', () => {
+  const rows = validateMemberImportRows([
+    row(2, ['이름', '01012345678', '33', 'pm', 'deferred-member']),
+  ]);
+
+  expect(rows[0]).toMatchObject({ status: 'valid', role: 'deferred-member' });
 });
 
 it('유효한 첫 행만 파일 중복 집합에 넣고 오류 행 뒤의 유효 행은 허용한다', () => {
@@ -108,5 +133,27 @@ it('하이픈 유무를 같은 전화번호로 정규화하고 집계를 배타�
     error: 1,
     duplicate: 1,
     planned: 2,
+  });
+});
+
+it('생성 SDK의 E.164 사전 명단과 전화번호를 비교해 중복을 분류한다', () => {
+  const rows = validateMemberImportRows([validRow(2)]);
+
+  const classified = classifyMemberImportRowsByRosterEntries(rows, [
+    {
+      rosterEntryId: 7001,
+      name: '기존 회원',
+      phoneNumber: '+821012345678',
+      generationId: 33,
+      position: 'PM',
+      role: 'PLAYER',
+      status: 'AVAILABLE',
+    },
+  ]);
+
+  expect(classified[0]).toMatchObject({
+    status: 'duplicate',
+    classification: 'existing-activity',
+    duplicate: { rosterEntryId: 7001 },
   });
 });
