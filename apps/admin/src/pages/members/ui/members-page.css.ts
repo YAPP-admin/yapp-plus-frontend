@@ -24,6 +24,21 @@ export const placeholder = style({
   fontSize: vars.$fontSize.t4,
 });
 
+export const loading = style({
+  display: 'block',
+  paddingBlock: vars.$dimension.x8,
+  color: vars.$color.fg.neutralMuted,
+});
+
+export const error = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  alignItems: 'center',
+  gap: vars.$dimension.x3,
+  paddingBlock: vars.$dimension.x6,
+  color: vars.$color.fg.critical,
+});
+
 export const tab = style({
   display: 'inline-flex',
   alignItems: 'center',

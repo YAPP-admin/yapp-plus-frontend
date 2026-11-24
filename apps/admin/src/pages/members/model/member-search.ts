@@ -27,7 +27,7 @@ export const partLabels = {
   android: 'Android',
   ios: 'iOS',
   web: 'Web',
-  server: 'Server',
   mobile: 'Mobile',
+  server: 'Server',
   'ai-native': 'AI Native',
 };

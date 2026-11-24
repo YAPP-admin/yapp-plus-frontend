@@ -22,15 +22,15 @@ export const Route = createFileRoute('/_dashboard/members/')({
 function MembersRoute() {
   const search = Route.useSearch();
   const navigate = Route.useNavigate();
+  // 기존 라우터 회귀 테스트의 fixture만 테스트 환경에서 유지하고, 실제 화면은 생성 API를 사용한다.
+  const usePreview = import.meta.env.MODE === 'test' && import.meta.env.DEV;
 
   return (
     <MembersPage
       search={search}
-      members={import.meta.env.DEV ? memberPreviewBeforeMapping.members : undefined}
-      currentGeneration={
-        import.meta.env.DEV ? memberPreviewBeforeMapping.currentGeneration : undefined
-      }
-      teamMapping={import.meta.env.DEV ? memberPreviewBeforeMapping.teamMapping : undefined}
+      members={usePreview ? memberPreviewBeforeMapping.members : undefined}
+      currentGeneration={usePreview ? memberPreviewBeforeMapping.currentGeneration : undefined}
+      teamMapping={usePreview ? memberPreviewBeforeMapping.teamMapping : undefined}
       onSearch={(query) => {
         void navigate({
           search: (previous) => ({ ...previous, q: query }),
