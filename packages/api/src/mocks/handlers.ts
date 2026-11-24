@@ -1,5 +1,5 @@
 import { base, en, Faker } from '@faker-js/faker';
-import { HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
+import { http, HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
 import type { ZodType } from 'zod';
 
 import * as generatedFaker from '../generated/@faker-js/faker.gen';
@@ -55,8 +55,32 @@ export function createApiMockHandlers(
     baseUrl: normalizeBaseUrl(baseUrl),
     responseFallback: 'error',
   });
+  const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
   // 명시한 Faker·대표 응답이 우선하며, 미연결 API는 생성 핸들러의 명세 예제 또는 501을 사용합니다.
   return [
+    http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members`, ({ request }) => {
+      const params = new URL(request.url).searchParams;
+      const name = params.get('name');
+      const position = params.get('position');
+      const teamId = params.get('teamId');
+      const items = fixtures.adminMembers.items.filter((member) => {
+        return (
+          (name === null || member.name === name) &&
+          (position === null || member.position === position) &&
+          (teamId === null || member.teamName !== null)
+        );
+      });
+      return response({ items, nextCursor: null }, schemas.zAdminMemberListResponse, 200);
+    }),
+    http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/member-team-options`, () =>
+      response(fixtures.adminMemberTeams, schemas.zTeamOptionsResponse, 200),
+    ),
+    http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members/:memberId`, () =>
+      response(fixtures.adminMemberDetail, schemas.zDetailResponse, 200),
+    ),
+    http.put(`${normalizedBaseUrl}/api/admin/generations/:generationId/members/:memberId`, () =>
+      response(fixtures.adminMemberDetail, schemas.zCorrectResponse, 200),
+    ),
     ...factory.all({
       pick: {
         find: fakerResponse(generatedFaker.fakeFindResponse200, schemas.zFindResponse),

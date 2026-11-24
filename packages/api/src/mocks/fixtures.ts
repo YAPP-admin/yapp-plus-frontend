@@ -1,5 +1,8 @@
 import type {
   AdminGenerationListResponse,
+  AdminMemberDetailResponse,
+  AdminMemberListResponse,
+  AdminMemberTeamOptionResponse,
   AdminPostRecipientListResponse,
   CurrentWeekSessionResponse,
   SessionListResponse,
@@ -18,6 +21,62 @@ export const adminGenerations = {
     { generationId: 32, generationNumber: 32, generationName: '32기' },
   ],
 } satisfies AdminGenerationListResponse;
+
+export const adminMembers = {
+  items: [
+    {
+      memberId: 101,
+      membershipId: 1001,
+      name: '개발 회원 A',
+      position: 'WEB',
+      status: 'PLAYER',
+      previousActivities: [{ generationNumber: 32, status: 'PLAYER', position: 'WEB' }],
+      attendanceScore: 92,
+      signedUpDate: '2026-09-01T00:00:00Z',
+      teamName: 'Orbit',
+    },
+    {
+      memberId: 102,
+      membershipId: 1002,
+      name: '개발 회원 B',
+      position: 'DESIGN',
+      status: 'PLAYER',
+      previousActivities: [],
+      attendanceScore: null,
+      signedUpDate: '2026-09-02T00:00:00Z',
+      teamName: null,
+    },
+    {
+      memberId: 103,
+      membershipId: 1003,
+      name: '개발 회원 C',
+      position: 'ANDROID',
+      status: 'DEFERRED',
+      previousActivities: [{ generationNumber: 31, status: 'COMPLETED_MEMBER', position: 'IOS' }],
+      attendanceScore: 80,
+      signedUpDate: '2026-09-03T00:00:00Z',
+      teamName: 'Nova',
+    },
+  ],
+  nextCursor: null,
+} satisfies AdminMemberListResponse;
+
+export const adminMemberTeams = [
+  { teamId: 201, name: 'Orbit', playerMemberCount: 1 },
+  { teamId: 202, name: 'Nova', playerMemberCount: 1 },
+] satisfies AdminMemberTeamOptionResponse[];
+
+const firstAdminMember = adminMembers.items[0];
+if (firstAdminMember === undefined) {
+  throw new Error('관리자 회원 모의 응답이 비어 있습니다.');
+}
+
+export const adminMemberDetail = {
+  ...firstAdminMember,
+  phoneNumber: '010-1234-5678',
+  revision: 1,
+  changes: [],
+} satisfies AdminMemberDetailResponse;
 
 export const sessions = {
   totalCount: 2,

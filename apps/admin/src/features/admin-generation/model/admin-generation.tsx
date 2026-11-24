@@ -23,11 +23,14 @@ function validateAdminGenerationList(value: unknown) {
   return Promise.resolve(result.data);
 }
 
+/** 관리자 공통 컨텍스트가 없는 화면에서도 사용할 수 있는 기수 조회 옵션입니다. */
+export function adminGenerationQueryOptions() {
+  return list2Options({ responseValidator: validateAdminGenerationList });
+}
+
 /** 인증된 관리자 작업 영역에서 기수 목록과 현재 선택을 제공한다. */
 export function AdminGenerationProvider({ children }: { children: ReactNode }) {
-  const { data } = useSuspenseQuery(
-    list2Options({ responseValidator: validateAdminGenerationList }),
-  );
+  const { data } = useSuspenseQuery(adminGenerationQueryOptions());
   // OpenAPI 생성 타입은 최소 길이를 표현하지 않지만 서버 계약상 목록에는 항상 기수가 하나 이상이다.
   // oxlint-disable-next-line typescript/no-non-null-assertion -- 서버 계약의 non-empty 배열을 보존한다.
   const firstGeneration = data.generations[0]!;
@@ -63,4 +66,9 @@ export function useAdminGeneration() {
     throw new Error('AdminGenerationProvider 안에서 useAdminGeneration을 호출해야 합니다.');
   }
   return value;
+}
+
+/** 공통 컨텍스트가 없을 때 API fallback을 조합할 수 있도록 현재 값을 nullable로 반환합니다. */
+export function useOptionalAdminGeneration() {
+  return useContext(AdminGenerationContext);
 }
