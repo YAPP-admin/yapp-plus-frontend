@@ -1,7 +1,7 @@
 # 작업 목록: 최신 API와 회원 팀 출석 운영 연결
 
 **입력**: [명세](spec.md)·[계획](plan.md)·[계약](contracts/team-attendance.md)
-**현재 범위**: T032 리뷰·커밋 완료. T033 구현·자동 검증 완료 후 사용자 리뷰 대기이며 최신 사용자 결정은 validation.md의 2026-11-24 기록을 따른다.
+**현재 범위**: T033 리뷰·커밋 완료. T034 운영 진입 검증 완료 후 사용자 리뷰 대기이며 최신 사용자 결정은 validation.md의 2026-11-24 기록을 따른다.
 작업 경로는 저장소 루트 기준이다. 테스트는 명세의 수용 조건과 회귀를 가까운 계층에서 확인한다.
 각 리뷰에는 실제 diff·check 결과·제품 변경 시 build 결과·캐시 재사용·미실행 항목을 제출한다.
 
@@ -76,7 +76,7 @@
 - [x] T031 [US4] apps/web/src/pages/home/ui/current-week-card.tsx에 서버 type·상태를 연결하고 PENDING_APPROVAL의 사진 상세만 조회한다. 사용자 리뷰로 사진 존재 기반 제출 차단을 대체했다.
 - [x] T032 [US4] apps/web/src/pages/home/model/code-attendance.ts의 화면 활성화는 REGULAR·AVAILABLE을 따르고 과거 성공 mutation이 최신 정정을 덮어쓰지 않도록 한다. 사용자 리뷰에 따라 제출 함수의 상태 재검사는 생략하고 서버 판정에 맡긴다.
 - [x] T033 [US4] apps/web/src/shared/lib/screen-activity.ts의 기본 동작은 보존하며 home/ui/current-week-card.tsx의 홈·앱 복귀 조회만 강제한다. polling은 추가하지 않는다.
-- [ ] T034 [US4] apps/web/stackflow/src/activities/home-sheets.tsx·activities.tsx의 팀 인증 운영 진입을 열고 로그인·정적 모드·세션 조건과 receipt 없는 완료 차단을 검증한다.
+- [x] T034 [US4] apps/web/stackflow/src/activities/home-sheets.tsx·activities.tsx의 팀 인증 운영 진입을 열고 로그인·정적 모드·세션 조건과 receipt 없는 완료 차단을 검증한다.
 - [ ] T035 [US4] specs/027-member-team-attendance/validation.md에 TEAM 코드·위치 요청 0회, 상태·접근성·6단계 리뷰를 기록한다.
 
 ## 7단계 — 통합과 검증 기록

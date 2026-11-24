@@ -598,7 +598,7 @@ it('일반 브라우저의 출석 시트 직접 진입에서는 로그인 안내
 it.each([
   { dev: true, mocking: 'false' },
   { dev: false, mocking: 'true' },
-])('팀 사진 입력 직접 URL은 개발·모의 조건이 모두 필요하다: %j', async ({ dev, mocking }) => {
+])('대상과 선택 사진 없는 팀 사진 URL은 환경에 관계없이 차단한다: %j', async ({ dev, mocking }) => {
   vi.stubEnv('DEV', dev);
   vi.stubEnv('VITE_API_MOCKING', mocking);
   window.history.replaceState({}, '', '/team-attendance/upload');
@@ -608,7 +608,7 @@ it.each([
 });
 
 it.each(['/team-attendance/complete', '/team-attendance/error', '/team-attendance/guide'])(
-  '운영에서는 팀 인증 경로를 직접 열 수 없다: %s',
+  '대상·접수 정보 없는 경로 또는 개발용 오류 화면은 운영에서 차단한다: %s',
   async (path) => {
     vi.stubEnv('DEV', false);
     window.history.replaceState({}, '', path);
@@ -620,6 +620,40 @@ it.each(['/team-attendance/complete', '/team-attendance/error', '/team-attendanc
 it('접수 정보 없는 완료 URL은 성공을 표시하지 않는다', async () => {
   window.history.replaceState({}, '', '/team-attendance/complete');
   renderStack();
+  expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
+  expect(screen.queryByText('인증 사진을 올렸어요!')).not.toBeInTheDocument();
+});
+
+it('운영 로그인 사용자는 sessionId가 있는 팀 인증 안내에 진입한다', async () => {
+  vi.stubEnv('DEV', false);
+  vi.stubEnv('VITE_API_MOCKING', 'false');
+  window.history.replaceState({}, '', '/team-attendance/guide?sessionId=42');
+  renderStack({ native: true });
+  expect(await screen.findByRole('button', { name: '앨범에서 선택하기' })).toBeEnabled();
+  expect(screen.getByRole('button', { name: '직접 사진 찍기' })).toBeEnabled();
+});
+
+it.each([
+  { native: false, staticMode: 'false' },
+  { native: true, staticMode: 'true' },
+])(
+  '로그인하지 않은 브라우저 또는 정적 모드는 팀 안내 직접 진입을 차단한다: %j',
+  async ({ native, staticMode }) => {
+    vi.stubEnv('DEV', false);
+    vi.stubEnv('VITE_API_MOCKING', 'false');
+    vi.stubEnv('VITE_STATIC_CONTENT', staticMode);
+    window.history.replaceState({}, '', '/team-attendance/guide?sessionId=42');
+    renderStack({ native });
+    expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
+    expect(screen.queryByRole('button', { name: '앨범에서 선택하기' })).not.toBeInTheDocument();
+  },
+);
+
+it('운영 로그인 상태여도 접수 정보 없는 완료 단계는 성공을 표시하지 않는다', async () => {
+  vi.stubEnv('DEV', false);
+  vi.stubEnv('VITE_API_MOCKING', 'false');
+  window.history.replaceState({}, '', '/team-attendance/upload?sessionId=42&stage=complete');
+  renderStack({ native: true });
   expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
   expect(screen.queryByText('인증 사진을 올렸어요!')).not.toBeInTheDocument();
 });

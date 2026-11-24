@@ -51,6 +51,7 @@ import {
 import { useTabsUrl } from '@/app/navigation/use-tabs-url';
 import { NativeAuthRedirect } from './native-auth-redirect';
 import { useNativeAuthSession } from '@/features/auth';
+import { staticContentEnabled } from '@/features/static-content';
 import { QueryBoundary } from '@/shared/ui/query-boundary';
 
 const TAB_TITLES: Record<TabName, string> = {
@@ -209,6 +210,7 @@ export function SettingsActivity() {
 }
 
 export function TeamAttendanceUploadActivity() {
+  const { phase } = useNativeAuthSession();
   const activity = useActivity();
   const params = useActivityParams<'TeamAttendanceUpload'>();
   const { sessionId: sessionIdParam } = params;
@@ -225,7 +227,12 @@ export function TeamAttendanceUploadActivity() {
     }
   }, [clearPhoto, isSubmissionComplete]);
 
-  if (!sessionIdParam || (!selectedPhoto && !isSubmissionComplete)) {
+  if (
+    !sessionIdParam ||
+    staticContentEnabled() ||
+    (phase !== 'SIGNED_IN' && !teamPhotoDevelopmentEnabled()) ||
+    (!selectedPhoto && !isSubmissionComplete)
+  ) {
     return <NotFoundActivity />;
   }
   if (isSubmissionComplete) {
