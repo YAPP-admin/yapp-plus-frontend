@@ -12,7 +12,7 @@ import {
 type TeamAttendancePhotoDraft = Readonly<{ photo: File; previewUrl: string }>;
 
 type TeamAttendancePhotoDraftContextValue = Readonly<{
-  draft: TeamAttendancePhotoDraft | null;
+  selectedPhoto: TeamAttendancePhotoDraft | null;
   setPhoto: (photo: File) => void;
   clearPhoto: () => void;
 }>;
@@ -23,21 +23,21 @@ const TeamAttendancePhotoDraftContext = createContext<TeamAttendancePhotoDraftCo
 
 /** 사진 선택부터 접수 완료 또는 흐름 이탈까지 File과 미리보기 URL만 메모리에 보관한다. */
 export function TeamAttendancePhotoDraftProvider({ children }: { children: ReactNode }) {
-  const [draft, setDraft] = useState<TeamAttendancePhotoDraft | null>(null);
+  const [selectedPhoto, setSelectedPhoto] = useState<TeamAttendancePhotoDraft | null>(null);
   const previewUrlRef = useRef<string | null>(null);
   const clearPhoto = useCallback(() => {
     if (previewUrlRef.current) {
       URL.revokeObjectURL(previewUrlRef.current);
       previewUrlRef.current = null;
     }
-    setDraft(null);
+    setSelectedPhoto(null);
   }, []);
   const setPhoto = useCallback(
     (photo: File) => {
       clearPhoto();
       const previewUrl = URL.createObjectURL(photo);
       previewUrlRef.current = previewUrl;
-      setDraft({ photo, previewUrl });
+      setSelectedPhoto({ photo, previewUrl });
     },
     [clearPhoto],
   );
@@ -45,7 +45,7 @@ export function TeamAttendancePhotoDraftProvider({ children }: { children: React
   useEffect(() => clearPhoto, [clearPhoto]);
 
   return (
-    <TeamAttendancePhotoDraftContext value={{ draft, setPhoto, clearPhoto }}>
+    <TeamAttendancePhotoDraftContext value={{ selectedPhoto, setPhoto, clearPhoto }}>
       {children}
     </TeamAttendancePhotoDraftContext>
   );

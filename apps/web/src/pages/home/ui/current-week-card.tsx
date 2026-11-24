@@ -1,12 +1,18 @@
 import { staticContentEnabled } from '@/features/static-content';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
+import {
+  find1Options,
+  type CurrentWeekSessionDetailResponse,
+  type UserTeamPhotoDetailResponse,
+} from '@yapp-plus/api/generated';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
 import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
 import { useFlow } from '@stackflow/react';
-import { useAttendanceConfirmation } from '../model/code-attendance';
-import { useErrorBoundary } from 'react-error-boundary';
+import { IconCameraFill } from '@karrotmarket/react-monochrome-icon';
+import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary';
+import { Image } from '@/app/navigation/image';
 import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { useNativeAuthSession } from '@/features/auth';
 import {
@@ -16,6 +22,7 @@ import {
   nextKoreanMidnight,
 } from '@/shared/lib/korean-date-time';
 import { currentWeekQueryOptions } from '../model/current-week-query';
+import { useAttendanceConfirmation } from '../model/code-attendance';
 import {
   calendarDateBadge,
   calendarDateBadgeActive,
@@ -27,7 +34,29 @@ import {
   sessionCard,
   sessionHeader,
   sessionTitle,
+  teamPhotoActionLoading,
+  teamPhotoIcon,
+  teamPhotoMeta,
+  teamPhotoStatus,
+  teamPhotoText,
+  teamPhotoThumbnail,
+  teamPhotoThumbnailImage,
+  teamPhotoTitle,
 } from './home-page.css';
+
+const attendanceStatusLabel = {
+  AVAILABLE: '출석하기',
+  NOT_ELIGIBLE: '출석 대상이 아니에요',
+  NOT_OPEN: '아직 출석할 수 없어요',
+  CHECKED_IN: '출석했어요!',
+  PENDING_APPROVAL: '인증 사진 검토 중',
+} satisfies Record<CurrentWeekSessionDetailResponse['attendanceStatus'], string>;
+
+const teamPhotoStatusLabel = {
+  PENDING: '운영진이 확인하고 있어요',
+  APPROVED: '팀 인증이 완료됐어요',
+  REJECTED: '팀 인증 사진이 반려됐어요',
+} satisfies Record<UserTeamPhotoDetailResponse['status'], string>;
 
 export function CurrentWeekCard() {
   const { phase } = useNativeAuthSession();
@@ -84,7 +113,6 @@ function WeekError() {
 
 function CurrentWeekContent() {
   const { apiOptions } = useNativeAuthSession();
-  const flow = useFlow();
   const confirmed = useAttendanceConfirmation();
   const query = useSuspenseQuery({
     ...currentWeekQueryOptions(apiOptions),
@@ -98,7 +126,7 @@ function CurrentWeekContent() {
         : true,
   });
   useRefetchOnScreenReturn(query);
-  const { data, dataUpdatedAt, error, refetch } = query;
+  const { data, dataUpdatedAt } = query;
   const today = koreanDateString(dataUpdatedAt);
   const days = Array.from({ length: 7 }, (_, index) => {
     const timestamp = koreanTimestamp(data.weekStartDate) + index * 86_400_000;
@@ -112,20 +140,6 @@ function CurrentWeekContent() {
   const session = data.session;
   return (
     <>
-      {error ? (
-        <div role="alert">
-          이번 주 세션을 새로 불러오지 못했어요. 이전 내용을 표시하고 있어요.
-          <ActionButton
-            variant="neutralWeak"
-            size="small"
-            onClick={() => {
-              void refetch({ cancelRefetch: false });
-            }}
-          >
-            다시 시도
-          </ActionButton>
-        </div>
-      ) : null}
       <div className={sessionHeader}>
         <span className={locationText}>{session?.location ?? '이번 주 세션'}</span>
         <h2 className={sessionTitle}>
@@ -149,27 +163,139 @@ function CurrentWeekContent() {
         ))}
       </div>
       {session ? (
-        <>
-          <ActionButton
-            variant="neutralWeak"
-            size="medium"
-            disabled={
-              !!error || confirmed === session.sessionId || session.attendanceStatus !== 'AVAILABLE'
-            }
-            onClick={() => flow.push('AttendanceCode', {})}
-          >
-            {confirmed === session.sessionId
-              ? '출석했어요!'
-              : {
-                  AVAILABLE: '출석하기',
-                  NOT_ELIGIBLE: '출석 대상이 아니에요',
-                  NOT_OPEN: '아직 출석할 수 없어요',
-                  CHECKED_IN: '출석했어요!',
-                  PENDING_APPROVAL: '인증 사진 검토 중',
-                }[session.attendanceStatus]}
-          </ActionButton>
-        </>
+        <SessionAttendanceAction
+          session={session}
+          isAttendanceConfirmed={confirmed === session.sessionId}
+        />
       ) : null}
     </>
+  );
+}
+
+function SessionAttendanceAction({
+  session,
+  isAttendanceConfirmed,
+}: {
+  session: CurrentWeekSessionDetailResponse;
+  isAttendanceConfirmed: boolean;
+}) {
+  const { isNative } = useNativeAuthSession();
+  const flow = useFlow();
+  const canOpenTeamPhoto =
+    !staticContentEnabled() &&
+    (isNative || (import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true'));
+  if (session.type === 'REGULAR') {
+    const disabled = isAttendanceConfirmed || session.attendanceStatus !== 'AVAILABLE';
+    return (
+      <ActionButton
+        variant="neutralWeak"
+        size="medium"
+        disabled={disabled}
+        onClick={() => flow.push('AttendanceCode', {})}
+      >
+        {isAttendanceConfirmed ? '출석했어요!' : attendanceStatusLabel[session.attendanceStatus]}
+      </ActionButton>
+    );
+  }
+
+  if (!canOpenTeamPhoto) {
+    return (
+      <TeamAttendanceAction disabled>인증 사진은 YAPP+ 앱에서 제출해 주세요</TeamAttendanceAction>
+    );
+  }
+  if (session.attendanceStatus === 'AVAILABLE') {
+    return (
+      <TeamAttendanceAction
+        onClick={() => flow.push('TeamAttendanceGuide', { sessionId: String(session.sessionId) })}
+      >
+        인증 사진 올리기
+      </TeamAttendanceAction>
+    );
+  }
+  if (session.attendanceStatus !== 'PENDING_APPROVAL') {
+    return (
+      <TeamAttendanceAction disabled>
+        {attendanceStatusLabel[session.attendanceStatus]}
+      </TeamAttendanceAction>
+    );
+  }
+
+  return (
+    <ErrorBoundary
+      resetKeys={[session.sessionId]}
+      fallback={<TeamAttendanceAction disabled>인증 사진 검토 중</TeamAttendanceAction>}
+    >
+      <Suspense fallback={<TeamAttendancePhotoLoading />}>
+        <TeamAttendancePhotoContent sessionId={session.sessionId} />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+
+function TeamAttendancePhotoContent({ sessionId }: { sessionId: number }) {
+  const { apiOptions } = useNativeAuthSession();
+  const photoQuery = useSuspenseQuery(find1Options({ ...apiOptions, path: { sessionId } }));
+
+  if (photoQuery.data.photo === null) {
+    return <TeamAttendanceAction disabled>인증 사진 검토 중</TeamAttendanceAction>;
+  }
+
+  return <TeamAttendancePhotoStatus photo={photoQuery.data.photo} />;
+}
+
+function TeamAttendanceAction({
+  children,
+  disabled = false,
+  onClick,
+}: {
+  children: string;
+  disabled?: boolean;
+  onClick?: () => void;
+}) {
+  return (
+    <ActionButton variant="neutralWeak" size="medium" disabled={disabled} onClick={onClick}>
+      {children}
+    </ActionButton>
+  );
+}
+
+function TeamAttendancePhotoLoading() {
+  return (
+    <div className={teamPhotoActionLoading}>
+      <VisuallyHidden asChild>
+        <output>인증 사진을 확인하고 있어요…</output>
+      </VisuallyHidden>
+      <Skeleton width="full" height="57px" radius="8" aria-hidden="true" />
+    </div>
+  );
+}
+
+function TeamAttendancePhotoStatus({ photo }: { photo: UserTeamPhotoDetailResponse }) {
+  const uploader = photo.uploader.name ?? '팀원';
+  return (
+    <output className={teamPhotoStatus}>
+      <div className={teamPhotoText}>
+        <div className={teamPhotoThumbnail}>
+          {photo.imageUrl ? (
+            <Image
+              src={photo.imageUrl}
+              alt=""
+              width={41}
+              height={41}
+              className={teamPhotoThumbnailImage}
+            />
+          ) : (
+            <IconCameraFill width={20} height={20} aria-hidden="true" />
+          )}
+        </div>
+        <div>
+          <p className={teamPhotoTitle}>{teamPhotoStatusLabel[photo.status]}</p>
+          <p className={teamPhotoMeta}>
+            {photo.uploadedTime} {uploader} 업로드 (참석 {photo.selectedMemberCount}명)
+          </p>
+        </div>
+      </div>
+      <IconCameraFill className={teamPhotoIcon} width={20} height={20} aria-hidden="true" />
+    </output>
   );
 }

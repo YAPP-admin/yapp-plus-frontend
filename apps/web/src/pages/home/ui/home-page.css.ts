@@ -155,6 +155,75 @@ export const attendanceButton = style({
   height: '44px',
 });
 
+export const teamPhotoActionLoading = style({
+  width: '100%',
+  minHeight: '57px',
+});
+
+export const teamPhotoStatus = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  gap: vars.$dimension.x2,
+  minHeight: '57px',
+  padding: '8px 10px',
+  borderRadius: '10px',
+  background: vars.$color.bg.layerDefaultPressed,
+  boxSizing: 'border-box',
+});
+
+export const teamPhotoText = style({
+  display: 'flex',
+  minWidth: 0,
+  alignItems: 'center',
+  gap: '10px',
+});
+
+export const teamPhotoThumbnail = style({
+  display: 'grid',
+  width: '41px',
+  height: '41px',
+  flex: '0 0 auto',
+  placeItems: 'center',
+  overflow: 'hidden',
+  borderRadius: '6px',
+  background: vars.$color.bg.neutralWeak,
+  color: vars.$color.fg.neutralMuted,
+});
+
+export const teamPhotoThumbnailImage = style({
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+});
+
+export const teamPhotoTitle = style({
+  margin: 0,
+  overflow: 'hidden',
+  color: vars.$color.fg.neutral,
+  fontSize: vars.$fontSize.t4,
+  fontWeight: vars.$fontWeight.bold,
+  lineHeight: vars.$lineHeight.t4,
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+export const teamPhotoMeta = style({
+  margin: '2px 0 0',
+  overflow: 'hidden',
+  color: vars.$color.fg.neutralSubtle,
+  fontSize: vars.$fontSize.t2,
+  fontWeight: vars.$fontWeight.medium,
+  lineHeight: vars.$lineHeight.t2,
+  textOverflow: 'ellipsis',
+  whiteSpace: 'nowrap',
+});
+
+export const teamPhotoIcon = style({
+  flex: '0 0 auto',
+  color: vars.$color.fg.neutralMuted,
+});
+
 export const quickCardsGrid = style({
   width: '100%',
 });

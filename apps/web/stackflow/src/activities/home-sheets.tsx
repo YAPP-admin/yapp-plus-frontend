@@ -90,7 +90,7 @@ export function TeamAttendanceGuideActivity() {
     setPhoto(file);
     flow.replace('TeamAttendanceUpload', { sessionId });
   });
-  if (!import.meta.env.DEV || import.meta.env.VITE_API_MOCKING !== 'true' || !sessionId) {
+  if (!sessionId) {
     return <NotFoundActivity />;
   }
   return (

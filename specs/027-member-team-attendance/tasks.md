@@ -1,7 +1,7 @@
 # 작업 목록: 최신 API와 회원 팀 출석 운영 연결
 
 **입력**: [명세](spec.md)·[계획](plan.md)·[계약](contracts/team-attendance.md)
-**현재 범위**: 0단계 문서 작성·검증. 사용자 리뷰와 1A 진행 확인 전 제품 구현 금지.
+**현재 범위**: 홈 팀 인증 연결 리뷰 완료. 다음 작업은 T032이며 최신 사용자 결정은 validation.md의 2026-11-24 기록을 따른다.
 작업 경로는 저장소 루트 기준이다. 테스트는 명세의 수용 조건과 회귀를 가까운 계층에서 확인한다.
 각 리뷰에는 실제 diff·check 결과·제품 변경 시 build 결과·캐시 재사용·미실행 항목을 제출한다.
 
@@ -73,7 +73,7 @@
 독립 검증: 두 유형과 다섯 상태, 기존 사진 여부, fresh 캐시 복귀·서버 정정을 확인한다.
 
 - [ ] T030 [US4] apps/web/src/pages/home/ui/home-page.test.tsx·attendance-code.test.tsx와 stackflow/src/query-recovery.test.tsx에 유형·홈 상태·사진 오류·강제 복귀 조회 회귀를 작성한다.
-- [ ] T031 [US4] apps/web/src/pages/home/ui/current-week-card.tsx에 서버 type·상태와 기존 사진 조회를 연결한다. #503의 main 반영 여부를 확인하고 겹치는 상태 변환을 재사용한다.
+- [x] T031 [US4] apps/web/src/pages/home/ui/current-week-card.tsx에 서버 type·상태를 연결하고 PENDING_APPROVAL의 사진 상세만 조회한다. 사용자 리뷰로 사진 존재 기반 제출 차단을 대체했다.
 - [ ] T032 [US4] apps/web/src/pages/home/model/code-attendance.ts의 시작·제출 경계에서 REGULAR을 확인하고 과거 성공 mutation이 최신 정정을 덮어쓰지 않도록 한다.
 - [ ] T033 [US4] apps/web/src/shared/lib/screen-activity.ts의 기본 동작은 보존하며 home/ui/current-week-card.tsx의 홈·앱 복귀 조회만 강제한다. polling은 추가하지 않는다.
 - [ ] T034 [US4] apps/web/stackflow/src/activities/home-sheets.tsx·activities.tsx의 팀 인증 운영 진입을 열고 로그인·정적 모드·세션 조건과 receipt 없는 완료 차단을 검증한다.
