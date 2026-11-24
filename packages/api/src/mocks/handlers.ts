@@ -64,10 +64,14 @@ export function createApiMockHandlers(
       const position = params.get('position');
       const teamId = params.get('teamId');
       const items = fixtures.adminMembers.items.filter((member) => {
+        const requestedTeamName =
+          teamId === null
+            ? null
+            : fixtures.adminMemberTeams.find((team) => String(team.teamId) === teamId)?.name;
         return (
           (name === null || member.name === name) &&
           (position === null || member.position === position) &&
-          (teamId === null || member.teamName !== null)
+          (teamId === null || member.teamName === requestedTeamName)
         );
       });
       return response({ items, nextCursor: null }, schemas.zAdminMemberListResponse, 200);
