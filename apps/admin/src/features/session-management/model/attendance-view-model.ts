@@ -97,5 +97,5 @@ export type MemberScoreViewModel = {
 
 export type AttendanceCodeViewModel =
   | { state: 'notIssued'; code: null; expiresAt: null }
-  | { state: 'active'; code: string; expiresAt: string }
+  | { state: 'active'; code: string; expiresAt: string | null }
   | { state: 'expired'; code: string | null; expiresAt: string };
