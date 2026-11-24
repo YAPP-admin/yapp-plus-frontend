@@ -1,6 +1,9 @@
 import { useInfiniteQuery, useQuery, useSuspenseQuery } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
-import type { AdminMemberItemResponse } from '@yapp-plus/api/generated';
+import type {
+  AdminGenerationListItemResponse,
+  AdminMemberItemResponse,
+} from '@yapp-plus/api/generated';
 import { overlay } from 'overlay-kit';
 import { ActionButton, Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
 import { Link } from '@tanstack/react-router';
@@ -31,6 +34,7 @@ export function ApiMembersPage({
   const generationQuery = useSuspenseQuery(adminGenerationQueryOptions());
   const currentGeneration =
     generationContext?.currentGeneration ?? generationQuery.data.generations[0];
+  const generations = generationContext?.generations ?? generationQuery.data.generations;
   const snackbar = useSnackbarAdapter();
 
   if (currentGeneration === undefined) {
@@ -61,6 +65,7 @@ export function ApiMembersPage({
         key={currentGeneration.generationId}
         generationId={currentGeneration.generationId}
         generationNumber={currentGeneration.generationNumber}
+        generations={generations}
         search={search}
         onSearch={onSearch}
         onFilterChange={onFilterChange}
@@ -77,6 +82,7 @@ export function ApiMembersPage({
 function ApiMembersContent({
   generationId,
   generationNumber,
+  generations,
   search,
   onSearch,
   onFilterChange,
@@ -84,6 +90,7 @@ function ApiMembersContent({
 }: {
   generationId: number;
   generationNumber: number;
+  generations: readonly AdminGenerationListItemResponse[];
   search: MemberSearch;
   onSearch: (query: string) => void;
   onFilterChange: (change: Partial<Omit<MemberSearch, 'q' | 'tab'>>) => void;
@@ -97,6 +104,8 @@ function ApiMembersContent({
     overlay.open(({ unmount }) => (
       <ApiMemberEditDialog
         generationId={generationId}
+        generationNumber={generationNumber}
+        generations={generations}
         search={search}
         memberId={memberId}
         onClose={unmount}

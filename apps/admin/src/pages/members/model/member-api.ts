@@ -66,9 +66,10 @@ export const memberPositionLabels = {
 
 export const memberStatusLabels = {
   PLAYER: '활동회원',
-  OB: 'OB',
+  OB: '정회원',
   COMPLETED_MEMBER: '수료회원',
   DEFERRED: '유예회원',
+  STAFF: '앱 운영진',
   WITHDRAWN: '탈퇴회원',
 } as const;
 
@@ -77,8 +78,10 @@ export const memberStatusOptions = [
   'OB',
   'COMPLETED_MEMBER',
   'DEFERRED',
-  'WITHDRAWN',
+  'STAFF',
 ] as const;
+
+export type MemberStatus = (typeof memberStatusOptions)[number];
 
 export const memberPositionOptions = [
   'PM',

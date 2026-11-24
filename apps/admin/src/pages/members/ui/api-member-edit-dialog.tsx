@@ -1,16 +1,21 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Dialog, HStack, Portal, Text, VStack } from '@seed-design/react';
-import type { AdminMemberDetailResponse } from '@yapp-plus/api/generated';
+import { Dialog, Field, HStack, Portal, Text, TextField, VStack } from '@seed-design/react';
+import type {
+  AdminGenerationListItemResponse,
+  AdminMemberDetailResponse,
+  AdminMemberUpdateRequest,
+} from '@yapp-plus/api/generated';
 import { correctMutation } from '@yapp-plus/api/generated';
-import { ActionButton, Badge } from '@yapp-plus/ui';
-import { X } from 'lucide-react';
+import { ActionButton } from '@yapp-plus/ui';
+import { ChevronUp, History, X } from 'lucide-react';
 import { FilterSelect } from '~/shared/ui/filter-select';
 import type { MemberSearch } from '../model/member-search';
 import {
   getMemberApiErrorMessage,
   memberPositionLabels,
   memberPositionOptions,
+  type MemberStatus,
   memberStatusLabels,
   memberStatusOptions,
   toMemberApiFailure,
@@ -31,8 +36,17 @@ const positionLabels: Record<PositionValue, string> = {
   ...memberPositionLabels,
 };
 
+const memberChangeFieldLabels: Record<string, string> = {
+  name: '이름',
+  generationId: '기수',
+  position: '직군',
+  status: '권한',
+};
+
 type ApiMemberEditDialogProps = {
   generationId: number;
+  generationNumber: number;
+  generations: readonly AdminGenerationListItemResponse[];
   search: MemberSearch;
   memberId: number;
   onClose: () => void;
@@ -41,6 +55,8 @@ type ApiMemberEditDialogProps = {
 
 export function ApiMemberEditDialog({
   generationId,
+  generationNumber,
+  generations,
   search,
   memberId,
   onClose,
@@ -62,10 +78,10 @@ export function ApiMemberEditDialog({
         <Dialog.Positioner>
           <Dialog.Content className={dialogStyles.dialog} data-seed-color-mode="dark-only">
             <Dialog.Header>
-              <Dialog.Title>회원 정보 수정</Dialog.Title>
-              <Dialog.Description>
-                서버 API가 제공하는 상태와 직군만 수정할 수 있어요.
-              </Dialog.Description>
+              <VStack gap="x1">
+                <Text className={dialogStyles.eyebrow}>EDIT MEMBER</Text>
+                <Dialog.Title>회원 정보 수정</Dialog.Title>
+              </VStack>
               <Dialog.CloseButton aria-label="닫기">
                 <X size={20} aria-hidden="true" />
               </Dialog.CloseButton>
@@ -77,6 +93,8 @@ export function ApiMemberEditDialog({
               refetch: detailQuery.refetch,
               detail: detailQuery.data,
               generationId,
+              generationNumber,
+              generations,
               search,
               onClose,
               onSaved,
@@ -91,19 +109,38 @@ export function ApiMemberEditDialog({
 function ApiMemberEditContent({
   detail,
   generationId,
+  generationNumber,
+  generations,
   search,
   onClose,
   onSaved,
 }: {
   detail: AdminMemberDetailResponse;
   generationId: number;
+  generationNumber: number;
+  generations: readonly AdminGenerationListItemResponse[];
   search: MemberSearch;
   onClose: () => void;
   onSaved: () => void;
 }) {
   const queryClient = useQueryClient();
+  const generationValues = generations.map((generation) => String(generation.generationId));
+  const generationLabels = Object.fromEntries(
+    generations.map((generation) => [
+      String(generation.generationId),
+      String(generation.generationNumber),
+    ]),
+  ) as Record<string, string>;
+  const currentGenerationValue = String(generationId);
+  if (generationValues.length === 0) {
+    generationValues.push(currentGenerationValue);
+  }
+  generationLabels[currentGenerationValue] ??= String(generationNumber);
+
+  const [name, setName] = useState(detail.name);
+  const [selectedGenerationId, setSelectedGenerationId] = useState(currentGenerationValue);
   const [position, setPosition] = useState<PositionValue>(detail.position ?? noPositionValue);
-  const [status, setStatus] = useState<AdminMemberDetailResponse['status']>(detail.status);
+  const [status, setStatus] = useState<MemberStatus | 'WITHDRAWN'>(detail.status);
   const [submitError, setSubmitError] = useState<string>();
   const save = useMutation({
     ...correctMutation(),
@@ -139,33 +176,52 @@ function ApiMemberEditContent({
       setSubmitError('탈퇴한 회원은 정정할 수 없어요.');
       return;
     }
-    save.mutate({
-      path: { generationId, memberId: detail.memberId },
-      body: {
+
+    const trimmedName = name.trim();
+    if (trimmedName.length === 0) {
+      setSubmitError('이름을 입력해 주세요.');
+      return;
+    }
+
+    const body = Object.assign(
+      {
         position: position === noPositionValue ? null : position,
-        status,
+        // STAFF는 최신 백엔드 enum이지만 생성 SDK에는 아직 반영되지 않았습니다.
+        // oxlint-disable-next-line typescript/no-unsafe-type-assertion -- OpenAPI 생성물 갱신 전까지 API 경계를 임시 호환한다.
+        status: status as AdminMemberUpdateRequest['status'],
         expectedRevision: detail.revision,
       },
+      {
+        name: trimmedName,
+        generationId: Number(selectedGenerationId),
+      },
+    );
+
+    save.mutate({
+      path: { generationId, memberId: detail.memberId },
+      body,
     });
   }
 
   return (
-    <Dialog.Body>
+    <Dialog.Body className={dialogStyles.body}>
       <form className={styles.form} aria-label="회원 정보 수정" noValidate onSubmit={submit}>
-        <VStack gap="x2">
-          <HStack gap="x2" flexWrap="wrap">
-            <Text as="h2" textStyle="t4Bold">
-              {detail.name}
-            </Text>
-            <Badge variant="weak" tone="neutral">
-              회원 ID {detail.memberId}
-            </Badge>
-          </HStack>
-          <Text color="fg.neutralMuted">{detail.phoneNumber ?? '전화번호 미제공'}</Text>
-        </VStack>
-
         <fieldset className={styles.fields} disabled={save.isPending || isWithdrawn}>
-          <legend className={styles.historyMeta}>서버 API 제공 필드</legend>
+          <Field.Root className={styles.spanTwo}>
+            <Field.Header>
+              <Field.Label>이름</Field.Label>
+            </Field.Header>
+            <TextField.Root value={name} onValueChange={setName} size="large">
+              <TextField.Input name="name" autoComplete="name" />
+            </TextField.Root>
+          </Field.Root>
+          <FilterSelect
+            label="기수"
+            value={selectedGenerationId}
+            options={generationValues}
+            labels={generationLabels}
+            onChange={setSelectedGenerationId}
+          />
           <FilterSelect
             label="직군"
             value={position}
@@ -174,7 +230,8 @@ function ApiMemberEditContent({
             onChange={setPosition}
           />
           <FilterSelect
-            label="상태"
+            className={styles.spanTwo}
+            label="권한"
             value={status}
             options={statusOptions}
             labels={memberStatusLabels}
@@ -184,15 +241,28 @@ function ApiMemberEditContent({
 
         <section className={styles.section} aria-labelledby={`member-history-${detail.memberId}`}>
           <VStack gap="x2">
-            <Text as="h2" id={`member-history-${detail.memberId}`} textStyle="t5Bold">
-              변경 이력
-            </Text>
+            <div className={styles.historyHeader}>
+              <HStack gap="x2" alignItems="center">
+                <History aria-hidden="true" size={13} />
+                <Text as="h2" id={`member-history-${detail.memberId}`} textStyle="t5Bold">
+                  변경 이력
+                </Text>
+              </HStack>
+              <ChevronUp aria-hidden="true" size={13} />
+            </div>
             {detail.changes.length > 0 ? (
               detail.changes.map((change) => (
                 <div className={styles.historyItem} key={`${change.changedAt}-${change.field}`}>
-                  <Text>{`${change.field}: ${change.before ?? '없음'} → ${change.after ?? '없음'}`}</Text>
                   <Text className={styles.historyMeta}>
-                    {`${change.changedByStaffId}번 운영진 · ${new Date(change.changedAt).toLocaleDateString('ko-KR')}`}
+                    {new Date(change.changedAt).toLocaleString('ko-KR', {
+                      dateStyle: 'short',
+                      timeStyle: 'short',
+                    })}
+                  </Text>
+                  <Text className={styles.historyChange}>
+                    {`${change.changedByStaffId}번 운영진 · ${memberChangeFieldLabels[change.field] ?? change.field} `}
+                    <strong>{change.before ?? '없음'}</strong> →{' '}
+                    <strong className={styles.historyAfter}>{change.after ?? '없음'}</strong>
                   </Text>
                 </div>
               ))
@@ -215,15 +285,26 @@ function ApiMemberEditContent({
         <div className={styles.actions}>
           <ActionButton
             type="button"
-            variant="neutralWeak"
-            disabled={save.isPending}
-            onClick={onClose}
+            variant="ghost"
+            className={styles.inactiveAction}
+            disabled
+            aria-label="비활동 처리 (준비 중)"
           >
-            취소
+            비활동 처리
           </ActionButton>
-          <ActionButton type="submit" disabled={isWithdrawn} loading={save.isPending}>
-            저장
-          </ActionButton>
+          <div className={styles.actionGroup}>
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              disabled={save.isPending}
+              onClick={onClose}
+            >
+              취소
+            </ActionButton>
+            <ActionButton type="submit" disabled={isWithdrawn} loading={save.isPending}>
+              저장하기
+            </ActionButton>
+          </div>
         </div>
         {toMemberApiFailure(save.error).status === 409 ? (
           <Text className={styles.notice} role="note">
@@ -242,6 +323,8 @@ function renderDetailContent({
   refetch,
   detail,
   generationId,
+  generationNumber,
+  generations,
   search,
   onClose,
   onSaved,
@@ -252,20 +335,22 @@ function renderDetailContent({
   refetch: () => Promise<unknown>;
   detail: AdminMemberDetailResponse | undefined;
   generationId: number;
+  generationNumber: number;
+  generations: readonly AdminGenerationListItemResponse[];
   search: MemberSearch;
   onClose: () => void;
   onSaved: () => void;
 }): ReactNode {
   if (isPending) {
     return (
-      <Dialog.Body>
+      <Dialog.Body className={dialogStyles.body}>
         <output className={styles.notice}>회원 정보를 불러오는 중입니다.</output>
       </Dialog.Body>
     );
   }
   if (error !== null && error !== undefined) {
     return (
-      <Dialog.Body>
+      <Dialog.Body className={dialogStyles.body}>
         <VStack gap="x3">
           <Text role="alert">{getMemberApiErrorMessage(error, 'detail')}</Text>
           <ActionButton
@@ -287,6 +372,8 @@ function renderDetailContent({
     <ApiMemberEditContent
       detail={detail}
       generationId={generationId}
+      generationNumber={generationNumber}
+      generations={generations}
       search={search}
       onClose={onClose}
       onSaved={onSaved}

@@ -75,7 +75,22 @@ export const adminMemberDetail = {
   ...firstAdminMember,
   phoneNumber: '010-1234-5678',
   revision: 1,
-  changes: [],
+  changes: [
+    {
+      field: 'position',
+      before: 'DESIGN',
+      after: 'WEB',
+      changedByStaffId: 7,
+      changedAt: '2026-09-05T09:00:00Z',
+    },
+    {
+      field: 'status',
+      before: 'DEFERRED',
+      after: 'PLAYER',
+      changedByStaffId: 7,
+      changedAt: '2026-09-06T09:30:00Z',
+    },
+  ],
 } satisfies AdminMemberDetailResponse;
 
 export const sessions = {
