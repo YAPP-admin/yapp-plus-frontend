@@ -45,13 +45,13 @@ type TeamAttendancePhotoProps = { photo: File; previewUrl: string };
 export function TeamAttendanceUploadPage(props: Props) {
   const active = useScreenActiveContext();
   const { phase, session } = useNativeAuthSession();
-  const { draft } = useTeamAttendancePhotoDraft();
-  return active && draft ? (
+  const { selectedPhoto } = useTeamAttendancePhotoDraft();
+  return active && selectedPhoto ? (
     <PhotoForm
       key={`${phase}:${session?.sessionId ?? 'browser'}:${session?.userId}:${props.target.sessionId}`}
       {...props}
-      photo={draft.photo}
-      previewUrl={draft.previewUrl}
+      photo={selectedPhoto.photo}
+      previewUrl={selectedPhoto.previewUrl}
     />
   ) : null;
 }

@@ -7,7 +7,7 @@ import {
   onlineManager,
 } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
-import { find6Options } from '@yapp-plus/api/generated';
+import { find1QueryKey, find6Options } from '@yapp-plus/api/generated';
 import { http, HttpResponse, delay } from 'msw';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
 import { apiBaseUrl, server } from '../../../mocks/server';
@@ -48,15 +48,48 @@ vi.mock('@/app/navigation/activity-link', () => ({
 }));
 
 const url = `${apiBaseUrl}/api/sessions/current-week`;
+const teamPhotoUrl = `${apiBaseUrl}/api/sessions/42/team-attendance-photos`;
 const response = {
   ...currentWeekFixture,
   session: {
     ...currentWeekFixture.session,
+    sessionId: 42,
     name: '설계 리뷰',
     location: null,
     attendanceStatus: 'AVAILABLE',
   },
 };
+const teamResponse = {
+  ...response,
+  session: {
+    ...response.session,
+    type: 'TEAM' as const,
+    location: null,
+    roadAddress: null,
+    latitude: null,
+    longitude: null,
+    detailAddress: null,
+  },
+};
+const pendingTeamResponse = {
+  ...teamResponse,
+  session: { ...teamResponse.session, attendanceStatus: 'PENDING_APPROVAL' },
+};
+const submittedPhoto = (status: 'PENDING' | 'APPROVED' | 'REJECTED') => ({
+  photo: {
+    photoId: 1,
+    teamId: 1,
+    teamName: 'YAPP+',
+    status,
+    imageUrl: 'https://image.yapp.test/team-attendance.jpg',
+    imageUrlExpiresAt: null,
+    uploadedAt: '2026-11-07T05:00:00Z',
+    uploadedTime: '14:00',
+    submittedAt: '2026-11-07T05:00:00Z',
+    uploader: { userId: 1, name: '김야뿌' },
+    selectedMemberCount: 3,
+  },
+});
 beforeEach(() => {
   vi.useFakeTimers({ toFake: ['Date'] });
   vi.setSystemTime(new Date('2026-11-06T15:00:00Z'));
@@ -272,12 +305,13 @@ it('공지 조회 오류가 세션 카드를 막지 않고 재시도로 복구�
   expect(screen.getByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
 });
 
-it('재조회 실패 시 기존 카드와 갱신 실패 안내를 유지한다', async () => {
+it('재조회 실패 시 기존 카드와 출석 버튼을 유지한다', async () => {
   const { client } = renderHome();
   await screen.findByRole('heading', { name: /설계 리뷰/ });
   server.use(http.get(url, () => HttpResponse.json({}, { status: 500 })));
   await act(() => client.invalidateQueries({ queryKey: find6Options().queryKey }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '출석하기' })).toBeEnabled();
   expect(screen.getByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
 });
 
@@ -377,12 +411,12 @@ it('주 경계를 지난 캐시로 복귀하면 staleTime과 무관하게 새 �
   expect(screen.getByLabelText('2026-11-08')).toHaveAttribute('aria-current', 'date');
 });
 
-it('주간 조회의 네트워크 오류 후 연결 복구 시 카드와 오류 안내를 함께 갱신한다', async () => {
+it('주간 재조회 실패 후 연결이 복구되면 기존 카드를 갱신한다', async () => {
   const { client } = renderHome();
   await screen.findByText(/설계 리뷰/);
   server.use(http.get(url, () => HttpResponse.error()));
   await act(() => client.invalidateQueries({ queryKey: find6Options().queryKey }));
-  expect(await screen.findByRole('alert')).toBeVisible();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   expect(screen.getByText(/설계 리뷰/)).toBeVisible();
 
   act(() => onlineManager.setOnline(false));
@@ -422,4 +456,122 @@ it('기본 목업은 정규 세션의 코드 출석으로 진입하고 팀 사�
   expect(mockPush).toHaveBeenCalledWith('AttendanceCode', {});
   expect(screen.queryByRole('button', { name: '인증 사진 올리기' })).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '팀 세션 화면으로 전환' })).not.toBeInTheDocument();
+});
+
+it('AVAILABLE 팀 세션은 사진 조회 없이 팀 사진 안내로 이동한다', async () => {
+  const photoRequest = vi.fn<() => void>();
+  server.use(
+    http.get(url, () => HttpResponse.json(teamResponse)),
+    http.get(teamPhotoUrl, () => {
+      photoRequest();
+      return HttpResponse.json(submittedPhoto('PENDING'));
+    }),
+  );
+  const user = userEvent.setup();
+  renderHome({}, true);
+
+  await user.click(await screen.findByRole('button', { name: '인증 사진 올리기' }));
+
+  expect(mockPush).toHaveBeenCalledWith('TeamAttendanceGuide', { sessionId: '42' });
+  expect(photoRequest).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['CHECKED_IN', '출석했어요!'],
+  ['NOT_OPEN', '아직 출석할 수 없어요'],
+  ['NOT_ELIGIBLE', '출석 대상이 아니에요'],
+])('TEAM %s는 사진 조회 없이 출석 상태를 표시한다', async (attendanceStatus, label) => {
+  const photoRequest = vi.fn<() => void>();
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({
+        ...teamResponse,
+        session: { ...teamResponse.session, attendanceStatus },
+      }),
+    ),
+    http.get(teamPhotoUrl, () => {
+      photoRequest();
+      return HttpResponse.json(submittedPhoto('PENDING'));
+    }),
+  );
+  renderHome({}, true);
+
+  expect(await screen.findByRole('button', { name: label })).toBeDisabled();
+  expect(photoRequest).not.toHaveBeenCalled();
+});
+
+it('TEAM 사진을 불러오는 동안 주간 세션 카드와 사진 영역의 로딩 상태를 함께 표시한다', async () => {
+  let releasePhoto!: () => void;
+  const photoRequest = new Promise<void>((resolve) => {
+    releasePhoto = resolve;
+  });
+  server.use(
+    http.get(url, () => HttpResponse.json(pendingTeamResponse)),
+    http.get(teamPhotoUrl, async () => {
+      await photoRequest;
+      return HttpResponse.json({ photo: null });
+    }),
+  );
+  renderHome({}, true);
+
+  expect(
+    await screen.findByRole('heading', { name: '이번 주는 설계 리뷰 세션이에요' }),
+  ).toBeVisible();
+  expect(screen.getByText('인증 사진을 확인하고 있어요…')).toBeInTheDocument();
+
+  act(() => {
+    releasePhoto();
+  });
+  expect(await screen.findByRole('button', { name: '인증 사진 검토 중' })).toBeDisabled();
+});
+
+it.each([
+  ['PENDING', '운영진이 확인하고 있어요'],
+  ['APPROVED', '팀 인증이 완료됐어요'],
+  ['REJECTED', '팀 인증 사진이 반려됐어요'],
+] as const)('TEAM 세션의 %s 사진은 제출 상태 행으로 표시한다', async (status, title) => {
+  server.use(
+    http.get(url, () => HttpResponse.json(pendingTeamResponse)),
+    http.get(teamPhotoUrl, () => HttpResponse.json(submittedPhoto(status))),
+  );
+  renderHome({}, true);
+
+  expect(await screen.findByRole('status')).toHaveTextContent(
+    `${title}14:00 김야뿌 업로드 (참석 3명)`,
+  );
+  expect(screen.queryByRole('button', { name: '인증 사진 올리기' })).not.toBeInTheDocument();
+  expect(mockPush).not.toHaveBeenCalled();
+});
+
+it.each([
+  ['HTTP 오류', () => HttpResponse.json({}, { status: 500 })],
+  ['네트워크 오류', () => HttpResponse.error()],
+])('TEAM 사진 조회 %s에도 검토 중 상태를 유지한다', async (_, errorResponse) => {
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  server.use(
+    http.get(url, () => HttpResponse.json(pendingTeamResponse)),
+    http.get(teamPhotoUrl, errorResponse),
+  );
+  renderHome({}, true);
+
+  expect(await screen.findByRole('button', { name: '인증 사진 검토 중' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: '인증 사진 올리기' })).not.toBeInTheDocument();
+  expect(mockPush).not.toHaveBeenCalled();
+});
+
+it('TEAM 사진 재조회 실패 시 기존 사진 상태를 유지한다', async () => {
+  server.use(
+    http.get(url, () => HttpResponse.json(pendingTeamResponse)),
+    http.get(teamPhotoUrl, () => HttpResponse.json(submittedPhoto('PENDING'))),
+  );
+  const { client } = renderHome({}, true);
+  expect(await screen.findByRole('status')).toHaveTextContent('운영진이 확인하고 있어요');
+
+  server.use(http.get(teamPhotoUrl, () => HttpResponse.error()));
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: find1QueryKey({ path: { sessionId: 42 } }) });
+  });
+
+  expect(screen.getByRole('status')).toHaveTextContent('운영진이 확인하고 있어요');
+  expect(screen.queryByRole('button', { name: '인증 사진 올리기' })).not.toBeInTheDocument();
 });

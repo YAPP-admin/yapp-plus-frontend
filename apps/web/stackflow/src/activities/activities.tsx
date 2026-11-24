@@ -212,23 +212,23 @@ export function TeamAttendanceUploadActivity() {
   const activity = useActivity();
   const params = useActivityParams<'TeamAttendanceUpload'>();
   const { sessionId: sessionIdParam } = params;
-  const { draft, clearPhoto } = useTeamAttendancePhotoDraft();
+  const { selectedPhoto, clearPhoto } = useTeamAttendancePhotoDraft();
   const stepFlow = useStepFlow('TeamAttendanceUpload');
   const step = activity.steps.filter((item) => item.id !== activity.id).at(-1);
-  const completed = (step?.params ?? params).stage === 'complete';
+  const isSubmissionComplete = (step?.params ?? params).stage === 'complete';
   const [receipt, setReceipt] = useState<TeamAttendanceReceipt | null>(null);
   const sessionId = Number(sessionIdParam);
   useEffect(() => clearPhoto, [clearPhoto]);
   useEffect(() => {
-    if (completed) {
+    if (isSubmissionComplete) {
       clearPhoto();
     }
-  }, [clearPhoto, completed]);
+  }, [clearPhoto, isSubmissionComplete]);
 
-  if (!teamPhotoDevelopmentEnabled() || !sessionIdParam || (!draft && !completed)) {
+  if (!sessionIdParam || (!selectedPhoto && !isSubmissionComplete)) {
     return <NotFoundActivity />;
   }
-  if (completed) {
+  if (isSubmissionComplete) {
     return receipt ? (
       <ActivityScreen title="팀 세션 인증 완료" preventSwipeBack>
         <TeamAttendanceCompletePage receipt={receipt} />
@@ -237,7 +237,7 @@ export function TeamAttendanceUploadActivity() {
       <NotFoundActivity />
     );
   }
-  return activity.isTop && draft ? (
+  return activity.isTop && selectedPhoto ? (
     <QueryBoundary
       pendingFallback={<output>팀원을 불러오고 있어요…</output>}
       errorFallback={<output role="alert">팀원을 불러오지 못했어요. 다시 확인해 주세요.</output>}
