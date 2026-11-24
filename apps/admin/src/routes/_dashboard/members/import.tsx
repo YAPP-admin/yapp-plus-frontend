@@ -1,5 +1,5 @@
 import { createFileRoute } from '@tanstack/react-router';
-import { memberPreviewAfterMapping } from '~/features/member-management/fixtures';
+import { useAdminGeneration } from '~/features/admin-generation';
 import { MemberImportPage } from '~/pages/member-import';
 
 export const Route = createFileRoute('/_dashboard/members/import')({
@@ -9,12 +9,12 @@ export const Route = createFileRoute('/_dashboard/members/import')({
 });
 
 function MemberImportRoute() {
+  const { currentGeneration } = useAdminGeneration();
+
   return (
     <MemberImportPage
-      members={import.meta.env.DEV ? memberPreviewAfterMapping.members : undefined}
-      currentGeneration={
-        import.meta.env.DEV ? memberPreviewAfterMapping.currentGeneration : undefined
-      }
+      generationId={currentGeneration.generationId}
+      currentGeneration={currentGeneration.generationNumber}
     />
   );
 }

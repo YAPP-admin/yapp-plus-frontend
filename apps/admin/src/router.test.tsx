@@ -726,6 +726,11 @@ describe('명단 업로드 진입점', () => {
 
   it('업로드 결과를 미리보고 목록으로 복귀한다', async () => {
     const user = userEvent.setup();
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations/:generationId/roster-entries`, () =>
+        HttpResponse.json({ items: [], nextCursor: null }),
+      ),
+    );
     const router = await renderRoute('/members/import');
     await waitForAdminWorkspace();
     const file = new File(
@@ -742,7 +747,9 @@ describe('명단 업로드 진입점', () => {
     await waitFor(() =>
       expect(screen.getByRole('status')).toHaveTextContent('members.csv 파일을 읽었어요.'),
     );
-    expect(screen.getByRole('table', { name: 'CSV 회원 명단 검증 결과' })).toBeVisible();
+    await waitFor(() =>
+      expect(screen.getByRole('table', { name: 'CSV 회원 명단 검증 결과' })).toBeVisible(),
+    );
 
     await user.click(screen.getByRole('link', { name: '회원 목록으로 돌아가기' }));
 
