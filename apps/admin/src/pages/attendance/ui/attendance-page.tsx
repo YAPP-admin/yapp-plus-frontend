@@ -1,6 +1,7 @@
 import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
 import type { ReactNode } from 'react';
+import { useAdminGeneration } from '~/features/admin-generation';
 import {
   AttendanceQueryBoundary,
   useMemberScoresQuery,
@@ -97,10 +98,6 @@ export function AttendanceScoresPage(props: FilterProps<AttendancePart>) {
   return (
     <AttendanceLayout title="출석 총점" description="직군별 출석 총점을 확인합니다.">
       <PartFilter {...props} options={attendancePartSchema.options} />
-      <p className={styles.scoreNotice}>
-        현재는 화면 검증용 mock 점수입니다. 실제 관리자 누적 점수 API 연동 전까지 서버 점수로
-        간주하지 않습니다.
-      </p>
       <AttendanceQueryBoundary
         fallback={<output>회원 점수를 불러오는 중입니다.</output>}
         errorMessage="회원 점수를 불러오지 못했습니다."
@@ -113,7 +110,8 @@ export function AttendanceScoresPage(props: FilterProps<AttendancePart>) {
 }
 
 function AttendanceSessionsData() {
-  const { data: sessions } = useSessionsQuery();
+  const { currentGeneration } = useAdminGeneration();
+  const { data: sessions } = useSessionsQuery(currentGeneration.generationId);
 
   if (sessions.length === 0) {
     return <p className={styles.placeholder}>등록된 세션이 없습니다.</p>;
@@ -145,7 +143,8 @@ function AttendanceSessionsData() {
 }
 
 function AttendanceScoresData({ part, emptyLabel }: { part: AttendancePart; emptyLabel: string }) {
-  const { data: scoresData } = useMemberScoresQuery();
+  const { currentGeneration } = useAdminGeneration();
+  const { data: scoresData } = useMemberScoresQuery(currentGeneration.generationId);
   const scores = filterMemberScores(scoresData, part);
 
   if (scores.length === 0) {

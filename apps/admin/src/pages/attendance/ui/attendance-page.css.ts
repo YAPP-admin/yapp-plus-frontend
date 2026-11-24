@@ -36,16 +36,6 @@ export const placeholder = style({
   fontSize: vars.$fontSize.t4,
 });
 
-export const scoreNotice = style({
-  margin: 0,
-  padding: vars.$dimension.x4,
-  borderRadius: vars.$radius.r3,
-  background: vars.$color.bg.layerDefault,
-  color: vars.$color.fg.neutralMuted,
-  fontSize: vars.$fontSize.t3,
-  lineHeight: vars.$lineHeight.t3,
-});
-
 export const scoreTableWrap = style({
   overflowX: 'auto',
   border: `1px solid ${vars.$color.stroke.neutralMuted}`,
