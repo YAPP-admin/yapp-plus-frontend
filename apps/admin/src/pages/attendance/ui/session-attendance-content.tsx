@@ -12,8 +12,12 @@ import {
   AttendanceQueryBoundary,
   attendanceHistoryQueryOptions,
   attendanceCodeQueryOptions,
+  attendanceCodeApiQueryOptions,
   teamReviewsQueryOptions,
-  sessionAttendanceQueryOptions,
+  teamReviewsApiQueryOptions,
+  getSessionAttendance,
+  useSessionAttendanceQuery,
+  useSessionsQuery,
   updateMemberAttendance,
   updateMemberBadge,
   updateTeamPhotoReview,
@@ -26,6 +30,7 @@ import {
   type TeamDecisionInput,
   type TeamReviewViewModel,
 } from '~/features/session-management';
+import { useOptionalAdminGeneration } from '~/features/admin-generation';
 import { attendancePartSchema, partLabels, type AttendancePart } from '../model/attendance-search';
 import * as styles from './session-attendance-content.css';
 
@@ -113,7 +118,14 @@ function MemberRow({
         </span>
       </th>
       <td>{member.latestReport ? reportLabels[member.latestReport.type] : '보고 없음'}</td>
-      <td>{formatTime(member.attendance.checkedInAt)}</td>
+      <td>
+        {formatTime(member.attendance.checkedInAt)}
+        {member.attendance.earlyLeaveAt && (
+          <span className={styles.secondary}>
+            조퇴 {formatTime(member.attendance.earlyLeaveAt)}
+          </span>
+        )}
+      </td>
       <td>
         <label className={styles.inlineControl}>
           <span className={styles.visuallyHidden}>{member.name} 출결 상태</span>
@@ -362,11 +374,116 @@ export function SessionAttendanceContent({
 }
 
 function SessionAttendanceData({ sessionId, part }: { sessionId: string; part: AttendancePart }) {
+  const generation = useOptionalAdminGeneration();
+  if (!generation) {
+    return <MockSessionAttendanceData sessionId={sessionId} part={part} />;
+  }
+  return (
+    <ApiSessionAttendanceData
+      generationId={generation.currentGeneration.generationId}
+      sessionId={sessionId}
+      part={part}
+    />
+  );
+}
+
+function MockSessionAttendanceData({
+  sessionId,
+  part,
+}: {
+  sessionId: string;
+  part: AttendancePart;
+}) {
+  const [{ data: attendance }, { data: attendanceCode }] = useSuspenseQueries({
+    queries: [
+      {
+        queryKey: ['admin', 'sessions', sessionId, 'attendance'],
+        queryFn: () => getSessionAttendance(sessionId),
+        retry: false,
+      },
+      attendanceCodeQueryOptions(sessionId),
+    ],
+  });
+  return (
+    <SessionAttendanceView
+      sessionId={sessionId}
+      part={part}
+      attendance={attendance}
+      attendanceCode={attendanceCode}
+    />
+  );
+}
+
+function ApiSessionAttendanceData({
+  generationId,
+  sessionId,
+  part,
+}: {
+  generationId: number;
+  sessionId: string;
+  part: AttendancePart;
+}) {
+  const { data: sessions } = useSessionsQuery(generationId);
+  const { members } = useSessionAttendanceQuery(generationId, sessionId);
+  const { data: attendanceCode } = useSuspenseQuery(
+    attendanceCodeApiQueryOptions(generationId, sessionId),
+  );
+  const session = sessions.find((item) => item.id === sessionId);
+  if (!session) {
+    throw new Error('출석을 조회할 세션을 찾을 수 없습니다.');
+  }
+  const attendance = {
+    session: {
+      id: session.id,
+      generationId: String(generationId),
+      title: session.name,
+      type: session.type === 'team' ? ('team' as const) : ('regular' as const),
+      startsAt: `${session.date}T${session.startTime}+09:00`,
+      endsAt: `${session.date}T${session.endTime}+09:00`,
+      phase: session.phase,
+      canCancelClose: false,
+      summary: {
+        total: members.length,
+        present: members.filter((member) => member.attendance.status === 'present').length,
+        late: members.filter((member) => member.attendance.status === 'late').length,
+        earlyLeave: members.filter((member) => member.attendance.status === 'earlyLeave').length,
+        absent: members.filter((member) => member.attendance.status === 'absent').length,
+        undecided: members.filter((member) => member.attendance.status === 'undecided').length,
+        reported: members.filter((member) => member.latestReport !== null).length,
+      },
+    },
+    members,
+  };
+  return (
+    <SessionAttendanceView
+      sessionId={sessionId}
+      part={part}
+      attendance={attendance}
+      attendanceCode={attendanceCode}
+      generationId={generationId}
+    />
+  );
+}
+
+function SessionAttendanceView({
+  sessionId,
+  part,
+  attendance,
+  attendanceCode,
+  generationId,
+}: {
+  sessionId: string;
+  part: AttendancePart;
+  attendance: {
+    session: AttendanceSessionViewModel;
+    members: AttendanceMemberViewModel[];
+  };
+  attendanceCode: AttendanceCodeViewModel | undefined;
+  generationId?: number;
+}) {
   const [historyMember, setHistoryMember] = useState<AttendanceMemberViewModel | null>(null);
   const queryClient = useQueryClient();
-  const [{ data: attendance }, { data: attendanceCode }] = useSuspenseQueries({
-    queries: [sessionAttendanceQueryOptions(sessionId), attendanceCodeQueryOptions(sessionId)],
-  });
+  const { session, members } = attendance;
   const attendanceMutation = useMutation({
     mutationFn: (input: AttendanceEditInput) => updateMemberAttendance(sessionId, input),
     onSuccess: () =>
@@ -424,7 +541,6 @@ function SessionAttendanceData({ sessionId, part }: { sessionId: string; part: A
       });
     },
   });
-  const { session, members } = attendance;
   const attendanceCodeCard = (
     <AttendanceCodeCard
       code={attendanceCode}
@@ -444,6 +560,7 @@ function SessionAttendanceData({ sessionId, part }: { sessionId: string; part: A
         <TeamSessionContent
           sessionId={sessionId}
           session={session}
+          generationId={generationId}
           attendanceCodeCard={attendanceCodeCard}
           closePending={closeMutation.isPending}
           closeError={closeMutation.isError}
@@ -487,6 +604,7 @@ function SessionAttendanceData({ sessionId, part }: { sessionId: string; part: A
 function TeamSessionContent({
   sessionId,
   session,
+  generationId,
   attendanceCodeCard,
   closePending,
   closeError,
@@ -500,6 +618,7 @@ function TeamSessionContent({
 }: {
   sessionId: string;
   session: AttendanceSessionViewModel;
+  generationId?: number;
   attendanceCodeCard: ReactNode;
   closePending: boolean;
   closeError: boolean;
@@ -511,7 +630,11 @@ function TeamSessionContent({
   teamDecisionError: boolean;
   onTeamDecision: (input: TeamDecisionInput) => void;
 }) {
-  const { data: teamReviews } = useSuspenseQuery(teamReviewsQueryOptions(sessionId));
+  const { data: teamReviews } = useSuspenseQuery(
+    generationId === undefined
+      ? teamReviewsQueryOptions(sessionId)
+      : teamReviewsApiQueryOptions(generationId, sessionId),
+  );
   const pendingReviewCount = teamReviews.filter(
     (review) => review.reviewState === 'pending',
   ).length;
