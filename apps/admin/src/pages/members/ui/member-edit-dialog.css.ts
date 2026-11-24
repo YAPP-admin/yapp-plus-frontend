@@ -15,3 +15,9 @@ export const body = style({
     },
   },
 });
+
+export const eyebrow = style({
+  color: vars.$color.fg.brand,
+  fontSize: vars.$fontSize.t1,
+  fontWeight: 700,
+});
