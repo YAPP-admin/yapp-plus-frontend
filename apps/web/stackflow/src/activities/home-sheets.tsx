@@ -8,6 +8,9 @@ import {
   type AttendanceReportStep,
 } from '@/pages/home';
 import { NotFoundActivity } from './activities';
+import { useNativeAuthSession } from '@/features/auth';
+import { staticContentEnabled } from '@/features/static-content';
+import { teamPhotoDevelopmentEnabled } from './team-photo-development';
 
 export function AttendanceCodeActivity() {
   const { isActive } = useActivity();
@@ -82,6 +85,7 @@ function readAttendanceReportStep(params: unknown): AttendanceReportStep {
 }
 
 export function TeamAttendanceGuideActivity() {
+  const { phase } = useNativeAuthSession();
   const { isActive } = useActivity();
   const { sessionId } = useActivityParams<'TeamAttendanceGuide'>();
   const flow = useFlow();
@@ -90,7 +94,11 @@ export function TeamAttendanceGuideActivity() {
     setPhoto(file);
     flow.replace('TeamAttendanceUpload', { sessionId });
   });
-  if (!sessionId) {
+  if (
+    !sessionId ||
+    staticContentEnabled() ||
+    (phase !== 'SIGNED_IN' && !teamPhotoDevelopmentEnabled())
+  ) {
     return <NotFoundActivity />;
   }
   return (
