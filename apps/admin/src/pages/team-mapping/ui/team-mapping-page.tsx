@@ -1,66 +1,111 @@
-/** 팀 빌딩 전·배정 중·확정됨 상태의 원본 목록과 화면 편집 진입을 제공한다. */
+/** 팀 빌딩 전·배정 중 상태의 원본 목록과 편집 진입을 제공한다. */
+import { useState } from 'react';
 import { overlay } from 'overlay-kit';
 import { ActionButton, ResultSection } from '@yapp-plus/ui';
 import { UsersRound } from 'lucide-react';
 import {
+  getMemberByActivityId,
   getTeamFilterCounts,
   getTeamsForFilter,
-  teamMappingStatusSchema,
+  teamMappingSnapshotSchema,
+  type TeamDraftValues,
   type TeamMappingTeam,
   type TeamMappingSnapshot,
-  type TeamMappingStatus,
 } from '~/features/team-management';
-import { FilterSelect } from '~/shared/ui/filter-select';
 import { PageHeader } from '~/shared/ui/page-header';
-import {
-  teamMappingFilterLabels,
-  teamMappingPreviewLabels,
-  type TeamMappingSearch,
-} from '../model/team-search';
+import { teamMappingFilterLabels, type TeamMappingSearch } from '../model/team-search';
 import { TeamCard } from './team-card';
-import { TeamConfirmDialog } from './team-confirm-dialog';
 import { TeamCreateDialog } from './team-create-dialog';
 import { TeamDetailPanel } from './team-detail-panel';
 import * as styles from './team-mapping-page.css';
 import { TeamFilters } from './team-filters';
 import { UnassignedMembers } from './unassigned-members';
 import { TeamMappingDraftContext, useTeamMappingDraft } from './team-mapping-draft-context';
-import { useConfirmedTeamEditing } from './use-confirmed-team-editing';
 
-function formatConfirmationDate(confirmedAt: string): string {
-  const date = confirmedAt.split('T')[0];
-  return date === undefined ? confirmedAt : date.replaceAll('-', '. ');
+function getTeamLeaderActivityId(
+  snapshot: TeamMappingSnapshot,
+  memberActivityIds: readonly string[],
+  preferredActivityId: string | null,
+): string | null {
+  if (
+    preferredActivityId !== null &&
+    memberActivityIds.includes(preferredActivityId) &&
+    getMemberByActivityId(snapshot, preferredActivityId)?.part === 'pm'
+  ) {
+    return preferredActivityId;
+  }
+
+  return (
+    memberActivityIds.find(
+      (activityId) => getMemberByActivityId(snapshot, activityId)?.part === 'pm',
+    ) ??
+    memberActivityIds[0] ??
+    null
+  );
 }
 
-/** 화면 상태에 따라 빈 상태 또는 읽기 전용 팀 목록을 표시한다. */
+function updateTeamSnapshot(
+  snapshot: TeamMappingSnapshot,
+  team: TeamMappingTeam,
+  values: TeamDraftValues,
+  destinationTeamIds: Readonly<Record<string, string>> = {},
+): TeamMappingSnapshot {
+  const selectedActivityIds = new Set(values.memberActivityIds);
+  const destinationEntries = Object.entries(destinationTeamIds);
+  const movedActivityIds = new Set(destinationEntries.map(([activityId]) => activityId));
+  const teams = snapshot.teams.map((candidate) => {
+    const memberActivityIds =
+      candidate.id === team.id
+        ? [...values.memberActivityIds]
+        : candidate.memberActivityIds.filter(
+            (activityId) =>
+              !selectedActivityIds.has(activityId) && !movedActivityIds.has(activityId),
+          );
+
+    destinationEntries.forEach(([activityId, destinationTeamId]) => {
+      if (candidate.id === destinationTeamId && !memberActivityIds.includes(activityId)) {
+        memberActivityIds.push(activityId);
+      }
+    });
+
+    return {
+      ...candidate,
+      name: candidate.id === team.id ? values.name.trim() : candidate.name,
+      serviceName:
+        candidate.id === team.id ? values.serviceName.trim() || null : candidate.serviceName,
+      memberActivityIds,
+      leaderActivityId: getTeamLeaderActivityId(
+        snapshot,
+        memberActivityIds,
+        candidate.leaderActivityId,
+      ),
+    };
+  });
+
+  return teamMappingSnapshotSchema.parse({ ...snapshot, teams });
+}
+
+/** snapshot 상태에 따라 빈 상태 또는 팀 목록을 표시한다. */
 export function TeamMappingPage({
   snapshot,
   search,
-  onPreviewChange,
   onFilterChange,
   onTeamSelect,
   onCreateTeam,
 }: {
   snapshot: TeamMappingSnapshot;
   search: TeamMappingSearch;
-  onPreviewChange: (preview: TeamMappingStatus) => void;
   onFilterChange?: (filter: TeamMappingSearch['filter']) => void;
   onTeamSelect?: (team: TeamMappingTeam) => void;
   onCreateTeam?: () => void;
 }) {
   const draft = useTeamMappingDraft();
-  const {
-    isEditing: isConfirmedEditing,
-    startEditing,
-    requestExit,
-  } = useConfirmedTeamEditing({
-    status: snapshot.status,
-  });
-  const hasTeams = snapshot.status !== 'before';
-  const filterCounts = getTeamFilterCounts(snapshot);
-  const teams = getTeamsForFilter(snapshot, search.filter);
+  const [workingSnapshot, setWorkingSnapshot] = useState(snapshot);
+  const hasTeams = workingSnapshot.status !== 'before';
+  const filterCounts = getTeamFilterCounts(workingSnapshot);
+  const teams = getTeamsForFilter(workingSnapshot, search.filter);
   const hasEmptyFilterResult = teams.length === 0;
-  const assignedMemberCount = snapshot.teams.reduce(
+  const assignedMemberCount = workingSnapshot.teams.reduce(
     (total, team) => total + team.memberActivityIds.length,
     0,
   );
@@ -69,13 +114,26 @@ export function TeamMappingPage({
     onCreateTeam?.();
     overlay.open(({ unmount }) => (
       <TeamMappingDraftContext.Provider value={draft}>
-        <TeamCreateDialog snapshot={snapshot} onClose={unmount} />
+        <TeamCreateDialog snapshot={workingSnapshot} onClose={unmount} />
       </TeamMappingDraftContext.Provider>
     ));
   }
 
-  function openConfirmDialog() {
-    overlay.open(({ unmount }) => <TeamConfirmDialog snapshot={snapshot} onClose={unmount} />);
+  function openEditDialog(team: TeamMappingTeam) {
+    overlay.open(({ unmount }) => (
+      <TeamMappingDraftContext.Provider value={draft}>
+        <TeamCreateDialog
+          snapshot={workingSnapshot}
+          team={team}
+          onClose={unmount}
+          onUpdate={(editingTeam, values, destinationTeamIds) => {
+            setWorkingSnapshot((currentSnapshot) =>
+              updateTeamSnapshot(currentSnapshot, editingTeam, values, destinationTeamIds),
+            );
+          }}
+        />
+      </TeamMappingDraftContext.Provider>
+    ));
   }
 
   function openTeamDetail(team: TeamMappingTeam) {
@@ -84,10 +142,14 @@ export function TeamMappingPage({
       overlay.open(({ unmount }) => (
         <TeamMappingDraftContext.Provider value={draft}>
           <TeamDetailPanel
-            snapshot={snapshot}
+            snapshot={workingSnapshot}
             team={team}
             onClose={unmount}
-            readOnly={snapshot.status === 'confirmed' && !isConfirmedEditing}
+            readOnly
+            onEdit={() => {
+              unmount();
+              openEditDialog(team);
+            }}
           />
         </TeamMappingDraftContext.Provider>
       ));
@@ -96,12 +158,7 @@ export function TeamMappingPage({
 
   function renderTeamContent() {
     if (search.filter === 'unassigned') {
-      return (
-        <UnassignedMembers
-          snapshot={snapshot}
-          readOnly={snapshot.status === 'confirmed' && !isConfirmedEditing}
-        />
-      );
+      return <UnassignedMembers snapshot={workingSnapshot} />;
     }
 
     if (hasEmptyFilterResult) {
@@ -124,7 +181,13 @@ export function TeamMappingPage({
     return (
       <div className={styles.teamGrid}>
         {teams.map((team) => (
-          <TeamCard key={team.id} snapshot={snapshot} team={team} onOpen={openTeamDetail} />
+          <TeamCard
+            key={team.id}
+            snapshot={workingSnapshot}
+            team={team}
+            onOpen={openTeamDetail}
+            onEdit={openEditDialog}
+          />
         ))}
       </div>
     );
@@ -138,17 +201,9 @@ export function TeamMappingPage({
         description="팀 구성과 회원 배정 현황을 관리해요."
       >
         <div className={styles.headerActions}>
-          <FilterSelect
-            className={styles.previewField}
-            label="화면 상태"
-            value={search.preview}
-            options={teamMappingStatusSchema.options}
-            labels={teamMappingPreviewLabels}
-            onChange={onPreviewChange}
-          />
           {hasTeams && (
             <TeamFilters
-              snapshot={snapshot}
+              snapshot={workingSnapshot}
               value={search.filter}
               onChange={(filter) => onFilterChange?.(filter)}
             />
@@ -156,7 +211,7 @@ export function TeamMappingPage({
         </div>
       </PageHeader>
 
-      {snapshot.status === 'before' ? (
+      {workingSnapshot.status === 'before' ? (
         <section className={styles.emptyState} aria-labelledby="team-mapping-empty-title">
           <ResultSection
             size="medium"
@@ -167,7 +222,7 @@ export function TeamMappingPage({
             }
             titleAs="h2"
             title={<span id="team-mapping-empty-title">아직 만들어진 팀이 없어요</span>}
-            description={`${snapshot.generation}기 팀 빌딩을 시작하면 팀원과 서비스를 함께 관리할 수 있어요.`}
+            description={`${workingSnapshot.generation}기 팀 빌딩을 시작하면 팀원과 서비스를 함께 관리할 수 있어요.`}
             primaryActionProps={{
               type: 'button',
               variant: 'neutralSolid',
@@ -179,30 +234,6 @@ export function TeamMappingPage({
         </section>
       ) : (
         <>
-          {snapshot.status === 'confirmed' && snapshot.confirmation !== null && (
-            <section className={styles.confirmationBanner} aria-label="확정 이력">
-              <div className={styles.confirmationContent}>
-                <span className={styles.confirmationEyebrow}>확정됨</span>
-                <h2 className={styles.confirmationTitle}>{snapshot.generation}기 팀 매핑</h2>
-                <p className={styles.confirmationDescription}>
-                  {formatConfirmationDate(snapshot.confirmation.confirmedAt)} ·{' '}
-                  {snapshot.confirmation.actorName} 확정
-                </p>
-                {isConfirmedEditing && (
-                  <output className={styles.editingDescription}>
-                    편집 중 · 팀원 배정만 변경할 수 있어요.
-                  </output>
-                )}
-              </div>
-              <ActionButton
-                type="button"
-                variant={isConfirmedEditing ? 'neutralWeak' : 'neutralSolid'}
-                onClick={isConfirmedEditing ? requestExit : startEditing}
-              >
-                {isConfirmedEditing ? '편집 종료' : '수정하기'}
-              </ActionButton>
-            </section>
-          )}
           <section className={styles.teamListSection} aria-labelledby="team-mapping-list-title">
             <div className={styles.listHeader}>
               <div>
@@ -210,26 +241,19 @@ export function TeamMappingPage({
                   팀 목록
                 </h2>
                 <p className={styles.listSummary}>
-                  총 {snapshot.teams.length}팀 · {assignedMemberCount}명 배정 ·{' '}
+                  총 {workingSnapshot.teams.length}팀 · {assignedMemberCount}명 배정 ·{' '}
                   {filterCounts.unassigned}명 미배정
                 </p>
               </div>
               <div className={styles.listActions}>
-                {snapshot.status === 'draft' && (
-                  <ActionButton type="button" variant="neutralWeak" onClick={openConfirmDialog}>
-                    팀 확정
-                  </ActionButton>
-                )}
-                {snapshot.status !== 'confirmed' && (
-                  <ActionButton
-                    type="button"
-                    variant="neutralSolid"
-                    aria-label="팀 만들기"
-                    onClick={openCreateDialog}
-                  >
-                    팀 만들기
-                  </ActionButton>
-                )}
+                <ActionButton
+                  type="button"
+                  variant="neutralSolid"
+                  aria-label="팀 만들기"
+                  onClick={openCreateDialog}
+                >
+                  팀 만들기
+                </ActionButton>
               </div>
             </div>
             {search.filter === 'unassigned' && (
