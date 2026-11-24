@@ -24,20 +24,17 @@ type TeamDetailPanelProps = {
   team: TeamMappingTeam;
   onClose: () => void;
   readOnly?: boolean;
+  onEdit?: () => void;
+  onDelete?: () => void;
 };
-
-function getMemberAddLabel(readOnly: boolean, isAddOpen: boolean): string {
-  if (readOnly) {
-    return '회원 추가 (조회 전용)';
-  }
-  return isAddOpen ? '회원 추가 닫기' : '회원 추가';
-}
 
 export function TeamDetailPanel({
   snapshot,
   team,
   onClose,
   readOnly = false,
+  onEdit,
+  onDelete,
 }: TeamDetailPanelProps) {
   const { setDetailDirty } = useTeamMappingDraft();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -122,15 +119,11 @@ export function TeamDetailPanel({
                   <h3 id="team-detail-members-title" className={styles.sectionTitle}>
                     팀원
                   </h3>
-                  <ActionButton
-                    type="button"
-                    variant="neutralWeak"
-                    size="small"
-                    disabled={readOnly}
-                    onClick={toggleAdd}
-                  >
-                    {getMemberAddLabel(readOnly, isAddOpen)}
-                  </ActionButton>
+                  {!readOnly && (
+                    <ActionButton type="button" variant="neutralWeak" size="small" onClick={toggleAdd}>
+                      {isAddOpen ? '회원 추가 닫기' : '회원 추가'}
+                    </ActionButton>
+                  )}
                 </div>
                 {!readOnly && isAddOpen && (
                   <TeamMemberSearchPanel
@@ -157,24 +150,39 @@ export function TeamDetailPanel({
                 )}
               </section>
 
-              <TeamPendingChanges
-                snapshot={snapshot}
-                currentTeamId={team.id}
-                changes={changes}
-                onCancel={cancelChange}
-                onClear={clearChanges}
-              />
+              {!readOnly && (
+                <TeamPendingChanges
+                  snapshot={snapshot}
+                  currentTeamId={team.id}
+                  changes={changes}
+                  onCancel={cancelChange}
+                  onClear={clearChanges}
+                />
+              )}
             </SidePanel.Body>
             <SidePanel.Footer className={styles.footer}>
-              <ActionButton type="button" variant="neutralWeak" disabled>
-                팀 정보 수정 (준비 중)
-              </ActionButton>
-              <ActionButton type="button" variant="neutralWeak" disabled>
-                팀 삭제 (준비 중)
-              </ActionButton>
-              <ActionButton type="button" variant="neutralSolid" disabled>
-                변경 반영 (준비 중)
-              </ActionButton>
+              {readOnly ? (
+                <>
+                  <ActionButton type="button" variant="neutralWeak" onClick={onEdit}>
+                    수정하기
+                  </ActionButton>
+                  <ActionButton type="button" variant="neutralWeak" disabled={onDelete === undefined} onClick={onDelete}>
+                    삭제하기
+                  </ActionButton>
+                </>
+              ) : (
+                <>
+                  <ActionButton type="button" variant="neutralWeak" disabled>
+                    팀 정보 수정 (준비 중)
+                  </ActionButton>
+                  <ActionButton type="button" variant="neutralWeak" disabled>
+                    팀 삭제 (준비 중)
+                  </ActionButton>
+                  <ActionButton type="button" variant="neutralSolid" disabled>
+                    변경 반영 (준비 중)
+                  </ActionButton>
+                </>
+              )}
             </SidePanel.Footer>
           </SidePanel.Content>
         </SidePanel.Positioner>
