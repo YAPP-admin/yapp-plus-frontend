@@ -1027,7 +1027,7 @@ describe('공지 작성·수정 진입점', () => {
     await waitFor(() => expect(screen.getByRole('radio', { name: '제출' })).toBeChecked());
 
     act(() => router.history.forward());
-    await user.click(await screen.findByRole('link', { name: '공지 목록으로 돌아가기' }));
+    await user.click(await screen.findByRole('button', { name: '취소' }));
 
     expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
     expect(router.state.location.href).toBe('/notices');
@@ -1046,15 +1046,15 @@ describe('공지 작성·수정 진입점', () => {
     expect(await screen.findByRole('table')).toBeVisible();
 
     act(() => router.history.forward());
-    await user.click(await screen.findByRole('link', { name: '공지 상세로 돌아가기' }));
+    await user.click(await screen.findByRole('button', { name: '취소' }));
 
     expect(await screen.findByRole('table')).toBeVisible();
     expect(router.state.location.href).toBe('/notices/demo-session');
   });
 
   it.each([
-    ['/notices', '공지 작성', '공지 목록으로 돌아가기', '공지 목록'],
-    ['/notices/demo-session', '공지 수정', '공지 상세로 돌아가기', '공지 상세'],
+    ['/notices', '공지 작성', '취소', '공지 목록'],
+    ['/notices/demo-session', '공지 수정', '취소', '공지 상세'],
   ])('%s에서 키보드로 진입하고 복귀한다', async (path, entryName, returnName, heading) => {
     const user = userEvent.setup();
     await renderRoute(path);
@@ -1062,14 +1062,14 @@ describe('공지 작성·수정 진입점', () => {
     (await screen.findByRole('link', { name: entryName })).focus();
 
     await user.keyboard('{Enter}');
-    const returnLink = await screen.findByRole('link', { name: returnName });
+    const returnControl = await screen.findByRole('button', { name: returnName });
     screen.getByRole('link', { name: '알림 발송 내역' }).focus();
 
-    for (let step = 0; step < 40 && document.activeElement !== returnLink; step += 1) {
+    for (let step = 0; step < 40 && document.activeElement !== returnControl; step += 1) {
       await user.tab();
     }
 
-    expect(returnLink).toHaveFocus();
+    expect(returnControl).toHaveFocus();
 
     await user.keyboard('{Enter}');
 
@@ -1136,7 +1136,7 @@ describe('공지 미저장 이탈', () => {
     paragraph.textContent = '본문만 변경';
     await waitFor(() => expect(body).toHaveTextContent('본문만 변경'));
 
-    await user.click(screen.getByRole('link', { name: '공지 상세로 돌아가기' }));
+    await user.click(screen.getByRole('button', { name: '취소' }));
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', { name: '계속 작성' }),
     );
@@ -1145,13 +1145,13 @@ describe('공지 미저장 이탈', () => {
     paragraph.textContent = originalBody;
     await waitFor(() => expect(body).toHaveTextContent(originalBody ?? ''));
 
-    await user.click(screen.getByRole('link', { name: '공지 상세로 돌아가기' }));
+    await user.click(screen.getByRole('button', { name: '취소' }));
     expect(await screen.findByRole('heading', { name: '공지 상세' })).toBeVisible();
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 
     await user.click(await screen.findByRole('link', { name: '공지 수정' }));
     await user.click(await screen.findByRole('button', { name: '세션 안내.PNG 제거' }));
-    await user.click(screen.getByRole('link', { name: '공지 상세로 돌아가기' }));
+    await user.click(screen.getByRole('button', { name: '취소' }));
     await user.click(
       within(await screen.findByRole('alertdialog')).getByRole('button', { name: '나가기' }),
     );
