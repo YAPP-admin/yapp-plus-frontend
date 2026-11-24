@@ -18,7 +18,7 @@ const positionByPart = {
   'ai-native': 'AI_NATIVE',
 } as const;
 
-function parseTeamId(value: string | undefined) {
+function parseTeamId(value: string | number | undefined) {
   if (value === undefined) {
     return undefined;
   }

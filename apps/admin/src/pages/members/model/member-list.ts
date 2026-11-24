@@ -44,7 +44,9 @@ export function filterMembers(
 ) {
   const query = search.q.trim();
   const teamIds = new Set(getMemberTeamOptions(members, currentGeneration).map((team) => team.id));
-  const team = search.team !== undefined && teamIds.has(search.team) ? search.team : undefined;
+  const requestedTeam = search.team === undefined ? undefined : String(search.team);
+  const team =
+    requestedTeam !== undefined && teamIds.has(requestedTeam) ? requestedTeam : undefined;
   return members
     .filter((member) => {
       const activity = member.activities.find((item) => item.generation === currentGeneration);
