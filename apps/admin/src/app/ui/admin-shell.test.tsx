@@ -168,7 +168,7 @@ describe('좁은 화면 관리자 메뉴', () => {
     await user.click(await screen.findByRole('button', { name: '메뉴' }));
     const dialog = await screen.findByRole('dialog');
     await user.click(within(dialog).getByRole('link', { name: /가입 신청/ }));
-    expect(await screen.findByText('가입 대기 중인 회원이 없어요')).toBeVisible();
+    expect(await screen.findByRole('heading', { name: '가입 대기', level: 2 })).toBeVisible();
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
     expect(router.state.location.search).toEqual({
       tab: 'pending',
