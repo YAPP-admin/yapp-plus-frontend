@@ -1,50 +1,31 @@
 # 데이터 모델과 상태 수명
 
-## 제출 대상과 명단
+## 서버 상태
 
-TeamAttendanceTarget은 sessionId·teamId·teamName·selfMembershipId·members를 소유한다.
-members는 membershipId·name·positionLabel을 갖고, 생성 응답의 isMe로 본인을 정한다.
-서버가 팀 ID·membership ID 범위와 본인 한 명 조건을 보장하며, 화면 경계는 기존 제출 대상 스키마의
-중복 명단·본인 포함 조건만 적용한다.
-position null은 ‘—’로 표시한다. 원본 ID를 이름·userId로 보정하지 않는다.
+- 주간 세션: useSuspenseQuery로 type·attendanceStatus를 읽어 홈과 입력 UI를 결정한다.
+- 팀원: 생성 find5Options를 소비하고 TeamAttendanceTarget으로 표시한다.
+  teamId·membershipId를 사용하고 isMe로 본인을 정한다. 직군 null은 ‘—’다.
+- 팀 사진: 생성 find1Options를 PENDING_APPROVAL에서 소비한다. 사진 없음·오류는 검토 중 표시를 유지한다.
+- 별도 조회 래퍼·SUBMITTED 상태 모델은 없다. 기존 제출 대상·폼 스키마만 유지한다.
 
-명단 비교는 membershipId로 정렬한 membershipId·name·position·isMe 값으로 한다.
-배열 순서나 새 객체 참조만 바뀌면 초기화하지 않는다. 같은 teamId에서 값이 바뀌면
-사진·업로드 결과를 유지하고 선택을 본인만으로 초기화하며 안내한다.
-teamId·sessionId·인증 계정 경계 변경은 사진·키·선택·접수 결과를 모두 폐기한다.
+## 화면 초안
 
-## 조회 결과
+selectedPhoto는 Context의 { photo: File; previewUrl: string } 또는 null이다.
+브리지 성공 콜백에서 저장하고 업로드 Activity로 이동한다. 사진 선택 시 서버 업로드는 없다.
+previewUrl은 URL.createObjectURL로 생성하며 교체·완료·이탈 시 revokeObjectURL로 해제한다.
+참석자 선택은 폼의 selectedMembershipIds가 소유하고 본인을 포함한다.
 
-- 주간 세션·팀원: 서버 상태를 Query로 소유하고 오류 시 진행하지 않는다.
-- 기존 사진: 성공의 photo 존재 여부로 판단한다. PENDING·APPROVED·REJECTED 모두 기존 제출이다.
-- 사진 조회 HTTP·네트워크·검증 실패: UI 판단에서 미제출로 처리한다. 이전 캐시로 계속 차단하지 않는다.
-- AbortSignal 취소: 미제출 결과가 아니라 행동 종료다. 후속 업로드·접수를 시작하지 않는다.
-- 사진 URL은 표시·다운로드·영구 저장하지 않는다. 계정 경계에서 관련 Query를 취소·제거한다.
+## 전송과 완료
 
-## 사진과 업로드
+최종 버튼에서 체크섬 생성·presign·PUT·접수를 실행한다.
+imageKey는 해당 전송 내부에서만 사용하며 다음 Activity에 전달하지 않는다.
+접수 결과 receipt는 photoId·submittedAt·PENDING·제출 당시 팀과 참석자 정보를 가진다.
+isSubmissionComplete는 Stackflow stage === complete로 계산하고 receipt가 있어야 완료 화면을 표시한다.
+진행·오류·접수 결과는 Mutation, 사진 File은 Context가 소유한다.
+계정 변경·화면 이탈의 취소와 늦은 응답 차단은 기존 화면 수명 정책을 따른다.
 
-| 상태                   | 보유 값·허용 행동                                    |
-| ---------------------- | ---------------------------------------------------- |
-| 사진 없음              | 선택·촬영 가능, 최종 제출 불가                       |
-| 사진 준비 중           | 기존 사진·키 유지, 도구 중복 실행·최종 제출 불가     |
-| 업로드 중              | 새 사진·미리보기, 이전 키 없음. 참석자 선택만 가능   |
-| 업로드 실패            | 현재 사진 유지, 키 없음. 새 URL로 명시적 재시도 가능 |
-| 업로드 완료            | 현재 사진에 대응하는 imageKey, 최종 제출 가능        |
-| 접수 중·완료·결과 불명 | 중복 제출 차단. 결과 불명은 홈 복귀 제공             |
+## 오류
 
-파일·object URL·업로드 키는 화면 흐름에서 소유하고 URL은 교체·이탈 시 해제한다.
-전송 진행·오류는 Mutation을 사용하며 동일한 상태를 별도 플래그로 복제하지 않는다.
-사진 바이트·Base64·서명 URL을 mutation 변수·결과나 로그에 남기지 않는 기존 경계를 유지한다.
-새 사진 준비 성공 때 이전 키를 즉시 폐기한다. 취소·준비 실패는 기존 사진·키를 유지한다.
-업로드 URL 만료 시각을 업로드 완료 imageKey의 최종 접수 만료로 해석하지 않는다.
-
-## 접수와 탐색
-
-접수 입력은 현재 imageKey와 selectedMembershipIds다. 선택은 본인을 포함하고 현재 명단의 부분집합이다.
-유효한 접수 결과는 photoId·submittedAt·PENDING과 제출 당시 팀·참석 명단을 갖는다.
-접수 성공은 출석 승인이 아니며 후속 조회 실패와 분리한다. 실제 사진 업로드 시각 대신
-submittedAt을 표시한다면 문구는 ‘제출 시간’으로 맞춘다.
-
-Activity params는 sessionId와 일회성 initialPhotoSource(library/camera)를 전달한다.
-도구 선택은 URL에 영속화하지 않고 Activity 수명에서 소비한다. 조회·폼 재마운트·OS 복귀로
-재실행하지 않는다. 완료 단계는 같은 흐름의 receipt가 있어야 하며 직접 진입 시 홈 복귀를 제공한다.
+팀원 조회 실패는 문구만 표시한다. 주간·사진 재조회 실패는 기존 데이터를 유지한다.
+명시적 제출 실패는 오류를 안내하고 결과 불명은 재전송을 막으며 홈 복귀를 제공한다.
+접수 성공과 후속 조회 실패를 구분하며 성공 기록으로 출석 승인 상태를 추정하지 않는다.
