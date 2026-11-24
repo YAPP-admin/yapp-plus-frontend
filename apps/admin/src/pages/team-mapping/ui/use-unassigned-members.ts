@@ -36,7 +36,7 @@ export function useUnassignedMembers({
   const [checkedActivityIds, setCheckedActivityIds] = useState<ReadonlySet<string>>(new Set());
   const [changes, setChanges] = useState<readonly TeamMemberChange[]>([]);
   const [feedback, setFeedback] = useState<string | undefined>();
-  const isReadOnly = readOnlyOverride ?? snapshot.status === 'confirmed';
+  const isReadOnly = readOnlyOverride ?? false;
   const pendingByActivityId = new Map(changes.map((change) => [change.activityId, change]));
   const checkedIds = members
     .filter((member) => checkedActivityIds.has(member.activityId))
