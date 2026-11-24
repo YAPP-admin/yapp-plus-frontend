@@ -7,3 +7,5 @@ export {
   type TeamMember,
 } from './model/submission-input';
 export type { TeamAttendanceReceipt } from './model/use-photo-submission';
+
+export { teamAttendanceEntryQueryOptions } from './model/team-attendance-query';

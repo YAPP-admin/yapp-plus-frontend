@@ -13,6 +13,7 @@ const memberSchema = z.object({
 export const teamAttendanceTargetSchema = z
   .object({
     sessionId: z.int().positive(),
+    teamId: z.int().positive(),
     teamName: z.string().trim().min(1),
     selfMembershipId: membershipId,
     members: z.array(memberSchema),

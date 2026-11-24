@@ -14,6 +14,7 @@ const checksum = 'ungWv48Bz+pBQUDeXa4iI7ADYaOWF3qctBD/YfIAFa0='; // 'abc'의 SHA
 const makeInput = (): SubmissionInput => ({
   target: teamAttendanceTargetSchema.parse({
     sessionId: 1,
+    teamId: 1,
     teamName: '팀',
     selfMembershipId: 10,
     members: [

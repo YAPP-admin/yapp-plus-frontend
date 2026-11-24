@@ -21,6 +21,7 @@ vi.mock('./use-photo-submission', () => ({
 const input: SubmissionInput = {
   target: teamAttendanceTargetSchema.parse({
     sessionId: 1,
+    teamId: 1,
     teamName: '팀',
     selfMembershipId: 10,
     members: [{ membershipId: 10, name: '본인', positionLabel: 'Web' }],
