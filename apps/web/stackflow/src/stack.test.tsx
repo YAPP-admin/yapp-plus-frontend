@@ -11,11 +11,19 @@ import { currentWeekFixture } from '@/mocks/session-handlers';
 import { koreanDateString } from '@/shared/lib/korean-date-time';
 import { http, HttpResponse } from 'msw';
 import { createStackflowApp, stackflowConfig } from './stack';
+import type { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
+
+const photoBridge = vi.hoisted(() => ({ pick: vi.fn<typeof pickAttendancePhoto>() }));
+vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
+  ...(await importOriginal()),
+  pickAttendancePhoto: photoBridge.pick,
+}));
 
 const popstateListeners: EventListenerOrEventListenerObject[] = [];
 const addWindowListener = window.addEventListener.bind(window);
 
 beforeEach(() => {
+  photoBridge.pick.mockReset();
   vi.stubEnv('VITE_API_MOCKING', 'true');
   // 각 테스트의 새 문서에서 생성한 history 구독을 수거합니다.
   vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
@@ -70,9 +78,9 @@ const teamMembers = {
   ],
 };
 
-function renderStack({ native = false } = {}) {
+function renderStack({ native = false, staleTime = 0 } = {}) {
   const { Stack, actions } = createStackflowApp();
-  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, staleTime } } });
   if (native) {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('YAPPPlusWebView');
     queryClient.setQueryData(nativeSessionQueryOptions(true).queryKey, signedIn);
@@ -529,6 +537,121 @@ it('출석 시트를 뒤로가기로 닫고 다시 열면 입력을 초기화한
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
   expect(window.location.pathname).toBe('/');
 }, 15000);
+
+it.each([
+  ['앨범에서 선택하기', 'library'],
+  ['직접 사진 찍기', 'camera'],
+] as const)(
+  '%s에서 취소·재선택 후 팀원 선택·제출·완료·홈 복귀를 연결한다',
+  async (label, source) => {
+    vi.stubEnv('DEV', false);
+    vi.stubEnv('VITE_API_MOCKING', 'false');
+    photoBridge.pick.mockResolvedValueOnce({ status: 'CANCELLED' }).mockResolvedValueOnce({
+      status: 'SUCCESS',
+      photo: {
+        filename: 'team-attendance.jpg',
+        contentType: 'image/jpeg',
+        sizeBytes: 4,
+        width: 1,
+        height: 1,
+        base64: '/9j/2Q==',
+      },
+    });
+    let submitted = false;
+    let uploadedBytes = 0;
+    const requests: string[] = [];
+    const submitBody = vi.fn<(body: unknown) => void>();
+    const endpoint = `${apiBaseUrl}/api/sessions/42/team-attendance-photos`;
+    server.use(
+      http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
+        HttpResponse.json({
+          ...currentWeekFixture,
+          session: {
+            ...currentWeekFixture.session,
+            sessionId: 42,
+            type: 'TEAM',
+            attendanceStatus: submitted ? 'PENDING_APPROVAL' : 'AVAILABLE',
+          },
+        }),
+      ),
+      http.get(endpoint, () =>
+        HttpResponse.json({
+          photo: submitted
+            ? {
+                photoId: 1,
+                teamId: 1,
+                teamName: 'Web 팀',
+                status: 'PENDING',
+                imageUrl: null,
+                imageUrlExpiresAt: null,
+                uploadedAt: '2026-11-24T05:00:00Z',
+                uploadedTime: '14:00',
+                submittedAt: '2026-11-24T05:00:00Z',
+                uploader: { userId: 1, name: '김야뿌' },
+                selectedMemberCount: 2,
+              }
+            : null,
+        }),
+      ),
+      http.post(`${endpoint}/presign`, () => {
+        requests.push('presign');
+        return HttpResponse.json({
+          imageKey: 'test-image',
+          uploadUrl: 'https://storage.test/team-photo',
+          signedHeaders: { 'Content-Type': 'image/jpeg' },
+          expiresAt: '2026-11-24T05:05:00Z',
+        });
+      }),
+      http.put('https://storage.test/team-photo', async ({ request }) => {
+        uploadedBytes = (await request.arrayBuffer()).byteLength;
+        requests.push('put');
+        return new HttpResponse(null, { status: 200 });
+      }),
+      http.post(endpoint, async ({ request }) => {
+        requests.push('submit');
+        submitBody(await request.json());
+        submitted = true;
+        return HttpResponse.json(
+          { photoId: 1, submittedAt: '2026-11-24T05:00:00Z', status: 'PENDING' },
+          { status: 201 },
+        );
+      }),
+    );
+    const user = userEvent.setup();
+    renderStack({ native: true, staleTime: Infinity });
+    const home = await waitForTopHeading('홈');
+    await user.click(await home.findByRole('button', { name: '인증 사진 올리기' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/team-attendance/guide'));
+    // happy-dom은 Drawer의 기본 transform을 계산하지 않는다.
+    (await screen.findByRole('dialog')).style.transform = 'none';
+    await user.click(await screen.findByRole('button', { name: label }));
+    await waitFor(() => expect(photoBridge.pick).toHaveBeenCalledTimes(1));
+    expect(window.location.pathname).toBe('/team-attendance/guide');
+    await user.click(await screen.findByRole('button', { name: label }));
+    await screen.findByRole('form', { name: '팀 인증 사진 제출' });
+    expect(photoBridge.pick).toHaveBeenNthCalledWith(2, { source });
+    expect(requests).toEqual([]);
+    expect(screen.getByRole('checkbox', { name: /김야뿌/ })).toBeChecked();
+    expect(screen.getByRole('checkbox', { name: /김야뿌/ })).toBeDisabled();
+    await user.click(screen.getByRole('checkbox', { name: /강야뿌/ }));
+    await user.click(screen.getByRole('button', { name: '인증 사진 제출하기' }));
+    await waitFor(() => expect(requests).toEqual(['presign', 'put', 'submit']));
+    expect(await screen.findByRole('heading', { name: '인증 사진을 올렸어요!' })).toBeVisible();
+    expect(requests).toEqual(['presign', 'put', 'submit']);
+    expect(uploadedBytes).toBe(4);
+    expect(submitBody).toHaveBeenCalledExactlyOnceWith({
+      imageKey: 'test-image',
+      selectedMembershipIds: [2, 1],
+    });
+    await user.click(screen.getByRole('link', { name: '확인' }));
+    const returnedHome = await waitForTopHeading('홈');
+    expect(await returnedHome.findByText('운영진이 확인하고 있어요')).toBeVisible();
+    expect(
+      returnedHome.queryByRole('button', { name: '인증 사진 올리기' }),
+    ).not.toBeInTheDocument();
+  },
+  15000,
+);
 
 it('팀 안내 시트는 사진 도구를 열기 전까지 홈 위에 유지한다', async () => {
   window.history.replaceState({}, '', '/?session=team');

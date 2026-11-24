@@ -253,7 +253,10 @@ export function TeamAttendanceUploadActivity() {
         sessionId={sessionId}
         onSubmitted={(result) => {
           setReceipt(result);
-          stepFlow.replaceStep({ stage: 'complete' }, { targetActivityId: activity.id });
+          stepFlow.replaceStep(
+            { sessionId: sessionIdParam, stage: 'complete' },
+            { targetActivityId: activity.id },
+          );
         }}
       />
     </QueryBoundary>
