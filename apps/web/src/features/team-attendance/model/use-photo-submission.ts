@@ -46,7 +46,7 @@ const createSubmissionUncertainError = () =>
     '접수 여부를 확인하지 못했어요. 다시 제출하지 말고 홈으로 돌아가 주세요.',
   );
 
-/** 세 mutation을 순서대로 실행한다. 사진 바이트는 mutation 변수·결과에 저장하지 않는다. */
+/** 최종 확인에서 presign·PUT·접수를 순서대로 실행한다. 사진 바이트는 mutation 변수·결과에 저장하지 않는다. */
 export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
   const uploadRequest = useRef<{
     photo: File;
@@ -66,13 +66,11 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
     mutationFn: async () => {
       const request = uploadRequest.current;
       uploadRequest.current = null;
-
       if (!request) {
         throw createSubmissionFailedError();
       }
       const { photo, destination, signal } = request;
       signal.throwIfAborted();
-
       await ky.put(destination.uploadUrl, {
         body: photo,
         headers: destination.signedHeaders,
@@ -96,7 +94,6 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
           afterResponse: [
             ...(apiOptions.kyOptions?.hooks?.afterResponse ?? []),
             ({ response }) => {
-              // HTTP 실패는 공통 ApiError로 처리하고, 성공 응답의 접수 상태만 확인한다.
               if (response.ok && response.status !== 201) {
                 throw createSubmissionUncertainError();
               }
@@ -119,12 +116,10 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
     }
 
     let imageKey: string;
-
     try {
       signal.throwIfAborted();
       const digest = await crypto.subtle.digest('SHA-256', await input.photo.arrayBuffer());
       signal.throwIfAborted();
-
       const destination = await presign.mutateAsync({
         signal,
         path: { sessionId: input.target.sessionId },
@@ -157,7 +152,6 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
       if (!Number.isSafeInteger(photoId) || photoId <= 0 || receipt.status !== 'PENDING') {
         throw createSubmissionUncertainError();
       }
-
       return {
         photoId,
         submittedAt: receipt.submittedAt,
@@ -168,11 +162,9 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
         ),
       };
     } catch (error) {
-      // 최종 POST 이후의 응답 유실은 서버 미접수를 뜻하지 않는다.
       if (error instanceof ApiError && TEAM_PHOTO_ERROR_MESSAGE_BY_HTTP_STATUS[error.status]) {
         throw createSubmissionFailedError(error.status);
       }
-
       throw error instanceof SubmissionError ? error : createSubmissionUncertainError();
     } finally {
       presign.reset();
@@ -180,6 +172,5 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
       submit.reset();
     }
   }
-
   return { submitPhoto };
 }
