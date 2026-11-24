@@ -52,13 +52,6 @@ it('체크된 회원의 기존 예정 대상을 일괄 대상 팀으로 덮어�
   expect(screen.getByRole('button', { name: '이도윤 배정 예정 취소' })).toBeVisible();
 });
 
-it('확정 상태에서는 체크와 배정 선택을 읽기 전용으로 표시한다', () => {
-  render(<UnassignedMembers snapshot={{ ...teamMappingDraftFixture, status: 'confirmed' }} />);
-
-  expect(screen.getByRole('checkbox', { name: '이도윤 선택' })).toBeDisabled();
-  expect(screen.getByRole('combobox', { name: '이도윤 대상 팀' })).toBeDisabled();
-});
-
 it('배정할 팀이 없으면 일괄 작업을 안내하지 않는다', () => {
   render(<UnassignedMembers snapshot={teamMappingBeforeFixture} />);
 

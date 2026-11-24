@@ -2,7 +2,6 @@
 export {
   getTeamMappingFixture,
   teamMappingBeforeFixture,
-  teamMappingConfirmedFixture,
   teamMappingDraftFixture,
   teamMappingFixtures,
 } from './model/team-fixtures';

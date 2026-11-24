@@ -1,9 +1,19 @@
 /** 팀 매핑 화면이 공유하는 읽기 전용 원본 입력과 집계 규칙을 정의한다. */
 import { z } from 'zod';
 
-export const teamMappingStatusSchema = z.enum(['before', 'draft', 'confirmed']);
-export const teamMappingPartSchema = z.enum(['pm', 'design', 'android', 'ios', 'web', 'server']);
-export const teamMappingFilterSchema = z.enum(['all', 'unassigned']);
+export const teamMappingStatusSchema = z.enum(['before', 'draft']);
+export const teamMappingPartSchema = z.enum([
+  'pm',
+  'design',
+  'android',
+  'ios',
+  'web',
+  'server',
+  'mobile',
+  'ai-native',
+  'unassigned',
+]);
+export const teamMappingFilterSchema = z.enum(['all', 'complete', 'needs-check', 'unassigned']);
 
 const identifier = z.string().trim().min(1);
 
@@ -14,6 +24,9 @@ export const teamMappingPartLabels: Readonly<Record<TeamMappingPart, string>> = 
   ios: 'iOS',
   web: 'Web',
   server: 'Server',
+  mobile: 'Mobile',
+  'ai-native': 'AI Native',
+  unassigned: '직군 미지정',
 };
 
 /** 현재 기수에서 팀에 배정 가능한 회원 활동 입력이다. */
@@ -37,14 +50,6 @@ export const teamMappingTeamSchema = z
   })
   .readonly();
 
-/** 확정됨 화면에 표시할 합성 확정 이력이다. 실제 저장 결과를 표현하지 않는다. */
-export const teamMappingConfirmationSchema = z
-  .object({
-    confirmedAt: z.iso.datetime(),
-    actorName: z.string().trim().min(1),
-  })
-  .readonly();
-
 /** 팀·회원 참조와 상태 불변식을 함께 검증하는 화면 snapshot이다. */
 export const teamMappingSnapshotSchema = z
   .object({
@@ -52,7 +57,6 @@ export const teamMappingSnapshotSchema = z
     status: teamMappingStatusSchema,
     members: teamMappingMemberSchema.array().readonly(),
     teams: teamMappingTeamSchema.array().readonly(),
-    confirmation: teamMappingConfirmationSchema.nullable(),
   })
   .superRefine((snapshot, context) => {
     const memberIds = new Set<string>();
@@ -138,8 +142,6 @@ export type TeamMappingFilter = z.infer<typeof teamMappingFilterSchema>;
 export type TeamMappingMember = z.infer<typeof teamMappingMemberSchema>;
 /** 팀 카드와 상세 패널의 읽기 전용 팀 입력이다. */
 export type TeamMappingTeam = z.infer<typeof teamMappingTeamSchema>;
-/** 확정됨 화면에 표시할 합성 이력이다. */
-export type TeamMappingConfirmation = z.infer<typeof teamMappingConfirmationSchema>;
 /** 화면이 받는 팀 매핑 원본 snapshot이다. */
 export type TeamMappingSnapshot = z.infer<typeof teamMappingSnapshotSchema>;
 
@@ -182,6 +184,9 @@ export function getTeamPartCounts(
     ios: 0,
     web: 0,
     server: 0,
+    mobile: 0,
+    'ai-native': 0,
+    unassigned: 0,
   };
   team.memberActivityIds.forEach((activityId) => {
     const member = getMemberByActivityId(snapshot, activityId);
@@ -190,6 +195,19 @@ export function getTeamPartCounts(
     }
   });
   return counts;
+}
+
+/** PM과 Design이 모두 포함된 팀을 구성 완료로 분류한다. */
+export function isTeamCompositionComplete(counts: TeamPartCounts): boolean {
+  return counts.pm > 0 && counts.design > 0;
+}
+
+/** 팀의 PM·Design 구성 여부로 목록 필터 상태를 계산한다. */
+export function getTeamFilter(
+  snapshot: TeamMappingSnapshot,
+  team: TeamMappingTeam,
+): TeamMappingFilter {
+  return isTeamCompositionComplete(getTeamPartCounts(snapshot, team)) ? 'complete' : 'needs-check';
 }
 
 /** 팀원 목록을 원본 기준으로 계산해 미배정 회원만 반환한다. */
@@ -201,15 +219,21 @@ export function getUnassignedMembers(snapshot: TeamMappingSnapshot): readonly Te
 /** 필터에 해당하는 원본 팀 목록을 반환한다. 변경 예정은 반영하지 않는다. */
 export function getTeamsForFilter(
   snapshot: TeamMappingSnapshot,
-  _filter: TeamMappingFilter,
+  filter: TeamMappingFilter,
 ): readonly TeamMappingTeam[] {
-  return snapshot.teams;
+  if (filter === 'all' || filter === 'unassigned') {
+    return snapshot.teams;
+  }
+  return snapshot.teams.filter((team) => getTeamFilter(snapshot, team) === filter);
 }
 
 /** 목록 필터 배지에 표시할 원본 팀·미배정 개수다. */
 export function getTeamFilterCounts(snapshot: TeamMappingSnapshot) {
   return {
     all: snapshot.teams.length,
+    complete: snapshot.teams.filter((team) => getTeamFilter(snapshot, team) === 'complete').length,
+    needsCheck: snapshot.teams.filter((team) => getTeamFilter(snapshot, team) === 'needs-check')
+      .length,
     unassigned: getUnassignedMembers(snapshot).length,
   } as const;
 }
