@@ -1,5 +1,6 @@
 /** 원본 팀 정보와 직군 구성을 상세 진입점과 분리해 표시한다. */
 import { ActionButton, Badge } from '@yapp-plus/ui';
+import { Menu } from '@seed-design/react';
 import { Ellipsis } from 'lucide-react';
 import {
   getMemberByActivityId,
@@ -16,10 +17,12 @@ export function TeamCard({
   snapshot,
   team,
   onOpen,
+  onEdit,
 }: {
   snapshot: TeamMappingSnapshot;
   team: TeamMappingTeam;
   onOpen?: (team: TeamMappingTeam) => void;
+  onEdit?: (team: TeamMappingTeam) => void;
 }) {
   const counts = getTeamPartCounts(snapshot, team);
   const members = team.memberActivityIds
@@ -70,16 +73,37 @@ export function TeamCard({
         </ul>
       </div>
 
-      <ActionButton
-        type="button"
-        variant="neutralWeak"
-        size="small"
-        className={styles.menuButton}
-        aria-label={`${team.name} 더보기`}
-        disabled
-      >
-        <Ellipsis size={18} aria-hidden="true" />
-      </ActionButton>
+      <Menu.Root placement="bottom-end" gutter={4}>
+        <Menu.Trigger asChild>
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            size="small"
+            className={styles.menuButton}
+            aria-label={`${team.name} 더보기`}
+          >
+            <Ellipsis size={18} aria-hidden="true" />
+          </ActionButton>
+        </Menu.Trigger>
+        <Menu.Positioner data-seed-color-mode="dark-only">
+          <Menu.Content>
+            <Menu.ScrollArea>
+              <Menu.Group>
+                <Menu.Item onClick={() => onEdit?.(team)}>
+                  <Menu.ItemBody>
+                    <Menu.ItemLabel>수정하기</Menu.ItemLabel>
+                  </Menu.ItemBody>
+                </Menu.Item>
+                <Menu.Item>
+                  <Menu.ItemBody>
+                    <Menu.ItemLabel>삭제하기</Menu.ItemLabel>
+                  </Menu.ItemBody>
+                </Menu.Item>
+              </Menu.Group>
+            </Menu.ScrollArea>
+          </Menu.Content>
+        </Menu.Positioner>
+      </Menu.Root>
     </article>
   );
 }
