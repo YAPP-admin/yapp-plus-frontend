@@ -63,9 +63,6 @@ export function ApiMemberEditDialog({
           <Dialog.Content className={dialogStyles.dialog} data-seed-color-mode="dark-only">
             <Dialog.Header>
               <Dialog.Title>회원 정보 수정</Dialog.Title>
-              <Dialog.Description>
-                서버 API가 제공하는 상태와 직군만 수정할 수 있어요.
-              </Dialog.Description>
               <Dialog.CloseButton aria-label="닫기">
                 <X size={20} aria-hidden="true" />
               </Dialog.CloseButton>
@@ -150,7 +147,7 @@ function ApiMemberEditContent({
   }
 
   return (
-    <Dialog.Body>
+    <Dialog.Body className={dialogStyles.body}>
       <form className={styles.form} aria-label="회원 정보 수정" noValidate onSubmit={submit}>
         <VStack gap="x2">
           <HStack gap="x2" flexWrap="wrap">
@@ -258,14 +255,14 @@ function renderDetailContent({
 }): ReactNode {
   if (isPending) {
     return (
-      <Dialog.Body>
+      <Dialog.Body className={dialogStyles.body}>
         <output className={styles.notice}>회원 정보를 불러오는 중입니다.</output>
       </Dialog.Body>
     );
   }
   if (error !== null && error !== undefined) {
     return (
-      <Dialog.Body>
+      <Dialog.Body className={dialogStyles.body}>
         <VStack gap="x3">
           <Text role="alert">{getMemberApiErrorMessage(error, 'detail')}</Text>
           <ActionButton
