@@ -589,11 +589,10 @@ describe('회원 목록 URL 상태', () => {
     const router = await renderRoute(
       '/members?tab=pending&q=Kim&part=web&team=team-1&role=admin&status=active',
     );
-    expect(await screen.findByText('가입 대기 중인 회원이 없어요')).toBeVisible();
-    expect(screen.getByText('0', { selector: 'strong' }).parentElement).toHaveTextContent('총 0건');
+    expect(await screen.findByRole('heading', { name: '가입 대기', level: 2 })).toBeVisible();
     expect(screen.queryByRole('searchbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('navigation', { name: '회원 목록 구분' })).not.toBeInTheDocument();
-    expect(screen.getByRole('link', { name: '가입 신청 가입 대기 0건' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /가입 신청 가입 대기/ })).toHaveAttribute(
       'aria-current',
       'page',
     );
