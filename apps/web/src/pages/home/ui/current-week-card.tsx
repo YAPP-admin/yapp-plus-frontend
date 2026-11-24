@@ -1,5 +1,5 @@
 import { staticContentEnabled } from '@/features/static-content';
-import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
+import { useRefetchOnScreenReturn, useScreenActiveContext } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import {
   find1Options,
@@ -112,18 +112,16 @@ function WeekError() {
 
 function CurrentWeekContent() {
   const { apiOptions } = useNativeAuthSession();
+  const active = useScreenActiveContext();
   const query = useSuspenseQuery({
     ...currentWeekQueryOptions(apiOptions),
     refetchOnMount: (cachedQuery) =>
       cachedQuery.state.data && nextKoreanMidnight(cachedQuery.state.data.weekEndDate) <= Date.now()
         ? 'always'
         : true,
-    refetchOnWindowFocus: (cachedQuery) =>
-      cachedQuery.state.data && nextKoreanMidnight(cachedQuery.state.data.weekEndDate) <= Date.now()
-        ? 'always'
-        : true,
+    refetchOnWindowFocus: active ? 'always' : false,
   });
-  useRefetchOnScreenReturn(query);
+  useRefetchOnScreenReturn(query, 'always');
   const { data, dataUpdatedAt } = query;
   const today = koreanDateString(dataUpdatedAt);
   const days = Array.from({ length: 7 }, (_, index) => {
