@@ -8,7 +8,8 @@ export const memberSearchSchema = z.object({
   tab: memberTabSchema.default('all').catch('all'),
   q: z.string().default('').catch(''),
   part: memberPartSchema.default('all').catch('all'),
-  team: z.string().trim().min(1).optional().catch(undefined),
+  // TanStack Router가 숫자로 파싱한 API teamId도 URL 상태에서 유지한다.
+  team: z.union([z.string().trim().min(1), z.number().int().positive()]).optional().catch(undefined),
 });
 
 export type MemberSearch = z.infer<typeof memberSearchSchema>;
