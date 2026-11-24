@@ -1,5 +1,5 @@
 /** 가입 심사 목록 조회와 승인·반려 완료 흐름을 생성 API 계약으로 검증합니다. */
-import { render, screen, waitFor, within } from '@testing-library/react';
+import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -180,26 +180,69 @@ it('MANUAL 승인 요청은 명단 ID 없이 직접 입력값을 보낸다', asy
 
 it('반려 사유가 없으면 요청하지 않고, 입력 후 성공하면 패널을 닫는다', async () => {
   const user = await setup();
-  let requestCount = 0;
+  let requestBody: unknown;
   server.use(
-    http.post(`${apiBaseUrl}/api/admin/membership-approvals/:memberId/reject`, () => {
-      requestCount += 1;
-      return HttpResponse.json(detailResponse);
-    }),
+    http.post(
+      `${apiBaseUrl}/api/admin/membership-approvals/:memberId/reject`,
+      async ({ request }) => {
+        requestBody = await request.json();
+        return HttpResponse.json(detailResponse);
+      },
+    ),
   );
 
   await openReview(user);
   await user.click(screen.getByRole('button', { name: '반려하기' }));
   expect(screen.getByRole('alert')).toHaveTextContent('반려 사유를 입력해 주세요.');
-  expect(requestCount).toBe(0);
+  expect(requestBody).toBeUndefined();
 
   await user.type(
     screen.getByRole('textbox', { name: '반려 사유' }),
-    '가입 정보가 확인되지 않아요.',
+    '가입 정보가 확인되지 않아요.\n특수문자: !@#$%',
   );
   await user.click(screen.getByRole('button', { name: '반려하기' }));
 
-  await waitFor(() => expect(requestCount).toBe(1));
+  await waitFor(() =>
+    expect(requestBody).toEqual({
+      reason: '가입 정보가 확인되지 않아요.\n특수문자: !@#$%',
+    }),
+  );
   expect(await screen.findByText('가입 반려를 완료했어요.')).toBeVisible();
   expect(screen.queryByRole('heading', { name: '가입 심사 상세' })).not.toBeInTheDocument();
+});
+
+it('반려 사유 길이 제한과 서버 검증 메시지를 표시한다', async () => {
+  const user = await setup();
+
+  await openReview(user);
+  const reasonInput = screen.getByRole('textbox', { name: '반려 사유' });
+  expect(reasonInput).toHaveAttribute('maxlength', '2000');
+  expect(
+    screen.getByText('1~2,000자까지 입력할 수 있어요. 줄바꿈과 특수문자를 사용할 수 있어요.'),
+  ).toBeVisible();
+
+  fireEvent.change(reasonInput, { target: { value: 'a'.repeat(2001) } });
+  await user.click(screen.getByRole('button', { name: '반려하기' }));
+  expect(screen.getByRole('alert')).toHaveTextContent(
+    '반려 사유는 최대 2,000자까지 입력해 주세요.',
+  );
+  await user.clear(reasonInput);
+
+  server.use(
+    http.post(`${apiBaseUrl}/api/admin/membership-approvals/:memberId/reject`, () =>
+      HttpResponse.json(
+        {
+          code: 'INVALID_MEMBER_REQUEST',
+          message: '반려 사유는 1~2,000자로 입력해 주세요.',
+          fieldErrors: [],
+        },
+        { status: 400 },
+      ),
+    ),
+  );
+  await user.type(reasonInput, '가입 정보');
+  await user.click(screen.getByRole('button', { name: '반려하기' }));
+
+  expect(await screen.findByText('반려 사유는 1~2,000자로 입력해 주세요.')).toBeVisible();
+  expect(screen.getByRole('heading', { name: '가입 심사 상세' })).toBeInTheDocument();
 });

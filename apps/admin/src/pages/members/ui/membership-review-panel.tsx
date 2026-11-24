@@ -15,6 +15,8 @@ import {
   approvalTypeOptions,
   formatMembershipReviewDate,
   parseGenerationId,
+  rejectionReasonMaxLength,
+  rejectionReasonMinLength,
   toMembershipReviewFailure,
   type ApprovalPosition,
   type ApprovalRole,
@@ -142,6 +144,8 @@ function MembershipReviewContent({
   const [rejectionAttempted, setRejectionAttempted] = useState(false);
   const [actionError, setActionError] = useState<string>();
   const generationId = parseGenerationId(generationInput);
+  const rejectionErrorMessage = getRejectionErrorMessage(reason);
+  const isRejectionValid = rejectionErrorMessage === undefined;
   const listQuery = pendingMembershipsQueryOptions();
   const detailQuery = membershipDetailQueryOptions(memberId);
   const isApprovalValid =
@@ -229,7 +233,7 @@ function MembershipReviewContent({
     setRejectionAttempted(true);
     setActionError(undefined);
 
-    if (reason.trim().length === 0) {
+    if (!isRejectionValid) {
       return;
     }
 
@@ -400,16 +404,21 @@ function MembershipReviewContent({
           onSubmit={submitRejection}
           noValidate
         >
-          <Field.Root invalid={rejectionAttempted && reason.trim().length === 0}>
+          <Field.Root invalid={rejectionAttempted && !isRejectionValid}>
             <Field.Label>반려 사유</Field.Label>
             <Field.Description>
-              현재는 최대 길이를 제한하지 않고 서버 검증을 따릅니다.
+              1~2,000자까지 입력할 수 있어요. 줄바꿈과 특수문자를 사용할 수 있어요.
             </Field.Description>
             <TextField.Root value={reason} onValueChange={setReason}>
-              <TextField.Textarea name="reason" required autoresize={false} />
+              <TextField.Textarea
+                name="reason"
+                maxLength={rejectionReasonMaxLength}
+                required
+                autoresize={false}
+              />
             </TextField.Root>
-            {rejectionAttempted && reason.trim().length === 0 ? (
-              <Field.ErrorMessage role="alert">반려 사유를 입력해 주세요.</Field.ErrorMessage>
+            {rejectionAttempted && rejectionErrorMessage !== undefined ? (
+              <Field.ErrorMessage role="alert">{rejectionErrorMessage}</Field.ErrorMessage>
             ) : null}
           </Field.Root>
           <div className={styles.formActions}>
@@ -603,10 +612,20 @@ function getDetailErrorMessage(error: unknown) {
     : '회원 정보를 불러오지 못했어요. 다시 시도해 주세요.';
 }
 
+function getRejectionErrorMessage(reason: string) {
+  if (reason.length < rejectionReasonMinLength) {
+    return '반려 사유를 입력해 주세요.';
+  }
+  if (reason.length > rejectionReasonMaxLength) {
+    return '반려 사유는 최대 2,000자까지 입력해 주세요.';
+  }
+  return undefined;
+}
+
 function getSaveErrorMessage(error: unknown) {
   const failure = toMembershipReviewFailure(error);
   if (failure.status === 400) {
-    return '입력값을 확인해 주세요.';
+    return failure.message ?? '입력값을 확인해 주세요.';
   }
   if (failure.status === 401) {
     return '로그인이 만료되었어요. 다시 로그인해 주세요.';

@@ -44,6 +44,9 @@ export const approvalPositionLabels: Record<ApprovalPosition, string> = {
   AI_NATIVE: 'AI_NATIVE',
 };
 
+export const rejectionReasonMinLength = 1;
+export const rejectionReasonMaxLength = 2000;
+
 const dateFormatter = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
   year: 'numeric',
@@ -62,6 +65,7 @@ export function parseGenerationId(value: string): number | undefined {
 
 export type MembershipReviewFailure = {
   code: string;
+  message?: string;
   status?: number;
 };
 
@@ -71,6 +75,7 @@ export function toMembershipReviewFailure(error: unknown): MembershipReviewFailu
     const body = zErrorResponse.safeParse(error.body);
     return {
       code: body.success ? body.data.code : `HTTP_${error.status}`,
+      message: body.success ? (body.data.message ?? undefined) : undefined,
       status: error.status,
     };
   }
@@ -101,7 +106,7 @@ export function getMembershipReviewErrorMessage(
   }
 
   if (failure.status === 400 || failure.code === 'INVALID_MEMBER_REQUEST') {
-    return '입력값을 확인해 주세요.';
+    return failure.message ?? '입력값을 확인해 주세요.';
   }
 
   if (operation === 'detail') {
