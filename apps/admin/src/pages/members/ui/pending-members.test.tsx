@@ -1,5 +1,5 @@
-/** 가입 심사 목록 조회와 승인·반려 완료 흐름을 생성 API 계약으로 검증합니다. */
-import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+/** 가입 심사 목록과 승인·신규 등록·거절 Dialog 흐름을 생성 API 계약으로 검증합니다. */
+import { render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { QueryClientProvider } from '@tanstack/react-query';
 import {
@@ -104,24 +104,34 @@ async function setup() {
   return userEvent.setup();
 }
 
-async function openReview(user: ReturnType<typeof userEvent.setup>) {
-  await user.click(await screen.findByRole('button', { name: '가입 신청자 가입 심사 상세' }));
-  return screen.findByRole('heading', { name: '가입 심사 상세' });
+async function openApprovalDialog(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: '가입 신청자 승인' }));
+  return screen.findByRole('heading', { name: '가입 신청자님을 명단에서 찾았어요' });
 }
 
-it('PENDING 목록을 조회하고 회원 상세 패널을 연다', async () => {
+async function openRejectionDialog(user: ReturnType<typeof userEvent.setup>) {
+  await user.click(await screen.findByRole('button', { name: '가입 신청자 거절' }));
+  return screen.findByRole('heading', { name: '가입 거절' });
+}
+
+it('PENDING 목록에서 신청일을 표시하고 상태·더보기 버튼 없이 승인·거절 버튼을 제공한다', async () => {
   const user = await setup();
 
   const table = await screen.findByRole('table');
   expect(within(table).getByRole('row', { name: /가입 신청자/ })).toHaveTextContent(
-    '가입 신청자010-1234-56782026.11.20PENDING상세 보기',
+    '가입 신청자010-1234-56782026.11.20승인거절',
   );
-  await openReview(user);
-  expect(await screen.findByText('명단 매칭 후보')).toBeVisible();
-  expect(screen.getAllByText('가입 신청자').length).toBeGreaterThan(1);
+  expect(within(table).getByRole('columnheader', { name: '신청일' })).toBeVisible();
+  expect(within(table).queryByRole('columnheader', { name: '상태' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '다음 가입 신청 불러오기' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '가입 신청자 승인' })).toBeVisible();
+  expect(screen.getByRole('button', { name: '가입 신청자 거절' })).toBeVisible();
+
+  await openApprovalDialog(user);
+  expect(await screen.findByText('후보 회원')).toBeVisible();
 });
 
-it('ROSTER 승인 요청을 보내고 성공 후 패널을 닫고 스낵바를 표시한다', async () => {
+it('명단 후보를 선택해 연결 승인하고 성공 후 Dialog를 닫고 스낵바를 표시한다', async () => {
   const user = await setup();
   let requestBody: unknown;
   server.use(
@@ -134,9 +144,9 @@ it('ROSTER 승인 요청을 보내고 성공 후 패널을 닫고 스낵바를 �
     ),
   );
 
-  await openReview(user);
-  await user.click(await screen.findByRole('button', { name: '선택' }));
-  await user.click(screen.getByRole('button', { name: '승인하기' }));
+  await openApprovalDialog(user);
+  expect(await screen.findByRole('radio')).toBeChecked();
+  await user.click(screen.getByRole('button', { name: '이 회원과 연결' }));
 
   await waitFor(() =>
     expect(requestBody).toEqual({
@@ -147,10 +157,10 @@ it('ROSTER 승인 요청을 보내고 성공 후 패널을 닫고 스낵바를 �
     }),
   );
   expect(await screen.findByText('가입 승인을 완료했어요.')).toBeVisible();
-  expect(screen.queryByRole('heading', { name: '가입 심사 상세' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: '가입 심사' })).not.toBeInTheDocument();
 });
 
-it('MANUAL 승인 요청은 명단 ID 없이 직접 입력값을 보낸다', async () => {
+it('새 회원으로 등록을 누르면 등록 Dialog로 이동하고 저장 시 MANUAL 승인 요청을 보낸다', async () => {
   const user = await setup();
   let requestBody: unknown;
   server.use(
@@ -163,9 +173,10 @@ it('MANUAL 승인 요청은 명단 ID 없이 직접 입력값을 보낸다', asy
     ),
   );
 
-  await openReview(user);
-  await user.click(screen.getByRole('radio', { name: 'MANUAL' }));
-  await user.click(screen.getByRole('button', { name: '승인하기' }));
+  await openApprovalDialog(user);
+  await user.click(screen.getByRole('button', { name: '새 회원으로 등록' }));
+  expect(await screen.findByRole('heading', { name: '신규 회원 등록' })).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '저장하기' }));
 
   await waitFor(() =>
     expect(requestBody).toEqual({
@@ -178,7 +189,7 @@ it('MANUAL 승인 요청은 명단 ID 없이 직접 입력값을 보낸다', asy
   );
 });
 
-it('반려 사유가 없으면 요청하지 않고, 입력 후 성공하면 패널을 닫는다', async () => {
+it('거절 버튼은 사유 입력 Dialog를 열고 줄바꿈·특수문자를 그대로 전송한다', async () => {
   const user = await setup();
   let requestBody: unknown;
   server.use(
@@ -191,58 +202,43 @@ it('반려 사유가 없으면 요청하지 않고, 입력 후 성공하면 패�
     ),
   );
 
-  await openReview(user);
-  await user.click(screen.getByRole('button', { name: '반려하기' }));
-  expect(screen.getByRole('alert')).toHaveTextContent('반려 사유를 입력해 주세요.');
-  expect(requestBody).toBeUndefined();
+  await openRejectionDialog(user);
+  const reasonInput = screen.getByRole('textbox', { name: '거절 사유' });
+  expect(reasonInput).toHaveAttribute('maxlength', '2000');
+  expect(screen.getByText('앱 화면에 사유가 노출돼요.')).toBeVisible();
+  expect(screen.getByRole('button', { name: '거절하기' })).toBeDisabled();
 
-  await user.type(
-    screen.getByRole('textbox', { name: '반려 사유' }),
-    '가입 정보가 확인되지 않아요.\n특수문자: !@#$%',
-  );
-  await user.click(screen.getByRole('button', { name: '반려하기' }));
+  await user.type(reasonInput, '가입 정보가 확인되지 않아요.\n특수문자: !@#$%');
+  expect(screen.getByText('28/2000')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '거절하기' }));
 
   await waitFor(() =>
     expect(requestBody).toEqual({
       reason: '가입 정보가 확인되지 않아요.\n특수문자: !@#$%',
     }),
   );
-  expect(await screen.findByText('가입 반려를 완료했어요.')).toBeVisible();
-  expect(screen.queryByRole('heading', { name: '가입 심사 상세' })).not.toBeInTheDocument();
+  expect(await screen.findByText('가입 거절을 완료했어요.')).toBeVisible();
+  expect(screen.queryByRole('heading', { name: '가입 거절' })).not.toBeInTheDocument();
 });
 
-it('반려 사유 길이 제한과 서버 검증 메시지를 표시한다', async () => {
+it('거절 API의 INVALID_MEMBER_REQUEST 메시지를 표시한다', async () => {
   const user = await setup();
-
-  await openReview(user);
-  const reasonInput = screen.getByRole('textbox', { name: '반려 사유' });
-  expect(reasonInput).toHaveAttribute('maxlength', '2000');
-  expect(
-    screen.getByText('1~2,000자까지 입력할 수 있어요. 줄바꿈과 특수문자를 사용할 수 있어요.'),
-  ).toBeVisible();
-
-  fireEvent.change(reasonInput, { target: { value: 'a'.repeat(2001) } });
-  await user.click(screen.getByRole('button', { name: '반려하기' }));
-  expect(screen.getByRole('alert')).toHaveTextContent(
-    '반려 사유는 최대 2,000자까지 입력해 주세요.',
-  );
-  await user.clear(reasonInput);
-
   server.use(
     http.post(`${apiBaseUrl}/api/admin/membership-approvals/:memberId/reject`, () =>
       HttpResponse.json(
         {
           code: 'INVALID_MEMBER_REQUEST',
-          message: '반려 사유는 1~2,000자로 입력해 주세요.',
-          fieldErrors: [],
+          message: '거절 사유는 1~2,000자로 입력해 주세요.',
         },
         { status: 400 },
       ),
     ),
   );
-  await user.type(reasonInput, '가입 정보');
-  await user.click(screen.getByRole('button', { name: '반려하기' }));
 
-  expect(await screen.findByText('반려 사유는 1~2,000자로 입력해 주세요.')).toBeVisible();
-  expect(screen.getByRole('heading', { name: '가입 심사 상세' })).toBeInTheDocument();
+  await openRejectionDialog(user);
+  await user.type(screen.getByRole('textbox', { name: '거절 사유' }), '가입 정보');
+  await user.click(screen.getByRole('button', { name: '거절하기' }));
+
+  expect(await screen.findByText('거절 사유는 1~2,000자로 입력해 주세요.')).toBeVisible();
+  expect(screen.getByRole('heading', { name: '가입 거절' })).toBeInTheDocument();
 });
