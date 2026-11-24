@@ -66,12 +66,12 @@ describe('관리자 라우팅', () => {
     }
   });
 
-  it('운영 환경의 회원 목록에는 예시 입력 대신 준비 안내를 표시한다', async () => {
+  it('운영 환경의 회원 목록은 생성 API 응답을 표시한다', async () => {
     vi.stubEnv('DEV', false);
     try {
       await renderRoute('/members');
-      expect(await screen.findByText('회원 목록을 준비 중입니다.')).toBeVisible();
-      expect(screen.queryByRole('table')).not.toBeInTheDocument();
+      expect(await screen.findByRole('table', { name: '33기 회원 목록' })).toBeVisible();
+      expect(screen.getByText('개발 회원 A')).toBeVisible();
       expect(screen.queryByText(/예시 회원/)).not.toBeInTheDocument();
     } finally {
       vi.unstubAllEnvs();

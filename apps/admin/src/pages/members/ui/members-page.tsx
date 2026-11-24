@@ -9,6 +9,7 @@ import { filterMembers } from '../model/member-list';
 import { Link } from '@tanstack/react-router';
 import { type MemberSearch } from '../model/member-search';
 import { PendingMembers } from './pending-members';
+import { ApiMembersPage } from './api-members-page';
 import * as styles from './members-page.css';
 
 function openMemberEdit(member: Member, activityId: string) {
@@ -35,6 +36,9 @@ export function MembersPage({
   if (search.tab === 'pending') {
     return <PendingMembers />;
   }
+  if (members === undefined || currentGeneration === undefined) {
+    return <ApiMembersPage search={search} onSearch={onSearch} onFilterChange={onFilterChange} />;
+  }
   const listSearch = teamMapping === 'after' ? search : { ...search, team: undefined };
   return (
     <main className={styles.page}>
@@ -56,19 +60,15 @@ export function MembersPage({
         currentGeneration={currentGeneration}
         teamMapping={teamMapping}
       />
-      {members !== undefined && currentGeneration !== undefined ? (
-        <MemberList
-          members={filterMembers(members, currentGeneration, listSearch)}
-          currentGeneration={currentGeneration}
-          teamMapping={teamMapping}
-          onEdit={openMemberEdit}
-          hasMembers={members.some((member) =>
-            member.activities.some((activity) => activity.generation === currentGeneration),
-          )}
-        />
-      ) : (
-        <p className={styles.placeholder}>회원 목록을 준비 중입니다.</p>
-      )}
+      <MemberList
+        members={filterMembers(members, currentGeneration, listSearch)}
+        currentGeneration={currentGeneration}
+        teamMapping={teamMapping}
+        onEdit={openMemberEdit}
+        hasMembers={members.some((member) =>
+          member.activities.some((activity) => activity.generation === currentGeneration),
+        )}
+      />
     </main>
   );
 }

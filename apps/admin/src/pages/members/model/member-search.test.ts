@@ -21,7 +21,7 @@ describe('회원 쿼리 검증', () => {
       });
     });
   });
-  it.each([null, true, 123, ['web'], { q: '김' }])(
+  it.each([null, true, ['web'], { q: '김' }])(
     '잘못된 외부 타입 %j를 기본값으로 처리한다',
     (value) => {
       expect(memberSearchSchema.parse({ tab: value, q: value, part: value, team: value })).toEqual(
@@ -29,6 +29,12 @@ describe('회원 쿼리 검증', () => {
       );
     },
   );
+  it('숫자 팀 식별자를 URL 상태에서 보존한다', () => {
+    expect(memberSearchSchema.parse({ team: 123 })).toEqual({
+      ...memberSearchDefaults,
+      team: 123,
+    });
+  });
   it('팀 식별자는 보존하고 과거 권한·상태 조건은 제거한다', () => {
     expect(memberSearchSchema.parse({ team: ' team-1 ', role: 'admin', status: 'active' })).toEqual(
       { ...memberSearchDefaults, team: 'team-1' },
