@@ -148,7 +148,10 @@ const draftTeams: readonly TeamMappingTeam[] = [
   team('team-08', '혼자서 준비하는 아주 긴 이름의 팀', null, ['member-40']),
 ];
 
-function snapshot(status: TeamMappingStatus, teams: readonly TeamMappingTeam[]): TeamMappingSnapshot {
+function snapshot(
+  status: TeamMappingStatus,
+  teams: readonly TeamMappingTeam[],
+): TeamMappingSnapshot {
   return teamMappingSnapshotSchema.parse({
     generation: GENERATION,
     status,
