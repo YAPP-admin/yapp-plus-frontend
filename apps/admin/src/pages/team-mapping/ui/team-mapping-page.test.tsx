@@ -83,7 +83,7 @@ it('preview 상태를 URL 입력으로 받아 팀 목록과 필터 개수를 표
     }),
   ).toBeVisible();
   expect(screen.getByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
-  expect(screen.getByRole('combobox', { name: '팀 목록 필터' })).toHaveTextContent('전체 팀 · 8');
+  expect(screen.getByRole('radio', { name: '전체 팀 · 8' })).toBeChecked();
   expect(screen.getByText('총 8팀 · 42명 배정 · 10명 미배정')).toBeVisible();
   expect(screen.getAllByText('김민서')).not.toHaveLength(0);
 });
@@ -103,7 +103,10 @@ it('팀 상세 진입과 더보기 버튼을 별도 조작 대상으로 구분�
 
   await user.click(screen.getByRole('button', { name: 'Orbit' }));
   expect(onTeamSelect).toHaveBeenCalledWith(teamMappingDraftFixture.teams[0]);
-  expect(screen.getByRole('button', { name: 'Orbit 더보기' })).toBeDisabled();
+  await user.click(screen.getByRole('button', { name: 'Orbit 더보기' }));
+  const menu = await screen.findByRole('menu', { name: 'Orbit 더보기' });
+  expect(within(menu).getByRole('menuitem', { name: '수정하기' })).toBeVisible();
+  expect(within(menu).getByRole('menuitem', { name: '삭제하기' })).toBeVisible();
 });
 
 it('상세 callback이 없으면 카드에서 상세 패널을 연다', async () => {
@@ -138,8 +141,7 @@ it('미배정 필터 변경 callback을 호출한다', async () => {
     />,
   );
 
-  await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
-  await user.click(screen.getByRole('option', { name: '미배정 회원 · 9' }));
+  await user.click(screen.getByRole('radio', { name: '미배정 회원 · 9' }));
   expect(onFilterChange).toHaveBeenCalledWith('unassigned');
 });
 

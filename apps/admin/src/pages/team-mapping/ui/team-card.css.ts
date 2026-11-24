@@ -3,9 +3,10 @@ import { style } from '@vanilla-extract/css';
 import { vars } from '@seed-design/css/vars';
 
 export const card = style({
+  position: 'relative',
   minWidth: 0,
   display: 'grid',
-  gridTemplateColumns: 'minmax(13rem, 18rem) minmax(0, 1fr) auto auto',
+  gridTemplateColumns: 'minmax(13rem, 18rem) minmax(0, 1fr)',
   alignItems: 'center',
   gap: vars.$dimension.x5,
   padding: `${vars.$dimension.x5} ${vars.$dimension.x6}`,
@@ -16,7 +17,7 @@ export const card = style({
   overflowWrap: 'anywhere',
   '@media': {
     '(width < 960px)': {
-      gridTemplateColumns: 'minmax(0, 1fr) auto',
+      gridTemplateColumns: 'minmax(0, 1fr)',
       gap: vars.$dimension.x4,
     },
     '(width < 480px)': { padding: vars.$dimension.x4 },
@@ -28,6 +29,7 @@ export const identity = style({
   display: 'grid',
   alignContent: 'center',
   gap: vars.$dimension.x1,
+  paddingRight: vars.$dimension.x12,
 });
 
 export const teamNameRow = style({
@@ -82,7 +84,14 @@ export const memberCount = style({
   lineHeight: vars.$lineHeight.t3,
 });
 
-export const menuButton = style({ minWidth: 44, minHeight: 44, flexShrink: 0 });
+export const menuButton = style({
+  position: 'absolute',
+  top: vars.$dimension.x3,
+  right: vars.$dimension.x3,
+  minWidth: 44,
+  minHeight: 44,
+  flexShrink: 0,
+});
 
 export const content = style({
   minWidth: 0,

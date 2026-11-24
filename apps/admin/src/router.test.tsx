@@ -247,8 +247,7 @@ describe('관리자 라우팅', () => {
     expect(await screen.findByRole('heading', { name: '팀 목록', level: 2 })).toBeVisible();
     expect(screen.getByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
 
-    await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
-    await user.click(await screen.findByRole('option', { name: '미배정 회원 · 10' }));
+    await user.click(screen.getByRole('radio', { name: '미배정 회원 · 10' }));
 
     await waitFor(() =>
       expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned'),
@@ -258,7 +257,7 @@ describe('관리자 라우팅', () => {
     act(() => router.history.back());
 
     expect(await screen.findByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();
-    expect(screen.getByRole('combobox', { name: '팀 목록 필터' })).toHaveTextContent('전체 팀 · 8');
+    expect(screen.getByRole('radio', { name: '전체 팀 · 8' })).toBeChecked();
   });
 
   it('미배정 배정 예정이 있으면 필터 이동 전에 이탈을 확인한다', async () => {
@@ -266,8 +265,7 @@ describe('관리자 라우팅', () => {
     const router = await renderRoute('/members/teams?preview=draft');
     await waitForAdminWorkspace();
 
-    await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
-    await user.click(await screen.findByRole('option', { name: '미배정 회원 · 10' }));
+    await user.click(screen.getByRole('radio', { name: '미배정 회원 · 10' }));
     await screen.findByRole('heading', { name: '미배정 회원 10명' });
 
     await user.click(screen.getByRole('combobox', { name: '이도윤 대상 팀' }));
@@ -278,8 +276,7 @@ describe('관리자 라우팅', () => {
     }
     await user.click(orbitOption);
 
-    await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
-    await user.click(await screen.findByRole('option', { name: '전체 팀 · 8' }));
+    await user.click(screen.getByRole('radio', { name: '전체 팀 · 8' }));
     expect(await screen.findByRole('alertdialog')).toHaveTextContent('변경을 버리고 나갈까요?');
     expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned');
 
@@ -287,8 +284,7 @@ describe('관리자 라우팅', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
     expect(router.state.location.href).toBe('/members/teams?preview=draft&filter=unassigned');
 
-    await user.click(screen.getByRole('combobox', { name: '팀 목록 필터' }));
-    await user.click(await screen.findByRole('option', { name: '전체 팀 · 8' }));
+    await user.click(screen.getByRole('radio', { name: '전체 팀 · 8' }));
     await user.click(await screen.findByRole('button', { name: '변경 버리기' }));
     await waitFor(() => expect(router.state.location.href).toBe('/members/teams?preview=draft'));
     expect(await screen.findByRole('heading', { name: 'Orbit', level: 2 })).toBeVisible();

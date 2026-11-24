@@ -15,6 +15,8 @@ export const teamMappingPreviewLabels: Record<TeamMappingStatus, string> = {
 
 export const teamMappingFilterLabels: Record<TeamMappingFilter, string> = {
   all: '전체 팀',
+  complete: '구성 완료',
+  'needs-check': '확인 필요',
   unassigned: '미배정 회원',
 };
 

@@ -7,15 +7,18 @@ describe('team mapping search', () => {
     expect(teamMappingSearchSchema.parse({})).toEqual(teamMappingSearchDefaults);
   });
 
-  it('keeps preview and filter values from the URL', () => {
-    expect(teamMappingSearchSchema.parse({ preview: 'confirmed', filter: 'unassigned' })).toEqual({
-      preview: 'confirmed',
-      filter: 'unassigned',
-    });
-  });
+  it.each(['all', 'complete', 'needs-check', 'unassigned'] as const)(
+    'keeps the %s filter value from the URL',
+    (filter) => {
+      expect(teamMappingSearchSchema.parse({ preview: 'confirmed', filter })).toEqual({
+        preview: 'confirmed',
+        filter,
+      });
+    },
+  );
 
   it('restores invalid values to the safe defaults', () => {
-    expect(teamMappingSearchSchema.parse({ preview: 'unknown', filter: 'needs-check' })).toEqual(
+    expect(teamMappingSearchSchema.parse({ preview: 'unknown', filter: 'unknown' })).toEqual(
       teamMappingSearchDefaults,
     );
   });

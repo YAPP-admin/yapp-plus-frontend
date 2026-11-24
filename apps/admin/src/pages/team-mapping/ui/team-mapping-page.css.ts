@@ -35,6 +35,12 @@ export const filterField = style({
   '@media': { [narrowScreen]: { width: '100%' } },
 });
 
+export const teamFilters = style({
+  display: 'flex',
+  flexWrap: 'wrap',
+  gap: vars.$dimension.x2,
+});
+
 export const emptyState = style({
   display: 'grid',
   justifyItems: 'center',

@@ -64,8 +64,14 @@ describe('팀 매핑 원본 집계', () => {
     ]);
     expect(getTeamFilterCounts(snapshot)).toEqual({
       all: 2,
+      complete: 1,
+      needsCheck: 1,
       unassigned: 1,
     });
+    expect(getTeamsForFilter(snapshot, 'complete').map((team) => team.id)).toEqual(['team-alpha']);
+    expect(getTeamsForFilter(snapshot, 'needs-check').map((team) => team.id)).toEqual([
+      'team-beta',
+    ]);
     expect(getTeamsForFilter(snapshot, 'unassigned').map((team) => team.id)).toEqual([
       'team-alpha',
       'team-beta',

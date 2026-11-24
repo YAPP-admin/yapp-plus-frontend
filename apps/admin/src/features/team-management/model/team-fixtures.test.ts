@@ -28,6 +28,8 @@ describe('team mapping fixtures', () => {
     expect(getUnassignedMembers(teamMappingDraftFixture)).toHaveLength(10);
     expect(getTeamFilterCounts(teamMappingDraftFixture)).toEqual({
       all: 8,
+      complete: 7,
+      needsCheck: 1,
       unassigned: 10,
     });
   });
@@ -41,6 +43,8 @@ describe('team mapping fixtures', () => {
     });
     expect(getTeamFilterCounts(teamMappingConfirmedFixture)).toEqual({
       all: 8,
+      complete: 8,
+      needsCheck: 0,
       unassigned: 9,
     });
   });
