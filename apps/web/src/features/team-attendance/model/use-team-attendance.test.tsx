@@ -39,12 +39,11 @@ const receipt: TeamAttendanceReceipt = {
 const onSubmitted = vi.fn<(receipt: TeamAttendanceReceipt) => void>();
 function setup() {
   const client = new QueryClient();
-  const hook = renderHook(() => useTeamAttendance(input.target, {}, onSubmitted), {
+  const hook = renderHook(() => useTeamAttendance(input.target, {}, input.photo, onSubmitted), {
     wrapper: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     ),
   });
-  act(() => hook.result.current.form.setFieldValue('photo', input.photo));
   return { ...hook, client };
 }
 function pendingReceipt() {
@@ -129,16 +128,9 @@ it.each([{ ids: [] }, { ids: [10, 10] }, { ids: [10, 99] }])(
     expect(submitPhoto).not.toHaveBeenCalled();
   },
 );
-it('사진 미선택은 필드 오류로 남기고 사진 선택 후에는 본인을 포함해 제출한다', async () => {
+it('업로드된 imageKey와 본인을 포함한 명단을 접수한다', async () => {
   vi.mocked(submitPhoto).mockResolvedValue(receipt);
   const { result } = setup();
-  act(() => result.current.form.setFieldValue('photo', null));
-  await act(async () => {
-    await result.current.form.handleSubmit();
-  });
-  expect(result.current.form.state.errorMap.onDynamic?.photo).toBeDefined();
-  expect(submitPhoto).not.toHaveBeenCalled();
-  act(() => result.current.form.setFieldValue('photo', input.photo));
   await act(async () => {
     await result.current.form.handleSubmit();
   });

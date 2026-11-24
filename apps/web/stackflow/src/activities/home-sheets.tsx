@@ -1,5 +1,6 @@
-import { useActivity, useFlow, useStepFlow } from '@stackflow/react';
+import { useActivity, useActivityParams, useFlow, useStepFlow } from '@stackflow/react';
 import { Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
+import { useAttendancePhoto, useTeamAttendancePhotoDraft } from '@/pages/team-attendance-upload';
 import {
   AttendanceCodeSheet,
   AttendanceReportSheet,
@@ -82,8 +83,14 @@ function readAttendanceReportStep(params: unknown): AttendanceReportStep {
 
 export function TeamAttendanceGuideActivity() {
   const { isActive } = useActivity();
+  const { sessionId } = useActivityParams<'TeamAttendanceGuide'>();
   const flow = useFlow();
-  if (!import.meta.env.DEV || import.meta.env.VITE_API_MOCKING !== 'true') {
+  const { setPhoto } = useTeamAttendancePhotoDraft();
+  const photo = useAttendancePhoto((file) => {
+    setPhoto(file);
+    flow.replace('TeamAttendanceUpload', { sessionId });
+  });
+  if (!import.meta.env.DEV || import.meta.env.VITE_API_MOCKING !== 'true' || !sessionId) {
     return <NotFoundActivity />;
   }
   return (
@@ -94,7 +101,9 @@ export function TeamAttendanceGuideActivity() {
           flow.pop();
         }
       }}
-      onComplete={() => flow.replace('TeamAttendanceUpload', {})}
+      onPhotoSource={photo.pick}
+      isPhotoPending={photo.isPending}
+      photoError={photo.error}
     />
   );
 }

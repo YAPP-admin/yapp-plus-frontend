@@ -22,6 +22,7 @@ import {
 export function useTeamAttendance(
   target: TeamAttendanceTarget,
   apiOptions: SubmissionApiOptions,
+  photo: File,
   onSubmitted: (receipt: TeamAttendanceReceipt) => void,
 ) {
   const { submitPhoto } = usePhotoSubmission(apiOptions);
@@ -59,7 +60,6 @@ export function useTeamAttendance(
   }, []);
 
   const defaultValues: TeamAttendanceFormValues = {
-    photo: null,
     selectedMembershipIds: [target.selfMembershipId],
   };
   const form = useForm({
@@ -70,15 +70,11 @@ export function useTeamAttendance(
       if (controllerRef.current) {
         return;
       }
-      // Standard Schema는 onSubmit 타입을 좁히지 않으므로 사진의 null 여부만 확정한다.
-      if (!value.photo) {
-        return;
-      }
       const current = new AbortController();
       controllerRef.current = current;
 
       const request = submitPhoto(
-        { target, photo: value.photo, selectedMembershipIds: value.selectedMembershipIds },
+        { target, photo, selectedMembershipIds: value.selectedMembershipIds },
         current.signal,
       );
 

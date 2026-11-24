@@ -1,11 +1,11 @@
 import { apiBaseUrl, server } from '@/mocks/server';
-import { createTeamPhotoHandlers } from '@/mocks/team-photo-handlers';
 import { currentWeekFixture } from '@/mocks/session-handlers';
-import { getAppBridge, pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
+import { getAppBridge } from '@yapp-plus/app-bridge/web';
+import type { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
 import { MutationObserver, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Suspense } from 'react';
+import { Suspense, useEffect } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import type { AuthResult, LocationResult } from '@yapp-plus/app-bridge';
 import { http, HttpResponse } from 'msw';
@@ -17,6 +17,10 @@ import {
   nativeWithdrawMutationOptions,
 } from '@/features/auth';
 import { createStackflowApp } from './stack';
+import {
+  TeamAttendancePhotoDraftProvider,
+  useTeamAttendancePhotoDraft,
+} from '@/pages/team-attendance-upload';
 
 const bridge = vi.hoisted(() => ({
   result: { status: 'SIGNED_OUT' } as AuthResult,
@@ -46,6 +50,18 @@ beforeEach(() => {
   });
   replaceDocument.mockClear();
   vi.spyOn(window.location, 'replace').mockImplementation(replaceDocument);
+  server.use(
+    http.get(`${apiBaseUrl}/api/sessions/:sessionId/team-members`, () =>
+      HttpResponse.json({
+        teamId: 1,
+        teamName: 'Web 팀',
+        members: [
+          { membershipId: 1, name: '강야뿌', position: 'WEB', isMe: false },
+          { membershipId: 2, name: '김야뿌', position: null, isMe: true },
+        ],
+      }),
+    ),
+  );
 });
 afterEach(async () => {
   // Stackflow core는 전환 안정화 interval의 dispose API를 제공하지 않습니다.
@@ -123,13 +139,24 @@ const mount = (client: QueryClient) => {
     <QueryClientProvider client={client}>
       <Suspense fallback="로딩 중">
         <NativeAuthSessionProvider>
-          <Stack initialContext={context} />
+          <TeamAttendancePhotoDraftProvider>
+            <TeamAttendancePhotoFixture />
+            <Stack initialContext={context} />
+          </TeamAttendancePhotoDraftProvider>
         </NativeAuthSessionProvider>
       </Suspense>
     </QueryClientProvider>,
   );
   return { ...view, actions };
 };
+
+function TeamAttendancePhotoFixture() {
+  const { setPhoto } = useTeamAttendancePhotoDraft();
+  useEffect(() => {
+    setPhoto(new File(['abc'], 'team-attendance.jpg', { type: 'image/jpeg' }));
+  }, [setPhoto]);
+  return null;
+}
 
 // 첫 진입의 lazy 화면 로딩과 탐색을 포함하므로 내부 10초 대기보다 긴 한도를 둡니다.
 it('세션 복구와 로그아웃 후 재로그인 뒤에도 현재 탭을 전환한다', async () => {
@@ -156,7 +183,7 @@ it('세션 복구와 로그아웃 후 재로그인 뒤에도 현재 탭을 전�
 it('토큰 갱신은 폼을 유지하고 계정 변경은 이전 폼과 화면을 제거한다', async () => {
   const client = new QueryClient();
   await apply(client, session(1));
-  window.history.replaceState(null, '', '/team-attendance/upload');
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
   mount(client);
   const input = await screen.findByRole('checkbox', { name: /강야뿌/ }, { timeout: 10000 });
   await userEvent.click(input);
@@ -165,7 +192,9 @@ it('토큰 갱신은 폼을 유지하고 계정 변경은 이전 폼과 화면�
   expect(screen.getByRole('checkbox', { name: /강야뿌/ })).toBeChecked();
 
   await act(() => apply(client, session(2)));
-  await waitFor(() => expect(screen.getByRole('checkbox', { name: /강야뿌/ })).not.toBeChecked());
+  await waitFor(() =>
+    expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument(),
+  );
   expect(replaceDocument).not.toHaveBeenCalled();
 }, 15000);
 
@@ -174,7 +203,7 @@ it.each(['logout', 'withdraw'] as const)(
   async (kind) => {
     const client = new QueryClient();
     await apply(client, session(1));
-    window.history.replaceState(null, '', '/team-attendance/upload');
+    window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
     mount(client);
     await screen.findByRole('checkbox', { name: /강야뿌/ });
     await act(() =>
@@ -192,20 +221,21 @@ it.each(['logout', 'withdraw'] as const)(
 it('로그아웃과 B 로그인이 같은 반영에 묶여도 A의 선택값은 남지 않는다', async () => {
   const client = new QueryClient();
   await apply(client, session(1));
-  window.history.replaceState(null, '', '/team-attendance/upload');
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
   mount(client);
   await userEvent.click(await screen.findByRole('checkbox', { name: /강야뿌/ }));
   await act(async () => {
     await apply(client, { status: 'SIGNED_OUT' }, 'logout');
     await apply(client, session(2));
   });
-  await waitFor(() => expect(screen.getByRole('checkbox', { name: /강야뿌/ })).not.toBeChecked());
+  await waitFor(() =>
+    expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument(),
+  );
 });
-
 it('로그아웃 상태로 보호 화면에 직접 접근하면 내용을 표시하지 않고 로그인으로 이동한다', async () => {
   const client = new QueryClient();
   await apply(client, { status: 'SIGNED_OUT' }, 'logout');
-  window.history.replaceState(null, '', '/team-attendance/upload');
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
   mount(client);
   expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
   expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
@@ -231,7 +261,7 @@ it('조회 실패는 보호 URL을 유지하며 안내하고 수동 복구 후 �
   vi.useFakeTimers({ toFake: ['Date'] });
   const client = new QueryClient();
   bridge.getSession.mockResolvedValueOnce(undefined).mockResolvedValue(session(1));
-  window.history.replaceState(null, '', '/team-attendance/upload');
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
   mount(client);
   expect(
     await screen.findByRole('heading', { name: '로그인 상태를 확인하지 못했어요' }),
@@ -258,7 +288,7 @@ it('세션 삭제 실패 후 수동 재시도로 정리되면 보호 내용을 �
   bridge.getSession
     .mockResolvedValueOnce({ status: 'ERROR', code: 'STORAGE', retryable: true })
     .mockReturnValueOnce(pending);
-  window.history.replaceState(null, '', '/team-attendance/upload');
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
   const view = mount(client);
 
   expect(
@@ -294,7 +324,7 @@ it('재시도 가능한 세션 조회 실패에서 로그인 화면으로 이동
     code: 'NETWORK',
     retryable: true,
   });
-  window.history.replaceState(null, '', '/team-attendance/upload');
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
   mount(client);
   await userEvent.click(await screen.findByRole('button', { name: '로그인 화면으로' }));
   expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
@@ -307,7 +337,7 @@ it('미지원 앱에서는 보호 내용을 숨기고 재시도 없이 업데이
     code: 'UNSUPPORTED',
     retryable: false,
   });
-  window.history.replaceState(null, '', '/team-attendance/upload');
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
   mount(new QueryClient());
   expect(
     await screen.findByRole('heading', { name: '앱 업데이트가 필요해요' }),
@@ -320,7 +350,7 @@ it('미지원 앱에서는 보호 내용을 숨기고 재시도 없이 업데이
 it('가려진 이전 계정 폼은 재로그인 뒤 back/forward에서도 선택값을 복원하지 않는다', async () => {
   const client = new QueryClient();
   await apply(client, session(1));
-  window.history.replaceState(null, '', '/team-attendance/upload');
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
   const { actions } = mount(client);
   await userEvent.click(await screen.findByRole('checkbox', { name: /강야뿌/ }));
   act(() => {
@@ -334,10 +364,10 @@ it('가려진 이전 계정 폼은 재로그인 뒤 back/forward에서도 선택
   await act(() => apply(client, session(2)));
   await waitFor(() => expect(window.location.pathname).toBe('/'));
   await traverse('back');
-  expect(await screen.findByRole('checkbox', { name: /강야뿌/ })).not.toBeChecked();
+  expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
   await traverse('forward');
   await traverse('back');
-  expect(await screen.findByRole('checkbox', { name: /강야뿌/ })).not.toBeChecked();
+  expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
 });
 
 const traverse = (direction: 'back' | 'forward') =>
@@ -461,49 +491,3 @@ it('위치 응답 전에 계정이 바뀌면 이전 계정의 출석을 전송�
   view.unmount();
   client.clear();
 });
-
-it.each(['계정 변경', '홈 복귀'])(
-  '사진 접수 완료 뒤 %s 시 완료 정보를 폐기한다',
-  async (exit) => {
-    server.use(...createTeamPhotoHandlers(apiBaseUrl));
-    vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:route-photo');
-    const revoke = vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => {});
-    vi.mocked(pickAttendancePhoto).mockResolvedValue({
-      status: 'SUCCESS',
-      photo: {
-        filename: 'team-attendance.jpg',
-        contentType: 'image/jpeg',
-        sizeBytes: 3,
-        width: 1,
-        height: 1,
-        base64: 'YWJj',
-      },
-    });
-    const client = new QueryClient();
-    await apply(client, session(1));
-    window.history.replaceState(null, '', '/team-attendance/upload');
-    const view = mount(client);
-    const user = userEvent.setup();
-    await user.click(await screen.findByRole('button', { name: '인증 사진 선택' }));
-    await screen.findByAltText('선택한 팀 인증 사진');
-    await user.click(screen.getByRole('checkbox', { name: /강야뿌/ }));
-    await user.click(screen.getByRole('button', { name: '인증 사진 제출하기' }));
-    expect(await screen.findByText('인증 사진을 올렸어요!')).toBeVisible();
-    expect(screen.getByText('강야뿌, 김야뿌')).toBeVisible();
-    expect(screen.getByText('2명')).toBeVisible();
-    await waitFor(() => expect(window.location.pathname).toBe('/team-attendance/complete'));
-    expect(window.location.search).toBe('');
-    expect(revoke).toHaveBeenCalledWith('blob:route-photo');
-    if (exit === '계정 변경') {
-      await act(() => apply(client, session(2)));
-    } else {
-      await user.click(screen.getByRole('link', { name: '확인' }));
-      await act(() => view.actions.push('TeamAttendanceUpload', { stage: 'complete' }));
-    }
-    await waitFor(() =>
-      expect(screen.queryByText('인증 사진을 올렸어요!')).not.toBeInTheDocument(),
-    );
-    view.unmount();
-  },
-  15000,
-);

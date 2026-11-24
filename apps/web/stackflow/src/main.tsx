@@ -11,6 +11,7 @@ import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Providers, createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
+import { TeamAttendancePhotoDraftProvider } from '@/pages/team-attendance-upload';
 import { createStackflowApp } from './stack';
 import { detectPlatform, getReducedMotionPreference } from './platform';
 
@@ -44,7 +45,9 @@ function App() {
         }
       >
         <NativeAuthSessionProvider>
-          <Stack initialContext={initialContext} />
+          <TeamAttendancePhotoDraftProvider>
+            <Stack initialContext={initialContext} />
+          </TeamAttendancePhotoDraftProvider>
         </NativeAuthSessionProvider>
       </Suspense>
     </Providers>

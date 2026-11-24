@@ -359,9 +359,15 @@ function AttendanceCodeInputGroup({
   );
 }
 export function TeamGuideSheet({
-  onComplete,
+  onPhotoSource,
+  isPhotoPending,
+  photoError,
   ...props
-}: BottomSheetRootProps & { onComplete: () => void }) {
+}: BottomSheetRootProps & {
+  onPhotoSource: (source: 'library' | 'camera') => void;
+  isPhotoPending: boolean;
+  photoError: string | null;
+}) {
   const layerIndex = useActivityZIndexBase();
   return (
     <BottomSheetRoot {...props}>
@@ -419,7 +425,8 @@ export function TeamGuideSheet({
                 variant="neutralWeak"
                 size="large"
                 className={sheetSecondaryButton}
-                onClick={onComplete}
+                disabled={isPhotoPending}
+                onClick={() => onPhotoSource('library')}
               >
                 앨범에서 선택하기
               </ActionButton>
@@ -427,11 +434,14 @@ export function TeamGuideSheet({
                 variant="brandSolid"
                 size="large"
                 className={sheetPrimaryButton}
-                onClick={onComplete}
+                disabled={isPhotoPending}
+                onClick={() => onPhotoSource('camera')}
               >
                 직접 사진 찍기
               </ActionButton>
             </VStack>
+            {isPhotoPending && <output>사진을 준비하고 있어요.</output>}
+            {photoError && <p role="alert">{photoError}</p>}
           </VStack>
         </VStack>
       </BottomSheetContent>

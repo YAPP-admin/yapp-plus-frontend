@@ -13,7 +13,12 @@ import { notificationNavigationPlugin } from './notification-navigation';
 import type { StackflowInitialContext } from './platform';
 
 type TabsParams = ActivityBaseParams & TabsState;
-type TeamPhotoParams = ActivityBaseParams & { stage?: 'upload' | 'complete'; error?: 'true' };
+type TeamPhotoParams = ActivityBaseParams & {
+  stage?: 'upload' | 'complete';
+  error?: 'true';
+  sessionId?: string;
+};
+type TeamGuideParams = ActivityBaseParams & { sessionId?: string };
 type BooleanQueryParams = ActivityBaseParams & { error?: 'true' };
 type AlertsParams = ActivityBaseParams;
 type SignupParams = ActivityBaseParams & { step?: 'phone' };
@@ -33,7 +38,7 @@ declare module '@stackflow/config' {
     AttendanceRules: EmptyActivityParams;
     AttendanceCode: EmptyActivityParams;
     AttendanceReport: AttendanceReportParams;
-    TeamAttendanceGuide: EmptyActivityParams;
+    TeamAttendanceGuide: TeamGuideParams;
     AttendanceComplete: EmptyActivityParams;
     Settings: EmptyActivityParams;
     TeamAttendanceUpload: TeamPhotoParams;
@@ -207,7 +212,16 @@ function initialHistory(history: NonNullable<Route<never>['defaultHistory']>): t
 
 const teamPhotoRoute = {
   path: '/team-attendance/:stage(upload|complete)',
-  encode: ({ stage = 'upload', error }) => ({ stage, error }),
+  encode: ({ stage = 'upload', error, sessionId }) => ({
+    stage,
+    error,
+    sessionId,
+  }),
+  decode: ({ stage, error, sessionId }: Record<string, string | undefined>) => ({
+    stage: stage === 'complete' ? 'complete' : 'upload',
+    ...(error === 'true' ? { error } : {}),
+    ...(sessionId ? { sessionId } : {}),
+  }),
   defaultHistory: initialHistory(() => [
     { activityName: 'Tabs', activityParams: { initialTab: 'home' } },
   ]),

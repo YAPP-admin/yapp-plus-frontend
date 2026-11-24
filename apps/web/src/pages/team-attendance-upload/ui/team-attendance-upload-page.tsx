@@ -1,21 +1,19 @@
-/** 사진 준비와 참석 명단 폼을 연결한다. 대상과 접수 이동은 상위 Activity가 공급한다. */
+/** 선택한 사진의 참석 명단을 고르고 최종 확인에서 업로드·접수한다. */
 'use client';
 
 import { BackButton } from '@/app/navigation/back-button';
 import { Checkbox, HStack, ImageFrame, VStack } from '@seed-design/react';
-import { IconCameraLine, IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
+import { IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
-import { useId, useRef, useState } from 'react';
 import {
   useTeamAttendance,
   type TeamAttendanceTarget,
   type TeamAttendanceReceipt,
 } from '@/features/team-attendance';
+import { useTeamAttendancePhotoDraft } from '../model/team-attendance-photo-draft';
 import { TabLink } from '@/app/navigation/tab-link';
 import { useNativeAuthSession } from '@/features/auth';
 import { useScreenActiveContext } from '@/shared/lib/screen-activity';
-import fixturePhotoUrl from '../model/photo-fixture.jpg';
-import { useAttendancePhoto } from '../model/use-attendance-photo';
 import {
   checkboxControl,
   checkboxIcon,
@@ -27,7 +25,6 @@ import {
   headerSpacer,
   headerTitle,
   imagePreview,
-  fixturePreview,
   meBadge,
   memberCard,
   memberCardChecked,
@@ -36,72 +33,38 @@ import {
   memberName,
   memberRole,
   memberTitle,
-  uploadArea,
-  uploadHintText,
-  uploadIconWrap,
-  uploadPromptText,
 } from './team-attendance-upload-page.css';
 
 type Props = {
   target: TeamAttendanceTarget;
   onSubmitted: (receipt: TeamAttendanceReceipt) => void;
 };
+type TeamAttendancePhotoProps = { photo: File; previewUrl: string };
 
-/** 비활성 화면과 계정이 바뀐 화면의 사진 초안은 재사용하지 않는다. */
+/** 비활성 화면과 계정이 바뀐 화면의 선택 초안은 재사용하지 않는다. */
 export function TeamAttendanceUploadPage(props: Props) {
   const active = useScreenActiveContext();
-  const { isNative, phase, session } = useNativeAuthSession();
-  return active ? (
+  const { phase, session } = useNativeAuthSession();
+  const { draft } = useTeamAttendancePhotoDraft();
+  return active && draft ? (
     <PhotoForm
       key={`${phase}:${session?.sessionId ?? 'browser'}:${session?.userId}:${props.target.sessionId}`}
       {...props}
-      isNative={isNative}
+      photo={draft.photo}
+      previewUrl={draft.previewUrl}
     />
   ) : null;
 }
 
-function PhotoForm({ isNative, target, onSubmitted }: Props & { isNative: boolean }) {
-  // 화면이 여러 개 쌓여도 각 사진 선택 버튼이 자신의 안내 문구를 참조하게 한다.
-  const hintId = useId();
-  const photoButtonRef = useRef<HTMLButtonElement>(null);
-  const [fixtureError, setFixtureError] = useState(false);
-  const showFixture =
-    !isNative && import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true';
+function PhotoForm({ target, photo, previewUrl, onSubmitted }: Props & TeamAttendancePhotoProps) {
   const { apiOptions } = useNativeAuthSession();
-  const { form, receipt, error, isPending } = useTeamAttendance(target, apiOptions, onSubmitted);
-  const photo = useAttendancePhoto(({ blob }) => {
-    form.setFieldValue('photo', new File([blob], 'team-attendance.jpg', { type: 'image/jpeg' }));
-  });
-  const isPhotoSubmissionFormDisabled = isPending || !!receipt || error?.kind === 'unknown';
-
-  const photoTrigger = (
-    <ActionButton
-      type="button"
-      variant="neutralWeak"
-      className={uploadArea}
-      disabled={photo.isPending || isPhotoSubmissionFormDisabled}
-      aria-busy={photo.isPending}
-      onClick={() => photo.pick('library')}
-      aria-label={photo.photo ? '인증 사진 바꾸기' : '인증 사진 선택'}
-      ref={photoButtonRef}
-      aria-describedby={`${hintId} ${hintId}-error`}
-    >
-      {photo.photo ? (
-        <ImageFrame
-          src={photo.photo.previewUrl}
-          alt="선택한 팀 인증 사진"
-          className={imagePreview}
-        />
-      ) : (
-        <>
-          <div className={uploadIconWrap}>
-            <IconCameraLine width={24} height={24} aria-hidden="true" />
-          </div>
-          <p className={uploadPromptText}>사진 첨부하기</p>
-        </>
-      )}
-    </ActionButton>
+  const { form, receipt, error, isPending } = useTeamAttendance(
+    target,
+    apiOptions,
+    photo,
+    onSubmitted,
   );
+  const isPhotoSubmissionFormDisabled = isPending || !!receipt || error?.kind === 'unknown';
 
   return (
     <VStack
@@ -110,11 +73,8 @@ function PhotoForm({ isNative, target, onSubmitted }: Props & { isNative: boolea
       aria-label="팀 인증 사진 제출"
       onSubmit={(event) => {
         event.preventDefault();
-        if (isNative && !isPhotoSubmissionFormDisabled && !photo.isPending) {
+        if (!isPhotoSubmissionFormDisabled) {
           void form.handleSubmit();
-          if (!photo.photo) {
-            photoButtonRef.current?.focus();
-          }
         }
       }}
     >
@@ -129,46 +89,8 @@ function PhotoForm({ isNative, target, onSubmitted }: Props & { isNative: boolea
       </HStack>
 
       <VStack as="main" gap="x5" className={body}>
-        <Text as="p">개발용 팀 정보로 서버에 사진을 제출해요.</Text>
-        {isNative && photoTrigger}
-        {showFixture && (
-          <>
-            <ImageFrame
-              src={fixturePhotoUrl}
-              alt="개발용 JPEG 미리보기"
-              className={fixturePreview}
-            />
-            <ActionButton
-              type="button"
-              variant="neutralWeak"
-              onClick={() => setFixtureError((previous) => !previous)}
-            >
-              {fixtureError ? '오류 안내 닫기' : '오류 안내 보기'}
-            </ActionButton>
-          </>
-        )}
-        <p id={hintId} className={uploadHintText}>
-          {isNative
-            ? '앨범에서 고르거나 직접 촬영해 주세요.'
-            : '브라우저에서는 고정 JPEG로 화면만 확인해요. 사진 선택·변환은 앱에서 확인해 주세요.'}{' '}
-          변환한 사진은 10MiB 이하여야 해요.
-        </p>
-        {isNative && (
-          <ActionButton
-            type="button"
-            variant="neutralWeak"
-            disabled={photo.isPending || isPhotoSubmissionFormDisabled}
-            onClick={() => photo.pick('camera')}
-          >
-            사진 촬영하기
-          </ActionButton>
-        )}
-        {photo.isPending && <progress aria-label="사진 준비 중" />}
-        <output aria-label="사진 준비 상태">
-          {showFixture && fixtureError
-            ? '사진을 준비하지 못했어요. 다시 시도해 주세요.'
-            : (photo.error ?? (photo.photo ? '사진을 준비했어요. 아직 제출하지 않았어요.' : ''))}
-        </output>
+        <Text as="p">{target.teamName} 팀원과 함께 찍은 사진을 제출해요.</Text>
+        <ImageFrame src={previewUrl} alt="선택한 팀 인증 사진" className={imagePreview} />
 
         {/* 팀원 선택 섹션 */}
         <VStack as="section" gap="x5" aria-label="참석 팀원 선택">
@@ -227,13 +149,6 @@ function PhotoForm({ isNative, target, onSubmitted }: Props & { isNative: boolea
         </VStack>
       </VStack>
 
-      <form.Field name="photo">
-        {(field) => (
-          <output id={`${hintId}-error`} aria-label="사진 입력 오류">
-            {field.state.meta.errors.map((issue) => issue?.message).join(' ')}
-          </output>
-        )}
-      </form.Field>
       {error && <p role="alert">{error.message}</p>}
       {isPending && <output>인증 사진을 제출하고 있어요.</output>}
       {error?.kind === 'unknown' && (
@@ -247,7 +162,7 @@ function PhotoForm({ isNative, target, onSubmitted }: Props & { isNative: boolea
           size="large"
           className={confirmButton}
           type="submit"
-          disabled={!isNative || photo.isPending || isPhotoSubmissionFormDisabled}
+          disabled={isPhotoSubmissionFormDisabled}
         >
           {isPending ? '제출 중' : '인증 사진 제출하기'}
         </ActionButton>
