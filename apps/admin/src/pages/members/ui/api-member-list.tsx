@@ -71,7 +71,7 @@ export function ApiMemberList({
               <tr>
                 <th scope="col">이름 / 직군</th>
                 <th scope="col" className={styles.role}>
-                  상태
+                  권한
                 </th>
                 <th scope="col" className={styles.team}>
                   팀
