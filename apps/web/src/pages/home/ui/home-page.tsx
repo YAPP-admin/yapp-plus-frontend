@@ -114,7 +114,7 @@ export function HomePage({
 
   function openTeamGuide() {
     if (canPreview) {
-      flow.push('TeamAttendanceGuide', {});
+      flow.push('TeamAttendanceGuide', { sessionId: '1' });
     }
   }
 

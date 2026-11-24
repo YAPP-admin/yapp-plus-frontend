@@ -1,6 +1,5 @@
 /** 공급부의 제출 대상과 폼 입력을 검증한다. API 요청 형식과 별도로 화면 입력 정책만 정의한다. */
 import { z } from 'zod';
-import { ATTENDANCE_PHOTO_MAX_BYTES } from '@yapp-plus/app-bridge';
 import { zSubmitTeamPhotoRequest, type SubmitTeamPhotoRequest } from '@yapp-plus/api/generated';
 
 const membershipId = z.int().positive();
@@ -34,9 +33,9 @@ export const teamAttendanceTargetSchema = z
 export type TeamAttendanceTarget = z.infer<typeof teamAttendanceTargetSchema>;
 /** 접수 결과에 표시할 제출 당시 팀원 정보다. */
 export type TeamMember = z.infer<typeof memberSchema>;
-/** 사진 미선택 상태를 포함한 폼 값이다. native Blob은 재인코딩 없이 File로 감싸 전달한다. */
-export type TeamAttendanceFormValues = { photo: File | null; selectedMembershipIds: number[] };
-/** 폼의 제출 검증을 통과한 값. 사진은 화면 수명에만 보관한다. */
+/** 화면에서 바꿀 수 있는 참석자 선택 값이다. 사진은 상위 흐름에서 별도로 소유한다. */
+export type TeamAttendanceFormValues = { selectedMembershipIds: number[] };
+/** 폼의 제출 검증을 통과한 값. 사진 바이트는 상위 흐름이 소유한 File을 그대로 사용한다. */
 export type SubmissionInput = {
   target: TeamAttendanceTarget;
   photo: File;
@@ -53,18 +52,11 @@ export function toSubmitTeamPhotoRequest(
   return body;
 }
 
-/** 검증된 대상 명단에 맞춰 사용자 입력만 검증하는 TanStack Form용 스키마다. */
+/** 검증된 대상 명단에 맞춰 사용자가 바꿀 수 있는 참석자 입력만 검증하는 TanStack Form용 스키마다. */
 export function createTeamAttendanceFormSchema(target: TeamAttendanceTarget) {
   const memberIds = new Set(target.members.map((member) => member.membershipId));
 
   return z.object({
-    photo: z
-      .file()
-      .mime('image/jpeg', '앱에서 준비한 JPEG 사진을 선택해 주세요.')
-      .min(1, '빈 사진은 제출할 수 없어요.')
-      .max(ATTENDANCE_PHOTO_MAX_BYTES, '사진은 10MiB 이하여야 해요.')
-      .nullable()
-      .refine((photo) => photo !== null, '사진을 선택해 주세요.'),
     selectedMembershipIds: z
       .array(membershipId)
       .refine(

@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event';
 import { Suspense } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
+import { TeamAttendancePhotoDraftProvider } from '@/pages/team-attendance-upload';
 import { apiBaseUrl, server } from '@/mocks/server';
 import { currentWeekFixture } from '@/mocks/session-handlers';
 import { koreanDateString } from '@/shared/lib/korean-date-time';
@@ -24,6 +25,11 @@ beforeEach(() => {
     addWindowListener(type, listener, options);
   });
   window.history.replaceState({}, '', '/');
+  server.use(
+    http.get(`${apiBaseUrl}/api/sessions/:sessionId/team-members`, () =>
+      HttpResponse.json(teamMembers),
+    ),
+  );
 });
 
 afterEach(async () => {
@@ -55,6 +61,15 @@ const signedIn = {
   },
 };
 
+const teamMembers = {
+  teamId: 1,
+  teamName: 'Web 팀',
+  members: [
+    { membershipId: 1, name: '강야뿌', position: 'WEB', isMe: false },
+    { membershipId: 2, name: '김야뿌', position: null, isMe: true },
+  ],
+};
+
 function renderStack({ native = false } = {}) {
   const { Stack, actions } = createStackflowApp();
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -69,10 +84,14 @@ function renderStack({ native = false } = {}) {
         <Suspense fallback={<div>로딩 중…</div>}>
           {native ? (
             <NativeAuthSessionProvider>
-              <Stack />
+              <TeamAttendancePhotoDraftProvider>
+                <Stack />
+              </TeamAttendancePhotoDraftProvider>
             </NativeAuthSessionProvider>
           ) : (
-            <Stack />
+            <TeamAttendancePhotoDraftProvider>
+              <Stack />
+            </TeamAttendancePhotoDraftProvider>
           )}
         </Suspense>
       </SnackbarProvider>
@@ -346,14 +365,12 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(await waitForTopHeading('출석 내역')).toBeTruthy();
   });
 
-  it('팀 사진 준비는 swipe back을 차단하고 error query로 가짜 제출 결과를 만들지 않는다', async () => {
-    window.history.replaceState({}, '', '/team-attendance/upload?error=true');
+  it('선택 사진 없는 팀 사진 직접 진입은 내용을 만들지 않는다', async () => {
+    window.history.replaceState({}, '', '/team-attendance/upload?sessionId=1');
     renderStack();
 
-    const uploadScreen = await waitForTopHeading('팀 세션 인증');
-    expect(document.querySelector('[data-part="edge"]')).not.toBeInTheDocument();
-    expect(uploadScreen.getByRole('button', { name: '인증 사진 제출하기' })).toBeDisabled();
-    expect(uploadScreen.getByAltText('개발용 JPEG 미리보기')).toBeInTheDocument();
+    expect(await waitForTopHeading('페이지를 찾을 수 없어요')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: '인증 사진 제출하기' })).not.toBeInTheDocument();
   });
 
   it('가입 상태 직접 진입은 Login fallback과 가입 입력 흐름을 유지한다', async () => {
@@ -513,7 +530,7 @@ it('출석 시트를 뒤로가기로 닫고 다시 열면 입력을 초기화한
   expect(window.location.pathname).toBe('/');
 }, 15000);
 
-it('팀 안내 시트를 업로드 화면으로 교체해서 뒤로가면 홈으로 돌아온다', async () => {
+it('팀 안내 시트는 사진 도구를 열기 전까지 홈 위에 유지한다', async () => {
   window.history.replaceState({}, '', '/?session=team');
   const user = userEvent.setup();
   renderStack();
@@ -527,9 +544,6 @@ it('팀 안내 시트를 업로드 화면으로 교체해서 뒤로가면 홈으
       'enter-done',
     ),
   );
-  fireEvent.click(screen.getByRole('button', { name: '앨범에서 선택하기' }));
-  await waitFor(() => expect(window.location.pathname).toBe('/team-attendance/upload'));
-  await waitForTopHeading('팀 세션 인증');
   window.history.back();
   await waitFor(() => expect(window.location.pathname).toBe('/'));
   await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
