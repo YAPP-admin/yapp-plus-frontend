@@ -1,4 +1,5 @@
 import { queryOptions, useMutation, useQueryClient, useSuspenseQuery } from '@tanstack/react-query';
+import { find2Options, list7Options } from '@yapp-plus/api/generated';
 import type { CreateSessionInput } from './session';
 import {
   createSession,
@@ -6,22 +7,51 @@ import {
   getAttendanceCode,
   getSessionAttendance,
   getTeamReviews,
-  listSessions,
-  listMemberScores,
   updateSession,
 } from '../service';
 
-export const sessionsQueryOptions = queryOptions({
-  queryKey: ['admin', 'sessions'],
-  queryFn: listSessions,
-  retry: false,
-});
+export const sessionsQueryOptions = (generationId: number) => {
+  const options = find2Options({
+    path: { generationId },
+    query: { type: 'ALL' },
+  });
+  return queryOptions({
+    ...options,
+    retry: false,
+    select: (response) =>
+      response.sessions.map((session) => ({
+        id: String(session.sessionId),
+        name: session.name,
+        type: session.type === 'TEAM' ? 'team' : 'regular',
+        date: session.date,
+        startTime: session.startTime,
+        endTime: session.endTime,
+        attendance: {
+          present: session.attendanceSummary.presentCount,
+          pending: session.attendanceSummary.undecidedCount,
+        },
+      })),
+  });
+};
 
-export const memberScoresQueryOptions = queryOptions({
-  queryKey: ['admin', 'attendance', 'member-scores'],
-  queryFn: listMemberScores,
-  retry: false,
-});
+export const memberScoresQueryOptions = (generationId: number) => {
+  const options = list7Options({ path: { generationId } });
+  return queryOptions({
+    ...options,
+    retry: false,
+    select: (response) =>
+      response.items.map((item) => ({
+        membershipId: String(item.membershipId),
+        name: item.name,
+        part: item.position?.toLowerCase() ?? null,
+        initialScore: 100 as const,
+        attendanceEntries: [],
+        adjustmentEntries: [],
+        totalScore: item.totalScore,
+        warning: item.totalScore !== null && item.totalScore < 40,
+      })),
+  });
+};
 
 export const sessionAttendanceQueryOptions = (sessionId: string) =>
   queryOptions({
@@ -51,12 +81,12 @@ export const attendanceCodeQueryOptions = (sessionId: string) =>
     retry: false,
   });
 
-export function useSessionsQuery() {
-  return useSuspenseQuery(sessionsQueryOptions);
+export function useSessionsQuery(generationId: number) {
+  return useSuspenseQuery(sessionsQueryOptions(generationId));
 }
 
-export function useMemberScoresQuery() {
-  return useSuspenseQuery(memberScoresQueryOptions);
+export function useMemberScoresQuery(generationId: number) {
+  return useSuspenseQuery(memberScoresQueryOptions(generationId));
 }
 
 /** 생성 결과가 목록과 개수에 반영될 때까지 저장 완료를 기다립니다. */
@@ -65,7 +95,7 @@ export function useCreateSessionMutation() {
 
   return useMutation({
     mutationFn: createSession,
-    onSuccess: () => client.invalidateQueries({ queryKey: sessionsQueryOptions.queryKey }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['admin', 'generations'] }),
   });
 }
 
@@ -76,6 +106,6 @@ export function useUpdateSessionMutation() {
   return useMutation({
     mutationFn: ({ id, input }: { id: string; input: CreateSessionInput }) =>
       updateSession(id, input),
-    onSuccess: () => client.invalidateQueries({ queryKey: sessionsQueryOptions.queryKey }),
+    onSuccess: () => client.invalidateQueries({ queryKey: ['admin', 'generations'] }),
   });
 }
