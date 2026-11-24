@@ -84,7 +84,7 @@ function NoticeReaderHeader({
 
   return (
     <th className={styles.cell} scope="col" aria-sort={ariaSort}>
-      <ActionButton variant="ghost" size="small" onClick={onSort}>
+      <ActionButton type="button" variant="ghost" size="small" onClick={onSort}>
         {label}
         <Icon size={14} aria-hidden="true" />
       </ActionButton>

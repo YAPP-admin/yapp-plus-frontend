@@ -7,6 +7,7 @@ import {
   sortFns,
 } from '@tanstack/react-table';
 import type { getNoticeReaders } from '~/features/notice-management';
+import * as styles from './notice-readers.css';
 
 export type NoticeReader = ReturnType<typeof getNoticeReaders>[number];
 
@@ -18,7 +19,6 @@ export const readerFeatures = tableFeatures({
 });
 
 const column = createColumnHelper<typeof readerFeatures, NoticeReader>();
-const membershipLabels = { active: '활동회원', regular: '정회원', completed: '수료회원' };
 const dateFormat = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
   dateStyle: 'short',
@@ -28,23 +28,35 @@ const dateFormat = new Intl.DateTimeFormat('ko-KR', {
 export const readerColumns = column.columns([
   column.accessor('member.name', {
     header: '이름',
+    cell: (info) => (
+      <span className={styles.memberCell}>
+        <span className={styles.avatar} aria-hidden="true">
+          {info.getValue().slice(0, 1)}
+        </span>
+        <span>{info.getValue()}</span>
+      </span>
+    ),
     sortFn: (a, b) => a.original.member.name.localeCompare(b.original.member.name, 'ko'),
   }),
-  column.accessor('member.cohort', {
-    header: '기수',
-    cell: (info) => `${info.getValue()}기`,
-    sortFn: 'basic',
-  }),
-  column.accessor('member.job', { header: '직군', sortFn: 'text' }),
-  column.accessor((row) => membershipLabels[row.member.membership], {
-    id: 'membership',
-    header: '회원 구분',
-    sortFn: 'text',
+  column.accessor((row) => `${row.member.cohort}기 · ${row.member.job}`, {
+    id: 'cohortJob',
+    header: '기수 · 직군',
+    cell: (info) => <span className={styles.memberMeta}>{info.getValue()}</span>,
+    sortFn: (a, b) =>
+      a.original.member.cohort - b.original.member.cohort ||
+      a.original.member.job.localeCompare(b.original.member.job, 'ko'),
   }),
   column.accessor((row) => (row.readAt ? 1 : 0), {
     id: 'read',
     header: '읽음 여부',
-    cell: (info) => (info.getValue() ? '읽음' : '미열람'),
+    cell: (info) => (
+      <span
+        className={info.getValue() ? styles.readStatus : styles.unreadStatus}
+        aria-label={info.getValue() ? '읽음' : '안 읽음'}
+      >
+        {info.getValue() ? 'Y' : 'N'}
+      </span>
+    ),
     sortFn: 'basic',
   }),
   column.accessor((row) => (row.readAt ? Date.parse(row.readAt) : undefined), {

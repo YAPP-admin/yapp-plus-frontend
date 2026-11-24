@@ -915,11 +915,10 @@ describe('공지 목록 URL 상태', () => {
 
 describe('공지 상세 탐색', () => {
   it.each([
-    ['', '읽음'],
-    ['?tab=readers', '읽음'],
-    ['?tab=questions', '질문'],
-    ['?tab=unknown', '읽음'],
-    ['?tab=%5B%22questions%22%5D', '읽음'],
+    ['', '읽음 현황'],
+    ['?tab=readers', '읽음 현황'],
+    ['?tab=unknown', '읽음 현황'],
+    ['?tab=%5B%22questions%22%5D', '읽음 현황'],
   ])('직접 접근 %s에서 탭과 공지 ID를 복원한다', async (query, activeTab) => {
     await renderRoute(`/notices/demo-session${query}`);
 
@@ -931,28 +930,12 @@ describe('공지 상세 탐색', () => {
     expect(screen.queryByRole('heading', { name: '공지 목록' })).not.toBeInTheDocument();
   });
 
-  it('탭 링크는 ID를 유지하고 history로 복원하며 읽음 기본값은 생략한다', async () => {
-    const user = userEvent.setup();
-    const router = await renderRoute('/notices/demo-session');
-
-    await user.click(await screen.findByRole('link', { name: '질문' }));
-    await waitFor(() =>
-      expect(router.state.location.href).toBe('/notices/demo-session?tab=questions'),
-    );
-
-    expect(screen.getByText('질문 목록을 준비 중입니다.')).toBeVisible();
-
-    act(() => router.history.back());
+  it('질문 탭은 다음 스프린트까지 숨기고 읽음 현황만 노출한다', async () => {
+    await renderRoute('/notices/demo-session');
 
     expect(await screen.findByRole('table')).toBeVisible();
-
-    act(() => router.history.forward());
-
-    expect(await screen.findByText('질문 목록을 준비 중입니다.')).toBeVisible();
-
-    await user.click(screen.getByRole('link', { name: '읽음' }));
-
-    await waitFor(() => expect(router.state.location.href).toBe('/notices/demo-session'));
+    expect(screen.getByRole('link', { name: '읽음 현황' })).toHaveAttribute('aria-current', 'page');
+    expect(screen.queryByRole('link', { name: '질문' })).not.toBeInTheDocument();
   });
 
   it('typed 상세 진입 후 뒤로가기는 목록 필터를 복원하고 명시적 복귀는 초기화한다', async () => {
@@ -963,19 +946,19 @@ describe('공지 상세 탐색', () => {
       router.navigate({
         to: '/notices/$noticeId',
         params: { noticeId: 'demo-session' },
-        search: { tab: 'questions' },
+        search: { tab: 'readers' },
       }),
     );
 
     expect(await screen.findByRole('heading', { name: '예시 세션 안내' })).toBeVisible();
-    expect(router.state.location.href).toBe('/notices/demo-session?tab=questions');
+    expect(router.state.location.href).toBe('/notices/demo-session');
 
     act(() => router.history.back());
 
     expect(await screen.findByRole('radio', { name: '세션' })).toBeChecked();
 
     act(() => router.history.forward());
-    await user.click(await screen.findByRole('link', { name: '공지 목록으로 돌아가기' }));
+    await user.click(await screen.findByRole('link', { name: '공지 목록으로' }));
 
     expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
     expect(router.state.location.href).toBe('/notices');
@@ -990,22 +973,21 @@ describe('공지 상세 탐색', () => {
 
     await user.tab();
 
-    expect(screen.getByRole('link', { name: '공지 목록으로 돌아가기' })).toHaveFocus();
+    expect(screen.getByRole('link', { name: '공지 목록으로' })).toHaveFocus();
 
     await user.tab();
 
-    expect(screen.getByRole('link', { name: '읽음' })).toHaveFocus();
+    expect(screen.getByRole('link', { name: '공지 수정' })).toHaveFocus();
 
     await user.tab();
 
-    expect(screen.getByRole('link', { name: '질문' })).toHaveFocus();
-
-    await user.keyboard('{Enter}');
-
-    expect(await screen.findByText('질문 목록을 준비 중입니다.')).toBeVisible();
+    expect(screen.getByRole('link', { name: '읽음 현황' })).toHaveFocus();
 
     await user.tab({ shift: true });
+    expect(screen.getByRole('link', { name: '공지 수정' })).toHaveFocus();
+
     await user.tab({ shift: true });
+    expect(screen.getByRole('link', { name: '공지 목록으로' })).toHaveFocus();
     await user.keyboard('{Enter}');
 
     expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
@@ -1051,9 +1033,9 @@ describe('공지 작성·수정 진입점', () => {
     expect(router.state.location.href).toBe('/notices');
   });
 
-  it('수정 진입은 ID만 유지하고 뒤로가기는 질문 탭을 복원하며 명시적 복귀는 읽음 탭으로 이동한다', async () => {
+  it('수정 진입은 ID를 유지하고 뒤로가기는 읽음 현황을 복원한다', async () => {
     const user = userEvent.setup();
-    const router = await renderRoute('/notices/demo-session?tab=questions');
+    const router = await renderRoute('/notices/demo-session');
 
     await user.click(await screen.findByRole('link', { name: '공지 수정' }));
 
@@ -1061,7 +1043,7 @@ describe('공지 작성·수정 진입점', () => {
 
     act(() => router.history.back());
 
-    expect(await screen.findByText('질문 목록을 준비 중입니다.')).toBeVisible();
+    expect(await screen.findByRole('table')).toBeVisible();
 
     act(() => router.history.forward());
     await user.click(await screen.findByRole('link', { name: '공지 상세로 돌아가기' }));
