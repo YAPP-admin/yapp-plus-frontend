@@ -30,6 +30,7 @@ export {
 export {
   sessionsQueryOptions,
   memberScoresQueryOptions,
+  memberScoreDetailQueryOptions,
   sessionAttendanceQueryOptions,
   attendanceOverrideMutationOptions,
   attendanceBadgeMutationOptions,
