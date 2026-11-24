@@ -28,8 +28,11 @@ export type TeamDraftIssue = Readonly<{
   message: string;
 }>;
 
-/** 팀 생성 입력을 TanStack Form에 연결하는 Standard Schema를 만든다. */
-export function createTeamDraftSchema(snapshot: TeamMappingSnapshot) {
+/** 팀 생성·수정 입력을 TanStack Form에 연결하는 Standard Schema를 만든다. */
+export function createTeamDraftSchema(
+  snapshot: TeamMappingSnapshot,
+  editingTeamId?: string,
+) {
   return z
     .object({
       name: z.string(),
@@ -37,7 +40,7 @@ export function createTeamDraftSchema(snapshot: TeamMappingSnapshot) {
       memberActivityIds: z.array(z.string()),
     })
     .superRefine((values, context) => {
-      getTeamDraftIssues(snapshot, values).forEach((issue) => {
+      getTeamDraftIssues(snapshot, values, editingTeamId).forEach((issue) => {
         context.addIssue({
           code: 'custom',
           path: [issue.field === 'name' ? 'name' : 'memberActivityIds'],
@@ -54,6 +57,9 @@ const searchAliases: Readonly<Record<TeamMappingPart, readonly string[]>> = {
   ios: ['ios'],
   web: ['web'],
   server: ['server', '서버'],
+  mobile: ['mobile', '모바일'],
+  'ai-native': ['ai-native', 'ai native', 'ai', '에이아이'],
+  unassigned: ['unassigned', '미지정', '직군 미지정'],
 };
 
 function normalize(value: string): string {
@@ -82,10 +88,11 @@ export function getCandidateMembers(
   });
 }
 
-/** 새 팀의 필수 입력과 기존 팀 최소 인원 영향을 함께 검증한다. */
+/** 새 팀 또는 기존 팀 수정에 필요한 입력과 팀원 이동 영향을 함께 검증한다. */
 export function getTeamDraftIssues(
   snapshot: TeamMappingSnapshot,
   values: TeamDraftValues,
+  editingTeamId?: string,
 ): readonly TeamDraftIssue[] {
   const issues: TeamDraftIssue[] = [];
   if (values.name.trim().length === 0) {
@@ -108,10 +115,18 @@ export function getTeamDraftIssues(
 
   const changes = [...selected]
     .filter((activityId) => getMemberByActivityId(snapshot, activityId) !== undefined)
-    .map((activityId) => ({
-      activityId,
-      destinationTeamId: 'new-team',
-    }));
+    .flatMap((activityId) => {
+      const currentTeamId = getMemberTeamId(snapshot, activityId);
+      if (editingTeamId !== undefined && currentTeamId === editingTeamId) {
+        return [];
+      }
+      return [
+        {
+          activityId,
+          destinationTeamId: editingTeamId ?? 'new-team',
+        },
+      ];
+    });
   issues.push(
     ...getTeamChangeIssues(snapshot, changes).map((issue): TeamDraftIssue => ({
       field: 'members',

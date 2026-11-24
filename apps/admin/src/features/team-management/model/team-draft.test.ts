@@ -35,7 +35,6 @@ const snapshot = teamMappingSnapshotSchema.parse({
       leaderActivityId: null,
     },
   ],
-  confirmation: null,
 });
 
 describe('팀 후보 검색', () => {
@@ -97,6 +96,16 @@ describe('팀 생성·변경 예정 검증', () => {
       { field: 'members', message: '같은 회원을 중복으로 추가할 수 없습니다.' },
       { field: 'members', message: '존재하지 않는 회원을 추가할 수 없습니다.' },
     ]);
+  });
+
+  it('기존 팀 수정에서는 현재 팀원을 유지한 입력을 허용한다', () => {
+    expect(
+      createTeamDraftSchema(snapshot, 'team-one').safeParse({
+        name: '수정한 1팀',
+        serviceName: '새 서비스',
+        memberActivityIds: ['pm-1', 'design-1'],
+      }).success,
+    ).toBe(true);
   });
 
   it('기존 팀의 마지막 회원을 이동·제외하는 변경을 막고 정상 변경은 허용한다', () => {
