@@ -35,7 +35,6 @@ const snapshot = teamMappingSnapshotSchema.parse({
       leaderActivityId: null,
     },
   ],
-  confirmation: null,
 });
 
 describe('팀 후보 검색', () => {

@@ -1,7 +1,7 @@
 /** 팀 매핑 화면이 공유하는 읽기 전용 원본 입력과 집계 규칙을 정의한다. */
 import { z } from 'zod';
 
-export const teamMappingStatusSchema = z.enum(['before', 'draft', 'confirmed']);
+export const teamMappingStatusSchema = z.enum(['before', 'draft']);
 export const teamMappingPartSchema = z.enum([
   'pm',
   'design',
@@ -50,14 +50,6 @@ export const teamMappingTeamSchema = z
   })
   .readonly();
 
-/** 확정됨 화면에 표시할 합성 확정 이력이다. 실제 저장 결과를 표현하지 않는다. */
-export const teamMappingConfirmationSchema = z
-  .object({
-    confirmedAt: z.iso.datetime(),
-    actorName: z.string().trim().min(1),
-  })
-  .readonly();
-
 /** 팀·회원 참조와 상태 불변식을 함께 검증하는 화면 snapshot이다. */
 export const teamMappingSnapshotSchema = z
   .object({
@@ -65,7 +57,6 @@ export const teamMappingSnapshotSchema = z
     status: teamMappingStatusSchema,
     members: teamMappingMemberSchema.array().readonly(),
     teams: teamMappingTeamSchema.array().readonly(),
-    confirmation: teamMappingConfirmationSchema.nullable(),
   })
   .superRefine((snapshot, context) => {
     const memberIds = new Set<string>();
@@ -151,8 +142,6 @@ export type TeamMappingFilter = z.infer<typeof teamMappingFilterSchema>;
 export type TeamMappingMember = z.infer<typeof teamMappingMemberSchema>;
 /** 팀 카드와 상세 패널의 읽기 전용 팀 입력이다. */
 export type TeamMappingTeam = z.infer<typeof teamMappingTeamSchema>;
-/** 확정됨 화면에 표시할 합성 이력이다. */
-export type TeamMappingConfirmation = z.infer<typeof teamMappingConfirmationSchema>;
 /** 화면이 받는 팀 매핑 원본 snapshot이다. */
 export type TeamMappingSnapshot = z.infer<typeof teamMappingSnapshotSchema>;
 

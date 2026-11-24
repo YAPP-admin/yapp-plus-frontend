@@ -35,7 +35,6 @@ const snapshot = teamMappingSnapshotSchema.parse({
       leaderActivityId: null,
     },
   ],
-  confirmation: null,
 });
 
 describe('팀 매핑 원본 집계', () => {
@@ -59,6 +58,12 @@ describe('팀 매핑 원본 집계', () => {
       'team-alpha',
       'team-beta',
     ]);
+    expect(getTeamsForFilter(snapshot, 'complete').map((candidate) => candidate.id)).toEqual([
+      'team-alpha',
+    ]);
+    expect(getTeamsForFilter(snapshot, 'needs-check').map((candidate) => candidate.id)).toEqual([
+      'team-beta',
+    ]);
   });
 
   it('미배정 회원과 필터별 개수를 원본에서 계산한다', () => {
@@ -71,10 +76,6 @@ describe('팀 매핑 원본 집계', () => {
       needsCheck: 1,
       unassigned: 1,
     });
-    expect(getTeamsForFilter(snapshot, 'complete').map((team) => team.id)).toEqual(['team-alpha']);
-    expect(getTeamsForFilter(snapshot, 'needs-check').map((team) => team.id)).toEqual([
-      'team-beta',
-    ]);
     expect(getTeamsForFilter(snapshot, 'unassigned').map((team) => team.id)).toEqual([
       'team-alpha',
       'team-beta',

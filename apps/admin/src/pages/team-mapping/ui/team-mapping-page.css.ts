@@ -14,12 +14,6 @@ export const page = style({
   '@media': { [narrowScreen]: { padding: `${vars.$dimension.x8} ${vars.$dimension.x4}` } },
 });
 
-export const previewField = style({
-  width: 'min(100%, 16rem)',
-  justifySelf: 'end',
-  '@media': { [narrowScreen]: { width: '100%', justifySelf: 'stretch' } },
-});
-
 export const headerActions = style({
   display: 'flex',
   alignItems: 'flex-end',
@@ -28,11 +22,6 @@ export const headerActions = style({
   gap: vars.$dimension.x3,
   width: 'min(100%, 34rem)',
   '@media': { [narrowScreen]: { width: '100%', alignItems: 'stretch' } },
-});
-
-export const filterField = style({
-  width: 'min(100%, 16rem)',
-  '@media': { [narrowScreen]: { width: '100%' } },
 });
 
 export const teamFilters = style({
@@ -150,56 +139,4 @@ export const filterEmpty = style({
   border: `1px solid ${vars.$color.stroke.neutralMuted}`,
   borderRadius: vars.$radius.r4,
   background: vars.$color.bg.layerDefault,
-});
-
-export const confirmationBanner = style({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  gap: vars.$dimension.x4,
-  padding: vars.$dimension.x5,
-  border: `1px solid ${vars.$color.stroke.brandWeak}`,
-  borderRadius: vars.$radius.r4,
-  background: vars.$color.bg.brandWeak,
-  '@media': {
-    [narrowScreen]: {
-      alignItems: 'stretch',
-      flexDirection: 'column',
-    },
-  },
-});
-
-export const confirmationContent = style({
-  display: 'grid',
-  gap: vars.$dimension.x1,
-  minWidth: 0,
-});
-
-export const confirmationEyebrow = style({
-  color: vars.$color.fg.brand,
-  fontSize: vars.$fontSize.t1,
-  fontWeight: vars.$fontWeight.bold,
-});
-
-export const confirmationTitle = style({
-  margin: 0,
-  color: vars.$color.fg.neutral,
-  fontSize: vars.$fontSize.t5,
-  lineHeight: vars.$lineHeight.t5,
-  fontWeight: vars.$fontWeight.bold,
-});
-
-export const confirmationDescription = style({
-  margin: 0,
-  color: vars.$color.fg.neutralMuted,
-  fontSize: vars.$fontSize.t2,
-  lineHeight: vars.$lineHeight.t2,
-});
-
-export const editingDescription = style({
-  margin: `${vars.$dimension.x1} 0 0`,
-  color: vars.$color.fg.neutral,
-  fontSize: vars.$fontSize.t2,
-  lineHeight: vars.$lineHeight.t2,
-  fontWeight: vars.$fontWeight.bold,
 });

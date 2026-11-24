@@ -16,7 +16,6 @@ export {
   teamMappingSnapshotSchema,
   teamMappingStatusSchema,
   teamMappingTeamSchema,
-  type TeamMappingConfirmation,
   type TeamMappingFilter,
   type TeamMappingMember,
   type TeamMappingPart,
@@ -38,7 +37,6 @@ export {
 export {
   getTeamMappingFixture,
   teamMappingBeforeFixture,
-  teamMappingConfirmedFixture,
   teamMappingDraftFixture,
   teamMappingFixtures,
 } from './fixtures';
