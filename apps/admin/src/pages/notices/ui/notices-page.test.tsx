@@ -57,7 +57,7 @@ it('최신순 공지·전체/필터 개수·대상·읽음 집계와 상세 링�
     '예시 제출 안내',
     '예시 세션 안내',
   ]);
-  expect(screen.getByText(/게시 중/)).toHaveTextContent('게시 중 3개');
+  expect(screen.queryByText(/게시 중/)).not.toBeInTheDocument();
   const session = within(screen.getByRole('article', { name: '예시 세션 안내' }));
   expect(session.getByText('전체 사용자')).toBeVisible();
   expect(session.getByText('1 / 4명')).toBeVisible();
@@ -74,7 +74,7 @@ it.each(['session', 'submission', 'operation'] as const)(
   async (category) => {
     await renderPage(category);
     expect(await screen.findAllByRole('article')).toHaveLength(1);
-    expect(screen.getByText(/게시 중/)).toHaveTextContent('게시 중 3개');
+    expect(screen.queryByText(/게시 중/)).not.toBeInTheDocument();
     expect(screen.getByText(/^총/)).toHaveTextContent('총 1개');
   },
 );
@@ -181,6 +181,6 @@ it('삭제 취소·실패 후 재시도하고 마지막 필터 항목 삭제 시
     await pending.promise;
   });
   expect(await screen.findByText('선택한 종류의 공지가 없습니다.')).toBeVisible();
-  expect(screen.getByText(/게시 중/)).toHaveTextContent('게시 중 2개');
+  expect(screen.queryByText(/게시 중/)).not.toBeInTheDocument();
   expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
 });
