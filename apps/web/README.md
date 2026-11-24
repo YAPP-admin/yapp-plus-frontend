@@ -73,6 +73,9 @@ mise exec -- pnpm --filter @yapp-plus/web test
 
 ## 검증과 제한
 
+팀 사진 presign·접수도 실서버로 우회하지 않고 기존 생성 MSW 정책을 따릅니다.
+별도 모의 업로드 흐름은 제공하지 않으며, 실제 제출 검증은 모킹을 끈 iPhone에서 진행합니다.
+
 ```sh
 mise exec -- node --run check
 mise exec -- node --run build

@@ -1,4 +1,3 @@
-import { http, passthrough } from 'msw';
 import { createNoticeFixtures } from './notice-fixtures';
 import { createAttendanceFixtures } from './attendance-fixtures';
 import { createUpcomingSessionFixtures } from './session-fixtures';
@@ -25,11 +24,6 @@ export function startMocking(): Promise<void> {
     const attendance = createAttendanceFixtures(fixtures);
     const noticeState = new URLSearchParams(window.location.search).get('noticeState');
     const worker = setupWorker(
-      // 팀 사진 제출은 개발 환경에서도 실제 API를 사용한다. 나머지 미정의 API 차단은 유지한다.
-      http.post(`${baseUrl}/api/sessions/:sessionId/team-attendance-photos/presign`, () =>
-        passthrough(),
-      ),
-      http.post(`${baseUrl}/api/sessions/:sessionId/team-attendance-photos`, () => passthrough()),
       ...createMemberProfileHandlers(baseUrl),
       ...createMemberAttendanceHandlers(
         baseUrl,
