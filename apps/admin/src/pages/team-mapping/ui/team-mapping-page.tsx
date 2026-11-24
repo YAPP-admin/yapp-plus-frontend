@@ -38,7 +38,9 @@ function getTeamLeaderActivityId(
   return (
     memberActivityIds.find(
       (activityId) => getMemberByActivityId(snapshot, activityId)?.part === 'pm',
-    ) ?? memberActivityIds[0] ?? null
+    ) ??
+    memberActivityIds[0] ??
+    null
   );
 }
 
@@ -156,9 +158,7 @@ export function TeamMappingPage({
 
   function renderTeamContent() {
     if (search.filter === 'unassigned') {
-      return (
-      <UnassignedMembers snapshot={workingSnapshot} />
-      );
+      return <UnassignedMembers snapshot={workingSnapshot} />;
     }
 
     if (hasEmptyFilterResult) {

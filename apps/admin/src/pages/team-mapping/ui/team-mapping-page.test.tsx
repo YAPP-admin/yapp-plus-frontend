@@ -43,10 +43,7 @@ it('생성 callback이 없어도 두 진입점에서 생성 모달을 연다', a
   const user = userEvent.setup();
   render(
     <OverlayProvider>
-      <TeamMappingPage
-        snapshot={teamMappingBeforeFixture}
-        search={teamMappingSearchDefaults}
-      />
+      <TeamMappingPage snapshot={teamMappingBeforeFixture} search={teamMappingSearchDefaults} />
     </OverlayProvider>,
   );
 
@@ -55,12 +52,7 @@ it('생성 callback이 없어도 두 진입점에서 생성 모달을 연다', a
 });
 
 it('팀 목록과 필터 개수를 표시한다', () => {
-  render(
-    <TeamMappingPage
-      snapshot={teamMappingDraftFixture}
-      search={teamMappingSearchDefaults}
-    />,
-  );
+  render(<TeamMappingPage snapshot={teamMappingDraftFixture} search={teamMappingSearchDefaults} />);
 
   expect(screen.getByRole('heading', { name: '팀 목록', level: 2 })).toBeVisible();
   expect(
@@ -125,10 +117,7 @@ it('상세 callback이 없으면 카드에서 상세 패널을 연다', async ()
 
   render(
     <OverlayProvider>
-      <TeamMappingPage
-        snapshot={teamMappingDraftFixture}
-        search={teamMappingSearchDefaults}
-      />
+      <TeamMappingPage snapshot={teamMappingDraftFixture} search={teamMappingSearchDefaults} />
     </OverlayProvider>,
   );
 
