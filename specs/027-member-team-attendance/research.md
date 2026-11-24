@@ -1,5 +1,8 @@
 # 조사와 결정
 
+이 문서는 2026-11-23 초기 조사 이력이다. 즉시 업로드·사진 조회 오류 처리 등 아래 당시 결정은
+후속 사용자 리뷰로 바뀌었으며 현재 계약은 spec.md·plan.md·contracts/team-attendance.md를 따른다.
+
 ## 기준
 
 - 확인일: 2026-11-23. HEAD·origin/main: cc90b35ed70b9c1cca466f1d256fd20739017aef.

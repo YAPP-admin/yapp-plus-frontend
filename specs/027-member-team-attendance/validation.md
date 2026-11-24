@@ -1,5 +1,50 @@
 # 검증 기록
 
+## 최종 자동 검증 — T037·T038·T040
+
+- 현재 승인 범위는 구현·자동 검증·문서 정리 완료이며 실제 iPhone 확인(T039)은 사용자 요청으로 보류한다.
+- 실제 Stackflow를 사용해 앨범·카메라 각각 홈 → 안내 → 취소 → 재선택 → 팀원 선택 →
+  presign·PUT·접수 → 완료 → 홈 복귀를 통합 검증했다. 브리지·HTTP는 모의 응답이며 실제 서버에 쓰지 않았다.
+- 제출 전 전송 0회, 본인 선택 고정, 선택 명단·JPEG 바이트 전달, 요청 순서와 단일 접수,
+  staleTime Infinity에서도 복귀 후 검토 중 상태 표시를 확인했다.
+- 이 테스트로 완료 단계 replaceStep에서 sessionId가 빠져 NotFound로 전환되는 버그를 재현하고
+  sessionId를 유지하도록 수정했다. 기존 receipt 없는 완료 직접 진입 차단은 그대로 통과한다.
+- spec·plan·data-model·contract·quickstart·tasks를 현재 결정에 맞췄고 초기 research는 역사적 기록임을 명시했다.
+  즉시 업로드·별도 Query 래퍼·제출 직전 명단 비교 등 폐기한 계획을 미구현 필수 작업과 구분했다.
+- node --run check 통과: format과 웹 lint·typecheck·테스트 70개 파일 574건은 새 실행,
+  나머지 패키지 lint·typecheck·test는 Turbo 캐시 재사용이다.
+- node --run build 통과: 웹 새 실행, admin·storybook 캐시 재사용. 기존 Vite chunk 크기 경고는 남아 있다.
+  git diff --check 통과. 브라우저 시각 확인·실제 터치·VoiceOver·사진 촬영·승인 후 실기기 복귀는 미실행이다.
+- 실패 시 팀 인증 진입을 차단하고 해당 기능 변경을 되돌린다. SDK 복구는 소비자와 함께 수행한다.
+  프런트 복구로 서버의 사진을 삭제하지 않는다. 이번 작업에서 commit·push·PR·배포는 수행하지 않았다.
+- 현재 결과는 사용자 최종 리뷰용이다. PR 생성 시 누적 변경의 800줄 제한을 만족하도록 분리해야 한다.
+
+## T036 — 개발 모킹의 사진 전송 경계
+
+- 사용자 리뷰에 따라 browser.ts의 presign·submit passthrough 제거만 유지한다.
+  별도 모의 업로드·상태 갱신 핸들러, 전용 시나리오와 추가 테스트는 제거했다.
+- presign·submit은 기존 생성 MSW의 responseFallback: error 정책으로 501을 반환한다.
+  presign이 실패하므로 PUT을 시작하지 않는다. 실제 제출 검증은 모킹을 끈 iPhone에서 진행한다.
+- team-photo-development.ts에는 고정 대상이 이미 없고 개발 진입 조건만 남아 있어 삭제하지 않았다.
+- node --run check, node --run build, git diff --check 통과. 웹 테스트 70개 파일 572건과
+  웹 lint·typecheck·build는 새 실행, 다른 패키지 및 admin·storybook build는 캐시 재사용이다.
+- 브라우저·실기기 수동 확인은 미실행이다. T035 문서와 이번 T036 변경은 미커밋 상태다.
+
+## T035 — 6단계 자동 검증·리뷰 기록
+
+- 사용자 승인으로 T034를 8374a7e8에 커밋했다. T030~T034의 홈·코드 출석·복귀·운영 진입 변경을 검토했다.
+- home-page.test.tsx, attendance-code.test.tsx, query-recovery.test.tsx를 새로 실행해
+  3개 파일 78건 통과했다. TEAM 코드 화면 직접 진입에서 위치 요청·코드 POST 0회를 확인한다.
+- 홈의 정규·팀 경로, AVAILABLE·CHECKED_IN·NOT_OPEN·NOT_ELIGIBLE·PENDING_APPROVAL,
+  사진 상세·오류 fallback·재조회 기존 데이터 유지 및 fresh 캐시 복귀를 검증했다.
+- 접근성 자동 검증 범위는 주간 조회 오류의 키보드 재시도, 코드 입력·Enter 제출,
+  이름 있는 버튼·상태 출력·비활성 상태다. 실제 터치·VoiceOver·iPhone 카메라는 미실행이며 T039에 남긴다.
+- quickstart.md의 즉시 업로드·사진 존재 기반 차단·사진 오류 미제출 정책을 최신 사용자 결정으로 갱신했다.
+- 이번 단계는 문서만 변경했다. 전체 check 통과: format 검사는 새 실행, Turbo lint·typecheck·test는
+  캐시 재사용이다. git diff --check 통과. 제품 build는 다시 실행하지 않고 직전 T034 성공 결과를 유지한다.
+- origin/main 대비 누적 변경은 선행 API 생성·소비자 이관 포함 800줄 초과다. PR 생성 전 분리가 필요하다.
+- 다음 T036은 개발 모킹의 실서버 presign·submit passthrough를 제거하고 생성 MSW 시나리오로 대체한다.
+
 ## T034 — 운영 진입·직접 URL 검증
 
 - 사용자 승인으로 T033을 d41387e1에 커밋하고 T034를 진행했다.
