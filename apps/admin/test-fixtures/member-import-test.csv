@@ -1,0 +1,5 @@
+이름,전화번호,기수,직군,권한
+테스트 신규 모바일,010-9999-0001,29,mobile,active-member
+테스트 신규 AI Native,01099990002,29,ai-native,regular-member
+테스트 수료 회원,010-9999-0003,29,server,completed-member
+테스트 유예 회원,01099990004,29,web,deferred-member
