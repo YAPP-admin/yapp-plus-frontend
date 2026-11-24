@@ -22,7 +22,6 @@ import {
   nextKoreanMidnight,
 } from '@/shared/lib/korean-date-time';
 import { currentWeekQueryOptions } from '../model/current-week-query';
-import { useAttendanceConfirmation } from '../model/code-attendance';
 import {
   calendarDateBadge,
   calendarDateBadgeActive,
@@ -113,7 +112,6 @@ function WeekError() {
 
 function CurrentWeekContent() {
   const { apiOptions } = useNativeAuthSession();
-  const confirmed = useAttendanceConfirmation();
   const query = useSuspenseQuery({
     ...currentWeekQueryOptions(apiOptions),
     refetchOnMount: (cachedQuery) =>
@@ -162,30 +160,19 @@ function CurrentWeekContent() {
           </div>
         ))}
       </div>
-      {session ? (
-        <SessionAttendanceAction
-          session={session}
-          isAttendanceConfirmed={confirmed === session.sessionId}
-        />
-      ) : null}
+      {session ? <SessionAttendanceAction session={session} /> : null}
     </>
   );
 }
 
-function SessionAttendanceAction({
-  session,
-  isAttendanceConfirmed,
-}: {
-  session: CurrentWeekSessionDetailResponse;
-  isAttendanceConfirmed: boolean;
-}) {
+function SessionAttendanceAction({ session }: { session: CurrentWeekSessionDetailResponse }) {
   const { isNative } = useNativeAuthSession();
   const flow = useFlow();
   const canOpenTeamPhoto =
     !staticContentEnabled() &&
     (isNative || (import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true'));
   if (session.type === 'REGULAR') {
-    const disabled = isAttendanceConfirmed || session.attendanceStatus !== 'AVAILABLE';
+    const disabled = session.attendanceStatus !== 'AVAILABLE';
     return (
       <ActionButton
         variant="neutralWeak"
@@ -193,7 +180,7 @@ function SessionAttendanceAction({
         disabled={disabled}
         onClick={() => flow.push('AttendanceCode', {})}
       >
-        {isAttendanceConfirmed ? '출석했어요!' : attendanceStatusLabel[session.attendanceStatus]}
+        {attendanceStatusLabel[session.attendanceStatus]}
       </ActionButton>
     );
   }

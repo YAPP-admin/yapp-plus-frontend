@@ -126,6 +126,14 @@ it('앞자리 0을 붙여넣고 Enter로 실제 코드·인증을 전송한 뒤 
     http.post(verifyUrl, async ({ request: req }) => {
       order.push('verify');
       request(await req.json(), req.headers.get('Authorization'));
+      server.use(
+        http.get(weekUrl, () =>
+          HttpResponse.json({
+            ...week,
+            session: { ...week.session, attendanceStatus: 'CHECKED_IN' },
+          }),
+        ),
+      );
       return HttpResponse.json(success);
     }),
   );
@@ -139,8 +147,34 @@ it('앞자리 0을 붙여넣고 Enter로 실제 코드·인증을 전송한 뒤 
   view.close();
   expect(await screen.findByRole('button', { name: '출석했어요!' })).toBeDisabled();
   view.unmount();
+  server.use(http.get(weekUrl, () => HttpResponse.json(week)));
   setup();
   await enter();
+});
+
+it('TEAM 세션으로 코드 화면에 직접 진입해도 위치·출석 요청을 보내지 않는다', async () => {
+  const request = vi.fn<() => Response>(() => HttpResponse.json(success));
+  server.use(
+    http.get(weekUrl, () =>
+      HttpResponse.json({ ...week, session: { ...week.session, type: 'TEAM' } }),
+    ),
+    http.post(verifyUrl, request),
+  );
+  setup();
+  expect(await screen.findByText('현재 출석할 수 있는 세션이 없어요.')).toBeVisible();
+  expect(screen.getByRole('button', { name: '위치 확인 후 출석하기' })).toBeDisabled();
+  expect(nativeLocation.request).not.toHaveBeenCalled();
+  expect(request).not.toHaveBeenCalled();
+});
+
+it('출석 성공 후 서버가 AVAILABLE로 정정하면 홈에서 다시 출석할 수 있다', async () => {
+  server.use(http.post(verifyUrl, () => HttpResponse.json(success)));
+  const view = setup();
+  const user = await enter();
+  await user.keyboard('{Enter}');
+  await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
+  view.close();
+  expect(await screen.findByRole('button', { name: '출석하기' })).toBeEnabled();
 });
 
 it('위치 메서드를 지원하지 않으면 위치·출석 요청을 보내지 않는다', async () => {
@@ -529,6 +563,16 @@ it.each(['오류 후 닫기', '화면 제거'])(
       http.post(verifyUrl, async () => {
         received();
         await response;
+        if (boundary === '화면 제거') {
+          server.use(
+            http.get(weekUrl, () =>
+              HttpResponse.json({
+                ...week,
+                session: { ...week.session, attendanceStatus: 'CHECKED_IN' },
+              }),
+            ),
+          );
+        }
         return boundary === '오류 후 닫기'
           ? HttpResponse.json({ code: 'INVALID_ATTENDANCE_CODE' }, { status: 400 })
           : HttpResponse.json(success);

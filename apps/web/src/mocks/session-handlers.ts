@@ -47,7 +47,15 @@ export const createSessionHandlers = (
         submittedAt: new Date().toISOString(),
       });
     }),
-    pick.find6(() => HttpResponse.json(currentWeek)),
+    pick.find6(() =>
+      HttpResponse.json({
+        ...currentWeek,
+        session:
+          currentWeek.session?.sessionId === attendance.sessionId && attendance.checkedInAt
+            ? { ...currentWeek.session, attendanceStatus: 'CHECKED_IN' }
+            : currentWeek.session,
+      }),
+    ),
     pick.find7(async () => {
       if (scheduleState === 'loading') {
         await delay(5_000);

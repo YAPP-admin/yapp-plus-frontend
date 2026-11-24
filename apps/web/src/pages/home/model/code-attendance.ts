@@ -26,7 +26,7 @@ import {
   type LocationAttendanceResult,
 } from './location-attendance';
 
-/** 서버가 확인한 성공 결과만 앱 수명 동안 보존합니다. */
+/** 완료 화면 진입에 필요한 접수 기록이다. 현재 출석 가능 여부는 주간 조회가 결정한다. */
 export function useAttendanceConfirmation() {
   const confirmations = useMutationState({
     filters: { mutationKey: verifyMutationKey(), status: 'success' },
@@ -169,7 +169,6 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
   const options = currentWeekQueryOptions(apiOptions);
   const week = useSuspenseQuery(options);
   const session = week.data.session;
-  const confirmed = useAttendanceConfirmation();
 
   const attendanceMutation = useMutation({
     ...verifyMutation({
@@ -252,7 +251,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
   });
   const isPending =
     locationCheckMutation.isPending || attendanceMutation.isPending || settingsMutation.isPending;
-  const available = session?.attendanceStatus === 'AVAILABLE' && confirmed !== session.sessionId;
+  const available = session?.type === 'REGULAR' && session.attendanceStatus === 'AVAILABLE';
   const queryIssue =
     week.error &&
     new AttendanceFlowError(
@@ -317,7 +316,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
       settingsMutation.mutate();
     },
     submit: (code: string, onInvalidCode: (message: string) => void) => {
-      if (!session || !available || isPending || !isSheetOpen) {
+      if (!session || isPending || !isSheetOpen) {
         return;
       }
       const sessionSnapshot: AttendanceSessionSnapshot = {
