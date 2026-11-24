@@ -51,6 +51,9 @@ describe('팀 매핑 원본 집계', () => {
       ios: 0,
       web: 0,
       server: 0,
+      mobile: 0,
+      'ai-native': 0,
+      unassigned: 0,
     });
     expect(getTeamsForFilter(snapshot, 'all').map((candidate) => candidate.id)).toEqual([
       'team-alpha',

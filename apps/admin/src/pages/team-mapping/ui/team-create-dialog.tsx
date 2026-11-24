@@ -1,5 +1,5 @@
-/** 팀 생성 입력과 다음 단계의 회원 선택 영역을 제공한다. 실제 생성은 아직 연결하지 않는다. */
-import { type FormEventHandler, type KeyboardEventHandler } from 'react';
+/** 팀 생성·수정 입력과 회원 선택 영역을 제공한다. */
+import { useState, type FormEventHandler, type KeyboardEventHandler } from 'react';
 import { revalidateLogic, useForm, useStore } from '@tanstack/react-form';
 import { Dialog, Portal } from '@seed-design/react';
 import { ActionButton, TextField, TextFieldInput } from '@yapp-plus/ui';
@@ -11,17 +11,24 @@ import {
   type TeamDraftValues,
   type TeamMappingPart,
   type TeamMappingSnapshot,
+  type TeamMappingTeam,
 } from '~/features/team-management';
 import * as styles from './team-create-dialog.css';
 import { TeamMemberSearch } from './team-member-search';
 import { useTeamMappingDraft } from './team-mapping-draft-context';
 import { useTeamLeaveGuard } from './use-team-leave-guard';
 
-/** 생성 모달의 화면 상태와 초안 변경을 부모에 전달하는 입력 계약이다. */
+/** 생성 모달의 초안 변경을 부모에 전달하는 입력 계약이다. */
 type TeamCreateDialogProps = {
   snapshot: TeamMappingSnapshot;
   onClose: () => void;
   onCreate?: (values: TeamDraftValues) => void;
+  team?: TeamMappingTeam;
+  onUpdate?: (
+    team: TeamMappingTeam,
+    values: TeamDraftValues,
+    destinationTeamIds?: Readonly<Record<string, string>>,
+  ) => void;
 };
 
 const initialValues: TeamDraftValues = {
@@ -37,6 +44,9 @@ const teamPartOrder: readonly TeamMappingPart[] = [
   'ios',
   'web',
   'server',
+  'mobile',
+  'ai-native',
+  'unassigned',
 ];
 
 /** 아직 연결하지 않은 생성 제출이 Enter로 실행되지 않도록 막는다. */
@@ -61,15 +71,44 @@ function getFieldErrorMessage(errors: readonly unknown[]): string | undefined {
 }
 
 /** 팀 생성 입력 모달입니다. 회원 선택은 7단계에서 이 영역에 연결합니다. */
-export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDialogProps) {
+export function TeamCreateDialog({
+  snapshot,
+  onClose,
+  onCreate,
+  team,
+  onUpdate,
+}: TeamCreateDialogProps) {
   const { setCreateDirty } = useTeamMappingDraft();
+  const isEdit = team !== undefined;
+  const [destinationTeamIds, setDestinationTeamIds] = useState<Record<string, string>>({});
+  const defaultValues: TeamDraftValues = team
+    ? {
+        name: team.name,
+        serviceName: team.serviceName ?? '',
+        memberActivityIds: team.memberActivityIds,
+      }
+    : initialValues;
   const form = useForm({
-    defaultValues: initialValues,
+    defaultValues,
     validationLogic: revalidateLogic({ mode: 'blur', modeAfterSubmission: 'change' }),
     validators: {
-      onDynamic: createTeamDraftSchema(snapshot),
+      onDynamic: createTeamDraftSchema(snapshot, team?.id),
     },
-    onSubmit: ({ value }) => onCreate?.(value),
+    onSubmit: ({ value }) => {
+      if (team !== undefined) {
+        if (Object.keys(destinationTeamIds).length > 0) {
+          onUpdate?.(team, value, destinationTeamIds);
+        } else {
+          onUpdate?.(team, value);
+        }
+        if (onUpdate !== undefined) {
+          setCreateDirty(false);
+          onClose();
+        }
+        return;
+      }
+      onCreate?.(value);
+    },
     listeners: {
       onChange: ({ formApi }) => setCreateDirty(!formApi.state.isDefaultValue),
     },
@@ -95,7 +134,7 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
         <Dialog.Positioner>
           <Dialog.Content className={styles.dialog} data-seed-color-mode="dark-only">
             <Dialog.Header>
-              <Dialog.Title>팀 만들기</Dialog.Title>
+              <Dialog.Title>{isEdit ? '팀 수정하기' : '팀 만들기'}</Dialog.Title>
               <Dialog.Description>
                 팀명과 서비스명을 입력하고 회원을 선택해 주세요.
               </Dialog.Description>
@@ -159,7 +198,17 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
                         counts[member.part] += 1;
                         return counts;
                       },
-                      { pm: 0, design: 0, android: 0, ios: 0, web: 0, server: 0 },
+                      {
+                        pm: 0,
+                        design: 0,
+                        android: 0,
+                        ios: 0,
+                        web: 0,
+                        server: 0,
+                        mobile: 0,
+                        'ai-native': 0,
+                        unassigned: 0,
+                      },
                     );
                     const composition = teamPartOrder
                       .filter((part) => partCounts[part] > 0)
@@ -169,11 +218,11 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
                     return (
                       <section
                         className={styles.memberSection}
-                        aria-labelledby="team-create-members-title"
+                        aria-labelledby="team-members-title"
                       >
                         <div className={styles.memberHeader}>
                           <div>
-                            <h3 id="team-create-members-title" className={styles.memberTitle}>
+                            <h3 id="team-members-title" className={styles.memberTitle}>
                               선택 회원
                             </h3>
                             <p className={styles.memberDescription}>
@@ -187,14 +236,46 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
                         <TeamMemberSearch
                           snapshot={snapshot}
                           selectedActivityIds={field.state.value}
+                          editingTeam={team}
                           onSelect={(activityId) => {
                             field.handleChange([...field.state.value, activityId]);
+                            setDestinationTeamIds((current) => {
+                              if (!(activityId in current)) {
+                                return current;
+                              }
+                              return Object.fromEntries(
+                                Object.entries(current).filter(([key]) => key !== activityId),
+                              );
+                            });
                           }}
                           onRemove={(activityId) => {
                             field.handleChange(
                               field.state.value.filter((selectedId) => selectedId !== activityId),
                             );
+                            setDestinationTeamIds((current) => {
+                              if (!(activityId in current)) {
+                                return current;
+                              }
+                              return Object.fromEntries(
+                                Object.entries(current).filter(([key]) => key !== activityId),
+                              );
+                            });
                           }}
+                          onMoveMember={
+                            team === undefined
+                              ? undefined
+                              : (activityId, destinationTeamId) => {
+                                  field.handleChange(
+                                    field.state.value.filter(
+                                      (selectedId) => selectedId !== activityId,
+                                    ),
+                                  );
+                                  setDestinationTeamIds((current) => ({
+                                    ...current,
+                                    [activityId]: destinationTeamId,
+                                  }));
+                                }
+                          }
                         />
                         {field.state.meta.errors.length > 0 && (
                           <p>{getFieldErrorMessage(field.state.meta.errors)}</p>
@@ -211,10 +292,10 @@ export function TeamCreateDialog({ snapshot, onClose, onCreate }: TeamCreateDial
                 <ActionButton
                   type="submit"
                   variant="neutralSolid"
-                  disabled
-                  aria-label="팀 만들기 (준비 중)"
+                  disabled={!isEdit}
+                  aria-label={isEdit ? '수정하기' : '팀 만들기 (준비 중)'}
                 >
-                  팀 만들기 (준비 중)
+                  {isEdit ? '수정하기' : '팀 만들기 (준비 중)'}
                 </ActionButton>
               </Dialog.Footer>
             </form>

@@ -2,7 +2,17 @@
 import { z } from 'zod';
 
 export const teamMappingStatusSchema = z.enum(['before', 'draft', 'confirmed']);
-export const teamMappingPartSchema = z.enum(['pm', 'design', 'android', 'ios', 'web', 'server']);
+export const teamMappingPartSchema = z.enum([
+  'pm',
+  'design',
+  'android',
+  'ios',
+  'web',
+  'server',
+  'mobile',
+  'ai-native',
+  'unassigned',
+]);
 export const teamMappingFilterSchema = z.enum(['all', 'complete', 'needs-check', 'unassigned']);
 
 const identifier = z.string().trim().min(1);
@@ -14,6 +24,9 @@ export const teamMappingPartLabels: Readonly<Record<TeamMappingPart, string>> = 
   ios: 'iOS',
   web: 'Web',
   server: 'Server',
+  mobile: 'Mobile',
+  'ai-native': 'AI Native',
+  unassigned: '직군 미지정',
 };
 
 /** 현재 기수에서 팀에 배정 가능한 회원 활동 입력이다. */
@@ -182,6 +195,9 @@ export function getTeamPartCounts(
     ios: 0,
     web: 0,
     server: 0,
+    mobile: 0,
+    'ai-native': 0,
+    unassigned: 0,
   };
   team.memberActivityIds.forEach((activityId) => {
     const member = getMemberByActivityId(snapshot, activityId);

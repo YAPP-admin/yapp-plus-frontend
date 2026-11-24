@@ -49,63 +49,68 @@ export function TeamMemberList({
               <span className={styles.memberName}>{getTeamMemberLabel(snapshot, activityId)}</span>
               <span className={styles.memberMeta}>현재 팀 소속</span>
             </div>
-            <Select.Root
-              disabled={readOnly}
-              value={[selection.value]}
-              onValueChange={(values) => {
-                onSelectDestination(activityId, values[0] ?? selection.value);
-              }}
-            >
-              <Select.Trigger
-                className={styles.memberAction}
-                aria-label={`${member?.name ?? '회원'} 변경`}
+            {!readOnly && (
+              <Select.Root
+                value={[selection.value]}
+                onValueChange={(values) => {
+                  onSelectDestination(activityId, values[0] ?? selection.value);
+                }}
               >
-                <Select.Value>{selection.label}</Select.Value>
-                <Select.SuffixIcon svg={<ChevronDown aria-hidden="true" size={18} />} />
-              </Select.Trigger>
-              {panelElement !== null && (
-                <Select.Positioner container={panelRef}>
-                  <Select.Content data-seed-color-mode="dark-only">
-                    <Select.ScrollArea>
-                      <Select.Group>
-                        <Select.Item value={teamMemberChangeSelectValues.none} label="변경 없음">
-                          <Select.ItemBody>
-                            <Select.ItemLabel />
-                          </Select.ItemBody>
-                          <Select.ItemIndicator selected={<Check aria-hidden="true" size={16} />} />
-                        </Select.Item>
-                        {snapshot.teams
-                          .filter((candidateTeam) => candidateTeam.id !== team.id)
-                          .map((candidateTeam) => (
-                            <Select.Item
-                              key={candidateTeam.id}
-                              value={candidateTeam.id}
-                              label={`${candidateTeam.name}으로 이동`}
-                            >
-                              <Select.ItemBody>
-                                <Select.ItemLabel />
-                              </Select.ItemBody>
-                              <Select.ItemIndicator
-                                selected={<Check aria-hidden="true" size={16} />}
-                              />
-                            </Select.Item>
-                          ))}
-                        <Select.Item
-                          value={teamMemberChangeSelectValues.exclude}
-                          label="팀에서 제외"
-                        >
-                          <Select.ItemBody>
-                            <Select.ItemLabel />
-                          </Select.ItemBody>
-                          <Select.ItemIndicator selected={<Check aria-hidden="true" size={16} />} />
-                        </Select.Item>
-                      </Select.Group>
-                    </Select.ScrollArea>
-                  </Select.Content>
-                </Select.Positioner>
-              )}
-              <Select.HiddenSelect />
-            </Select.Root>
+                <Select.Trigger
+                  className={styles.memberAction}
+                  aria-label={`${member?.name ?? '회원'} 변경`}
+                >
+                  <Select.Value>{selection.label}</Select.Value>
+                  <Select.SuffixIcon svg={<ChevronDown aria-hidden="true" size={18} />} />
+                </Select.Trigger>
+                {panelElement !== null && (
+                  <Select.Positioner container={panelRef}>
+                    <Select.Content data-seed-color-mode="dark-only">
+                      <Select.ScrollArea>
+                        <Select.Group>
+                          <Select.Item value={teamMemberChangeSelectValues.none} label="변경 없음">
+                            <Select.ItemBody>
+                              <Select.ItemLabel />
+                            </Select.ItemBody>
+                            <Select.ItemIndicator
+                              selected={<Check aria-hidden="true" size={16} />}
+                            />
+                          </Select.Item>
+                          {snapshot.teams
+                            .filter((candidateTeam) => candidateTeam.id !== team.id)
+                            .map((candidateTeam) => (
+                              <Select.Item
+                                key={candidateTeam.id}
+                                value={candidateTeam.id}
+                                label={`${candidateTeam.name}으로 이동`}
+                              >
+                                <Select.ItemBody>
+                                  <Select.ItemLabel />
+                                </Select.ItemBody>
+                                <Select.ItemIndicator
+                                  selected={<Check aria-hidden="true" size={16} />}
+                                />
+                              </Select.Item>
+                            ))}
+                          <Select.Item
+                            value={teamMemberChangeSelectValues.exclude}
+                            label="팀에서 제외"
+                          >
+                            <Select.ItemBody>
+                              <Select.ItemLabel />
+                            </Select.ItemBody>
+                            <Select.ItemIndicator
+                              selected={<Check aria-hidden="true" size={16} />}
+                            />
+                          </Select.Item>
+                        </Select.Group>
+                      </Select.ScrollArea>
+                    </Select.Content>
+                  </Select.Positioner>
+                )}
+                <Select.HiddenSelect />
+              </Select.Root>
+            )}
           </li>
         );
       })}

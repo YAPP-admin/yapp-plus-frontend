@@ -214,8 +214,8 @@ it('확정됨 조회 모드의 팀 상세는 배정 입력을 열지 않는다',
   );
 
   await user.click(screen.getByRole('button', { name: 'Orbit' }));
-  expect(await screen.findByRole('button', { name: '회원 추가 (조회 전용)' })).toBeDisabled();
-  expect(screen.getByRole('combobox', { name: '김민서 변경' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: /회원 추가/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('combobox', { name: '김민서 변경' })).not.toBeInTheDocument();
 });
 
 it('확정됨 편집 모드에서 변경 후 종료하면 초안 폐기를 확인한다', async () => {
