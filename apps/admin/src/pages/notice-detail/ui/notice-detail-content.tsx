@@ -1,6 +1,7 @@
 /** 조회된 공지의 본문·메타 정보와 선택된 현황을 조합한다. */
 import { Link } from '@tanstack/react-router';
-import { ActionButton } from '@yapp-plus/ui';
+import { ActionButton, Badge } from '@yapp-plus/ui';
+import { ArrowLeft, Pencil } from 'lucide-react';
 import {
   NoticeBody,
   NoticeAttachments,
@@ -15,7 +16,7 @@ import type { NoticeDetailTab } from '../model/notice-detail-search';
 import { NoticeReaders } from './notice-readers';
 import * as styles from './notice-detail-page.css';
 
-const categoryLabels = { session: '세션', operation: '운영', submission: '제출' };
+const categoryLabels = { session: '세션', operation: '기타', submission: '제출' };
 
 const audienceLabels = {
   all: '전체 사용자',
@@ -26,8 +27,9 @@ const audienceLabels = {
 
 const dateFormat = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
-  dateStyle: 'medium',
-  timeStyle: 'short',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
 });
 
 /** 목록과 동일한 대상·집계 계산을 사용하고 전체 대상 행을 표에 전달한다. */
@@ -46,33 +48,101 @@ export function NoticeDetailContent({
 
   return (
     <>
-      <NoticeDetailHeader notice={notice} />
+      <Link className={styles.backLink} to="/notices" search={{}}>
+        <ArrowLeft size={14} aria-hidden="true" />
+        공지 목록으로
+      </Link>
 
-      <ActionButton asChild variant="neutralWeak" className={styles.editLink}>
-        <Link to="/notices/$noticeId/edit" params={{ noticeId: notice.id }} search={{}}>
-          공지 수정
-        </Link>
-      </ActionButton>
+      <section className={styles.headerSection} aria-labelledby="notice-detail-title">
+        <NoticeDetailHeader notice={notice} />
 
-      <NoticeBody document={notice.bodyDocument} />
+        <ActionButton asChild variant="neutralWeak" className={styles.editLink}>
+          <Link to="/notices/$noticeId/edit" params={{ noticeId: notice.id }} search={{}}>
+            <Pencil size={13} aria-hidden="true" />
+            공지 수정
+          </Link>
+        </ActionButton>
+      </section>
 
-      <NoticeAttachments attachments={notice.attachments ?? []} />
+      <NoticeDetailTabs noticeId={notice.id} tab={tab} />
 
-      {notice.category === 'submission' && <NoticeSubmission submission={notice.submission} />}
+      <NoticeReadSummary summary={summary} />
 
-      <p className={styles.description}>
-        대상 {summary.targetCount}명 · 읽음 {summary.readCount}명 · 미열람 {summary.unreadCount}명 ·
-        읽음 비율 {summary.readPercentage}%
-      </p>
+      <section className={styles.readersSection} aria-labelledby="notice-readers-title">
+        <div className={styles.sectionHeading}>
+          <div>
+            <h2 id="notice-readers-title" className={styles.sectionTitle}>
+              회원별 읽음 현황
+            </h2>
+            <p className={styles.sectionDescription}>
+              회원이 공지를 처음 확인한 시각을 기준으로 표시해요.
+            </p>
+          </div>
+          <p className={styles.totalCount}>전체 {summary.targetCount}명</p>
+        </div>
 
-      {tab === 'readers' ? (
         <NoticeReaders readers={readers} />
-      ) : (
-        <p className={styles.placeholder}>질문 목록을 준비 중입니다.</p>
-      )}
+        {/*
+          TODO(다음 스프린트): 질문 API 연동 후 질문 탭과 질문 목록을 구현한다.
+          {tab === 'questions' && <p className={styles.placeholder}>질문 목록을 준비 중입니다.</p>}
+        */}
+      </section>
 
-      <p className={styles.description}>개발용 예시 데이터입니다.</p>
+      <section className={styles.bodySection} aria-labelledby="notice-body-title">
+        <h2 id="notice-body-title" className={styles.sectionTitle}>
+          공지 내용
+        </h2>
+        <NoticeBody document={notice.bodyDocument} />
+
+        <NoticeAttachments attachments={notice.attachments ?? []} />
+
+        {notice.category === 'submission' && <NoticeSubmission submission={notice.submission} />}
+      </section>
     </>
+  );
+}
+
+/** 상세의 읽음 집계를 Figma의 요약 카드 구조로 표시한다. */
+function NoticeReadSummary({ summary }: { summary: ReturnType<typeof getNoticeSummary> }) {
+  return (
+    <section className={styles.readSummary} aria-labelledby="notice-read-summary-title">
+      <div className={styles.summaryMetric}>
+        <p id="notice-read-summary-title" className={styles.summaryLabel}>
+          공지 확인 현황
+        </p>
+        <p className={styles.summaryValue}>
+          <strong className={styles.summaryValueNumber}>{summary.readCount}</strong>
+          <span>/ {summary.targetCount}명 읽음</span>
+          <Badge variant="weak" tone="informative">
+            {summary.readPercentage}%
+          </Badge>
+        </p>
+      </div>
+
+      <div className={styles.summaryProgress}>
+        <progress
+          className={styles.progress}
+          aria-label="공지 읽음 비율"
+          value={summary.readPercentage}
+          max={100}
+        />
+        <div className={styles.progressLegend}>
+          <span>
+            <i className={styles.readDot} aria-hidden="true" /> 읽음 {summary.readCount}명
+          </span>
+          <span>
+            <i className={styles.unreadDot} aria-hidden="true" /> 안 읽음 {summary.unreadCount}명
+          </span>
+        </div>
+      </div>
+
+      {/*
+        TODO(다음 스프린트): 알림 발송 API 연결 후 안 읽은 회원에게 알림 보내기를 구현한다.
+        <ActionButton type="button" variant="neutralWeak" size="small" disabled className={styles.notifyButton}>
+          안 읽은 회원에게 알림 보내기
+        </ActionButton>
+      */}
+    </section>
   );
 }
 
@@ -88,15 +158,51 @@ function getAudienceLabel(notice: Notice) {
 /** 종류·대상·제목·작성 시각을 하나의 정보 영역으로 표시한다. */
 function NoticeDetailHeader({ notice }: { notice: Notice }) {
   return (
-    <header>
-      <p className={styles.description}>
-        {categoryLabels[notice.category]} · {getAudienceLabel(notice)}
-      </p>
+    <header className={styles.detailHeader}>
+      <div className={styles.metaRow}>
+        <Badge variant="weak" tone="informative">
+          {categoryLabels[notice.category]}
+        </Badge>
+        <Badge variant="weak" tone="neutral">
+          {getAudienceLabel(notice)}
+        </Badge>
+        <span className={styles.metaSeparator} aria-hidden="true" />
+        <time className={styles.createdAt} dateTime={notice.createdAt}>
+          {dateFormat.format(new Date(notice.createdAt))} 작성
+        </time>
+      </div>
 
-      <h2 className={styles.title}>{notice.title}</h2>
+      <h2 id="notice-detail-title" className={styles.title}>
+        {notice.title}
+      </h2>
 
-      <time dateTime={notice.createdAt}>{dateFormat.format(new Date(notice.createdAt))}</time>
+      <p className={styles.headerDescription}>공지 본문과 회원별 확인 현황을 확인해 주세요.</p>
     </header>
+  );
+}
+
+/** URL 기반 상세 탐색은 페이지 내 내비게이션 링크로 제공한다. */
+function NoticeDetailTabs({ noticeId, tab }: { noticeId: string; tab: NoticeDetailTab }) {
+  return (
+    <nav className={styles.tabs} aria-label="공지 상세 구분">
+      <Link
+        className={styles.tab}
+        to="/notices/$noticeId"
+        params={{ noticeId }}
+        search={{ tab: 'readers' }}
+        resetScroll={false}
+        activeOptions={{ exact: true, includeSearch: true }}
+        aria-current={tab === 'readers' ? 'page' : undefined}
+      >
+        읽음 현황
+      </Link>
+      {/*
+        TODO(다음 스프린트): 질문 API가 확정되면 질문 탭을 다시 노출한다.
+        <Link className={styles.tab} to="/notices/$noticeId" params={{ noticeId }} search={{ tab: 'questions' }}>
+          질문
+        </Link>
+      */}
+    </nav>
   );
 }
 

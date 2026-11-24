@@ -51,7 +51,10 @@ async function renderPage() {
 it('목록과 같은 집계·대상 전원·읽기 전용 본문을 표시한다', async () => {
   await renderPage();
   expect(await screen.findByRole('table')).toBeVisible();
-  expect(screen.getByText('대상 4명 · 읽음 1명 · 미열람 3명 · 읽음 비율 25%')).toBeVisible();
+  expect(screen.getByText('공지 확인 현황')).toBeVisible();
+  expect(screen.getByText('/ 4명 읽음')).toBeVisible();
+  expect(screen.getByText('읽음 1명')).toBeVisible();
+  expect(screen.getByText('안 읽음 3명')).toBeVisible();
   const body = await screen.findByRole('document', { name: '공지 본문' });
   expect(body).toHaveAttribute('contenteditable', 'false');
   expect(body).toHaveTextContent('화면 검증용 예시 공지입니다.');
@@ -83,7 +86,9 @@ it('대상 0명은 집계 0과 대상 없음 안내를 표시한다', async () =
   vi.mocked(service.listNoticeMembers).mockResolvedValue([]);
   await renderPage();
   expect(await screen.findByText('대상 회원이 없습니다.')).toBeVisible();
-  expect(screen.getByText('대상 0명 · 읽음 0명 · 미열람 0명 · 읽음 비율 0%')).toBeVisible();
+  expect(screen.getByText('/ 0명 읽음')).toBeVisible();
+  expect(screen.getByText('읽음 0명')).toBeVisible();
+  expect(screen.getByText('안 읽음 0명')).toBeVisible();
 });
 
 const members: Member[] = [
@@ -98,14 +103,12 @@ function rowNames() {
   return screen
     .getAllByRole('row')
     .slice(1)
-    .map((row) => within(row).getAllByRole('cell')[0]?.textContent);
+    .map((row) => within(row).getAllByRole('cell')[0]?.textContent?.slice(1));
 }
 
 it.each([
   ['이름', ['가회원', '나회원', '다회원'], ['다회원', '나회원', '가회원']],
-  ['기수', ['가회원', '다회원', '나회원'], ['나회원', '다회원', '가회원']],
-  ['직군', ['가회원', '다회원', '나회원'], ['나회원', '다회원', '가회원']],
-  ['회원 구분', ['가회원', '다회원', '나회원'], ['나회원', '다회원', '가회원']],
+  ['기수 · 직군', ['가회원', '다회원', '나회원'], ['나회원', '다회원', '가회원']],
   ['읽음 여부', ['다회원', '나회원', '가회원'], ['나회원', '가회원', '다회원']],
   ['확인 시각', ['가회원', '나회원', '다회원'], ['나회원', '가회원', '다회원']],
 ])(
@@ -140,7 +143,7 @@ it('동률은 기본 순서를 유지하며 8명 이후 회원도 표시한다',
   const data = getNoticeReaders(many.toReversed(), {});
   render(<NoticeReaders readers={data} />);
   expect(screen.getAllByRole('row')).toHaveLength(11);
-  await userEvent.setup().click(screen.getByRole('button', { name: '기수' }));
+  await userEvent.setup().click(screen.getByRole('button', { name: '기수 · 직군' }));
   expect(rowNames()).toEqual(data.map((row) => row.member.name));
 });
 
@@ -161,6 +164,7 @@ it('제출 공지의 마감과 선택한 제출 방법을 표시한다', async (
     'href',
     'https://example.com/submit',
   );
-  expect(screen.getByRole('region', { name: '제출 안내' })).toHaveTextContent('2026. 11. 1.');
-  expect(screen.getByText('대상 2명 · 읽음 0명 · 미열람 2명 · 읽음 비율 0%')).toBeVisible();
+  expect(screen.getByRole('region', { name: '제출 안내' })).toHaveTextContent('2026. 11. 01.');
+  expect(screen.getByText('/ 2명 읽음')).toBeVisible();
+  expect(screen.getByText('안 읽음 2명')).toBeVisible();
 });
