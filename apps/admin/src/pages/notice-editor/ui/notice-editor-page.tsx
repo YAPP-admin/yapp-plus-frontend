@@ -1,28 +1,38 @@
 /** 작성·수정 화면의 탐색과 최초 데이터 조회를 구성한다. */
 import { useState } from 'react';
-import { Link } from '@tanstack/react-router';
+import { useNavigate } from '@tanstack/react-router';
 import { Skeleton, VStack } from '@seed-design/react';
+import { ActionButton } from '@yapp-plus/ui';
 import { NoticeQueryBoundary, useNoticeQuery } from '~/features/notice-management';
 import { NoticeEditorForm } from './notice-editor-form';
 import * as styles from './notice-editor-page.css';
 
 /** 새 공지는 공통 폼의 기본값으로 시작한다. */
 export function NoticeCreatePage() {
+  const navigate = useNavigate();
+
   return (
     <main className={styles.page}>
       <h1 className={styles.title}>공지 작성</h1>
 
       {import.meta.env.DEV ? <NoticeEditorForm /> : <p>공지 작성 기능을 준비 중입니다.</p>}
 
-      <Link className={styles.returnLink} to="/notices" search={{}}>
-        공지 목록으로 돌아가기
-      </Link>
+      <ActionButton
+        type="button"
+        variant="neutralWeak"
+        className={styles.returnLink}
+        onClick={() => void navigate({ to: '/notices', search: {} })}
+      >
+        취소
+      </ActionButton>
     </main>
   );
 }
 
 /** 공지 ID가 바뀌면 조회 상태와 입력을 함께 초기화한다. */
 export function NoticeEditPage({ noticeId }: { noticeId: string }) {
+  const navigate = useNavigate();
+
   return (
     <main className={styles.page}>
       <h1 className={styles.title}>공지 수정</h1>
@@ -31,9 +41,20 @@ export function NoticeEditPage({ noticeId }: { noticeId: string }) {
         <NoticeEditResult noticeId={noticeId} />
       </NoticeQueryBoundary>
 
-      <Link className={styles.returnLink} to="/notices/$noticeId" params={{ noticeId }} search={{}}>
-        공지 상세로 돌아가기
-      </Link>
+      <ActionButton
+        type="button"
+        variant="neutralWeak"
+        className={styles.returnLink}
+        onClick={() =>
+          void navigate({
+            to: '/notices/$noticeId',
+            params: { noticeId },
+            search: {},
+          })
+        }
+      >
+        취소
+      </ActionButton>
     </main>
   );
 }

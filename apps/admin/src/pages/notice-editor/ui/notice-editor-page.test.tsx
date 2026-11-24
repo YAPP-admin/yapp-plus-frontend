@@ -103,7 +103,7 @@ it('재조회 성공·실패·삭제 결과에도 입력을 보존하고 ID 변�
     ),
   );
   expect(screen.getByRole('radio', { name: '제출' })).toBeChecked();
-  expect(screen.getByLabelText('마감 날짜 (한국 시간)')).toHaveValue('2026-11-01');
+  expect(screen.getByLabelText('마감 날짜')).toHaveValue('2026-11-01');
 });
 
 it('조회 실패는 재시도로 복구하고 없는 공지는 구별한다', async () => {

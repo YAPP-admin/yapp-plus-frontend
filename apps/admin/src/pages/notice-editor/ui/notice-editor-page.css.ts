@@ -26,7 +26,8 @@ export const description = style({
 
 export const returnLink = style({
   display: 'inline-flex',
-  width: 'fit-content',
+  width: '100%',
+  justifySelf: 'stretch',
   minHeight: '2.75rem',
   alignItems: 'center',
   color: vars.$color.fg.brand,

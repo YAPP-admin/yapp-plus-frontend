@@ -17,8 +17,8 @@ import * as styles from './notice-form.css';
 
 const categories = [
   { value: 'session', label: '세션' },
-  { value: 'operation', label: '운영' },
   { value: 'submission', label: '제출' },
+  { value: 'operation', label: '기타' },
 ] as const;
 const audiences = [
   { value: 'all', label: '전체 사용자' },
@@ -27,9 +27,9 @@ const audiences = [
   { value: 'completed', label: '수료회원' },
 ] as const;
 const submissionFields = [
-  { name: 'submission.deadline.date', label: '마감 날짜 (한국 시간)', type: 'date' },
-  { name: 'submission.deadline.time', label: '마감 시각 (한국 시간)', type: 'time' },
-  { name: 'submission.method.name', label: '제출 방법 이름 (선택)', type: 'text' },
+  { name: 'submission.deadline.date', label: '마감 날짜', type: 'date' },
+  { name: 'submission.deadline.time', label: '마감 시각', type: 'time' },
+  { name: 'submission.method.name', label: '제출 방법 (선택)', type: 'text' },
   { name: 'submission.method.url', label: '제출 주소 (선택)', type: 'text' },
 ] as const;
 
@@ -194,9 +194,6 @@ export function NoticeForm({
 
                     {category === 'submission' && (
                       <fieldset className={styles.group}>
-                        <Text as="legend" textStyle="t5Bold">
-                          제출 정보
-                        </Text>
                         <div className={styles.form}>
                           {submissionFields.map(({ name, label, type }) => (
                             <form.Field key={name} name={name}>

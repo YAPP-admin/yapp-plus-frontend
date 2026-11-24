@@ -127,7 +127,8 @@ it.each([false, true])(
     expect(screen.getByRole('img', { name: '추가.PNG' })).toBeVisible();
     expect(store.getNotice('demo-session')?.attachments).toHaveLength(1);
 
-    await user.click(screen.getByRole('link', { name: /돌아가기/ }));
+    const leaveControl = screen.getByRole('button', { name: '취소' });
+    await user.click(leaveControl);
     const leaveDialog = await screen.findByRole('alertdialog');
     await user.click(within(leaveDialog).getByRole('button', { name: '계속 작성' }));
     await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
