@@ -3,6 +3,7 @@
 
 import { staticContentEnabled } from '@/features/static-content';
 
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconChevronRightFill } from '@karrotmarket/react-monochrome-icon';
@@ -56,6 +57,7 @@ function WeeklyNoticesContent() {
   const { apiOptions } = useNativeAuthSession();
   const query = useSuspenseQuery(memberNoticeListQueryOptions('ALL', apiOptions));
   useRefetchOnScreenReturn(query);
+  useThrowQueryError(query);
   const { data } = query;
   const notices = weeklyNotices(data);
 

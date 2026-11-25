@@ -53,10 +53,10 @@
 - [x] T024 [US1] `apps/web/src/shared/lib/query-error-policy.ts`와 인접 테스트에 cache 오류·재시도 중·추가 페이지 예외의 공통 판정을 구현한다.
 - [x] T025 [US1] `apps/web/src/pages/schedule/ui/schedule-page.tsx`·`notice-detail/ui/notice-detail-page.tsx`와 인접 테스트를 Local/page 정책으로 이전한다.
 - [x] T026 [US1] `specs/028-member-error-boundaries/validation.md`에 일정·공지 상세 4-A 검증·화면·diff·리뷰를 기록한다.
-- [ ] T027 [US1] `apps/web/src/pages/home/ui/current-week-card.tsx`·`weekly-notices.tsx`를 Local/section으로 이전하고 사진 상태의 원시 ErrorBoundary를 제거한다.
-- [ ] T028 [US1] `apps/web/src/pages/my/ui/profile-section.tsx`·`my-page.tsx`와 `pages/attendance/ui/attendance-page.tsx`의 경고 영역에 독립 오류 교체를 적용한다.
-- [ ] T029 [US1] `apps/web/stackflow/src/query-recovery.test.tsx`에 성공 cache 이후 재조회 실패·복귀·정상 DOM 유지·reset 로딩·반복 실패를 추가한다.
-- [ ] T030 [US1] `specs/028-member-error-boundaries/validation.md`에 홈·프로필·경고 4-B 검증·화면·diff·리뷰를 기록한다.
+- [x] T027 [US1] `apps/web/src/pages/home/ui/current-week-card.tsx`·`weekly-notices.tsx`를 Local/section으로 이전하고 사진 상태의 원시 ErrorBoundary를 제거한다.
+- [x] T028 [US1] `apps/web/src/pages/my/ui/profile-section.tsx`·`my-page.tsx`와 `pages/attendance/ui/attendance-page.tsx`의 경고 영역에 독립 오류 교체를 적용한다.
+- [x] T029 [US1] `apps/web/stackflow/src/query-recovery.test.tsx`에 성공 cache 이후 재조회 실패·복귀·정상 DOM 유지·reset 로딩·반복 실패를 추가한다.
+- [x] T030 [US1] `specs/028-member-error-boundaries/validation.md`에 홈·프로필·경고 4-B 검증·화면·diff·리뷰를 기록한다.
 - [ ] T031 [US1] `apps/web/src/pages/home/ui/attendance-report-sheet.tsx`·`home-demo-sheets.tsx`와 `model/code-attendance.ts`·`attendance-report.ts`에서 셸/Mutation 소유 수명과 조회 fallback을 분리한다.
 - [ ] T032 [US1] `apps/web/stackflow/src/activities/activities.tsx`의 팀원 조회와 `apps/web/src/pages/settings/model/notification-settings.ts`·`ui/notification-setting.tsx`를 공통 정책에 연결한다.
 - [ ] T033 [US1] `apps/web/src/pages/home/ui/attendance-code.test.tsx`·`attendance-report-sheet.test.tsx` 및 팀 사진·설정 인접 테스트에 입력 초기화·셸 유지·제출 완료 보존·미지원 예외를 추가한다.

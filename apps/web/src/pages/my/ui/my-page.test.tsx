@@ -14,6 +14,7 @@ import { act, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MyPage } from './my-page';
 import { name as profileName } from './my-page.css';
+import { profileQueryOptions } from '../model/profile-query';
 
 vi.mock('@/app/navigation/activity-link', () => ({
   ActivityLink: ({
@@ -189,13 +190,15 @@ describe('MyPage', () => {
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   });
 
-  it('재조회 실패는 이전 값과 오류 안내를 함께 표시한다', async () => {
+  it('출석 현황 재조회 실패는 카드 본문을 오류 안내로 교체하고 재시도한다', async () => {
     const { client } = renderPage();
     expect(await screen.findByText('92점')).toBeVisible();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
     server.use(http.get(scoreUrl, () => HttpResponse.json({}, { status: 500 })));
     await act(() => client.invalidateQueries({ queryKey: mineQueryKey() }));
-    expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
-    expect(screen.getByText('92점')).toBeVisible();
+    expect(await screen.findByRole('alert')).toHaveTextContent('출석 현황을 불러오지 못했어요');
+    expect(screen.queryByText('92점')).not.toBeInTheDocument();
+    expect(screen.getByRole('button', { name: '출석 규칙 안내' })).toBeVisible();
     server.use(...createMemberAttendanceHandlers(apiBaseUrl));
     await userEvent.setup().click(screen.getByRole('button', { name: '다시 시도' }));
     await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
@@ -240,6 +243,19 @@ describe('MyPage', () => {
     await userEvent.setup().click(screen.getByRole('button', { name: '프로필 다시 시도' }));
     expect(await screen.findByText('재시도 회원')).toBeVisible();
     expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  });
+
+  it('프로필 재조회 실패는 출석 현황과 메뉴를 유지한 오류 영역으로 교체한다', async () => {
+    const { client } = renderPage(true);
+    expect(await screen.findByText('테스트 회원')).toBeVisible();
+    vi.spyOn(console, 'error').mockImplementation(() => undefined);
+    server.use(http.get(profileUrl, () => HttpResponse.json({}, { status: 500 })));
+    await act(() => client.invalidateQueries({ queryKey: profileQueryOptions().queryKey }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('프로필을 불러오지 못했어요');
+    expect(screen.queryByText('테스트 회원')).not.toBeInTheDocument();
+    expect(screen.getByText('92점')).toBeVisible();
+    expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
   });
 
   it('출석 내역 메뉴 링크를 렌더링한다', async () => {

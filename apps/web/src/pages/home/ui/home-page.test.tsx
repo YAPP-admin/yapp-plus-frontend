@@ -10,6 +10,7 @@ import { createAppQueryClient } from '@/app/providers';
 import { find1QueryKey, find6Options } from '@yapp-plus/api/generated';
 import { http, HttpResponse, delay } from 'msw';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
+import { memberNoticeListQueryOptions } from '@/features/member-notice';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { memberNoticeFixture } from '../../../mocks/member-notice-handlers';
 import { currentWeekFixture } from '../../../mocks/session-handlers';
@@ -306,14 +307,37 @@ it('공지 조회 오류가 세션 카드를 막지 않고 재시도로 복구�
   expect(screen.getByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
 });
 
-it('재조회 실패 시 기존 카드와 출석 버튼을 유지한다', async () => {
+it('주간 공지 재조회 실패는 공지 영역만 오류 안내로 교체한다', async () => {
+  const { client } = renderHome();
+  expect(await screen.findByText('6주차 세션 안내')).toBeVisible();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts`, () =>
+      HttpResponse.json({ code: 'NOTICE_UNAVAILABLE' }, { status: 500 }),
+    ),
+  );
+  await act(() =>
+    client.invalidateQueries({ queryKey: memberNoticeListQueryOptions('ALL').queryKey }),
+  );
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 공지를 불러오지 못했어요');
+  expect(screen.queryByText('6주차 세션 안내')).not.toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
+});
+
+it('주간 세션 재조회 실패는 카드만 오류 안내로 교체한다', async () => {
   const { client } = renderHome();
   await screen.findByRole('heading', { name: /설계 리뷰/ });
+  vi.spyOn(console, 'error').mockImplementation(() => {});
   server.use(http.get(url, () => HttpResponse.json({}, { status: 500 })));
   await act(() => client.invalidateQueries({ queryKey: find6Options().queryKey }));
-  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  expect(screen.getByRole('button', { name: '출석하기' })).toBeEnabled();
-  expect(screen.getByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
+  expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 세션을 불러오지 못했어요');
+  expect(screen.queryByRole('button', { name: '출석하기' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: /설계 리뷰/ })).not.toBeInTheDocument();
+  expect(screen.getByRole('link', { name: '전체 세션 확인하기' })).toBeVisible();
+  server.use(http.get(url, () => HttpResponse.json(response)));
+  await userEvent.setup().click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(await screen.findByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
 });
 
 it('일반 브라우저는 모의 URL 상태로 API나 성공 흐름을 실행하지 않는다', async () => {
@@ -460,15 +484,14 @@ it('주 경계를 지난 캐시로 복귀하면 staleTime과 무관하게 새 �
   expect(screen.getByLabelText('2026-11-08')).toHaveAttribute('aria-current', 'date');
 });
 
-it('주간 재조회 실패 후 연결이 복구되면 기존 카드를 갱신한다', async () => {
+it('주간 재조회 실패 뒤 수동 재시도로 카드를 복구한다', async () => {
+  const user = userEvent.setup();
   const { client } = renderHome();
   await screen.findByText(/설계 리뷰/);
+  vi.spyOn(console, 'error').mockImplementation(() => {});
   server.use(http.get(url, () => HttpResponse.error()));
   await act(() => client.invalidateQueries({ queryKey: find6Options().queryKey }));
-  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
-  expect(screen.getByText(/설계 리뷰/)).toBeVisible();
-
-  act(() => onlineManager.setOnline(false));
+  expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 세션을 불러오지 못했어요');
   server.use(
     http.get(url, () =>
       HttpResponse.json({
@@ -477,7 +500,7 @@ it('주간 재조회 실패 후 연결이 복구되면 기존 카드를 갱신�
       }),
     ),
   );
-  act(() => onlineManager.setOnline(true));
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(await screen.findByText(/복구된 주간 세션/)).toBeVisible();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
@@ -595,7 +618,7 @@ it.each([
 it.each([
   ['HTTP 오류', () => HttpResponse.json({}, { status: 500 })],
   ['네트워크 오류', () => HttpResponse.error()],
-])('TEAM 사진 조회 %s에도 검토 중 상태를 유지한다', async (_, errorResponse) => {
+])('TEAM 사진 조회 %s는 사진 상태 오류 안내로 바꾼다', async (_, errorResponse) => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   server.use(
     http.get(url, () => HttpResponse.json(pendingTeamResponse)),
@@ -603,12 +626,12 @@ it.each([
   );
   renderHome({}, true);
 
-  expect(await screen.findByRole('button', { name: '인증 사진 검토 중' })).toBeDisabled();
+  expect(await screen.findByRole('alert')).toHaveTextContent('인증 사진 상태를 불러오지 못했어요');
   expect(screen.queryByRole('button', { name: '인증 사진 올리기' })).not.toBeInTheDocument();
   expect(mockPush).not.toHaveBeenCalled();
 });
 
-it('TEAM 사진 재조회 실패 시 기존 사진 상태를 유지한다', async () => {
+it('TEAM 사진 재조회 실패는 사진 상태 오류 안내로 교체한다', async () => {
   server.use(
     http.get(url, () => HttpResponse.json(pendingTeamResponse)),
     http.get(teamPhotoUrl, () => HttpResponse.json(submittedPhoto('PENDING'))),
@@ -616,11 +639,13 @@ it('TEAM 사진 재조회 실패 시 기존 사진 상태를 유지한다', asyn
   const { client } = renderHome({}, true);
   expect(await screen.findByRole('status')).toHaveTextContent('운영진이 확인하고 있어요');
 
+  vi.spyOn(console, 'error').mockImplementation(() => {});
   server.use(http.get(teamPhotoUrl, () => HttpResponse.error()));
   await act(async () => {
     await client.invalidateQueries({ queryKey: find1QueryKey({ path: { sessionId: 42 } }) });
   });
 
-  expect(screen.getByRole('status')).toHaveTextContent('운영진이 확인하고 있어요');
+  expect(await screen.findByRole('alert')).toHaveTextContent('인증 사진 상태를 불러오지 못했어요');
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '인증 사진 올리기' })).not.toBeInTheDocument();
 });
