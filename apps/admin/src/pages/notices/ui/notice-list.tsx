@@ -21,9 +21,6 @@ export function NoticeList({
   return (
     <>
       <div className={styles.results}>
-        <p>
-          게시 중 <strong>{notices.length}</strong>개
-        </p>
         <p aria-live="polite">
           총 <strong>{filtered.length}</strong>개
         </p>

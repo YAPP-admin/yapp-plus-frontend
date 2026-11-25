@@ -49,10 +49,12 @@ export function NoticeCard({
     <article className={styles.card} aria-label={notice.title}>
       <NoticeIdentity notice={notice} now={now} />
       <NoticeReadSummary notice={notice} members={members} />
+      {/* TODO(다음 스프린트): 질문 API 연동 시 미답변 질문 집계를 다시 노출한다.
       <dl className={styles.questions}>
         <dt>미답변 질문</dt>
         <dd className={styles.questionCount}>{notice.unansweredCount}</dd>
       </dl>
+      */}
       <NoticeActions notice={notice} />
     </article>
   );

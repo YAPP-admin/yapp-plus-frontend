@@ -12,5 +12,5 @@ export const noticeCategoryLabels = {
   all: '전체',
   session: '세션',
   submission: '제출',
-  operation: '운영',
+  operation: '기타',
 } satisfies Record<NoticeCategory, string>;

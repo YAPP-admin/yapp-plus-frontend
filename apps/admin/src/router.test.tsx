@@ -833,7 +833,7 @@ describe('공지 목록 URL 상태', () => {
     ['/notices?category=all', '전체'],
     ['/notices?category=session', '세션'],
     ['/notices?category=submission', '제출'],
-    ['/notices?category=operation', '운영'],
+    ['/notices?category=operation', '기타'],
     ['/notices?category=unknown', '전체'],
     ['/notices?category=%5B%22session%22%5D', '전체'],
     ['/notices?category=true', '전체'],
@@ -1033,7 +1033,7 @@ describe('공지 작성·수정 진입점', () => {
     expect(router.state.location.href).toBe('/notices');
   });
 
-  it('수정 진입은 ID를 유지하고 뒤로가기는 읽음 현황을 복원한다', async () => {
+  it('수정 진입은 ID를 유지하고 취소하면 상세로 이동한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/notices/demo-session');
 
@@ -1188,7 +1188,7 @@ describe('알림 발송 내역 탐색', () => {
 
     act(() => router.history.back());
 
-    expect(await screen.findByRole('radio', { name: '운영' })).toBeChecked();
+    expect(await screen.findByRole('radio', { name: '기타' })).toBeChecked();
 
     act(() => router.history.forward());
 
