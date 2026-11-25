@@ -2,7 +2,7 @@
 import { useId, useMemo, useState, type Dispatch, type SetStateAction } from 'react';
 import { Text, type AttachmentInputFileEntry } from '@seed-design/react';
 import { useRouter } from '@tanstack/react-router';
-import type { AdminPostDetailResponse, PostAudienceRequest } from '@yapp-plus/api/generated';
+import type { AdminPostDetailResponse } from '@yapp-plus/api/generated';
 import { ApiError } from '@yapp-plus/api';
 import { Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
 import { useAdminGeneration } from '~/features/admin-generation';
@@ -17,17 +17,9 @@ import {
   type NoticeFormContent,
 } from '~/features/notice-management';
 import * as styles from './notice-editor-page.css';
+import { getAudience } from './notice-editor-audience';
 
 type NoticeEditorEntry = AttachmentInputFileEntry & { imageKey?: string };
-
-const apiPositionByJob = {
-  PM: 'PM',
-  Design: 'DESIGN',
-  Mobile: 'MOBILE',
-  Web: 'WEB',
-  Server: 'SERVER',
-  'AI Native': 'AI_NATIVE',
-} as const;
 
 const jobByApiPosition = {
   PM: 'PM',
@@ -39,27 +31,6 @@ const jobByApiPosition = {
   SERVER: 'Server',
   AI_NATIVE: 'AI Native',
 } as const;
-
-function getAudience(content: NoticeFormContent): PostAudienceRequest {
-  if (content.category === 'submission') {
-    if (content.audience === 'all') {
-      return { type: 'GROUP', target: 'PLAYER' };
-    }
-    return {
-      type: 'POSITION',
-      positions: content.audience.map((job) => apiPositionByJob[job]),
-    };
-  }
-
-  const targetByAudience = {
-    all: 'ALL_USERS',
-    active: 'PLAYER',
-    regular: 'OB',
-    completed: 'COMPLETED_MEMBER',
-  } as const;
-
-  return { type: 'GROUP', target: targetByAudience[content.audience] };
-}
 
 function getNoticeType(category: NoticeFormContent['category']) {
   if (category === 'submission') {
@@ -76,7 +47,7 @@ function getAssignment(content: NoticeFormContent) {
     return null;
   }
 
-  const method = content.submission.method ?? { name: '', url: '' };
+  const method = content.submission.method;
   const deadlineDate = new Intl.DateTimeFormat('en-CA', {
     timeZone: 'Asia/Seoul',
   }).format(new Date(content.submission.deadlineAt));

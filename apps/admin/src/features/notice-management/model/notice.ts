@@ -81,12 +81,12 @@ export const noticeContentSchema = z.discriminatedUnion('category', [
     category: z.literal('submission'),
     /** 활동회원 전체(all) 또는 하나 이상의 직군 배열. 전체와 개별 직군은 함께 선택할 수 없다. */
     audience: submissionAudience,
-    /** 제출 공지에만 저장하는 마감과 선택적 제출 방법. */
+    /** 제출 공지에만 저장하는 마감과 필수 제출 방법. */
     submission: z.object({
       /** 마감 시각. 한국 시간 입력을 UTC ISO 문자열로 변환한 값이다. */
       deadlineAt: z.iso.datetime(),
-      /** 제출 방법 이름·주소. 지정하지 않았으면 null이다. */
-      method: methodSchema.nullable(),
+      /** 제출 방법 이름·주소. 이름과 주소를 모두 입력해야 한다. */
+      method: methodSchema,
     }),
   }),
 ]);
@@ -101,16 +101,8 @@ const koreanDeadlineSchema = z
   })
   .transform(({ date, time }) => new Date(`${date}T${time}:00+09:00`).toISOString());
 
-// 제출 방법을 둘 다 비우면 null로 바꾸고, 하나라도 입력하면 이름과 URL 입력을 모두 요구한다. URL 형식·프로토콜은 검사하지 않는다.
-const methodInputSchema = z
-  .object({
-    /** 제출 방법 이름 입력. 주소와 함께 비워 두면 제출 방법을 지정하지 않는다. */
-    name: z.string().trim(),
-    /** 제출 주소 입력. 이름을 입력했다면 이 값도 필요하다. */
-    url: z.string().trim(),
-  })
-  .transform((method) => (!method.name && !method.url ? null : method))
-  .pipe(methodSchema.nullable());
+// 제출 방법 이름과 주소를 모두 요구한다. URL 형식·프로토콜은 검사하지 않는다.
+const methodInputSchema = methodSchema;
 
 // 입력 상태와 저장 모델을 분리해 종류 전환 후 남은 제출 필드를 제거한다.
 export const noticeInputSchema = z.discriminatedUnion('category', [
@@ -127,12 +119,12 @@ export const noticeInputSchema = z.discriminatedUnion('category', [
     category: z.literal('submission'),
     /** 활동회원 전체(all) 또는 하나 이상의 직군 배열. 전체와 개별 직군은 함께 선택할 수 없다. */
     audience: submissionAudience,
-    /** 폼에서 받은 제출 정보. 변환 후에는 저장 모델의 필드 형태를 따른다. */
+    /** 폼에서 받은 필수 제출 정보. 변환 후에는 저장 모델의 필드 형태를 따른다. */
     submission: z
       .object({
         /** 날짜·시간 입력을 받아 UTC 마감 시각으로 변환한다. */
         deadline: koreanDeadlineSchema,
-        /** 이름·주소 입력을 받아 제출 방법 객체 또는 null로 변환한다. */
+        /** 이름·주소 입력을 받아 필수 제출 방법 객체로 변환한다. */
         method: methodInputSchema,
       })
       .transform(({ deadline, method }) => ({ deadlineAt: deadline, method })),
