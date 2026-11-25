@@ -1,5 +1,5 @@
 /** 실제 등록 조율기를 연결해 인증·권한·앱 수명의 동기화 정책을 검증합니다. */
-import type { AuthSession } from '@yapp-plus/app-bridge';
+import type { AuthResult, AuthSession, ReviewRequired } from '@yapp-plus/app-bridge';
 import { expect, it, vi } from 'vitest';
 import {
   NotificationRegistration,
@@ -8,7 +8,11 @@ import {
 } from './registration';
 import { startNotificationRegistrationSync } from './registration-sync';
 
-const setup = (enabled = true, initialPermission: NotificationPermission = 'allowed') => {
+const setup = (
+  enabled = true,
+  initialPermission: NotificationPermission = 'allowed',
+  reviewStatus?: ReviewRequired['reviewStatus'],
+) => {
   let session: AuthSession | undefined = {
     userId: 1,
     sessionId: 's1',
@@ -16,6 +20,9 @@ const setup = (enabled = true, initialPermission: NotificationPermission = 'allo
     accessToken: 'a1',
     expiresAt: Date.now() + 60_000,
   };
+  if (reviewStatus !== undefined) {
+    session = undefined;
+  }
   let sessionListener: () => void = vi.fn<() => void>();
   let tokenListener: () => void = vi.fn<() => void>();
   let activeListener: () => void = vi.fn<() => void>();
@@ -41,18 +48,23 @@ const setup = (enabled = true, initialPermission: NotificationPermission = 'allo
     .fn<() => Promise<NotificationPermission>>()
     .mockResolvedValue('allowed');
   const getToken = vi.fn<() => Promise<string>>().mockResolvedValue('fcm1');
+  const getSession = vi.fn<() => Promise<AuthResult>>(() => {
+    if (reviewStatus !== undefined) {
+      return Promise.resolve({ status: 'REVIEW_REQUIRED', userId: 1, reviewStatus });
+    }
+    return Promise.resolve(
+      session
+        ? { status: 'SIGNED_IN', session, reviewTransition: 'NONE' }
+        : { status: 'SIGNED_OUT' },
+    );
+  });
   const stop = startNotificationRegistrationSync({
     firebaseProjectId: 'project',
     getInstallationId: () => Promise.resolve('fid'),
     getToken,
     getPermission,
     requestPermission,
-    getSession: () =>
-      Promise.resolve(
-        session
-          ? { status: 'SIGNED_IN', session, reviewTransition: 'NONE' }
-          : { status: 'SIGNED_OUT' },
-      ),
+    getSession,
     getSessionSnapshot: () => session,
     subscribeSession: (listener) => {
       sessionListener = listener;
@@ -76,6 +88,7 @@ const setup = (enabled = true, initialPermission: NotificationPermission = 'allo
     getPermission,
     requestPermission,
     getToken,
+    getSession,
     stop,
     unsubscribers,
     token: () => tokenListener(),
@@ -86,6 +99,23 @@ const setup = (enabled = true, initialPermission: NotificationPermission = 'allo
     },
   };
 };
+
+it.each(['PENDING', 'REJECTED', null] as const)(
+  '제한 상태 %s는 시작·앱 복귀·토큰 변경에서도 푸시 등록을 시작하지 않는다',
+  async (reviewStatus) => {
+    const runtime = setup(true, 'undetermined', reviewStatus);
+    runtime.active();
+    runtime.token();
+    await Promise.all(runtime.getSession.mock.results.map(({ value }) => value));
+    expect(runtime.getSession).toHaveBeenCalledTimes(3);
+    expect(runtime.sync).not.toHaveBeenCalled();
+    expect(runtime.getToken).not.toHaveBeenCalled();
+    expect(runtime.getPermission).not.toHaveBeenCalled();
+    expect(runtime.requestPermission).not.toHaveBeenCalled();
+    expect(runtime.api.registerDevice).not.toHaveBeenCalled();
+    runtime.stop();
+  },
+);
 
 it('최초 인증 후 미결정 권한만 요청하고 중복 이벤트에서는 같은 등록을 보내지 않는다', async () => {
   const runtime = setup(true, 'undetermined');
