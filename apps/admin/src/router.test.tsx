@@ -186,6 +186,7 @@ describe('관리자 라우팅', () => {
   it.each([
     ['/', '대시보드', '대시보드'],
     ['/sessions', '세션 관리', '세션 목록'],
+    ['/dining', '뒤풀이 관리', '뒤풀이 관리'],
     ['/attendance', '출석부', '출석부'],
     ['/members', '회원 목록', '회원 관리'],
     ['/notices', '공지 목록', '공지 목록'],
@@ -490,6 +491,7 @@ describe('세션 목록 탐색', () => {
 
     await user.tab();
     await user.tab();
+    await user.tab();
     expect(screen.getByRole('button', { name: '세션 추가' })).toHaveFocus();
 
     await user.tab();
@@ -608,6 +610,7 @@ describe('출석 화면 탐색', () => {
     await user.tab();
     await user.tab();
 
+    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
@@ -904,7 +907,7 @@ describe('명단 업로드 진입점', () => {
     await renderRoute('/members');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 12; index += 1) {
+    for (let index = 0; index < 13; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
@@ -997,7 +1000,7 @@ describe('공지 목록 URL 상태', () => {
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 10; index += 1) {
+    for (let index = 0; index < 11; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveFocus();
@@ -1288,7 +1291,7 @@ describe('알림 발송 내역 탐색', () => {
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 11; index += 1) {
+    for (let index = 0; index < 12; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveFocus();
