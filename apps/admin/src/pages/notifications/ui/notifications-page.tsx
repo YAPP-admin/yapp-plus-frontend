@@ -10,8 +10,11 @@ import {
   getNotificationStatus,
   isVisibleNotificationStatus,
   type NotificationHistoryItem,
+  type NotificationSendValues,
 } from '../model/notifications';
 import { notificationHistoryQueryOptions } from '../model/notification-queries';
+import { NotificationCancelDialog } from './notification-cancel-dialog';
+import { NotificationSendDialog } from './notification-send-dialog';
 import * as styles from './notifications-page.css';
 
 const historyColumns = ['내용', '대상', '발송 시각', '상태'] as const;
@@ -26,6 +29,7 @@ export type NotificationsViewProps = {
   onLoadMore?: () => void;
   onSend?: () => void;
   onCancelRequest?: (notificationId: number) => void;
+  showSendButton?: boolean;
 };
 
 function getStatusBadgeClass(tone: ReturnType<typeof getNotificationStatus>['tone']) {
@@ -38,25 +42,60 @@ function getStatusBadgeClass(tone: ReturnType<typeof getNotificationStatus>['ton
   return styles.statusBadgeCompleted;
 }
 
-export function NotificationsPage() {
+export type NotificationsPageProps = {
+  onSend?: (values: NotificationSendValues) => void;
+  isSending?: boolean;
+  sendErrorMessage?: string;
+  onCancel?: (notificationId: number) => void;
+  isCanceling?: boolean;
+};
+
+export function NotificationsPage({
+  onSend,
+  isSending = false,
+  sendErrorMessage,
+  onCancel,
+  isCanceling = false,
+}: NotificationsPageProps = {}) {
   const historyQuery = useInfiniteQuery(notificationHistoryQueryOptions());
+  const [sendDialogOpen, setSendDialogOpen] = useState(false);
+  const [cancelNotificationId, setCancelNotificationId] = useState<number>();
   const notifications =
     historyQuery.data?.pages
       .flatMap((page) => page.items)
       .filter((notification) => isVisibleNotificationStatus(notification.status)) ?? [];
 
   return (
-    <NotificationsView
-      notifications={notifications}
-      isLoading={historyQuery.isPending}
-      errorMessage={
-        historyQuery.error ? getNotificationErrorMessage(historyQuery.error) : undefined
-      }
-      onRetry={() => void historyQuery.refetch()}
-      hasNextPage={historyQuery.hasNextPage}
-      isFetchingNextPage={historyQuery.isFetchingNextPage}
-      onLoadMore={() => void historyQuery.fetchNextPage()}
-    />
+    <>
+      <NotificationsView
+        notifications={notifications}
+        isLoading={historyQuery.isPending}
+        errorMessage={
+          historyQuery.error ? getNotificationErrorMessage(historyQuery.error) : undefined
+        }
+        onRetry={() => void historyQuery.refetch()}
+        hasNextPage={historyQuery.hasNextPage}
+        isFetchingNextPage={historyQuery.isFetchingNextPage}
+        onLoadMore={() => void historyQuery.fetchNextPage()}
+        onSend={() => setSendDialogOpen(true)}
+        onCancelRequest={setCancelNotificationId}
+        showSendButton={!sendDialogOpen}
+      />
+      {sendDialogOpen && (
+        <NotificationSendDialog
+          onClose={() => setSendDialogOpen(false)}
+          onSubmit={(values) => onSend?.(values)}
+          isPending={isSending}
+          errorMessage={sendErrorMessage}
+        />
+      )}
+      <NotificationCancelDialog
+        notificationId={cancelNotificationId}
+        onClose={() => setCancelNotificationId(undefined)}
+        onConfirm={(notificationId) => onCancel?.(notificationId)}
+        isPending={isCanceling}
+      />
+    </>
   );
 }
 
@@ -70,6 +109,7 @@ export function NotificationsView({
   onLoadMore,
   onSend,
   onCancelRequest,
+  showSendButton = true,
 }: NotificationsViewProps) {
   const [openMenuId, setOpenMenuId] = useState<number | null>(null);
   const visibleNotifications = notifications.filter((notification) =>
@@ -261,18 +301,20 @@ export function NotificationsView({
           </thead>
           <tbody className={styles.tableBody}>{renderHistoryContent()}</tbody>
         </table>
-        <div className={styles.listActionRow}>
-          <ActionButton
-            type="button"
-            variant="neutralWeak"
-            size="small"
-            className={styles.sendButton}
-            onClick={onSend}
-          >
-            <Plus size={17} strokeWidth={2} aria-hidden="true" />
-            알림 보내기
-          </ActionButton>
-        </div>
+        {showSendButton && (
+          <div className={styles.listActionRow}>
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              size="small"
+              className={styles.sendButton}
+              onClick={onSend}
+            >
+              <Plus size={17} strokeWidth={2} aria-hidden="true" />
+              알림 보내기
+            </ActionButton>
+          </div>
+        )}
       </section>
     </main>
   );

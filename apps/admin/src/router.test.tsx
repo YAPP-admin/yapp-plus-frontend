@@ -1308,6 +1308,36 @@ describe('알림 발송 내역 탐색', () => {
 
     expect(await screen.findByRole('heading', { name: '알림 관리' })).toBeVisible();
   });
+
+  it('알림 보내기 버튼으로 작성 모달을 열고 닫는다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/notifications');
+
+    await user.click(await screen.findByRole('button', { name: '알림 보내기' }));
+
+    expect(await screen.findByRole('dialog')).toHaveTextContent('알림 보내기');
+    expect(screen.getByRole('button', { name: '보내기' })).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: '취소' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: '알림 보내기' })).toBeVisible();
+  });
+
+  it('예약된 알림의 메뉴에서 예약 취소 확인창을 연다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/notifications');
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: '3차 세미나가 내일 오후 2시에 시작돼요. 장소를 다시 확인해 주세요. 더보기',
+      }),
+    );
+    await user.click(screen.getByRole('menuitem', { name: '예약 취소' }));
+
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('예약 알림을 취소할까요?');
+    expect(screen.queryByRole('menuitem', { name: '예약 취소' })).not.toBeInTheDocument();
+  });
 });
 
 describe('세션 관리 목록', () => {

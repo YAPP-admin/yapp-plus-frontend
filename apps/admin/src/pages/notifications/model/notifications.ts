@@ -4,6 +4,36 @@ import { zErrorResponse } from '@yapp-plus/api/generated';
 
 export type NotificationHistoryStatus = NotificationHistoryItemResponse['status'];
 
+export const notificationRoleOptions = [
+  { value: 'ALL_USERS', label: '전체 회원' },
+  { value: 'PLAYER', label: '활동회원' },
+  { value: 'OB_AND_PLAYER', label: '활동회원 + OB' },
+  { value: 'COMPLETED_MEMBER', label: '수료회원' },
+] as const;
+
+export type NotificationRole = (typeof notificationRoleOptions)[number]['value'];
+
+export const notificationPositionOptions = [
+  { value: 'ALL', label: '전체 직군' },
+  { value: 'PM', label: 'PM' },
+  { value: 'DESIGN', label: 'Design' },
+  { value: 'ANDROID', label: 'Android' },
+  { value: 'IOS', label: 'iOS' },
+  { value: 'WEB', label: 'Web' },
+  { value: 'SERVER', label: 'Server' },
+  { value: 'AI_NATIVE', label: 'AI Native' },
+  { value: 'MOBILE', label: 'Mobile' },
+] as const;
+
+export type NotificationPosition = (typeof notificationPositionOptions)[number]['value'];
+
+export type NotificationSendValues = {
+  content: string;
+  targetRole: NotificationRole;
+  position: NotificationPosition;
+  scheduledAt: string | null;
+};
+
 export type NotificationHistoryItem = {
   id: number;
   content: string;
@@ -74,6 +104,25 @@ const notificationDateFormatter = new Intl.DateTimeFormat('ko-KR', {
 export function formatNotificationDate(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : notificationDateFormatter.format(date);
+}
+
+export function toScheduledAt(value: string) {
+  if (!value) {
+    return null;
+  }
+
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
+}
+
+export function toLocalDateTimeInputValue(date: Date) {
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60_000);
+  return localDate.toISOString().slice(0, 16);
+}
+
+export function isPastDateTime(value: string, now = new Date()) {
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) || date.getTime() <= now.getTime();
 }
 
 export function getNotificationErrorMessage(error: unknown) {
