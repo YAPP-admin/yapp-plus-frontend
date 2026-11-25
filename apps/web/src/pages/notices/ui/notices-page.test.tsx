@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { ScreenActiveContext } from '@/shared/lib/screen-activity';
+import { memberNoticeListInfiniteQueryOptions } from '@/features/member-notice';
 import { NoticesPage } from './notices-page';
 
 vi.mock('@/app/navigation/activity-link', () => ({
@@ -121,6 +122,86 @@ it('초기 조회 오류를 ResultSection의 재시도로 복구한다', async (
   );
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(await screen.findByText('아직 작성된 공지사항이 없어요')).toBeVisible();
+});
+
+it('재조회 실패는 기존 공지와 탭을 공통 오류 UI로 교체한다', async () => {
+  const { client } = renderPage();
+  await screen.findByText('6주차 세션 안내');
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts`, () =>
+      HttpResponse.json({ code: 'FAILED' }, { status: 503 }),
+    ),
+  );
+
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: memberNoticeListInfiniteQueryOptions().queryKey });
+  });
+
+  expect(
+    await screen.findByRole('heading', { name: '공지사항을 불러오지 못했어요' }),
+  ).toBeVisible();
+  expect(screen.queryByText('6주차 세션 안내')).not.toBeInTheDocument();
+  expect(screen.queryByRole('tab', { name: '세션' })).not.toBeInTheDocument();
+});
+
+it('다음 페이지 일반 오류는 기존 공지를 유지하고 수동 재시도로만 복구한다', async () => {
+  const user = userEvent.setup();
+  let fail = true;
+  let calls = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts`, ({ request }) => {
+      calls += 1;
+      if (!new URL(request.url).searchParams.has('cursor')) {
+        return HttpResponse.json({
+          totalPostCount: 2,
+          items: [
+            {
+              postId: 1,
+              type: 'SESSION',
+              title: '첫 공지',
+              createdDate: '2026-11-07',
+              daysUntilDeadline: null,
+            },
+          ],
+          nextCursor: 'next',
+        });
+      }
+      if (fail) {
+        return HttpResponse.error();
+      }
+      return HttpResponse.json({
+        totalPostCount: 2,
+        items: [
+          {
+            postId: 2,
+            type: 'SESSION',
+            title: '다음 공지',
+            createdDate: '2026-11-06',
+            daysUntilDeadline: null,
+          },
+        ],
+        nextCursor: null,
+      });
+    }),
+  );
+  renderPage();
+  expect(await screen.findByText('첫 공지')).toBeVisible();
+
+  act(() => {
+    observer.trigger?.();
+    observer.trigger?.();
+  });
+  expect(await screen.findByRole('alert')).toHaveTextContent('다음 공지사항을 불러오지 못했어요');
+  expect(screen.getByText('첫 공지')).toBeVisible();
+  expect(calls).toBe(2);
+  act(() => observer.trigger?.());
+  expect(calls).toBe(2);
+
+  fail = false;
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(await screen.findByText('다음 공지')).toBeVisible();
+  expect(calls).toBe(3);
 });
 
 it('비활성 탭에서는 추가 조회 관찰을 해제하고 복귀하면 다시 연결한다', async () => {

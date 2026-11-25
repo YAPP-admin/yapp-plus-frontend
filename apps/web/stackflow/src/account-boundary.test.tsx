@@ -13,11 +13,13 @@ import type { AuthResult, LocationResult } from '@yapp-plus/app-bridge';
 import { http, HttpResponse } from 'msw';
 import {
   NativeAuthSessionProvider,
+  isAuthenticationError,
   nativeSignInMutationOptions,
   nativeSignOutMutationOptions,
   nativeSignupMutationOptions,
   nativeWithdrawMutationOptions,
 } from '@/features/auth';
+import { ErrorBoundaryPolicyProvider } from '@/shared/ui/error-boundary-policy';
 import { createStackflowApp } from './stack';
 import {
   TeamAttendancePhotoDraftProvider,
@@ -158,14 +160,16 @@ const mount = (client: QueryClient, initialContext = context) => {
   const { Stack, actions } = createStackflowApp({ reducedMotion: true, queryClient: client });
   const view = render(
     <QueryClientProvider client={client}>
-      <Suspense fallback="로딩 중">
-        <NativeAuthSessionProvider>
-          <TeamAttendancePhotoDraftProvider>
-            <TeamAttendancePhotoFixture />
-            <Stack initialContext={initialContext} />
-          </TeamAttendancePhotoDraftProvider>
-        </NativeAuthSessionProvider>
-      </Suspense>
+      <ErrorBoundaryPolicyProvider policy={{ shouldRethrow: isAuthenticationError }}>
+        <Suspense fallback="로딩 중">
+          <NativeAuthSessionProvider>
+            <TeamAttendancePhotoDraftProvider>
+              <TeamAttendancePhotoFixture />
+              <Stack initialContext={initialContext} />
+            </TeamAttendancePhotoDraftProvider>
+          </NativeAuthSessionProvider>
+        </Suspense>
+      </ErrorBoundaryPolicyProvider>
     </QueryClientProvider>,
   );
   return { ...view, actions };
@@ -456,6 +460,80 @@ it('최종 조회 401은 보호 내용을 숨기고 로그인으로 한 번 이�
   expect(screen.queryByRole('list', { name: '세션 일정 목록' })).not.toBeInTheDocument();
   expect(calls).toBe(2);
   expect(bridge.refreshSession).toHaveBeenCalledTimes(1);
+});
+
+it('다음 페이지 최종 401도 목록을 유지하지 않고 로그인으로 한 번 이동한다', async () => {
+  const client = createAppQueryClient();
+  bridge.getSession.mockResolvedValue(session(1));
+  bridge.refreshSession.mockResolvedValue(session(1, 2));
+  const triggers: (() => void)[] = [];
+  let calls = 0;
+  vi.stubGlobal(
+    'IntersectionObserver',
+    class {
+      constructor(
+        callback: (
+          entries: {
+            isIntersecting: boolean;
+            boundingClientRect: { top: number };
+            rootBounds: { top: number } | null;
+          }[],
+        ) => void,
+      ) {
+        triggers.push(() =>
+          callback([
+            {
+              isIntersecting: true,
+              boundingClientRect: { top: 0 },
+              rootBounds: { top: 0 },
+            },
+          ]),
+        );
+      }
+      observe = vi.fn<() => void>();
+      disconnect = vi.fn<() => void>();
+    },
+  );
+  server.use(
+    http.get(`${apiBaseUrl}/api/users/me/notifications`, ({ request }) => {
+      calls += 1;
+      if (!new URL(request.url).searchParams.has('cursor')) {
+        return HttpResponse.json({
+          items: [
+            {
+              id: 1,
+              content: '첫 알림',
+              sentDate: '2026-11-07',
+              type: 'GENERAL',
+              postId: null,
+              sessionId: null,
+              reminderKind: null,
+              navigationTarget: null,
+              settlementId: null,
+              afterpartyId: null,
+              title: null,
+              settlementKind: null,
+            },
+          ],
+          nextCursor: 'next',
+        });
+      }
+      return HttpResponse.json({ status: 401 }, { status: 401 });
+    }),
+  );
+  window.history.replaceState(null, '', '/alerts');
+  mount(client);
+
+  expect(await screen.findByText('첫 알림')).toBeInTheDocument();
+  await waitFor(() => expect(triggers.length).toBeGreaterThan(1));
+  act(() => triggers.forEach((trigger) => trigger()));
+
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+  await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+  expect(screen.queryByText('첫 알림')).not.toBeInTheDocument();
+  expect(calls).toBeGreaterThanOrEqual(3);
+  expect(bridge.refreshSession).toHaveBeenCalledTimes(1);
+  expect(screen.queryByText('다음 알림을 불러오지 못했어요.')).not.toBeInTheDocument();
 });
 
 it('뒤풀이 목록도 WebView 세션을 복구할 수 없으면 내용을 보호한다', async () => {

@@ -22,4 +22,17 @@ describe('shouldThrowQueryError', () => {
       }),
     ).toBe(false);
   });
+
+  it('다음 페이지 인증 오류는 상위 인증 경계로 전달한다', () => {
+    expect(
+      shouldThrowQueryError(
+        {
+          error: new Error('인증 필요'),
+          isFetching: false,
+          isFetchNextPageError: true,
+        },
+        () => true,
+      ),
+    ).toBe(true);
+  });
 });
