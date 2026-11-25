@@ -732,6 +732,7 @@ const registrationRoleLabels: Record<ApprovalRole, string> = {
   OB: '운영진',
   COMPLETED_MEMBER: '수료회원',
   DEFERRED: '유예회원',
+  STAFF: '운영진',
 };
 
 function getRejectionValidationMessage(reason: string) {

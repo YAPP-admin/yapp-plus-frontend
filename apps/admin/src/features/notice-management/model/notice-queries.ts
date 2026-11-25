@@ -1,12 +1,12 @@
 /** Suspense 조회와 저장 성공 이후 캐시 갱신을 연결한다. */
 import {
-  create3Mutation,
+  create4Mutation,
   delete2Mutation,
-  detail1Options,
-  listInfiniteOptions,
-  presign1Mutation,
-  recipientsInfiniteOptions,
-  update2Mutation,
+  detail2Options,
+  list1InfiniteOptions,
+  presign2Mutation,
+  recipients1InfiniteOptions,
+  update3Mutation,
 } from '@yapp-plus/api/generated';
 import {
   queryOptions,
@@ -39,7 +39,7 @@ const apiTypeByCategory = {
 /** 생성 SDK의 cursor 응답을 TanStack Query infinite query로 바로 연결한다. */
 export function adminNoticeListQueryOptions(generationId: number, category: NoticeListCategory) {
   const query = category === 'all' ? {} : { type: apiTypeByCategory[category] };
-  const generated = listInfiniteOptions({ path: { generationId }, query });
+  const generated = list1InfiniteOptions({ path: { generationId }, query });
 
   return {
     ...generated,
@@ -63,11 +63,11 @@ export function useAdminNoticeListQuery(generationId: number, category: NoticeLi
 
 /** 상세 공지는 생성 SDK의 응답을 가공하지 않고 사용한다. */
 export function useAdminNoticeQuery(generationId: number, noticeId: string) {
-  return useSuspenseQuery(detail1Options({ path: { generationId, postId: Number(noticeId) } }));
+  return useSuspenseQuery(detail2Options({ path: { generationId, postId: Number(noticeId) } }));
 }
 
 export function adminNoticeRecipientsQueryOptions(generationId: number, noticeId: string) {
-  const generated = recipientsInfiniteOptions({
+  const generated = recipients1InfiniteOptions({
     path: { generationId, postId: Number(noticeId) },
   });
 
@@ -111,12 +111,12 @@ export function useAdminNoticeMutations(generationId: number) {
   const client = useQueryClient();
 
   const create = useMutation({
-    ...create3Mutation(),
+    ...create4Mutation(),
     retry: false,
     onSuccess: () => invalidateGeneratedNoticeQueries(client),
   });
   const update = useMutation({
-    ...update2Mutation(),
+    ...update3Mutation(),
     retry: false,
     onSuccess: () => invalidateGeneratedNoticeQueries(client),
   });
@@ -125,7 +125,7 @@ export function useAdminNoticeMutations(generationId: number) {
     retry: false,
     onSuccess: () => invalidateGeneratedNoticeQueries(client),
   });
-  const presign = useMutation({ ...presign1Mutation(), retry: false });
+  const presign = useMutation({ ...presign2Mutation(), retry: false });
 
   return { create, update, remove, presign, generationId };
 }

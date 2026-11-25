@@ -2,7 +2,7 @@
 import { createContext, useContext, useState, type ReactNode } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import {
-  list2Options,
+  list5Options,
   zAdminGenerationListResponse,
   type AdminGenerationListItemResponse,
 } from '@yapp-plus/api/generated';
@@ -25,7 +25,7 @@ function validateAdminGenerationList(value: unknown) {
 
 /** 관리자 공통 컨텍스트가 없는 화면에서도 사용할 수 있는 기수 조회 옵션입니다. */
 export function adminGenerationQueryOptions() {
-  return list2Options({ responseValidator: validateAdminGenerationList });
+  return list5Options({ responseValidator: validateAdminGenerationList });
 }
 
 /** 인증된 관리자 작업 영역에서 기수 목록과 현재 선택을 제공한다. */

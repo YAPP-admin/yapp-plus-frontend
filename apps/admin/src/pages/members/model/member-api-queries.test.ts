@@ -10,7 +10,7 @@ it('검색 조건을 회원 목록 API 계약의 query로 변환한다', () => {
   });
 
   expect(options.queryKey[0]).toMatchObject({
-    _id: 'list6',
+    _id: 'list9',
     path: { generationId: 33 },
     query: { name: '김민수', position: 'AI_NATIVE', teamId: 7 },
   });

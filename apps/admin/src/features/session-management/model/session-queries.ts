@@ -10,14 +10,14 @@ import { ApiError } from '@yapp-plus/api';
 import {
   get,
   find2Options,
-  list4InfiniteOptions,
-  list3,
-  list7Options,
+  list7InfiniteOptions,
+  list6,
+  list10Options,
   badge,
   cancel1,
   close,
   decide,
-  detail3Options,
+  detail5Options,
   override,
   reissue,
   start,
@@ -72,7 +72,7 @@ export const sessionsQueryOptions = (generationId: number) => {
 };
 
 export const memberScoresQueryOptions = (generationId: number) => {
-  const options = list7Options({ path: { generationId } });
+  const options = list10Options({ path: { generationId } });
   return queryOptions({
     ...options,
     retry: false,
@@ -115,7 +115,7 @@ export function toMemberScoreDetailViewModel(
 }
 
 export const memberScoreDetailQueryOptions = (generationId: number, membershipId: string) => {
-  const options = detail3Options({
+  const options = detail5Options({
     path: { generationId, membershipId: toNumberId(membershipId, '회원 ID') },
   });
   return queryOptions({
@@ -241,7 +241,7 @@ function toMemberViewModel(
 
 export const sessionAttendanceQueryOptions = (generationId: number, sessionId: string) => {
   const path = { generationId, sessionId: Number(sessionId) };
-  const generated = list4InfiniteOptions({ path, query: { size: 100 } });
+  const generated = list7InfiniteOptions({ path, query: { size: 100 } });
   return {
     ...generated,
     // 생성 타입에는 skipToken도 포함되지만 Suspense는 함수 queryFn만 허용합니다.
@@ -495,7 +495,7 @@ export const teamReviewsApiQueryOptions = (generationId: number, sessionId: stri
     queryKey: ['admin', 'generations', String(generationId), 'sessions', sessionId, 'team-reviews'],
     retry: false,
     queryFn: async ({ signal }) => {
-      const response = await list3({ path, signal, throwOnError: true });
+      const response = await list6({ path, signal, throwOnError: true });
       return response.data.items.map(toTeamReviewViewModel);
     },
   });

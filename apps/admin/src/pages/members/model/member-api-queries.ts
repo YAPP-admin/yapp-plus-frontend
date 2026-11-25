@@ -1,7 +1,7 @@
 /** 회원관리 화면이 사용하는 생성 SDK Query 옵션을 조합합니다. */
 import {
-  detailOptions,
-  list6InfiniteOptions,
+  detail1Options,
+  list9InfiniteOptions,
   teamOptionsOptions,
   type AdminMemberListResponse,
 } from '@yapp-plus/api/generated';
@@ -32,7 +32,7 @@ export function memberListQueryOptions(generationId: number, search: MemberSearc
     position: search.part === 'all' ? undefined : positionByPart[search.part],
     teamId: parseTeamId(search.team),
   };
-  const generated = list6InfiniteOptions({ path: { generationId }, query });
+  const generated = list9InfiniteOptions({ path: { generationId }, query });
 
   return {
     ...generated,
@@ -46,5 +46,5 @@ export function memberTeamOptionsQueryOptions(generationId: number) {
 }
 
 export function memberDetailQueryOptions(generationId: number, memberId: number) {
-  return detailOptions({ path: { generationId, memberId } });
+  return detail1Options({ path: { generationId, memberId } });
 }
