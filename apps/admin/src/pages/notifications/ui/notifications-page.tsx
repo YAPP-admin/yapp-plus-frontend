@@ -1,6 +1,6 @@
-import { ActionButton } from '@yapp-plus/ui';
+import { ActionButton, Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
 import { Bell, MoreHorizontal, Plus } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { PageHeader } from '~/shared/ui/page-header';
 import {
@@ -10,9 +10,12 @@ import {
   getNotificationStatus,
   isVisibleNotificationStatus,
   type NotificationHistoryItem,
-  type NotificationSendValues,
+  createNotificationIdempotencyKey,
 } from '../model/notifications';
-import { notificationHistoryQueryOptions } from '../model/notification-queries';
+import {
+  notificationHistoryQueryOptions,
+  useNotificationMutations,
+} from '../model/notification-queries';
 import { NotificationCancelDialog } from './notification-cancel-dialog';
 import { NotificationSendDialog } from './notification-send-dialog';
 import * as styles from './notifications-page.css';
@@ -42,24 +45,19 @@ function getStatusBadgeClass(tone: ReturnType<typeof getNotificationStatus>['ton
   return styles.statusBadgeCompleted;
 }
 
-export type NotificationsPageProps = {
-  onSend?: (values: NotificationSendValues) => void;
-  isSending?: boolean;
-  sendErrorMessage?: string;
-  onCancel?: (notificationId: number) => void;
-  isCanceling?: boolean;
-};
-
-export function NotificationsPage({
-  onSend,
-  isSending = false,
-  sendErrorMessage,
-  onCancel,
-  isCanceling = false,
-}: NotificationsPageProps = {}) {
+export function NotificationsPage() {
   const historyQuery = useInfiniteQuery(notificationHistoryQueryOptions());
+  const { create, cancel } = useNotificationMutations();
+  const snackbar = useSnackbarAdapter();
+  const idempotencyKeyRef = useRef<string | undefined>(undefined);
   const [sendDialogOpen, setSendDialogOpen] = useState(false);
   const [cancelNotificationId, setCancelNotificationId] = useState<number>();
+
+  function closeSendDialog() {
+    setSendDialogOpen(false);
+    idempotencyKeyRef.current = undefined;
+    create.reset();
+  }
   const notifications =
     historyQuery.data?.pages
       .flatMap((page) => page.items)
@@ -83,17 +81,72 @@ export function NotificationsPage({
       />
       {sendDialogOpen && (
         <NotificationSendDialog
-          onClose={() => setSendDialogOpen(false)}
-          onSubmit={(values) => onSend?.(values)}
-          isPending={isSending}
-          errorMessage={sendErrorMessage}
+          onClose={closeSendDialog}
+          onSubmit={(values) => {
+            const idempotencyKey =
+              idempotencyKeyRef.current ??
+              (idempotencyKeyRef.current = createNotificationIdempotencyKey());
+            create.mutate(
+              {
+                headers: { 'Idempotency-Key': idempotencyKey },
+                body: values,
+              },
+              {
+                onSuccess: (response) => {
+                  idempotencyKeyRef.current = undefined;
+                  setSendDialogOpen(false);
+                  snackbar.create({
+                    render: () => (
+                      <Snackbar
+                        variant="positive"
+                        message={
+                          response.scheduledAt === null
+                            ? '알림을 성공적으로 보냈어요.'
+                            : '알림 예약을 완료했어요.'
+                        }
+                      />
+                    ),
+                  });
+                },
+              },
+            );
+          }}
+          isPending={create.isPending}
+          errorMessage={
+            create.isError ? getNotificationErrorMessage(create.error, 'create') : undefined
+          }
         />
       )}
       <NotificationCancelDialog
         notificationId={cancelNotificationId}
-        onClose={() => setCancelNotificationId(undefined)}
-        onConfirm={(notificationId) => onCancel?.(notificationId)}
-        isPending={isCanceling}
+        onClose={() => {
+          setCancelNotificationId(undefined);
+          cancel.reset();
+        }}
+        onConfirm={(notificationId) => {
+          cancel.mutate(
+            { path: { notificationId } },
+            {
+              onSuccess: () => {
+                setCancelNotificationId(undefined);
+                snackbar.create({
+                  render: () => <Snackbar variant="positive" message="예약을 취소했어요." />,
+                });
+              },
+              onError: (error) => {
+                snackbar.create({
+                  render: () => (
+                    <Snackbar
+                      variant="critical"
+                      message={getNotificationErrorMessage(error, 'cancel')}
+                    />
+                  ),
+                });
+              },
+            },
+          );
+        }}
+        isPending={cancel.isPending}
       />
     </>
   );

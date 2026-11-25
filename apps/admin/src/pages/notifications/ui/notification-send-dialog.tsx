@@ -286,6 +286,7 @@ export function NotificationSendDialog({
                     type="button"
                     variant="neutralWeak"
                     className={styles.cancelButton}
+                    disabled={isPending}
                     onClick={onClose}
                   >
                     취소
