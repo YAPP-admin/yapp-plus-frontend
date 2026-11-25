@@ -14,6 +14,19 @@ function csvFile(name: string, content: string) {
   return new File([content], name, { type: 'text/csv' });
 }
 
+async function spreadsheetFile(name: `${string}.xls` | `${string}.xlsx`) {
+  const xlsx = await import('xlsx');
+  const worksheet = xlsx.utils.aoa_to_sheet([
+    [...memberImportHeaders],
+    ['홍길동', '010-1234-5678', 33, 'pm', 'active-member'],
+  ]);
+  const workbook = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(workbook, worksheet, '명단');
+  const bookType = name.endsWith('.xls') ? 'xls' : 'xlsx';
+  const content = xlsx.write(workbook, { bookType, type: 'array' });
+  return new File([content], name);
+}
+
 it('CSV 파일을 읽고 인용부호·숫자 형태를 문자열로 보존한다', async () => {
   const result = await parseMemberImportFile(csvFile('members.csv', memberRows));
 
@@ -33,6 +46,23 @@ it('CSV의 인용 필드 안 쉼표와 줄바꿈을 하나의 값으로 읽는�
 
   expect(result.rows[0]?.values).toEqual(['홍,길동', '01012345678', '33', 'pm', '활동\n회원']);
 });
+
+it.each(['members.xlsx', 'members.xls'] as const)(
+  '%s 파일을 읽고 첫 번째 워크시트를 변환한다',
+  async (name) => {
+    const result = await parseMemberImportFile(await spreadsheetFile(name));
+
+    expect(result.fileName).toBe(name);
+    expect(result.headers).toEqual(memberImportHeaders);
+    expect(result.rows[0]?.values).toEqual([
+      '홍길동',
+      '010-1234-5678',
+      '33',
+      'pm',
+      'active-member',
+    ]);
+  },
+);
 
 it.each([
   ['members.txt', 'unsupported-type'],

@@ -4,7 +4,7 @@ import userEvent from '@testing-library/user-event';
 import type { ReactNode } from 'react';
 import { expect, it, vi } from 'vitest';
 import { memberPreviewAfterMapping } from '~/features/member-management/fixtures';
-import { memberImportHeaders } from '../model/import-file';
+import { MEMBER_IMPORT_FILE_ACCEPT, memberImportHeaders } from '../model/import-file';
 import { MemberImportPage } from './member-import-page';
 
 vi.mock('@tanstack/react-router', () => ({
@@ -35,7 +35,7 @@ function renderPage() {
   );
 }
 
-it('CSV 파일을 선택하면 읽기 상태와 6b 집계를 표시한다', async () => {
+it('명단 파일을 선택하면 읽기 상태와 6b 집계를 표시한다', async () => {
   const user = userEvent.setup();
   renderPage();
 
@@ -48,10 +48,12 @@ it('CSV 파일을 선택하면 읽기 상태와 6b 집계를 표시한다', asyn
   expect(screen.getByText('선택한 파일: members.csv')).toBeVisible();
 });
 
-it('드롭도 파일 선택과 같은 파싱 경로를 사용한다', async () => {
+it('명단 파일 드롭도 파일 선택과 같은 파싱 경로를 사용한다', async () => {
   renderPage();
   const file = csvFile('dropped.csv', '드롭 회원');
-  const dropzone = screen.getByText('CSV 파일을 여기에 놓거나 파일을 선택하세요.').parentElement;
+  const dropzone = screen.getByText(
+    'CSV·XLS·XLSX 파일을 여기에 놓거나 파일을 선택하세요.',
+  ).parentElement;
 
   if (dropzone === null) {
     throw new Error('CSV 드롭 영역을 찾을 수 없습니다.');
@@ -60,6 +62,15 @@ it('드롭도 파일 선택과 같은 파싱 경로를 사용한다', async () =
 
   await waitFor(() =>
     expect(screen.getByRole('status')).toHaveTextContent('dropped.csv 파일을 읽었어요.'),
+  );
+});
+
+it('CSV·XLS·XLSX 파일을 선택할 수 있도록 input accept를 설정한다', () => {
+  renderPage();
+
+  expect(screen.getByLabelText('회원 명단 파일')).toHaveAttribute(
+    'accept',
+    MEMBER_IMPORT_FILE_ACCEPT,
   );
 });
 

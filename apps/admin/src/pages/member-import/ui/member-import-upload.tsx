@@ -1,7 +1,7 @@
 import { useId } from 'react';
 import { AttachmentInput, Field, Text, VStack } from '@seed-design/react';
 import { FileSpreadsheet, Upload } from 'lucide-react';
-import { MAX_IMPORT_FILE_BYTES } from '../model/import-file';
+import { MAX_IMPORT_FILE_BYTES, MEMBER_IMPORT_FILE_ACCEPT } from '../model/import-file';
 import type { MemberImportUploadState } from '../model/use-member-import-upload';
 import {
   dropzone,
@@ -13,7 +13,7 @@ import {
 } from './member-import-page.css';
 
 const importFileOptions = {
-  accept: '.csv',
+  accept: MEMBER_IMPORT_FILE_ACCEPT,
   maxFiles: 1,
   maxFileSize: MAX_IMPORT_FILE_BYTES,
 };
@@ -44,10 +44,10 @@ export function MemberImportUpload({
     <>
       <VStack gap="x1_5">
         <Text as="h2" id="member-import-upload-heading" className={sectionTitle}>
-          CSV 파일 선택
+          명단 파일 선택
         </Text>
         <Text as="p" className={dropzoneDescription}>
-          UTF-8 CSV, 최대 10MB · 이름·전화번호·기수·직군·권한 열을 사용해요.
+          CSV·XLS·XLSX, 최대 10MB · 이름·전화번호·기수·직군·권한 열을 사용해요.
         </Text>
       </VStack>
 
@@ -68,14 +68,14 @@ export function MemberImportUpload({
           <AttachmentInput.Dropzone className={dropzone}>
             <FileSpreadsheet size={32} aria-hidden="true" />
             <AttachmentInput.DropzoneLabel>
-              CSV 파일을 여기에 놓거나 파일을 선택하세요.
+              CSV·XLS·XLSX 파일을 여기에 놓거나 파일을 선택하세요.
             </AttachmentInput.DropzoneLabel>
             <Text as="p" className={dropzoneDescription}>
               전화번호는 010-1234-5678 또는 01012345678 형식을 지원해요.
             </Text>
           </AttachmentInput.Dropzone>
           <AttachmentInput.Container className={triggerContainer}>
-            <AttachmentInput.Trigger aria-label="CSV 파일 선택">
+            <AttachmentInput.Trigger aria-label="명단 파일 선택">
               <Upload size={18} aria-hidden="true" />
               파일 선택
             </AttachmentInput.Trigger>
