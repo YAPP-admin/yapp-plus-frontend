@@ -134,6 +134,9 @@ jobs:
         uses: ./.github/actions/vercel-deploy
         env:
           TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VITE_JUSO_SEARCH_KEY: ${{ matrix.app_id == 'admin' && secrets.VITE_JUSO_SEARCH_KEY || '' }}
+          VITE_JUSO_COORD_KEY: ${{ matrix.app_id == 'admin' && secrets.VITE_JUSO_COORD_KEY || '' }}
+          VITE_KAKAO_MAP_JS_KEY: ${{ matrix.app_id == 'admin' && secrets.VITE_KAKAO_MAP_JS_KEY || '' }}
         with:
           environment: preview
           org-id: ${{ vars.VERCEL_ORG_ID }}

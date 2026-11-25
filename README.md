@@ -205,6 +205,9 @@ workflow를 사용하려면 저장소의 GitHub Actions 설정에 다음 값을 
 | 종류     | 이름                      | 값                                   |
 | -------- | ------------------------- | ------------------------------------ |
 | Secret   | `VERCEL_TOKEN`            | `yapp-plus` scope에 접근 가능한 토큰 |
+| Secret   | `VITE_JUSO_SEARCH_KEY`    | 관리자 세션 도로명주소 검색 승인키   |
+| Secret   | `VITE_JUSO_COORD_KEY`     | 관리자 세션 주소 좌표 조회 승인키    |
+| Secret   | `VITE_KAKAO_MAP_JS_KEY`   | 관리자 세션 카카오 JavaScript 키     |
 | Variable | `VERCEL_ORG_ID`           | `yapp-plus` scope ID                 |
 | Variable | `VERCEL_WEB_PROJECT_ID`   | `yapp-plus-web` 프로젝트 ID          |
 | Variable | `VERCEL_ADMIN_PROJECT_ID` | `yapp-plus-admin` 프로젝트 ID        |
@@ -214,8 +217,10 @@ GitHub 저장소에만 Secret으로 등록합니다. 이 토큰은 Vercel 배포
 사용하며, workflow는 `TURBO_TOKEN`에 `VERCEL_TOKEN` Secret을 전달하고 `TURBO_TEAM`에는
 `yapp-plus` 팀 slug를 사용합니다. GitHub Actions에 Secret이 없는 fork Pull Request나 로컬
 실행에서는 원격 캐시 없이 로컬 Turbo 캐시로 동작해야 합니다. 로컬 Vercel 인증 토큰이나
-`.vercel/`, `.env.local`은 커밋하지 않습니다. 앱이 사용하는 환경 변수는 GitHub Actions가 아니라
-각 Vercel 프로젝트의 Environment Variables에 Preview와 Production 환경별로 등록합니다.
+`.vercel/`, `.env.local`은 커밋하지 않습니다. 관리자 세션의 외부 서비스 키는 prebuilt 산출물을
+GitHub Actions에서 먼저 만들기 때문에 위 세 개의 Secret으로 등록해야 하며, CI 빌드와 Admin
+Preview/Production/수동 배포에만 전달합니다. 값이 없으면 관리자 화면에서 주소 검색·좌표·지도를
+안전하게 비활성화합니다. Web 배포에는 해당 키를 전달하지 않습니다.
 
 Vercel GitHub App의 `YAPP-admin/yapp-plus-frontend` 접근 승인이 완료되면 장기 토큰 대신 OIDC 기반
 Turbo 원격 캐시 인증으로 전환할 수 있습니다. OIDC 전환 전까지는 workflow 로그, 실행 요약과 캐시
