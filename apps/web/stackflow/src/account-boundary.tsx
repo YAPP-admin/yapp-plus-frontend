@@ -21,7 +21,7 @@ const publicActivities = new Set([
   'NotFound',
 ]);
 
-const developmentPublicActivities = new Set(['DevRoutes', 'DiningList', 'DiningDetail']);
+const developmentPublicActivities = new Set(['DevRoutes']);
 
 /** 개발 전용 경로는 WebView 인증 상태와 무관하게 fixture 화면을 확인할 수 있다. */
 const isPublicActivity = (name: string): boolean =>

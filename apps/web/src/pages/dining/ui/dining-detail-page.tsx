@@ -1,22 +1,15 @@
-/** 회식 상세 정보와 응답 화면 수명을 소유하며, 제출 결과는 공용 Snackbar로 알립니다. */
+/** 서버에서 조회한 회식 정보와 본인 응답을 표시합니다. */
 'use client';
 
-import IconChevronLeftLine from '@karrotmarket/react-monochrome-icon/IconChevronLeftLine';
-import { ActivityLink } from '@/app/navigation/activity-link';
+import { BackButton } from '@/app/navigation/back-button';
 import { koreanDateString } from '@/shared/lib/korean-date-time';
-import { Snackbar, Text, useSnackbarAdapter } from '@yapp-plus/ui';
-import { useState } from 'react';
-import {
-  getDiningDeadline,
-  toDiningAttendance,
-  type Dining,
-  type DiningAttendance,
-  type DiningDraft,
-} from '../model/dining-model';
-import { DiningAttendanceSection } from './dining-attendance-section';
+import { Text } from '@yapp-plus/ui';
+import type { ReactNode } from 'react';
+import { getDiningDeadline, type Dining } from '../model/dining-model';
+import { useDiningDetail } from '../model/dining-query';
+import { DiningQueryBoundary } from './dining-query-boundary';
 import {
   description,
-  detailBackButton,
   detailHeader,
   detailInformation,
   detailPage,
@@ -26,48 +19,72 @@ import {
   page,
 } from './dining-page.css';
 
-/** 하나의 회식에 대한 응답·수정 상태는 상세 화면을 떠날 때 함께 폐기됩니다. */
-export function DiningDetailPage({
+/** 회식 상세는 실제 서버 응답을 표시합니다. 차수별 응답·명단은 계약 확정 전 표시하지 않습니다. */
+export function DiningDetailPage({ diningId }: { diningId: string }) {
+  return (
+    <DiningQueryBoundary diningId={diningId}>
+      <DiningDetailContent diningId={diningId} />
+    </DiningQueryBoundary>
+  );
+}
+
+function DiningDetailContent({ diningId }: { diningId: string }) {
+  const query = useDiningDetail(diningId);
+  const dining = query.data;
+  return (
+    <DiningPageFrame
+      dining={{
+        title: dining.title,
+        description: dining.content,
+        startsAt: Date.parse(dining.startsAt),
+        surveyClosesAt: Date.parse(dining.deadline),
+      }}
+      now={query.dataUpdatedAt}
+    >
+      <section aria-label="참석 응답">
+        <Text as="h2" textStyle="t5Bold">
+          회식 참여 여부
+        </Text>
+        <Text as="p" textStyle="t4Regular">
+          {{ UNANSWERED: '미응답', ATTENDING: '참석', NOT_ATTENDING: '불참' }[dining.response]}
+        </Text>
+        {dining.attendingCount !== null && (
+          <Text as="p" textStyle="t4Regular">
+            참석 {dining.attendingCount}명
+          </Text>
+        )}
+        {dining.state === 'OPEN' && (
+          <Text as="p" textStyle="t4Regular">
+            참석 여부 변경은 준비 중이에요.
+          </Text>
+        )}
+        {dining.state !== 'OPEN' && (
+          <Text as="p" textStyle="t4Regular">
+            기한이 지났어요. 변경은 운영진에게 문의해 주세요.
+          </Text>
+        )}
+      </section>
+    </DiningPageFrame>
+  );
+}
+
+/** 회식 상세의 정보·뒤로가기 레이아웃입니다. */
+function DiningPageFrame({
   dining,
   now,
-  currentMemberId,
+  children,
 }: {
-  dining: Dining;
+  dining: Pick<Dining, 'title' | 'description' | 'startsAt' | 'surveyClosesAt'>;
   now: number;
-  currentMemberId: string;
+  children: ReactNode;
 }) {
-  const currentMember = dining.members.find(({ id }) => id === currentMemberId);
-  const [attendance, setAttendance] = useState<DiningAttendance | null>(
-    currentMember?.attendance ?? null,
-  );
-  const snackbar = useSnackbarAdapter();
   const deadline = getDiningDeadline(dining.surveyClosesAt, now);
-  const canRespond = deadline.status === 'open';
-
-  function submitAttendance(draft: DiningDraft, message: string) {
-    const nextAttendance = toDiningAttendance(draft);
-    if (nextAttendance === null) {
-      return;
-    }
-    setAttendance(nextAttendance);
-    snackbar.create({
-      render: () => <Snackbar variant="positive" message={message} />,
-    });
-  }
-
   return (
     <main className={[page, detailPage].join(' ')}>
       <header className={detailHeader}>
-        <ActivityLink
-          activityName="DiningList"
-          activityParams={{}}
-          className={detailBackButton}
-          aria-label="뒤로가기"
-        >
-          <IconChevronLeftLine width={24} height={24} aria-hidden="true" />
-        </ActivityLink>
+        <BackButton fallbackActivityName="DiningList" fallbackActivityParams={{}} iconOnly />
         <Text as="h1" textStyle="t6Bold" className={detailTitle}>
-          참석 여부
+          뒤풀이
         </Text>
       </header>
 
@@ -93,28 +110,30 @@ export function DiningDetailPage({
           </Text>
         </dl>
       </section>
-      <DiningAttendanceSection
-        dining={dining}
-        attendance={attendance}
-        canRespond={canRespond}
-        currentMemberId={currentMemberId}
-        onSubmit={(draft) => submitAttendance(draft, '참석 여부를 제출했어요.')}
-        onEditSubmit={(draft) => submitAttendance(draft, '참석 여부를 수정했어요.')}
-      />
+      {children}
     </main>
   );
 }
 
 function formatDiningDate(timestamp: number) {
-  return `${koreanDateString(timestamp).replaceAll('-', '.')} (${koreanWeekday(timestamp)}) 18:30`;
+  return `${koreanDateString(timestamp).replaceAll('-', '.')} (${koreanWeekday(timestamp)}) ${koreanTime(timestamp)}`;
 }
 
 function formatDeadline(timestamp: number, isClosed: boolean) {
-  return `${koreanDateString(timestamp).replaceAll('-', '.')} (${koreanWeekday(timestamp)}) 23:59${isClosed ? ' · 마감' : ''}`;
+  return `${koreanDateString(timestamp).replaceAll('-', '.')} (${koreanWeekday(timestamp)}) ${koreanTime(timestamp)}${isClosed ? ' · 마감' : ''}`;
 }
 
 function koreanWeekday(timestamp: number) {
   return new Intl.DateTimeFormat('ko-KR', { timeZone: 'Asia/Seoul', weekday: 'short' }).format(
     timestamp,
   );
+}
+
+function koreanTime(timestamp: number) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    timeZone: 'Asia/Seoul',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(timestamp);
 }

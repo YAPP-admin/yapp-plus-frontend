@@ -3,10 +3,16 @@
 
 import { IconCalendarFill } from '@karrotmarket/react-monochrome-icon';
 import { ActivityLink } from '@/app/navigation/activity-link';
-import { Badge, Text } from '@yapp-plus/ui';
-import { Chip, HStack } from '@seed-design/react';
+import { ActionButton, Badge, Text } from '@yapp-plus/ui';
+import { HStack } from '@seed-design/react';
 import { useState } from 'react';
-import { countDiningMembers, getDiningDeadline, type Dining } from '../model/dining-model';
+import { getDiningDeadline } from '../model/dining-model';
+import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
+import { list4InfiniteOptions } from '@yapp-plus/api/generated';
+import { diningListSchema, useDiningAccess } from '../model/dining-query';
+import { DiningQueryBoundary } from './dining-query-boundary';
+import { DiningQueryState } from './dining-query-state';
+import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import {
   calendarIcon,
   calendarMeta,
@@ -22,6 +28,8 @@ import {
   filterButton,
   filterButtonSelected,
   filterList,
+  filterGroup,
+  filterLegend,
   listContent,
   listPage,
   notificationDot,
@@ -36,14 +44,33 @@ const LIST_FILTERS: readonly { value: ListFilter; label: string }[] = [
   { value: 'CLOSED', label: '투표 마감' },
 ];
 
-/** 제공된 회식 목록을 개발 전용 필터와 함께 표시합니다. */
-export function DiningListPage({ items, now }: { items: readonly Dining[]; now: number }) {
-  const [filter, setFilter] = useState<ListFilter>('ALL');
-  const filteredItems = items.filter((dining) => {
-    const status = getDiningDeadline(dining.surveyClosesAt, now).status;
-    return filter === 'ALL' || (filter === 'OPEN' ? status === 'open' : status === 'closed');
-  });
+/** 서버 상태 필터와 cursor를 사용해 초대된 회식을 조회합니다. */
+export function DiningListPage() {
+  return (
+    <DiningQueryBoundary>
+      <DiningListContent />
+    </DiningQueryBoundary>
+  );
+}
 
+function DiningListContent() {
+  const [filter, setFilter] = useState<ListFilter>('ALL');
+  const { apiOptions } = useDiningAccess();
+  const generated = list4InfiniteOptions({ ...apiOptions, query: { filter } });
+  const query = useSuspenseInfiniteQuery({
+    ...generated,
+    queryFn: typeof generated.queryFn === 'function' ? generated.queryFn : undefined,
+    initialPageParam: {},
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    select: (data) => data.pages.flatMap((response) => diningListSchema.parse(response).items),
+  });
+  useRefetchOnScreenReturn(query);
+  if (query.error && !query.isFetching) {
+    throw query.error instanceof Error
+      ? query.error
+      : new Error('회식 정보를 불러오지 못했어요.', { cause: query.error });
+  }
+  const items = query.data;
   return (
     <main className={[page, listPage].join(' ')}>
       <header className={communityHeader}>
@@ -59,51 +86,63 @@ export function DiningListPage({ items, now }: { items: readonly Dining[]; now: 
       </header>
 
       <section className={listContent} aria-label="뒤풀이 목록">
-        <Chip.RadioRoot
-          value={filter}
-          name="dining-status-filter"
-          aria-label="뒤풀이 상태 필터"
-          onValueChange={(value) => {
-            const nextFilter = LIST_FILTERS.find(({ value: filterValue }) => filterValue === value);
-            if (nextFilter) {
-              setFilter(nextFilter.value);
-            }
-          }}
-        >
+        <fieldset className={filterGroup}>
+          <legend className={filterLegend}>뒤풀이 상태 필터</legend>
           <ul className={filterList}>
             {LIST_FILTERS.map(({ value, label }) => (
               <li key={value}>
-                <Chip.RadioItem
-                  value={value}
-                  size="medium"
-                  variant="solid"
+                <button
+                  type="button"
+                  aria-pressed={filter === value}
+                  onClick={() => setFilter(value)}
                   className={[filterButton, filter === value ? filterButtonSelected : ''].join(' ')}
                 >
-                  <Chip.Label>{label}</Chip.Label>
-                </Chip.RadioItem>
+                  {label}
+                </button>
               </li>
             ))}
           </ul>
-        </Chip.RadioRoot>
+        </fieldset>
+        {items.length === 0 && <DiningQueryState message="초대된 회식이 없어요." />}
         <ul className={diningList} aria-label="뒤풀이 목록">
-          {filteredItems.map((dining) => (
-            <li key={dining.id}>
-              <DiningCard dining={dining} now={now} />
+          {items.map((dining) => (
+            <li key={dining.afterpartyId}>
+              <DiningCard dining={dining} now={query.dataUpdatedAt} />
             </li>
           ))}
         </ul>
+        {query.hasNextPage && (
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            disabled={query.isFetchingNextPage}
+            onClick={() => {
+              void query.fetchNextPage();
+            }}
+          >
+            더 보기
+          </ActionButton>
+        )}
       </section>
     </main>
   );
 }
 
-function DiningCard({ dining, now }: { dining: Dining; now: number }) {
-  const deadline = getDiningDeadline(dining.surveyClosesAt, now);
-  const count = countDiningMembers(dining.members);
+function DiningCard({
+  dining,
+  now,
+}: {
+  now: number;
+  dining: ReturnType<typeof diningListSchema.parse>['items'][number];
+}) {
+  const deadline =
+    dining.state === 'OPEN'
+      ? getDiningDeadline(Date.parse(dining.deadline), now)
+      : { status: 'closed', label: dining.state === 'ENDED' ? '종료' : '투표 마감' };
   return (
     <ActivityLink
       activityName="DiningDetail"
-      activityParams={{ diningId: dining.id }}
+      activityParams={{ diningId: String(dining.afterpartyId) }}
       className={diningCard}
     >
       <Badge
@@ -120,11 +159,11 @@ function DiningCard({ dining, now }: { dining: Dining; now: number }) {
         <HStack className={calendarMeta}>
           <IconCalendarFill className={calendarIcon} aria-hidden="true" />
           <Text as="span" textStyle="t2Medium" color="fg.neutralSubtle">
-            {formatDiningListDate(dining.startsAt)}
+            {dining.startsAtDisplay ?? formatDiningListDate(Date.parse(dining.startsAt))}
           </Text>
         </HStack>
         <Text as="span" textStyle="t2Medium" color="fg.neutralSubtle">
-          {count.RESPONDED}명 참여
+          {dining.respondedCount}명 참여
         </Text>
       </HStack>
     </ActivityLink>
@@ -137,9 +176,12 @@ function formatDiningListDate(timestamp: number) {
     month: '2-digit',
     day: '2-digit',
     weekday: 'short',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
   });
   const parts = formatter.formatToParts(timestamp);
   const part = (type: Intl.DateTimeFormatPartTypes) =>
     parts.find((candidate) => candidate.type === type)?.value ?? '';
-  return `${part('month')}.${part('day')} (${part('weekday')}) 18:30`;
+  return `${part('month')}.${part('day')} (${part('weekday')}) ${part('hour')}:${part('minute')}`;
 }

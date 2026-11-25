@@ -14,7 +14,7 @@ import { AttendanceCompletePage } from '@/pages/attendance-complete';
 import { AttendancePage } from '@/pages/attendance';
 import { AttendanceRulesPage } from '@/pages/attendance-rules';
 import { DevRoutesPage } from '@/pages/dev-routes';
-import { DiningPage } from '@/pages/dining';
+import { DiningListPage, DiningDetailPage } from '@/pages/dining';
 import { HomePage, useAttendanceConfirmation } from '@/pages/home';
 import { LoginErrorPage } from '@/pages/login-error';
 import { LoginPage } from '@/pages/login';
@@ -414,15 +414,8 @@ export function DevRoutesActivity() {
 export function DiningListActivity() {
   return (
     <ActivityScreen title="회식">
-      <PageShell
-        header={null}
-        navigation={
-          import.meta.env.DEV ? (
-            <BottomNavigation activeTab="community" showDevelopmentCommunity />
-          ) : undefined
-        }
-      >
-        <DiningPage />
+      <PageShell header={null} navigation={<BottomNavigation activeTab="community" />}>
+        <DiningListPage />
       </PageShell>
     </ActivityScreen>
   );
@@ -432,7 +425,7 @@ export function DiningDetailActivity() {
   return (
     <ActivityScreen title="회식" snackbarPosition="safeArea">
       <PageShell header={null} plain>
-        <DiningPage diningId={diningId} />
+        <DiningDetailPage diningId={diningId} />
       </PageShell>
     </ActivityScreen>
   );

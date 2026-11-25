@@ -1,0 +1,37 @@
+/** 회식 화면의 접근 조건과 Suspense·Query 오류 복구를 연결합니다. */
+import { Suspense, type ReactNode } from 'react';
+import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
+import { useDiningAccess } from '../model/dining-query';
+import { DiningQueryState } from './dining-query-state';
+
+/** 조회 가능한 화면만 마운트하고 실패 재시도는 공통 Query 오류 경계에 위임합니다. */
+export function DiningQueryBoundary({
+  children,
+  diningId,
+}: {
+  children: ReactNode;
+  diningId?: string;
+}) {
+  const { canQuery } = useDiningAccess();
+  if (
+    diningId !== undefined &&
+    (!/^\d+$/.test(diningId) || !Number.isSafeInteger(Number(diningId)) || Number(diningId) <= 0)
+  ) {
+    return <DiningQueryState message="뒤풀이를 찾을 수 없어요." />;
+  }
+  if (!canQuery) {
+    return <DiningQueryState message="YAPP+ 앱에 로그인한 후 회식을 확인할 수 있어요." />;
+  }
+  return (
+    <ScreenQueryBoundary
+      key={diningId}
+      renderFallback={({ resetErrorBoundary }) => (
+        <DiningQueryState message="회식 정보를 불러오지 못했어요." onRetry={resetErrorBoundary} />
+      )}
+    >
+      <Suspense fallback={<DiningQueryState message="회식 정보를 불러오고 있어요." />}>
+        {children}
+      </Suspense>
+    </ScreenQueryBoundary>
+  );
+}

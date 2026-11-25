@@ -146,3 +146,16 @@ export const calendarIcon = style({
   flex: '0 0 auto',
   color: vars.$color.fg.neutralSubtle,
 });
+
+/** 필터 묶음의 의미는 유지하고 브라우저 기본 테두리·여백만 제거합니다. */
+export const filterGroup = style({ border: 0, padding: 0, margin: 0, minWidth: 0 });
+
+export const filterLegend = style({
+  position: 'absolute',
+  width: 1,
+  height: 1,
+  padding: 0,
+  overflow: 'hidden',
+  clipPath: 'inset(50%)',
+  whiteSpace: 'nowrap',
+});
