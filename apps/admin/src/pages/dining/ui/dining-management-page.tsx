@@ -22,6 +22,7 @@ import {
   tableRegion,
   title,
   titleCell,
+  titleLink,
   visuallyHidden,
 } from './dining-management-page.css';
 
@@ -251,7 +252,9 @@ function DiningRow({ item }: { item: DiningItem }) {
   return (
     <tr>
       <th className={`${tableCell} ${titleCell}`} scope="row">
-        {item.title}
+        <Link to="/dining/$diningId" params={{ diningId: item.id }} className={titleLink}>
+          {item.title}
+        </Link>
       </th>
       <td className={tableCell}>
         <time dateTime={item.dateTime}>{item.date}</time>
