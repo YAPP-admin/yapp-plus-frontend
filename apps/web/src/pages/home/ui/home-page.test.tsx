@@ -18,6 +18,7 @@ import { act, fireEvent, render, screen, within, waitFor } from '@testing-librar
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { HomePage } from './home-page';
+import { calendarDateBadgeActive } from './home-page.css';
 import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 
 const mockPush = vi.fn<(activityName: string, params: object) => void>();
@@ -248,10 +249,38 @@ it('주간 API만 조회하고 서버 이름·한국 날짜·분과 세션 날�
   expect(screen.getByText('오후 1시 30분 시작')).toBeVisible();
   const date = screen.getByLabelText('2026-11-07 세션 예정');
   expect(date).toHaveAttribute('aria-current', 'date');
+  expect(date).toHaveClass(calendarDateBadgeActive);
+  expect(
+    screen.getByLabelText('주간 일정').getElementsByClassName(calendarDateBadgeActive),
+  ).toHaveLength(1);
   expect(screen.getByLabelText('2026-11-01')).toHaveTextContent('1');
   expect(screen.getByRole('button', { name: '출석하기' })).toBeEnabled();
   expect(screen.queryByText('출석했어요!')).not.toBeInTheDocument();
   expect(scheduleRequest).not.toHaveBeenCalled();
+});
+
+it('오늘과 세션 예정일이 다르면 한국 시간의 오늘만 원형으로 강조한다', async () => {
+  vi.setSystemTime(new Date('2026-11-05T15:00:00Z'));
+  renderHome();
+  await screen.findByRole('heading', { name: /설계 리뷰/ });
+  const today = screen.getByLabelText('2026-11-06');
+  expect(today).toHaveAttribute('aria-current', 'date');
+  expect(today).toHaveClass(calendarDateBadgeActive);
+  const sessionDate = screen.getByLabelText('2026-11-07 세션 예정');
+  expect(sessionDate).not.toHaveAttribute('aria-current');
+  expect(sessionDate).not.toHaveClass(calendarDateBadgeActive);
+  expect(
+    screen.getByLabelText('주간 일정').getElementsByClassName(calendarDateBadgeActive),
+  ).toHaveLength(1);
+});
+
+it('오늘이 응답의 주간 범위 밖이면 어느 날짜도 원형으로 강조하지 않는다', async () => {
+  vi.setSystemTime(new Date('2026-11-08T15:00:00Z'));
+  renderHome();
+  await screen.findByRole('heading', { name: /설계 리뷰/ });
+  const calendar = screen.getByLabelText('주간 일정');
+  expect(calendar.getElementsByClassName(calendarDateBadgeActive)).toHaveLength(0);
+  expect(calendar.querySelector('[aria-current="date"]')).not.toBeInTheDocument();
 });
 
 it('세션 없는 주에도 응답의 달력을 표시한다', async () => {
@@ -259,6 +288,10 @@ it('세션 없는 주에도 응답의 달력을 표시한다', async () => {
   renderHome();
   expect(await screen.findByText('이번 주 예정된 세션이 없어요')).toBeVisible();
   expect(screen.getByLabelText('2026-11-07')).toBeVisible();
+  expect(screen.getByLabelText('2026-11-07')).toHaveClass(calendarDateBadgeActive);
+  expect(
+    screen.getByLabelText('주간 일정').getElementsByClassName(calendarDateBadgeActive),
+  ).toHaveLength(1);
   expect(screen.queryByRole('button', { name: '출석하기' })).not.toBeInTheDocument();
 });
 
@@ -469,6 +502,10 @@ it('주 경계가 지나도 타이머로 조회하지 않고 화면 복귀 시 �
   await waitFor(() => expect(screen.getByText('이번 주 예정된 세션이 없어요')).toBeVisible());
   expect(calls).toBe(2);
   expect(screen.getByLabelText('2026-11-08')).toHaveAttribute('aria-current', 'date');
+  expect(screen.getByLabelText('2026-11-08')).toHaveClass(calendarDateBadgeActive);
+  expect(
+    screen.getByLabelText('주간 일정').getElementsByClassName(calendarDateBadgeActive),
+  ).toHaveLength(1);
 });
 
 it('프로덕션에서는 목업 플래그가 있어도 시연 상태를 활성화하지 않는다', async () => {
