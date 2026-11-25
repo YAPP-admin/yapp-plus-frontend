@@ -15,7 +15,7 @@ import {
   titleSection,
 } from './login-error-page.css';
 
-const KAKAO_INQUIRY_URL = 'https://pf.kakao.com/_xkxmxjxd';
+const KAKAO_INQUIRY_URL = 'https://pf.kakao.com/_aGxofd';
 
 export function LoginErrorPage() {
   return (

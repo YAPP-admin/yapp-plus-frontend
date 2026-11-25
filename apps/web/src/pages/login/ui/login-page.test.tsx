@@ -126,7 +126,7 @@ describe('LoginPage', () => {
     renderLoginPage();
     await user.click(screen.getByRole('button', { name: '구글로 계속하기' }));
     const reportLink = screen.getByRole('link', { name: '제보하기' });
-    expect(reportLink).toHaveAttribute('href', 'https://pf.kakao.com/_xkxmxjxd');
+    expect(reportLink).toHaveAttribute('href', 'https://pf.kakao.com/_aGxofd');
     expect(reportLink).toHaveAttribute('target', '_blank');
     expect(reportLink).toHaveAttribute('rel', 'noopener noreferrer');
     reportLink.focus();

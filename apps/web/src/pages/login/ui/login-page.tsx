@@ -132,7 +132,7 @@ export function LoginPage({ initialError = false }: { initialError?: boolean }) 
               <DialogAction asChild>
                 <ActionButton asChild variant="brandSolid" size="medium" className={dialogButton}>
                   <a
-                    href="https://pf.kakao.com/_xkxmxjxd"
+                    href="https://pf.kakao.com/_aGxofd"
                     target="_blank"
                     rel="noopener noreferrer"
                     onClick={() => setIsErrorOpen(false)}

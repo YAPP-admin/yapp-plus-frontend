@@ -20,7 +20,7 @@ describe('LoginErrorPage', () => {
     expect(screen.getByText('운영진에게 문의하면 빠르게 해결할 수 있어요')).toBeInTheDocument();
 
     const contactLink = screen.getByRole('link', { name: '운영진에게 문의하기' });
-    expect(contactLink).toHaveAttribute('href', expect.stringContaining('kakao'));
+    expect(contactLink).toHaveAttribute('href', 'https://pf.kakao.com/_aGxofd');
     expect(contactLink).toHaveAttribute('target', '_blank');
   });
 
