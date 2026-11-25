@@ -15,6 +15,7 @@ it('getSession native 반환 로그에 토큰과 사용자 ID를 포함하지 �
 
   traceNativeSessionBridge('returned', {
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: {
       accessToken: 'secret-access-token',
       expiresAt: 9999999999,

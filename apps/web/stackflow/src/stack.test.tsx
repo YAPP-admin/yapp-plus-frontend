@@ -60,6 +60,7 @@ afterEach(async () => {
 
 const signedIn = {
   status: 'SIGNED_IN' as const,
+  reviewTransition: 'NONE' as const,
   session: {
     userId: 1,
     sessionId: 'test-session',

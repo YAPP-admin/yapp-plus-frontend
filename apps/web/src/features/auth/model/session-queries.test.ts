@@ -47,7 +47,11 @@ let client: QueryClient;
 beforeEach(async () => {
   vi.resetAllMocks();
   client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
-  bridge.signInWithNative.mockResolvedValue({ status: 'SIGNED_IN', session: first });
+  bridge.signInWithNative.mockResolvedValue({
+    status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
+    session: first,
+  });
   await new MutationObserver(client, nativeSignInMutationOptions(client)).mutate({
     input: 'google',
   });
@@ -66,10 +70,14 @@ it('홈의 401 갱신을 세션 cache에 반영하고 다음 일정 요청이 �
     }),
   );
   const renewed = { ...first, tokenVersion: 2, accessToken: 'test-renewed' };
-  bridge.refreshNativeSession.mockResolvedValue({ status: 'SIGNED_IN', session: renewed });
+  bridge.refreshNativeSession.mockResolvedValue({
+    status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
+    session: renewed,
+  });
   await client.fetchQuery(find6Options(nativeAuthClientOptions(first, client)));
   const current = client.getQueryData<AuthResult>(nativeSessionQueryKey);
-  expect(current).toEqual({ status: 'SIGNED_IN', session: renewed });
+  expect(current).toEqual({ status: 'SIGNED_IN', reviewTransition: 'NONE', session: renewed });
   if (current?.status !== 'SIGNED_IN') {
     throw new Error('로그인 세션이 없습니다.');
   }
@@ -119,6 +127,7 @@ it.each(['logout', 'withdraw', 'account', 'resume'] as const)(
     } else {
       expected = {
         status: 'SIGNED_IN',
+        reviewTransition: 'NONE',
         session: { ...first, userId: 2, sessionId: 'two', accessToken: 'test-two' },
       };
       if (kind === 'resume') {
@@ -143,7 +152,11 @@ it.each(['logout', 'withdraw', 'account', 'resume'] as const)(
     }
     expect(bridge.getNativeSession).toHaveBeenCalledTimes(kind === 'resume' ? 1 : 0);
     expect(isCancelledError(await oldRequest)).toBe(true);
-    finish({ status: 'SIGNED_IN', session: { ...first, tokenVersion: 2 } });
+    finish({
+      status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
+      session: { ...first, tokenVersion: 2 },
+    });
     await pending;
     expect(client.getQueryData(nativeSessionQueryKey)).toEqual(expected);
     expect(client.getQueryData(home.queryKey)).toBeUndefined();
@@ -184,7 +197,11 @@ it.each(['unavailable', 'other-account'] as const)(
     const response: AuthResult =
       scenario === 'unavailable'
         ? { status: 'UNAVAILABLE', code: 'TIMEOUT', retryable: true }
-        : { status: 'SIGNED_IN', session: { ...first, userId: 2, sessionId: 'other' } };
+        : {
+            status: 'SIGNED_IN',
+            reviewTransition: 'NONE',
+            session: { ...first, userId: 2, sessionId: 'other' },
+          };
     bridge.refreshNativeSession.mockResolvedValue(response);
     const cached = { generationId: 1, generationNumber: 1, sessions: [] };
     client.setQueryData(find7Options().queryKey, cached);
@@ -194,6 +211,7 @@ it.each(['unavailable', 'other-account'] as const)(
     expect(result).toMatchObject({ status: 401 });
     expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
       status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
       session: first,
     });
     expect(client.getQueryData(find7Options().queryKey)).toEqual(cached);
@@ -202,12 +220,20 @@ it.each(['unavailable', 'other-account'] as const)(
 
 it('점수 401 복구 후 내역 조회가 갱신 토큰을 사용하고 이름을 유지한다', async () => {
   const named = { ...first, name: '가상 회원 A' };
-  bridge.signInWithNative.mockResolvedValue({ status: 'SIGNED_IN', session: named });
+  bridge.signInWithNative.mockResolvedValue({
+    status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
+    session: named,
+  });
   await new MutationObserver(client, nativeSignInMutationOptions(client)).mutate({
     input: 'google',
   });
   const renewed = { ...named, tokenVersion: 2, accessToken: 'test-renewed' };
-  bridge.refreshNativeSession.mockResolvedValue({ status: 'SIGNED_IN', session: renewed });
+  bridge.refreshNativeSession.mockResolvedValue({
+    status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
+    session: renewed,
+  });
   const tokens: (string | null)[] = [];
   server.use(
     http.get(`${apiBaseUrl}/api/attendance-scores/me`, ({ request }) => {
@@ -226,6 +252,7 @@ it('점수 401 복구 후 내역 조회가 갱신 토큰을 사용하고 이름�
   ).resolves.toEqual(scoreFixture);
   expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: renewed,
   });
   const result = await client.fetchInfiniteQuery({
@@ -280,6 +307,7 @@ it('계정 전환은 이전 프로필·점수·내역 지연 응답을 새 계�
   await vi.waitUntil(() => started === 3);
   const next: AuthResult = {
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: { ...first, userId: 2, sessionId: 'two', accessToken: 'test-two', name: undefined },
   };
   bridge.signInWithNative.mockResolvedValue(next);
@@ -300,7 +328,11 @@ it('계정 전환은 이전 프로필·점수·내역 지연 응답을 새 계�
 it('출석 내역 최초 요청의 401도 갱신 후 같은 페이지를 재시도한다', async () => {
   const tokens: (string | null)[] = [];
   const renewed = { ...first, tokenVersion: 2, accessToken: 'test-renewed' };
-  bridge.refreshNativeSession.mockResolvedValue({ status: 'SIGNED_IN', session: renewed });
+  bridge.refreshNativeSession.mockResolvedValue({
+    status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
+    session: renewed,
+  });
   server.use(
     http.get(`${apiBaseUrl}/api/attendance-history`, ({ request }) => {
       tokens.push(request.headers.get('Authorization'));
@@ -319,6 +351,7 @@ it('출석 내역 최초 요청의 401도 갱신 후 같은 페이지를 재시�
   expect(tokens).toEqual(['Bearer test-one', 'Bearer test-renewed']);
   expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: renewed,
   });
 });

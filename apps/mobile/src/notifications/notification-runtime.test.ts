@@ -12,7 +12,7 @@ const session = {
   accessToken: 'test',
   expiresAt: 9999999999999,
 };
-const signedIn: AuthResult = { status: 'SIGNED_IN', session };
+const signedIn: AuthResult = { status: 'SIGNED_IN', session, reviewTransition: 'NONE' };
 const message = (id: string): PushTargetInput => ({
   messageId: id,
   data: { source: 'POST', postId: '2', postPushDeliveryId: id },

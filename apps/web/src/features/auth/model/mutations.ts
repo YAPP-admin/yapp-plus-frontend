@@ -26,6 +26,7 @@ import {
 export type NativeAuthCallbacks = Readonly<{
   onSignedIn?: () => void;
   onSignupRequired?: () => void;
+  onReviewRequired?: (result: Extract<AuthResult, { status: 'REVIEW_REQUIRED' }>) => void;
   onSignedOut?: () => void;
   onWithdrawn?: () => void;
   onFailure?: (result: AuthResult | undefined) => void;
@@ -39,6 +40,9 @@ const notifyResult = (callbacks: NativeAuthCallbacks, result: AuthResult | undef
       break;
     case 'SIGNUP_REQUIRED':
       callbacks.onSignupRequired?.();
+      break;
+    case 'REVIEW_REQUIRED':
+      callbacks.onReviewRequired?.(result);
       break;
     case 'SIGNED_OUT':
       callbacks.onSignedOut?.();

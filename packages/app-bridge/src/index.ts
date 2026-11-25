@@ -63,6 +63,7 @@ export type AuthProvider = 'apple' | 'google';
 /** WebView가 분기할 수 있는 native 인증 결과 상태입니다. */
 export const AUTH_STATUS = {
   signedIn: 'SIGNED_IN',
+  reviewRequired: 'REVIEW_REQUIRED',
   signupRequired: 'SIGNUP_REQUIRED',
   signedOut: 'SIGNED_OUT',
   authenticating: 'AUTHENTICATING',
@@ -123,12 +124,27 @@ export type AuthSession = Readonly<{
   tokenVersion: number;
 }>;
 
+/** 직접 인증 성공에서만 전달하며, 대기 계정이 같은 실행 중 승인됐을 때 가입 완료 화면을 한 번 표시합니다. */
+export type ReviewTransition = 'NONE' | 'PENDING_TO_APPROVED';
+
+/** 세션을 저장하지 않는 가입 심사 제한 결과입니다. */
+export type ReviewRequired = Readonly<{
+  status: typeof AUTH_STATUS.reviewRequired;
+  userId: number;
+  reviewStatus: 'PENDING' | 'REJECTED' | null;
+}>;
+
 /**
  * WebView로 전달해도 되는 인증 결과입니다.
  * refresh token과 registration token, 서버의 원문 오류는 native 경계를 넘지 않습니다.
  */
 export type AuthResult =
-  | Readonly<{ status: typeof AUTH_STATUS.signedIn; session: AuthSession }>
+  | Readonly<{
+      status: typeof AUTH_STATUS.signedIn;
+      session: AuthSession;
+      reviewTransition: ReviewTransition;
+    }>
+  | ReviewRequired
   | Readonly<{ status: typeof AUTH_STATUS.signupRequired; expiresAt: number }>
   | Readonly<{ status: typeof AUTH_STATUS.signedOut }>
   | Readonly<{ status: typeof AUTH_STATUS.authenticating }>
@@ -140,6 +156,66 @@ export type AuthResult =
       fieldErrors?: readonly AuthFieldError[];
     }>
   | Readonly<{ status: typeof AUTH_STATUS.withdrawn }>;
+
+const signedInResultSchema = z.object({
+  status: z.literal('SIGNED_IN'),
+  session: z.object({
+    accessToken: z.string().min(1),
+    expiresAt: z.number().finite(),
+    userId: z.number().int(),
+    name: sessionNameSchema,
+    sessionId: z.string().min(1),
+    tokenVersion: z.number().int().positive(),
+  }),
+  reviewTransition: z.enum(['NONE', 'PENDING_TO_APPROVED']),
+});
+
+const otherAuthResultSchemas = [
+  z.object({
+    status: z.literal('REVIEW_REQUIRED'),
+    userId: z.number().int(),
+    reviewStatus: z.enum(['PENDING', 'REJECTED']).nullable(),
+  }),
+  z.object({ status: z.literal('SIGNUP_REQUIRED'), expiresAt: z.number().finite() }),
+  z.object({ status: z.enum(['SIGNED_OUT', 'AUTHENTICATING', 'CANCELLED', 'WITHDRAWN']) }),
+  z.object({
+    status: z.enum(['ERROR', 'UNAVAILABLE']),
+    code: z.enum(AUTH_ERROR_CODE),
+    retryable: z.boolean(),
+    fieldErrors: z
+      .array(
+        z.object({
+          field: z.enum(['name', 'phoneNumber']),
+          code: z.enum(['REQUIRED', 'INVALID_FORMAT', 'TOO_LONG', 'ALREADY_EXISTS']),
+        }),
+      )
+      .optional(),
+  }),
+] as const;
+
+/** 새 native와 웹 내부 계약은 SIGNED_IN의 reviewTransition을 반드시 포함합니다. */
+export const authResultSchema = z.discriminatedUnion('status', [
+  signedInResultSchema,
+  ...otherAuthResultSchemas,
+]) satisfies z.ZodType<AuthResult>;
+
+const authWireResultSchema = z.discriminatedUnion('status', [
+  signedInResultSchema.extend({
+    reviewTransition: signedInResultSchema.shape.reviewTransition.default('NONE'),
+  }),
+  ...otherAuthResultSchemas,
+]);
+
+/** 웹 수신 경계에서 구 앱의 누락 필드만 보정하고 잘못된 응답은 자격 없는 오류로 변환합니다. */
+export function normalizeAuthResult(input: unknown): AuthResult | undefined {
+  if (input === undefined) {
+    return undefined;
+  }
+  const result = authWireResultSchema.safeParse(input);
+  return result.success
+    ? result.data
+    : { status: 'ERROR', code: 'INVALID_RESPONSE', retryable: false };
+}
 
 export const signInInputSchema = z.object({
   provider: z.enum(['apple', 'google']),

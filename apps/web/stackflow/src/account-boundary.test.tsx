@@ -103,6 +103,7 @@ vi.mock('@/features/auth/model/native-auth', () => ({
 const context = { platform: 'ios' as const, reducedMotion: true };
 const session = (userId: number, tokenVersion = 1, name?: string): AuthResult => ({
   status: 'SIGNED_IN',
+  reviewTransition: 'NONE',
   session: {
     userId,
     sessionId: `session-${userId}`,

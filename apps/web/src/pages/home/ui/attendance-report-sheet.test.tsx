@@ -17,6 +17,7 @@ const reportUrl = `${apiBaseUrl}/api/attendance-reports`;
 const weekUrl = `${apiBaseUrl}/api/sessions/current-week`;
 const signedIn = {
   status: 'SIGNED_IN' as const,
+  reviewTransition: 'NONE' as const,
   session: {
     userId: 1,
     sessionId: 'session-a',
