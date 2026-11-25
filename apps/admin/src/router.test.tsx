@@ -1251,11 +1251,17 @@ describe('공지 미저장 이탈', () => {
 });
 
 describe('알림 발송 내역 탐색', () => {
-  it('직접 접근하면 알림 안내와 현재 메뉴를 표시한다', async () => {
+  it('직접 접근하면 알림 목록과 현재 메뉴를 표시한다', async () => {
     await renderRoute('/notifications');
 
-    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
-    expect(screen.getByText('알림 발송 내역을 준비 중입니다.')).toBeVisible();
+    expect(await screen.findByRole('heading', { name: '알림 관리' })).toBeVisible();
+    expect(screen.getByRole('table', { name: '알림 발송 내역' })).toBeVisible();
+    expect(
+      screen.getByText('3차 세미나가 내일 오후 2시에 시작돼요. 장소를 다시 확인해 주세요.'),
+    ).toBeVisible();
+    expect(screen.getByText('예약')).toBeVisible();
+    expect(screen.getAllByText('완료')).toHaveLength(4);
+    expect(screen.getByText('실패')).toBeVisible();
     expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveAttribute(
       'aria-current',
       'page',
@@ -1279,7 +1285,7 @@ describe('알림 발송 내역 탐색', () => {
 
     act(() => router.history.forward());
 
-    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: '알림 관리' })).toBeVisible();
   });
 
   it('키보드로 알림 메뉴에 진입한다', async () => {
@@ -1294,7 +1300,7 @@ describe('알림 발송 내역 탐색', () => {
 
     await user.keyboard('{Enter}');
 
-    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: '알림 관리' })).toBeVisible();
   });
 });
 
