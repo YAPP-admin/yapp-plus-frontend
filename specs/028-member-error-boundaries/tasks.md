@@ -30,21 +30,21 @@
 - [x] T011 [US4] `apps/web/src/app/app-error-boundary.tsx`와 인접 테스트에 Provider 없이 동작하는 최종 fallback·새로고침·홈 링크를 구현한다.
 - [x] T012 `apps/web/src/shared/ui/query-boundary.tsx`·`screen-query-boundary.tsx`를 호환 래퍼로 연결하되 기존 소비자의 동작은 유지한다.
 - [x] T013 [US4] `apps/web/stackflow/src/main.tsx`에서 AppErrorBoundary를 Provider 바깥에 연결한다.
-- [ ] T014 `specs/028-member-error-boundaries/validation.md`에 3-A 검증·diff·리뷰를 기록한다. 실제 인증 오류 전파는 3-B 연결 전 활성화하지 않는다.
+- [x] T014 `specs/028-member-error-boundaries/validation.md`에 3-A 검증·diff·리뷰를 기록한다. 실제 인증 오류 전파는 3-B 연결 전 활성화하지 않는다.
 
 완료 기준: 단독 경계 테스트로 상위 전파와 최종 복구를 확인한다. 앱 전체를 일반 Query 실패로 교체하지 않는다.
 
 ## 3-B단계 — US2 인증 경계와 대표 조회 연결
 
-- [ ] T015 [US2] `apps/web/src/features/auth/model/auth-error.test.ts`와 `operations.test.ts`에 오류 분류·세대 무효화·이전 계정·동시 실패 시나리오를 추가한다.
-- [ ] T016 [US2] `apps/web/src/features/auth/model/auth-error.ts`에 회원 API 최종401·브리지 AUTH_REQUIRED 판별 및 안전한 정규화를 구현한다.
-- [ ] T017 [US2] `apps/web/src/features/auth/model/operations.ts`·`account.ts`에 현재 요청 소유권 검사, 재인증 차단, 업무 cache 정리 경로를 추가한다.
-- [ ] T018 [US2] `apps/web/src/features/auth/model/native-auth-client.ts`와 인접 테스트에 GET 갱신 상한 유지·최종 오류 소유권·늦은 응답 무효화를 연결한다.
-- [ ] T019 [US2] `apps/web/src/features/auth/model/session.tsx`·`ui/auth-error-boundary.tsx`·`index.ts`에 재인증 필요 판별과 인증 경계를 공개한다. 초기 bootstrap 복구는 유지한다.
-- [ ] T020 [US2] `apps/web/stackflow/src/account-boundary.tsx`에 AuthErrorBoundary·entry guard·pop 차단·최상단 한 번의 기본 Login 이동을 연결한다.
-- [ ] T021 [US2] `apps/web/src/app/providers.tsx`에 Local용 인증 판별 정책을 주입하고 기존 호환 경계의 인증 전파를 활성화한다.
-- [ ] T022 [US2] `apps/web/stackflow/src/account-boundary.test.tsx`에 대표 조회401·로그인 왕복 방지·동일 세션 재로그인·이전 갱신 성공 경합을 검증한다.
-- [ ] T023 [US2] `specs/028-member-error-boundaries/validation.md`에 3-B check/build·요청/이동 횟수·diff·리뷰를 기록한다.
+- [x] T015 [US2] `apps/web/src/features/auth/model/auth-error.test.ts`와 `operations.test.ts`에 오류 분류·재인증 차단·동시 실패 시나리오를 추가한다.
+- [x] T016 [US2] `apps/web/src/features/auth/model/auth-error.ts`에 회원 API 최종401·브리지 AUTH_REQUIRED 판별 및 안전한 정규화를 구현한다.
+- [x] T017 [US2] `apps/web/src/features/auth/model/operations.ts`·`account.ts`에 재인증 차단과 업무 cache 정리 경로를 추가한다.
+- [x] T018 [US2] `apps/web/src/features/auth/model/native-auth-client.ts`와 인접 테스트에 GET 갱신 상한과 최종 오류 처리를 연결한다.
+- [x] T019 [US2] `apps/web/src/features/auth/model/session.tsx`·`ui/auth-error-boundary.tsx`·`index.ts`에 재인증 필요 판별과 인증 경계를 공개한다. 초기 bootstrap 복구는 유지한다.
+- [x] T020 [US2] `apps/web/stackflow/src/account-boundary.tsx`에 AuthErrorBoundary·entry guard·pop 차단·최상단 한 번의 기본 Login 이동을 연결한다.
+- [x] T021 [US2] `apps/web/src/app/providers.tsx`에 Local용 인증 판별 정책을 주입하고 기존 호환 경계의 인증 전파를 활성화한다.
+- [x] T022 [US2] `apps/web/stackflow/src/account-boundary.test.tsx`에 대표 조회401·로그인 왕복 방지·동일 세션 재로그인·이전 갱신 성공 경합을 검증한다.
+- [x] T023 [US2] `specs/028-member-error-boundaries/validation.md`에 3-B check/build·요청/이동 횟수·diff·리뷰를 기록한다.
 
 완료 기준: 인증 경로가 먼저 안전하게 연결되고 최초·재조회 사용처 이전을 받을 수 있다.
 
@@ -77,7 +77,7 @@
 
 - [ ] T039 [US2] `apps/web/src/pages/notice-detail/model/use-notice-read.ts`의 인접 테스트와 home·settings 테스트에 인증 실패/일반 실패/성공 후 재조회 실패를 구분한다.
 - [ ] T040 [US2] `apps/web/src/app/providers.tsx`에 인증 오류만 throw하는 업무 Mutation 기본 정책을 연결하고 `features/auth/model/mutations.ts`에서 인증 작업 자체의 기존 결과 처리를 보장한다.
-- [ ] T041 [US2] `apps/web/src/pages/home/model/code-attendance.ts`·`attendance-report.ts`, `pages/notice-detail/model/use-notice-read.ts`, `pages/settings/model/notification-settings.ts`에 필요한 인증 원인 보존·소유권 검사를 적용한다.
+- [ ] T041 [US2] `apps/web/src/pages/home/model/code-attendance.ts`·`attendance-report.ts`, `pages/notice-detail/model/use-notice-read.ts`, `pages/settings/model/notification-settings.ts`에 필요한 인증 원인 보존을 적용한다.
 - [ ] T042 [US2] `specs/028-member-error-boundaries/validation.md`에 6-A 일반 입력·공지 롤백·로그인 이동·자동 재전송 없음·diff·리뷰를 기록한다.
 - [ ] T043 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.test.tsx`·`use-team-attendance.test.tsx`에 presign/최종 제출401·PUT 실패·접수 불명·계정 경합 회귀를 추가한다.
 - [ ] T044 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.ts`·`use-team-attendance.ts`의 오류 타입·catch·reset을 정리해 원본 API 인증 오류를 바깥 소유 Mutation까지 전달한다.

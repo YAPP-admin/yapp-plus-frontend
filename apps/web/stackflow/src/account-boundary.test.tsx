@@ -1,4 +1,5 @@
 import { apiBaseUrl, server } from '@/mocks/server';
+import { createAppQueryClient } from '@/app/providers';
 import { currentWeekFixture } from '@/mocks/session-handlers';
 import { getAppBridge } from '@yapp-plus/app-bridge/web';
 import type { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
@@ -25,6 +26,7 @@ import {
 const bridge = vi.hoisted(() => ({
   result: { status: 'SIGNED_OUT' } as AuthResult,
   getSession: vi.fn<() => Promise<AuthResult | undefined>>(),
+  refreshSession: vi.fn<() => Promise<AuthResult | undefined>>(),
 }));
 const nativeLocation = vi.hoisted(() => ({
   request: vi.fn<() => Promise<LocationResult>>(),
@@ -85,6 +87,7 @@ afterEach(async () => {
   vi.restoreAllMocks();
   vi.unstubAllEnvs();
   bridge.getSession.mockReset();
+  bridge.refreshSession.mockReset();
   nativeLocation.request.mockReset();
   vi.useRealTimers();
 });
@@ -95,6 +98,7 @@ vi.mock('@/features/auth/model/native-auth', () => ({
   withdrawNative: () => Promise.resolve(bridge.result),
   isNativeWebView: () => true,
   getNativeSession: () => bridge.getSession(),
+  refreshNativeSession: () => bridge.refreshSession(),
 }));
 const context = { platform: 'ios' as const, reducedMotion: true };
 const session = (userId: number, tokenVersion = 1, name?: string): AuthResult => ({
@@ -240,6 +244,27 @@ it('로그아웃 상태로 보호 화면에 직접 접근하면 내용을 표시
   expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
   expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
   await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+});
+
+it('최종 조회 401은 보호 내용을 숨기고 로그인으로 한 번 이동한다', async () => {
+  const client = createAppQueryClient();
+  bridge.getSession.mockResolvedValue(session(1));
+  bridge.refreshSession.mockResolvedValue(session(1, 2));
+  let calls = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/generations/current/sessions`, () => {
+      calls += 1;
+      return HttpResponse.json({ status: 401 }, { status: 401 });
+    }),
+  );
+  window.history.replaceState(null, '', '/schedule');
+  mount(client);
+
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+  await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+  expect(screen.queryByRole('list', { name: '세션 일정 목록' })).not.toBeInTheDocument();
+  expect(calls).toBe(2);
+  expect(bridge.refreshSession).toHaveBeenCalledTimes(1);
 });
 
 it('개발용 회식 목록은 WebView 세션을 복구할 수 없어도 표시한다', async () => {

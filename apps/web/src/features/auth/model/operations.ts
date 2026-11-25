@@ -1,13 +1,18 @@
 /** QueryClient 수명 안에서 인증 결과와 화면 callback의 유효성을 함께 관리합니다. */
 import { CancelledError, type QueryClient } from '@tanstack/react-query';
-import type { AuthResult } from '@yapp-plus/app-bridge';
+import { AUTH_ERROR_CODE, type AuthResult } from '@yapp-plus/app-bridge';
 import { applyAccountBoundary } from './account';
+import { isAuthenticationError } from './auth-error';
 
 export const nativeSessionQueryKey = ['native-auth', 'session'] as const;
 export type AuthOperation = { generation: number; result?: AuthResult };
 export type AuthOperationKind = 'authenticate' | 'signup' | 'logout' | 'withdraw';
 
-type OperationState = { generation: number; authenticating?: AuthOperation };
+type OperationState = {
+  generation: number;
+  authenticating?: AuthOperation;
+  refreshedAfter401: boolean;
+};
 
 export class AuthBusyError extends Error {
   constructor(public readonly generation: number) {
@@ -21,7 +26,7 @@ const states = new WeakMap<QueryClient, OperationState>();
 const stateFor = (client: QueryClient): OperationState => {
   let state = states.get(client);
   if (!state) {
-    state = { generation: 0 };
+    state = { generation: 0, refreshedAfter401: false };
     states.set(client, state);
   }
   return state;
@@ -73,6 +78,44 @@ export const isCurrentAuthOperation = (
   result?: AuthResult,
 ): boolean =>
   stateFor(client).generation === operation.generation && !isOlderSession(client, result);
+
+/** 최종 업무 인증 실패를 보호 화면 차단 상태로 기록합니다. */
+export const markAuthRequired = (client: QueryClient): boolean => {
+  const current = client.getQueryData<AuthResult>(nativeSessionQueryKey);
+  if (current?.status !== 'SIGNED_IN') {
+    return false;
+  }
+
+  // native 자격을 지우지 않고 업무 cache만 계정 경계처럼 정리합니다.
+  applyAccountBoundary(client, { status: 'SIGNED_OUT' });
+  client.setQueryData(nativeSessionQueryKey, {
+    status: 'ERROR',
+    code: AUTH_ERROR_CODE.authRequired,
+    retryable: false,
+  } satisfies AuthResult);
+  return true;
+};
+
+/** 갱신 성공 뒤 같은 조회가 다시 401을 반환할 때만 최종 인증 실패로 처리합니다. */
+export const rememberRefreshedSession = (client: QueryClient): void => {
+  stateFor(client).refreshedAfter401 = true;
+};
+
+/** 새 401의 갱신을 시작하면 이전 조회의 성공 기록은 더 이상 사용할 수 없습니다. */
+export const clearRefreshedSession = (client: QueryClient): void => {
+  stateFor(client).refreshedAfter401 = false;
+};
+
+/** 생성 Query의 오류 훅은 직전 갱신 뒤의 최종 401만 보호 화면 차단으로 바꿉니다. */
+export const handleQueryAuthenticationError = (client: QueryClient, error: unknown): boolean => {
+  if (!isAuthenticationError(error)) {
+    return false;
+  }
+  const state = stateFor(client);
+  const refreshed = state.refreshedAfter401;
+  state.refreshedAfter401 = false;
+  return refreshed ? markAuthRequired(client) : false;
+};
 
 /** 유효한 결과만 cache에 반영합니다. 인증 확정 시 작업 도중 시작된 조회도 무효화합니다. */
 export const applyAuthResult = (

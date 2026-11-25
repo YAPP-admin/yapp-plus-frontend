@@ -6,6 +6,7 @@ import { createContext, useContext, useState, type ReactNode } from 'react';
 import { getNativeSession, isNativeWebView } from './native-auth';
 import { nativeAuthClientOptions } from './native-auth-client';
 import { nativeSessionQueryKey, readAuthSession } from './operations';
+import { isAuthenticationRequiredResult } from './auth-error';
 
 export { nativeSessionQueryKey } from './operations';
 
@@ -14,6 +15,7 @@ export type NativeAuthSessionPhase =
   | 'LOADING'
   | 'SIGNED_OUT'
   | 'SIGNED_IN'
+  | 'AUTH_REQUIRED'
   | 'UNAVAILABLE';
 
 type NativeAuthSessionContextValue = Readonly<{
@@ -78,6 +80,10 @@ const resultToState = (
     case 'WITHDRAWN':
       return { phase: 'SIGNED_OUT' };
     case 'ERROR':
+      if (isAuthenticationRequiredResult(result)) {
+        return { phase: 'AUTH_REQUIRED' };
+      }
+      return { phase: 'UNAVAILABLE' };
     case 'UNAVAILABLE':
       return { phase: 'UNAVAILABLE' };
     case 'AUTHENTICATING':
