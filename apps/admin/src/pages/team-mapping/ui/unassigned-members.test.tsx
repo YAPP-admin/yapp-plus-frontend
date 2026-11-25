@@ -1,7 +1,7 @@
 /** 미배정 회원의 개별·일괄 예정과 체크 상태 분리를 검증한다. */
 import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { expect, it } from 'vitest';
+import { expect, it, vi } from 'vitest';
 import { teamMappingBeforeFixture, teamMappingDraftFixture } from '~/features/team-management';
 import { UnassignedMembers } from './unassigned-members';
 
@@ -50,6 +50,26 @@ it('체크된 회원의 기존 예정 대상을 일괄 대상 팀으로 덮어�
   await user.click(screen.getByRole('checkbox', { name: '이도윤 선택' }));
   expect(screen.getByText('1명 선택 · 2명 배정 예정')).toBeVisible();
   expect(screen.getByRole('button', { name: '이도윤 배정 예정 취소' })).toBeVisible();
+});
+
+it('배정하기 버튼으로 예정된 회원 배정을 저장하고 변경사항을 비운다', async () => {
+  const user = userEvent.setup();
+  const onApplyAssignments = vi.fn<() => Promise<void>>().mockResolvedValue(undefined);
+  render(
+    <UnassignedMembers
+      snapshot={teamMappingDraftFixture}
+      onApplyAssignments={onApplyAssignments}
+    />,
+  );
+
+  await user.click(screen.getByRole('combobox', { name: '이도윤 대상 팀' }));
+  await user.click(await findOpenOption('Orbit으로 배정'));
+  await user.click(screen.getByRole('button', { name: '배정하기' }));
+
+  expect(onApplyAssignments).toHaveBeenCalledWith([
+    { activityId: 'member-43', destinationTeamId: 'team-01' },
+  ]);
+  expect(screen.getByText('0명 선택 · 0명 배정 예정')).toBeVisible();
 });
 
 it('배정할 팀이 없으면 일괄 작업을 안내하지 않는다', () => {
