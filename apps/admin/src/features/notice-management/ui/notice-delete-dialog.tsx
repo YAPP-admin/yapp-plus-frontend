@@ -36,9 +36,7 @@ export function NoticeDeleteDialog({
           onError: (error) => {
             if (error instanceof ApiError && error.status === 404) {
               snackbar.create({
-                render: () => (
-                  <Snackbar variant="critical" message="존재하지 않는 공지입니다." />
-                ),
+                render: () => <Snackbar variant="critical" message="존재하지 않는 공지입니다." />,
               });
               setOpen(false);
               void navigate({ to: '/notices', search: {} });

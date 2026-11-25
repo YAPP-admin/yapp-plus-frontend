@@ -12,7 +12,7 @@ export const Route = createFileRoute('/login')({
 export function LoginRoute() {
   const router = useRouter({ warn: false });
   const redirect = router
-    ? new URLSearchParams(router.state.location.searchStr).get('redirect') ?? undefined
+    ? (new URLSearchParams(router.state.location.searchStr).get('redirect') ?? undefined)
     : undefined;
 
   return (

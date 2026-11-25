@@ -41,9 +41,7 @@ export function NoticeList({
       </div>
 
       {notices.length === 0 ? (
-        <p className={styles.placeholder}>
-          {emptyMessage}
-        </p>
+        <p className={styles.placeholder}>{emptyMessage}</p>
       ) : (
         <ul className={styles.list} aria-label="공지 목록">
           {notices.map((notice) => (

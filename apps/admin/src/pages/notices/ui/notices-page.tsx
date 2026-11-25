@@ -60,7 +60,10 @@ export function NoticesPage({
 }
 
 /** 병렬 조회가 끝난 목록과 명단으로 집계와 카드를 표시한다. */
-function NoticesData({ category, generationId }: Pick<Props, 'category'> & { generationId: number }) {
+function NoticesData({
+  category,
+  generationId,
+}: Pick<Props, 'category'> & { generationId: number }) {
   const noticeList = useAdminNoticeListQuery(generationId, category);
 
   return (

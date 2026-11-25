@@ -3,14 +3,17 @@ import { ActionButton, Badge } from '@yapp-plus/ui';
 import type { AdminPostListItemResponse } from '@yapp-plus/api/generated';
 import { Ellipsis } from 'lucide-react';
 import { Link } from '@tanstack/react-router';
-import {
-  NoticeDeleteDialog,
-} from '~/features/notice-management';
+import { NoticeDeleteDialog } from '~/features/notice-management';
 import { noticeCategoryLabels } from '../model/notice-search';
 import type { NoticeCategory } from '../model/notice-search';
 import * as styles from './notice-card.css';
 
-const audienceLabels = { ALL_USERS: '전체 사용자', PLAYER: '활동회원', OB: '정회원', COMPLETED_MEMBER: '수료회원' } as const;
+const audienceLabels = {
+  ALL_USERS: '전체 사용자',
+  PLAYER: '활동회원',
+  OB: '정회원',
+  COMPLETED_MEMBER: '수료회원',
+} as const;
 
 const dateFormat = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
@@ -64,7 +67,15 @@ export function NoticeCard({
 }
 
 /** 종류·마감·제목·게시일·대상을 묶어 공지의 기본 정보를 표시한다. */
-function NoticeIdentity({ notice, category, now }: { notice: AdminPostListItemResponse; category: NoticeCategory; now: Date }) {
+function NoticeIdentity({
+  notice,
+  category,
+  now,
+}: {
+  notice: AdminPostListItemResponse;
+  category: NoticeCategory;
+  now: Date;
+}) {
   return (
     <div className={styles.identity}>
       <div className={styles.heading}>
@@ -122,7 +133,13 @@ function NoticeReadSummary({ notice }: { notice: AdminPostListItemResponse }) {
 }
 
 /** 네이티브 펼침 동작으로 수정·삭제 액션을 제공한다. */
-function NoticeActions({ notice, generationId }: { notice: AdminPostListItemResponse; generationId: number }) {
+function NoticeActions({
+  notice,
+  generationId,
+}: {
+  notice: AdminPostListItemResponse;
+  generationId: number;
+}) {
   return (
     <details className={styles.menu}>
       <ActionButton asChild variant="neutralWeak" size="small" className={styles.menuButton}>
@@ -132,7 +149,11 @@ function NoticeActions({ notice, generationId }: { notice: AdminPostListItemResp
       </ActionButton>
       <div className={styles.menuContent}>
         <ActionButton asChild variant="ghost" size="small">
-          <Link to="/notices/$noticeId/edit" params={{ noticeId: String(notice.postId) }} search={{}}>
+          <Link
+            to="/notices/$noticeId/edit"
+            params={{ noticeId: String(notice.postId) }}
+            search={{}}
+          >
             수정
           </Link>
         </ActionButton>

@@ -27,10 +27,7 @@ export function NoticeQueryBoundary({
 }
 
 /** Query 오류와 렌더링 오류 경계를 함께 초기화하여 조회를 다시 시작한다. */
-function NoticeQueryError({ error, reset }: {
-  error: unknown;
-  reset: () => void;
-}) {
+function NoticeQueryError({ error, reset }: { error: unknown; reset: () => void }) {
   const query = useQueryErrorResetBoundary();
   const navigate = useNavigate();
 
