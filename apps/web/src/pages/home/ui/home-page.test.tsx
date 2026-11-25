@@ -505,20 +505,62 @@ it('주간 재조회 실패 뒤 수동 재시도로 카드를 복구한다', asy
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
 
-it.each(['NOT_OPEN', 'NOT_ELIGIBLE'])(
-  '서버 상태 %s에서는 출석을 시작할 수 없다',
-  async (attendanceStatus) => {
-    server.use(
-      http.get(url, () =>
-        HttpResponse.json({ ...response, session: { ...response.session, attendanceStatus } }),
-      ),
-    );
-    renderHome({}, true);
-    await screen.findByRole('heading', { name: /설계 리뷰/ });
-    expect(screen.queryByRole('button', { name: '출석하기' })).not.toBeInTheDocument();
-    expect(mockPush).not.toHaveBeenCalled();
-  },
-);
+it.each([
+  ['REGULAR', '2026-01-02T14:59:59Z', '00:00', '3일 00:00에 세션이 시작돼요'],
+  ['REGULAR', '2026-01-02T15:00:00Z', '13:30:45', '13:10에 출석할 수 있어요'],
+  ['TEAM', '2026-01-02T14:59:59Z', '00:00:00', '3일 00:00에 세션이 시작돼요'],
+  ['TEAM', '2026-01-02T15:00:00Z', '09:05', '08:45에 출석할 수 있어요'],
+  ['REGULAR', '2026-01-02T15:00:00Z', '00:10', '2일 23:50에 출석할 수 있어요'],
+  ['REGULAR', '2026-01-03T09:00:00Z', '14:00', '출석이 마감됐어요'],
+  ['TEAM', '2026-01-03T09:00:00Z', '14:00', '출석이 마감됐어요'],
+])('%s 출석 전에는 한국 날짜(%s)에 맞는 안내를 표시한다', async (type, now, startTime, label) => {
+  vi.setSystemTime(new Date(now));
+  const photoRequest = vi.fn<() => void>();
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({
+        ...response,
+        weekStartDate: '2025-12-28',
+        weekEndDate: '2026-01-03',
+        session: {
+          ...teamResponse.session,
+          type,
+          date: '2026-01-03',
+          startTime,
+          endTime: '18:00:00',
+          attendanceStatus: 'NOT_OPEN',
+        },
+      }),
+    ),
+    http.get(teamPhotoUrl, () => {
+      photoRequest();
+      return HttpResponse.json(submittedPhoto('PENDING'));
+    }),
+  );
+  const user = userEvent.setup();
+  renderHome({}, true);
+
+  const button = await screen.findByRole('button', {
+    name: label,
+  });
+  expect(button).toBeDisabled();
+  expect(screen.queryByText(/시작$/)).not.toBeInTheDocument();
+  await user.click(button);
+  expect(mockPush).not.toHaveBeenCalled();
+  expect(photoRequest).not.toHaveBeenCalled();
+});
+
+it.each(['NOT_ELIGIBLE'])('서버 상태 %s에서는 출석을 시작할 수 없다', async (attendanceStatus) => {
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({ ...response, session: { ...response.session, attendanceStatus } }),
+    ),
+  );
+  renderHome({}, true);
+  await screen.findByRole('heading', { name: /설계 리뷰/ });
+  expect(screen.queryByRole('button', { name: '출석하기' })).not.toBeInTheDocument();
+  expect(mockPush).not.toHaveBeenCalled();
+});
 
 it('기본 목업은 정규 세션의 코드 출석으로 진입하고 팀 사진 진입점을 숨긴다', async () => {
   server.use(http.get(url, () => HttpResponse.json(currentWeekFixture)));
@@ -550,7 +592,6 @@ it('AVAILABLE 팀 세션은 사진 조회 없이 팀 사진 안내로 이동한�
 
 it.each([
   ['CHECKED_IN', '출석했어요!'],
-  ['NOT_OPEN', '아직 출석할 수 없어요'],
   ['NOT_ELIGIBLE', '출석 대상이 아니에요'],
 ])('TEAM %s는 사진 조회 없이 출석 상태를 표시한다', async (attendanceStatus, label) => {
   const photoRequest = vi.fn<() => void>();

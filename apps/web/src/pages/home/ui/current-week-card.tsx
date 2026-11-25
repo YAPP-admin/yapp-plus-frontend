@@ -45,13 +45,15 @@ import {
   teamPhotoTitle,
 } from './home-page.css';
 
-const attendanceStatusLabel = {
+const ATTENDANCE_STATUS_LABEL = {
   AVAILABLE: '출석하기',
   NOT_ELIGIBLE: '출석 대상이 아니에요',
-  NOT_OPEN: '아직 출석할 수 없어요',
   CHECKED_IN: '출석했어요!',
   PENDING_APPROVAL: '인증 사진 검토 중',
-} satisfies Record<CurrentWeekSessionDetailResponse['attendanceStatus'], string>;
+} satisfies Record<
+  Exclude<CurrentWeekSessionDetailResponse['attendanceStatus'], 'NOT_OPEN'>,
+  string
+>;
 
 const teamPhotoStatusLabel = {
   PENDING: '운영진이 확인하고 있어요',
@@ -143,7 +145,9 @@ function CurrentWeekContent() {
         <h2 className={sessionTitle}>
           {session ? `이번 주는 ${session.name} 세션이에요` : '이번 주 예정된 세션이 없어요'}
         </h2>
-        {session ? <p>{formatKoreanTime(session.startTime)} 시작</p> : null}
+        {session && session.attendanceStatus !== 'NOT_OPEN' ? (
+          <p>{formatKoreanTime(session.startTime)} 시작</p>
+        ) : null}
       </div>
       <div className={calendarWeek} aria-label="주간 일정">
         {days.map(({ date, label }) => (
@@ -160,14 +164,45 @@ function CurrentWeekContent() {
           </div>
         ))}
       </div>
-      {session ? <SessionAttendanceAction session={session} /> : null}
+      {session ? <SessionAttendanceAction session={session} now={dataUpdatedAt} /> : null}
     </>
   );
 }
 
-function SessionAttendanceAction({ session }: { session: CurrentWeekSessionDetailResponse }) {
+function getAttendanceLabel(session: CurrentWeekSessionDetailResponse, now: number) {
+  if (session.attendanceStatus !== 'NOT_OPEN') {
+    return ATTENDANCE_STATUS_LABEL[session.attendanceStatus];
+  }
+  if (now >= koreanTimestamp(session.date, session.endTime)) {
+    return '출석이 마감됐어요';
+  }
+  const today = koreanDateString(now);
+  if (session.date !== today) {
+    return `${Number(session.date.slice(8))}일 ${session.startTime.slice(0, 5)}에 세션이 시작돼요`;
+  }
+  // 서버의 20분 전 개방 정책을 문구에만 반영하며, 버튼 활성 여부는 attendanceStatus를 따른다.
+  const opensAt = koreanTimestamp(session.date, session.startTime) - 20 * 60_000;
+  const openingDate = koreanDateString(opensAt);
+  const time = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Asia/Seoul',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).format(opensAt);
+  const datePrefix = openingDate === today ? '' : `${Number(openingDate.slice(8))}일 `;
+  return `${datePrefix}${time}에 출석할 수 있어요`;
+}
+
+function SessionAttendanceAction({
+  session,
+  now,
+}: {
+  session: CurrentWeekSessionDetailResponse;
+  now: number;
+}) {
   const { isNative } = useNativeAuthSession();
   const flow = useFlow();
+  const attendanceLabel = getAttendanceLabel(session, now);
   const canOpenTeamPhoto =
     !staticContentEnabled() &&
     (isNative || (import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true'));
@@ -180,7 +215,7 @@ function SessionAttendanceAction({ session }: { session: CurrentWeekSessionDetai
         disabled={disabled}
         onClick={() => flow.push('AttendanceCode', {})}
       >
-        {attendanceStatusLabel[session.attendanceStatus]}
+        {attendanceLabel}
       </ActionButton>
     );
   }
@@ -200,11 +235,7 @@ function SessionAttendanceAction({ session }: { session: CurrentWeekSessionDetai
     );
   }
   if (session.attendanceStatus !== 'PENDING_APPROVAL') {
-    return (
-      <TeamAttendanceAction disabled>
-        {attendanceStatusLabel[session.attendanceStatus]}
-      </TeamAttendanceAction>
-    );
+    return <TeamAttendanceAction disabled>{attendanceLabel}</TeamAttendanceAction>;
   }
 
   return (
