@@ -170,6 +170,24 @@ describe('TabsLayout', () => {
     expect(navigation.queryByRole('link', { current: 'page' })).not.toBeInTheDocument();
   });
 
+  it('알림 화면이 자체 헤더를 소유하므로 공통 헤더를 추가하지 않는다', () => {
+    render(
+      <TabsLayout activeTab={null}>
+        <div>
+          <header>
+            <h1>알림</h1>
+          </header>
+          <main>알림 목록</main>
+        </div>
+      </TabsLayout>,
+    );
+
+    expect(screen.getAllByRole('banner')).toHaveLength(1);
+    expect(screen.getByRole('banner')).toContainElement(
+      screen.getByRole('heading', { name: '알림' }),
+    );
+  });
+
   it('방문한 패널의 DOM·입력·스크롤을 숨김이나 재마운트 없이 보존한다', async () => {
     const start = vi.fn<() => void>();
     const stop = vi.fn<() => void>();

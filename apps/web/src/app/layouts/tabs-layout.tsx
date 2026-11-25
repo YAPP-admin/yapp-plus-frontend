@@ -8,7 +8,7 @@ import { isTabName, type TabName } from '../navigation/tab';
 import { BottomNavigation } from './bottom-navigation';
 import { PageShell } from './page-shell';
 import { TabsHeader } from './tabs-header';
-import { communityTabShell, panel, tabShell } from './tabs-layout.css';
+import { headerlessShell, panel, tabShell } from './tabs-layout.css';
 
 type TabsLayoutProps = {
   children: ReactNode;
@@ -19,19 +19,14 @@ type TabsLayoutProps = {
 
 /** 선택은 호출자가 확정하며, null인 알림 화면은 탭 패널 없이 기존 메뉴를 표시합니다. */
 export function TabsLayout({ children, activeTab, onTabChange }: TabsLayoutProps) {
-  let shellClassName: string | undefined;
-  if (activeTab === 'community') {
-    shellClassName = communityTabShell;
-  } else if (activeTab !== null) {
-    shellClassName = tabShell;
-  }
+  const hasOwnHeader = activeTab === 'community' || activeTab === null;
 
   const shell = (
     <PageShell
-      className={shellClassName}
+      className={hasOwnHeader ? headerlessShell : tabShell}
       navigation={<BottomNavigation activeTab={activeTab} />}
       borderlessHeader
-      header={activeTab === 'community' ? null : <TabsHeader activeTab={activeTab} />}
+      header={hasOwnHeader ? null : <TabsHeader activeTab={activeTab} />}
     >
       {children}
     </PageShell>

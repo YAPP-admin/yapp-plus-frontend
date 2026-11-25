@@ -1,16 +1,15 @@
+/** 셸의 가용 높이 안에서 알림 헤더를 유지하고 목록 본문만 스크롤합니다. */
 import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
 export const container = style({
-  minHeight: '100%',
+  minHeight: 0,
   backgroundColor: vars.$color.bg.layerDefault,
 });
 
 export const header = style({
-  position: 'sticky',
-  top: 0,
-  zIndex: 10,
-  height: '54px',
+  minHeight: '54px',
+  flexShrink: 0,
   padding: `0 ${vars.$dimension.x4}`,
   backgroundColor: vars.$color.bg.layerDefault,
   width: '100%',
@@ -34,6 +33,9 @@ export const headerSpacer = style({
 
 export const body = style({
   flex: 1,
+  minHeight: 0,
+  overflowY: 'auto',
+  overscrollBehaviorY: 'contain',
   padding: 0,
   width: '100%',
   maxWidth: '480px',
