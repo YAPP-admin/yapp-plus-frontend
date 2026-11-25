@@ -1102,7 +1102,7 @@ describe('공지 상세 탐색', () => {
 describe('공지 작성·수정 진입점', () => {
   it.each([
     ['/notices/new', '공지 작성'],
-    ['/notices/101/edit', '공지 수정'],
+    ['/notices/demo-session/edit', '공지 수정'],
   ])('%s 직접 접근은 독립된 %s 화면을 표시한다', async (path, heading) => {
     const router = await renderRoute(path);
 
@@ -1134,17 +1134,17 @@ describe('공지 작성·수정 진입점', () => {
     act(() => router.history.forward());
     await user.click(await screen.findByRole('button', { name: '취소' }));
 
-    expect(await screen.findByRole('radio', { name: '제출' })).toBeChecked();
-    expect(router.state.location.href).toBe('/notices?category=submission');
+    expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
+    expect(router.state.location.href).toBe('/notices');
   });
 
   it('수정 진입은 ID를 유지하고 취소하면 상세로 이동한다', async () => {
     const user = userEvent.setup();
-    const router = await renderRoute('/notices/101');
+    const router = await renderRoute('/notices/demo-session');
 
     await user.click(await screen.findByRole('link', { name: '공지 수정' }));
 
-    await waitFor(() => expect(router.state.location.href).toBe('/notices/101/edit'));
+    await waitFor(() => expect(router.state.location.href).toBe('/notices/demo-session/edit'));
 
     act(() => router.history.back());
 
@@ -1154,12 +1154,12 @@ describe('공지 작성·수정 진입점', () => {
     await user.click(await screen.findByRole('button', { name: '취소' }));
 
     expect(await screen.findByRole('table')).toBeVisible();
-    expect(router.state.location.href).toBe('/notices/101');
+    expect(router.state.location.href).toBe('/notices/demo-session');
   });
 
   it.each([
     ['/notices', '공지 작성', '취소', '공지 목록'],
-    ['/notices/101', '공지 수정', '취소', '공지 상세'],
+    ['/notices/demo-session', '공지 수정', '취소', '공지 상세'],
   ])('%s에서 키보드로 진입하고 복귀한다', async (path, entryName, returnName, heading) => {
     const user = userEvent.setup();
     await renderRoute(path);
@@ -1225,18 +1225,45 @@ describe('공지 미저장 이탈', () => {
     }
   });
 
-  it('수정 화면의 취소는 SDK 상세로 돌아가고 저장된 본문·첨부를 유지한다', async () => {
+  it('본문·첨부만 바꿔도 확인하고 원상 복구하면 바로 이동하며 저장 원본은 보존한다', async () => {
     const user = userEvent.setup();
-    const router = await renderRoute('/notices/101/edit');
+    const router = await renderRoute('/notices/demo-session/edit');
+    const title = await screen.findByRole('textbox', { name: '제목' });
+    await user.type(title, ' 수정');
+    await user.clear(title);
+    await user.type(title, '  예시 세션 안내  ');
+    const body = await screen.findByRole('textbox', { name: '공지 내용' });
+    const paragraph = within(body).getAllByRole('paragraph')[0];
+    if (!paragraph) {
+      throw new Error('본문 문단이 없습니다.');
+    }
+    const originalBody = paragraph.textContent;
+    paragraph.textContent = '본문만 변경';
+    await waitFor(() => expect(body).toHaveTextContent('본문만 변경'));
 
-    await screen.findByRole('textbox', { name: '제목' });
     await user.click(screen.getByRole('button', { name: '취소' }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: '계속 작성' }),
+    );
+    await waitFor(() => expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument());
+    expect(body).toHaveTextContent('본문만 변경');
+    paragraph.textContent = originalBody;
+    await waitFor(() => expect(body).toHaveTextContent(originalBody ?? ''));
 
+    await user.click(screen.getByRole('button', { name: '취소' }));
     expect(await screen.findByRole('heading', { name: '공지 상세' })).toBeVisible();
-    expect(router.state.location.pathname).toBe('/notices/101');
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument();
+
+    await user.click(await screen.findByRole('link', { name: '공지 수정' }));
+    await user.click(await screen.findByRole('button', { name: '세션 안내.PNG 제거' }));
+    await user.click(screen.getByRole('button', { name: '취소' }));
+    await user.click(
+      within(await screen.findByRole('alertdialog')).getByRole('button', { name: '나가기' }),
+    );
+    await waitFor(() => expect(router.state.location.pathname).toBe('/notices/demo-session'));
     expect(await screen.findByRole('img', { name: '세션 안내.PNG' })).toBeVisible();
     expect(screen.getByRole('document', { name: '공지 본문' })).toHaveTextContent(
-      '화면 검증용 예시 공지입니다.',
+      originalBody ?? '',
     );
   });
 });
