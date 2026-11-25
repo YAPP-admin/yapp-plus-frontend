@@ -1,27 +1,34 @@
 /** 작성·수정 화면의 탐색과 최초 데이터 조회를 구성한다. */
 import { useState } from 'react';
-import { useNavigate } from '@tanstack/react-router';
+import { useRouter } from '@tanstack/react-router';
 import { Skeleton, VStack } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
-import { NoticeQueryBoundary, useNoticeQuery } from '~/features/notice-management';
+import { NoticeQueryBoundary, useAdminNoticeQuery } from '~/features/notice-management';
+import { useAdminGeneration } from '~/features/admin-generation';
 import { NoticeEditorForm } from './notice-editor-form';
 import * as styles from './notice-editor-page.css';
 
 /** 새 공지는 공통 폼의 기본값으로 시작한다. */
 export function NoticeCreatePage() {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <main className={styles.page}>
       <h1 className={styles.title}>공지 작성</h1>
 
-      {import.meta.env.DEV ? <NoticeEditorForm /> : <p>공지 작성 기능을 준비 중입니다.</p>}
+      <NoticeEditorForm />
 
       <ActionButton
         type="button"
         variant="neutralWeak"
         className={styles.returnLink}
-        onClick={() => void navigate({ to: '/notices', search: {} })}
+        onClick={() => {
+          if (router.history.canGoBack()) {
+            router.history.back();
+          } else {
+            void router.navigate({ to: '/notices', search: {} });
+          }
+        }}
       >
         취소
       </ActionButton>
@@ -31,7 +38,7 @@ export function NoticeCreatePage() {
 
 /** 공지 ID가 바뀌면 조회 상태와 입력을 함께 초기화한다. */
 export function NoticeEditPage({ noticeId }: { noticeId: string }) {
-  const navigate = useNavigate();
+  const router = useRouter();
 
   return (
     <main className={styles.page}>
@@ -45,13 +52,17 @@ export function NoticeEditPage({ noticeId }: { noticeId: string }) {
         type="button"
         variant="neutralWeak"
         className={styles.returnLink}
-        onClick={() =>
-          void navigate({
-            to: '/notices/$noticeId',
-            params: { noticeId },
-            search: {},
-          })
-        }
+        onClick={() => {
+          if (router.history.canGoBack()) {
+            router.history.back();
+          } else {
+            void router.navigate({
+              to: '/notices/$noticeId',
+              params: { noticeId },
+              search: {},
+            });
+          }
+        }}
       >
         취소
       </ActionButton>
@@ -61,7 +72,8 @@ export function NoticeEditPage({ noticeId }: { noticeId: string }) {
 
 /** 최초 성공한 조회만 편집 시작값으로 채택하여 재조회가 입력을 덮어쓰지 않게 한다. */
 function NoticeEditResult({ noticeId }: { noticeId: string }) {
-  const { data } = useNoticeQuery(noticeId);
+  const { currentGeneration } = useAdminGeneration();
+  const { data } = useAdminNoticeQuery(currentGeneration.generationId, noticeId);
   const [initialNotice] = useState(() => data);
 
   return initialNotice ? (
