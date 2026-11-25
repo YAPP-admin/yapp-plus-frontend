@@ -1,15 +1,17 @@
 import { ActionButton } from '@yapp-plus/ui';
 import { Bell, MoreHorizontal, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
+import { useInfiniteQuery } from '@tanstack/react-query';
 import { PageHeader } from '~/shared/ui/page-header';
 import {
   formatNotificationDate,
   formatNotificationTarget,
+  getNotificationErrorMessage,
   getNotificationStatus,
   isVisibleNotificationStatus,
-  notificationPreviewItems,
   type NotificationHistoryItem,
 } from '../model/notifications';
+import { notificationHistoryQueryOptions } from '../model/notification-queries';
 import * as styles from './notifications-page.css';
 
 const historyColumns = ['내용', '대상', '발송 시각', '상태'] as const;
@@ -37,7 +39,25 @@ function getStatusBadgeClass(tone: ReturnType<typeof getNotificationStatus>['ton
 }
 
 export function NotificationsPage() {
-  return <NotificationsView notifications={notificationPreviewItems} />;
+  const historyQuery = useInfiniteQuery(notificationHistoryQueryOptions());
+  const notifications =
+    historyQuery.data?.pages
+      .flatMap((page) => page.items)
+      .filter((notification) => isVisibleNotificationStatus(notification.status)) ?? [];
+
+  return (
+    <NotificationsView
+      notifications={notifications}
+      isLoading={historyQuery.isPending}
+      errorMessage={
+        historyQuery.error ? getNotificationErrorMessage(historyQuery.error) : undefined
+      }
+      onRetry={() => void historyQuery.refetch()}
+      hasNextPage={historyQuery.hasNextPage}
+      isFetchingNextPage={historyQuery.isFetchingNextPage}
+      onLoadMore={() => void historyQuery.fetchNextPage()}
+    />
+  );
 }
 
 export function NotificationsView({

@@ -1263,11 +1263,11 @@ describe('알림 발송 내역 탐색', () => {
     expect(await screen.findByRole('heading', { name: '알림 관리' })).toBeVisible();
     expect(screen.getByRole('table', { name: '알림 발송 내역' })).toBeVisible();
     expect(
-      screen.getByText('3차 세미나가 내일 오후 2시에 시작돼요. 장소를 다시 확인해 주세요.'),
+      await screen.findByText('3차 세미나가 내일 오후 2시에 시작돼요. 장소를 다시 확인해 주세요.'),
     ).toBeVisible();
     expect(screen.getByText('예약')).toBeVisible();
-    expect(screen.getAllByText('완료')).toHaveLength(4);
-    expect(screen.getByText('실패')).toBeVisible();
+    expect(screen.getAllByText('완료')).toHaveLength(3);
+    expect(screen.queryByText('실패')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveAttribute(
       'aria-current',
       'page',
