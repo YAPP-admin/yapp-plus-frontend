@@ -69,3 +69,12 @@
 - `node --run check`와 `node --run build`는 모두 exit 0으로 통과했다. check에서는 웹 lint·typecheck·test가 새로 실행되고 나머지 패키지 작업은 Turbo 캐시를 재사용했다. build에서는 웹 build가 새로 실행되고 admin·Storybook은 캐시를 재사용했다. 기존 500kB 이상 웹 chunk 경고는 유지된다.
 - 전체 check 중 기존 홈의 TEAM APPROVED 사진 상태 테스트가 한 번 일시적으로 실패한 로그가 있었으나, 명령은 exit 0이었고 같은 테스트 단독 재실행 및 웹 전체 테스트 재실행은 exit 0으로 통과했다. 이번 목록 오류 변경과 직접 관련 없는 기존 비결정성 가능성으로 기록한다.
 - 현재 `origin/main` 대비 작업 트리는 문서 포함 800줄 제한을 초과한다. PR 생성 전 4-C와 5단계를 독립 검토 단위로 분리해야 한다. 실제 좁은 화면·키보드·스크린 리더·터치·WebView 수동 확인은 다음 리뷰에서 대기한다.
+
+## 6-A 구현·자동 검증 완료 — 리뷰 대기
+
+- `MutationCache`는 업무 Mutation의 최종 `ApiError(401)`만 현재 로그인 세션의 `AUTH_REQUIRED`로 바꾼다. 기본 `throwOnError`도 같은 조건에서만 활성화해 보호 Activity의 `AuthErrorBoundary`까지 전달한다. 일반 400·403·네트워크·브리지 오류는 각 입력·롤백 UI가 계속 소유한다.
+- 네이티브 로그인·가입·로그아웃·탈퇴 Mutation은 `meta.authOperation`과 `throwOnError: false`로 업무 정책에서 제외했다. 기존 `AuthResult`·callback·중복 인증 수명은 변경하지 않았다.
+- 공지 읽음 저장의 최종 401은 낙관적 상태를 남기지 않고 Login으로 한 번 이동한다. GET 전용 토큰 갱신은 Mutation에서 시작하지 않는다. 출석 코드의 기존 401 로컬 복구 기대는 제거하고, 일반 검증·서버·응답 유실 실패의 입력 보존은 유지했다.
+- 집중 회귀: Provider·인증 작업·Account 경계·공지 상세·코드 출석·사전 보고·알림 설정 9개 파일 117개 테스트와 웹 타입 검사가 통과했다. 일반 읽음 롤백, 사전 보고 입력 보존, 성공 뒤 재조회 실패의 분리, 알림 브리지 실패 유지, 인증 Mutation 자체의 정책 제외를 확인했다.
+- `node --run check`는 포맷 1건을 수정한 재실행에서 exit 0으로 통과했다. 웹 lint·typecheck·test는 새로 실행했고 나머지 패키지 작업은 Turbo 캐시를 재사용했다. `node --run build`도 exit 0으로 통과했으며 웹 build만 새로 실행, admin·Storybook은 캐시 재사용했다. 기존 500kB 이상 웹 chunk 경고는 유지된다.
+- 팀 사진 제출의 presign·최종 제출·PUT·결과 불명 원인 보존(T043–T045)은 아직 변경하지 않았다. 이 6-A 리뷰 뒤 별도 단계로 진행한다.

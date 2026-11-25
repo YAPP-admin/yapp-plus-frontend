@@ -451,11 +451,6 @@ it.each([
     '출석 결과를 확인하지 못했어요',
   ],
   ['응답 유실', HttpResponse.error(), '출석 결과를 확인하지 못했어요'],
-  [
-    '인증 만료',
-    HttpResponse.json({ code: 'AUTHENTICATION_FAILED' }, { status: 401 }),
-    '인증이 만료됐어요',
-  ],
 ] as const)('%s에서는 완료·자동 재전송 없이 복구를 안내한다', async (_, response, message) => {
   const request = vi.fn<() => typeof response>(() => response);
   server.use(http.post(verifyUrl, request));
