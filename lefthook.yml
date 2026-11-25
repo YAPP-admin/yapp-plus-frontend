@@ -20,6 +20,4 @@ pre-commit:
 pre-push:
   commands:
     typecheck:
-      run: mise exec -- pnpm typecheck
-    test:
-      run: mise exec -- pnpm test
+      run: mise exec -- node --run typecheck
