@@ -13,6 +13,7 @@ export const homeHeader = style({
 export const logoLink = style({
   display: 'inline-flex',
   alignItems: 'center',
+  color: vars.$color.fg.neutral,
 });
 
 export const bellButton = style({
