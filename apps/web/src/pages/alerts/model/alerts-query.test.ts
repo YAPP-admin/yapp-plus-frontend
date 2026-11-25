@@ -14,6 +14,13 @@ const item = {
   sentDate: '2026-11-07',
   type: 'POST',
   postId: 4,
+  sessionId: null,
+  reminderKind: null,
+  navigationTarget: null,
+  settlementId: null,
+  afterpartyId: null,
+  title: null,
+  settlementKind: null,
 } as const;
 const page = (id = 1, nextCursor: string | null = null): UserNotificationListResponse => ({
   items: [{ ...item, id }],

@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import {
-  list1InfiniteQueryKey,
-  list1QueryKey,
+  list3InfiniteQueryKey,
+  list3QueryKey,
   type UserPostListResponse,
 } from '@yapp-plus/api/generated';
 import { http, HttpResponse } from 'msw';
@@ -37,13 +37,13 @@ it('생성 single/infinite key, 유형과 첫 페이지 cursor 생략을 유지�
     }),
   );
   const options = memberNoticeListQueryOptions('ASSIGNMENT');
-  expect(options.queryKey).toEqual(list1QueryKey({ query: { type: 'ASSIGNMENT' } }));
+  expect(options.queryKey).toEqual(list3QueryKey({ query: { type: 'ASSIGNMENT' } }));
   await expect(new QueryClient().fetchQuery(options)).resolves.toMatchObject({
     totalPostCount: 1,
     items: [{ postId: 1 }],
   });
   expect(memberNoticeListInfiniteQueryOptions('ASSIGNMENT').queryKey).toEqual(
-    list1InfiniteQueryKey({ query: { type: 'ASSIGNMENT' } }),
+    list3InfiniteQueryKey({ query: { type: 'ASSIGNMENT' } }),
   );
 });
 

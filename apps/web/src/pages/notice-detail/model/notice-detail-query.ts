@@ -2,7 +2,7 @@ import { queryOptions } from '@tanstack/react-query';
 import { getStaticNotice, staticContentEnabled } from '@/features/static-content';
 /** 생성 상세 API 응답을 화면이 안전하게 소비하는 공지 상세 모델로 검증·변환한다. */
 import {
-  detail2Options,
+  detail3Options,
   zUserPostDetailResponse,
   zUserPostImageResponse,
 } from '@yapp-plus/api/generated';
@@ -43,9 +43,9 @@ export const noticeDetailSchema = zUserPostDetailResponse.extend({
 /** 인증 옵션과 검증기를 생성 detail query에 결합한다. */
 export function memberNoticeDetailQueryOptions(
   postId: number,
-  options?: Omit<Parameters<typeof detail2Options>[0], 'path'>,
+  options?: Omit<Parameters<typeof detail3Options>[0], 'path'>,
 ) {
-  const generated = detail2Options({
+  const generated = detail3Options({
     ...options,
     path: { postId },
     responseTransformer: (data: unknown) => noticeDetailSchema.parseAsync(data),

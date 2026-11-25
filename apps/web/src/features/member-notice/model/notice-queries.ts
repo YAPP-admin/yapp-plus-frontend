@@ -2,8 +2,8 @@ import { queryOptions } from '@tanstack/react-query';
 import { getStaticNotices, staticContentEnabled } from '@/features/static-content';
 /** 생성 API 공지 응답을 목록 UI 계약으로 검증·변환하는 query 모델이다. */
 import {
-  list1InfiniteOptions,
-  list1Options,
+  list3InfiniteOptions,
+  list3Options,
   zUserPostListItemResponse,
   zUserPostListResponse,
   type UserPostListResponse,
@@ -35,7 +35,7 @@ export const noticeListSchema = zUserPostListResponse
   })
   .refine(({ nextCursor }) => nextCursor === null || nextCursor.length > 0, '빈 커서입니다.');
 
-function listOptions(category: NoticeCategory, options?: Parameters<typeof list1Options>[0]) {
+function listOptions(category: NoticeCategory, options?: Parameters<typeof list3Options>[0]) {
   return {
     ...options,
     query: { ...options?.query, type: category },
@@ -46,9 +46,9 @@ function listOptions(category: NoticeCategory, options?: Parameters<typeof list1
 /** 단일 첫 페이지 조회에 인증 옵션과 OpenAPI type 필터를 결합한다. */
 export function memberNoticeListQueryOptions(
   category: NoticeCategory = 'ALL',
-  options?: Parameters<typeof list1Options>[0],
+  options?: Parameters<typeof list3Options>[0],
 ) {
-  const generated = list1Options(listOptions(category, options));
+  const generated = list3Options(listOptions(category, options));
   return staticContentEnabled()
     ? queryOptions({
         ...generated,
@@ -60,9 +60,9 @@ export function memberNoticeListQueryOptions(
 /** cursor가 null일 때만 종료하는 무한 목록 query 옵션을 생성한다. */
 export function memberNoticeListInfiniteQueryOptions(
   category: NoticeCategory = 'ALL',
-  options?: Parameters<typeof list1InfiniteOptions>[0],
+  options?: Parameters<typeof list3InfiniteOptions>[0],
 ) {
-  const generated = list1InfiniteOptions(listOptions(category, options));
+  const generated = list3InfiniteOptions(listOptions(category, options));
   const queryFn = typeof generated.queryFn === 'function' ? generated.queryFn : undefined;
   return {
     ...generated,

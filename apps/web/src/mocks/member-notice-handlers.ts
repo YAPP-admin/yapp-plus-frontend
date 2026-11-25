@@ -114,7 +114,7 @@ export function createMemberNoticeHandlers(
   });
   const { pick } = createMswHandlers({ baseUrl });
   return [
-    pick.list1(async ({ request }) => {
+    pick.list3(async ({ request }) => {
       const url = new URL(request.url);
       const cursor = url.searchParams.get('cursor');
       const type = url.searchParams.get('type') ?? 'ALL';
@@ -154,7 +154,7 @@ export function createMemberNoticeHandlers(
       } satisfies UserPostListResponse;
       return HttpResponse.json(response);
     }),
-    pick.detail2(({ params }) => {
+    pick.detail3(({ params }) => {
       if (noticeState === 'detail-error' || noticeState === 'detail-unavailable') {
         return HttpResponse.json(
           {

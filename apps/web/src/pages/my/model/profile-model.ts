@@ -6,6 +6,7 @@ const membershipStatusLabel = {
   OB: 'OB',
   COMPLETED_MEMBER: '수료회원',
   DEFERRED: '유예 회원',
+  STAFF: '운영진',
 } satisfies Record<NonNullable<UserProfileResponse['membershipStatus']>, string>;
 
 const positionLabel = {
