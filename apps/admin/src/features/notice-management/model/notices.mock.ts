@@ -58,7 +58,10 @@ const fixtures = noticeSchema.array().parse([
     title: '예시 제출 안내',
     bodyDocument,
     audience: 'all',
-    submission: { deadlineAt: '2026-11-01T09:00:00.000Z', method: null },
+    submission: {
+      deadlineAt: '2026-11-01T09:00:00.000Z',
+      method: { name: '예시 제출 폼', url: 'https://example.com/submit' },
+    },
     createdAt: '2026-10-21T00:00:00.000Z',
     readAtByMemberId: {},
     unansweredCount: 0,

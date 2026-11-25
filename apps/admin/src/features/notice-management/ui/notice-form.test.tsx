@@ -5,6 +5,34 @@ import { expect, it, vi } from 'vitest';
 import type { NoticeFormContent } from '../model/notice-form';
 import { NoticeForm } from './notice-form';
 
+// 폼 계약 테스트에서는 실제 Picker 조작을 분리하고 날짜·시간 필드를 일반 입력으로 대체한다.
+vi.mock('./notice-schedule-field', () => ({
+  NoticeScheduleField: ({
+    label,
+    value,
+    disabled,
+    errors,
+    onChange,
+  }: {
+    label: string;
+    value: string;
+    disabled: boolean;
+    errors: (string | undefined)[];
+    onChange: (value: string) => void;
+  }) => (
+    <label>
+      {label}
+      <input
+        aria-label={label}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {errors.length > 0 && <span role="alert">{errors.join(' ')}</span>}
+    </label>
+  ),
+}));
+
 /** 폼을 열고 유효한 제목을 입력한다. */
 async function setup() {
   const onSubmit = vi.fn<(value: NoticeFormContent) => void>();
@@ -70,11 +98,16 @@ it('제출 전체·직군은 배타적이며 빈 선택은 거절한다', async 
   await user.click(screen.getByRole('checkbox', { name: 'Web' }));
   await user.click(screen.getByRole('checkbox', { name: 'Design' }));
   expect(all).not.toBeChecked();
+  await user.type(screen.getByLabelText('제출 방법'), '과제 제출');
+  await user.type(screen.getByLabelText('제출 주소'), 'https://example.com/submit');
   await user.click(screen.getByRole('button', { name: '입력 확인' }));
   expect(onSubmit).toHaveBeenLastCalledWith(
     expect.objectContaining({
       audience: ['Web', 'Design'],
-      submission: { deadlineAt: '2020-01-01T00:30:00.000Z', method: null },
+      submission: {
+        deadlineAt: '2020-01-01T00:30:00.000Z',
+        method: { name: '과제 제출', url: 'https://example.com/submit' },
+      },
     }),
   );
   await user.click(all);
@@ -90,37 +123,34 @@ it('마감 날짜와 시각을 각각 요구한다', async () => {
   const { user, onSubmit } = await setup();
   await user.click(screen.getByRole('radio', { name: '제출' }));
   await user.click(screen.getByRole('button', { name: '입력 확인' }));
-  expect(screen.getAllByRole('alert')).toHaveLength(2);
+  expect(screen.getAllByRole('alert')).toHaveLength(4);
   expect(onSubmit).not.toHaveBeenCalled();
   fireEvent.change(screen.getByLabelText('마감 날짜'), {
     target: { value: '2020-01-01' },
   });
   await user.click(screen.getByRole('button', { name: '입력 확인' }));
-  expect(screen.getAllByRole('alert')).toHaveLength(1);
+  expect(screen.getAllByRole('alert')).toHaveLength(3);
 });
 
-it.each(['제출 방법 (선택)', '제출 주소 (선택)'])(
-  '%s만 입력하면 나머지도 요구한다',
-  async (label) => {
-    const { user, onSubmit } = await setup();
-    await user.click(screen.getByRole('radio', { name: '제출' }));
-    enterDeadline();
-    await user.type(screen.getByLabelText(label), '임의 입력');
-    await user.click(screen.getByRole('button', { name: '입력 확인' }));
-    expect(onSubmit).not.toHaveBeenCalled();
-    expect(screen.getAllByRole('alert')).toHaveLength(1);
-    const other = label === '제출 주소 (선택)' ? '제출 방법 (선택)' : '제출 주소 (선택)';
-    await user.type(screen.getByLabelText(other), '주소 형식 검사 없음');
-    await user.click(screen.getByRole('button', { name: '입력 확인' }));
-    expect(onSubmit).toHaveBeenCalledOnce();
-  },
-);
+it.each(['제출 방법', '제출 주소'])('%s만 입력하면 나머지도 요구한다', async (label) => {
+  const { user, onSubmit } = await setup();
+  await user.click(screen.getByRole('radio', { name: '제출' }));
+  enterDeadline();
+  await user.type(screen.getByLabelText(label), '임의 입력');
+  await user.click(screen.getByRole('button', { name: '입력 확인' }));
+  expect(onSubmit).not.toHaveBeenCalled();
+  expect(screen.getAllByRole('alert')).toHaveLength(1);
+  const other = label === '제출 주소' ? '제출 방법' : '제출 주소';
+  await user.type(screen.getByLabelText(other), '주소 형식 검사 없음');
+  await user.click(screen.getByRole('button', { name: '입력 확인' }));
+  expect(onSubmit).toHaveBeenCalledOnce();
+});
 
 it('일반 종류로 전환하면 제출 데이터와 오류를 제거한다', async () => {
   const { user, onSubmit } = await setup();
   await user.click(screen.getByRole('radio', { name: '제출' }));
   await user.click(screen.getByRole('checkbox', { name: 'Web' }));
-  await user.type(screen.getByLabelText('제출 방법 (선택)'), '과제');
+  await user.type(screen.getByLabelText('제출 방법'), '과제');
   await user.click(screen.getByRole('button', { name: '입력 확인' }));
   await user.click(screen.getByRole('radio', { name: '기타' }));
   expect(screen.queryByLabelText('마감 날짜')).not.toBeInTheDocument();
@@ -132,5 +162,18 @@ it('일반 종류로 전환하면 제출 데이터와 오류를 제거한다', a
   });
   await user.click(screen.getByRole('radio', { name: '제출' }));
   expect(screen.getByLabelText('마감 날짜')).toHaveValue('');
-  expect(screen.getByLabelText('제출 방법 (선택)')).toHaveValue('');
+  expect(screen.getByLabelText('제출 방법')).toHaveValue('');
+});
+
+it('제출 방법과 주소를 모두 필수로 입력한다', async () => {
+  const { user, onSubmit } = await setup();
+  await user.click(screen.getByRole('radio', { name: '제출' }));
+  enterDeadline();
+
+  expect(screen.getByLabelText('제출 방법')).toBeRequired();
+  expect(screen.getByLabelText('제출 주소')).toBeRequired();
+  await user.click(screen.getByRole('button', { name: '입력 확인' }));
+
+  expect(onSubmit).not.toHaveBeenCalled();
+  expect(screen.getAllByRole('alert')).toHaveLength(2);
 });

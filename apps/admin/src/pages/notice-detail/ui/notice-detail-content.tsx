@@ -264,7 +264,7 @@ function NoticeDetailTabs({ noticeId, tab }: { noticeId: string; tab: NoticeDeta
   );
 }
 
-/** 제출 공지의 마감과 선택적 제출 링크를 표시한다. */
+/** 제출 공지의 마감과 제출 링크를 표시한다. */
 function NoticeSubmission({
   assignment,
 }: {
