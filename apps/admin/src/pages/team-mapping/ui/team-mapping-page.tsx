@@ -9,6 +9,7 @@ import {
   getTeamsForFilter,
   teamMappingSnapshotSchema,
   type TeamDraftValues,
+  type TeamMemberChange,
   type TeamMappingTeam,
   type TeamMappingSnapshot,
 } from '~/features/team-management';
@@ -95,6 +96,7 @@ export function TeamMappingPage({
   createTeam,
   updateTeam,
   onDeleteTeam,
+  assignUnassigned,
 }: {
   snapshot: TeamMappingSnapshot;
   search: TeamMappingSearch;
@@ -108,6 +110,7 @@ export function TeamMappingPage({
     destinationTeamIds?: Readonly<Record<string, string>>,
   ) => Promise<void>;
   onDeleteTeam?: (team: TeamMappingTeam) => void;
+  assignUnassigned?: (changes: readonly TeamMemberChange[]) => Promise<void>;
 }) {
   const draft = useTeamMappingDraft();
   const [localSnapshot, setLocalSnapshot] = useState(snapshot);
@@ -173,7 +176,7 @@ export function TeamMappingPage({
 
   function renderTeamContent() {
     if (search.filter === 'unassigned') {
-      return <UnassignedMembers snapshot={workingSnapshot} />;
+      return <UnassignedMembers snapshot={workingSnapshot} onApplyAssignments={assignUnassigned} />;
     }
 
     if (hasEmptyFilterResult) {

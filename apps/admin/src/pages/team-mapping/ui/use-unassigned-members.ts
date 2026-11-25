@@ -79,6 +79,13 @@ export function useUnassignedMembers({
     updateAssignments([activityId], null);
   }
 
+  function clearChanges() {
+    setChanges([]);
+    setCheckedActivityIds(new Set());
+    onDirtyChange?.(false);
+    setFeedback(undefined);
+  }
+
   return {
     checkedActivityIds,
     checkedIds,
@@ -87,6 +94,7 @@ export function useUnassignedMembers({
     isReadOnly,
     pendingByActivityId,
     cancelAssignment,
+    clearChanges,
     selectMemberDestination,
     toggleChecked,
     updateAssignments,
