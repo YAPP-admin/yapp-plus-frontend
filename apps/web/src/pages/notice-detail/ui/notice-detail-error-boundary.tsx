@@ -1,6 +1,6 @@
 /** 공지 상세 초기 조회 실패를 해당 화면 안에서 재시도 가능하게 처리한다. */
 import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
-import { ResultSection } from '@yapp-plus/ui';
+import { ErrorState } from '@/shared/ui/error-state';
 import type { ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 import { container } from './notice-detail-page.css';
@@ -20,11 +20,10 @@ function NoticeDetailError({ resetErrorBoundary }: FallbackProps) {
     <>
       <NoticeDetailHeader categoryLabel="공지사항" />
       <main className={container}>
-        <ResultSection
-          role="alert"
-          size="medium"
+        <ErrorState
+          variant="page"
           title="공지 상세를 불러오지 못했어요"
-          primaryActionProps={{ children: '다시 시도', onClick: resetErrorBoundary }}
+          onRetry={resetErrorBoundary}
         />
       </main>
     </>

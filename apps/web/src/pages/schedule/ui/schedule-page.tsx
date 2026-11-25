@@ -2,9 +2,9 @@
 
 import { staticContentEnabled } from '@/features/static-content';
 
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { ActionButton } from '@yapp-plus/ui';
 import { Suspense } from 'react';
 import { List, VStack } from '@seed-design/react';
 import { useNativeAuthSession } from '@/features/auth';
@@ -55,23 +55,10 @@ function ScheduleList() {
   const query = useSuspenseQuery(scheduleQueryOptions(apiOptions));
 
   useRefetchOnScreenReturn(query);
-  const { data, dataUpdatedAt, error, refetch } = query;
+  useThrowQueryError(query);
+  const { data, dataUpdatedAt } = query;
   return (
     <>
-      {error ? (
-        <div role="alert">
-          <p>일정을 새로 불러오지 못했어요. 이전 내용을 표시하고 있어요.</p>
-          <ActionButton
-            variant="neutralWeak"
-            size="medium"
-            onClick={() => {
-              void refetch({ cancelRefetch: false });
-            }}
-          >
-            다시 시도
-          </ActionButton>
-        </div>
-      ) : null}
       {data.sessions.length ? (
         <List.Root className={list} aria-label="세션 일정 목록">
           {data.sessions.map((session) => (

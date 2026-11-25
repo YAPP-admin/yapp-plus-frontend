@@ -50,9 +50,9 @@
 
 ## 4단계 — US1 일반 조회 적용
 
-- [ ] T024 [US1] `apps/web/src/shared/lib/query-error-policy.ts`와 인접 테스트에 cache 오류·재시도 중·추가 페이지 예외의 공통 판정을 구현한다.
-- [ ] T025 [US1] `apps/web/src/pages/schedule/ui/schedule-page.tsx`·`notice-detail/ui/notice-detail-page.tsx`와 인접 테스트를 Local/page 정책으로 이전한다.
-- [ ] T026 [US1] `specs/028-member-error-boundaries/validation.md`에 일정·공지 상세 4-A 검증·화면·diff·리뷰를 기록한다.
+- [x] T024 [US1] `apps/web/src/shared/lib/query-error-policy.ts`와 인접 테스트에 cache 오류·재시도 중·추가 페이지 예외의 공통 판정을 구현한다.
+- [x] T025 [US1] `apps/web/src/pages/schedule/ui/schedule-page.tsx`·`notice-detail/ui/notice-detail-page.tsx`와 인접 테스트를 Local/page 정책으로 이전한다.
+- [x] T026 [US1] `specs/028-member-error-boundaries/validation.md`에 일정·공지 상세 4-A 검증·화면·diff·리뷰를 기록한다.
 - [ ] T027 [US1] `apps/web/src/pages/home/ui/current-week-card.tsx`·`weekly-notices.tsx`를 Local/section으로 이전하고 사진 상태의 원시 ErrorBoundary를 제거한다.
 - [ ] T028 [US1] `apps/web/src/pages/my/ui/profile-section.tsx`·`my-page.tsx`와 `pages/attendance/ui/attendance-page.tsx`의 경고 영역에 독립 오류 교체를 적용한다.
 - [ ] T029 [US1] `apps/web/stackflow/src/query-recovery.test.tsx`에 성공 cache 이후 재조회 실패·복귀·정상 DOM 유지·reset 로딩·반복 실패를 추가한다.
