@@ -45,8 +45,11 @@ export {
   teamReviewsApiQueryOptions,
   attendanceCodeApiQueryOptions,
   useSessionAttendanceQuery,
+  useSessionAttendanceQueryState,
+  useAttendanceCodeQueryState,
   useCreateSessionMutation,
   useSessionsQuery,
+  useSessionsQueryState,
   useMemberScoresQuery,
   useUpdateSessionMutation,
 } from './model/session-queries';
