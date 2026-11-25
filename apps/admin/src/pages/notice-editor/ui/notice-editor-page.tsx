@@ -3,10 +3,7 @@ import { useState } from 'react';
 import { useRouter } from '@tanstack/react-router';
 import { Skeleton, VStack } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
-import {
-  NoticeQueryBoundary,
-  useAdminNoticeQuery,
-} from '~/features/notice-management';
+import { NoticeQueryBoundary, useAdminNoticeQuery } from '~/features/notice-management';
 import { useAdminGeneration } from '~/features/admin-generation';
 import { NoticeEditorForm } from './notice-editor-form';
 import * as styles from './notice-editor-page.css';

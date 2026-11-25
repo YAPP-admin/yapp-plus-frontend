@@ -93,14 +93,17 @@ function getInitialValues(notice?: AdminPostDetailResponse) {
     return emptyNoticeForm;
   }
 
-  const audience = notice.audience.type === 'POSITION'
-    ? notice.audience.positions.map((position) => jobByApiPosition[position])
-    : ({
-        ALL_USERS: 'all',
-        PLAYER: 'active',
-        OB: 'regular',
-        COMPLETED_MEMBER: 'completed',
-      } as const)[notice.audience.target ?? 'ALL_USERS'];
+  const audience =
+    notice.audience.type === 'POSITION'
+      ? notice.audience.positions.map((position) => jobByApiPosition[position])
+      : (
+          {
+            ALL_USERS: 'all',
+            PLAYER: 'active',
+            OB: 'regular',
+            COMPLETED_MEMBER: 'completed',
+          } as const
+        )[notice.audience.target ?? 'ALL_USERS'];
   let category: 'session' | 'submission' | 'operation' = 'operation';
   if (notice.type === 'ASSIGNMENT') {
     category = 'submission';
@@ -131,11 +134,7 @@ function getInitialEntries(notice?: AdminPostDetailResponse): NoticeEditorEntry[
   }));
 }
 
-function getDraftSnapshot(
-  values: NoticeFormValues,
-  body: string,
-  entries: NoticeEditorEntry[],
-) {
+function getDraftSnapshot(values: NoticeFormValues, body: string, entries: NoticeEditorEntry[]) {
   return JSON.stringify({
     values,
     body,
@@ -242,7 +241,12 @@ export function NoticeEditorForm({ notice }: { notice?: AdminPostDetailResponse 
     }
 
     try {
-      const imageKeys = await uploadImages(entries, currentGeneration.generationId, presign, setEntries);
+      const imageKeys = await uploadImages(
+        entries,
+        currentGeneration.generationId,
+        presign,
+        setEntries,
+      );
       const requestBody = {
         type: getNoticeType(content.category),
         audience: getAudience(content),
@@ -272,14 +276,17 @@ export function NoticeEditorForm({ notice }: { notice?: AdminPostDetailResponse 
       router.history.back();
     } catch (error) {
       if (error instanceof ApiError && error.status === 404 && notice) {
-        snackbar.create({ render: () => <Snackbar variant="critical" message="존재하지 않는 공지입니다." /> });
+        snackbar.create({
+          render: () => <Snackbar variant="critical" message="존재하지 않는 공지입니다." />,
+        });
         void router.navigate({ to: '/notices', search: {} });
         return;
       }
 
-      const message = error instanceof ApiError && error.status === 409
-        ? '다른 관리자가 먼저 수정했습니다. 최신 내용을 확인한 뒤 다시 시도해 주세요.'
-        : '저장하지 못했습니다. 입력을 유지했으니 다시 시도해 주세요.';
+      const message =
+        error instanceof ApiError && error.status === 409
+          ? '다른 관리자가 먼저 수정했습니다. 최신 내용을 확인한 뒤 다시 시도해 주세요.'
+          : '저장하지 못했습니다. 입력을 유지했으니 다시 시도해 주세요.';
       setSaveError(message);
       snackbar.create({ render: () => <Snackbar variant="critical" message={message} /> });
     }
@@ -304,7 +311,9 @@ export function NoticeEditorForm({ notice }: { notice?: AdminPostDetailResponse 
       )}
     >
       <section aria-labelledby={bodyId} inert={pending}>
-        <h2 id={bodyId} className={styles.description}>공지 내용</h2>
+        <h2 id={bodyId} className={styles.description}>
+          공지 내용
+        </h2>
         <NoticeEditor
           labelId={bodyId}
           initialMarkdown={notice?.contentMarkdown}
