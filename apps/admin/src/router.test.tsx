@@ -369,6 +369,7 @@ describe('관리자 라우팅', () => {
     const user = userEvent.setup();
     const router = await renderRoute('/members/teams');
     await waitForAdminWorkspace();
+    await screen.findByRole('heading', { name: '팀 목록', level: 2 });
 
     await user.click(screen.getByRole('radio', { name: '미배정 회원 · 10' }));
     await screen.findByRole('heading', { name: '미배정 회원 10명' });
