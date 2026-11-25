@@ -1,5 +1,7 @@
 import { render, screen } from '@testing-library/react';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { describe, expect, it, vi } from 'vitest';
+import { createAppQueryClient } from '@/app/providers';
 import { HomePage } from '../../pages/home';
 import { shell, shellWithNavigation } from './page-shell.css';
 import { PageShell } from './page-shell';
@@ -36,10 +38,14 @@ vi.mock('@/app/navigation/activity-link', () => ({
 
 describe('PageShell', () => {
   it('홈을 감쌀 때 헤더와 본문 영역을 중복 렌더링하지 않는다', () => {
+    const client = createAppQueryClient();
+
     render(
-      <PageShell>
-        <HomePage />
-      </PageShell>,
+      <QueryClientProvider client={client}>
+        <PageShell>
+          <HomePage />
+        </PageShell>
+      </QueryClientProvider>,
     );
 
     expect(screen.getAllByRole('banner')).toHaveLength(1);

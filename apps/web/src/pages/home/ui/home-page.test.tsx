@@ -113,20 +113,25 @@ function renderHome(props: React.ComponentProps<typeof HomePage> = {}, native = 
       },
     });
   }
-  const result = render(
+  const renderTree = (active = true) => (
     <QueryClientProvider client={client}>
       <SnackbarProvider>
         {native ? (
           <NativeAuthSessionProvider>
-            <HomePage {...props} />
+            <ScreenActiveContext value={active}>
+              <HomePage {...props} />
+            </ScreenActiveContext>
           </NativeAuthSessionProvider>
         ) : (
-          <HomePage {...props} />
+          <ScreenActiveContext value={active}>
+            <HomePage {...props} />
+          </ScreenActiveContext>
         )}
       </SnackbarProvider>
-    </QueryClientProvider>,
+    </QueryClientProvider>
   );
-  return { ...result, client };
+  const result = render(renderTree());
+  return { ...result, client, renderTree };
 }
 function renderDemo() {
   renderHome({ initialSession: 'team' });
@@ -374,6 +379,21 @@ it('로그인 WebView는 실제 출석과 출결 보고 진입을 허용한다',
   await userEvent.click(screen.getByRole('button', { name: '출결 보고하기' }));
   expect(mockPush).toHaveBeenCalledWith('AttendanceReport', {});
   expect(screen.queryByText('출석했어요!')).not.toBeInTheDocument();
+});
+
+it('기간 내 출결 보고 안내는 홈이 비활성화되면 제거되고 복귀하면 다시 표시한다', async () => {
+  vi.stubEnv('VITE_API_MOCKING', 'false');
+  const view = renderHome({}, true);
+
+  expect(await screen.findByText('세션 시작 전에 미리 보고해 주세요')).toBeVisible();
+  fireEvent.pointerDown(document.body);
+  expect(screen.getByText('세션 시작 전에 미리 보고해 주세요')).toBeVisible();
+
+  view.rerender(view.renderTree(false));
+  expect(screen.queryByText('세션 시작 전에 미리 보고해 주세요')).not.toBeInTheDocument();
+
+  view.rerender(view.renderTree(true));
+  expect(await screen.findByText('세션 시작 전에 미리 보고해 주세요')).toBeVisible();
 });
 
 it.each(['화면 복귀', '앱 복귀'])(
