@@ -7,6 +7,8 @@ import type {
   AdminPostListResponse,
   AdminPostRecipientListResponse,
   CurrentWeekSessionResponse,
+  TeamMemberCandidateResponse,
+  TeamResponse,
   SessionListResponse,
   StaffLoginResponse,
 } from '../generated/types.gen';
@@ -94,6 +96,113 @@ export const adminMemberDetail = {
     },
   ],
 } satisfies AdminMemberDetailResponse;
+
+const teamDefinitions = [
+  { teamId: 201, name: 'Orbit', serviceName: 'YAPP Orbit', membershipIds: [1, 2, 3, 4, 5, 6] },
+  { teamId: 202, name: 'Pocket', serviceName: 'Pocket', membershipIds: [7, 8, 9, 10, 11, 12] },
+  { teamId: 203, name: 'Mosaic', serviceName: 'Mosaic', membershipIds: [13, 14, 15, 16, 17, 18] },
+  { teamId: 204, name: 'Nori', serviceName: 'Nori', membershipIds: [19, 20, 21, 22, 23, 29] },
+  { teamId: 205, name: 'Loop', serviceName: 'Loop', membershipIds: [24, 25, 26, 27, 28, 33] },
+  { teamId: 206, name: 'Canvas', serviceName: 'Canvas', membershipIds: [30, 31, 32, 34, 41, 42] },
+  { teamId: 207, name: 'Beacon', serviceName: 'Beacon', membershipIds: [35, 36, 37, 38, 39] },
+  {
+    teamId: 208,
+    name: '혼자서 준비하는 아주 긴 이름의 팀',
+    serviceName: null,
+    membershipIds: [40],
+  },
+] as const;
+
+const candidateNames = [
+  '김민서',
+  '이서윤',
+  '박지훈',
+  '최하늘',
+  '정도윤',
+  '한유진',
+  '김도현',
+  '장하은',
+  '오세훈',
+  '윤서아',
+  '강민재',
+  '황지민',
+  '전유나',
+  '배수빈',
+  '임건우',
+  '송지호',
+  '문지아',
+  '조은채',
+  '정다은',
+  '이주원',
+  '김태윤',
+  '박서연',
+  '이현우',
+  '김가람',
+  '서유진',
+  '김태윤',
+  '신예은',
+  '노준혁',
+  '강예린',
+  '권예린',
+  '조현우',
+  '남도윤',
+  '이채원',
+  '윤지호',
+  '한서준',
+  '김나연',
+  '배준서',
+  '최준영',
+  '황도경',
+  '김하늘아주긴이름을가진회원입니다',
+  '고은우',
+  '류다빈',
+  '이도윤',
+  '차유림',
+  '정하림',
+  '서준호',
+  '김서현',
+  '문예린',
+  '유건우',
+  '박다온',
+  '오유진',
+  '신도현',
+] as const;
+
+const candidatePositions = ['PM', 'DESIGN', 'ANDROID', 'WEB', 'SERVER', 'IOS'] as const;
+
+const teamIdByMembershipId = new Map<number, number>(
+  teamDefinitions.flatMap((team) =>
+    team.membershipIds.map((membershipId) => [membershipId, team.teamId]),
+  ),
+);
+
+export const adminTeamMemberCandidates = candidateNames.map((name, index) => {
+  const membershipId = index + 1;
+  const teamId = teamIdByMembershipId.get(membershipId) ?? null;
+  const position = candidatePositions[index % candidatePositions.length] ?? 'WEB';
+  const team = teamDefinitions.find((candidate) => candidate.teamId === teamId);
+  return {
+    membershipId,
+    name,
+    position,
+    assigned: teamId !== null,
+    currentTeam: team === undefined || teamId === null ? null : { teamId, name: team.name },
+  } satisfies TeamMemberCandidateResponse;
+});
+
+export const adminTeams = teamDefinitions.map((team) => ({
+  teamId: team.teamId,
+  name: team.name,
+  serviceName: team.serviceName,
+  totalMemberCount: team.membershipIds.length,
+  version: 1,
+  members: team.membershipIds.flatMap((membershipId) => {
+    const candidate = adminTeamMemberCandidates[membershipId - 1];
+    return candidate === undefined
+      ? []
+      : [{ membershipId, name: candidate.name, position: candidate.position }];
+  }),
+})) satisfies TeamResponse[];
 
 export const sessions = {
   totalCount: 2,

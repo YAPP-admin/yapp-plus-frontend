@@ -47,6 +47,8 @@ export const teamMappingTeamSchema = z
     serviceName: z.string().trim().min(1).nullable(),
     memberActivityIds: identifier.array().min(1).readonly(),
     leaderActivityId: identifier.nullable(),
+    /** API 목록·상세 응답의 동시 수정 방지용 버전. fixture에서는 생략할 수 있다. */
+    version: z.number().int().nonnegative().optional(),
   })
   .readonly();
 

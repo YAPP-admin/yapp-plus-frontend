@@ -1,8 +1,7 @@
-/** 팀 매핑 URL과 환경 공통 합성 fixture를 팀 매핑 페이지에 연결한다. */
+/** 팀 매핑 URL과 현재 기수 기반 API 화면을 연결한다. */
 import { createFileRoute, stripSearchParams, useBlocker } from '@tanstack/react-router';
-import { getTeamMappingFixture } from '~/features/team-management';
 import {
-  TeamMappingPage,
+  TeamMappingApiPage,
   TeamMappingDraftProvider,
   TeamLeaveDialog,
   useTeamMappingDraft,
@@ -38,9 +37,8 @@ function TeamMappingRouteContent() {
 
   return (
     <>
-      <TeamMappingPage
+      <TeamMappingApiPage
         key={search.filter}
-        snapshot={getTeamMappingFixture('draft')}
         search={search}
         onFilterChange={(filter) => {
           void navigate({ search: (previous) => ({ ...previous, filter }), resetScroll: false });

@@ -113,6 +113,36 @@ export function createApiMockHandlers(
     http.put(`${normalizedBaseUrl}/api/admin/generations/:generationId/members/:memberId`, () =>
       response(fixtures.adminMemberDetail, schemas.zCorrectResponse, 200),
     ),
+    http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/teams`, () =>
+      response(fixtures.adminTeams, schemas.zFindAllResponse, 200),
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/team-member-candidates`,
+      ({ request }) => {
+        const assigned = new URL(request.url).searchParams.get('assigned');
+        const candidates =
+          assigned === null
+            ? fixtures.adminTeamMemberCandidates
+            : fixtures.adminTeamMemberCandidates.filter(
+                (candidate) => candidate.assigned === (assigned === 'true'),
+              );
+        return response(candidates, schemas.zCandidatesResponse, 200);
+      },
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/teams/:teamId`,
+      ({ params }) => {
+        const team = fixtures.adminTeams.find(
+          (candidate) => String(candidate.teamId) === params.teamId,
+        );
+        return team === undefined
+          ? HttpResponse.json(
+              { code: 'TEAM_NOT_FOUND', message: '팀을 찾을 수 없습니다.' },
+              { status: 404 },
+            )
+          : response(team, schemas.zFindResponse, 200);
+      },
+    ),
     ...factory.all({
       pick: {
         find: fakerResponse(generatedFaker.fakeFindResponse200, schemas.zFindResponse),
