@@ -1,14 +1,14 @@
 /** 생성 SDK Mutation 옵션을 사용하고 변경 뒤 전체 목록 재조회를 예약합니다. */
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import {
-  create2Mutation,
+  create3Mutation,
   delete1Mutation,
   find2Options,
-  update1Mutation,
+  update2Mutation,
 } from '@yapp-plus/api/generated';
 
-export const createSessionMutationOptions = create2Mutation();
-export const updateSessionMutationOptions = update1Mutation();
+export const createSessionMutationOptions = create3Mutation();
+export const updateSessionMutationOptions = update2Mutation();
 export const deleteSessionMutationOptions = delete1Mutation();
 
 export function useCreateSessionMutation(generationId: number) {

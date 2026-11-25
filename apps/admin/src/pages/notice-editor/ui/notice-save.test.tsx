@@ -1,7 +1,7 @@
 import { QueryClient } from '@tanstack/react-query';
 import { HttpResponse, http } from 'msw';
 import { expect, it } from 'vitest';
-import { create3Mutation } from '@yapp-plus/api/generated';
+import { create4Mutation } from '@yapp-plus/api/generated';
 import { apiBaseUrl, server } from '~/mocks/server';
 
 const variables = {
@@ -31,7 +31,7 @@ it('공지 작성은 생성 SDK의 Markdown 본문·대상·idempotency key를 �
   const client = new QueryClient();
   const result = await client
     .getMutationCache()
-    .build(client, { ...create3Mutation(), retry: false })
+    .build(client, { ...create4Mutation(), retry: false })
     .execute(variables);
 
   expect(result).toEqual({ postId: 101 });

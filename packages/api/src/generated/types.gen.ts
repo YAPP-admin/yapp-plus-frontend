@@ -9,169 +9,45 @@ export type RegisterNotificationDeviceRequest = {
   registrationToken: string;
 };
 
-export type UpdateTeamRequest = {
-  expectedVersion: number;
-  name: string;
-  serviceName?: string | null;
-};
-
-export type TeamMemberResponse = {
-  membershipId: number;
-  name: string;
-  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
-};
-
-export type TeamResponse = {
-  teamId: number;
-  name: string;
-  serviceName: string | null;
-  totalMemberCount: number;
-  version: number;
-  members: Array<TeamMemberResponse>;
-};
-
-export type ReplaceTeamMembersRequest = {
-  expectedVersion: number;
-  members: Array<TeamMemberRequest>;
-};
-
-export type TeamMemberRequest = {
-  membershipId: number;
+export type SettlementUpdateRequest = {
+  bank:
+    | 'HANA'
+    | 'KB_KOOKMIN'
+    | 'IBK'
+    | 'NH'
+    | 'KYONGNAM'
+    | 'KWANGJU'
+    | 'BUSAN'
+    | 'KDB'
+    | 'SUHYUP'
+    | 'SHINHAN'
+    | 'WOORI'
+    | 'JEONBUK'
+    | 'JEJU'
+    | 'KAKAO'
+    | 'K_BANK'
+    | 'TOSS'
+    | 'IM_BANK'
+    | 'SC_FIRST'
+    | 'CITI'
+    | 'MG'
+    | 'FORESTRY'
+    | 'CREDIT_UNION'
+    | 'POST_OFFICE'
+    | 'SAVINGS';
   /**
-   * 후보 조회 시 확인한 현재 Team ID. 미배정이면 null
+   * 앞자리0 보존 문자열,trim후1~50자
    */
-  expectedCurrentTeamId?: number | null;
-};
-
-export type CreateSessionRequest = {
-  name: string;
+  accountNumber: string;
   /**
-   * REGULAR 세션 장소. TEAM이면 null
+   * trim후1~100코드포인트
    */
-  location: string | null;
-  date: string;
-  startTime: string;
-  endTime: string;
-  type: 'REGULAR' | 'TEAM';
-  /**
-   * REGULAR 필수 도로명주소, TEAM은 null. 최대 255자
-   */
-  roadAddress?: string | null;
-  /**
-   * REGULAR 필수 위도(-90~90). 저장 시 소수점 7자리 HALF_UP 반올림, TEAM은 null
-   */
-  latitude?: number | null;
-  /**
-   * REGULAR 필수 경도(-180~180). 저장 시 소수점 7자리 HALF_UP 반올림, TEAM은 null
-   */
-  longitude?: number | null;
-  /**
-   * REGULAR 선택 상세주소, TEAM은 null. 최대 255자
-   */
-  detailAddress?: string | null;
-};
-
-export type AdminMemberUpdateRequest = {
-  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
-  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'WITHDRAWN';
+  accountHolder: string;
+  totalAmount: number;
+  perPersonAmount: number;
+  recipientIds: Array<number>;
+  imageIds: Array<number>;
   expectedRevision: number;
-};
-
-export type AdminMemberChangeResponse = {
-  field: string;
-  before: string | null;
-  after: string | null;
-  changedByStaffId: number;
-  changedAt: string;
-};
-
-export type AdminMemberDetailResponse = {
-  memberId: number;
-  membershipId: number;
-  name: string;
-  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
-  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'WITHDRAWN';
-  previousActivities: Array<AdminPreviousActivityResponse>;
-  attendanceScore: number | null;
-  signedUpDate: string;
-  teamName: string | null;
-  phoneNumber: string | null;
-  revision: number;
-  changes: Array<AdminMemberChangeResponse>;
-};
-
-export type AdminPreviousActivityResponse = {
-  generationNumber: number;
-  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'WITHDRAWN';
-  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
-};
-
-export type RegisterUserRequest = {
-  /**
-   * Native 가입 흐름의 일회용 가입 토큰. Web은 HttpOnly 가입 쿠키를 사용할 수 있다.
-   */
-  registrationToken?: string | null;
-  /**
-   * 사용자 이름
-   */
-  name: string;
-  /**
-   * E.164 형식 전화번호
-   */
-  phoneNumber: string;
-};
-
-export type AuthSessionResponse = {
-  /**
-   * YAPP Plus access token
-   */
-  accessToken: string;
-  /**
-   * Native 응답의 refresh token. Web cookie 흐름에서는 응답 body에서 생략된다.
-   */
-  refreshToken: string | null;
-  /**
-   * access token 만료까지 남은 초
-   */
-  expiresIn: number;
-};
-
-export type AuthenticationResponse = {
-  /**
-   * 인증 결과
-   */
-  result: 'SIGNED_IN' | 'SIGNUP_REQUIRED';
-  /**
-   * SIGNED_IN일 때의 사용자
-   */
-  user: UserResponse | null;
-  /**
-   * SIGNED_IN일 때의 세션
-   */
-  session: AuthSessionResponse | null;
-  /**
-   * SIGNUP_REQUIRED일 때의 일회용 가입 토큰. Web에서는 HttpOnly cookie로 전달될 수 있다.
-   */
-  registrationToken: string | null;
-  /**
-   * SIGNUP_REQUIRED 가입 토큰 만료까지 남은 초
-   */
-  expiresIn: number | null;
-};
-
-export type UserResponse = {
-  /**
-   * User 식별자
-   */
-  id: number;
-  /**
-   * 사용자 이름
-   */
-  name: string;
-  /**
-   * E.164 형식 전화번호
-   */
-  phoneNumber: string;
 };
 
 export type ErrorResponse = {
@@ -179,6 +55,17 @@ export type ErrorResponse = {
    * 기계 판독용 오류 코드
    */
   code:
+    | 'INVALID_SETTLEMENT_REQUEST'
+    | 'SETTLEMENT_NOT_FOUND'
+    | 'SETTLEMENT_FORBIDDEN'
+    | 'SETTLEMENT_REVISION_CONFLICT'
+    | 'SETTLEMENT_FINANCIAL_EDIT_LOCKED'
+    | 'SETTLEMENT_UNAVAILABLE'
+    | 'INVALID_AFTERPARTY_REQUEST'
+    | 'AFTERPARTY_NOT_FOUND'
+    | 'AFTERPARTY_RESPONSE_REQUIRED'
+    | 'AFTERPARTY_VOTING_CLOSED'
+    | 'AFTERPARTY_UNAVAILABLE'
     | 'APPLE_REVOKE_PENDING'
     | 'APPLE_UNAVAILABLE'
     | 'APPLE_NOTIFICATION_INVALID'
@@ -287,6 +174,262 @@ export type RegistrationFieldError = {
    * 사용자에게 표시할 수 있는 오류 설명
    */
   message: string;
+};
+
+export type SettlementDetailResponse = {
+  settlementId?: number;
+  afterpartyId?: number;
+  creatorUserId?: number;
+  creatorName?: string;
+  totalAmount?: number;
+  perPersonAmount?: number;
+  bank?:
+    | 'HANA'
+    | 'KB_KOOKMIN'
+    | 'IBK'
+    | 'NH'
+    | 'KYONGNAM'
+    | 'KWANGJU'
+    | 'BUSAN'
+    | 'KDB'
+    | 'SUHYUP'
+    | 'SHINHAN'
+    | 'WOORI'
+    | 'JEONBUK'
+    | 'JEJU'
+    | 'KAKAO'
+    | 'K_BANK'
+    | 'TOSS'
+    | 'IM_BANK'
+    | 'SC_FIRST'
+    | 'CITI'
+    | 'MG'
+    | 'FORESTRY'
+    | 'CREDIT_UNION'
+    | 'POST_OFFICE'
+    | 'SAVINGS';
+  accountNumber?: string;
+  accountHolder?: string;
+  participantCount?: number;
+  debtorCount?: number;
+  paidCount?: number;
+  myAmount?: number;
+  paymentStatus: 'PAID' | 'UNPAID' | null;
+  recipientIds?: Array<number>;
+  photos?: Array<SettlementPhotoResponse>;
+  revision?: number;
+  createdAt?: string;
+  isMe: boolean;
+};
+
+export type SettlementPhotoResponse = {
+  imageId?: number;
+  readUrl: string | null;
+  expiresAt: string | null;
+  retentionExpiresAt: string | null;
+};
+
+export type SettlementPaymentRequest = {
+  paymentStatus: 'PAID' | 'UNPAID';
+};
+
+export type SettlementPaymentResponse = {
+  settlementId?: number;
+  recipientId?: number;
+  paymentStatus?: 'PAID' | 'UNPAID';
+  statusChangedAt?: string;
+};
+
+export type AfterpartyVoteRequest = {
+  response: 'ATTENDING' | 'NOT_ATTENDING';
+};
+
+export type AfterpartyResponseResult = {
+  afterpartyId?: number;
+  recipientId?: number;
+  response?: 'UNANSWERED' | 'ATTENDING' | 'NOT_ATTENDING';
+  respondedAt: string | null;
+};
+
+export type UpdateTeamRequest = {
+  expectedVersion: number;
+  name: string;
+  serviceName?: string | null;
+};
+
+export type TeamMemberResponse = {
+  membershipId: number;
+  name: string;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+};
+
+export type TeamResponse = {
+  teamId: number;
+  name: string;
+  serviceName: string | null;
+  totalMemberCount: number;
+  version: number;
+  members: Array<TeamMemberResponse>;
+};
+
+export type ReplaceTeamMembersRequest = {
+  expectedVersion: number;
+  members: Array<TeamMemberRequest>;
+};
+
+export type TeamMemberRequest = {
+  membershipId: number;
+  /**
+   * 후보 조회 시 확인한 현재 Team ID. 미배정이면 null
+   */
+  expectedCurrentTeamId?: number | null;
+};
+
+export type CreateSessionRequest = {
+  name: string;
+  /**
+   * REGULAR 세션 장소. TEAM이면 null
+   */
+  location: string | null;
+  date: string;
+  startTime: string;
+  endTime: string;
+  type: 'REGULAR' | 'TEAM';
+  /**
+   * REGULAR 필수 도로명주소, TEAM은 null. 최대 255자
+   */
+  roadAddress?: string | null;
+  /**
+   * REGULAR 필수 위도(-90~90). 저장 시 소수점 7자리 HALF_UP 반올림, TEAM은 null
+   */
+  latitude?: number | null;
+  /**
+   * REGULAR 필수 경도(-180~180). 저장 시 소수점 7자리 HALF_UP 반올림, TEAM은 null
+   */
+  longitude?: number | null;
+  /**
+   * REGULAR 선택 상세주소, TEAM은 null. 최대 255자
+   */
+  detailAddress?: string | null;
+};
+
+export type AdminMemberUpdateRequest = {
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  /**
+   * PLAYER(활동회원), OB(정회원), COMPLETED_MEMBER(수료회원), STAFF(앱 운영진), DEFERRED(유예회원). WITHDRAWN은 요청할 수 없으며 STAFF는 독립 관리자 계정 권한과 다르다.
+   */
+  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'STAFF' | 'DEFERRED';
+  expectedRevision: number;
+  /**
+   * 다른 기수이면 기존 소속을 보존하고 새 소속을 추가한다. 생략/null/동일 값이면 기존 소속을 정정한다.
+   */
+  targetGenerationId?: number | null;
+  /**
+   * 생략하면 유지, 입력하면 모든 기수와 앱 프로필의 공통 이름을 변경한다. null/공백은 허용하지 않는다.
+   */
+  name?: string;
+};
+
+export type AdminMemberChangeResponse = {
+  field: string;
+  before: string | null;
+  after: string | null;
+  changedByStaffId: number;
+  changedAt: string;
+};
+
+export type AdminMemberDetailResponse = {
+  memberId: number;
+  membershipId: number;
+  name: string;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF' | 'WITHDRAWN';
+  previousActivities: Array<AdminPreviousActivityResponse>;
+  attendanceScore: number | null;
+  signedUpDate: string;
+  teamName: string | null;
+  phoneNumber: string | null;
+  revision: number;
+  changes: Array<AdminMemberChangeResponse>;
+  generationId: number;
+};
+
+export type AdminPreviousActivityResponse = {
+  generationNumber: number;
+  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF' | 'WITHDRAWN';
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+};
+
+export type AdminAfterpartyResponseRequest = {
+  response: 'UNANSWERED' | 'ATTENDING' | 'NOT_ATTENDING';
+};
+
+export type RegisterUserRequest = {
+  /**
+   * Native 가입 흐름의 일회용 가입 토큰. Web은 HttpOnly 가입 쿠키를 사용할 수 있다.
+   */
+  registrationToken?: string | null;
+  /**
+   * 사용자 이름
+   */
+  name: string;
+  /**
+   * E.164 형식 전화번호
+   */
+  phoneNumber: string;
+};
+
+export type AuthSessionResponse = {
+  /**
+   * YAPP Plus access token
+   */
+  accessToken: string;
+  /**
+   * Native 응답의 refresh token. Web cookie 흐름에서는 응답 body에서 생략된다.
+   */
+  refreshToken: string | null;
+  /**
+   * access token 만료까지 남은 초
+   */
+  expiresIn: number;
+};
+
+export type AuthenticationResponse = {
+  /**
+   * 인증 결과
+   */
+  result: 'SIGNED_IN' | 'SIGNUP_REQUIRED';
+  /**
+   * SIGNED_IN일 때의 사용자
+   */
+  user: UserResponse | null;
+  /**
+   * SIGNED_IN일 때의 세션
+   */
+  session: AuthSessionResponse | null;
+  /**
+   * SIGNUP_REQUIRED일 때의 일회용 가입 토큰. Web에서는 HttpOnly cookie로 전달될 수 있다.
+   */
+  registrationToken: string | null;
+  /**
+   * SIGNUP_REQUIRED 가입 토큰 만료까지 남은 초
+   */
+  expiresIn: number | null;
+};
+
+export type UserResponse = {
+  /**
+   * User 식별자
+   */
+  id: number;
+  /**
+   * 사용자 이름
+   */
+  name: string;
+  /**
+   * E.164 형식 전화번호
+   */
+  phoneNumber: string;
 };
 
 export type SubmitTeamPhotoRequest = {
@@ -401,12 +544,81 @@ export type VerifyAttendanceCodeResponse = {
 
 export type SubmitAttendanceReportRequest = {
   type: 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
-  reason?: string | null;
+  /**
+   * 필수 원문 문자열, 공백만 불가. 2~30 Unicode 코드포인트이며 trim하지 않는다. NUL·잘못된 Unicode는 거절한다.
+   */
+  reason: string;
 };
 
 export type AttendanceReportResponse = {
   sessionId: number;
   submittedAt: string;
+};
+
+export type SettlementWriteRequest = {
+  bank:
+    | 'HANA'
+    | 'KB_KOOKMIN'
+    | 'IBK'
+    | 'NH'
+    | 'KYONGNAM'
+    | 'KWANGJU'
+    | 'BUSAN'
+    | 'KDB'
+    | 'SUHYUP'
+    | 'SHINHAN'
+    | 'WOORI'
+    | 'JEONBUK'
+    | 'JEJU'
+    | 'KAKAO'
+    | 'K_BANK'
+    | 'TOSS'
+    | 'IM_BANK'
+    | 'SC_FIRST'
+    | 'CITI'
+    | 'MG'
+    | 'FORESTRY'
+    | 'CREDIT_UNION'
+    | 'POST_OFFICE'
+    | 'SAVINGS';
+  /**
+   * 앞자리 0을 보존하는 숫자·하이픈 문자열, trim 후1~50자
+   */
+  accountNumber: string;
+  /**
+   * trim 후1~100코드포인트
+   */
+  accountHolder: string;
+  /**
+   * 클라이언트 원문 총액. 인당금액과 일치 검증하지 않음
+   */
+  totalAmount: number;
+  /**
+   * 클라이언트 원문 인당금액. 서버 분할계산 없음
+   */
+  perPersonAmount: number;
+  recipientIds: Array<number>;
+  imageIds: Array<number>;
+};
+
+export type SettlementPresignRequest = {
+  filename?: string;
+  contentType?: string;
+  sizeBytes?: number;
+  checksumSha256?: string;
+  /**
+   * 기존 정산 수정이면 지정. 해당 creator만 허용
+   */
+  settlementId?: number | null;
+};
+
+export type SettlementPhotoUploadResponse = {
+  imageId?: number;
+  uploadUrl?: string;
+  signedHeaders?: {
+    [key: string]: string;
+  };
+  expiresAt?: string;
 };
 
 export type CreateNotificationRequest = {
@@ -433,6 +645,9 @@ export type CreatedNotificationResponse = {
 };
 
 export type RejectMemberRequest = {
+  /**
+   * 필수 문자열. CRLF/CR을 LF로 통일하고 앞뒤 Unicode 공백을 제거한 후 1~2,000 Unicode 코드포인트. 정규화 전 원문 길이에 maxLength를 적용하지 않는다. 내부 LF/TAB·특수문자·이모지는 허용하고 그 외 C0/C1 제어문자는 금지한다.
+   */
   reason: string;
 };
 
@@ -444,7 +659,7 @@ export type MemberDetailResponse = {
   accountDeleted: boolean;
   signedUpAt: string;
   reviewStatus: string;
-  role: 'PLAYER' | 'OB' | null;
+  role: 'PLAYER' | 'OB' | 'STAFF' | null;
   memberships: Array<MemberMembershipResponse>;
   rejectionReason: string | null;
 };
@@ -458,7 +673,7 @@ export type MemberMembershipResponse = {
 
 export type ApproveMemberRequest = {
   approvalType: 'ROSTER' | 'MANUAL';
-  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED';
+  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF';
   position?: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
   phoneNumber?: string | null;
   generationId?: number | null;
@@ -503,7 +718,7 @@ export type GenerationRosterEntryRequest = {
    */
   phoneNumber: string;
   position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE';
-  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED';
+  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF';
 };
 
 export type RegisterGenerationRosterRequest = {
@@ -588,6 +803,49 @@ export type PresignPostImageResponse = {
   expiresAt: string;
 };
 
+export type AfterpartyCreateRequest = {
+  /**
+   * trim 후 코드포인트 1~50자, 한 줄
+   */
+  title: string;
+  /**
+   * trim 후 코드포인트 1~2000자
+   */
+  content: string;
+  /**
+   * offset 포함 ISO8601, 미래 시각
+   */
+  startsAt: string;
+  /**
+   * 미래 시각, startsAt보다 이전
+   */
+  deadline: string;
+  invitationRoles: Array<'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF'>;
+};
+
+export type AdminAfterpartyResponse = {
+  afterpartyId?: number;
+  generationId?: number;
+  generationNumber?: number;
+  title?: string;
+  content?: string;
+  startsAt?: string;
+  startsAtDisplay?: string;
+  deadline?: string;
+  deadlineDisplay?: string;
+  invitationRoles?: Array<'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF'>;
+  state?: 'OPEN' | 'CLOSED' | 'ENDED';
+  counts?: AfterpartyCountsResponse;
+};
+
+export type AfterpartyCountsResponse = {
+  totalCount?: number;
+  respondedCount?: number;
+  attendingCount?: number;
+  notAttendingCount?: number;
+  unansweredCount?: number;
+};
+
 export type StaffLoginRequest = {
   loginId: string;
   password: string;
@@ -667,7 +925,7 @@ export type PostImageResponse = {
 export type UserProfileResponse = {
   userId: number;
   name: string;
-  membershipStatus: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | null;
+  membershipStatus: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF' | null;
   /**
    * 선택된 기수의 DB ID. 유효 소속이 없으면 null
    */
@@ -689,11 +947,33 @@ export type UserNotificationListItemResponse = {
   /**
    * 알림 출처
    */
-  type: 'GENERAL' | 'POST';
+  type: 'GENERAL' | 'POST' | 'SESSION_REMINDER' | 'SETTLEMENT';
   /**
    * 공지 상세 이동용 ID. 일반 알림이면 null
    */
   postId: number | null;
+  /**
+   * 세션 자동 알림의 이동용 세션 ID. 다른 알림은 null
+   */
+  sessionId: number | null;
+  reminderKind: 'DAY_BEFORE_REGULAR' | 'BEFORE_ATTENDANCE_END' | 'AFTER_REGULAR_START' | null;
+  navigationTarget: 'SESSION_SCHEDULE' | 'SETTLEMENT' | null;
+  /**
+   * 정산 알림 이동용 ID
+   */
+  settlementId: number | null;
+  /**
+   * 정산의 부모 뒤풀이 ID
+   */
+  afterpartyId: number | null;
+  /**
+   * 정산 알림 제목. 기존source는null
+   */
+  title: string | null;
+  /**
+   * 정산 CREATED/REMINDER. 기존source는null
+   */
+  settlementKind: string | null;
 };
 
 export type UserNotificationListResponse = {
@@ -970,6 +1250,131 @@ export type AttendanceHistorySummaryResponse = {
   startedSessionCount: number;
 };
 
+export type AppAfterpartyListItemResponse = {
+  afterpartyId?: number;
+  title?: string;
+  startsAt?: string;
+  startsAtDisplay?: string;
+  deadline?: string;
+  deadlineDisplay?: string;
+  respondedCount?: number;
+  state?: 'OPEN' | 'CLOSED' | 'ENDED';
+};
+
+export type AppAfterpartyPageResponse = {
+  items?: Array<AppAfterpartyListItemResponse>;
+  nextCursor: string | null;
+};
+
+export type AppAfterpartyDetailResponse = {
+  afterpartyId?: number;
+  title?: string;
+  content?: string;
+  startsAt?: string;
+  startsAtDisplay?: string;
+  deadline?: string;
+  deadlineDisplay?: string;
+  state?: 'OPEN' | 'CLOSED' | 'ENDED';
+  response?: 'UNANSWERED' | 'ATTENDING' | 'NOT_ATTENDING';
+  /**
+   * 미응답이면 null, 참석/불참 응답 후 참석 수 공개
+   */
+  attendingCount: number | null;
+};
+
+export type SettlementListItemResponse = {
+  settlementId?: number;
+  afterpartyId?: number;
+  creatorUserId?: number;
+  creatorName?: string;
+  participantCount?: number;
+  myAmount?: number;
+  paymentStatus: 'PAID' | 'UNPAID' | null;
+  bank:
+    | 'HANA'
+    | 'KB_KOOKMIN'
+    | 'IBK'
+    | 'NH'
+    | 'KYONGNAM'
+    | 'KWANGJU'
+    | 'BUSAN'
+    | 'KDB'
+    | 'SUHYUP'
+    | 'SHINHAN'
+    | 'WOORI'
+    | 'JEONBUK'
+    | 'JEJU'
+    | 'KAKAO'
+    | 'K_BANK'
+    | 'TOSS'
+    | 'IM_BANK'
+    | 'SC_FIRST'
+    | 'CITI'
+    | 'MG'
+    | 'FORESTRY'
+    | 'CREDIT_UNION'
+    | 'POST_OFFICE'
+    | 'SAVINGS'
+    | null;
+  accountNumber: string | null;
+  accountHolder: string | null;
+  isMe: boolean;
+};
+
+export type SettlementListResponse = {
+  items?: Array<SettlementListItemResponse>;
+  nextCursor: string | null;
+};
+
+export type SettlementSummaryResponse = {
+  settlementId?: number;
+  expectedReceivableAmount?: number;
+  perPersonAmount?: number;
+  debtorCount?: number;
+  paidCount?: number;
+};
+
+export type SettlementPeopleResponse = {
+  afterpartyId?: number;
+  settlementId: number | null;
+  items?: Array<SettlementPersonResponse>;
+  nextCursor: string | null;
+};
+
+export type SettlementPersonResponse = {
+  /**
+   * 후보 API는 Afterparty 초대 대상 ID, 납부 명단 API는 Settlement 대상 ID. 생성/수정 입력에는 항상 후보 ID 사용
+   */
+  recipientId?: number;
+  userId?: number;
+  membershipId?: number;
+  name?: string;
+  teamId: number | null;
+  teamName: string | null;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  paymentStatus: 'PAID' | 'UNPAID' | null;
+  statusChangedAt: string | null;
+  isMe: boolean;
+};
+
+export type AfterpartyAttendeeResponse = {
+  recipientId?: number;
+  userId?: number;
+  membershipId?: number;
+  name?: string;
+  teamId: number | null;
+  teamName: string | null;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  isMe: boolean;
+};
+
+export type AfterpartyAttendeesResponse = {
+  afterpartyId?: number;
+  attendingCount?: number;
+  items?: Array<AfterpartyAttendeeResponse>;
+  nextCursor: string | null;
+};
+
 export type RetainedHistoryEntry = {
   sourceType: string;
   sourceId: number;
@@ -1024,7 +1429,7 @@ export type RosterCandidateView = {
   phoneNumber: string;
   generationId: number;
   position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
-  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | null;
+  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF' | null;
 };
 
 export type AdminGenerationListItemResponse = {
@@ -1193,7 +1598,7 @@ export type GenerationRosterListEntryResponse = {
   phoneNumber: string;
   generationId: number;
   position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
-  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | null;
+  role: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF' | null;
   status: 'AVAILABLE';
 };
 
@@ -1263,7 +1668,7 @@ export type AdminMemberItemResponse = {
   membershipId: number;
   name: string;
   position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
-  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'WITHDRAWN';
+  status: 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF' | 'WITHDRAWN';
   previousActivities: Array<AdminPreviousActivityResponse>;
   attendanceScore: number | null;
   signedUpDate: string;
@@ -1298,6 +1703,50 @@ export type AdminAttendanceStatisticsItemResponse = {
 
 export type AdminAttendanceStatisticsListResponse = {
   items: Array<AdminAttendanceStatisticsItemResponse>;
+};
+
+export type AdminAfterpartyPageResponse = {
+  items?: Array<AdminAfterpartyResponse>;
+  nextCursor: string | null;
+};
+
+export type AfterpartyRecipientCountResponse = {
+  generationId?: number;
+  invitationRoles?: Array<'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF'>;
+  recipientCount?: number;
+};
+
+export type AfterpartyGroupResponse = {
+  groupId?: string;
+  kind?: 'TEAM' | 'STAFF' | 'UNASSIGNED';
+  teamId: number | null;
+  name?: string;
+  counts?: AfterpartyCountsResponse;
+};
+
+export type AfterpartyGroupsResponse = {
+  afterpartyId?: number;
+  groups?: Array<AfterpartyGroupResponse>;
+};
+
+export type AfterpartyRecipientResponse = {
+  recipientId?: number;
+  userId?: number;
+  membershipId?: number;
+  name?: string;
+  teamId: number | null;
+  teamName: string | null;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  response?: 'UNANSWERED' | 'ATTENDING' | 'NOT_ATTENDING';
+  respondedAt: string | null;
+  respondedAtDisplay: string | null;
+};
+
+export type AfterpartyRecipientsResponse = {
+  afterpartyId?: number;
+  totalCount?: number;
+  items?: Array<AfterpartyRecipientResponse>;
+  nextCursor: string | null;
 };
 
 export type RemoveData = {
@@ -1412,6 +1861,193 @@ export type AcknowledgeResponses = {
 
 export type AcknowledgeResponse = AcknowledgeResponses[keyof AcknowledgeResponses];
 
+export type DetailData = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+    settlementId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}';
+};
+
+export type DetailErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type DetailError = DetailErrors[keyof DetailErrors];
+
+export type DetailResponses = {
+  /**
+   * 성공
+   */
+  200: SettlementDetailResponse;
+};
+
+export type DetailResponse = DetailResponses[keyof DetailResponses];
+
+export type UpdateData = {
+  body: SettlementUpdateRequest;
+  path: {
+    afterpartyId: number;
+    settlementId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}';
+};
+
+export type UpdateErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type UpdateError = UpdateErrors[keyof UpdateErrors];
+
+export type UpdateResponses = {
+  /**
+   * 성공
+   */
+  200: SettlementDetailResponse;
+};
+
+export type UpdateResponse = UpdateResponses[keyof UpdateResponses];
+
+export type PaymentData = {
+  body: SettlementPaymentRequest;
+  path: {
+    afterpartyId: number;
+    settlementId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}/payment';
+};
+
+export type PaymentErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type PaymentError = PaymentErrors[keyof PaymentErrors];
+
+export type PaymentResponses = {
+  /**
+   * 성공
+   */
+  200: SettlementPaymentResponse;
+};
+
+export type PaymentResponse = PaymentResponses[keyof PaymentResponses];
+
+export type RespondData = {
+  body: AfterpartyVoteRequest;
+  path: {
+    afterpartyId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}/response';
+};
+
+export type RespondErrors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND: 없거나 열람 권한 없음
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_VOTING_CLOSED
+   */
+  409: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type RespondError = RespondErrors[keyof RespondErrors];
+
+export type RespondResponses = {
+  /**
+   * 성공
+   */
+  200: AfterpartyResponseResult;
+};
+
+export type RespondResponse = RespondResponses[keyof RespondResponses];
+
 export type DeleteData = {
   body?: never;
   path: {
@@ -1476,7 +2112,7 @@ export type FindResponses = {
 
 export type FindResponse = FindResponses[keyof FindResponses];
 
-export type UpdateData = {
+export type Update1Data = {
   body: UpdateTeamRequest;
   path: {
     generationId: number;
@@ -1486,7 +2122,7 @@ export type UpdateData = {
   url: '/api/admin/generations/{generationId}/teams/{teamId}';
 };
 
-export type UpdateErrors = {
+export type Update1Errors = {
   /**
    * INVALID_TEAM_REQUEST
    */
@@ -1505,16 +2141,16 @@ export type UpdateErrors = {
   409: ErrorResponse;
 };
 
-export type UpdateError = UpdateErrors[keyof UpdateErrors];
+export type Update1Error = Update1Errors[keyof Update1Errors];
 
-export type UpdateResponses = {
+export type Update1Responses = {
   /**
    * OK
    */
   200: TeamResponse;
 };
 
-export type UpdateResponse = UpdateResponses[keyof UpdateResponses];
+export type Update1Response = Update1Responses[keyof Update1Responses];
 
 export type ReplaceMembersData = {
   body: ReplaceTeamMembersRequest;
@@ -1592,7 +2228,7 @@ export type Delete1Responses = {
 
 export type Delete1Response = Delete1Responses[keyof Delete1Responses];
 
-export type Update1Data = {
+export type Update2Data = {
   body: CreateSessionRequest;
   path: {
     generationId: number;
@@ -1602,7 +2238,7 @@ export type Update1Data = {
   url: '/api/admin/generations/{generationId}/sessions/{sessionId}';
 };
 
-export type Update1Errors = {
+export type Update2Errors = {
   /**
    * INVALID_SESSION_REQUEST
    */
@@ -1621,18 +2257,18 @@ export type Update1Errors = {
   409: ErrorResponse;
 };
 
-export type Update1Error = Update1Errors[keyof Update1Errors];
+export type Update2Error = Update2Errors[keyof Update2Errors];
 
-export type Update1Responses = {
+export type Update2Responses = {
   /**
    * 수정 성공
    */
   204: void;
 };
 
-export type Update1Response = Update1Responses[keyof Update1Responses];
+export type Update2Response = Update2Responses[keyof Update2Responses];
 
-export type DetailData = {
+export type Detail1Data = {
   body?: never;
   path: {
     generationId: number;
@@ -1642,7 +2278,7 @@ export type DetailData = {
   url: '/api/admin/generations/{generationId}/members/{memberId}';
 };
 
-export type DetailErrors = {
+export type Detail1Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -1661,16 +2297,16 @@ export type DetailErrors = {
   503: ErrorResponse;
 };
 
-export type DetailError = DetailErrors[keyof DetailErrors];
+export type Detail1Error = Detail1Errors[keyof Detail1Errors];
 
-export type DetailResponses = {
+export type Detail1Responses = {
   /**
    * 조회 성공
    */
   200: AdminMemberDetailResponse;
 };
 
-export type DetailResponse = DetailResponses[keyof DetailResponses];
+export type Detail1Response = Detail1Responses[keyof Detail1Responses];
 
 export type CorrectData = {
   body: AdminMemberUpdateRequest;
@@ -1719,6 +2355,46 @@ export type CorrectResponses = {
 };
 
 export type CorrectResponse = CorrectResponses[keyof CorrectResponses];
+
+export type Respond1Data = {
+  body: AdminAfterpartyResponseRequest;
+  path: {
+    afterpartyId: number;
+    recipientId: number;
+  };
+  query?: never;
+  url: '/api/admin/afterparties/{afterpartyId}/recipients/{recipientId}/response';
+};
+
+export type Respond1Errors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND 또는 GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Respond1Error = Respond1Errors[keyof Respond1Errors];
+
+export type Respond1Responses = {
+  /**
+   * 성공
+   */
+  200: AfterpartyResponseResult;
+};
+
+export type Respond1Response = Respond1Responses[keyof Respond1Responses];
 
 export type Register1Data = {
   /**
@@ -2209,6 +2885,149 @@ export type Submit1Responses = {
 
 export type Submit1Response = Submit1Responses[keyof Submit1Responses];
 
+export type ListData = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+  };
+  query?: {
+    cursor?: string;
+  };
+  url: '/api/afterparties/{afterpartyId}/settlements';
+};
+
+export type ListErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type ListError = ListErrors[keyof ListErrors];
+
+export type ListResponses = {
+  /**
+   * 성공
+   */
+  200: SettlementListResponse;
+};
+
+export type ListResponse = ListResponses[keyof ListResponses];
+
+export type CreateData = {
+  body: SettlementWriteRequest;
+  path: {
+    afterpartyId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}/settlements';
+};
+
+export type CreateErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type CreateError = CreateErrors[keyof CreateErrors];
+
+export type CreateResponses = {
+  /**
+   * 생성
+   */
+  201: SettlementDetailResponse;
+};
+
+export type CreateResponse = CreateResponses[keyof CreateResponses];
+
+export type Presign1Data = {
+  body: SettlementPresignRequest;
+  path: {
+    afterpartyId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}/settlement-images/presign';
+};
+
+export type Presign1Errors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Presign1Error = Presign1Errors[keyof Presign1Errors];
+
+export type Presign1Responses = {
+  /**
+   * 성공
+   */
+  200: SettlementPhotoUploadResponse;
+};
+
+export type Presign1Response = Presign1Responses[keyof Presign1Responses];
+
 export type HistoryData = {
   body?: never;
   path?: never;
@@ -2247,7 +3066,7 @@ export type HistoryResponses = {
 
 export type HistoryResponse = HistoryResponses[keyof HistoryResponses];
 
-export type CreateData = {
+export type Create1Data = {
   body: CreateNotificationRequest;
   headers: {
     'Idempotency-Key': string;
@@ -2257,7 +3076,7 @@ export type CreateData = {
   url: '/api/admin/notifications';
 };
 
-export type CreateErrors = {
+export type Create1Errors = {
   /**
    * INVALID_NOTIFICATION_REQUEST
    */
@@ -2276,16 +3095,16 @@ export type CreateErrors = {
   503: ErrorResponse;
 };
 
-export type CreateError = CreateErrors[keyof CreateErrors];
+export type Create1Error = Create1Errors[keyof Create1Errors];
 
-export type CreateResponses = {
+export type Create1Responses = {
   /**
    * Accepted
    */
   202: CreatedNotificationResponse;
 };
 
-export type CreateResponse = CreateResponses[keyof CreateResponses];
+export type Create1Response = Create1Responses[keyof Create1Responses];
 
 export type CancelData = {
   body?: never;
@@ -2362,7 +3181,7 @@ export type RejectError = RejectErrors[keyof RejectErrors];
 
 export type RejectResponses = {
   /**
-   * OK
+   * 거절 결과와 정규화된 사유 반환
    */
   200: MemberDetailResponse;
 };
@@ -2439,7 +3258,7 @@ export type FindAllResponses = {
 
 export type FindAllResponse = FindAllResponses[keyof FindAllResponses];
 
-export type Create1Data = {
+export type Create2Data = {
   body: CreateTeamRequest;
   path: {
     generationId: number;
@@ -2448,7 +3267,7 @@ export type Create1Data = {
   url: '/api/admin/generations/{generationId}/teams';
 };
 
-export type Create1Errors = {
+export type Create2Errors = {
   /**
    * INVALID_TEAM_REQUEST
    */
@@ -2467,16 +3286,16 @@ export type Create1Errors = {
   409: ErrorResponse;
 };
 
-export type Create1Error = Create1Errors[keyof Create1Errors];
+export type Create2Error = Create2Errors[keyof Create2Errors];
 
-export type Create1Responses = {
+export type Create2Responses = {
   /**
    * 생성 성공
    */
   201: TeamResponse;
 };
 
-export type Create1Response = Create1Responses[keyof Create1Responses];
+export type Create2Response = Create2Responses[keyof Create2Responses];
 
 export type Find2Data = {
   body?: never;
@@ -2518,7 +3337,7 @@ export type Find2Responses = {
 
 export type Find2Response = Find2Responses[keyof Find2Responses];
 
-export type Create2Data = {
+export type Create3Data = {
   body: CreateSessionRequest;
   path: {
     generationId: number;
@@ -2527,7 +3346,7 @@ export type Create2Data = {
   url: '/api/admin/generations/{generationId}/sessions';
 };
 
-export type Create2Errors = {
+export type Create3Errors = {
   /**
    * INVALID_SESSION_REQUEST
    */
@@ -2546,16 +3365,16 @@ export type Create2Errors = {
   409: ErrorResponse;
 };
 
-export type Create2Error = Create2Errors[keyof Create2Errors];
+export type Create3Error = Create3Errors[keyof Create3Errors];
 
-export type Create2Responses = {
+export type Create3Responses = {
   /**
    * 등록 성공
    */
   201: CreateSessionResponse;
 };
 
-export type Create2Response = Create2Responses[keyof Create2Responses];
+export type Create3Response = Create3Responses[keyof Create3Responses];
 
 export type DecideData = {
   body: DecideTeamPhotoRequest;
@@ -2813,7 +3632,7 @@ export type Register2Responses = {
 
 export type Register2Response = Register2Responses[keyof Register2Responses];
 
-export type ListData = {
+export type List1Data = {
   body?: never;
   path: {
     generationId: number;
@@ -2825,7 +3644,7 @@ export type ListData = {
   url: '/api/admin/generations/{generationId}/posts';
 };
 
-export type ListErrors = {
+export type List1Errors = {
   /**
    * INVALID_POST_REQUEST|INVALID_POST_CURSOR
    */
@@ -2840,18 +3659,18 @@ export type ListErrors = {
   404: ErrorResponse;
 };
 
-export type ListError = ListErrors[keyof ListErrors];
+export type List1Error = List1Errors[keyof List1Errors];
 
-export type ListResponses = {
+export type List1Responses = {
   /**
    * OK
    */
   200: AdminPostListResponse;
 };
 
-export type ListResponse = ListResponses[keyof ListResponses];
+export type List1Response = List1Responses[keyof List1Responses];
 
-export type Create3Data = {
+export type Create4Data = {
   body: CreateAdminPostRequest;
   headers: {
     'Idempotency-Key': string;
@@ -2863,7 +3682,7 @@ export type Create3Data = {
   url: '/api/admin/generations/{generationId}/posts';
 };
 
-export type Create3Errors = {
+export type Create4Errors = {
   /**
    * INVALID_POST_REQUEST|EMPTY_POST_AUDIENCE|INVALID_POST_IMAGE
    */
@@ -2886,18 +3705,18 @@ export type Create3Errors = {
   503: ErrorResponse;
 };
 
-export type Create3Error = Create3Errors[keyof Create3Errors];
+export type Create4Error = Create4Errors[keyof Create4Errors];
 
-export type Create3Responses = {
+export type Create4Responses = {
   /**
    * Created
    */
   201: CreatedPostResponse;
 };
 
-export type Create3Response = Create3Responses[keyof Create3Responses];
+export type Create4Response = Create4Responses[keyof Create4Responses];
 
-export type Presign1Data = {
+export type Presign2Data = {
   body: PresignPostImageRequest;
   path: {
     generationId: number;
@@ -2906,7 +3725,7 @@ export type Presign1Data = {
   url: '/api/admin/generations/{generationId}/post-images/presign';
 };
 
-export type Presign1Errors = {
+export type Presign2Errors = {
   /**
    * INVALID_POST_REQUEST|INVALID_POST_IMAGE
    */
@@ -2925,16 +3744,97 @@ export type Presign1Errors = {
   503: ErrorResponse;
 };
 
-export type Presign1Error = Presign1Errors[keyof Presign1Errors];
+export type Presign2Error = Presign2Errors[keyof Presign2Errors];
 
-export type Presign1Responses = {
+export type Presign2Responses = {
   /**
    * OK
    */
   200: PresignPostImageResponse;
 };
 
-export type Presign1Response = Presign1Responses[keyof Presign1Responses];
+export type Presign2Response = Presign2Responses[keyof Presign2Responses];
+
+export type List2Data = {
+  body?: never;
+  path: {
+    generationId: number;
+  };
+  query?: {
+    period?: 'UPCOMING' | 'PAST';
+    cursor?: string;
+  };
+  url: '/api/admin/generations/{generationId}/afterparties';
+};
+
+export type List2Errors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND 또는 GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type List2Error = List2Errors[keyof List2Errors];
+
+export type List2Responses = {
+  /**
+   * 성공
+   */
+  200: AdminAfterpartyPageResponse;
+};
+
+export type List2Response = List2Responses[keyof List2Responses];
+
+export type Create5Data = {
+  body: AfterpartyCreateRequest;
+  path: {
+    generationId: number;
+  };
+  query?: never;
+  url: '/api/admin/generations/{generationId}/afterparties';
+};
+
+export type Create5Errors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND 또는 GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Create5Error = Create5Errors[keyof Create5Errors];
+
+export type Create5Responses = {
+  /**
+   * 생성 성공
+   */
+  201: AdminAfterpartyResponse;
+};
+
+export type Create5Response = Create5Responses[keyof Create5Responses];
 
 export type LoginData = {
   body: StaffLoginRequest;
@@ -3067,7 +3967,7 @@ export type Delete2Responses = {
 
 export type Delete2Response = Delete2Responses[keyof Delete2Responses];
 
-export type Detail1Data = {
+export type Detail2Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3077,7 +3977,7 @@ export type Detail1Data = {
   url: '/api/admin/generations/{generationId}/posts/{postId}';
 };
 
-export type Detail1Errors = {
+export type Detail2Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -3088,18 +3988,18 @@ export type Detail1Errors = {
   404: ErrorResponse;
 };
 
-export type Detail1Error = Detail1Errors[keyof Detail1Errors];
+export type Detail2Error = Detail2Errors[keyof Detail2Errors];
 
-export type Detail1Responses = {
+export type Detail2Responses = {
   /**
    * OK
    */
   200: AdminPostDetailResponse;
 };
 
-export type Detail1Response = Detail1Responses[keyof Detail1Responses];
+export type Detail2Response = Detail2Responses[keyof Detail2Responses];
 
-export type Update2Data = {
+export type Update3Data = {
   body: UpdateAdminPostRequest;
   path: {
     generationId: number;
@@ -3109,7 +4009,7 @@ export type Update2Data = {
   url: '/api/admin/generations/{generationId}/posts/{postId}';
 };
 
-export type Update2Errors = {
+export type Update3Errors = {
   /**
    * INVALID_POST_REQUEST|INVALID_POST_IMAGE
    */
@@ -3132,16 +4032,16 @@ export type Update2Errors = {
   503: ErrorResponse;
 };
 
-export type Update2Error = Update2Errors[keyof Update2Errors];
+export type Update3Error = Update3Errors[keyof Update3Errors];
 
-export type Update2Responses = {
+export type Update3Responses = {
   /**
    * OK
    */
   200: AdminPostDetailResponse;
 };
 
-export type Update2Response = Update2Responses[keyof Update2Responses];
+export type Update3Response = Update3Responses[keyof Update3Responses];
 
 export type WithdrawData = {
   body?: never;
@@ -3319,7 +4219,7 @@ export type Find6Responses = {
 
 export type Find6Response = Find6Responses[keyof Find6Responses];
 
-export type List1Data = {
+export type List3Data = {
   body?: never;
   path?: never;
   query?: {
@@ -3332,7 +4232,7 @@ export type List1Data = {
   url: '/api/posts';
 };
 
-export type List1Errors = {
+export type List3Errors = {
   /**
    * INVALID_POST_REQUEST|INVALID_POST_CURSOR
    */
@@ -3343,18 +4243,18 @@ export type List1Errors = {
   401: ErrorResponse;
 };
 
-export type List1Error = List1Errors[keyof List1Errors];
+export type List3Error = List3Errors[keyof List3Errors];
 
-export type List1Responses = {
+export type List3Responses = {
   /**
    * OK
    */
   200: UserPostListResponse;
 };
 
-export type List1Response = List1Responses[keyof List1Responses];
+export type List3Response = List3Responses[keyof List3Responses];
 
-export type Detail2Data = {
+export type Detail3Data = {
   body?: never;
   path: {
     /**
@@ -3366,7 +4266,7 @@ export type Detail2Data = {
   url: '/api/posts/{postId}';
 };
 
-export type Detail2Errors = {
+export type Detail3Errors = {
   /**
    * INVALID_POST_REQUEST
    */
@@ -3385,16 +4285,16 @@ export type Detail2Errors = {
   503: ErrorResponse;
 };
 
-export type Detail2Error = Detail2Errors[keyof Detail2Errors];
+export type Detail3Error = Detail3Errors[keyof Detail3Errors];
 
-export type Detail2Responses = {
+export type Detail3Responses = {
   /**
    * OK
    */
   200: UserPostDetailResponse;
 };
 
-export type Detail2Response = Detail2Responses[keyof Detail2Responses];
+export type Detail3Response = Detail3Responses[keyof Detail3Responses];
 
 export type Find7Data = {
   body?: never;
@@ -3637,6 +4537,327 @@ export type Find8Responses = {
 
 export type Find8Response = Find8Responses[keyof Find8Responses];
 
+export type List4Data = {
+  body?: never;
+  path?: never;
+  query?: {
+    filter?: 'ALL' | 'OPEN' | 'CLOSED';
+    cursor?: string;
+  };
+  url: '/api/afterparties';
+};
+
+export type List4Errors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND: 없거나 열람 권한 없음
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type List4Error = List4Errors[keyof List4Errors];
+
+export type List4Responses = {
+  /**
+   * 성공
+   */
+  200: AppAfterpartyPageResponse;
+};
+
+export type List4Response = List4Responses[keyof List4Responses];
+
+export type Detail4Data = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}';
+};
+
+export type Detail4Errors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND: 없거나 열람 권한 없음
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Detail4Error = Detail4Errors[keyof Detail4Errors];
+
+export type Detail4Responses = {
+  /**
+   * 성공
+   */
+  200: AppAfterpartyDetailResponse;
+};
+
+export type Detail4Response = Detail4Responses[keyof Detail4Responses];
+
+export type SummaryData = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+    settlementId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}/summary';
+};
+
+export type SummaryErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type SummaryError = SummaryErrors[keyof SummaryErrors];
+
+export type SummaryResponses = {
+  /**
+   * 성공
+   */
+  200: SettlementSummaryResponse;
+};
+
+export type SummaryResponse = SummaryResponses[keyof SummaryResponses];
+
+export type RecipientsData = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+    settlementId: number;
+  };
+  query: {
+    paymentStatus: 'PAID' | 'UNPAID';
+    cursor?: string;
+  };
+  url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}/recipients';
+};
+
+export type RecipientsErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type RecipientsError = RecipientsErrors[keyof RecipientsErrors];
+
+export type RecipientsResponses = {
+  /**
+   * 성공
+   */
+  200: SettlementPeopleResponse;
+};
+
+export type RecipientsResponse = RecipientsResponses[keyof RecipientsResponses];
+
+export type EditData = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+    settlementId: number;
+  };
+  query?: never;
+  url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}/edit';
+};
+
+export type EditErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type EditError = EditErrors[keyof EditErrors];
+
+export type EditResponses = {
+  /**
+   * 성공
+   */
+  200: SettlementDetailResponse;
+};
+
+export type EditResponse = EditResponses[keyof EditResponses];
+
+export type ParticipantsData = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+  };
+  query?: {
+    settlementId?: number;
+    cursor?: string;
+  };
+  url: '/api/afterparties/{afterpartyId}/settlement-participants';
+};
+
+export type ParticipantsErrors = {
+  /**
+   * INVALID_SETTLEMENT_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * SETTLEMENT_FORBIDDEN
+   */
+  403: ErrorResponse;
+  /**
+   * SETTLEMENT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * SETTLEMENT_REVISION_CONFLICT 또는 SETTLEMENT_FINANCIAL_EDIT_LOCKED
+   */
+  409: ErrorResponse;
+  /**
+   * SETTLEMENT_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type ParticipantsError = ParticipantsErrors[keyof ParticipantsErrors];
+
+export type ParticipantsResponses = {
+  /**
+   * 성공
+   */
+  200: SettlementPeopleResponse;
+};
+
+export type ParticipantsResponse = ParticipantsResponses[keyof ParticipantsResponses];
+
+export type AttendeesData = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+  };
+  query?: {
+    cursor?: string;
+  };
+  url: '/api/afterparties/{afterpartyId}/attendees';
+};
+
+export type AttendeesErrors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_RESPONSE_REQUIRED
+   */
+  403: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND: 없거나 열람 권한 없음
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type AttendeesError = AttendeesErrors[keyof AttendeesErrors];
+
+export type AttendeesResponses = {
+  /**
+   * 성공
+   */
+  200: AfterpartyAttendeesResponse;
+};
+
+export type AttendeesResponse = AttendeesResponses[keyof AttendeesResponses];
+
 export type Find9Data = {
   body?: never;
   path: {
@@ -3793,14 +5014,14 @@ export type FindCandidatesResponses = {
 
 export type FindCandidatesResponse = FindCandidatesResponses[keyof FindCandidatesResponses];
 
-export type List2Data = {
+export type List5Data = {
   body?: never;
   path?: never;
   query?: never;
   url: '/api/admin/generations';
 };
 
-export type List2Errors = {
+export type List5Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -3811,16 +5032,16 @@ export type List2Errors = {
   500: ErrorResponse;
 };
 
-export type List2Error = List2Errors[keyof List2Errors];
+export type List5Error = List5Errors[keyof List5Errors];
 
-export type List2Responses = {
+export type List5Responses = {
   /**
    * 전체 기수 목록 조회 성공
    */
   200: AdminGenerationListResponse;
 };
 
-export type List2Response = List2Responses[keyof List2Responses];
+export type List5Response = List5Responses[keyof List5Responses];
 
 export type CandidatesData = {
   body?: never;
@@ -3858,7 +5079,7 @@ export type CandidatesResponses = {
 
 export type CandidatesResponse = CandidatesResponses[keyof CandidatesResponses];
 
-export type List3Data = {
+export type List6Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3868,7 +5089,7 @@ export type List3Data = {
   url: '/api/admin/generations/{generationId}/sessions/{sessionId}/team-attendance-photos';
 };
 
-export type List3Errors = {
+export type List6Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -3883,18 +5104,18 @@ export type List3Errors = {
   503: ErrorResponse;
 };
 
-export type List3Error = List3Errors[keyof List3Errors];
+export type List6Error = List6Errors[keyof List6Errors];
 
-export type List3Responses = {
+export type List6Responses = {
   /**
    * OK
    */
   200: TeamPhotoListResponse;
 };
 
-export type List3Response = List3Responses[keyof List3Responses];
+export type List6Response = List6Responses[keyof List6Responses];
 
-export type List4Data = {
+export type List7Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3907,7 +5128,7 @@ export type List4Data = {
   url: '/api/admin/generations/{generationId}/sessions/{sessionId}/attendance';
 };
 
-export type List4Errors = {
+export type List7Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -3918,18 +5139,18 @@ export type List4Errors = {
   404: ErrorResponse;
 };
 
-export type List4Error = List4Errors[keyof List4Errors];
+export type List7Error = List7Errors[keyof List7Errors];
 
-export type List4Responses = {
+export type List7Responses = {
   /**
    * OK
    */
   200: AdminAttendanceListResponse;
 };
 
-export type List4Response = List4Responses[keyof List4Responses];
+export type List7Response = List7Responses[keyof List7Responses];
 
-export type List5Data = {
+export type List8Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3943,7 +5164,7 @@ export type List5Data = {
   url: '/api/admin/generations/{generationId}/roster-entries';
 };
 
-export type List5Errors = {
+export type List8Errors = {
   /**
    * INVALID_ROSTER_LIST_REQUEST
    */
@@ -3962,18 +5183,18 @@ export type List5Errors = {
   500: ErrorResponse;
 };
 
-export type List5Error = List5Errors[keyof List5Errors];
+export type List8Error = List8Errors[keyof List8Errors];
 
-export type List5Responses = {
+export type List8Responses = {
   /**
    * 조회 성공
    */
   200: GenerationRosterListResponse;
 };
 
-export type List5Response = List5Responses[keyof List5Responses];
+export type List8Response = List8Responses[keyof List8Responses];
 
-export type RecipientsData = {
+export type Recipients1Data = {
   body?: never;
   path: {
     generationId: number;
@@ -3985,7 +5206,7 @@ export type RecipientsData = {
   url: '/api/admin/generations/{generationId}/posts/{postId}/recipients';
 };
 
-export type RecipientsErrors = {
+export type Recipients1Errors = {
   /**
    * INVALID_POST_CURSOR
    */
@@ -4000,18 +5221,18 @@ export type RecipientsErrors = {
   404: ErrorResponse;
 };
 
-export type RecipientsError = RecipientsErrors[keyof RecipientsErrors];
+export type Recipients1Error = Recipients1Errors[keyof Recipients1Errors];
 
-export type RecipientsResponses = {
+export type Recipients1Responses = {
   /**
    * OK
    */
   200: AdminPostRecipientListResponse;
 };
 
-export type RecipientsResponse = RecipientsResponses[keyof RecipientsResponses];
+export type Recipients1Response = Recipients1Responses[keyof Recipients1Responses];
 
-export type Detail3Data = {
+export type Detail5Data = {
   body?: never;
   path: {
     generationId: number;
@@ -4021,7 +5242,7 @@ export type Detail3Data = {
   url: '/api/admin/generations/{generationId}/memberships/{membershipId}/attendance-statistics';
 };
 
-export type Detail3Errors = {
+export type Detail5Errors = {
   /**
    * STAFF_AUTHENTICATION_FAILED
    */
@@ -4040,18 +5261,18 @@ export type Detail3Errors = {
   503: ErrorResponse;
 };
 
-export type Detail3Error = Detail3Errors[keyof Detail3Errors];
+export type Detail5Error = Detail5Errors[keyof Detail5Errors];
 
-export type Detail3Responses = {
+export type Detail5Responses = {
   /**
    * 조회 성공
    */
   200: AdminAttendanceStatisticsDetailResponse;
 };
 
-export type Detail3Response = Detail3Responses[keyof Detail3Responses];
+export type Detail5Response = Detail5Responses[keyof Detail5Responses];
 
-export type List6Data = {
+export type List9Data = {
   body?: never;
   path: {
     generationId: number;
@@ -4065,7 +5286,7 @@ export type List6Data = {
   url: '/api/admin/generations/{generationId}/members';
 };
 
-export type List6Errors = {
+export type List9Errors = {
   /**
    * INVALID_MEMBER_REQUEST|INVALID_MEMBER_CURSOR
    */
@@ -4088,16 +5309,16 @@ export type List6Errors = {
   503: ErrorResponse;
 };
 
-export type List6Error = List6Errors[keyof List6Errors];
+export type List9Error = List9Errors[keyof List9Errors];
 
-export type List6Responses = {
+export type List9Responses = {
   /**
    * 조회 성공
    */
   200: AdminMemberListResponse;
 };
 
-export type List6Response = List6Responses[keyof List6Responses];
+export type List9Response = List9Responses[keyof List9Responses];
 
 export type TeamOptionsData = {
   body?: never;
@@ -4134,7 +5355,7 @@ export type TeamOptionsResponses = {
 
 export type TeamOptionsResponse = TeamOptionsResponses[keyof TeamOptionsResponses];
 
-export type List7Data = {
+export type List10Data = {
   body?: never;
   path: {
     generationId: number;
@@ -4148,7 +5369,7 @@ export type List7Data = {
   url: '/api/admin/generations/{generationId}/attendance-statistics';
 };
 
-export type List7Errors = {
+export type List10Errors = {
   /**
    * INVALID_REQUEST
    */
@@ -4171,16 +5392,177 @@ export type List7Errors = {
   503: ErrorResponse;
 };
 
-export type List7Error = List7Errors[keyof List7Errors];
+export type List10Error = List10Errors[keyof List10Errors];
 
-export type List7Responses = {
+export type List10Responses = {
   /**
    * 조회 성공. 승인 회원이 없으면 items는 빈 배열
    */
   200: AdminAttendanceStatisticsListResponse;
 };
 
-export type List7Response = List7Responses[keyof List7Responses];
+export type List10Response = List10Responses[keyof List10Responses];
+
+export type PreviewData = {
+  body?: never;
+  path: {
+    generationId: number;
+  };
+  query: {
+    roles: Array<'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF'>;
+  };
+  url: '/api/admin/generations/{generationId}/afterparties/recipient-count';
+};
+
+export type PreviewErrors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND 또는 GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type PreviewError = PreviewErrors[keyof PreviewErrors];
+
+export type PreviewResponses = {
+  /**
+   * 성공
+   */
+  200: AfterpartyRecipientCountResponse;
+};
+
+export type PreviewResponse = PreviewResponses[keyof PreviewResponses];
+
+export type Detail6Data = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+  };
+  query?: never;
+  url: '/api/admin/afterparties/{afterpartyId}';
+};
+
+export type Detail6Errors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND 또는 GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Detail6Error = Detail6Errors[keyof Detail6Errors];
+
+export type Detail6Responses = {
+  /**
+   * 성공
+   */
+  200: AdminAfterpartyResponse;
+};
+
+export type Detail6Response = Detail6Responses[keyof Detail6Responses];
+
+export type GroupsData = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+  };
+  query?: never;
+  url: '/api/admin/afterparties/{afterpartyId}/team-responses';
+};
+
+export type GroupsErrors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND 또는 GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type GroupsError = GroupsErrors[keyof GroupsErrors];
+
+export type GroupsResponses = {
+  /**
+   * 성공
+   */
+  200: AfterpartyGroupsResponse;
+};
+
+export type GroupsResponse = GroupsResponses[keyof GroupsResponses];
+
+export type Recipients2Data = {
+  body?: never;
+  path: {
+    afterpartyId: number;
+  };
+  query?: {
+    response?: 'ALL' | 'ATTENDING' | 'NOT_ATTENDING' | 'UNANSWERED';
+    cursor?: string;
+  };
+  url: '/api/admin/afterparties/{afterpartyId}/recipients';
+};
+
+export type Recipients2Errors = {
+  /**
+   * INVALID_AFTERPARTY_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * AFTERPARTY_NOT_FOUND 또는 GENERATION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * AFTERPARTY_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Recipients2Error = Recipients2Errors[keyof Recipients2Errors];
+
+export type Recipients2Responses = {
+  /**
+   * 성공
+   */
+  200: AfterpartyRecipientsResponse;
+};
+
+export type Recipients2Response = Recipients2Responses[keyof Recipients2Responses];
 
 export type RevokeData = {
   /**

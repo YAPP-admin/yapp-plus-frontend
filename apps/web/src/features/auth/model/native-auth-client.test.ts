@@ -1,6 +1,6 @@
 import {
-  detail2,
-  detail2Options,
+  detail3,
+  detail3Options,
   find6,
   find7,
   find6Options,
@@ -75,7 +75,7 @@ it('공지 상세 GET도 401 갱신 후 새 토큰으로 한 번 재시도한다
   });
 
   await expect(
-    detail2({
+    detail3({
       ...nativeAuthClientOptions(session),
       path: { postId: 2 },
       signal: controller.signal,
@@ -203,9 +203,9 @@ const sessionQueries = [
   {
     name: '공지 상세',
     options: (config: Parameters<typeof find6Options>[0]) =>
-      detail2Options({ ...config, path: { postId: 2 } }),
+      detail3Options({ ...config, path: { postId: 2 } }),
     fetch: (client: QueryClient, auth: AuthSession) =>
-      client.fetchQuery(detail2Options({ ...nativeAuthClientOptions(auth), path: { postId: 2 } })),
+      client.fetchQuery(detail3Options({ ...nativeAuthClientOptions(auth), path: { postId: 2 } })),
   },
 ];
 

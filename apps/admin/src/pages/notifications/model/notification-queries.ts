@@ -1,6 +1,6 @@
 import {
   cancelMutation,
-  createMutation,
+  create1Mutation,
   historyInfiniteOptions,
   historyInfiniteQueryKey,
 } from '@yapp-plus/api/generated';
@@ -22,7 +22,7 @@ export function useNotificationMutations() {
     queryClient.invalidateQueries({ queryKey: historyInfiniteQueryKey() });
 
   const create = useMutation({
-    ...createMutation(),
+    ...create1Mutation(),
     onSuccess: async () => {
       await invalidateHistory();
     },

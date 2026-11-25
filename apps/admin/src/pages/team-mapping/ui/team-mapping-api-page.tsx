@@ -3,12 +3,12 @@ import { useMemo, type ReactNode } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   candidatesOptions,
-  create1Mutation,
+  create2Mutation,
   deleteMutation,
   findAllOptions,
   findOptions,
   replaceMembersMutation,
-  updateMutation,
+  update1Mutation,
   type TeamMemberCandidateResponse,
   type TeamResponse,
 } from '@yapp-plus/api/generated';
@@ -182,8 +182,8 @@ export function TeamMappingApiPage({
   );
   const teamsQuery = useQuery(teamListOptions);
   const candidatesQuery = useQuery(candidateOptions);
-  const create = useMutation(create1Mutation());
-  const update = useMutation(updateMutation());
+  const create = useMutation(create2Mutation());
+  const update = useMutation(update1Mutation());
   const replaceMembers = useMutation(replaceMembersMutation());
   const remove = useMutation(deleteMutation());
 

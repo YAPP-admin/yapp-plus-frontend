@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
-import { list5InfiniteOptions } from '@yapp-plus/api/generated';
+import { list8InfiniteOptions } from '@yapp-plus/api/generated';
 
 type UseMemberImportRosterQueryOptions = {
   generationId: number;
@@ -13,7 +13,7 @@ export function useMemberImportRosterQuery({
   enabled,
 }: UseMemberImportRosterQueryOptions) {
   const query = useInfiniteQuery({
-    ...list5InfiniteOptions({ path: { generationId } }),
+    ...list8InfiniteOptions({ path: { generationId } }),
     enabled,
     initialPageParam: { path: { generationId } },
     getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,

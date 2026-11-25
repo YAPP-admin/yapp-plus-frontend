@@ -11,6 +11,7 @@ export const approvalRoleOptions = [
   'OB',
   'COMPLETED_MEMBER',
   'DEFERRED',
+  'STAFF',
 ] as const satisfies readonly ApproveMemberRequest['role'][];
 export type ApprovalRole = (typeof approvalRoleOptions)[number];
 
@@ -31,6 +32,7 @@ export const approvalRoleLabels: Record<ApprovalRole, string> = {
   OB: 'OB',
   COMPLETED_MEMBER: 'COMPLETED_MEMBER',
   DEFERRED: 'DEFERRED',
+  STAFF: 'STAFF',
 };
 
 export const approvalPositionLabels: Record<ApprovalPosition, string> = {
