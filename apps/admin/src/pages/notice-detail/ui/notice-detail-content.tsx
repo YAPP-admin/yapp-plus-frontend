@@ -12,7 +12,7 @@ import type { NoticeDetailTab } from '../model/notice-detail-search';
 import { NoticeReaders } from './notice-readers';
 import * as styles from './notice-detail-page.css';
 
-const categoryLabels = { SESSION: '세션', OPERATION: '기타', ASSIGNMENT: '제출' } as const;
+const categoryLabels = { SESSION: '세션', OPERATION: '기타', ASSIGNMENT: '과제' } as const;
 
 const audienceLabels = {
   ALL_USERS: '전체 사용자',

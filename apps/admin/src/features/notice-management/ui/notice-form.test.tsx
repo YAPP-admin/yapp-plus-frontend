@@ -91,7 +91,7 @@ it('공백과 61자 제목을 거절하고 60자는 허용한다', async () => {
 
 it('제출 전체·직군은 배타적이며 빈 선택은 거절한다', async () => {
   const { user, onSubmit } = await setup();
-  await user.click(screen.getByRole('radio', { name: '제출' }));
+  await user.click(screen.getByRole('radio', { name: '과제' }));
   const all = screen.getByRole('checkbox', { name: '활동회원 전체' });
   expect(all).toBeChecked();
   enterDeadline();
@@ -121,7 +121,7 @@ it('제출 전체·직군은 배타적이며 빈 선택은 거절한다', async 
 
 it('마감 날짜와 시각을 각각 요구한다', async () => {
   const { user, onSubmit } = await setup();
-  await user.click(screen.getByRole('radio', { name: '제출' }));
+  await user.click(screen.getByRole('radio', { name: '과제' }));
   await user.click(screen.getByRole('button', { name: '입력 확인' }));
   expect(screen.getAllByRole('alert')).toHaveLength(4);
   expect(onSubmit).not.toHaveBeenCalled();
@@ -134,7 +134,7 @@ it('마감 날짜와 시각을 각각 요구한다', async () => {
 
 it.each(['제출 방법', '제출 주소'])('%s만 입력하면 나머지도 요구한다', async (label) => {
   const { user, onSubmit } = await setup();
-  await user.click(screen.getByRole('radio', { name: '제출' }));
+  await user.click(screen.getByRole('radio', { name: '과제' }));
   enterDeadline();
   await user.type(screen.getByLabelText(label), '임의 입력');
   await user.click(screen.getByRole('button', { name: '입력 확인' }));
@@ -148,7 +148,7 @@ it.each(['제출 방법', '제출 주소'])('%s만 입력하면 나머지도 요
 
 it('일반 종류로 전환하면 제출 데이터와 오류를 제거한다', async () => {
   const { user, onSubmit } = await setup();
-  await user.click(screen.getByRole('radio', { name: '제출' }));
+  await user.click(screen.getByRole('radio', { name: '과제' }));
   await user.click(screen.getByRole('checkbox', { name: 'Web' }));
   await user.type(screen.getByLabelText('제출 방법'), '과제');
   await user.click(screen.getByRole('button', { name: '입력 확인' }));
@@ -160,20 +160,25 @@ it('일반 종류로 전환하면 제출 데이터와 오류를 제거한다', a
     category: 'operation',
     audience: 'all',
   });
-  await user.click(screen.getByRole('radio', { name: '제출' }));
+  await user.click(screen.getByRole('radio', { name: '과제' }));
   expect(screen.getByLabelText('마감 날짜')).toHaveValue('');
   expect(screen.getByLabelText('제출 방법')).toHaveValue('');
 });
 
 it('제출 방법과 주소를 모두 필수로 입력한다', async () => {
   const { user, onSubmit } = await setup();
-  await user.click(screen.getByRole('radio', { name: '제출' }));
+  await user.click(screen.getByRole('radio', { name: '과제' }));
   enterDeadline();
 
   expect(screen.getByLabelText('제출 방법')).toBeRequired();
   expect(screen.getByLabelText('제출 주소')).toBeRequired();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
   await user.click(screen.getByRole('button', { name: '입력 확인' }));
 
   expect(onSubmit).not.toHaveBeenCalled();
   expect(screen.getAllByRole('alert')).toHaveLength(2);
+  expect(screen.getByLabelText('제출 방법')).toHaveAccessibleDescription(
+    '제출 방법 이름을 입력하세요.',
+  );
+  expect(screen.getByLabelText('제출 주소')).toHaveAccessibleDescription('제출 주소를 입력하세요.');
 });
