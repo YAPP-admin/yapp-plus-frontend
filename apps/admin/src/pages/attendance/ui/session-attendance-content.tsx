@@ -11,6 +11,8 @@ import {
   cancelAttendance,
   AttendanceQueryBoundary,
   attendanceBadgeMutationOptions,
+  attendanceCodeIssueMutationOptions,
+  attendanceCodeReissueMutationOptions,
   attendanceCloseCancelMutationOptions,
   attendanceCloseMutationOptions,
   attendanceHistoryQueryOptions,
@@ -19,6 +21,7 @@ import {
   attendanceCodeApiQueryOptions,
   sessionAttendanceQueryOptions,
   sessionsQueryOptions,
+  teamReviewDecisionMutationOptions,
   teamReviewsQueryOptions,
   teamReviewsApiQueryOptions,
   getSessionAttendance,
@@ -498,6 +501,14 @@ function SessionAttendanceView({
     generationId === undefined
       ? ['admin', 'sessions']
       : sessionsQueryOptions(generationId).queryKey;
+  const attendanceCodeApiQueryKey =
+    generationId === undefined
+      ? ['admin', 'sessions', sessionId, 'attendance-code']
+      : attendanceCodeApiQueryOptions(generationId, sessionId).queryKey;
+  const teamReviewsApiQueryKey =
+    generationId === undefined
+      ? ['admin', 'sessions', sessionId, 'team-reviews']
+      : teamReviewsApiQueryOptions(generationId, sessionId).queryKey;
   const attendanceMutation = useMutation({
     ...(generationId === undefined
       ? {
@@ -519,18 +530,20 @@ function SessionAttendanceView({
     onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceApiQueryKey }),
   });
   const issueCodeMutation = useMutation({
-    mutationFn: () => issueAttendanceCode(sessionId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ['admin', 'sessions', sessionId, 'attendance-code'],
-      }),
+    ...(generationId === undefined
+      ? {
+          mutationFn: () => issueAttendanceCode(sessionId),
+        }
+      : attendanceCodeIssueMutationOptions(generationId, sessionId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceCodeApiQueryKey }),
   });
   const reissueCodeMutation = useMutation({
-    mutationFn: () => reissueAttendanceCode(sessionId),
-    onSuccess: () =>
-      queryClient.invalidateQueries({
-        queryKey: ['admin', 'sessions', sessionId, 'attendance-code'],
-      }),
+    ...(generationId === undefined
+      ? {
+          mutationFn: () => reissueAttendanceCode(sessionId),
+        }
+      : attendanceCodeReissueMutationOptions(generationId, sessionId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceCodeApiQueryKey }),
   });
   const closeMutation = useMutation({
     ...(generationId === undefined
@@ -559,14 +572,16 @@ function SessionAttendanceView({
     },
   });
   const teamReviewMutation = useMutation({
-    mutationFn: (input: TeamDecisionInput) => updateTeamPhotoReview(sessionId, input),
+    ...(generationId === undefined
+      ? {
+          mutationFn: async (input: TeamDecisionInput) => {
+            await updateTeamPhotoReview(sessionId, input);
+          },
+        }
+      : teamReviewDecisionMutationOptions(generationId, sessionId)),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['admin', 'sessions', sessionId, 'team-reviews'],
-      });
-      void queryClient.invalidateQueries({
-        queryKey: ['admin', 'sessions', sessionId, 'attendance'],
-      });
+      void queryClient.invalidateQueries({ queryKey: teamReviewsApiQueryKey });
+      void queryClient.invalidateQueries({ queryKey: attendanceApiQueryKey });
     },
   });
   const attendanceCodeCard = (

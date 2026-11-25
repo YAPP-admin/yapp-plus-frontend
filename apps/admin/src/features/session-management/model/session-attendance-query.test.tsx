@@ -7,10 +7,13 @@ import { createAdminQueryClient } from '~/query-client';
 import { apiBaseUrl, server } from '~/mocks/server';
 import {
   attendanceBadgeMutationOptions,
+  attendanceCodeIssueMutationOptions,
+  attendanceCodeReissueMutationOptions,
   attendanceCloseCancelMutationOptions,
   attendanceCloseMutationOptions,
   attendanceOverrideMutationOptions,
   attendanceCodeApiQueryOptions,
+  teamReviewDecisionMutationOptions,
   teamReviewsApiQueryOptions,
   useSessionAttendanceQuery,
 } from './session-queries';
@@ -200,4 +203,70 @@ it('출결 변경 mutation이 생성 SDK 계약에 맞는 요청을 보낸다', 
   expect(badgeBody).toEqual({ enabled: true });
   expect(closeRequestCount).toBe(1);
   expect(cancelRequestCount).toBe(1);
+});
+
+it('출석 코드와 팀 사진 검수 mutation이 생성 SDK 계약에 맞는 요청을 보낸다', async () => {
+  let issueRequestCount = 0;
+  let reissueRequestCount = 0;
+  let decisionBody: unknown;
+
+  server.use(
+    http.post(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance-code`,
+      () => {
+        issueRequestCount += 1;
+        return HttpResponse.json({
+          status: 'ISSUED',
+          code: 123456,
+          revision: 1,
+          issuedAt: '2026-10-31T05:00:00Z',
+          issuedByStaffId: 1,
+        });
+      },
+    ),
+    http.post(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance-code/reissue`,
+      () => {
+        reissueRequestCount += 1;
+        return HttpResponse.json({
+          status: 'ISSUED',
+          code: 654321,
+          revision: 2,
+          issuedAt: '2026-10-31T06:00:00Z',
+          issuedByStaffId: 1,
+        });
+      },
+    ),
+    http.post(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/team-attendance-photos/:photoId/decision`,
+      async ({ request }) => {
+        decisionBody = await request.json();
+        return HttpResponse.json({
+          photoId: 7,
+          status: 'REJECTED',
+          decidedAt: '2026-10-31T06:05:00Z',
+        });
+      },
+    ),
+  );
+
+  const client = createAdminQueryClient();
+  const issuedCode = await client
+    .getMutationCache()
+    .build(client, attendanceCodeIssueMutationOptions(33, '101'))
+    .execute(undefined);
+  const reissuedCode = await client
+    .getMutationCache()
+    .build(client, attendanceCodeReissueMutationOptions(33, '101'))
+    .execute(undefined);
+  await client
+    .getMutationCache()
+    .build(client, teamReviewDecisionMutationOptions(33, '101'))
+    .execute({ photoId: '7', decision: 'reject', reason: '사진이 기준과 다릅니다.' });
+
+  expect(issuedCode).toEqual({ state: 'active', code: '123456', expiresAt: null });
+  expect(reissuedCode).toEqual({ state: 'active', code: '654321', expiresAt: null });
+  expect(issueRequestCount).toBe(1);
+  expect(reissueRequestCount).toBe(1);
+  expect(decisionBody).toEqual({ decision: 'REJECTED', reason: '사진이 기준과 다릅니다.' });
 });

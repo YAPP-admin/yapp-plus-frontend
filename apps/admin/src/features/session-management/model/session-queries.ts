@@ -16,7 +16,10 @@ import {
   badge,
   cancel1,
   close,
+  decide,
   override,
+  reissue,
+  start,
   type AdminAttendanceListResponse,
   type AttendanceCodeResponse,
   type OverrideAttendanceRequest,
@@ -25,7 +28,7 @@ import {
 import { useEffect } from 'react';
 import type { CreateSessionInput } from './session';
 import { attendanceResultSchema } from './attendance';
-import type { AttendanceEditInput, BadgeEditInput } from './attendance-input';
+import type { AttendanceEditInput, BadgeEditInput, TeamDecisionInput } from './attendance-input';
 import type {
   AttendanceCodeViewModel,
   AttendanceMemberViewModel,
@@ -287,6 +290,46 @@ export const attendanceCloseCancelMutationOptions = (generationId: number, sessi
     mutationFn: async () => {
       await cancel1({
         path: { generationId, sessionId: toNumberId(sessionId, '세션 ID') },
+        throwOnError: true,
+      });
+    },
+  });
+
+export const attendanceCodeIssueMutationOptions = (generationId: number, sessionId: string) =>
+  mutationOptions({
+    mutationFn: async () => {
+      const response = await start({
+        path: { generationId, sessionId: toNumberId(sessionId, '세션 ID') },
+        throwOnError: true,
+      });
+      return toAttendanceCodeViewModel(response.data);
+    },
+  });
+
+export const attendanceCodeReissueMutationOptions = (generationId: number, sessionId: string) =>
+  mutationOptions({
+    mutationFn: async () => {
+      const response = await reissue({
+        path: { generationId, sessionId: toNumberId(sessionId, '세션 ID') },
+        throwOnError: true,
+      });
+      return toAttendanceCodeViewModel(response.data);
+    },
+  });
+
+export const teamReviewDecisionMutationOptions = (generationId: number, sessionId: string) =>
+  mutationOptions({
+    mutationFn: async (input: TeamDecisionInput) => {
+      await decide({
+        path: {
+          generationId,
+          sessionId: toNumberId(sessionId, '세션 ID'),
+          photoId: toNumberId(input.photoId, '사진 ID'),
+        },
+        body: {
+          decision: input.decision === 'approve' ? 'APPROVED' : 'REJECTED',
+          reason: input.reason,
+        },
         throwOnError: true,
       });
     },
