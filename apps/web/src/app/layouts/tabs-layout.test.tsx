@@ -109,14 +109,22 @@ describe('TabsLayout', () => {
     expect(within(navigation).getByRole('tab', { selected: true })).toHaveTextContent('게시판');
   });
 
-  it('홈 탭에서는 상단 헤더에 YAPP 로고와 알림 링크를 렌더링한다', () => {
+  it('홈 헤더의 로고와 알림 링크에 이름과 키보드 포커스를 제공한다', async () => {
+    const user = userEvent.setup();
     render(
       <TabsLayout activeTab="home" onTabChange={vi.fn<() => void>()}>
         <main>홈</main>
       </TabsLayout>,
     );
-    expect(screen.getByRole('link', { name: 'YAPP 홈' })).toHaveAttribute('href', '/');
-    expect(screen.getByRole('link', { name: '알림' })).toHaveAttribute('href', '/alerts');
+    const homeLink = screen.getByRole('link', { name: 'YAPP 홈' });
+    const alertsLink = screen.getByRole('link', { name: '알림' });
+    expect(homeLink).toHaveAttribute('href', '/');
+    expect(alertsLink).toHaveAttribute('href', '/alerts');
+
+    await user.tab();
+    expect(homeLink).toHaveFocus();
+    await user.tab();
+    expect(alertsLink).toHaveFocus();
   });
 
   it('마이페이지 탭에서는 상단 헤더에 마이페이지 타이틀과 설정 링크를 렌더링한다', () => {
