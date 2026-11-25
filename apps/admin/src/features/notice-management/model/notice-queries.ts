@@ -37,10 +37,7 @@ const apiTypeByCategory = {
 } as const;
 
 /** 생성 SDK의 cursor 응답을 TanStack Query infinite query로 바로 연결한다. */
-export function adminNoticeListQueryOptions(
-  generationId: number,
-  category: NoticeListCategory,
-) {
+export function adminNoticeListQueryOptions(generationId: number, category: NoticeListCategory) {
   const query = category === 'all' ? {} : { type: apiTypeByCategory[category] };
   const generated = listInfiniteOptions({ path: { generationId }, query });
 
@@ -48,8 +45,7 @@ export function adminNoticeListQueryOptions(
     ...generated,
     retry: false,
     initialPageParam: { path: { generationId }, query: {} },
-    getNextPageParam: (lastPage: { nextCursor: string | null }) =>
-      lastPage.nextCursor ?? undefined,
+    getNextPageParam: (lastPage: { nextCursor: string | null }) => lastPage.nextCursor ?? undefined,
   };
 }
 
@@ -82,8 +78,7 @@ export function adminNoticeRecipientsQueryOptions(generationId: number, noticeId
       path: { generationId, postId: Number(noticeId) },
       query: {},
     },
-    getNextPageParam: (lastPage: { nextCursor: string | null }) =>
-      lastPage.nextCursor ?? undefined,
+    getNextPageParam: (lastPage: { nextCursor: string | null }) => lastPage.nextCursor ?? undefined,
   };
 }
 
@@ -104,7 +99,8 @@ function invalidateGeneratedNoticeQueries(client: ReturnType<typeof useQueryClie
   void client.invalidateQueries({
     predicate: ({ queryKey }) => {
       const key = queryKey[0];
-      const operationId = typeof key === 'object' && key !== null ? Reflect.get(key, '_id') : undefined;
+      const operationId =
+        typeof key === 'object' && key !== null ? Reflect.get(key, '_id') : undefined;
       return operationId === 'list' || operationId === 'detail1' || operationId === 'recipients';
     },
   });

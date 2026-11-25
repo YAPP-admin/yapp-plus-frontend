@@ -95,7 +95,8 @@ export function createApiMockHandlers(
       ({ params }) => {
         const postId = Number(params.postId);
         // 기존 API 계약 테스트가 사용하는 대표 ID 1은 첫 공지 상세로 호환합니다.
-        const post = fixtures.adminPostDetails[postId] ??
+        const post =
+          fixtures.adminPostDetails[postId] ??
           (postId === 1 ? fixtures.adminPostDetails[101] : undefined);
         if (!post) {
           return HttpResponse.json(
