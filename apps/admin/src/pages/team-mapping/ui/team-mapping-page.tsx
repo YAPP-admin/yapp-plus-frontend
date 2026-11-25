@@ -92,15 +92,27 @@ export function TeamMappingPage({
   onFilterChange,
   onTeamSelect,
   onCreateTeam,
+  createTeam,
+  updateTeam,
+  onDeleteTeam,
 }: {
   snapshot: TeamMappingSnapshot;
   search: TeamMappingSearch;
   onFilterChange?: (filter: TeamMappingSearch['filter']) => void;
   onTeamSelect?: (team: TeamMappingTeam) => void;
   onCreateTeam?: () => void;
+  createTeam?: (values: TeamDraftValues) => Promise<void>;
+  updateTeam?: (
+    team: TeamMappingTeam,
+    values: TeamDraftValues,
+    destinationTeamIds?: Readonly<Record<string, string>>,
+  ) => Promise<void>;
+  onDeleteTeam?: (team: TeamMappingTeam) => void;
 }) {
   const draft = useTeamMappingDraft();
-  const [workingSnapshot, setWorkingSnapshot] = useState(snapshot);
+  const [localSnapshot, setLocalSnapshot] = useState(snapshot);
+  const [localSnapshotSource, setLocalSnapshotSource] = useState(snapshot);
+  const workingSnapshot = localSnapshotSource === snapshot ? localSnapshot : snapshot;
   const hasTeams = workingSnapshot.status !== 'before';
   const filterCounts = getTeamFilterCounts(workingSnapshot);
   const teams = getTeamsForFilter(workingSnapshot, search.filter);
@@ -114,7 +126,7 @@ export function TeamMappingPage({
     onCreateTeam?.();
     overlay.open(({ unmount }) => (
       <TeamMappingDraftContext.Provider value={draft}>
-        <TeamCreateDialog snapshot={workingSnapshot} onClose={unmount} />
+        <TeamCreateDialog snapshot={workingSnapshot} onClose={unmount} onCreateAsync={createTeam} />
       </TeamMappingDraftContext.Provider>
     ));
   }
@@ -126,10 +138,12 @@ export function TeamMappingPage({
           snapshot={workingSnapshot}
           team={team}
           onClose={unmount}
+          onUpdateAsync={updateTeam}
           onUpdate={(editingTeam, values, destinationTeamIds) => {
-            setWorkingSnapshot((currentSnapshot) =>
-              updateTeamSnapshot(currentSnapshot, editingTeam, values, destinationTeamIds),
+            setLocalSnapshot(
+              updateTeamSnapshot(workingSnapshot, editingTeam, values, destinationTeamIds),
             );
+            setLocalSnapshotSource(snapshot);
           }}
         />
       </TeamMappingDraftContext.Provider>
@@ -150,6 +164,7 @@ export function TeamMappingPage({
               unmount();
               openEditDialog(team);
             }}
+            onDelete={onDeleteTeam === undefined ? undefined : () => onDeleteTeam(team)}
           />
         </TeamMappingDraftContext.Provider>
       ));
@@ -187,6 +202,7 @@ export function TeamMappingPage({
             team={team}
             onOpen={openTeamDetail}
             onEdit={openEditDialog}
+            onDelete={onDeleteTeam}
           />
         ))}
       </div>
