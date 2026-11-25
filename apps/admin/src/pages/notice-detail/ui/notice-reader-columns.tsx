@@ -33,20 +33,24 @@ export const readerColumns = column.columns([
         <span className={styles.avatar} aria-hidden="true">
           {info.getValue().slice(0, 1)}
         </span>
-      <span>{info.getValue()}</span>
+        <span>{info.getValue()}</span>
       </span>
     ),
     sortFn: (a, b) => a.original.name.localeCompare(b.original.name, 'ko'),
   }),
-  column.accessor((row) => `${row.generationNumber ? `${row.generationNumber}기` : '기수 미지정'} · ${row.position ?? '직군 미지정'}`, {
-    id: 'cohortJob',
-    header: '기수 · 직군',
-    cell: (info) => <span className={styles.memberMeta}>{info.getValue()}</span>,
-    sortFn: (a, b) =>
-      (a.original.generationNumber ?? Number.MAX_SAFE_INTEGER) -
-        (b.original.generationNumber ?? Number.MAX_SAFE_INTEGER) ||
-      (a.original.position ?? '').localeCompare(b.original.position ?? '', 'ko'),
-  }),
+  column.accessor(
+    (row) =>
+      `${row.generationNumber ? `${row.generationNumber}기` : '기수 미지정'} · ${row.position ?? '직군 미지정'}`,
+    {
+      id: 'cohortJob',
+      header: '기수 · 직군',
+      cell: (info) => <span className={styles.memberMeta}>{info.getValue()}</span>,
+      sortFn: (a, b) =>
+        (a.original.generationNumber ?? Number.MAX_SAFE_INTEGER) -
+          (b.original.generationNumber ?? Number.MAX_SAFE_INTEGER) ||
+        (a.original.position ?? '').localeCompare(b.original.position ?? '', 'ko'),
+    },
+  ),
   column.accessor((row) => (row.read ? 1 : 0), {
     id: 'read',
     header: '읽음 여부',

@@ -20,5 +20,7 @@ function NoticeDetailData({ noticeId, tab }: Props) {
   const { currentGeneration } = useAdminGeneration();
   const { data: notice } = useAdminNoticeQuery(currentGeneration.generationId, noticeId);
 
-  return <NoticeDetailContent notice={notice} generationId={currentGeneration.generationId} tab={tab} />;
+  return (
+    <NoticeDetailContent notice={notice} generationId={currentGeneration.generationId} tab={tab} />
+  );
 }

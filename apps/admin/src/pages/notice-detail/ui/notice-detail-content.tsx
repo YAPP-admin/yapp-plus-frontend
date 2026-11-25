@@ -14,7 +14,12 @@ import * as styles from './notice-detail-page.css';
 
 const categoryLabels = { SESSION: '세션', OPERATION: '기타', ASSIGNMENT: '제출' } as const;
 
-const audienceLabels = { ALL_USERS: '전체 사용자', PLAYER: '활동회원', OB: '정회원', COMPLETED_MEMBER: '수료회원' } as const;
+const audienceLabels = {
+  ALL_USERS: '전체 사용자',
+  PLAYER: '활동회원',
+  OB: '정회원',
+  COMPLETED_MEMBER: '수료회원',
+} as const;
 
 const dateFormat = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
@@ -57,7 +62,11 @@ export function NoticeDetailContent({
       return (
         <div role="alert">
           <p>회원별 읽음 현황을 불러오지 못했습니다.</p>
-          <ActionButton type="button" variant="neutralWeak" onClick={() => void readersQuery.refetch()}>
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            onClick={() => void readersQuery.refetch()}
+          >
             다시 시도
           </ActionButton>
         </div>
@@ -92,7 +101,11 @@ export function NoticeDetailContent({
         <NoticeDetailHeader notice={notice} category={category} />
 
         <ActionButton asChild variant="neutralWeak" className={styles.editLink}>
-          <Link to="/notices/$noticeId/edit" params={{ noticeId: String(notice.postId) }} search={{}}>
+          <Link
+            to="/notices/$noticeId/edit"
+            params={{ noticeId: String(notice.postId) }}
+            search={{}}
+          >
             <Pencil size={13} aria-hidden="true" />
             공지 수정
           </Link>
@@ -195,7 +208,13 @@ function getAudienceLabel(notice: AdminPostDetailResponse) {
 }
 
 /** 종류·대상·제목·작성 시각을 하나의 정보 영역으로 표시한다. */
-function NoticeDetailHeader({ notice, category }: { notice: AdminPostDetailResponse; category: string }) {
+function NoticeDetailHeader({
+  notice,
+  category,
+}: {
+  notice: AdminPostDetailResponse;
+  category: string;
+}) {
   return (
     <header className={styles.detailHeader}>
       <div className={styles.metaRow}>
@@ -254,10 +273,7 @@ function NoticeSubmission({
   return (
     <section aria-label="제출 안내">
       <p>
-        마감:{' '}
-        <time dateTime={assignment.deadlineDate}>
-          {assignment.deadlineDate}
-        </time>{' '}
+        마감: <time dateTime={assignment.deadlineDate}>{assignment.deadlineDate}</time>{' '}
       </p>
 
       {assignment.submissionUrl && (

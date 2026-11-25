@@ -4,7 +4,6 @@ import type { PostImageResponse } from '@yapp-plus/api/generated';
 
 /** 조회된 첨부가 바뀌면 최신 파일 목록을 전달한다. */
 export function NoticeAttachments({ images }: { images: PostImageResponse[] }) {
-
   if (images.length === 0) {
     return null;
   }
