@@ -61,10 +61,12 @@ export function useNotificationSettings() {
   });
 
   const error = mutation.error ?? query.error;
+  const queryFailure = query.error instanceof SettingsError ? query.error.failure : undefined;
 
   return {
     query,
     mutation,
     failure: error instanceof SettingsError ? error.failure : undefined,
+    queryFailure,
   };
 }

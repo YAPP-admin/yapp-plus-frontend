@@ -9,6 +9,10 @@ import {
   VStack,
 } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
+import type { FallbackProps } from 'react-error-boundary';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
+import { ErrorState } from '@/shared/ui/error-state';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
 import { useOpenAppSettingsMutation } from '../model/open-app-settings';
 import { useNotificationSettings } from '../model/notification-settings';
 import {
@@ -22,11 +26,37 @@ import {
 
 /** 조회 전에는 선택을 확정하지 않으며 변경 실패 시 이전 체크 상태와 재시도를 제공합니다. */
 export function NotificationSetting() {
+  return (
+    <LocalErrorBoundary fallbackRender={renderNotificationError}>
+      <NotificationSettingContent />
+    </LocalErrorBoundary>
+  );
+}
+
+function renderNotificationError({ resetErrorBoundary }: FallbackProps) {
+  return (
+    <ErrorState
+      variant="section"
+      title="알림 설정을 불러오지 못했어요"
+      titleAs="h2"
+      retryLabel="알림 설정 다시 불러오기"
+      onRetry={resetErrorBoundary}
+    />
+  );
+}
+
+function NotificationSettingContent() {
   const descriptionId = useId();
-  const { query, mutation, failure } = useNotificationSettings();
+  const { query, mutation, failure, queryFailure } = useNotificationSettings();
   const settingsMutation = useOpenAppSettingsMutation();
 
   const unsupported = failure?.code === 'UNSUPPORTED';
+  const hasSpecialQueryFailure =
+    queryFailure?.code === 'UNSUPPORTED' || queryFailure?.code === 'PERMISSION_REQUIRED';
+  useThrowQueryError({
+    error: hasSpecialQueryFailure ? undefined : query.error,
+    isFetching: query.isFetching,
+  });
 
   // 권한 안내는 복귀 후 조회한 현재 OS 상태를 기준으로 합니다.
   const denied = query.data?.permission === 'denied';
@@ -44,7 +74,7 @@ export function NotificationSetting() {
       return '변경하지 못했어요. 다시 시도해 주세요.';
     }
 
-    return query.isError ? '알림 설정을 불러오지 못했어요.' : null;
+    return null;
   };
   const message = getMessage();
 
@@ -52,32 +82,20 @@ export function NotificationSetting() {
     <VStack width="full" align="stretch" gap="x2">
       <div className={menuItem}>
         <span className={menuLabel}>알림</span>
-        {!query.data && failure?.retryable ? (
-          <ActionButton
-            type="button"
-            size="small"
-            variant="neutralWeak"
-            disabled={query.isFetching}
-            onClick={() => void query.refetch()}
-          >
-            알림 설정 다시 불러오기
-          </ActionButton>
-        ) : (
-          <SwitchRoot
-            className={switchRoot}
-            checked={query.data?.enabled ?? false}
-            disabled={!query.data || unsupported || mutation.isPending}
-            onCheckedChange={(enabled) => mutation.mutate(enabled)}
-          >
-            <SwitchHiddenInput
-              aria-label="알림"
-              aria-describedby={message ? descriptionId : undefined}
-            />
-            <SwitchControl className={switchControl}>
-              <SwitchThumb className={switchThumb} />
-            </SwitchControl>
-          </SwitchRoot>
-        )}
+        <SwitchRoot
+          className={switchRoot}
+          checked={query.data?.enabled ?? false}
+          disabled={!query.data || unsupported || mutation.isPending}
+          onCheckedChange={(enabled) => mutation.mutate(enabled)}
+        >
+          <SwitchHiddenInput
+            aria-label="알림"
+            aria-describedby={message ? descriptionId : undefined}
+          />
+          <SwitchControl className={switchControl}>
+            <SwitchThumb className={switchThumb} />
+          </SwitchControl>
+        </SwitchRoot>
       </div>
 
       {message && (
