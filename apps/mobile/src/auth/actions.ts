@@ -134,7 +134,9 @@ export class AuthActions {
   public getSession(): Promise<AuthResult> {
     if (this.runtime.session.isSigningOut) {
       const session = this.runtime.session.snapshot;
-      return Promise.resolve(session ? { status: 'SIGNED_IN', session } : this.busy());
+      return Promise.resolve(
+        session ? { status: 'SIGNED_IN', session, reviewTransition: 'NONE' } : this.busy(),
+      );
     }
     return this.runtime.session.get((refreshToken) =>
       this.runtime.renew({ body: { refreshToken } }),

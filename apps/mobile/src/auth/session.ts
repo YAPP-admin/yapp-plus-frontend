@@ -192,7 +192,7 @@ export class SessionManager {
    */
   public async get(renew: Renew): Promise<AuthResult> {
     if (this.currentSession && this.currentSession.expiresAt > Date.now() + REFRESH_EARLY_MS) {
-      return { status: 'SIGNED_IN', session: this.currentSession };
+      return { status: 'SIGNED_IN', session: this.currentSession, reviewTransition: 'NONE' };
     }
     if (this.restoreState === 'blocked') {
       return { status: 'SIGNED_OUT' };
@@ -248,12 +248,12 @@ export class SessionManager {
   public async refresh(input: RefreshSessionInput | undefined, renew: Renew): Promise<AuthResult> {
     if (input && input.sessionId !== this.currentSession?.sessionId) {
       return this.currentSession
-        ? { status: 'SIGNED_IN', session: this.currentSession }
+        ? { status: 'SIGNED_IN', session: this.currentSession, reviewTransition: 'NONE' }
         : { status: 'SIGNED_OUT' };
     }
     if (input && input.tokenVersion !== this.currentSession?.tokenVersion) {
       return this.currentSession
-        ? { status: 'SIGNED_IN', session: this.currentSession }
+        ? { status: 'SIGNED_IN', session: this.currentSession, reviewTransition: 'NONE' }
         : { status: 'SIGNED_OUT' };
     }
     if (!this.storedSession) {
@@ -411,7 +411,7 @@ export class SessionManager {
       }
       this.restoreState = 'allowed';
       this.notify();
-      return { status: 'SIGNED_IN', session: this.currentSession };
+      return { status: 'SIGNED_IN', session: this.currentSession, reviewTransition: 'NONE' };
     });
   }
 }

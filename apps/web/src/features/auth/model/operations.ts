@@ -132,16 +132,19 @@ export const applyAuthResult = (
     kind === 'logout' && (!response || response.status === 'CANCELLED') ? unavailable : response;
   // 진행 상태는 mutation이 소유합니다. 서버 해제 실패로 로그인 cache를 지우지 않습니다.
   const localDeletionFailed = result?.status === 'ERROR' && result.code === 'STORAGE';
+  const reviewRequired =
+    client.getQueryData<AuthResult>(nativeSessionQueryKey)?.status === 'REVIEW_REQUIRED';
   if (
     kind === 'logout' &&
     result?.status !== 'SIGNED_OUT' &&
     result?.status !== 'WITHDRAWN' &&
-    !localDeletionFailed
+    (!localDeletionFailed || reviewRequired)
   ) {
     return result;
   }
   if (
     result?.status === 'SIGNED_IN' ||
+    result?.status === 'REVIEW_REQUIRED' ||
     result?.status === 'SIGNED_OUT' ||
     result?.status === 'WITHDRAWN'
   ) {

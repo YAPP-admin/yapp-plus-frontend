@@ -37,6 +37,7 @@ const refreshFailure = (
     case 'SIGNED_OUT':
     case 'WITHDRAWN':
     case 'SIGNUP_REQUIRED':
+    case 'REVIEW_REQUIRED':
       return { ok: false, code: 'AUTH_REQUIRED' };
     case 'ERROR':
     case 'UNAVAILABLE':

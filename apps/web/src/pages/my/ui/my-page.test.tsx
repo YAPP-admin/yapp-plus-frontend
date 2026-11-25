@@ -46,6 +46,7 @@ function renderPage(native = false, name?: string) {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('YAPPPlusWebView');
     const result = {
       status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
       session: {
         userId: 1,
         sessionId: 'test-session',

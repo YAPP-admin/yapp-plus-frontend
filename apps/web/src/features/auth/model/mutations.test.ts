@@ -29,6 +29,7 @@ const bridge = vi.hoisted(() => ({
 vi.mock('./native-auth', () => bridge);
 const signedIn = (tokenVersion = 1): AuthResult => ({
   status: 'SIGNED_IN',
+  reviewTransition: 'NONE',
   session: {
     userId: 7,
     sessionId: 'session',

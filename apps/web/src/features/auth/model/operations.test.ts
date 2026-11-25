@@ -1,8 +1,9 @@
-import { QueryClient } from '@tanstack/react-query';
+import { QueryClient, isCancelledError } from '@tanstack/react-query';
 import type { AuthResult } from '@yapp-plus/app-bridge';
 import { expect, it } from 'vitest';
 import {
   beginAuthOperation,
+  applyAuthResult,
   finishAuthOperation,
   nativeSessionQueryKey,
   readAuthSession,
@@ -11,6 +12,7 @@ import {
 
 const session: AuthResult = {
   status: 'SIGNED_IN',
+  reviewTransition: 'NONE',
   session: {
     userId: 7,
     sessionId: 'session',
@@ -20,10 +22,45 @@ const session: AuthResult = {
   },
 };
 
+it.each(['PENDING', 'REJECTED', null] as const)(
+  '제한 결과 %s 확정 뒤 늦은 정상 세션 조회는 폐기하고 업무 캐시를 비운다',
+  async (reviewStatus) => {
+    const client = new QueryClient();
+    const initial = beginAuthOperation(client, 'authenticate');
+    applyAuthResult(client, initial, 'authenticate', session);
+    finishAuthOperation(client, initial);
+    client.setQueryData(['schedule'], 'private');
+    const operation = beginAuthOperation(client, 'authenticate');
+    let resolve: ((result: AuthResult) => void) | undefined;
+    const delayed = new Promise<AuthResult>((complete) => {
+      resolve = complete;
+    });
+    const read = readAuthSession(client, new AbortController().signal, () => delayed);
+    const review = { status: 'REVIEW_REQUIRED', userId: 7, reviewStatus } as const;
+    expect(applyAuthResult(client, operation, 'authenticate', review)).toEqual(review);
+    resolve?.(session);
+    await expect(read).rejects.toSatisfy(isCancelledError);
+    expect(client.getQueryData(nativeSessionQueryKey)).toEqual(review);
+    expect(client.getQueryData(['schedule'])).toBeUndefined();
+    client.clear();
+  },
+);
+
+it('제한 계정의 저장 정리 실패는 제한 상태를 유지해 복귀 재시도를 허용한다', () => {
+  const client = new QueryClient();
+  const review = { status: 'REVIEW_REQUIRED', userId: 7, reviewStatus: 'REJECTED' } as const;
+  const failure = { status: 'ERROR', code: 'STORAGE', retryable: true } as const;
+  client.setQueryData(nativeSessionQueryKey, review);
+  const operation = beginAuthOperation(client, 'logout');
+  expect(applyAuthResult(client, operation, 'logout', failure)).toEqual(failure);
+  expect(client.getQueryData(nativeSessionQueryKey)).toEqual(review);
+});
+
 it('낮은 tokenVersion의 조회 결과로 현재 세션을 덮지 않는다', async () => {
   const client = new QueryClient();
   const current: AuthResult = {
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: {
       userId: 7,
       sessionId: 'session',
@@ -37,6 +74,7 @@ it('낮은 tokenVersion의 조회 결과로 현재 세션을 덮지 않는다', 
   const result = await readAuthSession(client, new AbortController().signal, () =>
     Promise.resolve({
       status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
       session: { ...current.session, tokenVersion: 2 },
     }),
   );

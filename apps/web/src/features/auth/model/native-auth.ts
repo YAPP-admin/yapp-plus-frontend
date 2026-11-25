@@ -2,6 +2,7 @@
 
 import {
   isYappPlusWebViewUserAgent,
+  normalizeAuthResult,
   type AuthProvider,
   type AuthResult,
   type CompleteSignupInput,
@@ -42,7 +43,7 @@ export const signInWithNative = async (provider: AuthProvider): Promise<AuthResu
   }
   traceNativeBridge('signIn', 'requested');
   try {
-    const result = await bridge.signIn({ provider });
+    const result = normalizeAuthResult(await bridge.signIn({ provider }));
     traceNativeBridge('signIn', 'received');
     return result;
   } catch (error) {
@@ -57,7 +58,7 @@ export const completeNativeSignup = async (
 ): Promise<AuthResult | undefined> => {
   const bridge = getNativeBridge();
 
-  return bridge ? bridge.completeSignup(input) : undefined;
+  return bridge ? normalizeAuthResult(await bridge.completeSignup(input)) : undefined;
 };
 
 /** 앱 재실행 시 native 세션을 복구합니다. */
@@ -69,7 +70,7 @@ export const getNativeSession = async (): Promise<AuthResult | undefined> => {
   }
   traceNativeBridge('getSession', 'requested');
   try {
-    const result = await bridge.getSession();
+    const result = normalizeAuthResult(await bridge.getSession());
     traceNativeBridge('getSession', 'received', result);
     return result;
   } catch (error) {
@@ -84,19 +85,19 @@ export const refreshNativeSession = async (
 ): Promise<AuthResult | undefined> => {
   const bridge = getNativeBridge();
 
-  return bridge ? bridge.refreshSession(input) : undefined;
+  return bridge ? normalizeAuthResult(await bridge.refreshSession(input)) : undefined;
 };
 
 /** native refresh token을 폐기하고 로컬 세션을 정리합니다. */
 export const signOutNative = async (): Promise<AuthResult | undefined> => {
   const bridge = getNativeBridge();
 
-  return bridge ? bridge.signOut() : undefined;
+  return bridge ? normalizeAuthResult(await bridge.signOut()) : undefined;
 };
 
 /** native access token으로 계정 탈퇴를 수행하고 세션을 정리합니다. */
 export const withdrawNative = async (): Promise<AuthResult | undefined> => {
   const bridge = getNativeBridge();
 
-  return bridge ? bridge.withdraw() : undefined;
+  return bridge ? normalizeAuthResult(await bridge.withdraw()) : undefined;
 };

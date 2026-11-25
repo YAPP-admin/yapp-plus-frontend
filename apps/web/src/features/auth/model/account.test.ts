@@ -14,6 +14,7 @@ const session = (
   tokenVersion = 1,
 ): Extract<AuthResult, { status: 'SIGNED_IN' }> => ({
   status: 'SIGNED_IN',
+  reviewTransition: 'NONE',
   session: {
     userId,
     sessionId: `session-${userId}`,

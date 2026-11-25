@@ -48,7 +48,11 @@ const setup = (enabled = true, initialPermission: NotificationPermission = 'allo
     getPermission,
     requestPermission,
     getSession: () =>
-      Promise.resolve(session ? { status: 'SIGNED_IN', session } : { status: 'SIGNED_OUT' }),
+      Promise.resolve(
+        session
+          ? { status: 'SIGNED_IN', session, reviewTransition: 'NONE' }
+          : { status: 'SIGNED_OUT' },
+      ),
     getSessionSnapshot: () => session,
     subscribeSession: (listener) => {
       sessionListener = listener;
