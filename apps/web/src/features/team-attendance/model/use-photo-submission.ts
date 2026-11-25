@@ -47,6 +47,8 @@ const createSubmissionUncertainError = () =>
     'unknown',
     '접수 여부를 확인하지 못했어요. 다시 제출하지 말고 홈으로 돌아가 주세요.',
   );
+const isFinalAuthenticationError = (error: unknown): error is ApiError =>
+  error instanceof ApiError && error.status === 401;
 
 /** presign·PUT·접수 후 주간 상태와 해당 세션 사진 캐시를 무효화한다. 재조회 완료는 기다리지 않으며 사진 바이트는 mutation 변수·결과에 저장하지 않는다. */
 export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
@@ -137,10 +139,13 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
       uploadRequest.current = { photo: input.photo, destination, signal };
       await upload.mutateAsync();
       signal.throwIfAborted();
-    } catch {
+    } catch (error) {
       uploadRequest.current = null;
       presign.reset();
       upload.reset();
+      if (isFinalAuthenticationError(error)) {
+        throw error;
+      }
       throw createSubmissionFailedError();
     }
 
@@ -169,6 +174,9 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
         ),
       };
     } catch (error) {
+      if (isFinalAuthenticationError(error)) {
+        throw error;
+      }
       if (error instanceof ApiError && TEAM_PHOTO_ERROR_MESSAGE_BY_HTTP_STATUS[error.status]) {
         throw createSubmissionFailedError(error.status);
       }

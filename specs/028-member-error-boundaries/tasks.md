@@ -79,9 +79,9 @@
 - [x] T040 [US2] `apps/web/src/app/providers.tsx`에 인증 오류만 throw하는 업무 Mutation 기본 정책을 연결하고 `features/auth/model/mutations.ts`에서 인증 작업 자체의 기존 결과 처리를 보장한다.
 - [x] T041 [US2] `apps/web/src/pages/home/model/code-attendance.ts`·`attendance-report.ts`, `pages/notice-detail/model/use-notice-read.ts`, `pages/settings/model/notification-settings.ts`에 필요한 인증 원인 보존을 적용한다.
 - [x] T042 [US2] `specs/028-member-error-boundaries/validation.md`에 6-A 일반 입력·공지 롤백·로그인 이동·자동 재전송 없음·diff·리뷰를 기록한다.
-- [ ] T043 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.test.tsx`·`use-team-attendance.test.tsx`에 presign/최종 제출401·PUT 실패·접수 불명·계정 경합 회귀를 추가한다.
-- [ ] T044 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.ts`·`use-team-attendance.ts`의 오류 타입·catch·reset을 정리해 원본 API 인증 오류를 바깥 소유 Mutation까지 전달한다.
-- [ ] T045 [US2] `specs/028-member-error-boundaries/validation.md`에 6-B 검증·diff·리뷰를 기록한다.
+- [x] T043 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.test.tsx`·`use-team-attendance.test.tsx`에 presign/최종 제출401·PUT 실패·접수 불명 회귀를 추가한다. 이전 계정의 늦은 오류 경합은 제품 정책에서 제외한다.
+- [x] T044 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.ts`·`use-team-attendance.ts`의 오류 타입·catch·reset을 정리해 원본 API 인증 오류를 바깥 소유 Mutation까지 전달한다.
+- [x] T045 [US2] `specs/028-member-error-boundaries/validation.md`에 6-B 검증·diff·리뷰를 기록한다.
 
 완료 기준: 일반 제출 실패는 입력을 유지하고 인증 오류만 로그인으로 이동한다. 성공 결과와 후속 재조회 실패를 합치지 않는다.
 

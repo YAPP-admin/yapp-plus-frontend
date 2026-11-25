@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import type { ReactNode } from 'react';
 import { beforeEach, expect, it, vi } from 'vitest';
+import { ApiError } from '@yapp-plus/api';
 import {
   SubmissionError,
   teamAttendanceTargetSchema,
@@ -90,6 +91,18 @@ it.each(['failed', 'unknown'] as const)('%s 후 재제출 가능 여부를 구�
     await result.current.form.handleSubmit();
   });
   await waitFor(() => expect(submitPhoto).toHaveBeenCalledTimes(kind === 'failed' ? 2 : 1));
+});
+it('최종 401은 바깥 제출 Mutation에도 원본 오류를 남긴다', async () => {
+  const error = new ApiError(401, {});
+  vi.mocked(submitPhoto).mockRejectedValue(error);
+  const { result, client } = setup();
+
+  await act(async () => {
+    await result.current.form.handleSubmit();
+  });
+
+  await waitFor(() => expect(client.getMutationCache().getAll()[0]?.state.error).toBe(error));
+  expect(result.current.error).toBeNull();
 });
 it('폼 이탈 후 늦은 접수를 무시하고 새 폼에서는 다시 제출할 수 있다', async () => {
   const deferred = pendingReceipt();

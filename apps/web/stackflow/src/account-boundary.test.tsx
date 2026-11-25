@@ -480,6 +480,24 @@ it('읽음 저장 401은 낙관적 상태를 남기지 않고 로그인으로 �
   expect(bridge.refreshSession).not.toHaveBeenCalled();
 });
 
+it('사진 presign 401은 로컬 제출 오류를 남기지 않고 로그인으로 한 번 이동한다', async () => {
+  const user = userEvent.setup();
+  const client = createAppQueryClient();
+  bridge.getSession.mockResolvedValue(session(1));
+  const request = vi.fn<() => Response>(() => HttpResponse.json({ status: 401 }, { status: 401 }));
+  server.use(http.post(`${apiBaseUrl}/api/sessions/1/team-attendance-photos/presign`, request));
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
+  mount(client);
+
+  await user.click(await screen.findByRole('button', { name: '인증 사진 제출하기' }));
+
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+  await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(request).toHaveBeenCalledOnce();
+  expect(bridge.refreshSession).not.toHaveBeenCalled();
+});
+
 it('다음 페이지 최종 401도 목록을 유지하지 않고 로그인으로 한 번 이동한다', async () => {
   const client = createAppQueryClient();
   bridge.getSession.mockResolvedValue(session(1));

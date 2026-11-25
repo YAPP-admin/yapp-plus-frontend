@@ -2,9 +2,10 @@
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useEffect, useRef } from 'react';
 import { useMutation } from '@tanstack/react-query';
+import type { ApiError } from '@yapp-plus/api';
 import {
   createTeamAttendanceFormSchema,
-  type SubmissionError,
+  SubmissionError,
   type TeamAttendanceTarget,
   type TeamAttendanceFormValues,
 } from './submission-input';
@@ -30,7 +31,7 @@ export function useTeamAttendance(
   const controllerRef = useRef<AbortController | null>(null);
   const submission = useMutation<
     TeamAttendanceReceipt,
-    SubmissionError,
+    SubmissionError | ApiError,
     { request: Promise<TeamAttendanceReceipt>; signal: AbortSignal }
   >({
     retry: false,
@@ -43,7 +44,7 @@ export function useTeamAttendance(
       return receipt;
     },
     onError: (error, { signal }) => {
-      if (!signal.aborted && error.kind !== 'unknown') {
+      if (!signal.aborted && !(error instanceof SubmissionError && error.kind === 'unknown')) {
         controllerRef.current = null;
       }
     },
@@ -92,6 +93,7 @@ export function useTeamAttendance(
     form,
     receipt: submission.data ?? null,
     isPending: submission.isPending,
-    error: submission.error,
+    // 인증 오류는 AuthErrorBoundary가 소유하고, 폼에는 재제출 가능한 로컬 오류만 남깁니다.
+    error: submission.error instanceof SubmissionError ? submission.error : null,
   };
 }

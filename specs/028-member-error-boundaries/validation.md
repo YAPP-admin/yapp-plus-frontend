@@ -78,3 +78,12 @@
 - 집중 회귀: Provider·인증 작업·Account 경계·공지 상세·코드 출석·사전 보고·알림 설정 9개 파일 117개 테스트와 웹 타입 검사가 통과했다. 일반 읽음 롤백, 사전 보고 입력 보존, 성공 뒤 재조회 실패의 분리, 알림 브리지 실패 유지, 인증 Mutation 자체의 정책 제외를 확인했다.
 - `node --run check`는 포맷 1건을 수정한 재실행에서 exit 0으로 통과했다. 웹 lint·typecheck·test는 새로 실행했고 나머지 패키지 작업은 Turbo 캐시를 재사용했다. `node --run build`도 exit 0으로 통과했으며 웹 build만 새로 실행, admin·Storybook은 캐시 재사용했다. 기존 500kB 이상 웹 chunk 경고는 유지된다.
 - 팀 사진 제출의 presign·최종 제출·PUT·결과 불명 원인 보존(T043–T045)은 아직 변경하지 않았다. 이 6-A 리뷰 뒤 별도 단계로 진행한다.
+
+## 6-B 구현·자동 검증 완료 — 리뷰 대기
+
+- 팀 사진 제출은 presign과 최종 접수의 최종 `ApiError(401)`을 `SubmissionError`로 변환하지 않고 바깥 제출 Mutation까지 보존한다. 전역 `MutationCache`와 `AuthErrorBoundary`가 이를 소유하므로 사진 폼에는 원문 오류나 로컬 재시도 안내가 남지 않고 Login으로 한 번 이동한다. Mutation에서 GET 토큰 갱신이나 자동 재제출은 시작하지 않는다.
+- 서명 URL `PUT` 실패와 presign의 일반 실패는 재제출 가능한 `SubmissionError('failed')`로 유지한다. 최종 접수가 201이 아니거나 결과 형식이 유효하지 않으면 `SubmissionError('unknown')`으로 바꿔 기존 홈 복귀·재제출 차단을 유지한다. 성공 접수와 이후 조회 실패를 하나의 실패로 합치지 않는다.
+- 바깥 제출 Mutation은 `SubmissionError | ApiError`를 정확히 표현하되, 폼에는 `SubmissionError`만 반환한다. 따라서 인증 원문의 메시지가 화면에 노출되지 않으며, 일반 오류의 선택값·사진 초안·재제출 정책은 유지된다.
+- 집중 회귀: 사진 제출 모델·폼·화면·Stackflow 계정 경계 5개 파일 79개 테스트와 웹 타입 검사가 통과했다. presign/최종 제출401 원본 보존, PUT403 로컬 실패, 201 이외 접수 불명, 중복 제출·폼 이탈·성공 접수, 실제 presign401 뒤 Login 한 번 이동과 GET 갱신 미실행을 확인했다.
+- 사용자가 제외를 명시한 이전 계정의 늦은 오류 경합은 테스트·구현 범위에 다시 넣지 않았고 T043의 과거 작업 문구도 이를 반영했다.
+- `node --run check`는 새 테스트 파일의 포맷과 type import 두 건을 정리한 재실행에서 exit 0으로 통과했다. 웹 lint·typecheck·test는 새로 실행했고 나머지 패키지 작업은 Turbo 캐시를 재사용했다. `node --run build`도 exit 0으로 통과했으며 web·admin·Storybook build는 Turbo 캐시를 재사용했다. 기존 500kB 이상 웹 chunk 경고는 유지된다. 실제 WebView 수동 확인은 이 리뷰 단위에서 아직 실행하지 않았다.
