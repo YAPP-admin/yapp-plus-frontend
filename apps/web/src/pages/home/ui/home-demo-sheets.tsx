@@ -1,12 +1,13 @@
 /** 홈에서 사용하는 출석 코드·팀 확인 바텀시트와 입력 상호작용을 제공합니다. */
 import { Box, HStack, VStack } from '@seed-design/react';
 import { useActivityZIndexBase } from '@seed-design/stackflow';
-import { useId, useRef, type ReactNode } from 'react';
+import { Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { z } from 'zod';
-import { useErrorBoundary } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
-import { QueryBoundary } from '@/shared/ui/query-boundary';
+import type { FallbackProps } from 'react-error-boundary';
+import { ErrorState } from '@/shared/ui/error-state';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
 import { useCodeAttendance } from '../model/code-attendance';
 import { IconExclamationmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import {
@@ -69,6 +70,7 @@ const attendanceCodeSchema = z
 
 export function AttendanceCodeSheet({ onComplete, ...props }: AttendanceCodeSheetProps) {
   const { isNative } = useNativeAuthSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const mockBrowser = import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true';
   if (!isNative && !mockBrowser) {
     return (
@@ -78,20 +80,17 @@ export function AttendanceCodeSheet({ onComplete, ...props }: AttendanceCodeShee
     );
   }
   return (
-    <QueryBoundary
-      errorFallback={
-        <CodeSheetShell {...props}>
-          <CodeSheetError />
-        </CodeSheetShell>
-      }
-      pendingFallback={
-        <CodeSheetShell {...props}>
-          <CodeSheetMessage message="세션을 불러오고 있어요…" />
-        </CodeSheetShell>
-      }
-    >
-      <AttendanceCodeContent {...props} onComplete={onComplete} />
-    </QueryBoundary>
+    <CodeSheetShell {...props} dismissible={!isSubmitting}>
+      <LocalErrorBoundary fallbackRender={renderCodeSheetError}>
+        <Suspense fallback={<CodeSheetMessage message="세션을 불러오고 있어요…" />}>
+          <AttendanceCodeContent
+            onComplete={onComplete}
+            isSheetOpen={props.open === true}
+            onSubmittingChange={setIsSubmitting}
+          />
+        </Suspense>
+      </LocalErrorBoundary>
+    </CodeSheetShell>
   );
 }
 
@@ -125,34 +124,38 @@ function CodeSheetShell({ children, ...props }: BottomSheetRootProps & { childre
   );
 }
 
-function CodeSheetError() {
-  const { resetBoundary } = useErrorBoundary();
+function renderCodeSheetError({ resetErrorBoundary }: FallbackProps) {
   return (
-    <CodeSheetMessage
-      message="세션을 불러오지 못했어요. 다시 확인해 주세요."
-      retry={resetBoundary}
+    <ErrorState
+      variant="section"
+      title="세션을 불러오지 못했어요"
+      titleAs="h3"
+      retryLabel="세션 다시 확인"
+      onRetry={resetErrorBoundary}
     />
   );
 }
 
-function CodeSheetMessage({ message, retry }: { message: string; retry?: () => void }) {
+function CodeSheetMessage({ message }: { message: string }) {
   return (
     <VStack gap="x5" className={sheetContainer}>
-      <p role={retry ? 'alert' : 'status'}>{message}</p>
+      <output>{message}</output>
       <ActionButton variant="brandSolid" size="large" className={sheetPrimaryButton} disabled>
         확인
       </ActionButton>
-      {retry && (
-        <ActionButton variant="ghost" onClick={retry}>
-          세션 다시 확인
-        </ActionButton>
-      )}
     </VStack>
   );
 }
 
-function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProps) {
-  const isSheetOpen = props.open === true;
+function AttendanceCodeContent({
+  onComplete,
+  isSheetOpen,
+  onSubmittingChange,
+}: {
+  onComplete: () => void;
+  isSheetOpen: boolean;
+  onSubmittingChange: (isSubmitting: boolean) => void;
+}) {
   const form = useForm({
     defaultValues: { code: ['', '', '', ''] },
     validationLogic: revalidateLogic({ mode: 'submit', modeAfterSubmission: 'change' }),
@@ -160,6 +163,11 @@ function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProp
   });
   const attendance = useCodeAttendance(onComplete, isSheetOpen);
   const flowIssue = attendance.issue;
+
+  useEffect(() => {
+    onSubmittingChange(attendance.isPending);
+    return () => onSubmittingChange(false);
+  }, [attendance.isPending, onSubmittingChange]);
 
   function submitAttendanceCode(code: string) {
     attendance.submit(code, (message) => {
@@ -177,90 +185,88 @@ function AttendanceCodeContent({ onComplete, ...props }: AttendanceCodeSheetProp
   });
 
   return (
-    <CodeSheetShell {...props} dismissible={!attendance.isPending}>
-      <VStack
-        as="form"
-        gap="x5"
-        className={sheetContainer}
-        onSubmit={(event) => {
-          event.preventDefault();
-          void form.handleSubmit();
-        }}
-      >
-        <VStack gap="x6" width="full">
-          <VStack gap="x2_5" align="center" justify="center" width="full">
-            <form.Field name="code" validators={{ onDynamic: attendanceCodeSchema }}>
-              {(field) => {
-                const validationIssue = field.state.meta.errors[0];
-                const codeError = validationIssue?.message;
-                return (
-                  <AttendanceCodeInputGroup
-                    value={field.state.value}
-                    error={codeError}
-                    disabled={attendance.isPending}
-                    onBlur={field.handleBlur}
-                    onChange={(value) => {
-                      field.handleChange(value);
-                      attendance.reset();
-                    }}
-                  />
-                );
-              }}
-            </form.Field>
-            {flowIssue && (
-              <HStack
-                gap="x1"
-                align="flex-start"
-                justify="center"
-                width="full"
-                className={attendanceFeedbackMessage}
-                role="alert"
-              >
-                <IconExclamationmarkCircleFill width={16} height={16} aria-hidden="true" />
-                <span>{flowIssue.message}</span>
-              </HStack>
-            )}
-            {progressMessage && (
-              <output className={attendanceProgressMessage}>{progressMessage}</output>
-            )}
-          </VStack>
-        </VStack>
-
-        <VStack width="full" gap="x2">
-          <ActionButton
-            variant="brandSolid"
-            size="large"
-            className={sheetPrimaryButton}
-            type="submit"
-            loading={attendance.isPending}
-            disabled={attendance.disabled}
-          >
-            {submitLabel}
-          </ActionButton>
-          {flowIssue?.recovery === 'OPEN_SETTINGS' && (
-            <ActionButton
-              type="button"
-              variant="ghost"
-              loading={attendance.openingSettings}
-              disabled={attendance.isPending}
-              onClick={attendance.openSettings}
+    <VStack
+      as="form"
+      gap="x5"
+      className={sheetContainer}
+      onSubmit={(event) => {
+        event.preventDefault();
+        void form.handleSubmit();
+      }}
+    >
+      <VStack gap="x6" width="full">
+        <VStack gap="x2_5" align="center" justify="center" width="full">
+          <form.Field name="code" validators={{ onDynamic: attendanceCodeSchema }}>
+            {(field) => {
+              const validationIssue = field.state.meta.errors[0];
+              const codeError = validationIssue?.message;
+              return (
+                <AttendanceCodeInputGroup
+                  value={field.state.value}
+                  error={codeError}
+                  disabled={attendance.isPending}
+                  onBlur={field.handleBlur}
+                  onChange={(value) => {
+                    field.handleChange(value);
+                    attendance.reset();
+                  }}
+                />
+              );
+            }}
+          </form.Field>
+          {flowIssue && (
+            <HStack
+              gap="x1"
+              align="flex-start"
+              justify="center"
+              width="full"
+              className={attendanceFeedbackMessage}
+              role="alert"
             >
-              앱 설정 열기
-            </ActionButton>
+              <IconExclamationmarkCircleFill width={16} height={16} aria-hidden="true" />
+              <span>{flowIssue.message}</span>
+            </HStack>
           )}
-          {flowIssue?.recovery === 'REFRESH_SESSION' && (
-            <ActionButton
-              type="button"
-              variant="ghost"
-              disabled={attendance.isPending}
-              onClick={attendance.refresh}
-            >
-              세션 다시 확인
-            </ActionButton>
+          {progressMessage && (
+            <output className={attendanceProgressMessage}>{progressMessage}</output>
           )}
         </VStack>
       </VStack>
-    </CodeSheetShell>
+
+      <VStack width="full" gap="x2">
+        <ActionButton
+          variant="brandSolid"
+          size="large"
+          className={sheetPrimaryButton}
+          type="submit"
+          loading={attendance.isPending}
+          disabled={attendance.disabled}
+        >
+          {submitLabel}
+        </ActionButton>
+        {flowIssue?.recovery === 'OPEN_SETTINGS' && (
+          <ActionButton
+            type="button"
+            variant="ghost"
+            loading={attendance.openingSettings}
+            disabled={attendance.isPending}
+            onClick={attendance.openSettings}
+          >
+            앱 설정 열기
+          </ActionButton>
+        )}
+        {flowIssue?.recovery === 'REFRESH_SESSION' && (
+          <ActionButton
+            type="button"
+            variant="ghost"
+            disabled={attendance.isPending}
+            onClick={attendance.refresh}
+          >
+            세션 다시 확인
+          </ActionButton>
+        )}
+      </VStack>
+    </VStack>
   );
 }
 

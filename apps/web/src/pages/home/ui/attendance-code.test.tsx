@@ -409,7 +409,7 @@ it('최초 조회 대기와 오류를 시트 안에 표시하고 재시도로 �
     respond();
     await response;
   });
-  expect(await screen.findByRole('alert')).toHaveTextContent('세션을 불러오지 못했어요.');
+  expect(await screen.findByRole('heading', { name: '세션을 불러오지 못했어요' })).toBeVisible();
   server.use(http.get(weekUrl, () => HttpResponse.json(week)));
   await userEvent.click(screen.getByRole('button', { name: '세션 다시 확인' }));
   await enter();

@@ -1,5 +1,5 @@
 /** URL·step params를 화면 슬라이스와 연결하며 탭의 선택과 패널 수명을 소유합니다. */
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { find5Options } from '@yapp-plus/api/generated';
 import { teamAttendanceTargetSchema, type TeamAttendanceReceipt } from '@/features/team-attendance';
@@ -51,7 +51,10 @@ import { useTabsUrl } from '@/app/navigation/use-tabs-url';
 import { NativeAuthRedirect } from './native-auth-redirect';
 import { useNativeAuthSession } from '@/features/auth';
 import { staticContentEnabled } from '@/features/static-content';
-import { QueryBoundary } from '@/shared/ui/query-boundary';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
+import { ErrorState } from '@/shared/ui/error-state';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
 
 const TAB_TITLES: Record<TabName, string> = {
   home: '홈',
@@ -251,22 +254,35 @@ export function TeamAttendanceUploadActivity() {
     );
   }
   return activity.isTop && selectedPhoto ? (
-    <QueryBoundary
-      pendingFallback={<output>팀원을 불러오고 있어요…</output>}
-      errorFallback={<output role="alert">팀원을 불러오지 못했어요. 다시 확인해 주세요.</output>}
-    >
-      <TeamPhotoSubmissionFlow
-        sessionId={sessionId}
-        onSubmitted={(result) => {
-          setReceipt(result);
-          stepFlow.replaceStep(
-            { sessionId: sessionIdParam, stage: 'complete' },
-            { targetActivityId: activity.id },
-          );
-        }}
-      />
-    </QueryBoundary>
+    <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
+      <LocalErrorBoundary fallbackRender={renderTeamMembersError}>
+        <Suspense fallback={<output>팀원을 불러오고 있어요…</output>}>
+          <TeamPhotoSubmissionFlow
+            sessionId={sessionId}
+            onSubmitted={(result) => {
+              setReceipt(result);
+              stepFlow.replaceStep(
+                { sessionId: sessionIdParam, stage: 'complete' },
+                { targetActivityId: activity.id },
+              );
+            }}
+          />
+        </Suspense>
+      </LocalErrorBoundary>
+    </ActivityScreen>
   ) : null;
+}
+
+function renderTeamMembersError({ resetErrorBoundary }: FallbackProps) {
+  return (
+    <ErrorState
+      variant="page"
+      title="팀원을 불러오지 못했어요"
+      titleAs="h2"
+      retryLabel="팀원 다시 확인"
+      onRetry={resetErrorBoundary}
+    />
+  );
 }
 
 /** 입력·완료를 한 화면 수명으로 묶고 계정 변경 시 기존 인증 경계가 함께 폐기한다. */
@@ -278,7 +294,9 @@ function TeamPhotoSubmissionFlow({
   onSubmitted: (receipt: TeamAttendanceReceipt) => void;
 }) {
   const { apiOptions } = useNativeAuthSession();
-  const { data: team } = useSuspenseQuery(find5Options({ ...apiOptions, path: { sessionId } }));
+  const teamQuery = useSuspenseQuery(find5Options({ ...apiOptions, path: { sessionId } }));
+  useThrowQueryError(teamQuery);
+  const { data: team } = teamQuery;
   const target = teamAttendanceTargetSchema.parse({
     sessionId,
     teamId: team.teamId,
@@ -303,11 +321,7 @@ function TeamPhotoSubmissionFlow({
     })),
   });
 
-  return (
-    <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
-      <TeamAttendanceUploadPage target={target} onSubmitted={onSubmitted} />
-    </ActivityScreen>
-  );
+  return <TeamAttendanceUploadPage target={target} onSubmitted={onSubmitted} />;
 }
 
 export function TeamAttendanceErrorActivity() {

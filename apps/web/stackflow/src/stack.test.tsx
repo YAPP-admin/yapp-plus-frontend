@@ -655,6 +655,52 @@ it.each([
   15000,
 );
 
+it('팀원 조회 실패는 사진 선택을 유지한 채 화면 안 오류 UI로 교체하고 수동 재시도로 폼을 연다', async () => {
+  vi.stubEnv('DEV', false);
+  vi.stubEnv('VITE_API_MOCKING', 'false');
+  photoBridge.pick.mockResolvedValue({
+    status: 'SUCCESS',
+    photo: {
+      filename: 'team-attendance.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 4,
+      width: 1,
+      height: 1,
+      base64: '/9j/2Q==',
+    },
+  });
+  server.use(
+    http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
+      HttpResponse.json({
+        ...currentWeekFixture,
+        session: {
+          ...currentWeekFixture.session,
+          sessionId: 42,
+          type: 'TEAM',
+          attendanceStatus: 'AVAILABLE',
+        },
+      }),
+    ),
+    http.get(`${apiBaseUrl}/api/sessions/42/team-members`, () =>
+      HttpResponse.json({ code: 'UNAVAILABLE' }, { status: 500 }),
+    ),
+  );
+  const user = userEvent.setup();
+  renderStack({ native: true, staleTime: Infinity });
+  const home = await waitForTopHeading('홈');
+  await user.click(await home.findByRole('button', { name: '인증 사진 올리기' }));
+  (await screen.findByRole('dialog')).style.transform = 'none';
+  await user.click(await screen.findByRole('button', { name: '앨범에서 선택하기' }));
+
+  expect(await screen.findByRole('heading', { name: '팀원을 불러오지 못했어요' })).toBeVisible();
+  expect(screen.queryByRole('form', { name: '팀 인증 사진 제출' })).not.toBeInTheDocument();
+  server.use(
+    http.get(`${apiBaseUrl}/api/sessions/42/team-members`, () => HttpResponse.json(teamMembers)),
+  );
+  await user.click(screen.getByRole('button', { name: '팀원 다시 확인' }));
+  expect(await screen.findByRole('form', { name: '팀 인증 사진 제출' })).toBeVisible();
+});
+
 it('팀 안내 시트는 사진 도구를 열기 전까지 홈 위에 유지한다', async () => {
   window.history.replaceState({}, '', '/?session=team');
   const user = userEvent.setup();

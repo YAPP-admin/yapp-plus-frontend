@@ -15,6 +15,7 @@ import { z } from 'zod';
 import { useNativeAuthSession } from '@/features/auth';
 import { staticContentEnabled } from '@/features/static-content';
 import { koreanTimestamp } from '@/shared/lib/korean-date-time';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { currentWeekQueryOptions } from './current-week-query';
 
 const reportMessages: Record<string, string> = {
@@ -85,6 +86,7 @@ export function useAttendanceReport(onComplete: () => void) {
   const queryClient = useQueryClient();
   const options = currentWeekQueryOptions(apiOptions);
   const week = useSuspenseQuery(options);
+  useThrowQueryError(week);
   const session = week.data.session;
   const reportable = isAttendanceReportOpen(session);
   const mutation = useMutation({
