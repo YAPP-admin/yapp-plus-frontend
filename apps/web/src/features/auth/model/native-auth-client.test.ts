@@ -12,6 +12,8 @@ import { beforeEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { isCancelledError, QueryClient } from '@tanstack/react-query';
 import { nativeAuthClientOptions } from './native-auth-client';
+import { applyAuthResult, beginAuthOperation, nativeSessionQueryKey } from './operations';
+import { createAppQueryClient } from '@/app/providers';
 import { refreshNativeSession } from './native-auth';
 
 vi.mock('./native-auth', () => ({ refreshNativeSession: vi.fn<typeof refreshNativeSession>() }));
@@ -141,6 +143,57 @@ it.each(['account', 'cancel', 'older', 'signed-out', 'unavailable'] as const)(
     expect(count).toBe(1);
   },
 );
+
+it('갱신 뒤에도 401이면 현재 세션을 재인증 필요로 전환한다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/*`, () => HttpResponse.json({ status: 401 }, { status: 401 })),
+  );
+  vi.mocked(refreshNativeSession).mockResolvedValue({
+    status: 'SIGNED_IN',
+    session: { ...session, tokenVersion: 2, accessToken: 'test-new' },
+  });
+  const client = createAppQueryClient();
+  const operation = beginAuthOperation(client, 'authenticate');
+  applyAuthResult(client, operation, 'authenticate', { status: 'SIGNED_IN', session });
+
+  const error = await client
+    .fetchQuery(find6Options(nativeAuthClientOptions(session, client)))
+    .catch((caught: unknown) => caught);
+  expect(error).toMatchObject({ status: 401 });
+  expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
+    status: 'ERROR',
+    code: 'AUTH_REQUIRED',
+    retryable: false,
+  });
+});
+
+it('브리지의 AUTH_REQUIRED 갱신 결과도 재인증 필요로 전환한다', async () => {
+  let calls = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/*`, () => {
+      calls += 1;
+      return HttpResponse.json({ status: 401 }, { status: 401 });
+    }),
+  );
+  vi.mocked(refreshNativeSession).mockResolvedValue({
+    status: 'ERROR',
+    code: 'AUTH_REQUIRED',
+    retryable: false,
+  });
+  const client = createAppQueryClient();
+  const operation = beginAuthOperation(client, 'authenticate');
+  applyAuthResult(client, operation, 'authenticate', { status: 'SIGNED_IN', session });
+
+  await expect(
+    client.fetchQuery(find6Options(nativeAuthClientOptions(session, client))),
+  ).rejects.toSatisfy(isCancelledError);
+  expect(calls).toBe(1);
+  expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
+    status: 'ERROR',
+    code: 'AUTH_REQUIRED',
+    retryable: false,
+  });
+});
 
 it('이미 취소된 조회는 HTTP 요청이나 갱신을 시작하지 않는다', async () => {
   controller.abort();

@@ -1,13 +1,22 @@
 import type { CreateClientConfig } from '@yapp-plus/api/generated';
 import type { QueryClient } from '@tanstack/react-query';
-import { nativeSessionQueryKey, readAuthSession } from './operations';
+import {
+  clearRefreshedSession,
+  markAuthRequired,
+  nativeSessionQueryKey,
+  readAuthSession,
+  rememberRefreshedSession,
+} from './operations';
 import type { AuthSession } from '@yapp-plus/app-bridge';
 import ky from 'ky';
 import { refreshNativeSession } from './native-auth';
+import { isAuthenticationRequiredResult } from './auth-error';
 
 /** Provider가 제공하는 SDK 옵션입니다. 401 복구는 HTTP 응답 훅에서 한 번만 수행합니다. */
-export const nativeAuthClientOptions = (session?: AuthSession, client?: QueryClient) =>
-  ({
+export const nativeAuthClientOptions = (session?: AuthSession, client?: QueryClient) => {
+  let retriedAfterRefresh = false;
+
+  return {
     auth: session?.accessToken,
     retry: session ? { limit: 1, shouldRetry: () => false } : 0,
     kyOptions: {
@@ -15,11 +24,18 @@ export const nativeAuthClientOptions = (session?: AuthSession, client?: QueryCli
       throwHttpErrors: false,
       hooks: {
         afterResponse: [
-          async ({ request, response, retryCount }) => {
-            if (!session || response.status !== 401 || request.method !== 'GET' || retryCount > 0) {
+          async ({ request, response }) => {
+            if (retriedAfterRefresh) {
+              retriedAfterRefresh = false;
+              return response;
+            }
+            if (!session || response.status !== 401 || request.method !== 'GET') {
               return response;
             }
             request.signal.throwIfAborted();
+            if (client) {
+              clearRefreshedSession(client);
+            }
             const refresh = async () => {
               const result = await refreshNativeSession({
                 sessionId: session.sessionId,
@@ -41,6 +57,9 @@ export const nativeAuthClientOptions = (session?: AuthSession, client?: QueryCli
             if (client && (result?.status === 'SIGNED_IN' || result?.status === 'SIGNED_OUT')) {
               client.setQueryData(nativeSessionQueryKey, result);
             }
+            if (client && isAuthenticationRequiredResult(result)) {
+              markAuthRequired(client);
+            }
             request.signal.throwIfAborted();
             if (
               result?.status !== 'SIGNED_IN' ||
@@ -52,9 +71,14 @@ export const nativeAuthClientOptions = (session?: AuthSession, client?: QueryCli
             }
             const headers = new Headers(request.headers);
             headers.set('Authorization', `Bearer ${result.session.accessToken}`);
+            if (client) {
+              rememberRefreshedSession(client);
+            }
+            retriedAfterRefresh = true;
             return ky.retry({ request: new Request(request, { headers }), delay: 0 });
           },
         ],
       },
     },
-  }) satisfies ReturnType<CreateClientConfig>;
+  } satisfies ReturnType<CreateClientConfig>;
+};

@@ -6,14 +6,14 @@
 | --------------- | -------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Query           | 최초 대기·성공·일반 오류·추가 오류·재시도 중 | 일반 재조회 성공 전에는 기존 값 사용 가능, 실패 확정 뒤 UI 숨김; 추가 오류만 목록 유지 |
 | Local 경계      | 정상·fallback                                | 수동 retry 또는 queryKey에 대응하는 reset key 변경으로 reset; 화면 복귀 reset 없음     |
-| 인증 cache      | 기존 AuthResult + ERROR/AUTH_REQUIRED        | 현재 요청 소유권 확인 후 차단; 새 로그인 결과만 보호 화면 복원                         |
-| 인증 operations | 기존 세대와 tokenVersion                     | 재인증 차단에서 이전 작업 무효화; 취소·오래된 계정 오류 무시                           |
+| 인증 cache      | 기존 AuthResult + ERROR/AUTH_REQUIRED        | 갱신 뒤 최종401 또는 명시적 AUTH_REQUIRED에서 차단; 새 로그인 결과로 보호 화면 복원    |
+| 인증 operations | 기존 세대와 tokenVersion                     | 기존 native 인증 작업의 중복·토큰 갱신만 관리; 재인증 전환은 상태만 기록               |
 | Mutation        | pending·success·error                        | Query fallback과 독립된 완료 수명; 자동 재제출 없음                                    |
 | 입력 폼         | 기존 로컬 값                                 | 경계 내부 unmount 시 초기화; 제출 일반 오류는 유지                                     |
 
 업무 인증 실패와 native의 실제 SIGNED_OUT은 구분한다. 차단할 때 native 자격 삭제를 호출하지 않는다.
 기존 cancel/remove 처리를 재사용하되 보호 화면 차단보다 먼저 데이터만 지워 무인증 조회가 시작되지 않게 한다.
-새 로그인 전 늦은 갱신·업무 callback은 세대와 계정·세션 검사를 통과해야 반영할 수 있다.
+이전 계정의 늦은 오류를 별도로 판별하거나 격리하지 않는다. 재인증 전환은 업무 cache 정리와 상태 기록만 수행한다.
 
 ## reset 불변 조건
 

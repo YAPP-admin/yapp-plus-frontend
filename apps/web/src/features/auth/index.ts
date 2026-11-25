@@ -20,6 +20,8 @@ export {
   useNativeSignupMutation,
   useNativeWithdrawMutation,
 } from './model/mutations';
+export { isAuthenticationError, isAuthenticationRequiredResult } from './model/auth-error';
+export { handleQueryAuthenticationError } from './model/operations';
 export {
   NativeAuthSessionProvider,
   nativeSessionQueryKey,
@@ -27,5 +29,7 @@ export {
   useNativeAuthSession,
   type NativeAuthSessionPhase,
 } from './model/session';
+
+export { AuthErrorBoundary } from './ui/auth-error-boundary';
 
 export { NativeSessionRecovery } from './ui/native-session-recovery';
