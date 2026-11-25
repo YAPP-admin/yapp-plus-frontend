@@ -7,8 +7,10 @@ import { Image } from '@/app/navigation/image';
 import { useNativeAuthSession } from '@/features/auth';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useLoadMoreObserver } from '@/shared/lib/use-load-more-observer';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { Suspense } from 'react';
+import { ActionButton } from '@yapp-plus/ui';
 import { alertSentDateLabel } from '../model/alerts-display';
 import { alertsInfiniteQueryOptions } from '../model/alerts-query';
 import { AlertsListBoundary } from './alerts-list-boundary';
@@ -65,6 +67,7 @@ function AlertsList() {
   const { apiOptions } = useNativeAuthSession();
   const alerts = useSuspenseInfiniteQuery(alertsInfiniteQueryOptions(apiOptions));
   useRefetchOnScreenReturn(alerts);
+  useThrowQueryError(alerts);
   const items = alerts.data.pages.flatMap((page) => page.items);
   const loadMoreRef = useLoadMoreObserver(
     alerts.hasNextPage && !alerts.isFetching && !alerts.isError,
@@ -107,6 +110,20 @@ function AlertsList() {
             <ProgressCircle.Range />
           </ProgressCircle.Root>
         </HStack>
+      )}
+      {alerts.isFetchNextPageError && (
+        <div role="alert">
+          <p>다음 알림을 불러오지 못했어요.</p>
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            size="medium"
+            disabled={alerts.isFetchingNextPage}
+            onClick={() => void alerts.fetchNextPage({ cancelRefetch: false })}
+          >
+            다시 시도
+          </ActionButton>
+        </div>
       )}
       <div ref={loadMoreRef} aria-hidden="true" />
     </>

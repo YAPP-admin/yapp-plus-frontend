@@ -1,6 +1,6 @@
 /** 공지 목록의 초기 조회 오류를 탭 페이지 안에서 복구하는 UI 경계다. */
 import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
-import { ResultSection } from '@yapp-plus/ui';
+import { ErrorState } from '@/shared/ui/error-state';
 import type { ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 
@@ -15,11 +15,11 @@ export function NoticeListBoundary({ children }: { children: ReactNode }) {
 
 function NoticeListError({ resetErrorBoundary }: FallbackProps) {
   return (
-    <ResultSection
-      role="alert"
-      size="medium"
+    <ErrorState
+      variant="page"
       title="공지사항을 불러오지 못했어요"
-      primaryActionProps={{ children: '다시 시도', onClick: resetErrorBoundary }}
+      titleAs="h2"
+      onRetry={resetErrorBoundary}
     />
   );
 }
