@@ -5,6 +5,9 @@ import { faker } from '@faker-js/faker/locale/en';
 
 import type {
   AcknowledgeErrors,
+  AdminAfterpartyPageResponse,
+  AdminAfterpartyResponse,
+  AdminAfterpartyResponseRequest,
   AdminAttendanceDeductionResponse,
   AdminAttendanceListResponse,
   AdminAttendanceRow,
@@ -26,6 +29,20 @@ import type {
   AdminPostRecipientResponse,
   AdminPreviousActivityResponse,
   AdminSessionResponse,
+  AfterpartyAttendeeResponse,
+  AfterpartyAttendeesResponse,
+  AfterpartyCountsResponse,
+  AfterpartyCreateRequest,
+  AfterpartyGroupResponse,
+  AfterpartyGroupsResponse,
+  AfterpartyRecipientCountResponse,
+  AfterpartyRecipientResponse,
+  AfterpartyRecipientsResponse,
+  AfterpartyResponseResult,
+  AfterpartyVoteRequest,
+  AppAfterpartyDetailResponse,
+  AppAfterpartyListItemResponse,
+  AppAfterpartyPageResponse,
   AppleBrowserCallbackRequest,
   AppleNativeAuthenticationRequest,
   AppleNotificationRequest,
@@ -40,6 +57,8 @@ import type {
   AttendanceHistorySummaryResponse,
   AttendanceReportResponse,
   AttendanceSummaryResponse,
+  AttendeesErrors,
+  AttendeesResponses,
   AuthenticateAppleErrors,
   AuthenticateAppleResponses,
   AuthenticateGoogleErrors,
@@ -71,6 +90,10 @@ import type {
   Create2Responses,
   Create3Errors,
   Create3Responses,
+  Create4Errors,
+  Create4Responses,
+  Create5Errors,
+  Create5Responses,
   CreateAdminPostRequest,
   CreatedNotificationResponse,
   CreatedPostResponse,
@@ -97,8 +120,16 @@ import type {
   Detail2Responses,
   Detail3Errors,
   Detail3Responses,
+  Detail4Errors,
+  Detail4Responses,
+  Detail5Errors,
+  Detail5Responses,
+  Detail6Errors,
+  Detail6Responses,
   DetailErrors,
   DetailResponses,
+  EditErrors,
+  EditResponses,
   ErrorResponse,
   Find1Errors,
   Find1Responses,
@@ -138,9 +169,13 @@ import type {
   GetErrors,
   GetResponses,
   GoogleNativeAuthenticationRequest,
+  GroupsErrors,
+  GroupsResponses,
   HistoryErrors,
   HistoryResponses,
   KakaoNativeAuthenticationRequest,
+  List10Errors,
+  List10Responses,
   List1Errors,
   List1Responses,
   List2Errors,
@@ -155,6 +190,10 @@ import type {
   List6Responses,
   List7Errors,
   List7Responses,
+  List8Errors,
+  List8Responses,
+  List9Errors,
+  List9Responses,
   ListErrors,
   ListResponses,
   LoginErrors,
@@ -171,6 +210,10 @@ import type {
   OverrideAttendanceRequest,
   OverrideErrors,
   OverrideResponses,
+  ParticipantsErrors,
+  ParticipantsResponses,
+  PaymentErrors,
+  PaymentResponses,
   PendingMemberListResponse,
   PendingMemberView,
   PostAudienceRequest,
@@ -178,13 +221,21 @@ import type {
   PostImageResponse,
   Presign1Errors,
   Presign1Responses,
+  Presign2Errors,
+  Presign2Responses,
   PresignErrors,
   PresignPostImageRequest,
   PresignPostImageResponse,
   PresignResponses,
   PresignTeamPhotoRequest,
+  PreviewErrors,
+  PreviewResponses,
   ReceiveErrors,
   ReceiveResponses,
+  Recipients1Errors,
+  Recipients1Responses,
+  Recipients2Errors,
+  Recipients2Responses,
   RecipientsErrors,
   RecipientsResponses,
   Register1Errors,
@@ -208,11 +259,28 @@ import type {
   ReplaceMembersErrors,
   ReplaceMembersResponses,
   ReplaceTeamMembersRequest,
+  Respond1Errors,
+  Respond1Responses,
+  RespondErrors,
+  RespondResponses,
   RetainedHistoryEntry,
   RetainedHistoryPage,
   RevokeErrors,
   RosterCandidateView,
   SessionListResponse,
+  SettlementDetailResponse,
+  SettlementListItemResponse,
+  SettlementListResponse,
+  SettlementPaymentRequest,
+  SettlementPaymentResponse,
+  SettlementPeopleResponse,
+  SettlementPersonResponse,
+  SettlementPhotoResponse,
+  SettlementPhotoUploadResponse,
+  SettlementPresignRequest,
+  SettlementSummaryResponse,
+  SettlementUpdateRequest,
+  SettlementWriteRequest,
   StaffLoginRequest,
   StaffLoginResponse,
   StaffSummaryResponse,
@@ -227,6 +295,8 @@ import type {
   SubmitErrors,
   SubmitResponses,
   SubmitTeamPhotoRequest,
+  SummaryErrors,
+  SummaryResponses,
   TeamMemberCandidateResponse,
   TeamMemberRequest,
   TeamMemberResponse,
@@ -241,8 +311,10 @@ import type {
   TeamPhotoWithUrl,
   TeamResponse,
   Update1Errors,
+  Update1Responses,
   Update2Errors,
-  Update2Responses,
+  Update3Errors,
+  Update3Responses,
   UpdateAdminPostRequest,
   UpdateErrors,
   UpdateResponses,
@@ -295,6 +367,302 @@ export const fakeRegisterNotificationDeviceRequest = (
   return {
     platform: f.helpers.arrayElement(['ANDROID', 'IOS']),
     registrationToken: f.string.sample(),
+  };
+};
+
+export const fakeSettlementUpdateRequest = (options?: Options): SettlementUpdateRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    bank: f.helpers.arrayElement([
+      'HANA',
+      'KB_KOOKMIN',
+      'IBK',
+      'NH',
+      'KYONGNAM',
+      'KWANGJU',
+      'BUSAN',
+      'KDB',
+      'SUHYUP',
+      'SHINHAN',
+      'WOORI',
+      'JEONBUK',
+      'JEJU',
+      'KAKAO',
+      'K_BANK',
+      'TOSS',
+      'IM_BANK',
+      'SC_FIRST',
+      'CITI',
+      'MG',
+      'FORESTRY',
+      'CREDIT_UNION',
+      'POST_OFFICE',
+      'SAVINGS',
+    ]),
+    accountNumber: f.finance.accountNumber(),
+    accountHolder: f.string.sample(),
+    totalAmount: f.number.int({ min: 1 }),
+    perPersonAmount: f.number.int({ min: 1 }),
+    recipientIds: f.helpers.multiple(() => f.number.int()),
+    imageIds: f.helpers.multiple(() => f.number.int(), { count: { min: 0, max: 5 } }),
+    expectedRevision: f.number.int({ min: 0 }),
+  };
+};
+
+export const fakeRegistrationFieldError = (options?: Options): RegistrationFieldError => {
+  const f = options?.faker ?? faker;
+  return {
+    field: f.helpers.arrayElement(['name', 'phoneNumber']),
+    code: f.helpers.arrayElement(['REQUIRED', 'INVALID_FORMAT', 'TOO_LONG', 'ALREADY_EXISTS']),
+    message: f.string.sample(),
+  };
+};
+
+export const fakeErrorResponse = (options?: Options): ErrorResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    code: f.helpers.arrayElement([
+      'INVALID_SETTLEMENT_REQUEST',
+      'SETTLEMENT_NOT_FOUND',
+      'SETTLEMENT_FORBIDDEN',
+      'SETTLEMENT_REVISION_CONFLICT',
+      'SETTLEMENT_FINANCIAL_EDIT_LOCKED',
+      'SETTLEMENT_UNAVAILABLE',
+      'INVALID_AFTERPARTY_REQUEST',
+      'AFTERPARTY_NOT_FOUND',
+      'AFTERPARTY_RESPONSE_REQUIRED',
+      'AFTERPARTY_VOTING_CLOSED',
+      'AFTERPARTY_UNAVAILABLE',
+      'APPLE_REVOKE_PENDING',
+      'APPLE_UNAVAILABLE',
+      'APPLE_NOTIFICATION_INVALID',
+      'APPLE_NOTIFICATION_UNAVAILABLE',
+      'APPLE_NOTIFICATION_FAILED',
+      'ACTIVE_GENERATION_CONFLICT',
+      'ATTENDANCE_CODE_CONFLICT',
+      'ATTENDANCE_CODE_NOT_ISSUED',
+      'ATTENDANCE_CODE_UPDATE_FAILED',
+      'ATTENDANCE_REPORT_NOT_ELIGIBLE',
+      'ATTENDANCE_REPORT_SESSION_CONFLICT',
+      'ATTENDANCE_REPORT_SESSION_CHANGED',
+      'ATTENDANCE_REPORT_UNAVAILABLE',
+      'ATTENDANCE_SCORE_NOT_ELIGIBLE',
+      'ATTENDANCE_SCORE_INCONSISTENT',
+      'ATTENDANCE_SESSION_NOT_FOUND',
+      'ATTENDANCE_UNAVAILABLE',
+      'TEAM_ATTENDANCE_PENDING',
+      'AUTHENTICATION_FAILED',
+      'AUTHENTICATION_STATE_INVALID',
+      'CURRENT_GENERATION_NOT_FOUND',
+      'CURRENT_WEEK_SESSION_CONFLICT',
+      'EMPTY_POST_AUDIENCE',
+      'GENERATION_NOT_FOUND',
+      'GENERATION_QUERY_FAILED',
+      'INVALID_ATTENDANCE_CODE',
+      'INVALID_ATTENDANCE_HISTORY_CURSOR',
+      'INVALID_ATTENDANCE_REPORT',
+      'INVALID_ATTENDANCE_REQUEST',
+      'INVALID_HISTORY_REQUEST',
+      'INVALID_MEMBER_REQUEST',
+      'MEMBER_APPROVAL_UNAVAILABLE',
+      'INVALID_MEMBER_CURSOR',
+      'INVALID_POST_CURSOR',
+      'INVALID_POST_IMAGE',
+      'INVALID_POST_REQUEST',
+      'INVALID_REQUEST',
+      'INVALID_ROSTER_LIST_REQUEST',
+      'INVALID_SESSION_REQUEST',
+      'INVALID_STAFF_AUTHENTICATION_REQUEST',
+      'INVALID_TEAM_REQUEST',
+      'MEMBER_CONFLICT',
+      'MEMBER_NOT_FOUND',
+      'MEMBER_DATA_UNAVAILABLE',
+      'MEMBER_UPDATE_CONFLICT',
+      'MEMBER_UPDATE_INELIGIBLE',
+      'INVALID_NOTIFICATION_REQUEST',
+      'INVALID_NOTIFICATION_HISTORY_CURSOR',
+      'INVALID_NOTIFICATION_DEVICE_REQUEST',
+      'INVALID_USER_NOTIFICATION_CURSOR',
+      'NOTIFICATION_CONFLICT',
+      'NOTIFICATION_DEVICE_CONFLICT',
+      'NOTIFICATION_NOT_FOUND',
+      'NOTIFICATION_UNAVAILABLE',
+      'POST_IDEMPOTENCY_CONFLICT',
+      'POST_IMAGE_CONFLICT',
+      'POST_IMAGE_STORAGE_FAILED',
+      'POST_NOT_FOUND',
+      'RETAINED_HISTORY_UNAVAILABLE',
+      'ROSTER_CONFLICT',
+      'ROSTER_PERSISTENCE_FAILED',
+      'ROSTER_QUERY_FAILED',
+      'ROSTER_VALIDATION_FAILED',
+      'SESSION_DATE_CONFLICT',
+      'SESSION_DELETE_CONFLICT',
+      'SESSION_NOT_FOUND',
+      'SESSION_UPDATE_CONFLICT',
+      'STAFF_AUTHENTICATION_FAILED',
+      'TEAM_ASSIGNMENT_STALE',
+      'TEAM_CONFLICT',
+      'TEAM_MEMBER_INELIGIBLE',
+      'TEAM_MEMBER_NOT_FOUND',
+      'TEAM_NAME_CONFLICT',
+      'TEAM_NOT_FOUND',
+      'TEAM_PHOTO_INVALID',
+      'TEAM_PHOTO_NOT_ELIGIBLE',
+      'TEAM_PHOTO_NOT_FOUND',
+      'TEAM_PHOTO_STORAGE_FAILED',
+      'TEAM_PHOTO_UNAVAILABLE',
+      'TEAM_VERSION_CONFLICT',
+      'USER_ALREADY_EXISTS',
+      'USER_PROFILE_UNAVAILABLE',
+      'USER_NOT_FOUND',
+      'USER_REGISTRATION_FAILED',
+      'USER_WITHDRAWAL_FAILED',
+    ]),
+    message: f.datatype.boolean() ? f.string.sample() : null,
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { fieldErrors: f.helpers.multiple(() => fakeRegistrationFieldError(options)) }),
+  };
+};
+
+export const fakeSettlementPhotoResponse = (options?: Options): SettlementPhotoResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { imageId: f.number.int() }),
+    readUrl: f.datatype.boolean() ? f.internet.url() : null,
+    expiresAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    retentionExpiresAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+  };
+};
+
+export const fakeSettlementDetailResponse = (options?: Options): SettlementDetailResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { settlementId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { creatorUserId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { creatorName: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { totalAmount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { perPersonAmount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : {
+          bank: f.helpers.arrayElement([
+            'HANA',
+            'KB_KOOKMIN',
+            'IBK',
+            'NH',
+            'KYONGNAM',
+            'KWANGJU',
+            'BUSAN',
+            'KDB',
+            'SUHYUP',
+            'SHINHAN',
+            'WOORI',
+            'JEONBUK',
+            'JEJU',
+            'KAKAO',
+            'K_BANK',
+            'TOSS',
+            'IM_BANK',
+            'SC_FIRST',
+            'CITI',
+            'MG',
+            'FORESTRY',
+            'CREDIT_UNION',
+            'POST_OFFICE',
+            'SAVINGS',
+          ]),
+        }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { accountNumber: f.finance.accountNumber() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { accountHolder: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { participantCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { debtorCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { paidCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { myAmount: f.number.int() }),
+    paymentStatus: f.helpers.arrayElement(['PAID', 'UNPAID', null]) as any,
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { recipientIds: f.helpers.multiple(() => f.number.int()) }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { photos: f.helpers.multiple(() => fakeSettlementPhotoResponse(options)) }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { revision: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { createdAt: f.date.recent().toISOString() }),
+    isMe: f.datatype.boolean(),
+  };
+};
+
+export const fakeSettlementPaymentRequest = (options?: Options): SettlementPaymentRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    paymentStatus: f.helpers.arrayElement(['PAID', 'UNPAID']),
+  };
+};
+
+export const fakeSettlementPaymentResponse = (options?: Options): SettlementPaymentResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { settlementId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { recipientId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { paymentStatus: f.helpers.arrayElement(['PAID', 'UNPAID']) }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { statusChangedAt: f.date.recent().toISOString() }),
+  };
+};
+
+export const fakeAfterpartyVoteRequest = (options?: Options): AfterpartyVoteRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    response: f.helpers.arrayElement(['ATTENDING', 'NOT_ATTENDING']),
+  };
+};
+
+export const fakeAfterpartyResponseResult = (options?: Options): AfterpartyResponseResult => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { recipientId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { response: f.helpers.arrayElement(['UNANSWERED', 'ATTENDING', 'NOT_ATTENDING']) }),
+    respondedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -396,8 +764,14 @@ export const fakeAdminMemberUpdateRequest = (options?: Options): AdminMemberUpda
       'AI_NATIVE',
       null,
     ]) as any,
-    status: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'WITHDRAWN']),
+    status: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'STAFF', 'DEFERRED']),
     expectedRevision: f.number.int(),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { targetGenerationId: f.datatype.boolean() ? f.number.int({ min: 1 }) : null }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { name: f.string.alpha({ length: { min: 1, max: 100 } }) }),
   };
 };
 
@@ -418,7 +792,14 @@ export const fakeAdminPreviousActivityResponse = (
   const f = options?.faker ?? faker;
   return {
     generationNumber: f.number.int({ min: 1, max: 100 }),
-    status: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'WITHDRAWN']),
+    status: f.helpers.arrayElement([
+      'PLAYER',
+      'OB',
+      'COMPLETED_MEMBER',
+      'DEFERRED',
+      'STAFF',
+      'WITHDRAWN',
+    ]),
     position: f.helpers.arrayElement([
       'PM',
       'DESIGN',
@@ -450,7 +831,14 @@ export const fakeAdminMemberDetailResponse = (options?: Options): AdminMemberDet
       'AI_NATIVE',
       null,
     ]) as any,
-    status: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'WITHDRAWN']),
+    status: f.helpers.arrayElement([
+      'PLAYER',
+      'OB',
+      'COMPLETED_MEMBER',
+      'DEFERRED',
+      'STAFF',
+      'WITHDRAWN',
+    ]),
     previousActivities: f.helpers.multiple(() => fakeAdminPreviousActivityResponse(options)),
     attendanceScore: f.datatype.boolean() ? f.number.int() : null,
     signedUpDate: f.string.sample(),
@@ -458,6 +846,16 @@ export const fakeAdminMemberDetailResponse = (options?: Options): AdminMemberDet
     phoneNumber: f.datatype.boolean() ? f.phone.number() : null,
     revision: f.number.int(),
     changes: f.helpers.multiple(() => fakeAdminMemberChangeResponse(options)),
+    generationId: f.number.int(),
+  };
+};
+
+export const fakeAdminAfterpartyResponseRequest = (
+  options?: Options,
+): AdminAfterpartyResponseRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    response: f.helpers.arrayElement(['UNANSWERED', 'ATTENDING', 'NOT_ATTENDING']),
   };
 };
 
@@ -498,112 +896,6 @@ export const fakeAuthenticationResponse = (options?: Options): AuthenticationRes
     session: f.datatype.boolean() ? fakeAuthSessionResponse(options) : null,
     registrationToken: f.datatype.boolean() ? f.string.sample() : null,
     expiresIn: f.datatype.boolean() ? f.number.int() : null,
-  };
-};
-
-export const fakeRegistrationFieldError = (options?: Options): RegistrationFieldError => {
-  const f = options?.faker ?? faker;
-  return {
-    field: f.helpers.arrayElement(['name', 'phoneNumber']),
-    code: f.helpers.arrayElement(['REQUIRED', 'INVALID_FORMAT', 'TOO_LONG', 'ALREADY_EXISTS']),
-    message: f.string.sample(),
-  };
-};
-
-export const fakeErrorResponse = (options?: Options): ErrorResponse => {
-  const f = options?.faker ?? faker;
-  return {
-    code: f.helpers.arrayElement([
-      'APPLE_REVOKE_PENDING',
-      'APPLE_UNAVAILABLE',
-      'APPLE_NOTIFICATION_INVALID',
-      'APPLE_NOTIFICATION_UNAVAILABLE',
-      'APPLE_NOTIFICATION_FAILED',
-      'ACTIVE_GENERATION_CONFLICT',
-      'ATTENDANCE_CODE_CONFLICT',
-      'ATTENDANCE_CODE_NOT_ISSUED',
-      'ATTENDANCE_CODE_UPDATE_FAILED',
-      'ATTENDANCE_REPORT_NOT_ELIGIBLE',
-      'ATTENDANCE_REPORT_SESSION_CONFLICT',
-      'ATTENDANCE_REPORT_SESSION_CHANGED',
-      'ATTENDANCE_REPORT_UNAVAILABLE',
-      'ATTENDANCE_SCORE_NOT_ELIGIBLE',
-      'ATTENDANCE_SCORE_INCONSISTENT',
-      'ATTENDANCE_SESSION_NOT_FOUND',
-      'ATTENDANCE_UNAVAILABLE',
-      'TEAM_ATTENDANCE_PENDING',
-      'AUTHENTICATION_FAILED',
-      'AUTHENTICATION_STATE_INVALID',
-      'CURRENT_GENERATION_NOT_FOUND',
-      'CURRENT_WEEK_SESSION_CONFLICT',
-      'EMPTY_POST_AUDIENCE',
-      'GENERATION_NOT_FOUND',
-      'GENERATION_QUERY_FAILED',
-      'INVALID_ATTENDANCE_CODE',
-      'INVALID_ATTENDANCE_HISTORY_CURSOR',
-      'INVALID_ATTENDANCE_REPORT',
-      'INVALID_ATTENDANCE_REQUEST',
-      'INVALID_HISTORY_REQUEST',
-      'INVALID_MEMBER_REQUEST',
-      'MEMBER_APPROVAL_UNAVAILABLE',
-      'INVALID_MEMBER_CURSOR',
-      'INVALID_POST_CURSOR',
-      'INVALID_POST_IMAGE',
-      'INVALID_POST_REQUEST',
-      'INVALID_REQUEST',
-      'INVALID_ROSTER_LIST_REQUEST',
-      'INVALID_SESSION_REQUEST',
-      'INVALID_STAFF_AUTHENTICATION_REQUEST',
-      'INVALID_TEAM_REQUEST',
-      'MEMBER_CONFLICT',
-      'MEMBER_NOT_FOUND',
-      'MEMBER_DATA_UNAVAILABLE',
-      'MEMBER_UPDATE_CONFLICT',
-      'MEMBER_UPDATE_INELIGIBLE',
-      'INVALID_NOTIFICATION_REQUEST',
-      'INVALID_NOTIFICATION_HISTORY_CURSOR',
-      'INVALID_NOTIFICATION_DEVICE_REQUEST',
-      'INVALID_USER_NOTIFICATION_CURSOR',
-      'NOTIFICATION_CONFLICT',
-      'NOTIFICATION_DEVICE_CONFLICT',
-      'NOTIFICATION_NOT_FOUND',
-      'NOTIFICATION_UNAVAILABLE',
-      'POST_IDEMPOTENCY_CONFLICT',
-      'POST_IMAGE_CONFLICT',
-      'POST_IMAGE_STORAGE_FAILED',
-      'POST_NOT_FOUND',
-      'RETAINED_HISTORY_UNAVAILABLE',
-      'ROSTER_CONFLICT',
-      'ROSTER_PERSISTENCE_FAILED',
-      'ROSTER_QUERY_FAILED',
-      'ROSTER_VALIDATION_FAILED',
-      'SESSION_DATE_CONFLICT',
-      'SESSION_DELETE_CONFLICT',
-      'SESSION_NOT_FOUND',
-      'SESSION_UPDATE_CONFLICT',
-      'STAFF_AUTHENTICATION_FAILED',
-      'TEAM_ASSIGNMENT_STALE',
-      'TEAM_CONFLICT',
-      'TEAM_MEMBER_INELIGIBLE',
-      'TEAM_MEMBER_NOT_FOUND',
-      'TEAM_NAME_CONFLICT',
-      'TEAM_NOT_FOUND',
-      'TEAM_PHOTO_INVALID',
-      'TEAM_PHOTO_NOT_ELIGIBLE',
-      'TEAM_PHOTO_NOT_FOUND',
-      'TEAM_PHOTO_STORAGE_FAILED',
-      'TEAM_PHOTO_UNAVAILABLE',
-      'TEAM_VERSION_CONFLICT',
-      'USER_ALREADY_EXISTS',
-      'USER_PROFILE_UNAVAILABLE',
-      'USER_NOT_FOUND',
-      'USER_REGISTRATION_FAILED',
-      'USER_WITHDRAWAL_FAILED',
-    ]),
-    message: f.datatype.boolean() ? f.string.sample() : null,
-    ...(!resolveCondition(options?.includeOptional ?? true, f)
-      ? {}
-      : { fieldErrors: f.helpers.multiple(() => fakeRegistrationFieldError(options)) }),
   };
 };
 
@@ -737,9 +1029,7 @@ export const fakeSubmitAttendanceReportRequest = (
   const f = options?.faker ?? faker;
   return {
     type: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT']),
-    ...(!resolveCondition(options?.includeOptional ?? true, f)
-      ? {}
-      : { reason: f.datatype.boolean() ? f.string.sample() : null }),
+    reason: f.string.alpha({ length: { min: 2, max: 30 } }),
   };
 };
 
@@ -748,6 +1038,89 @@ export const fakeAttendanceReportResponse = (options?: Options): AttendanceRepor
   return {
     sessionId: f.number.int(),
     submittedAt: f.date.recent().toISOString(),
+  };
+};
+
+export const fakeSettlementWriteRequest = (options?: Options): SettlementWriteRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    bank: f.helpers.arrayElement([
+      'HANA',
+      'KB_KOOKMIN',
+      'IBK',
+      'NH',
+      'KYONGNAM',
+      'KWANGJU',
+      'BUSAN',
+      'KDB',
+      'SUHYUP',
+      'SHINHAN',
+      'WOORI',
+      'JEONBUK',
+      'JEJU',
+      'KAKAO',
+      'K_BANK',
+      'TOSS',
+      'IM_BANK',
+      'SC_FIRST',
+      'CITI',
+      'MG',
+      'FORESTRY',
+      'CREDIT_UNION',
+      'POST_OFFICE',
+      'SAVINGS',
+    ]),
+    accountNumber: f.finance.accountNumber(),
+    accountHolder: f.string.sample(),
+    totalAmount: f.number.int({ min: 1 }),
+    perPersonAmount: f.number.int({ min: 1 }),
+    recipientIds: f.helpers.multiple(() => f.number.int()),
+    imageIds: f.helpers.multiple(() => f.number.int(), { count: { min: 0, max: 5 } }),
+  };
+};
+
+export const fakeSettlementPresignRequest = (options?: Options): SettlementPresignRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { filename: f.system.fileName() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { contentType: f.system.mimeType() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { sizeBytes: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { checksumSha256: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { settlementId: f.datatype.boolean() ? f.number.int() : null }),
+  };
+};
+
+export const fakeSettlementPhotoUploadResponse = (
+  options?: Options,
+): SettlementPhotoUploadResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { imageId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { uploadUrl: f.internet.url() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : {
+          signedHeaders: !resolveCondition(options?.includeOptional ?? true, f)
+            ? ({} as {})
+            : {
+                additionalProp: f.string.sample(),
+              },
+        }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { expiresAt: f.date.recent().toISOString() }),
   };
 };
 
@@ -791,7 +1164,7 @@ export const fakeCreatedNotificationResponse = (options?: Options): CreatedNotif
 export const fakeRejectMemberRequest = (options?: Options): RejectMemberRequest => {
   const f = options?.faker ?? faker;
   return {
-    reason: f.string.sample(),
+    reason: f.string.alpha({ length: { min: 1, max: 100 } }),
   };
 };
 
@@ -825,7 +1198,7 @@ export const fakeMemberDetailResponse = (options?: Options): MemberDetailRespons
     accountDeleted: f.datatype.boolean(),
     signedUpAt: f.date.recent().toISOString(),
     reviewStatus: f.string.sample(),
-    role: f.helpers.arrayElement(['PLAYER', 'OB', null]) as any,
+    role: f.helpers.arrayElement(['PLAYER', 'OB', 'STAFF', null]) as any,
     memberships: f.helpers.multiple(() => fakeMemberMembershipResponse(options)),
     rejectionReason: f.datatype.boolean() ? f.string.sample() : null,
   };
@@ -835,7 +1208,7 @@ export const fakeApproveMemberRequest = (options?: Options): ApproveMemberReques
   const f = options?.faker ?? faker;
   return {
     approvalType: f.helpers.arrayElement(['ROSTER', 'MANUAL']),
-    role: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED']),
+    role: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'STAFF']),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : {
@@ -930,7 +1303,7 @@ export const fakeGenerationRosterEntryRequest = (
       'SERVER',
       'AI_NATIVE',
     ]),
-    role: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED']),
+    role: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'STAFF']),
   };
 };
 
@@ -1084,6 +1457,85 @@ export const fakePresignPostImageResponse = (options?: Options): PresignPostImag
   };
 };
 
+export const fakeAfterpartyCreateRequest = (options?: Options): AfterpartyCreateRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    title: f.lorem.words(),
+    content: f.string.alpha({ length: { min: 1, max: 100 } }),
+    startsAt: f.date.recent().toISOString(),
+    deadline: f.date.recent().toISOString(),
+    invitationRoles: f.helpers.multiple(
+      () => f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'STAFF']),
+      { count: { min: 1, max: 100 } },
+    ),
+  };
+};
+
+export const fakeAfterpartyCountsResponse = (options?: Options): AfterpartyCountsResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { totalCount: f.number.int({ min: 0, max: 100 }) }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { respondedCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { attendingCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { notAttendingCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { unansweredCount: f.number.int() }),
+  };
+};
+
+export const fakeAdminAfterpartyResponse = (options?: Options): AdminAfterpartyResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { generationId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { generationNumber: f.number.int({ min: 1, max: 100 }) }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { title: f.lorem.words() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { content: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { startsAt: f.date.recent().toISOString() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { startsAtDisplay: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { deadline: f.date.recent().toISOString() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { deadlineDisplay: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : {
+          invitationRoles: f.helpers.multiple(() =>
+            f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'STAFF']),
+          ),
+        }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { state: f.helpers.arrayElement(['OPEN', 'CLOSED', 'ENDED']) }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { counts: fakeAfterpartyCountsResponse(options) }),
+  };
+};
+
 export const fakeStaffLoginRequest = (options?: Options): StaffLoginRequest => {
   const f = options?.faker ?? faker;
   return {
@@ -1220,6 +1672,7 @@ export const fakeUserProfileResponse = (options?: Options): UserProfileResponse 
       'OB',
       'COMPLETED_MEMBER',
       'DEFERRED',
+      'STAFF',
       null,
     ]) as any,
     generationId: f.datatype.boolean() ? f.number.int() : null,
@@ -1246,8 +1699,20 @@ export const fakeUserNotificationListItemResponse = (
     id: f.number.int(),
     content: f.string.sample(),
     sentDate: f.date.recent().toISOString().slice(0, 10),
-    type: f.helpers.arrayElement(['GENERAL', 'POST']),
+    type: f.helpers.arrayElement(['GENERAL', 'POST', 'SESSION_REMINDER', 'SETTLEMENT']),
     postId: f.datatype.boolean() ? f.number.int() : null,
+    sessionId: f.datatype.boolean() ? f.number.int() : null,
+    reminderKind: f.helpers.arrayElement([
+      'DAY_BEFORE_REGULAR',
+      'BEFORE_ATTENDANCE_END',
+      'AFTER_REGULAR_START',
+      null,
+    ]) as any,
+    navigationTarget: f.helpers.arrayElement(['SESSION_SCHEDULE', 'SETTLEMENT', null]) as any,
+    settlementId: f.datatype.boolean() ? f.number.int() : null,
+    afterpartyId: f.datatype.boolean() ? f.number.int() : null,
+    title: f.datatype.boolean() ? f.lorem.words() : null,
+    settlementKind: f.datatype.boolean() ? f.string.sample() : null,
   };
 };
 
@@ -1514,6 +1979,250 @@ export const fakeAttendanceHistoryResponse = (options?: Options): AttendanceHist
   };
 };
 
+export const fakeAppAfterpartyListItemResponse = (
+  options?: Options,
+): AppAfterpartyListItemResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { title: f.lorem.words() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { startsAt: f.date.recent().toISOString() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { startsAtDisplay: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { deadline: f.date.recent().toISOString() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { deadlineDisplay: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { respondedCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { state: f.helpers.arrayElement(['OPEN', 'CLOSED', 'ENDED']) }),
+  };
+};
+
+export const fakeAppAfterpartyPageResponse = (options?: Options): AppAfterpartyPageResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { items: f.helpers.multiple(() => fakeAppAfterpartyListItemResponse(options)) }),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
+export const fakeAppAfterpartyDetailResponse = (options?: Options): AppAfterpartyDetailResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { title: f.lorem.words() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { content: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { startsAt: f.date.recent().toISOString() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { startsAtDisplay: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { deadline: f.date.recent().toISOString() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { deadlineDisplay: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { state: f.helpers.arrayElement(['OPEN', 'CLOSED', 'ENDED']) }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { response: f.helpers.arrayElement(['UNANSWERED', 'ATTENDING', 'NOT_ATTENDING']) }),
+    attendingCount: f.datatype.boolean() ? f.number.int() : null,
+  };
+};
+
+export const fakeSettlementListItemResponse = (options?: Options): SettlementListItemResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { settlementId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { creatorUserId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { creatorName: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { participantCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { myAmount: f.number.int() }),
+    paymentStatus: f.helpers.arrayElement(['PAID', 'UNPAID', null]) as any,
+    bank: f.helpers.arrayElement([
+      'HANA',
+      'KB_KOOKMIN',
+      'IBK',
+      'NH',
+      'KYONGNAM',
+      'KWANGJU',
+      'BUSAN',
+      'KDB',
+      'SUHYUP',
+      'SHINHAN',
+      'WOORI',
+      'JEONBUK',
+      'JEJU',
+      'KAKAO',
+      'K_BANK',
+      'TOSS',
+      'IM_BANK',
+      'SC_FIRST',
+      'CITI',
+      'MG',
+      'FORESTRY',
+      'CREDIT_UNION',
+      'POST_OFFICE',
+      'SAVINGS',
+      null,
+    ]) as any,
+    accountNumber: f.datatype.boolean() ? f.finance.accountNumber() : null,
+    accountHolder: f.datatype.boolean() ? f.string.sample() : null,
+    isMe: f.datatype.boolean(),
+  };
+};
+
+export const fakeSettlementListResponse = (options?: Options): SettlementListResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { items: f.helpers.multiple(() => fakeSettlementListItemResponse(options)) }),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
+export const fakeSettlementSummaryResponse = (options?: Options): SettlementSummaryResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { settlementId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { expectedReceivableAmount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { perPersonAmount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { debtorCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { paidCount: f.number.int() }),
+  };
+};
+
+export const fakeSettlementPersonResponse = (options?: Options): SettlementPersonResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { recipientId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { userId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { membershipId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { name: f.string.sample() }),
+    teamId: f.datatype.boolean() ? f.number.int() : null,
+    teamName: f.datatype.boolean() ? f.string.sample() : null,
+    position: f.helpers.arrayElement([
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'WEB',
+      'MOBILE',
+      'SERVER',
+      'AI_NATIVE',
+      null,
+    ]) as any,
+    paymentStatus: f.helpers.arrayElement(['PAID', 'UNPAID', null]) as any,
+    statusChangedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    isMe: f.datatype.boolean(),
+  };
+};
+
+export const fakeSettlementPeopleResponse = (options?: Options): SettlementPeopleResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    settlementId: f.datatype.boolean() ? f.number.int() : null,
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { items: f.helpers.multiple(() => fakeSettlementPersonResponse(options)) }),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
+export const fakeAfterpartyAttendeeResponse = (options?: Options): AfterpartyAttendeeResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { recipientId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { userId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { membershipId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { name: f.string.sample() }),
+    teamId: f.datatype.boolean() ? f.number.int() : null,
+    teamName: f.datatype.boolean() ? f.string.sample() : null,
+    position: f.helpers.arrayElement([
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'WEB',
+      'MOBILE',
+      'SERVER',
+      'AI_NATIVE',
+      null,
+    ]) as any,
+    isMe: f.datatype.boolean(),
+  };
+};
+
+export const fakeAfterpartyAttendeesResponse = (options?: Options): AfterpartyAttendeesResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { attendingCount: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { items: f.helpers.multiple(() => fakeAfterpartyAttendeeResponse(options)) }),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
 export const fakeRetainedHistoryEntry = (options?: Options): RetainedHistoryEntry => {
   const f = options?.faker ?? faker;
   return {
@@ -1608,7 +2317,14 @@ export const fakeRosterCandidateView = (options?: Options): RosterCandidateView 
       'AI_NATIVE',
       null,
     ]) as any,
-    role: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', null]) as any,
+    role: f.helpers.arrayElement([
+      'PLAYER',
+      'OB',
+      'COMPLETED_MEMBER',
+      'DEFERRED',
+      'STAFF',
+      null,
+    ]) as any,
   };
 };
 
@@ -1796,7 +2512,14 @@ export const fakeGenerationRosterListEntryResponse = (
       'AI_NATIVE',
       null,
     ]) as any,
-    role: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', null]) as any,
+    role: f.helpers.arrayElement([
+      'PLAYER',
+      'OB',
+      'COMPLETED_MEMBER',
+      'DEFERRED',
+      'STAFF',
+      null,
+    ]) as any,
     status: 'AVAILABLE',
   };
 };
@@ -1925,7 +2648,14 @@ export const fakeAdminMemberItemResponse = (options?: Options): AdminMemberItemR
       'AI_NATIVE',
       null,
     ]) as any,
-    status: f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'WITHDRAWN']),
+    status: f.helpers.arrayElement([
+      'PLAYER',
+      'OB',
+      'COMPLETED_MEMBER',
+      'DEFERRED',
+      'STAFF',
+      'WITHDRAWN',
+    ]),
     previousActivities: f.helpers.multiple(() => fakeAdminPreviousActivityResponse(options)),
     attendanceScore: f.datatype.boolean() ? f.number.int() : null,
     signedUpDate: f.string.sample(),
@@ -1988,6 +2718,114 @@ export const fakeAdminAttendanceStatisticsListResponse = (
   };
 };
 
+export const fakeAdminAfterpartyPageResponse = (options?: Options): AdminAfterpartyPageResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { items: f.helpers.multiple(() => fakeAdminAfterpartyResponse(options)) }),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
+export const fakeAfterpartyRecipientCountResponse = (
+  options?: Options,
+): AfterpartyRecipientCountResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { generationId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : {
+          invitationRoles: f.helpers.multiple(() =>
+            f.helpers.arrayElement(['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'STAFF']),
+          ),
+        }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { recipientCount: f.number.int() }),
+  };
+};
+
+export const fakeAfterpartyGroupResponse = (options?: Options): AfterpartyGroupResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { groupId: f.string.uuid() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { kind: f.helpers.arrayElement(['TEAM', 'STAFF', 'UNASSIGNED']) }),
+    teamId: f.datatype.boolean() ? f.number.int() : null,
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { name: f.string.sample() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { counts: fakeAfterpartyCountsResponse(options) }),
+  };
+};
+
+export const fakeAfterpartyGroupsResponse = (options?: Options): AfterpartyGroupsResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { groups: f.helpers.multiple(() => fakeAfterpartyGroupResponse(options)) }),
+  };
+};
+
+export const fakeAfterpartyRecipientResponse = (options?: Options): AfterpartyRecipientResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { recipientId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { userId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { membershipId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f) ? {} : { name: f.string.sample() }),
+    teamId: f.datatype.boolean() ? f.number.int() : null,
+    teamName: f.datatype.boolean() ? f.string.sample() : null,
+    position: f.helpers.arrayElement([
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'WEB',
+      'MOBILE',
+      'SERVER',
+      'AI_NATIVE',
+      null,
+    ]) as any,
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { response: f.helpers.arrayElement(['UNANSWERED', 'ATTENDING', 'NOT_ATTENDING']) }),
+    respondedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    respondedAtDisplay: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
+export const fakeAfterpartyRecipientsResponse = (
+  options?: Options,
+): AfterpartyRecipientsResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { afterpartyId: f.number.int() }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { totalCount: f.number.int({ min: 0, max: 100 }) }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { items: f.helpers.multiple(() => fakeAfterpartyRecipientResponse(options)) }),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
 export const fakeRemoveResponse400 = (options?: Options): RemoveErrors[400] =>
   fakeErrorResponse(options);
 
@@ -2018,6 +2856,87 @@ export const fakeAcknowledgeResponse401 = (options?: Options): AcknowledgeErrors
 export const fakeAcknowledgeResponse404 = (options?: Options): AcknowledgeErrors[404] =>
   fakeErrorResponse(options);
 
+export const fakeDetailResponse200 = (options?: Options): DetailResponses[200] =>
+  fakeSettlementDetailResponse(options);
+
+export const fakeDetailResponse400 = (options?: Options): DetailErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeDetailResponse401 = (options?: Options): DetailErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDetailResponse403 = (options?: Options): DetailErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeDetailResponse404 = (options?: Options): DetailErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeDetailResponse409 = (options?: Options): DetailErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeDetailResponse503 = (options?: Options): DetailErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeUpdateResponse200 = (options?: Options): UpdateResponses[200] =>
+  fakeSettlementDetailResponse(options);
+
+export const fakeUpdateResponse400 = (options?: Options): UpdateErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeUpdateResponse401 = (options?: Options): UpdateErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeUpdateResponse403 = (options?: Options): UpdateErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeUpdateResponse404 = (options?: Options): UpdateErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeUpdateResponse409 = (options?: Options): UpdateErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeUpdateResponse503 = (options?: Options): UpdateErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakePaymentResponse200 = (options?: Options): PaymentResponses[200] =>
+  fakeSettlementPaymentResponse(options);
+
+export const fakePaymentResponse400 = (options?: Options): PaymentErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakePaymentResponse401 = (options?: Options): PaymentErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakePaymentResponse403 = (options?: Options): PaymentErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakePaymentResponse404 = (options?: Options): PaymentErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakePaymentResponse409 = (options?: Options): PaymentErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakePaymentResponse503 = (options?: Options): PaymentErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeRespondResponse200 = (options?: Options): RespondResponses[200] =>
+  fakeAfterpartyResponseResult(options);
+
+export const fakeRespondResponse400 = (options?: Options): RespondErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeRespondResponse401 = (options?: Options): RespondErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRespondResponse404 = (options?: Options): RespondErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeRespondResponse409 = (options?: Options): RespondErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeRespondResponse503 = (options?: Options): RespondErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeDeleteResponse401 = (options?: Options): DeleteErrors[401] =>
   fakeErrorResponse(options);
 
@@ -2033,19 +2952,19 @@ export const fakeFindResponse401 = (options?: Options): FindErrors[401] =>
 export const fakeFindResponse404 = (options?: Options): FindErrors[404] =>
   fakeErrorResponse(options);
 
-export const fakeUpdateResponse200 = (options?: Options): UpdateResponses[200] =>
+export const fakeUpdate1Response200 = (options?: Options): Update1Responses[200] =>
   fakeTeamResponse(options);
 
-export const fakeUpdateResponse400 = (options?: Options): UpdateErrors[400] =>
+export const fakeUpdate1Response400 = (options?: Options): Update1Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeUpdateResponse401 = (options?: Options): UpdateErrors[401] =>
+export const fakeUpdate1Response401 = (options?: Options): Update1Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeUpdateResponse404 = (options?: Options): UpdateErrors[404] =>
+export const fakeUpdate1Response404 = (options?: Options): Update1Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeUpdateResponse409 = (options?: Options): UpdateErrors[409] =>
+export const fakeUpdate1Response409 = (options?: Options): Update1Errors[409] =>
   fakeErrorResponse(options);
 
 export const fakeReplaceMembersResponse200 = (options?: Options): ReplaceMembersResponses[200] =>
@@ -2072,31 +2991,31 @@ export const fakeDelete1Response404 = (options?: Options): Delete1Errors[404] =>
 export const fakeDelete1Response409 = (options?: Options): Delete1Errors[409] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate1Response400 = (options?: Options): Update1Errors[400] =>
+export const fakeUpdate2Response400 = (options?: Options): Update2Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate1Response401 = (options?: Options): Update1Errors[401] =>
+export const fakeUpdate2Response401 = (options?: Options): Update2Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate1Response404 = (options?: Options): Update1Errors[404] =>
+export const fakeUpdate2Response404 = (options?: Options): Update2Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate1Response409 = (options?: Options): Update1Errors[409] =>
+export const fakeUpdate2Response409 = (options?: Options): Update2Errors[409] =>
   fakeErrorResponse(options);
 
-export const fakeDetailResponse200 = (options?: Options): DetailResponses[200] =>
+export const fakeDetail1Response200 = (options?: Options): Detail1Responses[200] =>
   fakeAdminMemberDetailResponse(options);
 
-export const fakeDetailResponse401 = (options?: Options): DetailErrors[401] =>
+export const fakeDetail1Response401 = (options?: Options): Detail1Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeDetailResponse404 = (options?: Options): DetailErrors[404] =>
+export const fakeDetail1Response404 = (options?: Options): Detail1Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeDetailResponse500 = (options?: Options): DetailErrors[500] =>
+export const fakeDetail1Response500 = (options?: Options): Detail1Errors[500] =>
   fakeErrorResponse(options);
 
-export const fakeDetailResponse503 = (options?: Options): DetailErrors[503] =>
+export const fakeDetail1Response503 = (options?: Options): Detail1Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeCorrectResponse200 = (options?: Options): CorrectResponses[200] =>
@@ -2118,6 +3037,21 @@ export const fakeCorrectResponse500 = (options?: Options): CorrectErrors[500] =>
   fakeErrorResponse(options);
 
 export const fakeCorrectResponse503 = (options?: Options): CorrectErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeRespond1Response200 = (options?: Options): Respond1Responses[200] =>
+  fakeAfterpartyResponseResult(options);
+
+export const fakeRespond1Response400 = (options?: Options): Respond1Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeRespond1Response401 = (options?: Options): Respond1Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRespond1Response404 = (options?: Options): Respond1Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeRespond1Response503 = (options?: Options): Respond1Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeRegister1Response200 = (options?: Options): Register1Responses[200] =>
@@ -2310,6 +3244,69 @@ export const fakeSubmit1Response404 = (options?: Options): Submit1Errors[404] =>
 export const fakeSubmit1Response409 = (options?: Options): Submit1Errors[409] =>
   fakeErrorResponse(options);
 
+export const fakeListResponse200 = (options?: Options): ListResponses[200] =>
+  fakeSettlementListResponse(options);
+
+export const fakeListResponse400 = (options?: Options): ListErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeListResponse401 = (options?: Options): ListErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeListResponse403 = (options?: Options): ListErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeListResponse404 = (options?: Options): ListErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeListResponse409 = (options?: Options): ListErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeListResponse503 = (options?: Options): ListErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeCreateResponse201 = (options?: Options): CreateResponses[201] =>
+  fakeSettlementDetailResponse(options);
+
+export const fakeCreateResponse400 = (options?: Options): CreateErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeCreateResponse401 = (options?: Options): CreateErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeCreateResponse403 = (options?: Options): CreateErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeCreateResponse404 = (options?: Options): CreateErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeCreateResponse409 = (options?: Options): CreateErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeCreateResponse503 = (options?: Options): CreateErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakePresign1Response200 = (options?: Options): Presign1Responses[200] =>
+  fakeSettlementPhotoUploadResponse(options);
+
+export const fakePresign1Response400 = (options?: Options): Presign1Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakePresign1Response401 = (options?: Options): Presign1Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakePresign1Response403 = (options?: Options): Presign1Errors[403] =>
+  fakeErrorResponse(options);
+
+export const fakePresign1Response404 = (options?: Options): Presign1Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakePresign1Response409 = (options?: Options): Presign1Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakePresign1Response503 = (options?: Options): Presign1Errors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeHistoryResponse200 = (options?: Options): HistoryResponses[200] =>
   fakeNotificationHistoryPageResponse(options);
 
@@ -2322,19 +3319,19 @@ export const fakeHistoryResponse401 = (options?: Options): HistoryErrors[401] =>
 export const fakeHistoryResponse503 = (options?: Options): HistoryErrors[503] =>
   fakeErrorResponse(options);
 
-export const fakeCreateResponse202 = (options?: Options): CreateResponses[202] =>
+export const fakeCreate1Response202 = (options?: Options): Create1Responses[202] =>
   fakeCreatedNotificationResponse(options);
 
-export const fakeCreateResponse400 = (options?: Options): CreateErrors[400] =>
+export const fakeCreate1Response400 = (options?: Options): Create1Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeCreateResponse401 = (options?: Options): CreateErrors[401] =>
+export const fakeCreate1Response401 = (options?: Options): Create1Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeCreateResponse409 = (options?: Options): CreateErrors[409] =>
+export const fakeCreate1Response409 = (options?: Options): Create1Errors[409] =>
   fakeErrorResponse(options);
 
-export const fakeCreateResponse503 = (options?: Options): CreateErrors[503] =>
+export const fakeCreate1Response503 = (options?: Options): Create1Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeCancelResponse400 = (options?: Options): CancelErrors[400] =>
@@ -2393,19 +3390,19 @@ export const fakeFindAllResponse401 = (options?: Options): FindAllErrors[401] =>
 export const fakeFindAllResponse404 = (options?: Options): FindAllErrors[404] =>
   fakeErrorResponse(options);
 
-export const fakeCreate1Response201 = (options?: Options): Create1Responses[201] =>
+export const fakeCreate2Response201 = (options?: Options): Create2Responses[201] =>
   fakeTeamResponse(options);
 
-export const fakeCreate1Response400 = (options?: Options): Create1Errors[400] =>
+export const fakeCreate2Response400 = (options?: Options): Create2Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeCreate1Response401 = (options?: Options): Create1Errors[401] =>
+export const fakeCreate2Response401 = (options?: Options): Create2Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeCreate1Response404 = (options?: Options): Create1Errors[404] =>
+export const fakeCreate2Response404 = (options?: Options): Create2Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeCreate1Response409 = (options?: Options): Create1Errors[409] =>
+export const fakeCreate2Response409 = (options?: Options): Create2Errors[409] =>
   fakeErrorResponse(options);
 
 export const fakeFind2Response200 = (options?: Options): Find2Responses[200] =>
@@ -2420,19 +3417,19 @@ export const fakeFind2Response401 = (options?: Options): Find2Errors[401] =>
 export const fakeFind2Response404 = (options?: Options): Find2Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeCreate2Response201 = (options?: Options): Create2Responses[201] =>
+export const fakeCreate3Response201 = (options?: Options): Create3Responses[201] =>
   fakeCreateSessionResponse(options);
 
-export const fakeCreate2Response400 = (options?: Options): Create2Errors[400] =>
+export const fakeCreate3Response400 = (options?: Options): Create3Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeCreate2Response401 = (options?: Options): Create2Errors[401] =>
+export const fakeCreate3Response401 = (options?: Options): Create3Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeCreate2Response404 = (options?: Options): Create2Errors[404] =>
+export const fakeCreate3Response404 = (options?: Options): Create3Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeCreate2Response409 = (options?: Options): Create2Errors[409] =>
+export const fakeCreate3Response409 = (options?: Options): Create3Errors[409] =>
   fakeErrorResponse(options);
 
 export const fakeDecideResponse200 = (options?: Options): DecideResponses[200] =>
@@ -2521,49 +3518,79 @@ export const fakeRegister2Response422 = (options?: Options): Register2Errors[422
 export const fakeRegister2Response500 = (options?: Options): Register2Errors[500] =>
   fakeErrorResponse(options);
 
-export const fakeListResponse200 = (options?: Options): ListResponses[200] =>
+export const fakeList1Response200 = (options?: Options): List1Responses[200] =>
   fakeAdminPostListResponse(options);
 
-export const fakeListResponse400 = (options?: Options): ListErrors[400] =>
+export const fakeList1Response400 = (options?: Options): List1Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeListResponse401 = (options?: Options): ListErrors[401] =>
+export const fakeList1Response401 = (options?: Options): List1Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeListResponse404 = (options?: Options): ListErrors[404] =>
+export const fakeList1Response404 = (options?: Options): List1Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeCreate3Response201 = (options?: Options): Create3Responses[201] =>
+export const fakeCreate4Response201 = (options?: Options): Create4Responses[201] =>
   fakeCreatedPostResponse(options);
 
-export const fakeCreate3Response400 = (options?: Options): Create3Errors[400] =>
+export const fakeCreate4Response400 = (options?: Options): Create4Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeCreate3Response401 = (options?: Options): Create3Errors[401] =>
+export const fakeCreate4Response401 = (options?: Options): Create4Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeCreate3Response404 = (options?: Options): Create3Errors[404] =>
+export const fakeCreate4Response404 = (options?: Options): Create4Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeCreate3Response409 = (options?: Options): Create3Errors[409] =>
+export const fakeCreate4Response409 = (options?: Options): Create4Errors[409] =>
   fakeErrorResponse(options);
 
-export const fakeCreate3Response503 = (options?: Options): Create3Errors[503] =>
+export const fakeCreate4Response503 = (options?: Options): Create4Errors[503] =>
   fakeErrorResponse(options);
 
-export const fakePresign1Response200 = (options?: Options): Presign1Responses[200] =>
+export const fakePresign2Response200 = (options?: Options): Presign2Responses[200] =>
   fakePresignPostImageResponse(options);
 
-export const fakePresign1Response400 = (options?: Options): Presign1Errors[400] =>
+export const fakePresign2Response400 = (options?: Options): Presign2Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakePresign1Response401 = (options?: Options): Presign1Errors[401] =>
+export const fakePresign2Response401 = (options?: Options): Presign2Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakePresign1Response404 = (options?: Options): Presign1Errors[404] =>
+export const fakePresign2Response404 = (options?: Options): Presign2Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakePresign1Response503 = (options?: Options): Presign1Errors[503] =>
+export const fakePresign2Response503 = (options?: Options): Presign2Errors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeList2Response200 = (options?: Options): List2Responses[200] =>
+  fakeAdminAfterpartyPageResponse(options);
+
+export const fakeList2Response400 = (options?: Options): List2Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeList2Response401 = (options?: Options): List2Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList2Response404 = (options?: Options): List2Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList2Response503 = (options?: Options): List2Errors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeCreate5Response201 = (options?: Options): Create5Responses[201] =>
+  fakeAdminAfterpartyResponse(options);
+
+export const fakeCreate5Response400 = (options?: Options): Create5Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeCreate5Response401 = (options?: Options): Create5Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeCreate5Response404 = (options?: Options): Create5Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeCreate5Response503 = (options?: Options): Create5Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeLoginResponse200 = (options?: Options): LoginResponses[200] =>
@@ -2603,31 +3630,31 @@ export const fakeDelete2Response401 = (options?: Options): Delete2Errors[401] =>
 export const fakeDelete2Response404 = (options?: Options): Delete2Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeDetail1Response200 = (options?: Options): Detail1Responses[200] =>
+export const fakeDetail2Response200 = (options?: Options): Detail2Responses[200] =>
   fakeAdminPostDetailResponse(options);
 
-export const fakeDetail1Response401 = (options?: Options): Detail1Errors[401] =>
+export const fakeDetail2Response401 = (options?: Options): Detail2Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeDetail1Response404 = (options?: Options): Detail1Errors[404] =>
+export const fakeDetail2Response404 = (options?: Options): Detail2Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate2Response200 = (options?: Options): Update2Responses[200] =>
+export const fakeUpdate3Response200 = (options?: Options): Update3Responses[200] =>
   fakeAdminPostDetailResponse(options);
 
-export const fakeUpdate2Response400 = (options?: Options): Update2Errors[400] =>
+export const fakeUpdate3Response400 = (options?: Options): Update3Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate2Response401 = (options?: Options): Update2Errors[401] =>
+export const fakeUpdate3Response401 = (options?: Options): Update3Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate2Response404 = (options?: Options): Update2Errors[404] =>
+export const fakeUpdate3Response404 = (options?: Options): Update3Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate2Response409 = (options?: Options): Update2Errors[409] =>
+export const fakeUpdate3Response409 = (options?: Options): Update3Errors[409] =>
   fakeErrorResponse(options);
 
-export const fakeUpdate2Response503 = (options?: Options): Update2Errors[503] =>
+export const fakeUpdate3Response503 = (options?: Options): Update3Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeWithdrawResponse401 = (options?: Options): WithdrawErrors[401] =>
@@ -2690,28 +3717,28 @@ export const fakeFind6Response404 = (options?: Options): Find6Errors[404] =>
 export const fakeFind6Response409 = (options?: Options): Find6Errors[409] =>
   fakeErrorResponse(options);
 
-export const fakeList1Response200 = (options?: Options): List1Responses[200] =>
+export const fakeList3Response200 = (options?: Options): List3Responses[200] =>
   fakeUserPostListResponse(options);
 
-export const fakeList1Response400 = (options?: Options): List1Errors[400] =>
+export const fakeList3Response400 = (options?: Options): List3Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeList1Response401 = (options?: Options): List1Errors[401] =>
+export const fakeList3Response401 = (options?: Options): List3Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeDetail2Response200 = (options?: Options): Detail2Responses[200] =>
+export const fakeDetail3Response200 = (options?: Options): Detail3Responses[200] =>
   fakeUserPostDetailResponse(options);
 
-export const fakeDetail2Response400 = (options?: Options): Detail2Errors[400] =>
+export const fakeDetail3Response400 = (options?: Options): Detail3Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeDetail2Response401 = (options?: Options): Detail2Errors[401] =>
+export const fakeDetail3Response401 = (options?: Options): Detail3Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeDetail2Response404 = (options?: Options): Detail2Errors[404] =>
+export const fakeDetail3Response404 = (options?: Options): Detail3Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeDetail2Response503 = (options?: Options): Detail2Errors[503] =>
+export const fakeDetail3Response503 = (options?: Options): Detail3Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeFind7Response200 = (options?: Options): Find7Responses[200] =>
@@ -2800,6 +3827,138 @@ export const fakeFind8Response401 = (options?: Options): Find8Errors[401] =>
 export const fakeFind8Response409 = (options?: Options): Find8Errors[409] =>
   fakeErrorResponse(options);
 
+export const fakeList4Response200 = (options?: Options): List4Responses[200] =>
+  fakeAppAfterpartyPageResponse(options);
+
+export const fakeList4Response400 = (options?: Options): List4Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeList4Response401 = (options?: Options): List4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList4Response404 = (options?: Options): List4Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList4Response503 = (options?: Options): List4Errors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail4Response200 = (options?: Options): Detail4Responses[200] =>
+  fakeAppAfterpartyDetailResponse(options);
+
+export const fakeDetail4Response400 = (options?: Options): Detail4Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail4Response401 = (options?: Options): Detail4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail4Response404 = (options?: Options): Detail4Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail4Response503 = (options?: Options): Detail4Errors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeSummaryResponse200 = (options?: Options): SummaryResponses[200] =>
+  fakeSettlementSummaryResponse(options);
+
+export const fakeSummaryResponse400 = (options?: Options): SummaryErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeSummaryResponse401 = (options?: Options): SummaryErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeSummaryResponse403 = (options?: Options): SummaryErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeSummaryResponse404 = (options?: Options): SummaryErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeSummaryResponse409 = (options?: Options): SummaryErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeSummaryResponse503 = (options?: Options): SummaryErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipientsResponse200 = (options?: Options): RecipientsResponses[200] =>
+  fakeSettlementPeopleResponse(options);
+
+export const fakeRecipientsResponse400 = (options?: Options): RecipientsErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipientsResponse401 = (options?: Options): RecipientsErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipientsResponse403 = (options?: Options): RecipientsErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipientsResponse404 = (options?: Options): RecipientsErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipientsResponse409 = (options?: Options): RecipientsErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipientsResponse503 = (options?: Options): RecipientsErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeEditResponse200 = (options?: Options): EditResponses[200] =>
+  fakeSettlementDetailResponse(options);
+
+export const fakeEditResponse400 = (options?: Options): EditErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeEditResponse401 = (options?: Options): EditErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeEditResponse403 = (options?: Options): EditErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeEditResponse404 = (options?: Options): EditErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeEditResponse409 = (options?: Options): EditErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeEditResponse503 = (options?: Options): EditErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeParticipantsResponse200 = (options?: Options): ParticipantsResponses[200] =>
+  fakeSettlementPeopleResponse(options);
+
+export const fakeParticipantsResponse400 = (options?: Options): ParticipantsErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeParticipantsResponse401 = (options?: Options): ParticipantsErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeParticipantsResponse403 = (options?: Options): ParticipantsErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeParticipantsResponse404 = (options?: Options): ParticipantsErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeParticipantsResponse409 = (options?: Options): ParticipantsErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeParticipantsResponse503 = (options?: Options): ParticipantsErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeAttendeesResponse200 = (options?: Options): AttendeesResponses[200] =>
+  fakeAfterpartyAttendeesResponse(options);
+
+export const fakeAttendeesResponse400 = (options?: Options): AttendeesErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeAttendeesResponse401 = (options?: Options): AttendeesErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeAttendeesResponse403 = (options?: Options): AttendeesErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeAttendeesResponse404 = (options?: Options): AttendeesErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeAttendeesResponse503 = (options?: Options): AttendeesErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeFind9Response200 = (options?: Options): Find9Responses[200] =>
   fakeRetainedHistoryPage(options);
 
@@ -2850,13 +4009,13 @@ export const fakeFindCandidatesResponse401 = (options?: Options): FindCandidates
 export const fakeFindCandidatesResponse404 = (options?: Options): FindCandidatesErrors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList2Response200 = (options?: Options): List2Responses[200] =>
+export const fakeList5Response200 = (options?: Options): List5Responses[200] =>
   fakeAdminGenerationListResponse(options);
 
-export const fakeList2Response401 = (options?: Options): List2Errors[401] =>
+export const fakeList5Response401 = (options?: Options): List5Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeList2Response500 = (options?: Options): List2Errors[500] =>
+export const fakeList5Response500 = (options?: Options): List5Errors[500] =>
   fakeErrorResponse(options);
 
 export const fakeCandidatesResponse200 = (options?: Options): CandidatesResponses[200] => {
@@ -2870,74 +4029,8 @@ export const fakeCandidatesResponse401 = (options?: Options): CandidatesErrors[4
 export const fakeCandidatesResponse404 = (options?: Options): CandidatesErrors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList3Response200 = (options?: Options): List3Responses[200] =>
-  fakeTeamPhotoListResponse(options);
-
-export const fakeList3Response401 = (options?: Options): List3Errors[401] =>
-  fakeErrorResponse(options);
-
-export const fakeList3Response404 = (options?: Options): List3Errors[404] =>
-  fakeErrorResponse(options);
-
-export const fakeList3Response503 = (options?: Options): List3Errors[503] =>
-  fakeErrorResponse(options);
-
-export const fakeList4Response200 = (options?: Options): List4Responses[200] =>
-  fakeAdminAttendanceListResponse(options);
-
-export const fakeList4Response401 = (options?: Options): List4Errors[401] =>
-  fakeErrorResponse(options);
-
-export const fakeList4Response404 = (options?: Options): List4Errors[404] =>
-  fakeErrorResponse(options);
-
-export const fakeList5Response200 = (options?: Options): List5Responses[200] =>
-  fakeGenerationRosterListResponse(options);
-
-export const fakeList5Response400 = (options?: Options): List5Errors[400] =>
-  fakeErrorResponse(options);
-
-export const fakeList5Response401 = (options?: Options): List5Errors[401] =>
-  fakeErrorResponse(options);
-
-export const fakeList5Response404 = (options?: Options): List5Errors[404] =>
-  fakeErrorResponse(options);
-
-export const fakeList5Response500 = (options?: Options): List5Errors[500] =>
-  fakeErrorResponse(options);
-
-export const fakeRecipientsResponse200 = (options?: Options): RecipientsResponses[200] =>
-  fakeAdminPostRecipientListResponse(options);
-
-export const fakeRecipientsResponse400 = (options?: Options): RecipientsErrors[400] =>
-  fakeErrorResponse(options);
-
-export const fakeRecipientsResponse401 = (options?: Options): RecipientsErrors[401] =>
-  fakeErrorResponse(options);
-
-export const fakeRecipientsResponse404 = (options?: Options): RecipientsErrors[404] =>
-  fakeErrorResponse(options);
-
-export const fakeDetail3Response200 = (options?: Options): Detail3Responses[200] =>
-  fakeAdminAttendanceStatisticsDetailResponse(options);
-
-export const fakeDetail3Response401 = (options?: Options): Detail3Errors[401] =>
-  fakeErrorResponse(options);
-
-export const fakeDetail3Response404 = (options?: Options): Detail3Errors[404] =>
-  fakeErrorResponse(options);
-
-export const fakeDetail3Response500 = (options?: Options): Detail3Errors[500] =>
-  fakeErrorResponse(options);
-
-export const fakeDetail3Response503 = (options?: Options): Detail3Errors[503] =>
-  fakeErrorResponse(options);
-
 export const fakeList6Response200 = (options?: Options): List6Responses[200] =>
-  fakeAdminMemberListResponse(options);
-
-export const fakeList6Response400 = (options?: Options): List6Errors[400] =>
-  fakeErrorResponse(options);
+  fakeTeamPhotoListResponse(options);
 
 export const fakeList6Response401 = (options?: Options): List6Errors[401] =>
   fakeErrorResponse(options);
@@ -2945,10 +4038,76 @@ export const fakeList6Response401 = (options?: Options): List6Errors[401] =>
 export const fakeList6Response404 = (options?: Options): List6Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList6Response500 = (options?: Options): List6Errors[500] =>
+export const fakeList6Response503 = (options?: Options): List6Errors[503] =>
   fakeErrorResponse(options);
 
-export const fakeList6Response503 = (options?: Options): List6Errors[503] =>
+export const fakeList7Response200 = (options?: Options): List7Responses[200] =>
+  fakeAdminAttendanceListResponse(options);
+
+export const fakeList7Response401 = (options?: Options): List7Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList7Response404 = (options?: Options): List7Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList8Response200 = (options?: Options): List8Responses[200] =>
+  fakeGenerationRosterListResponse(options);
+
+export const fakeList8Response400 = (options?: Options): List8Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeList8Response401 = (options?: Options): List8Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList8Response404 = (options?: Options): List8Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList8Response500 = (options?: Options): List8Errors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipients1Response200 = (options?: Options): Recipients1Responses[200] =>
+  fakeAdminPostRecipientListResponse(options);
+
+export const fakeRecipients1Response400 = (options?: Options): Recipients1Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipients1Response401 = (options?: Options): Recipients1Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipients1Response404 = (options?: Options): Recipients1Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail5Response200 = (options?: Options): Detail5Responses[200] =>
+  fakeAdminAttendanceStatisticsDetailResponse(options);
+
+export const fakeDetail5Response401 = (options?: Options): Detail5Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail5Response404 = (options?: Options): Detail5Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail5Response500 = (options?: Options): Detail5Errors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail5Response503 = (options?: Options): Detail5Errors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeList9Response200 = (options?: Options): List9Responses[200] =>
+  fakeAdminMemberListResponse(options);
+
+export const fakeList9Response400 = (options?: Options): List9Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeList9Response401 = (options?: Options): List9Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList9Response404 = (options?: Options): List9Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList9Response500 = (options?: Options): List9Errors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeList9Response503 = (options?: Options): List9Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeTeamOptionsResponse200 = (options?: Options): TeamOptionsResponses[200] => {
@@ -2965,22 +4124,82 @@ export const fakeTeamOptionsResponse404 = (options?: Options): TeamOptionsErrors
 export const fakeTeamOptionsResponse503 = (options?: Options): TeamOptionsErrors[503] =>
   fakeErrorResponse(options);
 
-export const fakeList7Response200 = (options?: Options): List7Responses[200] =>
+export const fakeList10Response200 = (options?: Options): List10Responses[200] =>
   fakeAdminAttendanceStatisticsListResponse(options);
 
-export const fakeList7Response400 = (options?: Options): List7Errors[400] =>
+export const fakeList10Response400 = (options?: Options): List10Errors[400] =>
   fakeErrorResponse(options);
 
-export const fakeList7Response401 = (options?: Options): List7Errors[401] =>
+export const fakeList10Response401 = (options?: Options): List10Errors[401] =>
   fakeErrorResponse(options);
 
-export const fakeList7Response404 = (options?: Options): List7Errors[404] =>
+export const fakeList10Response404 = (options?: Options): List10Errors[404] =>
   fakeErrorResponse(options);
 
-export const fakeList7Response500 = (options?: Options): List7Errors[500] =>
+export const fakeList10Response500 = (options?: Options): List10Errors[500] =>
   fakeErrorResponse(options);
 
-export const fakeList7Response503 = (options?: Options): List7Errors[503] =>
+export const fakeList10Response503 = (options?: Options): List10Errors[503] =>
+  fakeErrorResponse(options);
+
+export const fakePreviewResponse200 = (options?: Options): PreviewResponses[200] =>
+  fakeAfterpartyRecipientCountResponse(options);
+
+export const fakePreviewResponse400 = (options?: Options): PreviewErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakePreviewResponse401 = (options?: Options): PreviewErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakePreviewResponse404 = (options?: Options): PreviewErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakePreviewResponse503 = (options?: Options): PreviewErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail6Response200 = (options?: Options): Detail6Responses[200] =>
+  fakeAdminAfterpartyResponse(options);
+
+export const fakeDetail6Response400 = (options?: Options): Detail6Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail6Response401 = (options?: Options): Detail6Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail6Response404 = (options?: Options): Detail6Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail6Response503 = (options?: Options): Detail6Errors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeGroupsResponse200 = (options?: Options): GroupsResponses[200] =>
+  fakeAfterpartyGroupsResponse(options);
+
+export const fakeGroupsResponse400 = (options?: Options): GroupsErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeGroupsResponse401 = (options?: Options): GroupsErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeGroupsResponse404 = (options?: Options): GroupsErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeGroupsResponse503 = (options?: Options): GroupsErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipients2Response200 = (options?: Options): Recipients2Responses[200] =>
+  fakeAfterpartyRecipientsResponse(options);
+
+export const fakeRecipients2Response400 = (options?: Options): Recipients2Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipients2Response401 = (options?: Options): Recipients2Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipients2Response404 = (options?: Options): Recipients2Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeRecipients2Response503 = (options?: Options): Recipients2Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeRevokeResponse400 = (options?: Options): RevokeErrors[400] =>

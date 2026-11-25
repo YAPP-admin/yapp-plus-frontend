@@ -16,6 +16,9 @@ import type {
   ApproveData,
   ApproveErrors,
   ApproveResponses,
+  AttendeesData,
+  AttendeesErrors,
+  AttendeesResponses,
   AuthenticateAppleData,
   AuthenticateAppleErrors,
   AuthenticateAppleResponses,
@@ -61,6 +64,12 @@ import type {
   Create3Data,
   Create3Errors,
   Create3Responses,
+  Create4Data,
+  Create4Errors,
+  Create4Responses,
+  Create5Data,
+  Create5Errors,
+  Create5Responses,
   CreateData,
   CreateErrors,
   CreateResponses,
@@ -85,9 +94,21 @@ import type {
   Detail3Data,
   Detail3Errors,
   Detail3Responses,
+  Detail4Data,
+  Detail4Errors,
+  Detail4Responses,
+  Detail5Data,
+  Detail5Errors,
+  Detail5Responses,
+  Detail6Data,
+  Detail6Errors,
+  Detail6Responses,
   DetailData,
   DetailErrors,
   DetailResponses,
+  EditData,
+  EditErrors,
+  EditResponses,
   Find1Data,
   Find1Errors,
   Find1Responses,
@@ -133,9 +154,15 @@ import type {
   GetData,
   GetErrors,
   GetResponses,
+  GroupsData,
+  GroupsErrors,
+  GroupsResponses,
   HistoryData,
   HistoryErrors,
   HistoryResponses,
+  List10Data,
+  List10Errors,
+  List10Responses,
   List1Data,
   List1Errors,
   List1Responses,
@@ -157,6 +184,12 @@ import type {
   List7Data,
   List7Errors,
   List7Responses,
+  List8Data,
+  List8Errors,
+  List8Responses,
+  List9Data,
+  List9Errors,
+  List9Responses,
   ListData,
   ListErrors,
   ListResponses,
@@ -172,15 +205,33 @@ import type {
   OverrideData,
   OverrideErrors,
   OverrideResponses,
+  ParticipantsData,
+  ParticipantsErrors,
+  ParticipantsResponses,
+  PaymentData,
+  PaymentErrors,
+  PaymentResponses,
   Presign1Data,
   Presign1Errors,
   Presign1Responses,
+  Presign2Data,
+  Presign2Errors,
+  Presign2Responses,
   PresignData,
   PresignErrors,
   PresignResponses,
+  PreviewData,
+  PreviewErrors,
+  PreviewResponses,
   ReceiveData,
   ReceiveErrors,
   ReceiveResponses,
+  Recipients1Data,
+  Recipients1Errors,
+  Recipients1Responses,
+  Recipients2Data,
+  Recipients2Errors,
+  Recipients2Responses,
   RecipientsData,
   RecipientsErrors,
   RecipientsResponses,
@@ -208,6 +259,12 @@ import type {
   ReplaceMembersData,
   ReplaceMembersErrors,
   ReplaceMembersResponses,
+  Respond1Data,
+  Respond1Errors,
+  Respond1Responses,
+  RespondData,
+  RespondErrors,
+  RespondResponses,
   RevokeData,
   RevokeErrors,
   RevokeResponses,
@@ -226,6 +283,9 @@ import type {
   SubmitData,
   SubmitErrors,
   SubmitResponses,
+  SummaryData,
+  SummaryErrors,
+  SummaryResponses,
   TeamOptionsData,
   TeamOptionsErrors,
   TeamOptionsResponses,
@@ -235,6 +295,9 @@ import type {
   Update2Data,
   Update2Errors,
   Update2Responses,
+  Update3Data,
+  Update3Errors,
+  Update3Responses,
   UpdateData,
   UpdateErrors,
   UpdateResponses,
@@ -329,6 +392,98 @@ export const acknowledge = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 정산 상세
+ *
+ * 정산자/활성대상만 계좌·사진열람. 사진등록후UTC6개월보관,GET최대5분. 탈퇴/제거/정산자비활성은404.
+ */
+export const detail = <ThrowOnError extends boolean = false>(
+  options: Options<DetailData, ThrowOnError>,
+): RequestResult<DetailResponses, DetailErrors, ThrowOnError> =>
+  (options.client ?? client).get<DetailResponses, DetailErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}',
+    ...options,
+  });
+
+/**
+ * 정산 전체 덮어쓰기
+ *
+ * creator전용·expectedRevision필수.현재PAID한명있으면금융/대상변경409·사진만허용. 동일PUT는revision/시각불변.전원UNPAID복귀후수정가능.유지대상은후일불참이어도유지,신규추가만ATTENDING.
+ */
+export const update = <ThrowOnError extends boolean = false>(
+  options: Options<UpdateData, ThrowOnError>,
+): RequestResult<UpdateResponses, UpdateErrors, ThrowOnError> =>
+  (options.client ?? client).put<UpdateResponses, UpdateErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * 본인 송금 완료·미완료 표시
+ *
+ * debtor본인만PAID/UNPAID,같은값시각유지.실제이체없음.creator는403. UNPAID복귀는그시각24h후리마인드재시작.
+ */
+export const payment = <ThrowOnError extends boolean = false>(
+  options: Options<PaymentData, ThrowOnError>,
+): RequestResult<PaymentResponses, PaymentErrors, ThrowOnError> =>
+  (options.client ?? client).put<PaymentResponses, PaymentErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}/payment',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Afterparty 참석·불참 투표와 변경
+ *
+ * deadline 직전까지만 가능. 같은 값도 마감 이후에는 409. 변경 시 시각 갱신, 동일 값은 보존. 미응답 취소 불가. 마감 전 운영진의 정정도 다시 변경 가능.
+ */
+export const respond = <ThrowOnError extends boolean = false>(
+  options: Options<RespondData, ThrowOnError>,
+): RequestResult<RespondResponses, RespondErrors, ThrowOnError> =>
+  (options.client ?? client).put<RespondResponses, RespondErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/response',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
  * Team 삭제
  *
  * version 없이 Team을 soft delete한다. 탈퇴하지 않은 팀원은 미배정으로 만들고 탈퇴 회원의 연결 이력은 보존한다.
@@ -369,10 +524,10 @@ export const find = <ThrowOnError extends boolean = false>(
 /**
  * Team 정보 수정
  */
-export const update = <ThrowOnError extends boolean = false>(
-  options: Options<UpdateData, ThrowOnError>,
-): RequestResult<UpdateResponses, UpdateErrors, ThrowOnError> =>
-  (options.client ?? client).put<UpdateResponses, UpdateErrors, ThrowOnError>({
+export const update1 = <ThrowOnError extends boolean = false>(
+  options: Options<Update1Data, ThrowOnError>,
+): RequestResult<Update1Responses, Update1Errors, ThrowOnError> =>
+  (options.client ?? client).put<Update1Responses, Update1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -437,10 +592,10 @@ export const delete1 = <ThrowOnError extends boolean = false>(
  *
  * 생성과 동일한 본문으로 세션 정보를 전체 덮어쓴다. 연결된 출결 자료에 영향을 주는 시각·유형 변경은 제한한다.
  */
-export const update1 = <ThrowOnError extends boolean = false>(
-  options: Options<Update1Data, ThrowOnError>,
-): RequestResult<Update1Responses, Update1Errors, ThrowOnError> =>
-  (options.client ?? client).put<Update1Responses, Update1Errors, ThrowOnError>({
+export const update2 = <ThrowOnError extends boolean = false>(
+  options: Options<Update2Data, ThrowOnError>,
+): RequestResult<Update2Responses, Update2Errors, ThrowOnError> =>
+  (options.client ?? client).put<Update2Responses, Update2Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -461,10 +616,10 @@ export const update1 = <ThrowOnError extends boolean = false>(
  *
  * 목록 정보, 전화번호, 수정 revision과 필드별 정정 이력을 조회한다.
  */
-export const detail = <ThrowOnError extends boolean = false>(
-  options: Options<DetailData, ThrowOnError>,
-): RequestResult<DetailResponses, DetailErrors, ThrowOnError> =>
-  (options.client ?? client).get<DetailResponses, DetailErrors, ThrowOnError>({
+export const detail1 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail1Data, ThrowOnError>,
+): RequestResult<Detail1Responses, Detail1Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail1Responses, Detail1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -477,9 +632,9 @@ export const detail = <ThrowOnError extends boolean = false>(
   });
 
 /**
- * 회원 상태·Position 정정
+ * 회원 정보 정정과 새 기수 활동 추가
  *
- * 두 필드를 전체 대체한다. position은 null을 명시할 수 있다. WITHDRAWN은 정정할 수 없고, 변경된 필드만 감사 이력에 기록한다. no-op은 revision을 올리지 않는다.
+ * position/status/expectedRevision은 필수다. targetGenerationId가 다르면 기존 소속을 보존하고 팀 미배정·revision 0인 새 소속을 추가하며 대상 기수 상세를 반환한다. 이미 대상 소속이 있으면 WITHDRAWN을 포함해 409다. 선택적 name은 모든 기수의 공통 이름을 변경하고 모든 기존 소속 revision을 각 1회 올린다. 이름은 생략 시 유지하며 null/공백/100자 초과는 400이다. 이름이 같으면 no-op이다. WITHDRAWN 정정/복원은 지원하지 않는다.
  */
 export const correct = <ThrowOnError extends boolean = false>(
   options: Options<CorrectData, ThrowOnError>,
@@ -493,6 +648,30 @@ export const correct = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/admin/generations/{generationId}/members/{memberId}',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Afterparty 응답 수동 정정
+ *
+ * 마감·종료 후에도 가능. UNANSWERED 초기화 시 시각 null. 변경 시 응답 시각 갱신·내부 감사 이력 저장. 동일 값은 시각/이력 보존. 사용자와 최종 저장 응답 우선.
+ */
+export const respond1 = <ThrowOnError extends boolean = false>(
+  options: Options<Respond1Data, ThrowOnError>,
+): RequestResult<Respond1Responses, Respond1Errors, ThrowOnError> =>
+  (options.client ?? client).put<Respond1Responses, Respond1Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/afterparties/{afterpartyId}/recipients/{recipientId}/response',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -738,7 +917,7 @@ export const verify = <ThrowOnError extends boolean = false>(
 /**
  * 이번 주 세션 사전 출결 보고
  *
- * 지각·조퇴·결석 보고는 서버 DB 시각이 세션 시작 시각보다 이전이고 출석 미마감일 때만 접수한다. 시작 정각부터 또는 조기 마감 후에는 409 ATTENDANCE_REPORT_UNAVAILABLE이다. 토요일 종료 시각까지는 당일 세션을 대상으로 하므로 시작 이후 요청을 다음 주로 넘기지 않는다. 종료 후에만 다음 토요일로 연결한다. 결석 보고 접수 기한과 감점 인정은 별개이며, 일반 결석 감점은 시작 48시간 전까지 제출한 보고만 인정한다.
+ * 지각·조퇴·결석 보고는 서버 DB 시각이 세션 시작 시각보다 이전이고 출석 미마감일 때만 접수한다. 시작 정각부터 또는 조기 마감 후에는 409 ATTENDANCE_REPORT_UNAVAILABLE이다. 토요일 종료 시각까지는 당일 세션을 대상으로 하므로 시작 이후 요청을 다음 주로 넘기지 않는다. 종료 후에만 다음 토요일로 연결한다. 결석 보고 접수 기한과 감점 인정은 별개이며, 일반 결석 감점은 시작 48시간 전까지 제출한 보고만 인정한다. reason은 필수 JSON 문자열이며 공백만 불가, 2~30 Unicode 코드포인트의 원문을 보존한다.
  */
 export const submit1 = <ThrowOnError extends boolean = false>(
   options: Options<Submit1Data, ThrowOnError>,
@@ -752,6 +931,74 @@ export const submit1 = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/attendance-reports',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * 본인이 관여하는 정산 목록
+ *
+ * 정산자/활성대상만,생성일·ID역순20cursor. 총인원은정산자+유효대상. 정산자는myAmount0/paymentStatusnull·목록계좌null.
+ */
+export const list = <ThrowOnError extends boolean = false>(
+  options: Options<ListData, ThrowOnError>,
+): RequestResult<ListResponses, ListErrors, ThrowOnError> =>
+  (options.client ?? client).get<ListResponses, ListErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlements',
+    ...options,
+  });
+
+/**
+ * 정산 생성
+ *
+ * 시작 전후 제한 없음. 현재 ATTENDING 정산자,현재ATTENDING 대상(본인제외). totalAmount/perPersonAmount 독립원문저장·일치검증/분할없음. 생성알림+24h미납리마인드.
+ */
+export const create = <ThrowOnError extends boolean = false>(
+  options: Options<CreateData, ThrowOnError>,
+): RequestResult<CreateResponses, CreateErrors, ThrowOnError> =>
+  (options.client ?? client).post<CreateResponses, CreateErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlements',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * 정산 사진 업로드 URL
+ *
+ * JPEG/PNG 10MB, SHA256,5분 PUT. 새생성은ATTENDING,기존수정은settlementId의creator.최대5개첨부는정산저장시검증.
+ */
+export const presign1 = <ThrowOnError extends boolean = false>(
+  options: Options<Presign1Data, ThrowOnError>,
+): RequestResult<Presign1Responses, Presign1Errors, ThrowOnError> =>
+  (options.client ?? client).post<Presign1Responses, Presign1Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlement-images/presign',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -784,10 +1031,10 @@ export const history_ = <ThrowOnError extends boolean = false>(
  *
  * Idempotency-Key가 필수다. 발송 기능이 비활성화된 환경에서는 503을 반환한다.
  */
-export const create = <ThrowOnError extends boolean = false>(
-  options: Options<CreateData, ThrowOnError>,
-): RequestResult<CreateResponses, CreateErrors, ThrowOnError> =>
-  (options.client ?? client).post<CreateResponses, CreateErrors, ThrowOnError>({
+export const create1 = <ThrowOnError extends boolean = false>(
+  options: Options<Create1Data, ThrowOnError>,
+): RequestResult<Create1Responses, Create1Errors, ThrowOnError> =>
+  (options.client ?? client).post<Create1Responses, Create1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -823,6 +1070,8 @@ export const cancel = <ThrowOnError extends boolean = false>(
 
 /**
  * 가입 대기 회원 거절
+ *
+ * reason을 정규화한 뒤 Member·감사 이력·응답에 같은 값을 기록한다. 반려 사유 입력 오류는 400 INVALID_MEMBER_REQUEST이며, 누락/null/빈 값/공백만: 반려 사유를 입력해 주세요. / 정규화 후 2,000 코드포인트 초과: 반려 사유는 2,000자 이하로 입력해 주세요. / 문자열 외 타입: 반려 사유는 문자열로 입력해 주세요. / 금지 제어문자: 반려 사유에 허용되지 않는 문자가 포함되어 있습니다. / 잘못된 JSON·Unicode 형식: 요청 형식을 확인해 주세요. 기존 상태·대상 등 비즈니스 오류는 별도 기존 계약을 유지한다.
  */
 export const reject = <ThrowOnError extends boolean = false>(
   options: Options<RejectData, ThrowOnError>,
@@ -890,10 +1139,10 @@ export const findAll = <ThrowOnError extends boolean = false>(
  *
  * 같은 기수의 탈퇴하지 않은 Membership 하나 이상으로 Team을 생성한다.
  */
-export const create1 = <ThrowOnError extends boolean = false>(
-  options: Options<Create1Data, ThrowOnError>,
-): RequestResult<Create1Responses, Create1Errors, ThrowOnError> =>
-  (options.client ?? client).post<Create1Responses, Create1Errors, ThrowOnError>({
+export const create2 = <ThrowOnError extends boolean = false>(
+  options: Options<Create2Data, ThrowOnError>,
+): RequestResult<Create2Responses, Create2Errors, ThrowOnError> =>
+  (options.client ?? client).post<Create2Responses, Create2Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -934,10 +1183,10 @@ export const find2 = <ThrowOnError extends boolean = false>(
  *
  * 한 기수에 세션 한 건을 등록한다.
  */
-export const create2 = <ThrowOnError extends boolean = false>(
-  options: Options<Create2Data, ThrowOnError>,
-): RequestResult<Create2Responses, Create2Errors, ThrowOnError> =>
-  (options.client ?? client).post<Create2Responses, Create2Errors, ThrowOnError>({
+export const create3 = <ThrowOnError extends boolean = false>(
+  options: Options<Create3Data, ThrowOnError>,
+): RequestResult<Create3Responses, Create3Errors, ThrowOnError> =>
+  (options.client ?? client).post<Create3Responses, Create3Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1090,10 +1339,10 @@ export const register2 = <ThrowOnError extends boolean = false>(
  *
  * 20개 고정 크기로 최신 공지를 cursor 조회한다. 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
-export const list = <ThrowOnError extends boolean = false>(
-  options: Options<ListData, ThrowOnError>,
-): RequestResult<ListResponses, ListErrors, ThrowOnError> =>
-  (options.client ?? client).get<ListResponses, ListErrors, ThrowOnError>({
+export const list1 = <ThrowOnError extends boolean = false>(
+  options: Options<List1Data, ThrowOnError>,
+): RequestResult<List1Responses, List1Errors, ThrowOnError> =>
+  (options.client ?? client).get<List1Responses, List1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1110,10 +1359,10 @@ export const list = <ThrowOnError extends boolean = false>(
  *
  * Idempotency-Key로 즉시 게시하고 발행 당시 열람자의 공지 앱 푸시 작업을 원자적으로 저장한다. 201은 FCM 수락·단말 표시를 뜻하지 않는다. 푸시 data의 postId로 사용자 상세로 이동하며 일반 알림 목록에는 포함되지 않는다.
  */
-export const create3 = <ThrowOnError extends boolean = false>(
-  options: Options<Create3Data, ThrowOnError>,
-): RequestResult<Create3Responses, Create3Errors, ThrowOnError> =>
-  (options.client ?? client).post<Create3Responses, Create3Errors, ThrowOnError>({
+export const create4 = <ThrowOnError extends boolean = false>(
+  options: Options<Create4Data, ThrowOnError>,
+): RequestResult<Create4Responses, Create4Errors, ThrowOnError> =>
+  (options.client ?? client).post<Create4Responses, Create4Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1134,10 +1383,10 @@ export const create3 = <ThrowOnError extends boolean = false>(
  *
  * 5분 동안 유효한 AWS S3 presigned PUT URL을 발급한다.
  */
-export const presign1 = <ThrowOnError extends boolean = false>(
-  options: Options<Presign1Data, ThrowOnError>,
-): RequestResult<Presign1Responses, Presign1Errors, ThrowOnError> =>
-  (options.client ?? client).post<Presign1Responses, Presign1Errors, ThrowOnError>({
+export const presign2 = <ThrowOnError extends boolean = false>(
+  options: Options<Presign2Data, ThrowOnError>,
+): RequestResult<Presign2Responses, Presign2Errors, ThrowOnError> =>
+  (options.client ?? client).post<Presign2Responses, Presign2Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1146,6 +1395,50 @@ export const presign1 = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/admin/generations/{generationId}/post-images/presign',
+    ...options,
+    headers: {
+      'Content-Type': 'application/json',
+      ...options.headers,
+    },
+  });
+
+/**
+ * Afterparty 목록
+ *
+ * UPCOMING: startsAt>now, 시각·ID 오름차순. PAST: startsAt<=now, 내림차순. 20건 커서. 페이지 사이 변경에 따른 중복/누락 허용.
+ */
+export const list2 = <ThrowOnError extends boolean = false>(
+  options: Options<List2Data, ThrowOnError>,
+): RequestResult<List2Responses, List2Errors, ThrowOnError> =>
+  (options.client ?? client).get<List2Responses, List2Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/afterparties',
+    ...options,
+  });
+
+/**
+ * Afterparty 생성
+ *
+ * 초대 대상·팀명·역할을 생성 시 확정한다. title/content trim, 미래 deadline < startsAt. 날짜 입력은 offset 포함 ISO8601, display는 KST다.
+ */
+export const create5 = <ThrowOnError extends boolean = false>(
+  options: Options<Create5Data, ThrowOnError>,
+): RequestResult<Create5Responses, Create5Errors, ThrowOnError> =>
+  (options.client ?? client).post<Create5Responses, Create5Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/afterparties',
     ...options,
     headers: {
       'Content-Type': 'application/json',
@@ -1233,10 +1526,10 @@ export const delete2 = <ThrowOnError extends boolean = false>(
  *
  * 수신자·읽음 수는 현재 열람 가능한 회원 기준이다.
  */
-export const detail1 = <ThrowOnError extends boolean = false>(
-  options: Options<Detail1Data, ThrowOnError>,
-): RequestResult<Detail1Responses, Detail1Errors, ThrowOnError> =>
-  (options.client ?? client).get<Detail1Responses, Detail1Errors, ThrowOnError>({
+export const detail2 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail2Data, ThrowOnError>,
+): RequestResult<Detail2Responses, Detail2Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail2Responses, Detail2Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1253,10 +1546,10 @@ export const detail1 = <ThrowOnError extends boolean = false>(
  *
  * 수정 때 앱 푸시를 다시 보내지 않고 최초 발행 푸시 제목도 바꾸지 않는다.
  */
-export const update2 = <ThrowOnError extends boolean = false>(
-  options: Options<Update2Data, ThrowOnError>,
-): RequestResult<Update2Responses, Update2Errors, ThrowOnError> =>
-  (options.client ?? client).patch<Update2Responses, Update2Errors, ThrowOnError>({
+export const update3 = <ThrowOnError extends boolean = false>(
+  options: Options<Update3Data, ThrowOnError>,
+): RequestResult<Update3Responses, Update3Errors, ThrowOnError> =>
+  (options.client ?? client).patch<Update3Responses, Update3Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1315,7 +1608,7 @@ export const find3 = <ThrowOnError extends boolean = false>(
 /**
  * 본인 알림 목록 조회
  *
- * 일반 알림과 새 공지 발행 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다.
+ * 일반 알림·새 공지 발행·세션 자동 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. SESSION_REMINDER는 sessionId와 reminderKind를 포함하며 navigationTarget=SESSION_SCHEDULE 일정 화면으로 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다. SETTLEMENT는 settlementId/afterpartyId와 navigationTarget=SETTLEMENT를 제공한다. 정산자 탈퇴 시 복사된 이름 문구를 비식별화하고 상세는404다.
  */
 export const find4 = <ThrowOnError extends boolean = false>(
   options?: Options<Find4Data, ThrowOnError>,
@@ -1377,10 +1670,10 @@ export const find6 = <ThrowOnError extends boolean = false>(
  *
  * 전체 기수에서 현재 열람 가능한 글을 게시 시각과 ID 역순으로 20개씩 조회한다. 권한이 변하면 첫 페이지부터 다시 조회한다.
  */
-export const list1 = <ThrowOnError extends boolean = false>(
-  options?: Options<List1Data, ThrowOnError>,
-): RequestResult<List1Responses, List1Errors, ThrowOnError> =>
-  (options?.client ?? client).get<List1Responses, List1Errors, ThrowOnError>({
+export const list3 = <ThrowOnError extends boolean = false>(
+  options?: Options<List3Data, ThrowOnError>,
+): RequestResult<List3Responses, List3Errors, ThrowOnError> =>
+  (options?.client ?? client).get<List3Responses, List3Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1397,10 +1690,10 @@ export const list1 = <ThrowOnError extends boolean = false>(
  *
  * 현재 열람 권한을 확인해 본문·과제 제출 정보·첨부 이미지를 반환한다. 조회는 읽음 상태를 변경하지 않는다. 이미 발급된 이미지 URL은 탈퇴 후에도 남은 유효 시간 동안 사용할 수 있다.
  */
-export const detail2 = <ThrowOnError extends boolean = false>(
-  options: Options<Detail2Data, ThrowOnError>,
-): RequestResult<Detail2Responses, Detail2Errors, ThrowOnError> =>
-  (options.client ?? client).get<Detail2Responses, Detail2Errors, ThrowOnError>({
+export const detail3 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail3Data, ThrowOnError>,
+): RequestResult<Detail3Responses, Detail3Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail3Responses, Detail3Errors, ThrowOnError>({
     security: [
       {
         key: 'userBearerAuth',
@@ -1536,6 +1829,146 @@ export const find8 = <ThrowOnError extends boolean = false>(
   });
 
 /**
+ * 초대된 Afterparty 목록
+ *
+ * ALL/OPEN/CLOSED 필터. CLOSED는 ENDED 포함. 뒤풀이 시각·ID 내림차순 20건 커서. 페이지 사이 상태/응답 변경에 따른 중복·누락 허용.
+ */
+export const list4 = <ThrowOnError extends boolean = false>(
+  options?: Options<List4Data, ThrowOnError>,
+): RequestResult<List4Responses, List4Errors, ThrowOnError> =>
+  (options?.client ?? client).get<List4Responses, List4Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties',
+    ...options,
+  });
+
+/**
+ * Afterparty 상세
+ *
+ * 상태·본인 응답 포함. 응답 전 attendingCount=null, 참석/불참 응답 후 실제 참석 수 공개. 참석자 명단은 별도 /attendees 커서 API로 조회한다.
+ */
+export const detail4 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail4Data, ThrowOnError>,
+): RequestResult<Detail4Responses, Detail4Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail4Responses, Detail4Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}',
+    ...options,
+  });
+
+/**
+ * 정산자 수금 요약
+ *
+ * expectedReceivable=perPerson×유효debtorCount,rawtotal과일치불필요.overflow400.납부대상수는정산자제외.
+ */
+export const summary = <ThrowOnError extends boolean = false>(
+  options: Options<SummaryData, ThrowOnError>,
+): RequestResult<SummaryResponses, SummaryErrors, ThrowOnError> =>
+  (options.client ?? client).get<SummaryResponses, SummaryErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}/summary',
+    ...options,
+  });
+
+/**
+ * 정산자 납부 상태별 대상 명단
+ *
+ * creator전용,필수paymentStatus=PAID/UNPAID,대상ID오름차순20cursor.
+ */
+export const recipients = <ThrowOnError extends boolean = false>(
+  options: Options<RecipientsData, ThrowOnError>,
+): RequestResult<RecipientsResponses, RecipientsErrors, ThrowOnError> =>
+  (options.client ?? client).get<RecipientsResponses, RecipientsErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}/recipients',
+    ...options,
+  });
+
+/**
+ * 정산자 수정 원본
+ *
+ * creator전용 원래금액/계좌/대상/사진/revision. 유효대상만ID반환,사진이만료삭제됐으면새로고침후현재사진목록으로PUT.
+ */
+export const edit = <ThrowOnError extends boolean = false>(
+  options: Options<EditData, ThrowOnError>,
+): RequestResult<EditResponses, EditErrors, ThrowOnError> =>
+  (options.client ?? client).get<EditResponses, EditErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlements/{settlementId}/edit',
+    ...options,
+  });
+
+/**
+ * 정산 대상 선택 후보
+ *
+ * 현재 ATTENDING 참석자 중 본인 제외, ID오름차순20건. 기존creator가후일불참이면settlementId를지정해관리권한사용.
+ */
+export const participants = <ThrowOnError extends boolean = false>(
+  options: Options<ParticipantsData, ThrowOnError>,
+): RequestResult<ParticipantsResponses, ParticipantsErrors, ThrowOnError> =>
+  (options.client ?? client).get<ParticipantsResponses, ParticipantsErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/settlement-participants',
+    ...options,
+  });
+
+/**
+ * Afterparty 참석자 명단
+ *
+ * 현재 응답이 ATTENDING 또는 NOT_ATTENDING인 초대 대상자만 조회 가능. 마감·종료 후에도 가능. 실제 참석 응답자만 시각·대상 ID 오름차순 20건, 현재 이름·직군/생성 당시 팀/isMe 제공.
+ */
+export const attendees = <ThrowOnError extends boolean = false>(
+  options: Options<AttendeesData, ThrowOnError>,
+): RequestResult<AttendeesResponses, AttendeesErrors, ThrowOnError> =>
+  (options.client ?? client).get<AttendeesResponses, AttendeesErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'userBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/afterparties/{afterpartyId}/attendees',
+    ...options,
+  });
+
+/**
  * 탈퇴 사용자 보존 사유 이력 조회
  *
  * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
@@ -1618,10 +2051,10 @@ export const findCandidates = <ThrowOnError extends boolean = false>(
  *
  * STAFF는 별도 기수 소속 제한 없이 과거·현재·미래 전체 기수를 조회한다. 기수 번호·ID 내림차순이며 생성일 및 활동 여부로 제한하지 않는다. 페이지네이션 없이 반환하고, 등록된 기수가 없으면 빈 배열을 반환한다. 클라이언트는 첫 항목을 기본 기수로 선택할 수 있다.
  */
-export const list2 = <ThrowOnError extends boolean = false>(
-  options?: Options<List2Data, ThrowOnError>,
-): RequestResult<List2Responses, List2Errors, ThrowOnError> =>
-  (options?.client ?? client).get<List2Responses, List2Errors, ThrowOnError>({
+export const list5 = <ThrowOnError extends boolean = false>(
+  options?: Options<List5Data, ThrowOnError>,
+): RequestResult<List5Responses, List5Errors, ThrowOnError> =>
+  (options?.client ?? client).get<List5Responses, List5Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1656,10 +2089,10 @@ export const candidates = <ThrowOnError extends boolean = false>(
 /**
  * 팀 출석 사진 및 전체 팀원 보고 조회
  */
-export const list3 = <ThrowOnError extends boolean = false>(
-  options: Options<List3Data, ThrowOnError>,
-): RequestResult<List3Responses, List3Errors, ThrowOnError> =>
-  (options.client ?? client).get<List3Responses, List3Errors, ThrowOnError>({
+export const list6 = <ThrowOnError extends boolean = false>(
+  options: Options<List6Data, ThrowOnError>,
+): RequestResult<List6Responses, List6Errors, ThrowOnError> =>
+  (options.client ?? client).get<List6Responses, List6Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1674,10 +2107,10 @@ export const list3 = <ThrowOnError extends boolean = false>(
 /**
  * 세션 출석 현황 조회
  */
-export const list4 = <ThrowOnError extends boolean = false>(
-  options: Options<List4Data, ThrowOnError>,
-): RequestResult<List4Responses, List4Errors, ThrowOnError> =>
-  (options.client ?? client).get<List4Responses, List4Errors, ThrowOnError>({
+export const list7 = <ThrowOnError extends boolean = false>(
+  options: Options<List7Data, ThrowOnError>,
+): RequestResult<List7Responses, List7Errors, ThrowOnError> =>
+  (options.client ?? client).get<List7Responses, List7Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1694,10 +2127,10 @@ export const list4 = <ThrowOnError extends boolean = false>(
  *
  * 지정 기수의 AVAILABLE 명단만 원래 등록 시각 내림차순으로 20건씩 조회한다. MATCHED·CANCELLED와 개인정보 비식별화 행은 반환하지 않는다. 기존 명단의 직군·역할은 null일 수 있다.
  */
-export const list5 = <ThrowOnError extends boolean = false>(
-  options: Options<List5Data, ThrowOnError>,
-): RequestResult<List5Responses, List5Errors, ThrowOnError> =>
-  (options.client ?? client).get<List5Responses, List5Errors, ThrowOnError>({
+export const list8 = <ThrowOnError extends boolean = false>(
+  options: Options<List8Data, ThrowOnError>,
+): RequestResult<List8Responses, List8Errors, ThrowOnError> =>
+  (options.client ?? client).get<List8Responses, List8Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1714,10 +2147,10 @@ export const list5 = <ThrowOnError extends boolean = false>(
  *
  * 첫 페이지의 asOf는 읽음 시각만 고정한다. 현재 열람 가능한 회원을 읽은 시각 오름차순, userId 오름차순으로 조회한다. 자격이 변하면 첫 페이지부터 다시 조회한다. ALL_USERS의 이름·최신 기수·직군은 현재 값이며 무 Membership이면 기수·직군이 null이다.
  */
-export const recipients = <ThrowOnError extends boolean = false>(
-  options: Options<RecipientsData, ThrowOnError>,
-): RequestResult<RecipientsResponses, RecipientsErrors, ThrowOnError> =>
-  (options.client ?? client).get<RecipientsResponses, RecipientsErrors, ThrowOnError>({
+export const recipients1 = <ThrowOnError extends boolean = false>(
+  options: Options<Recipients1Data, ThrowOnError>,
+): RequestResult<Recipients1Responses, Recipients1Errors, ThrowOnError> =>
+  (options.client ?? client).get<Recipients1Responses, Recipients1Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1734,10 +2167,10 @@ export const recipients = <ThrowOnError extends boolean = false>(
  *
  * 한 기수 소속의 현재 확정 총점과 마감 세션별 지각·조퇴·결석 감점을 사건 단위로 조회한다.
  */
-export const detail3 = <ThrowOnError extends boolean = false>(
-  options: Options<Detail3Data, ThrowOnError>,
-): RequestResult<Detail3Responses, Detail3Errors, ThrowOnError> =>
-  (options.client ?? client).get<Detail3Responses, Detail3Errors, ThrowOnError>({
+export const detail5 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail5Data, ThrowOnError>,
+): RequestResult<Detail5Responses, Detail5Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail5Responses, Detail5Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1754,10 +2187,10 @@ export const detail3 = <ThrowOnError extends boolean = false>(
  *
  * 승인되고 탈퇴하지 않은 회원. 이름은 완전 일치, 필터는 AND. 가입 시각·회원 ID 역순, 20개 커서 페이지. 출석 점수는 해당 기수 PLAYER 이력이 없으면 null.
  */
-export const list6 = <ThrowOnError extends boolean = false>(
-  options: Options<List6Data, ThrowOnError>,
-): RequestResult<List6Responses, List6Errors, ThrowOnError> =>
-  (options.client ?? client).get<List6Responses, List6Errors, ThrowOnError>({
+export const list9 = <ThrowOnError extends boolean = false>(
+  options: Options<List9Data, ThrowOnError>,
+): RequestResult<List9Responses, List9Errors, ThrowOnError> =>
+  (options.client ?? client).get<List9Responses, List9Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1794,10 +2227,10 @@ export const teamOptions = <ThrowOnError extends boolean = false>(
  *
  * 승인된 비탈퇴 회원 전체 또는 일치 Position을 페이지 없이 조회한다. 현재 저장된 마감 감점만 반영한다.
  */
-export const list7 = <ThrowOnError extends boolean = false>(
-  options: Options<List7Data, ThrowOnError>,
-): RequestResult<List7Responses, List7Errors, ThrowOnError> =>
-  (options.client ?? client).get<List7Responses, List7Errors, ThrowOnError>({
+export const list10 = <ThrowOnError extends boolean = false>(
+  options: Options<List10Data, ThrowOnError>,
+): RequestResult<List10Responses, List10Errors, ThrowOnError> =>
+  (options.client ?? client).get<List10Responses, List10Errors, ThrowOnError>({
     security: [
       {
         key: 'staffBearerAuth',
@@ -1806,6 +2239,86 @@ export const list7 = <ThrowOnError extends boolean = false>(
       },
     ],
     url: '/api/admin/generations/{generationId}/attendance-statistics',
+    ...options,
+  });
+
+/**
+ * Afterparty 생성 전 초대 대상 수
+ *
+ * 선택 기수의 승인·비탈퇴 회원 중 5종 역할 복수 선택. 생성 시 다시 계산되므로 미리보기와 결과가 다를 수 있다.
+ */
+export const preview = <ThrowOnError extends boolean = false>(
+  options: Options<PreviewData, ThrowOnError>,
+): RequestResult<PreviewResponses, PreviewErrors, ThrowOnError> =>
+  (options.client ?? client).get<PreviewResponses, PreviewErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/afterparties/recipient-count',
+    ...options,
+  });
+
+/**
+ * Afterparty 기본 정보
+ *
+ * 내용·기수·초대 역할·상태와 대상/응답/참석/불참/미응답 수를 반환한다. 탈퇴 대상은 집계에서 제외한다.
+ */
+export const detail6 = <ThrowOnError extends boolean = false>(
+  options: Options<Detail6Data, ThrowOnError>,
+): RequestResult<Detail6Responses, Detail6Errors, ThrowOnError> =>
+  (options.client ?? client).get<Detail6Responses, Detail6Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/afterparties/{afterpartyId}',
+    ...options,
+  });
+
+/**
+ * Afterparty 팀별 응답
+ *
+ * 생성 당시 소속 기준. STAFF는 운영진, 나머지 팀 미배정은 미배정 그룹. groupId는 TEAM:{teamId}, STAFF, UNASSIGNED이며 가상 그룹의 teamId는 null이다. 대상이 있는 그룹만 반환한다.
+ */
+export const groups = <ThrowOnError extends boolean = false>(
+  options: Options<GroupsData, ThrowOnError>,
+): RequestResult<GroupsResponses, GroupsErrors, ThrowOnError> =>
+  (options.client ?? client).get<GroupsResponses, GroupsErrors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/afterparties/{afterpartyId}/team-responses',
+    ...options,
+  });
+
+/**
+ * Afterparty 대상 명단
+ *
+ * 전체 대상 수와 필터된 20건. 응답 시각·대상 ID 오름차순, 미응답은 뒤에 ID순. 현재 이름/직군, 생성 당시 팀. 페이지 사이 변경에 따른 중복/누락 허용.
+ */
+export const recipients2 = <ThrowOnError extends boolean = false>(
+  options: Options<Recipients2Data, ThrowOnError>,
+): RequestResult<Recipients2Responses, Recipients2Errors, ThrowOnError> =>
+  (options.client ?? client).get<Recipients2Responses, Recipients2Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/afterparties/{afterpartyId}/recipients',
     ...options,
   });
 
