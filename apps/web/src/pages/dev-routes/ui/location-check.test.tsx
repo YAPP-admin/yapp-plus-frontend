@@ -1,7 +1,7 @@
 /** 개발 도구의 사용자 흐름과 화면 수명을 검증한다. 테스트 위치는 합성 값만 사용한다. */
 
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
-import { act, render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
@@ -110,13 +110,14 @@ describe('위치 개발 도구', () => {
     expect(screen.queryByRole('button', { name: '현재 위치 요청' })).not.toBeInTheDocument();
     h.setActive(true);
     await screen.findByRole('button', { name: '현재 위치 요청' });
+    const location = within(screen.getByRole('region', { name: '위치 브리지 확인' }));
     await act(async () => {
       pending.resolve(sample);
       await pending.promise;
     });
-    expect(screen.getByRole('status')).toHaveTextContent('아직 요청하지 않았습니다.');
+    expect(location.getByRole('status')).toHaveTextContent('아직 요청하지 않았습니다.');
     await user.click(screen.getByRole('button', { name: '현재 위치 요청' }));
-    await waitFor(() => expect(screen.getByRole('status')).toHaveTextContent('위치 수신 성공'));
+    await waitFor(() => expect(location.getByRole('status')).toHaveTextContent('위치 수신 성공'));
     expect(bridge.requestCurrentLocation).toHaveBeenCalledTimes(2);
   });
 
