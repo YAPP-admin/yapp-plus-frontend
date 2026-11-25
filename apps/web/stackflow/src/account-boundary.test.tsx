@@ -3,6 +3,7 @@ import { createAppQueryClient } from '@/app/providers';
 import { currentWeekFixture } from '@/mocks/session-handlers';
 import { getAppBridge } from '@yapp-plus/app-bridge/web';
 import type { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
+import type * as AppBridgeWeb from '@yapp-plus/app-bridge/web';
 import { MutationObserver, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
@@ -25,9 +26,29 @@ import {
 
 const bridge = vi.hoisted(() => ({
   result: { status: 'SIGNED_OUT' } as AuthResult,
-  getSession: vi.fn<() => Promise<AuthResult | undefined>>(),
+  getSession: vi.fn<() => Promise<unknown>>(),
   refreshSession: vi.fn<() => Promise<AuthResult | undefined>>(),
 }));
+const replacedActivities = vi.hoisted(() => vi.fn<(name: string) => void>());
+vi.mock(import('./account-boundary'), async (importOriginal) => {
+  const original = await importOriginal();
+  return {
+    ...original,
+    accountBoundaryPlugin: () => {
+      const plugin = original.accountBoundaryPlugin();
+      return () => {
+        const hooks = plugin();
+        return {
+          ...hooks,
+          onReplaced: (args: Parameters<NonNullable<typeof hooks.onReplaced>>[0]) => {
+            hooks.onReplaced?.(args);
+            replacedActivities(args.effect.activity.name);
+          },
+        };
+      };
+    },
+  };
+});
 const nativeLocation = vi.hoisted(() => ({
   request: vi.fn<() => Promise<LocationResult>>(),
 }));
@@ -37,6 +58,10 @@ const stackflowIntervals = new Set<ReturnType<typeof globalThis.setInterval>>();
 const addListener = window.addEventListener.bind(window);
 const addInterval = globalThis.setInterval.bind(globalThis);
 beforeEach(() => {
+  replacedActivities.mockClear();
+  window.history.replaceState(null, '', '/');
+  bridge.result = { status: 'SIGNED_OUT' };
+  vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('YAPPPlusWebView');
   // 팀 사진 폼은 개발 모의 환경에서만 노출한다. 인증 경계 검증도 같은 조건으로 실행한다.
   vi.stubEnv('VITE_API_MOCKING', 'true');
   vi.spyOn(window, 'addEventListener').mockImplementation((type, listener, options) => {
@@ -91,15 +116,6 @@ afterEach(async () => {
   nativeLocation.request.mockReset();
   vi.useRealTimers();
 });
-vi.mock('@/features/auth/model/native-auth', () => ({
-  signInWithNative: () => Promise.resolve(bridge.result),
-  completeNativeSignup: () => Promise.resolve(bridge.result),
-  signOutNative: () => Promise.resolve(bridge.result),
-  withdrawNative: () => Promise.resolve(bridge.result),
-  isNativeWebView: () => true,
-  getNativeSession: () => bridge.getSession(),
-  refreshNativeSession: () => bridge.refreshSession(),
-}));
 const context = { platform: 'ios' as const, reducedMotion: true };
 const session = (userId: number, tokenVersion = 1, name?: string): AuthResult => ({
   status: 'SIGNED_IN',
@@ -162,6 +178,180 @@ function TeamAttendancePhotoFixture() {
   }, [setPhoto]);
   return null;
 }
+
+it('구 앱의 전환 필드 없는 세션은 수신 정규화 후 로그인 URL에서 홈으로 이동한다', async () => {
+  window.history.replaceState(null, '', '/login');
+  const approved = session(1);
+  if (approved.status !== 'SIGNED_IN') {
+    throw new Error('승인된 세션 fixture가 필요합니다.');
+  }
+  bridge.getSession.mockResolvedValue({ status: 'SIGNED_IN', session: approved.session });
+  mount(new QueryClient());
+  await screen.findByRole('tab', { name: '일정' }, { timeout: 10000 });
+  await waitFor(() => expect(window.location.pathname).toBe('/'));
+  expect(screen.queryByRole('button', { name: '구글로 계속하기' })).not.toBeInTheDocument();
+  expect(bridge.getSession).toHaveBeenCalledTimes(1);
+  expect(replacedActivities.mock.calls).toEqual([['Tabs']]);
+}, 15000);
+
+it('대기 상태 없이 승인 대기 URL에 직접 진입하면 로그인으로 복귀한다', async () => {
+  window.history.replaceState(null, '', '/signup/status');
+  bridge.getSession.mockResolvedValue({ status: 'SIGNED_OUT' });
+  mount(new QueryClient());
+  expect(screen.queryByText('운영진 승인을 기다리고 있어요...')).not.toBeInTheDocument();
+  await screen.findByRole('button', { name: '구글로 계속하기' }, { timeout: 10000 });
+  await waitFor(() => expect(window.location.pathname).toBe('/login'));
+  expect(screen.queryByText('운영진 승인을 기다리고 있어요...')).not.toBeInTheDocument();
+}, 15000);
+
+it.each(['PENDING', 'REJECTED', null] as const)(
+  '제한 상태 %s의 보호 URL 진입은 업무 화면 없이 상태 화면으로 이동한다',
+  async (reviewStatus) => {
+    window.history.replaceState(null, '', '/schedule');
+    bridge.getSession.mockResolvedValue({ status: 'REVIEW_REQUIRED', userId: 1, reviewStatus });
+    const client = new QueryClient();
+    mount(client);
+    const title =
+      reviewStatus === 'PENDING' ? '운영진 승인을 기다리고 있어요...' : '앗, 문제가 발생했어요!';
+    await screen.findByRole('heading', { name: title }, { timeout: 10000 });
+    await waitFor(() =>
+      expect(window.location.pathname).toBe(
+        reviewStatus === 'PENDING' ? '/signup/status' : '/error',
+      ),
+    );
+    expect(screen.queryByRole('tab', { name: '일정' })).not.toBeInTheDocument();
+    expect(
+      client
+        .getQueryCache()
+        .getAll()
+        .filter((query) => query.queryKey[0] !== 'native-auth'),
+    ).toHaveLength(0);
+  },
+  15000,
+);
+
+it.each(['PENDING', 'REJECTED', null] as const)(
+  '로그인의 %s 응답은 상태 화면으로 한 번만 이동한다',
+  async (reviewStatus) => {
+    window.history.replaceState(null, '', '/login');
+    bridge.getSession.mockResolvedValue({ status: 'SIGNED_OUT' });
+    mount(new QueryClient());
+    const login = await screen.findByRole(
+      'button',
+      { name: '구글로 계속하기' },
+      { timeout: 10000 },
+    );
+    bridge.result = { status: 'REVIEW_REQUIRED', userId: 1, reviewStatus };
+    bridge.getSession.mockResolvedValue(bridge.result);
+    await userEvent.click(login);
+    await screen.findByRole('heading', {
+      name:
+        reviewStatus === 'PENDING' ? '운영진 승인을 기다리고 있어요...' : '앗, 문제가 발생했어요!',
+    });
+    await waitFor(() =>
+      expect(replacedActivities.mock.calls).toEqual([
+        [reviewStatus === 'PENDING' ? 'SignupStatus' : 'Error'],
+      ]),
+    );
+    expect(screen.queryByRole('tab', { name: '일정' })).not.toBeInTheDocument();
+  },
+  15000,
+);
+
+it('가입의 PENDING 응답도 인증 상태 반영 후 대기 화면으로 한 번만 이동한다', async () => {
+  const user = userEvent.setup();
+  window.history.replaceState(null, '', '/signup');
+  bridge.getSession.mockResolvedValue({ status: 'SIGNED_OUT' });
+  mount(new QueryClient());
+  await user.type(
+    await screen.findByRole('textbox', { name: '이름을 입력해 주세요' }, { timeout: 10000 }),
+    '김야뿌',
+  );
+  await user.click(screen.getByRole('button', { name: '다음' }));
+  await user.type(
+    await screen.findByRole('textbox', { name: '휴대폰 번호를 입력해 주세요' }),
+    '01012345678',
+  );
+  bridge.result = { status: 'REVIEW_REQUIRED', userId: 1, reviewStatus: 'PENDING' };
+  bridge.getSession.mockResolvedValue(bridge.result);
+  await user.click(screen.getByRole('button', { name: '다음' }));
+  await screen.findByRole('heading', { name: '운영진 승인을 기다리고 있어요...' });
+  await waitFor(() => expect(replacedActivities.mock.calls).toEqual([['SignupStatus']]));
+  expect(window.location.pathname).toBe('/signup/status');
+}, 15000);
+
+it.each([
+  { userId: 1, reviewTransition: 'PENDING_TO_APPROVED', destination: '/signup/complete' },
+  { userId: 2, reviewTransition: 'NONE', destination: '/' },
+] as const)(
+  '대기 복귀 후 계정 $userId 승인 로그인은 $destination 으로 이동한다',
+  async ({ userId, reviewTransition, destination }) => {
+    const user = userEvent.setup();
+    window.history.replaceState(null, '', '/signup/status');
+    bridge.getSession.mockResolvedValue({
+      status: 'REVIEW_REQUIRED',
+      userId: 1,
+      reviewStatus: 'PENDING',
+    });
+    mount(new QueryClient());
+    await screen.findByRole(
+      'heading',
+      { name: '운영진 승인을 기다리고 있어요...' },
+      { timeout: 10000 },
+    );
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }));
+    await user.click(await screen.findByRole('button', { name: '취소' }));
+    expect(window.location.pathname).toBe('/signup/status');
+    await user.click(screen.getByRole('button', { name: '뒤로가기' }));
+    bridge.result = { status: 'SIGNED_OUT' };
+    await user.click(await screen.findByRole('button', { name: '로그인으로 돌아가기' }));
+    await waitFor(() => expect(window.location.pathname).toBe('/login'));
+    const approved = session(userId);
+    if (approved.status !== 'SIGNED_IN') {
+      throw new Error('승인된 세션 fixture가 필요합니다.');
+    }
+    bridge.result = { ...approved, reviewTransition };
+    replacedActivities.mockClear();
+    await user.click(await screen.findByRole('button', { name: '구글로 계속하기' }));
+    await waitFor(() => expect(window.location.pathname).toBe(destination));
+    await waitFor(() =>
+      expect(screen.queryByRole('tab', { name: '일정' }) !== null).toBe(
+        reviewTransition === 'NONE',
+      ),
+    );
+    expect(replacedActivities.mock.calls).toEqual([
+      [reviewTransition === 'NONE' ? 'Tabs' : 'SignupComplete'],
+    ]);
+  },
+  15000,
+);
+
+it('대기 복귀 정리가 실패하면 대기를 유지하고 재시도 성공 후 로그인으로 돌아간다', async () => {
+  const user = userEvent.setup();
+  window.history.replaceState(null, '', '/signup/status');
+  bridge.getSession.mockResolvedValue({
+    status: 'REVIEW_REQUIRED',
+    userId: 1,
+    reviewStatus: 'PENDING',
+  });
+  mount(new QueryClient());
+  await screen.findByRole(
+    'heading',
+    { name: '운영진 승인을 기다리고 있어요...' },
+    { timeout: 10000 },
+  );
+  await user.click(screen.getByRole('button', { name: '뒤로가기' }));
+  bridge.result = { status: 'ERROR', code: 'STORAGE', retryable: true };
+  await user.click(await screen.findByRole('button', { name: '로그인으로 돌아가기' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('로그인 화면으로 돌아가지 못했어요');
+  expect(window.location.pathname).toBe('/signup/status');
+  expect(screen.queryByRole('button', { name: '구글로 계속하기' })).not.toBeInTheDocument();
+  bridge.result = { status: 'SIGNED_OUT' };
+  await user.click(screen.getByRole('button', { name: '로그인으로 돌아가기' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/login'));
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+}, 15000);
 
 // 첫 진입의 lazy 화면 로딩과 탐색을 포함하므로 내부 10초 대기보다 긴 한도를 둡니다.
 it('세션 복구와 로그아웃 후 재로그인 뒤에도 현재 탭을 전환한다', async () => {
@@ -399,6 +589,26 @@ const traverse = (direction: 'back' | 'forward') =>
       }),
   );
 
+it('대기 전환 후 새 보호 화면 진입과 이전 폼의 history 복원을 차단한다', async () => {
+  const client = new QueryClient();
+  await apply(client, session(1));
+  window.history.replaceState(null, '', '/team-attendance/upload?sessionId=1');
+  const { actions } = mount(client);
+  await screen.findByRole('checkbox', { name: /강야뿌/ }, { timeout: 10000 });
+  await act(() => actions.push('Alerts', {}));
+  await waitFor(() => expect(window.location.pathname).toBe('/alerts'));
+  await act(() => apply(client, { status: 'REVIEW_REQUIRED', userId: 1, reviewStatus: 'PENDING' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/signup/status'));
+  expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
+  await act(() => actions.push('Alerts', {}));
+  await waitFor(() => expect(window.location.pathname).toBe('/signup/status'));
+  expect(screen.queryByRole('heading', { name: '알림' })).not.toBeInTheDocument();
+  await traverse('back');
+  expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
+  await traverse('forward');
+  expect(screen.queryByRole('checkbox', { name: /강야뿌/ })).not.toBeInTheDocument();
+}, 15000);
+
 it.each(['/attendance/code', '/attendance/report', '/team-attendance/guide'])(
   '로그아웃 상태에서 %s 직접 진입은 시트 없이 로그인으로 이동한다',
   async (path) => {
@@ -449,11 +659,25 @@ it('계정 전환 후 MY는 세션 이름을 표시하지 않는다', async () =
   client.clear();
 });
 
-vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
-  ...(await importOriginal()),
-  pickAttendancePhoto: vi.fn<typeof pickAttendancePhoto>(),
-  requestCurrentLocation: nativeLocation.request,
-}));
+vi.mock('@yapp-plus/app-bridge/web', async (importOriginal) => {
+  const original = await importOriginal<typeof AppBridgeWeb>();
+  // RPC 전송만 대체해 실제 웹 수신 검증과 정규화도 탐색 흐름에 포함합니다.
+  const nativeBridge = {
+    isNativeMethodAvailable: () => false,
+    signIn: () => Promise.resolve(bridge.result),
+    completeSignup: () => Promise.resolve(bridge.result),
+    signOut: () => Promise.resolve(bridge.result),
+    withdraw: () => Promise.resolve(bridge.result),
+    getSession: bridge.getSession,
+    refreshSession: bridge.refreshSession,
+  };
+  return {
+    ...original,
+    getAppBridge: () => nativeBridge,
+    pickAttendancePhoto: vi.fn<typeof pickAttendancePhoto>(),
+    requestCurrentLocation: nativeLocation.request,
+  };
+});
 
 it('위치 응답 전에 계정이 바뀌면 이전 계정의 출석을 전송하지 않는다', async () => {
   let respond!: (value: LocationResult) => void;

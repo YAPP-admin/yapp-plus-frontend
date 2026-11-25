@@ -390,6 +390,7 @@ describe('Stackflow FSD 화면 연결', () => {
 
     const statusScreen = await waitForTopHeading('운영진 승인을 기다리고 있어요...');
     await user.click(statusScreen.getByRole('button', { name: '뒤로가기' }));
+    await user.click(await screen.findByRole('button', { name: '로그인으로 돌아가기' }));
     await waitFor(() => expect(window.location.pathname.replace(/\/+$/, '')).toBe('/login'));
 
     const loginScreen = await waitForTopHeading(/당신의 작은 아이디어가/);

@@ -26,7 +26,7 @@ import { SchedulePage } from '@/pages/schedule';
 import { SettingsPage } from '@/pages/settings';
 import { SignupCompletePage } from '@/pages/signup-complete';
 import { SignupPage } from '@/pages/signup';
-import { SignupStatusPage } from '@/pages/signup-status';
+import { SignupStatusContent } from './signup-status-content';
 import { SignupUnregisteredPage } from '@/pages/signup-unregistered';
 import { TeamAttendanceCompletePage } from '@/pages/team-attendance-complete';
 import { TeamAttendanceErrorPage } from '@/pages/team-attendance-error';
@@ -324,6 +324,7 @@ export function LoginActivity() {
   return (
     <ActivityScreen title="로그인" showBack={false} preventSwipeBack>
       <NativeAuthRedirect target="TABS" when="SIGNED_IN" />
+      <NativeAuthRedirect target="REVIEW" when="REVIEW_REQUIRED" />
       <AuthLayout>
         <LoginPage initialError={error === 'true'} />
       </AuthLayout>
@@ -333,7 +334,7 @@ export function LoginActivity() {
 
 export function LoginErrorActivity() {
   return (
-    <ActivityScreen title="오류 안내">
+    <ActivityScreen title="오류 안내" preventSwipeBack>
       <AuthLayout>
         <LoginErrorPage />
       </AuthLayout>
@@ -346,6 +347,7 @@ export function SignupActivity() {
 
   return (
     <ActivityScreen title="회원가입" preventSwipeBack>
+      <NativeAuthRedirect target="REVIEW" when="REVIEW_REQUIRED" />
       <PageShell
         plain
         backButton={
@@ -375,9 +377,7 @@ export function SignupActivity() {
 export function SignupStatusActivity() {
   return (
     <ActivityScreen title="가입 승인 상태" preventSwipeBack>
-      <AuthLayout showBack>
-        <SignupStatusPage />
-      </AuthLayout>
+      <SignupStatusContent />
     </ActivityScreen>
   );
 }
