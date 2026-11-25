@@ -79,6 +79,30 @@ export function createApiMockHandlers(
     http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/member-team-options`, () =>
       response(fixtures.adminMemberTeams, schemas.zTeamOptionsResponse, 200),
     ),
+    http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/posts`, ({ request }) => {
+      const type = new URL(request.url).searchParams.get('type');
+      const items = type
+        ? fixtures.adminPosts.items.filter((post) => post.type === type)
+        : fixtures.adminPosts.items;
+      return response(
+        { totalPostCount: items.length, items, nextCursor: null },
+        schemas.zAdminPostListResponse,
+        200,
+      );
+    }),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/posts/:postId`,
+      ({ params }) => {
+        const post = fixtures.adminPostDetails[Number(params.postId)];
+        if (!post) {
+          return HttpResponse.json(
+            { code: 'POST_NOT_FOUND', message: '공지 정보를 찾을 수 없습니다.' },
+            { status: 404 },
+          );
+        }
+        return response(post, schemas.zAdminPostDetailResponse, 200);
+      },
+    ),
     http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members/:memberId`, () =>
       response(fixtures.adminMemberDetail, schemas.zDetailResponse, 200),
     ),
@@ -153,7 +177,7 @@ export function createApiMockHandlers(
           }),
           schemas.zDetailResponse,
         ),
-        detail1: fakerResponse(generatedFaker.fakeDetail1Response200, schemas.zDetail1Response),
+        detail1: fixedResponse(fixtures.adminPostDetails[101], schemas.zDetail1Response),
         update1: () => new HttpResponse(null, { status: 204 }),
         update2: fakerResponse(generatedFaker.fakeUpdate2Response200, schemas.zUpdate2Response),
         find6: fixedResponse(

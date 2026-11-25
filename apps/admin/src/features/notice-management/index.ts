@@ -10,6 +10,12 @@ export {
   useNoticeQuery,
   useNoticeDetailQuery,
   useNoticeMutations,
+  useAdminNoticeListQuery,
+  useAdminNoticeQuery,
+  useAdminNoticeRecipientsQuery,
+  useAdminNoticeMutations,
+  adminNoticeListQueryOptions,
+  adminNoticeRecipientsQueryOptions,
 } from './model/notice-queries';
 export { getNoticeAudience } from './model/notice-audience';
 export { getNoticeSummary, getNoticeDeadline, getNoticeReaders } from './model/notice-summary';
