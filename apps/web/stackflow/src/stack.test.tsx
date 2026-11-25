@@ -638,6 +638,12 @@ it.each([
     await user.click(screen.getByRole('checkbox', { name: /강야뿌/ }));
     await user.click(screen.getByRole('button', { name: '인증 사진 제출하기' }));
     await waitFor(() => expect(requests).toEqual(['presign', 'put', 'submit']));
+    await waitFor(() =>
+      expect(document.querySelector('[data-global-transition-state]')).toHaveAttribute(
+        'data-global-transition-state',
+        'enter-done',
+      ),
+    );
     expect(await screen.findByRole('heading', { name: '인증 사진을 올렸어요!' })).toBeVisible();
     expect(requests).toEqual(['presign', 'put', 'submit']);
     expect(uploadedBytes).toBe(4);
