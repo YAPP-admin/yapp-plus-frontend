@@ -13,11 +13,11 @@ HTTP API·생성 SDK·브리지 wire 계약은 변경하지 않는다. 아래 �
 
 ## LocalErrorBoundary와 판별 정책
 
-- 입력: children, ErrorState 표시 설정, pendingFallback, resetKeys, 화면 복귀 reset 여부.
+- 입력: children, ErrorState 표시 설정, pendingFallback, resetKeys.
 - 판별 Context의 `shouldRethrow(error: unknown): boolean`은 app이 auth 분류 함수를 주입한다.
   일반 단독 테스트의 기본 정책은 false다. 앱 통합 테스트는 실제 주입을 사용한다.
 - 위임 대상 오류는 fallback을 렌더링하기 전에 다시 throw한다. 일반 오류는 ErrorState로 교체한다.
-- 내부 QueryErrorResetBoundary와 React reset을 함께 수행한다. 기존 화면 활성 Context를 사용한다.
+- 내부 QueryErrorResetBoundary와 React reset을 함께 수행한다. 화면 복귀만으로 fallback을 reset하지 않는다.
 - Query 결과를 넘기는 공통 판정은 `error`, `isFetching`, `isFetchNextPageError`와 인증 분류를 사용한다.
   Hooks 호출 순서를 깨거나 생성 Query 옵션을 재정의하지 않는다.
 
