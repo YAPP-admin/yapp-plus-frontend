@@ -1,6 +1,7 @@
 import { base, en, Faker } from '@faker-js/faker';
 import { http, HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
 import type { ZodType } from 'zod';
+import type { NotificationHistoryItemResponse } from '../generated/types.gen';
 
 import * as generatedFaker from '../generated/@faker-js/faker.gen';
 import { createMswHandlers } from '../generated/msw.gen';
@@ -56,8 +57,29 @@ export function createApiMockHandlers(
     responseFallback: 'error',
   });
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+  const notificationHistory: NotificationHistoryItemResponse[] = empty
+    ? []
+    : [...fixtures.adminNotifications.items];
+
+  function getNotificationPage(cursor: string | null) {
+    const pageSize = 4;
+    const pageIndex = cursor === null ? 0 : Number(cursor.replace('mock-page-', '')) - 1;
+    const start = Number.isInteger(pageIndex) && pageIndex >= 0 ? pageIndex * pageSize : 0;
+    const items = notificationHistory.slice(start, start + pageSize);
+    const nextCursor =
+      start + items.length < notificationHistory.length ? `mock-page-${pageIndex + 2}` : null;
+    return { items, nextCursor };
+  }
+
   // 명시한 Faker·대표 응답이 우선하며, 미연결 API는 생성 핸들러의 명세 예제 또는 501을 사용합니다.
   return [
+    http.get(`${normalizedBaseUrl}/api/admin/notifications`, ({ request }) =>
+      response(
+        getNotificationPage(new URL(request.url).searchParams.get('cursor')),
+        schemas.zHistoryResponse,
+        200,
+      ),
+    ),
     http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members`, ({ request }) => {
       const params = new URL(request.url).searchParams;
       const name = params.get('name');

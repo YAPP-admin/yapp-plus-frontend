@@ -1,12 +1,8 @@
-export type NotificationHistoryStatus =
-  | 'SCHEDULED'
-  | 'QUEUED'
-  | 'IN_PROGRESS'
-  | 'SENDING'
-  | 'COMPLETED'
-  | 'FAILED'
-  | 'CANCELED'
-  | 'RETRY_PENDING';
+import { ApiError } from '@yapp-plus/api';
+import type { NotificationHistoryItemResponse } from '@yapp-plus/api/generated';
+import { zErrorResponse } from '@yapp-plus/api/generated';
+
+export type NotificationHistoryStatus = NotificationHistoryItemResponse['status'];
 
 export type NotificationHistoryItem = {
   id: number;
@@ -24,19 +20,19 @@ export function getNotificationStatus(status: NotificationHistoryStatus): {
   tone: NotificationStatusTone;
   canCancel: boolean;
 } {
-  if (status === 'SCHEDULED' || status === 'QUEUED') {
-    return { label: '예약', tone: 'scheduled', canCancel: status === 'SCHEDULED' };
+  if (status === 'SCHEDULED') {
+    return { label: '예약', tone: 'scheduled', canCancel: true };
   }
 
-  if (status === 'IN_PROGRESS' || status === 'SENDING' || status === 'COMPLETED') {
+  if (status === 'IN_PROGRESS' || status === 'COMPLETED') {
     return { label: '완료', tone: 'completed', canCancel: false };
   }
 
   return { label: '실패', tone: 'failed', canCancel: false };
 }
 
-export function isVisibleNotificationStatus(status: NotificationHistoryStatus) {
-  return status !== 'RETRY_PENDING';
+export function isVisibleNotificationStatus(_status: NotificationHistoryStatus) {
+  return true;
 }
 
 export function getNotificationRoleLabel(role: string) {
@@ -78,6 +74,20 @@ const notificationDateFormatter = new Intl.DateTimeFormat('ko-KR', {
 export function formatNotificationDate(value: string) {
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? value : notificationDateFormatter.format(date);
+}
+
+export function getNotificationErrorMessage(error: unknown) {
+  if (error instanceof ApiError) {
+    const body = zErrorResponse.safeParse(error.body);
+    if (error.status === 401) {
+      return '로그인이 만료되었어요. 다시 로그인해 주세요.';
+    }
+    if (error.status === 503 || (body.success && body.data.code === 'NOTIFICATION_UNAVAILABLE')) {
+      return '알림 서버를 사용할 수 없어요. 잠시 후 다시 시도해 주세요.';
+    }
+  }
+
+  return '알림 발송 내역을 불러오지 못했어요. 다시 시도해 주세요.';
 }
 
 export const notificationPreviewItems: readonly NotificationHistoryItem[] = [
