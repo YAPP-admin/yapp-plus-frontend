@@ -1,14 +1,12 @@
-import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { ErrorState } from '@/shared/ui/error-state';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
 import type { ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 
+const renderScheduleError = (props: FallbackProps) => <ScheduleErrorFallback {...props} />;
+
 export function ScheduleErrorBoundary({ children }: { children: ReactNode }) {
-  return (
-    <ScreenQueryBoundary renderFallback={(props) => <ScheduleErrorFallback {...props} />}>
-      {children}
-    </ScreenQueryBoundary>
-  );
+  return <LocalErrorBoundary fallbackRender={renderScheduleError}>{children}</LocalErrorBoundary>;
 }
 
 function ScheduleErrorFallback({ resetErrorBoundary }: FallbackProps) {

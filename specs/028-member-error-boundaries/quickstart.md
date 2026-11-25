@@ -30,7 +30,7 @@ node --run dev:web
 | Q04 | 오류 화면 숨김 → 복귀, 정상 화면 숨김 → 복귀       | 오류 fallback 유지, 정상 DOM 유지                   | Stackflow query-recovery   |
 | Q05 | GET401 → 갱신 성공 → GET200                        | 원래 조회 한 번 재전송, 로그인 이동 없음            | native-auth-client         |
 | Q06 | GET401 → 갱신 불가 또는 재전송401                  | 보호 콘텐츠 제거, 기본 Login 한 번                  | auth+account-boundary      |
-| Q07 | 동시401 → 새 로그인 → 이전 갱신 성공               | 새 인증만 유지, 왕복·cache 덮어쓰기 없음            | operations+대표 Stackflow  |
+| Q07 | 동시401                                            | 기본 Login 한 번, 보호 콘텐츠 재노출 없음           | account-boundary           |
 | Q09 | 다음 페이지500 → 수동 retry200                     | 기존 항목 유지, 실패 페이지 복구, 중복 없음         | 목록 페이지                |
 | Q10 | 다음 페이지401                                     | 목록 예외 없이 Login 이동                           | account-boundary 대표 흐름 |
 | Q11 | 목록 오류 중 분류 변경                             | 새 조건 조회, 이전 오류에 갇히지 않음               | 공지 목록                  |

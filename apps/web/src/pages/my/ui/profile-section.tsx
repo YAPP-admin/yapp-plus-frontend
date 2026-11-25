@@ -1,7 +1,7 @@
 /** 마이페이지 프로필의 조회·오류 수명과 표시를 출석 현황과 분리합니다. */
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useThrowQueryError } from '@/shared/lib/query-error-policy';
-import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
 import { Box, HStack, VStack } from '@seed-design/react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Suspense, type ReactNode } from 'react';
@@ -13,14 +13,16 @@ import { toProfileDisplay } from '../model/profile-model';
 import { profileQueryOptions } from '../model/profile-query';
 import { activeChip, avatar, name, queryNotice, subDivider, subText } from './my-page.css';
 
+const renderProfileError = (props: FallbackProps) => <ProfileError {...props} />;
+
 /** 인증된 조회와 개발 MSW 조회만 프로필 요청을 허용합니다. */
 export function ProfileSection({ canQuery }: { canQuery: boolean }) {
   return canQuery ? (
-    <ScreenQueryBoundary renderFallback={(props) => <ProfileError {...props} />}>
+    <LocalErrorBoundary fallbackRender={renderProfileError}>
       <Suspense fallback={<ProfileSummary notice={<ProfileLoading />} />}>
         <ProfileContent />
       </Suspense>
-    </ScreenQueryBoundary>
+    </LocalErrorBoundary>
   ) : (
     <ProfileSummary notice="프로필은 YAPP+ 앱에 로그인한 후 확인할 수 있어요." />
   );

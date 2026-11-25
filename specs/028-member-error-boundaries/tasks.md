@@ -87,11 +87,11 @@
 
 ## 7단계 — 통합 검증·정리
 
-- [ ] T046 `apps/web/src/shared/ui/query-boundary.tsx`·`screen-query-boundary.tsx` 및 이전 화면별 fallback을 전체 사용처 이전 후 제거한다. 404·업무 전용 오류 화면은 유지한다.
-- [ ] T047 `docs/web-development.md`와 `research.md`의 변경 대상 기존 명세에 새 정책 참조를 연결한다. 과거 validation의 실행 이력은 수정하지 않는다.
-- [ ] T048 `apps/web/stackflow/src/query-recovery.test.tsx`·`account-boundary.test.tsx`에서 최종 탐색·재인증·캐시 수명 통합 흐름을 검증한다.
-- [ ] T049 `specs/028-member-error-boundaries/quickstart.md`의 전체 시나리오와 check/build·브라우저/WebView·접근성 결과를 `validation.md`에 기록한다.
-- [ ] T050 `specs/028-member-error-boundaries/validation.md`에 최종 diff 크기·PR 분리·미실행 위험·복구 절차·사용자 최종 리뷰를 기록한다.
+- [x] T046 `apps/web/src/shared/ui/query-boundary.tsx`·`screen-query-boundary.tsx` 및 이전 화면별 fallback을 전체 사용처 이전 후 제거한다. 404·업무 전용 오류 화면은 유지한다.
+- [x] T047 `docs/web-development.md`와 `research.md`의 변경 대상 기존 명세에 새 정책 참조를 연결한다. 과거 validation의 실행 이력은 수정하지 않는다.
+- [x] T048 `apps/web/stackflow/src/query-recovery.test.tsx`·`account-boundary.test.tsx`에서 최종 탐색·재인증·캐시 수명 통합 흐름을 검증한다.
+- [x] T049 `specs/028-member-error-boundaries/quickstart.md`의 전체 시나리오와 check/build·브라우저/WebView·접근성 결과를 `validation.md`에 기록한다.
+- [x] T050 `specs/028-member-error-boundaries/validation.md`에 최종 diff 크기·PR 분리·미실행 위험·복구 절차·사용자 최종 리뷰를 기록한다.
 
 ## 의존 순서와 병렬 가능 범위
 
