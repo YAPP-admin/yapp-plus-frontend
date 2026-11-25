@@ -6,6 +6,10 @@ import { expect, it } from 'vitest';
 import { createAdminQueryClient } from '~/query-client';
 import { apiBaseUrl, server } from '~/mocks/server';
 import {
+  attendanceBadgeMutationOptions,
+  attendanceCloseCancelMutationOptions,
+  attendanceCloseMutationOptions,
+  attendanceOverrideMutationOptions,
   attendanceCodeApiQueryOptions,
   teamReviewsApiQueryOptions,
   useSessionAttendanceQuery,
@@ -126,4 +130,74 @@ it('생성 SDK 출석 코드와 팀 사진 검수 응답을 화면 모델로 변
       readUrl: 'https://example.com/team-photo.jpg',
     },
   });
+});
+
+it('출결 변경 mutation이 생성 SDK 계약에 맞는 요청을 보낸다', async () => {
+  let overrideBody: unknown;
+  let badgeBody: unknown;
+  let closeRequestCount = 0;
+  let cancelRequestCount = 0;
+
+  server.use(
+    http.patch(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance/:membershipId`,
+      async ({ request }) => {
+        overrideBody = await request.json();
+        return HttpResponse.json({});
+      },
+    ),
+    http.patch(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance/:membershipId/badge`,
+      async ({ request }) => {
+        badgeBody = await request.json();
+        return HttpResponse.json({});
+      },
+    ),
+    http.post(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance/close`,
+      () => {
+        closeRequestCount += 1;
+        return HttpResponse.json({});
+      },
+    ),
+    http.post(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance/close/cancel`,
+      () => {
+        cancelRequestCount += 1;
+        return HttpResponse.json({});
+      },
+    ),
+  );
+
+  const client = createAdminQueryClient();
+  await client
+    .getMutationCache()
+    .build(client, attendanceOverrideMutationOptions(33, '101'))
+    .execute({
+      membershipId: '1001',
+      status: 'late',
+      penaltyCategory: 'regular',
+      durationBand: 'withinThreeHours',
+      reason: '운영진 판정',
+    });
+  await client
+    .getMutationCache()
+    .build(client, attendanceBadgeMutationOptions(33, '101'))
+    .execute({ membershipId: '1001', verified: true });
+  await client
+    .getMutationCache()
+    .build(client, attendanceCloseMutationOptions(33, '101'))
+    .execute(undefined);
+  await client
+    .getMutationCache()
+    .build(client, attendanceCloseCancelMutationOptions(33, '101'))
+    .execute(undefined);
+
+  expect(overrideBody).toEqual({
+    status: 'LATE_THREE_HOUR',
+    reason: '운영진 판정',
+  });
+  expect(badgeBody).toEqual({ enabled: true });
+  expect(closeRequestCount).toBe(1);
+  expect(cancelRequestCount).toBe(1);
 });

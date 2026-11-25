@@ -1,4 +1,5 @@
 import {
+  mutationOptions,
   queryOptions,
   useMutation,
   useQueryClient,
@@ -12,13 +13,19 @@ import {
   list4InfiniteOptions,
   list3,
   list7Options,
+  badge,
+  cancel1,
+  close,
+  override,
   type AdminAttendanceListResponse,
   type AttendanceCodeResponse,
+  type OverrideAttendanceRequest,
   type TeamPhotoWithUrl,
 } from '@yapp-plus/api/generated';
 import { useEffect } from 'react';
 import type { CreateSessionInput } from './session';
 import { attendanceResultSchema } from './attendance';
+import type { AttendanceEditInput, BadgeEditInput } from './attendance-input';
 import type {
   AttendanceCodeViewModel,
   AttendanceMemberViewModel,
@@ -203,6 +210,87 @@ export const sessionAttendanceQueryOptions = (generationId: number, sessionId: s
     getNextPageParam: (lastPage: AdminAttendanceListResponse) => lastPage.nextCursor ?? undefined,
   };
 };
+
+function toNumberId(id: string, label: string) {
+  const value = Number(id);
+  if (!Number.isInteger(value)) {
+    throw new Error(`${label}는 숫자 식별자여야 합니다.`);
+  }
+  return value;
+}
+
+export function toAttendanceOverrideRequest(input: AttendanceEditInput): OverrideAttendanceRequest {
+  let status: OverrideAttendanceRequest['status'];
+  switch (input.status) {
+    case 'late':
+      status = input.durationBand === 'withinThreeHours' ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
+      break;
+    case 'earlyLeave':
+      status = 'EARLY_LEAVE';
+      break;
+    case 'absent':
+      status = 'ABSENT';
+      break;
+    case 'present':
+      status = 'PRESENT';
+      break;
+    case 'undecided':
+      status = 'UNDECIDED';
+      break;
+  }
+
+  return { status, reason: input.reason };
+}
+
+export const attendanceOverrideMutationOptions = (generationId: number, sessionId: string) =>
+  mutationOptions({
+    mutationFn: async (input: AttendanceEditInput) => {
+      await override({
+        path: {
+          generationId,
+          sessionId: toNumberId(sessionId, '세션 ID'),
+          membershipId: toNumberId(input.membershipId, '회원 ID'),
+        },
+        body: toAttendanceOverrideRequest(input),
+        throwOnError: true,
+      });
+    },
+  });
+
+export const attendanceBadgeMutationOptions = (generationId: number, sessionId: string) =>
+  mutationOptions({
+    mutationFn: async (input: BadgeEditInput) => {
+      await badge({
+        path: {
+          generationId,
+          sessionId: toNumberId(sessionId, '세션 ID'),
+          membershipId: toNumberId(input.membershipId, '회원 ID'),
+        },
+        body: { enabled: input.verified },
+        throwOnError: true,
+      });
+    },
+  });
+
+export const attendanceCloseMutationOptions = (generationId: number, sessionId: string) =>
+  mutationOptions({
+    mutationFn: async () => {
+      await close({
+        path: { generationId, sessionId: toNumberId(sessionId, '세션 ID') },
+        throwOnError: true,
+      });
+    },
+  });
+
+export const attendanceCloseCancelMutationOptions = (generationId: number, sessionId: string) =>
+  mutationOptions({
+    mutationFn: async () => {
+      await cancel1({
+        path: { generationId, sessionId: toNumberId(sessionId, '세션 ID') },
+        throwOnError: true,
+      });
+    },
+  });
 
 export function useSessionAttendanceQuery(generationId: number, sessionId: string) {
   const query = useSuspenseInfiniteQuery(sessionAttendanceQueryOptions(generationId, sessionId));

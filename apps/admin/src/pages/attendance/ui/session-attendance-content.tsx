@@ -10,9 +10,15 @@ import {
   closeAttendance,
   cancelAttendance,
   AttendanceQueryBoundary,
+  attendanceBadgeMutationOptions,
+  attendanceCloseCancelMutationOptions,
+  attendanceCloseMutationOptions,
   attendanceHistoryQueryOptions,
+  attendanceOverrideMutationOptions,
   attendanceCodeQueryOptions,
   attendanceCodeApiQueryOptions,
+  sessionAttendanceQueryOptions,
+  sessionsQueryOptions,
   teamReviewsQueryOptions,
   teamReviewsApiQueryOptions,
   getSessionAttendance,
@@ -484,19 +490,33 @@ function SessionAttendanceView({
   const [historyMember, setHistoryMember] = useState<AttendanceMemberViewModel | null>(null);
   const queryClient = useQueryClient();
   const { session, members } = attendance;
+  const attendanceApiQueryKey =
+    generationId === undefined
+      ? ['admin', 'sessions', sessionId, 'attendance']
+      : sessionAttendanceQueryOptions(generationId, sessionId).queryKey;
+  const sessionsApiQueryKey =
+    generationId === undefined
+      ? ['admin', 'sessions']
+      : sessionsQueryOptions(generationId).queryKey;
   const attendanceMutation = useMutation({
-    mutationFn: (input: AttendanceEditInput) => updateMemberAttendance(sessionId, input),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['admin', 'sessions', sessionId, 'attendance'] }),
+    ...(generationId === undefined
+      ? {
+          mutationFn: async (input: AttendanceEditInput) => {
+            await updateMemberAttendance(sessionId, input);
+          },
+        }
+      : attendanceOverrideMutationOptions(generationId, sessionId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceApiQueryKey }),
   });
   const badgeMutation = useMutation({
-    mutationFn: (member: AttendanceMemberViewModel) =>
-      updateMemberBadge(sessionId, {
-        membershipId: member.membershipId,
-        verified: !member.badge.verified,
-      }),
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: ['admin', 'sessions', sessionId, 'attendance'] }),
+    ...(generationId === undefined
+      ? {
+          mutationFn: async (input: { membershipId: string; verified: boolean }) => {
+            await updateMemberBadge(sessionId, input);
+          },
+        }
+      : attendanceBadgeMutationOptions(generationId, sessionId)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: attendanceApiQueryKey }),
   });
   const issueCodeMutation = useMutation({
     mutationFn: () => issueAttendanceCode(sessionId),
@@ -513,21 +533,29 @@ function SessionAttendanceView({
       }),
   });
   const closeMutation = useMutation({
-    mutationFn: () => closeAttendance(sessionId),
+    ...(generationId === undefined
+      ? {
+          mutationFn: async () => {
+            await closeAttendance(sessionId);
+          },
+        }
+      : attendanceCloseMutationOptions(generationId, sessionId)),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['admin', 'sessions', sessionId, 'attendance'],
-      });
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'sessions'] });
+      void queryClient.invalidateQueries({ queryKey: attendanceApiQueryKey });
+      void queryClient.invalidateQueries({ queryKey: sessionsApiQueryKey });
     },
   });
   const cancelMutation = useMutation({
-    mutationFn: () => cancelAttendance(sessionId),
+    ...(generationId === undefined
+      ? {
+          mutationFn: async () => {
+            await cancelAttendance(sessionId);
+          },
+        }
+      : attendanceCloseCancelMutationOptions(generationId, sessionId)),
     onSuccess: () => {
-      void queryClient.invalidateQueries({
-        queryKey: ['admin', 'sessions', sessionId, 'attendance'],
-      });
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'sessions'] });
+      void queryClient.invalidateQueries({ queryKey: attendanceApiQueryKey });
+      void queryClient.invalidateQueries({ queryKey: sessionsApiQueryKey });
     },
   });
   const teamReviewMutation = useMutation({
@@ -587,7 +615,12 @@ function SessionAttendanceView({
       attendancePending={attendanceMutation.isPending}
       onAttendanceChange={(input) => attendanceMutation.mutate(input)}
       badgePending={badgeMutation.isPending}
-      onBadgeChange={(member) => badgeMutation.mutate(member)}
+      onBadgeChange={(member) =>
+        badgeMutation.mutate({
+          membershipId: member.membershipId,
+          verified: !member.badge.verified,
+        })
+      }
       historyMember={historyMember}
       onHistoryOpen={setHistoryMember}
       onHistoryClose={() => setHistoryMember(null)}
