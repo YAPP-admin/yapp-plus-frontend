@@ -53,7 +53,7 @@ export function useDiningDetail(diningId: string) {
   if (query.error && !query.isFetching) {
     throw query.error instanceof Error
       ? query.error
-      : new Error('회식 정보를 불러오지 못했어요.', { cause: query.error });
+      : new Error('뒤풀이 정보를 불러오지 못했어요.', { cause: query.error });
   }
   return query;
 }

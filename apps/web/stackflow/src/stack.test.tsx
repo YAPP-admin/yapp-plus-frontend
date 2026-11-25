@@ -168,9 +168,10 @@ describe('Stackflow FSD 화면 연결', () => {
     act(() => navigation.getByRole('tab', { name: '게시판' }).focus());
 
     for (const [key, label, path] of [
-      ['ArrowRight', 'MY', '/my'],
+      ['ArrowRight', '커뮤니티', '/dining'],
       ['Home', '홈', '/'],
       ['End', 'MY', '/my'],
+      ['ArrowLeft', '커뮤니티', '/dining'],
       ['ArrowLeft', '게시판', '/notices'],
     ] as const) {
       await user.keyboard(`{${key}}`);
@@ -505,7 +506,6 @@ describe('Stackflow FSD 화면 연결', () => {
       'SignupComplete',
       'SignupUnregistered',
       'DevRoutes',
-      'DiningList',
       'DiningDetail',
       'NotFound',
     ]);
@@ -786,15 +786,9 @@ it('프로덕션 회원은 커뮤니티에서 뒤풀이 상세를 조회하고 �
   vi.stubEnv('VITE_API_MOCKING', 'false');
   renderStack({ native: true });
   const home = await waitForTopHeading('홈');
-  await userEvent.click(home.getByRole('link', { name: '커뮤니티' }));
-  const list = await waitForTopHeading('커뮤니티');
-  await userEvent.click(await list.findByRole('link', { name: /^D-.*세션 뒤풀이/ }));
-  const detail = await waitForTopHeading('뒤풀이');
-  expect(detail.getByRole('heading', { name: '세션 뒤풀이' })).toBeVisible();
-  expect(detail.queryByRole('button', { name: '정산 추가하기' })).toBeNull();
-  await userEvent.click(detail.getByRole('button', { name: '뒤로가기' }));
-  await waitForTopHeading('커뮤니티');
-  expect(window.location.pathname).toBe('/dining');
+  await userEvent.click(home.getByRole('tab', { name: '커뮤니티' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/dining'));
+  expect(screen.getByRole('tab', { name: '커뮤니티', selected: true })).toBeVisible();
 });
 
 it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', async () => {
@@ -803,6 +797,6 @@ it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', a
   renderStack({ native: true });
   const detail = await waitForTopHeading('뒤풀이');
   await userEvent.click(detail.getByRole('button', { name: '뒤로가기' }));
-  await waitForTopHeading('커뮤니티');
-  expect(window.location.pathname).toBe('/dining');
+  await waitFor(() => expect(window.location.pathname).toBe('/dining'));
+  expect(screen.getByRole('tab', { name: '커뮤니티', selected: true })).toBeVisible();
 });

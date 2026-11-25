@@ -68,6 +68,10 @@ export function TabsHeader({ activeTab }: TabsHeaderProps) {
     return null;
   }
 
+  if (activeTab === 'community') {
+    return null;
+  }
+
   const title = TAB_TITLES[activeTab] ?? 'YAPP+';
   return (
     <HStack

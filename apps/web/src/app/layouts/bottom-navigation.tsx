@@ -10,7 +10,6 @@ import {
   IconPersonFill,
   IconStarFill,
 } from '@karrotmarket/react-monochrome-icon';
-import { ActivityLink } from '@/app/navigation/activity-link';
 import { TabLink } from '@/app/navigation/tab-link';
 import type { TabName } from '@/app/navigation/tab';
 import { bottomBar, homeIndicatorArea, item, itemLabel, navigation } from './bottom-navigation.css';
@@ -32,20 +31,20 @@ const destinations = [
     Icon: IconArticleFill,
   },
   {
+    tab: 'community' as const,
+    label: '커뮤니티',
+    Icon: IconStarFill,
+  },
+  {
     tab: 'my' as const,
     label: 'MY',
     Icon: IconPersonFill,
   },
 ];
 
-const COMMUNITY_DESTINATION = {
-  label: '커뮤니티',
-  Icon: IconStarFill,
-};
-
 /** activeTab이 null이면 SEED Tabs context 없이 알림에서 탭으로 복귀하는 링크를 렌더링합니다. */
-export function BottomNavigation({ activeTab }: { activeTab: TabName | 'community' | null }) {
-  const isTabNavigation = activeTab !== null && activeTab !== 'community';
+export function BottomNavigation({ activeTab }: { activeTab: TabName | null }) {
+  const isTabNavigation = activeTab !== null;
   const links = destinations.map(({ tab, label, Icon }) => {
     const content = (
       <>
@@ -80,31 +79,6 @@ export function BottomNavigation({ activeTab }: { activeTab: TabName | 'communit
       </VStack>
     );
   });
-
-  const { label, Icon } = COMMUNITY_DESTINATION;
-  const current = activeTab === 'community';
-  links.splice(
-    links.length - 1,
-    0,
-    <VStack key="community" asChild align="center" justify="center" gap="x1">
-      <ActivityLink
-        activityName="DiningList"
-        activityParams={{}}
-        className={item}
-        aria-current={current ? 'page' : undefined}
-        onClick={(event) => {
-          if (current) {
-            event.preventDefault();
-          }
-        }}
-      >
-        <Icon width={24} height={24} aria-hidden="true" />
-        <Text textStyle="t2Bold" className={itemLabel}>
-          {label}
-        </Text>
-      </ActivityLink>
-    </VStack>,
-  );
 
   return (
     <VStack className={bottomBar}>

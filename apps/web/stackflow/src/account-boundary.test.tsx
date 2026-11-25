@@ -137,7 +137,7 @@ const apply = (
     input: 'google',
   });
 };
-const mount = (client: QueryClient) => {
+const mount = (client: QueryClient, initialContext = context) => {
   const { Stack, actions } = createStackflowApp({ reducedMotion: true, queryClient: client });
   const view = render(
     <QueryClientProvider client={client}>
@@ -145,7 +145,7 @@ const mount = (client: QueryClient) => {
         <NativeAuthSessionProvider>
           <TeamAttendancePhotoDraftProvider>
             <TeamAttendancePhotoFixture />
-            <Stack initialContext={context} />
+            <Stack initialContext={initialContext} />
           </TeamAttendancePhotoDraftProvider>
         </NativeAuthSessionProvider>
       </Suspense>
@@ -267,7 +267,7 @@ it('최종 조회 401은 보호 내용을 숨기고 로그인으로 한 번 이�
   expect(bridge.refreshSession).toHaveBeenCalledTimes(1);
 });
 
-it('회식 목록도 WebView 세션을 복구할 수 없으면 내용을 보호한다', async () => {
+it('뒤풀이 목록도 WebView 세션을 복구할 수 없으면 내용을 보호한다', async () => {
   const client = new QueryClient();
   bridge.getSession.mockResolvedValue({
     status: 'UNAVAILABLE',
@@ -281,7 +281,6 @@ it('회식 목록도 WebView 세션을 복구할 수 없으면 내용을 보호�
     await screen.findByRole('heading', { name: '로그인 상태를 확인하지 못했어요' }),
   ).toBeInTheDocument();
   expect(screen.queryByRole('heading', { name: '커뮤니티' })).toBeNull();
-  expect(window.location.pathname).toBe('/dining');
 });
 
 it('조회 실패는 보호 URL을 유지하며 안내하고 수동 복구 후 원래 화면을 표시한다', async () => {

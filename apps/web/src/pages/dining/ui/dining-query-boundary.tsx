@@ -20,16 +20,16 @@ export function DiningQueryBoundary({
     return <DiningQueryState message="뒤풀이를 찾을 수 없어요." />;
   }
   if (!canQuery) {
-    return <DiningQueryState message="YAPP+ 앱에 로그인한 후 회식을 확인할 수 있어요." />;
+    return <DiningQueryState message="YAPP+ 앱에 로그인한 후 뒤풀이를 확인할 수 있어요." />;
   }
   return (
     <ScreenQueryBoundary
       key={diningId}
       renderFallback={({ resetErrorBoundary }) => (
-        <DiningQueryState message="회식 정보를 불러오지 못했어요." onRetry={resetErrorBoundary} />
+        <DiningQueryState message="뒤풀이 정보를 불러오지 못했어요." onRetry={resetErrorBoundary} />
       )}
     >
-      <Suspense fallback={<DiningQueryState message="회식 정보를 불러오고 있어요." />}>
+      <Suspense fallback={<DiningQueryState message="뒤풀이 정보를 불러오고 있어요." />}>
         {children}
       </Suspense>
     </ScreenQueryBoundary>

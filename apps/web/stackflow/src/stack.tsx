@@ -51,7 +51,6 @@ declare module '@stackflow/config' {
     SignupComplete: EmptyActivityParams;
     SignupUnregistered: EmptyActivityParams;
     DevRoutes: EmptyActivityParams;
-    DiningList: EmptyActivityParams;
     DiningDetail: { diningId: string };
   }
 }
@@ -165,11 +164,6 @@ export const activityComponents = {
       default: DevRoutesActivity,
     })),
   ),
-  DiningList: lazy<EmptyActivityParams>(() =>
-    import('./activities/activities').then(({ DiningListActivity }) => ({
-      default: DiningListActivity,
-    })),
-  ),
   DiningDetail: lazy<{ diningId: string }>(() =>
     import('./activities/activities').then(({ DiningDetailActivity }) => ({
       default: DiningDetailActivity,
@@ -197,6 +191,7 @@ const tabRoutes = [
     }),
   },
   { path: '/my', decode: () => ({ initialTab: 'my' as const }) },
+  { path: '/dining', decode: () => ({ initialTab: 'community' as const }) },
 ];
 
 /** 초기 부모 화면을 한 번에 구성해 가드가 차단한 뒤 추가 진입이 예약되지 않게 합니다. */
@@ -360,12 +355,13 @@ export const stackflowConfig = defineConfig({
     { name: 'SignupComplete', route: '/signup/complete' },
     { name: 'SignupUnregistered', route: '/signup/unregistered' },
     { name: 'DevRoutes', route: '/dev/routes' },
-    { name: 'DiningList', route: '/dining' },
     {
       name: 'DiningDetail',
       route: {
         path: '/dining/:diningId',
-        defaultHistory: initialHistory(() => [{ activityName: 'DiningList', activityParams: {} }]),
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'community' } },
+        ]),
       },
     },
     { name: 'NotFound', route: '*' },
