@@ -699,7 +699,7 @@ export const register1 = <ThrowOnError extends boolean = false>(
 /**
  * 본인 팀의 최신 출석 사진과 제출 정보 조회
  *
- * 해당 세션 기수의 현재 PLAYER이며 제출 당시 팀원 명단에 포함된 사용자만 조회한다. 미선택자도 허용하고 팀 이동 후에도 스냅샷 권한을 유지한다. 팀별 최신 사진 선정 후 권한을 검사하며 REPLACED는 제외한다. PENDING·APPROVED·REJECTED 모두 조회 가능하다. 업로드 URL 예약/S3 PUT만 완료한 미제출은 photo:null. URL은 최대 5분이며 업로드 6개월 또는 객체 삭제 후에는 URL만 null이다. 응답은 Cache-Control: no-store.
+ * 해당 세션 기수의 현재 PLAYER이며 제출 당시 팀원 명단에 포함된 사용자만 조회한다. 미선택자도 허용하고 팀 이동 후에도 스냅샷 권한을 유지한다. 팀별 최신 사진 선정 후 권한을 검사하며 REPLACED는 제외한다. PENDING·APPROVED·REJECTED 모두 조회 가능하다. rejectionReason은 REJECTED의 저장된 사유만 제공하고 나머지 상태와 사유 없는 기존 거절 사진에는 null이다. 업로드 URL 예약/S3 PUT만 완료한 미제출은 photo:null. URL은 최대 5분이며 업로드 6개월 또는 객체 삭제 후에는 URL만 null이다. 응답은 Cache-Control: no-store.
  */
 export const find1 = <ThrowOnError extends boolean = false>(
   options: Options<Find1Data, ThrowOnError>,
@@ -718,6 +718,8 @@ export const find1 = <ThrowOnError extends boolean = false>(
 
 /**
  * 팀 출석 사진 최종 제출
+ *
+ * TEAM 세션 시작 20분 전 정각부터 종료 직전까지 가능하다. 서버는 제출 트랜잭션의 필수 잠금 이후 DB 시각으로 시간창을 다시 검사하며, 종료 정각 이후나 출석 마감 후에는 409 TEAM_PHOTO_UNAVAILABLE이다.
  */
 export const submit = <ThrowOnError extends boolean = false>(
   options: Options<SubmitData, ThrowOnError>,
@@ -740,6 +742,8 @@ export const submit = <ThrowOnError extends boolean = false>(
 
 /**
  * 팀 출석 사진 업로드 URL 발급
+ *
+ * TEAM 세션 시작 20분 전 정각부터 종료 직전까지 가능하다. 출석 마감이나 시간창 밖이면 409 TEAM_PHOTO_UNAVAILABLE이다. URL 발급은 출석 인증이 아니며 최종 제출 때 다시 검사한다.
  */
 export const presign = <ThrowOnError extends boolean = false>(
   options: Options<PresignData, ThrowOnError>,
@@ -1009,7 +1013,7 @@ export const presign1 = <ThrowOnError extends boolean = false>(
 /**
  * 알림 발송 이력 조회
  *
- * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다.
+ * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다. position은 필수 문자열 enum이며 전체 직군은 ALL, 개별 직군은 기존 8개 값을 반환한다.
  */
 export const history_ = <ThrowOnError extends boolean = false>(
   options?: Options<HistoryData, ThrowOnError>,
@@ -1029,7 +1033,7 @@ export const history_ = <ThrowOnError extends boolean = false>(
 /**
  * 알림 즉시·예약 발송 접수
  *
- * Idempotency-Key가 필수다. 발송 기능이 비활성화된 환경에서는 503을 반환한다.
+ * Idempotency-Key가 필수다. 발송 기능이 비활성화된 환경에서는 503을 반환한다. position은 모든 targetRole에서 ALL 또는 개별 직군 8개를 받는 필수 non-null 문자열 enum이다. 숫자 ordinal 및 문자열 외 타입은 허용하지 않는다.
  */
 export const create1 = <ThrowOnError extends boolean = false>(
   options: Options<Create1Data, ThrowOnError>,
@@ -1463,6 +1467,11 @@ export const login = <ThrowOnError extends boolean = false>(
     },
   });
 
+/**
+ * 회원 출결 상태 정정
+ *
+ * 실제 도착·퇴장 시각은 보존하며 명시 조퇴 상태는 운영진이 선택한 감점 구간을 우선한다. 조퇴 보고가 실제 퇴장 전에 제출되었으면 일반 감점을 적용한다. 기존 EARLY_LEAVE는 실제 시간 기반이고, 지각이 함께 있으면 합산한다. 마감된 기록도 정정 후 점수를 다시 계산한다.
+ */
 export const override = <ThrowOnError extends boolean = false>(
   options: Options<OverrideData, ThrowOnError>,
 ): RequestResult<OverrideResponses, OverrideErrors, ThrowOnError> =>
@@ -2106,6 +2115,8 @@ export const list6 = <ThrowOnError extends boolean = false>(
 
 /**
  * 세션 출석 현황 조회
+ *
+ * status는 저장된 운영진 정정 상태를 그대로 반환한다. 명시 조퇴 구간도 EARLY_LEAVE_ONE_HOUR 또는 EARLY_LEAVE_THREE_HOUR로 구분하며 scoreDelta는 마감 전 예상 감점, 마감 후 확정 감점이다.
  */
 export const list7 = <ThrowOnError extends boolean = false>(
   options: Options<List7Data, ThrowOnError>,
