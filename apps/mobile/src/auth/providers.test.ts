@@ -155,7 +155,7 @@ it.each(['서버 실패 후 재시도', '로그아웃 후 재로그인'] as cons
     const authenticateGoogle = vi.fn<NativeAuthRuntime['authenticateGoogle']>().mockResolvedValue({
       data: {
         result: 'SIGNED_IN',
-        user: { id: 7, name: '테스트', phoneNumber: '+821012345678' },
+        user: { id: 7, name: '테스트', phoneNumber: '+821012345678', reviewStatus: 'APPROVED' },
         session: { accessToken: 'access', refreshToken: 'refresh', expiresIn: 3600 },
         registrationToken: null,
         expiresIn: null,

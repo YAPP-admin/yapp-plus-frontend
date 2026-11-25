@@ -77,6 +77,7 @@ export const zRegistrationFieldError = z.object({
 
 export const zErrorResponse = z.object({
   code: z.enum([
+    'ATTENDANCE_DETAIL_NOT_FOUND',
     'INVALID_SETTLEMENT_REQUEST',
     'SETTLEMENT_NOT_FOUND',
     'SETTLEMENT_FORBIDDEN',
@@ -107,6 +108,8 @@ export const zErrorResponse = z.object({
     'ATTENDANCE_UNAVAILABLE',
     'TEAM_ATTENDANCE_PENDING',
     'AUTHENTICATION_FAILED',
+    'MEMBER_APPROVAL_REQUIRED',
+    'MEMBER_APPROVAL_CHECK_UNAVAILABLE',
     'AUTHENTICATION_STATE_INVALID',
     'CURRENT_GENERATION_NOT_FOUND',
     'CURRENT_WEEK_SESSION_CONFLICT',
@@ -114,6 +117,7 @@ export const zErrorResponse = z.object({
     'GENERATION_NOT_FOUND',
     'GENERATION_QUERY_FAILED',
     'INVALID_ATTENDANCE_CODE',
+    'INVALID_ATTENDANCE_DETAIL_CURSOR',
     'INVALID_ATTENDANCE_HISTORY_CURSOR',
     'INVALID_ATTENDANCE_REPORT',
     'INVALID_ATTENDANCE_REQUEST',
@@ -643,6 +647,9 @@ export const zUserResponse = z.object({
     }),
   name: z.string(),
   phoneNumber: z.string(),
+  reviewStatus: z
+    .union([z.literal('PENDING'), z.literal('APPROVED'), z.literal('REJECTED')])
+    .nullable(),
 });
 
 export const zAuthenticationResponse = z.object({
@@ -881,7 +888,17 @@ export const zSettlementPhotoUploadResponse = z.object({
 export const zCreateNotificationRequest = z.object({
   content: z.string(),
   targetRole: z.enum(['ALL_USERS', 'PLAYER', 'OB_AND_PLAYER', 'COMPLETED_MEMBER']),
-  position: z.string(),
+  position: z.enum([
+    'ALL',
+    'PM',
+    'DESIGN',
+    'ANDROID',
+    'IOS',
+    'MOBILE',
+    'WEB',
+    'SERVER',
+    'AI_NATIVE',
+  ]),
   scheduledAt: z.iso.datetime().nullish(),
 });
 
@@ -1323,6 +1340,8 @@ export const zOverrideAttendanceRequest = z.object({
     'LATE_ONE_HOUR',
     'LATE_THREE_HOUR',
     'EARLY_LEAVE',
+    'EARLY_LEAVE_ONE_HOUR',
+    'EARLY_LEAVE_THREE_HOUR',
     'ABSENT',
     'EXCUSED_ABSENCE',
   ]),
@@ -1606,6 +1625,7 @@ export const zUserTeamPhotoDetailResponse = z.object({
     }),
   teamName: z.string(),
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED']),
+  rejectionReason: z.string().nullable(),
   imageUrl: z.string().nullable(),
   imageUrlExpiresAt: z.iso.datetime().nullable(),
   uploadedAt: z.iso.datetime(),
@@ -2218,7 +2238,17 @@ export const zNotificationHistoryItemResponse = z.object({
     }),
   content: z.string(),
   targetRole: z.enum(['ALL_USERS', 'PLAYER', 'OB_AND_PLAYER', 'COMPLETED_MEMBER']),
-  position: z.string(),
+  position: z.enum([
+    'ALL',
+    'PM',
+    'DESIGN',
+    'ANDROID',
+    'IOS',
+    'MOBILE',
+    'WEB',
+    'SERVER',
+    'AI_NATIVE',
+  ]),
   status: z.enum([
     'SCHEDULED',
     'IN_PROGRESS',
@@ -2413,6 +2443,8 @@ export const zAdminSessionResponse = z.object({
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   detailAddress: z.string().nullable(),
+  attendancePhase: z.enum(['OPEN', 'CLOSED']),
+  attendanceClosedAt: z.iso.datetime().nullable(),
 });
 
 export const zSessionListResponse = z.object({
@@ -2514,6 +2546,8 @@ export const zAdminAttendanceRow = z.object({
     'LATE_ONE_HOUR',
     'LATE_THREE_HOUR',
     'EARLY_LEAVE',
+    'EARLY_LEAVE_ONE_HOUR',
+    'EARLY_LEAVE_THREE_HOUR',
     'ABSENT',
     'EXCUSED_ABSENCE',
   ]),
@@ -4495,16 +4529,11 @@ export const zList7Query = z.object({
       error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
     })
     .optional(),
-  size: z
-    .int()
-    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
-    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })
-    .optional()
-    .default(20),
+  size: z.string().optional().default('20'),
 });
 
 /**
- * OK
+ * PLAYER 출석 목록. nextCursor는 추가 페이지가 있을 때 마지막 반환 membershipId이며 마지막 페이지에서는 null이다.
  */
 export const zList7Response = zAdminAttendanceListResponse;
 

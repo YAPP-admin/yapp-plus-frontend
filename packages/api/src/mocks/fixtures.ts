@@ -224,6 +224,8 @@ export const sessions = {
       startTime: '14:00:00',
       endTime: '18:00:00',
       type: 'REGULAR',
+      attendancePhase: 'OPEN',
+      attendanceClosedAt: null,
       attendanceSummary: {
         status: 'STARTED',
         totalCount: 3,
@@ -246,6 +248,8 @@ export const sessions = {
       startTime: '14:00:00',
       endTime: '18:00:00',
       type: 'TEAM',
+      attendancePhase: 'OPEN',
+      attendanceClosedAt: null,
       attendanceSummary: {
         status: 'NOT_STARTED',
         totalCount: 3,

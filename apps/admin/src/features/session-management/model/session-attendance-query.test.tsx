@@ -15,6 +15,7 @@ import {
   attendanceCodeApiQueryOptions,
   memberScoreDetailQueryOptions,
   teamReviewDecisionMutationOptions,
+  toAttendanceOverrideRequest,
   teamReviewsApiQueryOptions,
   useSessionAttendanceQuery,
 } from './session-queries';
@@ -75,6 +76,48 @@ it('생성 SDK 출석 명단을 실제 체크인·조퇴 시각이 포함된 회
     badge: { verified: true, verifiedAt: '2026-10-31T05:05:00Z' },
     score: { source: 'server', delta: -4 },
   });
+});
+
+it.each([
+  ['EARLY_LEAVE_ONE_HOUR', 'withinOneHour'],
+  ['EARLY_LEAVE_THREE_HOUR', 'withinThreeHours'],
+] as const)('새 조퇴 상태 %s를 시간 구간으로 보존한다', async (status, durationBand) => {
+  server.use(
+    http.get(
+      `${apiBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance`,
+      () =>
+        HttpResponse.json({
+          ...attendanceResponse,
+          items: [{ ...attendanceResponse.items[0], status }],
+        }),
+    ),
+  );
+
+  const { result } = renderHook(() => useSessionAttendanceQuery(33, '101'), {
+    wrapper: createWrapper(),
+  });
+
+  await waitFor(() => expect(result.current.members).toHaveLength(1));
+
+  expect(result.current.members[0]?.attendance).toMatchObject({
+    status: 'earlyLeave',
+    durationBand,
+  });
+});
+
+it.each([
+  ['withinOneHour', 'EARLY_LEAVE_ONE_HOUR'],
+  ['withinThreeHours', 'EARLY_LEAVE_THREE_HOUR'],
+] as const)('조퇴 시간 구간 %s를 서버 상태 %s로 전송한다', (durationBand, status) => {
+  expect(
+    toAttendanceOverrideRequest({
+      membershipId: '1001',
+      status: 'earlyLeave',
+      penaltyCategory: 'regular',
+      durationBand,
+      reason: '운영진 판정',
+    }),
+  ).toEqual({ status, reason: '운영진 판정' });
 });
 
 it('생성 SDK 출석 코드와 팀 사진 검수 응답을 화면 모델로 변환한다', async () => {

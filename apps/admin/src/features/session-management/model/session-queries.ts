@@ -189,6 +189,20 @@ function toAttendanceResult(row: AdminAttendanceListResponse['items'][number]) {
         penaltyCategory: 'unknown',
         durationBand: null,
       });
+    case 'EARLY_LEAVE_ONE_HOUR':
+      return attendanceResultSchema.parse({
+        ...common,
+        status: 'earlyLeave',
+        penaltyCategory: 'unknown',
+        durationBand: 'withinOneHour',
+      });
+    case 'EARLY_LEAVE_THREE_HOUR':
+      return attendanceResultSchema.parse({
+        ...common,
+        status: 'earlyLeave',
+        penaltyCategory: 'unknown',
+        durationBand: 'withinThreeHours',
+      });
     case 'ABSENT':
       return attendanceResultSchema.parse({
         ...common,
@@ -243,13 +257,13 @@ function toMemberViewModel(
 
 export const sessionAttendanceQueryOptions = (generationId: number, sessionId: string) => {
   const path = { generationId, sessionId: Number(sessionId) };
-  const generated = list7InfiniteOptions({ path, query: { size: 50 } });
+  const generated = list7InfiniteOptions({ path, query: { size: '50' } });
   return {
     ...generated,
     // 생성 타입에는 skipToken도 포함되지만 Suspense는 함수 queryFn만 허용합니다.
     queryFn: typeof generated.queryFn === 'function' ? generated.queryFn : undefined,
     retry: false,
-    initialPageParam: { path, query: { size: 50 } },
+    initialPageParam: { path, query: { size: '50' } },
     getNextPageParam: (lastPage: AdminAttendanceListResponse) => lastPage.nextCursor ?? undefined,
   };
 };
@@ -269,7 +283,10 @@ export function toAttendanceOverrideRequest(input: AttendanceEditInput): Overrid
       status = input.durationBand === 'withinThreeHours' ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
       break;
     case 'earlyLeave':
-      status = 'EARLY_LEAVE';
+      status =
+        input.durationBand === 'withinThreeHours'
+          ? 'EARLY_LEAVE_THREE_HOUR'
+          : 'EARLY_LEAVE_ONE_HOUR';
       break;
     case 'absent':
       status = 'ABSENT';

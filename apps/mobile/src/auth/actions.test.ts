@@ -25,7 +25,12 @@ vi.mock('./storage', () => ({ authStorage: storage }));
 
 const signedInResponse = (version: number): AuthenticationResponse => ({
   result: 'SIGNED_IN',
-  user: { id: 7, name: '  테스트 사용자  ', phoneNumber: '+821012345678' },
+  user: {
+    id: 7,
+    name: '  테스트 사용자  ',
+    phoneNumber: '+821012345678',
+    reviewStatus: 'APPROVED',
+  },
   session: {
     accessToken: `access-${version}`,
     refreshToken: `refresh-${version}`,

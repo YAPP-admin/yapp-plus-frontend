@@ -422,6 +422,7 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
   const f = options?.faker ?? faker;
   return {
     code: f.helpers.arrayElement([
+      'ATTENDANCE_DETAIL_NOT_FOUND',
       'INVALID_SETTLEMENT_REQUEST',
       'SETTLEMENT_NOT_FOUND',
       'SETTLEMENT_FORBIDDEN',
@@ -452,6 +453,8 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'ATTENDANCE_UNAVAILABLE',
       'TEAM_ATTENDANCE_PENDING',
       'AUTHENTICATION_FAILED',
+      'MEMBER_APPROVAL_REQUIRED',
+      'MEMBER_APPROVAL_CHECK_UNAVAILABLE',
       'AUTHENTICATION_STATE_INVALID',
       'CURRENT_GENERATION_NOT_FOUND',
       'CURRENT_WEEK_SESSION_CONFLICT',
@@ -459,6 +462,7 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'GENERATION_NOT_FOUND',
       'GENERATION_QUERY_FAILED',
       'INVALID_ATTENDANCE_CODE',
+      'INVALID_ATTENDANCE_DETAIL_CURSOR',
       'INVALID_ATTENDANCE_HISTORY_CURSOR',
       'INVALID_ATTENDANCE_REPORT',
       'INVALID_ATTENDANCE_REQUEST',
@@ -885,6 +889,7 @@ export const fakeUserResponse = (options?: Options): UserResponse => {
     id: f.number.int(),
     name: f.string.sample(),
     phoneNumber: f.phone.number(),
+    reviewStatus: f.helpers.arrayElement(['PENDING', 'APPROVED', 'REJECTED', null]) as any,
   };
 };
 
@@ -1134,7 +1139,17 @@ export const fakeCreateNotificationRequest = (options?: Options): CreateNotifica
       'OB_AND_PLAYER',
       'COMPLETED_MEMBER',
     ]),
-    position: f.string.sample(),
+    position: f.helpers.arrayElement([
+      'ALL',
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'MOBILE',
+      'WEB',
+      'SERVER',
+      'AI_NATIVE',
+    ]),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { scheduledAt: f.datatype.boolean() ? f.date.recent().toISOString() : null }),
@@ -1569,6 +1584,8 @@ export const fakeOverrideAttendanceRequest = (options?: Options): OverrideAttend
       'LATE_ONE_HOUR',
       'LATE_THREE_HOUR',
       'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
       'ABSENT',
       'EXCUSED_ABSENCE',
     ]),
@@ -1772,6 +1789,7 @@ export const fakeUserTeamPhotoDetailResponse = (options?: Options): UserTeamPhot
     teamId: f.number.int(),
     teamName: f.string.sample(),
     status: f.helpers.arrayElement(['PENDING', 'APPROVED', 'REJECTED']),
+    rejectionReason: f.datatype.boolean() ? f.string.sample() : null,
     imageUrl: f.datatype.boolean() ? f.image.url() : null,
     imageUrlExpiresAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
     uploadedAt: f.date.recent().toISOString(),
@@ -2254,7 +2272,17 @@ export const fakeNotificationHistoryItemResponse = (
       'OB_AND_PLAYER',
       'COMPLETED_MEMBER',
     ]),
-    position: f.string.sample(),
+    position: f.helpers.arrayElement([
+      'ALL',
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'MOBILE',
+      'WEB',
+      'SERVER',
+      'AI_NATIVE',
+    ]),
     status: f.helpers.arrayElement([
       'SCHEDULED',
       'IN_PROGRESS',
@@ -2403,6 +2431,8 @@ export const fakeAdminSessionResponse = (options?: Options): AdminSessionRespons
     latitude: f.datatype.boolean() ? f.number.float() : null,
     longitude: f.datatype.boolean() ? f.number.float() : null,
     detailAddress: f.datatype.boolean() ? f.string.sample() : null,
+    attendancePhase: f.helpers.arrayElement(['OPEN', 'CLOSED']),
+    attendanceClosedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -2475,6 +2505,8 @@ export const fakeAdminAttendanceRow = (options?: Options): AdminAttendanceRow =>
       'LATE_ONE_HOUR',
       'LATE_THREE_HOUR',
       'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
       'ABSENT',
       'EXCUSED_ABSENCE',
     ]),
@@ -2832,6 +2864,9 @@ export const fakeRemoveResponse400 = (options?: Options): RemoveErrors[400] =>
 export const fakeRemoveResponse401 = (options?: Options): RemoveErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeRemoveResponse403 = (options?: Options): RemoveErrors[403] =>
+  fakeErrorResponse(options);
+
 export const fakeRemoveResponse503 = (options?: Options): RemoveErrors[503] =>
   fakeErrorResponse(options);
 
@@ -2839,6 +2874,9 @@ export const fakeRegisterResponse400 = (options?: Options): RegisterErrors[400] 
   fakeErrorResponse(options);
 
 export const fakeRegisterResponse401 = (options?: Options): RegisterErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRegisterResponse403 = (options?: Options): RegisterErrors[403] =>
   fakeErrorResponse(options);
 
 export const fakeRegisterResponse409 = (options?: Options): RegisterErrors[409] =>
@@ -2853,7 +2891,13 @@ export const fakeAcknowledgeResponse400 = (options?: Options): AcknowledgeErrors
 export const fakeAcknowledgeResponse401 = (options?: Options): AcknowledgeErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeAcknowledgeResponse403 = (options?: Options): AcknowledgeErrors[403] =>
+  fakeErrorResponse(options);
+
 export const fakeAcknowledgeResponse404 = (options?: Options): AcknowledgeErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeAcknowledgeResponse503 = (options?: Options): AcknowledgeErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeDetailResponse200 = (options?: Options): DetailResponses[200] =>
@@ -2926,6 +2970,9 @@ export const fakeRespondResponse400 = (options?: Options): RespondErrors[400] =>
   fakeErrorResponse(options);
 
 export const fakeRespondResponse401 = (options?: Options): RespondErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRespondResponse403 = (options?: Options): RespondErrors[403] =>
   fakeErrorResponse(options);
 
 export const fakeRespondResponse404 = (options?: Options): RespondErrors[404] =>
@@ -3163,6 +3210,9 @@ export const fakeAuthenticateKakaoResponse400 = (options?: Options): Authenticat
 export const fakeAuthenticateKakaoResponse401 = (options?: Options): AuthenticateKakaoErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeAuthenticateKakaoResponse503 = (options?: Options): AuthenticateKakaoErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeAuthenticateGoogleResponse200 = (
   options?: Options,
 ): AuthenticateGoogleResponses[200] => fakeAuthenticationResponse(options);
@@ -3174,6 +3224,10 @@ export const fakeAuthenticateGoogleResponse400 = (
 export const fakeAuthenticateGoogleResponse401 = (
   options?: Options,
 ): AuthenticateGoogleErrors[401] => fakeErrorResponse(options);
+
+export const fakeAuthenticateGoogleResponse503 = (
+  options?: Options,
+): AuthenticateGoogleErrors[503] => fakeErrorResponse(options);
 
 export const fakeReceiveResponse200 = (): ReceiveResponses[200] => undefined;
 
@@ -3220,10 +3274,16 @@ export const fakeVerifyResponse400 = (options?: Options): VerifyErrors[400] =>
 export const fakeVerifyResponse401 = (options?: Options): VerifyErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeVerifyResponse403 = (options?: Options): VerifyErrors[403] =>
+  fakeErrorResponse(options);
+
 export const fakeVerifyResponse404 = (options?: Options): VerifyErrors[404] =>
   fakeErrorResponse(options);
 
 export const fakeVerifyResponse409 = (options?: Options): VerifyErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeVerifyResponse503 = (options?: Options): VerifyErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeSubmit1Response200 = (options?: Options): Submit1Responses[200] =>
@@ -3242,6 +3302,9 @@ export const fakeSubmit1Response404 = (options?: Options): Submit1Errors[404] =>
   fakeErrorResponse(options);
 
 export const fakeSubmit1Response409 = (options?: Options): Submit1Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeSubmit1Response503 = (options?: Options): Submit1Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeListResponse200 = (options?: Options): ListResponses[200] =>
@@ -3447,6 +3510,9 @@ export const fakeDecideResponse404 = (options?: Options): DecideErrors[404] =>
 export const fakeDecideResponse409 = (options?: Options): DecideErrors[409] =>
   fakeErrorResponse(options);
 
+export const fakeDecideResponse503 = (options?: Options): DecideErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeCloseResponse200 = (): CloseResponses[200] => undefined;
 
 export const fakeCloseResponse401 = (options?: Options): CloseErrors[401] =>
@@ -3613,12 +3679,18 @@ export const fakeOverrideResponse401 = (options?: Options): OverrideErrors[401] 
 export const fakeOverrideResponse404 = (options?: Options): OverrideErrors[404] =>
   fakeErrorResponse(options);
 
+export const fakeOverrideResponse503 = (options?: Options): OverrideErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeBadgeResponse200 = (): BadgeResponses[200] => undefined;
 
 export const fakeBadgeResponse401 = (options?: Options): BadgeErrors[401] =>
   fakeErrorResponse(options);
 
 export const fakeBadgeResponse404 = (options?: Options): BadgeErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeBadgeResponse503 = (options?: Options): BadgeErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeDelete2Response400 = (options?: Options): Delete2Errors[400] =>
@@ -3682,6 +3754,9 @@ export const fakeFind4Response400 = (options?: Options): Find4Errors[400] =>
   fakeErrorResponse(options);
 
 export const fakeFind4Response401 = (options?: Options): Find4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeFind4Response403 = (options?: Options): Find4Errors[403] =>
   fakeErrorResponse(options);
 
 export const fakeFind4Response503 = (options?: Options): Find4Errors[503] =>
@@ -3761,6 +3836,10 @@ export const fakeCompleteKakaoAuthorizationResponse401 = (
   options?: Options,
 ): CompleteKakaoAuthorizationErrors[401] => fakeErrorResponse(options);
 
+export const fakeCompleteKakaoAuthorizationResponse503 = (
+  options?: Options,
+): CompleteKakaoAuthorizationErrors[503] => fakeErrorResponse(options);
+
 export const fakeStartKakaoAuthorizationResponse400 = (
   options?: Options,
 ): StartKakaoAuthorizationErrors[400] => fakeErrorResponse(options);
@@ -3776,6 +3855,10 @@ export const fakeCompleteGoogleAuthorizationResponse400 = (
 export const fakeCompleteGoogleAuthorizationResponse401 = (
   options?: Options,
 ): CompleteGoogleAuthorizationErrors[401] => fakeErrorResponse(options);
+
+export const fakeCompleteGoogleAuthorizationResponse503 = (
+  options?: Options,
+): CompleteGoogleAuthorizationErrors[503] => fakeErrorResponse(options);
 
 export const fakeStartGoogleAuthorizationResponse400 = (
   options?: Options,
@@ -3815,6 +3898,9 @@ export const fakeMineResponse409 = (options?: Options): MineErrors[409] =>
 export const fakeMineResponse500 = (options?: Options): MineErrors[500] =>
   fakeErrorResponse(options);
 
+export const fakeMineResponse503 = (options?: Options): MineErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeFind8Response200 = (options?: Options): Find8Responses[200] =>
   fakeAttendanceHistoryResponse(options);
 
@@ -3824,7 +3910,13 @@ export const fakeFind8Response400 = (options?: Options): Find8Errors[400] =>
 export const fakeFind8Response401 = (options?: Options): Find8Errors[401] =>
   fakeErrorResponse(options);
 
+export const fakeFind8Response403 = (options?: Options): Find8Errors[403] =>
+  fakeErrorResponse(options);
+
 export const fakeFind8Response409 = (options?: Options): Find8Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeFind8Response503 = (options?: Options): Find8Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeList4Response200 = (options?: Options): List4Responses[200] =>
@@ -3834,6 +3926,9 @@ export const fakeList4Response400 = (options?: Options): List4Errors[400] =>
   fakeErrorResponse(options);
 
 export const fakeList4Response401 = (options?: Options): List4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList4Response403 = (options?: Options): List4Errors[403] =>
   fakeErrorResponse(options);
 
 export const fakeList4Response404 = (options?: Options): List4Errors[404] =>
@@ -3849,6 +3944,9 @@ export const fakeDetail4Response400 = (options?: Options): Detail4Errors[400] =>
   fakeErrorResponse(options);
 
 export const fakeDetail4Response401 = (options?: Options): Detail4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail4Response403 = (options?: Options): Detail4Errors[403] =>
   fakeErrorResponse(options);
 
 export const fakeDetail4Response404 = (options?: Options): Detail4Errors[404] =>
@@ -4044,10 +4142,16 @@ export const fakeList6Response503 = (options?: Options): List6Errors[503] =>
 export const fakeList7Response200 = (options?: Options): List7Responses[200] =>
   fakeAdminAttendanceListResponse(options);
 
+export const fakeList7Response400 = (options?: Options): List7Errors[400] =>
+  fakeErrorResponse(options);
+
 export const fakeList7Response401 = (options?: Options): List7Errors[401] =>
   fakeErrorResponse(options);
 
 export const fakeList7Response404 = (options?: Options): List7Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList7Response503 = (options?: Options): List7Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeList8Response200 = (options?: Options): List8Responses[200] =>
