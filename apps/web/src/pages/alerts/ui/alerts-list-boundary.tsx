@@ -1,5 +1,5 @@
 import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
-import { ResultSection } from '@yapp-plus/ui';
+import { ErrorState } from '@/shared/ui/error-state';
 import type { ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 
@@ -14,11 +14,11 @@ export function AlertsListBoundary({ children }: { children: ReactNode }) {
 
 function AlertsListError({ resetErrorBoundary }: FallbackProps) {
   return (
-    <ResultSection
-      role="alert"
-      size="medium"
+    <ErrorState
+      variant="page"
       title="알림을 불러오지 못했어요"
-      primaryActionProps={{ children: '다시 시도', onClick: resetErrorBoundary }}
+      titleAs="h2"
+      onRetry={resetErrorBoundary}
     />
   );
 }

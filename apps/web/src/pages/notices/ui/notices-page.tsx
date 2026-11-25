@@ -4,6 +4,7 @@ import { staticContentEnabled } from '@/features/static-content';
 
 /** 공지 목록의 인증·조회·탭 상태를 렌더링하는 페이지 UI다. */
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useSuspenseInfiniteQuery } from '@tanstack/react-query';
 import { ActionButton } from '@yapp-plus/ui';
 import { HStack, ProgressCircle, Skeleton, VStack } from '@seed-design/react';
@@ -64,6 +65,7 @@ function NoticeList({ category, onCategoryChange }: Required<NoticesPageProps>) 
     memberNoticeListInfiniteQueryOptions(category, apiOptions),
   );
   useRefetchOnScreenReturn(notices);
+  useThrowQueryError(notices);
   const items = notices.data.pages.flatMap((page) => page.items);
   const isEmpty = items.length === 0 && !notices.hasNextPage;
   const loadMoreRef = useLoadMoreObserver(
@@ -72,11 +74,7 @@ function NoticeList({ category, onCategoryChange }: Required<NoticesPageProps>) 
       void notices.fetchNextPage({ cancelRefetch: false });
     },
   );
-  const retry = () => {
-    void (notices.isFetchNextPageError
-      ? notices.fetchNextPage({ cancelRefetch: false })
-      : notices.refetch({ cancelRefetch: false }));
-  };
+  const retryLoadMore = () => void notices.fetchNextPage({ cancelRefetch: false });
 
   return (
     <NoticeTabs selected={category} onSelect={onCategoryChange}>
@@ -98,14 +96,14 @@ function NoticeList({ category, onCategoryChange }: Required<NoticesPageProps>) 
           ))}
         </ul>
       )}
-      {notices.isError && (
+      {notices.isFetchNextPageError && (
         <div role="alert">
-          <p>공지사항을 새로 불러오지 못했어요. 이전 내용을 표시하고 있어요.</p>
+          <p>다음 공지사항을 불러오지 못했어요.</p>
           <ActionButton
             variant="neutralWeak"
             size="medium"
-            disabled={notices.isFetching}
-            onClick={retry}
+            disabled={notices.isFetchingNextPage}
+            onClick={retryLoadMore}
           >
             다시 시도
           </ActionButton>

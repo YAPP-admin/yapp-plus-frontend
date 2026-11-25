@@ -99,6 +99,7 @@ function AttendanceContent() {
   const options = historyQueryOptions(apiOptions);
   const history = useSuspenseInfiniteQuery(options);
   useRefetchOnScreenReturn(history);
+  useThrowQueryError(history);
   const currentRecords = history.data.pages.flatMap((page) => page.items);
   const sessionSummary = history.data.pages.at(-1)?.summary;
   const isNone = currentRecords.length === 0 && !history.hasNextPage;
@@ -108,11 +109,7 @@ function AttendanceContent() {
       void history.fetchNextPage({ cancelRefetch: false });
     },
   );
-  const retry = () => {
-    void (history.isFetchNextPageError
-      ? history.fetchNextPage({ cancelRefetch: false })
-      : history.refetch({ cancelRefetch: false }));
-  };
+  const retryLoadMore = () => void history.fetchNextPage({ cancelRefetch: false });
 
   return (
     <>
@@ -165,14 +162,14 @@ function AttendanceContent() {
             ))}
           </div>
         )}
-        {history.isError && (
+        {history.isFetchNextPageError && (
           <VStack gap="x2" role="alert">
-            <p>출석 내역을 새로 불러오지 못했어요. 이전 내용을 표시하고 있어요.</p>
+            <p>다음 출석 내역을 불러오지 못했어요.</p>
             <ActionButton
               size="small"
               variant="neutralWeak"
-              disabled={history.isFetching}
-              onClick={retry}
+              disabled={history.isFetchingNextPage}
+              onClick={retryLoadMore}
             >
               다시 시도
             </ActionButton>
