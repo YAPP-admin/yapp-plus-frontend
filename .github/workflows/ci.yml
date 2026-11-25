@@ -60,6 +60,9 @@ jobs:
       - name: Build
         env:
           TURBO_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VITE_JUSO_SEARCH_KEY: ${{ secrets.VITE_JUSO_SEARCH_KEY }}
+          VITE_JUSO_COORD_KEY: ${{ secrets.VITE_JUSO_COORD_KEY }}
+          VITE_KAKAO_MAP_JS_KEY: ${{ secrets.VITE_KAKAO_MAP_JS_KEY }}
         run: node --run build
 
       # 공용 의존성 변경도 빠짐없이 확인하도록 Doctor를 매번 실행합니다.
