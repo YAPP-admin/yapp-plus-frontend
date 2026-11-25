@@ -7,6 +7,7 @@ import { http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { ScreenActiveContext } from '@/shared/lib/screen-activity';
+import { alertsInfiniteQueryOptions } from '../model/alerts-query';
 import { AlertsPage } from './alerts-page';
 
 vi.mock('@/app/navigation/activity-link', () => ({
@@ -58,7 +59,7 @@ afterEach(() => {
 
 function renderPage() {
   const client = createAppQueryClient();
-  return render(
+  const view = render(
     <QueryClientProvider client={client}>
       <NativeAuthSessionProvider>
         <ScreenActiveContext value>
@@ -67,6 +68,7 @@ function renderPage() {
       </NativeAuthSessionProvider>
     </QueryClientProvider>,
   );
+  return { client, ...view };
 }
 
 it('일반 알림을 표시하고 POST 알림만 공지 상세 링크로 연결한다', async () => {
@@ -108,6 +110,95 @@ it('초기 조회 오류를 재시도로 복구한다', async () => {
   server.use(http.get(url, () => HttpResponse.json({ items: [], nextCursor: null })));
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(await screen.findByText('아직 알림이 없어요')).toBeVisible();
+});
+
+it('재조회 실패는 기존 알림을 공통 오류 UI로 교체한다', async () => {
+  const { client } = renderPage();
+  await screen.findByText('내일 오후 2시, 정기 세션이 열려요.');
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  server.use(
+    http.get(`${apiBaseUrl}/api/users/me/notifications`, () =>
+      HttpResponse.json({ code: 'FAILED' }, { status: 503 }),
+    ),
+  );
+
+  await act(async () => {
+    await client.invalidateQueries({ queryKey: alertsInfiniteQueryOptions().queryKey });
+  });
+
+  expect(await screen.findByRole('heading', { name: '알림을 불러오지 못했어요' })).toBeVisible();
+  expect(screen.queryByText('내일 오후 2시, 정기 세션이 열려요.')).not.toBeInTheDocument();
+});
+
+it('다음 페이지 일반 오류는 기존 알림을 유지하고 수동 재시도로만 복구한다', async () => {
+  const user = userEvent.setup();
+  let fail = true;
+  let calls = 0;
+  server.use(
+    http.get(`${apiBaseUrl}/api/users/me/notifications`, ({ request }) => {
+      calls += 1;
+      if (!new URL(request.url).searchParams.has('cursor')) {
+        return HttpResponse.json({
+          items: [
+            {
+              id: 1,
+              content: '첫 알림',
+              sentDate: '2026-11-07',
+              type: 'GENERAL',
+              postId: null,
+              sessionId: null,
+              reminderKind: null,
+              navigationTarget: null,
+              settlementId: null,
+              afterpartyId: null,
+              title: null,
+              settlementKind: null,
+            },
+          ],
+          nextCursor: 'next',
+        });
+      }
+      if (fail) {
+        return HttpResponse.error();
+      }
+      return HttpResponse.json({
+        items: [
+          {
+            id: 2,
+            content: '다음 알림',
+            sentDate: '2026-11-06',
+            type: 'GENERAL',
+            postId: null,
+            sessionId: null,
+            reminderKind: null,
+            navigationTarget: null,
+            settlementId: null,
+            afterpartyId: null,
+            title: null,
+            settlementKind: null,
+          },
+        ],
+        nextCursor: null,
+      });
+    }),
+  );
+  renderPage();
+  expect(await screen.findByText('첫 알림')).toBeVisible();
+
+  act(() => {
+    observer.trigger?.();
+    observer.trigger?.();
+  });
+  expect(await screen.findByRole('alert')).toHaveTextContent('다음 알림을 불러오지 못했어요');
+  expect(screen.getByText('첫 알림')).toBeVisible();
+  expect(calls).toBe(2);
+  act(() => observer.trigger?.());
+  expect(calls).toBe(2);
+
+  fail = false;
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(await screen.findByText('다음 알림')).toBeVisible();
+  expect(calls).toBe(3);
 });
 
 it('로그인하지 않은 브라우저에서는 목록을 조회하지 않는다', async () => {

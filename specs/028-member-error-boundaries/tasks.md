@@ -60,16 +60,16 @@
 - [x] T031 [US1] `apps/web/src/pages/home/ui/attendance-report-sheet.tsx`·`home-demo-sheets.tsx`와 `model/code-attendance.ts`·`attendance-report.ts`에서 셸/Mutation 소유 수명과 조회 fallback을 분리한다.
 - [x] T032 [US1] `apps/web/stackflow/src/activities/activities.tsx`의 팀원 조회와 `apps/web/src/pages/settings/model/notification-settings.ts`·`ui/notification-setting.tsx`를 공통 정책에 연결한다.
 - [x] T033 [US1] `apps/web/src/pages/home/ui/attendance-code.test.tsx`·`attendance-report-sheet.test.tsx` 및 팀 사진·설정 인접 테스트에 입력 초기화·셸 유지·제출 완료 보존·미지원 예외를 추가한다.
-- [ ] T034 [US1] `specs/028-member-error-boundaries/validation.md`에 입력 흐름·설정 4-C 검증·diff·리뷰를 기록한다.
+- [x] T034 [US1] `specs/028-member-error-boundaries/validation.md`에 입력 흐름·설정 4-C 검증·diff·리뷰를 기록한다.
 
 완료 기준: 오류와 이전 콘텐츠가 같은 영역에 공존하지 않는다. 일반 재조회 중 정상 콘텐츠 유지와 실패 후 교체를 구분한다.
 
 ## 5단계 — US3 무한 목록 적용
 
-- [ ] T035 [US3] `apps/web/src/pages/notices/ui/notices-page.test.tsx`·`alerts/ui/alerts-page.test.tsx`·`attendance/ui/attendance-page.test.tsx`에 첫 조회/재조회/다음 페이지 오류·중복 방지·조건 변경 회귀를 추가한다.
-- [ ] T036 [US3] `apps/web/src/pages/notices/ui/notices-page.tsx`·`pages/alerts/ui/alerts-page.tsx`·`pages/attendance/ui/attendance-page.tsx`에서 일반 추가 오류만 목록을 유지하고 나머지는 Local로 전달한다. 분류 컨트롤·reset key·observer를 연결한다.
-- [ ] T037 [US3] `apps/web/stackflow/src/account-boundary.test.tsx`에 다음 페이지 인증 오류의 로그인 이동을 대표 흐름 하나로 검증한다.
-- [ ] T038 [US3] `specs/028-member-error-boundaries/validation.md`에 5단계 check/build·목록 화면·diff·리뷰를 기록한다.
+- [x] T035 [US3] `apps/web/src/pages/notices/ui/notices-page.test.tsx`·`alerts/ui/alerts-page.test.tsx`·`attendance/ui/attendance-page.test.tsx`에 첫 조회/재조회/다음 페이지 오류·중복 방지·조건 변경 회귀를 추가한다.
+- [x] T036 [US3] `apps/web/src/pages/notices/ui/notices-page.tsx`·`pages/alerts/ui/alerts-page.tsx`·`pages/attendance/ui/attendance-page.tsx`에서 일반 추가 오류만 목록을 유지하고 나머지는 Local로 전달한다. 분류 컨트롤·reset key·observer를 연결한다.
+- [x] T037 [US3] `apps/web/stackflow/src/account-boundary.test.tsx`에 다음 페이지 인증 오류의 로그인 이동을 대표 흐름 하나로 검증한다.
+- [x] T038 [US3] `specs/028-member-error-boundaries/validation.md`에 5단계 check/build·목록 화면·diff·리뷰를 기록한다.
 
 완료 기준: 추가 페이지 실패 뒤 기존 항목이 남고 재시도 성공 뒤 중복이 없으며 인증 실패는 예외 없이 상위로 전달된다.
 
