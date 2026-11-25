@@ -9,6 +9,8 @@ type Props = {
   type: 'date' | 'time';
   label: string;
   value: string;
+  displayValue?: string;
+  labelClassName?: string;
   disabled: boolean;
   error?: string;
   onChange: (value: string) => void;
@@ -30,6 +32,8 @@ export function SessionScheduleField({
   type,
   label,
   value,
+  displayValue = value,
+  labelClassName,
   disabled,
   error,
   onChange,
@@ -37,11 +41,11 @@ export function SessionScheduleField({
 }: Props) {
   return (
     <FieldButton.Root values={value ? [value] : []} disabled={disabled} invalid={Boolean(error)}>
-      <FieldButton.Label>{label}</FieldButton.Label>
+      <FieldButton.Label className={labelClassName}>{label}</FieldButton.Label>
       <FieldButton.Control>
         <FieldButton.Button
           type="button"
-          aria-label={`${label}, ${value || '선택'}`}
+          aria-label={`${label}, ${displayValue || '선택'}`}
           aria-haspopup="dialog"
           onClick={() => {
             overlay.open(({ unmount }) => (
@@ -57,7 +61,7 @@ export function SessionScheduleField({
           onBlur={onBlur}
         />
         {value ? (
-          <FieldButton.Value>{value}</FieldButton.Value>
+          <FieldButton.Value>{displayValue}</FieldButton.Value>
         ) : (
           <FieldButton.Placeholder>선택해 주세요</FieldButton.Placeholder>
         )}

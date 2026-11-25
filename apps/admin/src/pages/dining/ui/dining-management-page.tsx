@@ -1,6 +1,9 @@
+import { Plus } from 'lucide-react';
 import { useState } from 'react';
-import { Badge } from '@yapp-plus/ui';
+import { Link } from '@tanstack/react-router';
+import { ActionButton, Badge } from '@yapp-plus/ui';
 import {
+  createButton,
   description,
   eyebrow,
   emptyState,
@@ -166,6 +169,12 @@ export function DiningManagementPage() {
           <h1 className={title}>뒤풀이 관리</h1>
           <p className={description}>뒤풀이 참여 여부 조사를 만들고 응답 현황을 확인해요.</p>
         </div>
+        <ActionButton asChild variant="brandSolid" className={createButton}>
+          <Link to="/dining/new">
+            <Plus size={16} aria-hidden="true" />
+            뒤풀이 만들기
+          </Link>
+        </ActionButton>
       </header>
 
       <nav className={filterGroup} aria-label="뒤풀이 상태 필터">
