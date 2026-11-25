@@ -77,6 +77,7 @@ if (firstAdminMember === undefined) {
 
 export const adminMemberDetail = {
   ...firstAdminMember,
+  generationId: 33,
   phoneNumber: '010-1234-5678',
   revision: 1,
   changes: [

@@ -108,7 +108,7 @@ export function createApiMockHandlers(
       },
     ),
     http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members/:memberId`, () =>
-      response(fixtures.adminMemberDetail, schemas.zDetailResponse, 200),
+      response(fixtures.adminMemberDetail, schemas.zDetail1Response, 200),
     ),
     http.put(`${normalizedBaseUrl}/api/admin/generations/:generationId/members/:memberId`, () =>
       response(fixtures.adminMemberDetail, schemas.zCorrectResponse, 200),
@@ -178,42 +178,35 @@ export function createApiMockHandlers(
         reject: fakerResponse(generatedFaker.fakeRejectResponse200, schemas.zRejectResponse),
         approve: fakerResponse(generatedFaker.fakeApproveResponse200, schemas.zApproveResponse),
         findAll: fakerResponse(generatedFaker.fakeFindAllResponse200, schemas.zFindAllResponse),
-        create1: fakerResponse(
-          generatedFaker.fakeCreate1Response201,
-          schemas.zCreate1Response,
+        create2: fakerResponse(
+          generatedFaker.fakeCreate2Response201,
+          schemas.zCreate2Response,
           201,
         ),
         find2: fixedResponse(
           empty ? fixtures.emptySessions : fixtures.sessions,
           schemas.zSessionListResponse,
         ),
-        create2: fakerResponse(
-          generatedFaker.fakeCreate2Response201,
-          schemas.zCreate2Response,
-          201,
-        ),
-        get: fakerResponse(generatedFaker.fakeGetResponse200, schemas.zGetResponse),
-        start: fakerResponse(generatedFaker.fakeStartResponse200, schemas.zStartResponse),
-        reissue: fakerResponse(generatedFaker.fakeReissueResponse200, schemas.zReissueResponse),
-        list: fakerResponse(generatedFaker.fakeListResponse200, schemas.zListResponse),
         create3: fakerResponse(
           generatedFaker.fakeCreate3Response201,
           schemas.zCreate3Response,
           201,
         ),
-        presign1: fakerResponse(generatedFaker.fakePresign1Response200, schemas.zPresign1Response),
-        login: fixedResponse(fixtures.staffLogin, schemas.zStaffLoginResponse),
-        detail: fakerResponse(
-          (fakerOptions) => ({
-            ...generatedFaker.fakeDetailResponse200(fakerOptions),
-            // 생성 Faker는 이 필드의 int32 범위 없이 정수를 만들므로 대표 점수를 사용합니다.
-            attendanceScore: 0,
-          }),
-          schemas.zDetailResponse,
+        get: fakerResponse(generatedFaker.fakeGetResponse200, schemas.zGetResponse),
+        start: fakerResponse(generatedFaker.fakeStartResponse200, schemas.zStartResponse),
+        reissue: fakerResponse(generatedFaker.fakeReissueResponse200, schemas.zReissueResponse),
+        list1: fakerResponse(generatedFaker.fakeList1Response200, schemas.zList1Response),
+        create4: fakerResponse(
+          generatedFaker.fakeCreate4Response201,
+          schemas.zCreate4Response,
+          201,
         ),
-        detail1: fixedResponse(fixtures.adminPostDetails[101], schemas.zDetail1Response),
-        update1: () => new HttpResponse(null, { status: 204 }),
-        update2: fakerResponse(generatedFaker.fakeUpdate2Response200, schemas.zUpdate2Response),
+        presign2: fakerResponse(generatedFaker.fakePresign2Response200, schemas.zPresign2Response),
+        login: fixedResponse(fixtures.staffLogin, schemas.zStaffLoginResponse),
+        detail1: fixedResponse(fixtures.adminMemberDetail, schemas.zDetail1Response),
+        detail2: fixedResponse(fixtures.adminPostDetails[101], schemas.zDetail2Response),
+        update2: () => new HttpResponse(null, { status: 204 }),
+        update3: fakerResponse(generatedFaker.fakeUpdate3Response200, schemas.zUpdate3Response),
         find6: fixedResponse(
           empty ? fixtures.emptyWeek : fixtures.currentWeek,
           schemas.zFind6Response,
@@ -231,15 +224,15 @@ export function createApiMockHandlers(
           generatedFaker.fakeFindCandidatesResponse200,
           schemas.zFindCandidatesResponse,
         ),
-        list2: fixedResponse(fixtures.adminGenerations, schemas.zAdminGenerationListResponse),
+        list5: fixedResponse(fixtures.adminGenerations, schemas.zAdminGenerationListResponse),
         candidates: fakerResponse(
           generatedFaker.fakeCandidatesResponse200,
           schemas.zCandidatesResponse,
         ),
-        list4: fakerResponse(generatedFaker.fakeList4Response200, schemas.zList4Response),
-        recipients: fixedResponse(
+        list7: fakerResponse(generatedFaker.fakeList7Response200, schemas.zList7Response),
+        recipients1: fixedResponse(
           empty ? fixtures.emptyRecipients : fixtures.postRecipients,
-          schemas.zAdminPostRecipientListResponse,
+          schemas.zRecipients1Response,
         ),
         revoke: () => new HttpResponse(null, { status: 204 }),
         delete1: () => new HttpResponse(null, { status: 204 }),
