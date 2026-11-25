@@ -1,3 +1,4 @@
+import { createMemberDiningHandlers } from './member-dining-handlers';
 import { createSessionHandlers, currentWeekFixture, scheduleFixture } from './session-handlers';
 import { createMemberAttendanceHandlers } from './member-attendance-handlers';
 import { createMemberNoticeHandlers } from './member-notice-handlers';
@@ -9,6 +10,7 @@ import { setupServer } from 'msw/node';
 export const apiBaseUrl = 'https://api.yapp.test';
 export const createTestHandlers = () => [
   ...createMemberProfileHandlers(apiBaseUrl),
+  ...createMemberDiningHandlers(apiBaseUrl),
   ...createMemberAttendanceHandlers(apiBaseUrl),
   ...createMemberNoticeHandlers(apiBaseUrl),
   ...createMemberNotificationHandlers(apiBaseUrl),

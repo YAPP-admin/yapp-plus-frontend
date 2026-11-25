@@ -267,7 +267,7 @@ it('최종 조회 401은 보호 내용을 숨기고 로그인으로 한 번 이�
   expect(bridge.refreshSession).toHaveBeenCalledTimes(1);
 });
 
-it('개발용 회식 목록은 WebView 세션을 복구할 수 없어도 표시한다', async () => {
+it('회식 목록도 WebView 세션을 복구할 수 없으면 내용을 보호한다', async () => {
   const client = new QueryClient();
   bridge.getSession.mockResolvedValue({
     status: 'UNAVAILABLE',
@@ -277,8 +277,10 @@ it('개발용 회식 목록은 WebView 세션을 복구할 수 없어도 표시�
   window.history.replaceState(null, '', '/dining');
   mount(client);
 
-  expect(await screen.findByRole('heading', { name: '커뮤니티' })).toBeInTheDocument();
-  expect(screen.queryByRole('heading', { name: '로그인 상태를 확인하지 못했어요' })).toBeNull();
+  expect(
+    await screen.findByRole('heading', { name: '로그인 상태를 확인하지 못했어요' }),
+  ).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: '커뮤니티' })).toBeNull();
   expect(window.location.pathname).toBe('/dining');
 });
 

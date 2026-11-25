@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react';
-import { beforeEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { TabLink } from './tab-link';
 import type { TabsState } from './tab';
 import { Tabs } from '@seed-design/react';
@@ -52,6 +52,8 @@ vi.mock('@/app/navigation/activity-link', () => ({
     </a>
   ),
 }));
+
+afterEach(() => vi.unstubAllEnvs());
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -143,10 +145,10 @@ it('SEED 탭 클릭은 step을 한 번만 교체하고 현재 탭 재선택은 �
   expect(onValueChange).not.toHaveBeenCalled();
 });
 
-it('개발용 커뮤니티 메뉴는 기존 하단 navigation 안에서 다섯 번째 항목으로 표시한다', () => {
+it('커뮤니티 메뉴는 기존 하단 navigation 안에서 다섯 번째 항목으로 표시한다', () => {
   render(
     <Tabs.Root value="home">
-      <BottomNavigation activeTab="community" showDevelopmentCommunity />
+      <BottomNavigation activeTab="community" />
     </Tabs.Root>,
   );
 
@@ -224,4 +226,14 @@ it('새 창 대상 링크는 Stackflow 이동으로 가로채지 않는다', asy
   expect(state.pop).not.toHaveBeenCalled();
   expect(state.replace).not.toHaveBeenCalled();
   expect(state.push).not.toHaveBeenCalled();
+});
+
+it('프로덕션 홈에서도 커뮤니티 진입 링크를 표시한다', () => {
+  vi.stubEnv('DEV', false);
+  render(
+    <Tabs.Root value="home">
+      <BottomNavigation activeTab="home" />
+    </Tabs.Root>,
+  );
+  expect(screen.getByRole('link', { name: '커뮤니티' })).toHaveAttribute('href', '/dining');
 });

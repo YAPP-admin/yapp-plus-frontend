@@ -38,20 +38,13 @@ const destinations = [
   },
 ];
 
-const developmentCommunityDestination = {
+const COMMUNITY_DESTINATION = {
   label: '커뮤니티',
   Icon: IconStarFill,
 };
 
 /** activeTab이 null이면 SEED Tabs context 없이 알림에서 탭으로 복귀하는 링크를 렌더링합니다. */
-export function BottomNavigation({
-  activeTab,
-  showDevelopmentCommunity = false,
-}: {
-  activeTab: TabName | 'community' | null;
-  /** 개발 전용 회식 목록에서만 피그마의 커뮤니티 메뉴를 보입니다. */
-  showDevelopmentCommunity?: boolean;
-}) {
+export function BottomNavigation({ activeTab }: { activeTab: TabName | 'community' | null }) {
   const isTabNavigation = activeTab !== null && activeTab !== 'community';
   const links = destinations.map(({ tab, label, Icon }) => {
     const content = (
@@ -88,44 +81,42 @@ export function BottomNavigation({
     );
   });
 
-  if (showDevelopmentCommunity) {
-    const { label, Icon } = developmentCommunityDestination;
-    const current = activeTab === 'community';
-    links.splice(
-      links.length - 1,
-      0,
-      <VStack key="community" asChild align="center" justify="center" gap="x1">
-        <ActivityLink
-          activityName="DiningList"
-          activityParams={{}}
-          className={item}
-          aria-current={current ? 'page' : undefined}
-          onClick={(event) => {
-            if (current) {
-              event.preventDefault();
-            }
-          }}
-        >
-          <Icon width={24} height={24} aria-hidden="true" />
-          <Text textStyle="t2Bold" className={itemLabel}>
-            {label}
-          </Text>
-        </ActivityLink>
-      </VStack>,
-    );
-  }
+  const { label, Icon } = COMMUNITY_DESTINATION;
+  const current = activeTab === 'community';
+  links.splice(
+    links.length - 1,
+    0,
+    <VStack key="community" asChild align="center" justify="center" gap="x1">
+      <ActivityLink
+        activityName="DiningList"
+        activityParams={{}}
+        className={item}
+        aria-current={current ? 'page' : undefined}
+        onClick={(event) => {
+          if (current) {
+            event.preventDefault();
+          }
+        }}
+      >
+        <Icon width={24} height={24} aria-hidden="true" />
+        <Text textStyle="t2Bold" className={itemLabel}>
+          {label}
+        </Text>
+      </ActivityLink>
+    </VStack>,
+  );
 
   return (
     <VStack className={bottomBar}>
       <Box as="nav" aria-label="주요 메뉴">
         {isTabNavigation ? (
           <Tabs.List asChild aria-label="주요 메뉴">
-            <Grid columns={showDevelopmentCommunity ? 5 : 4} className={navigation}>
+            <Grid columns={5} className={navigation}>
               {links}
             </Grid>
           </Tabs.List>
         ) : (
-          <Grid columns={showDevelopmentCommunity ? 5 : 4} className={navigation}>
+          <Grid columns={5} className={navigation}>
             {links}
           </Grid>
         )}

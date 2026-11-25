@@ -1,3 +1,4 @@
+import { createMemberDiningHandlers } from './member-dining-handlers';
 import { createNoticeFixtures } from './notice-fixtures';
 import { createAttendanceFixtures } from './attendance-fixtures';
 import { createUpcomingSessionFixtures } from './session-fixtures';
@@ -25,6 +26,7 @@ export function startMocking(): Promise<void> {
     const noticeState = new URLSearchParams(window.location.search).get('noticeState');
     const worker = setupWorker(
       ...createMemberProfileHandlers(baseUrl),
+      ...createMemberDiningHandlers(baseUrl),
       ...createMemberAttendanceHandlers(
         baseUrl,
         new URLSearchParams(window.location.search).get('myState'),

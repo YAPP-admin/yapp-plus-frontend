@@ -361,7 +361,13 @@ export const stackflowConfig = defineConfig({
     { name: 'SignupUnregistered', route: '/signup/unregistered' },
     { name: 'DevRoutes', route: '/dev/routes' },
     { name: 'DiningList', route: '/dining' },
-    { name: 'DiningDetail', route: '/dining/:diningId' },
+    {
+      name: 'DiningDetail',
+      route: {
+        path: '/dining/:diningId',
+        defaultHistory: initialHistory(() => [{ activityName: 'DiningList', activityParams: {} }]),
+      },
+    },
     { name: 'NotFound', route: '*' },
   ],
   transitionDuration: 350,

@@ -780,3 +780,29 @@ it('운영 로그인 상태여도 접수 정보 없는 완료 단계는 성공�
   expect(await screen.findByText('페이지를 찾을 수 없어요')).toBeVisible();
   expect(screen.queryByText('인증 사진을 올렸어요!')).not.toBeInTheDocument();
 });
+
+it('프로덕션 회원은 커뮤니티에서 뒤풀이 상세를 조회하고 목록으로 복귀한다', async () => {
+  vi.stubEnv('DEV', false);
+  vi.stubEnv('VITE_API_MOCKING', 'false');
+  renderStack({ native: true });
+  const home = await waitForTopHeading('홈');
+  await userEvent.click(home.getByRole('link', { name: '커뮤니티' }));
+  const list = await waitForTopHeading('커뮤니티');
+  await userEvent.click(await list.findByRole('link', { name: /^D-.*세션 뒤풀이/ }));
+  const detail = await waitForTopHeading('뒤풀이');
+  expect(detail.getByRole('heading', { name: '세션 뒤풀이' })).toBeVisible();
+  expect(detail.queryByRole('button', { name: '정산 추가하기' })).toBeNull();
+  await userEvent.click(detail.getByRole('button', { name: '뒤로가기' }));
+  await waitForTopHeading('커뮤니티');
+  expect(window.location.pathname).toBe('/dining');
+});
+
+it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', async () => {
+  vi.stubEnv('DEV', false);
+  window.history.replaceState({}, '', '/dining/1');
+  renderStack({ native: true });
+  const detail = await waitForTopHeading('뒤풀이');
+  await userEvent.click(detail.getByRole('button', { name: '뒤로가기' }));
+  await waitForTopHeading('커뮤니티');
+  expect(window.location.pathname).toBe('/dining');
+});
