@@ -125,17 +125,46 @@ export function isPastDateTime(value: string, now = new Date()) {
   return Number.isNaN(date.getTime()) || date.getTime() <= now.getTime();
 }
 
-export function getNotificationErrorMessage(error: unknown) {
+export function createNotificationIdempotencyKey() {
+  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `notification-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
+export type NotificationOperation = 'list' | 'create' | 'cancel';
+
+export function getNotificationErrorMessage(
+  error: unknown,
+  operation: NotificationOperation = 'list',
+) {
   if (error instanceof ApiError) {
     const body = zErrorResponse.safeParse(error.body);
+    const message = body.success ? body.data.message : undefined;
+    if (error.status === 400) {
+      return message ?? '입력값을 확인해 주세요.';
+    }
     if (error.status === 401) {
       return '로그인이 만료되었어요. 다시 로그인해 주세요.';
+    }
+    if (error.status === 404 && operation === 'cancel') {
+      return '예약 알림을 찾을 수 없어요. 목록을 새로고침해 주세요.';
+    }
+    if (error.status === 409) {
+      return '알림 상태가 변경됐어요. 최신 목록을 확인해 주세요.';
     }
     if (error.status === 503 || (body.success && body.data.code === 'NOTIFICATION_UNAVAILABLE')) {
       return '알림 서버를 사용할 수 없어요. 잠시 후 다시 시도해 주세요.';
     }
   }
 
+  if (operation === 'create') {
+    return '알림을 보내지 못했어요. 다시 시도해 주세요.';
+  }
+  if (operation === 'cancel') {
+    return '예약 알림을 취소하지 못했어요. 다시 시도해 주세요.';
+  }
   return '알림 발송 내역을 불러오지 못했어요. 다시 시도해 주세요.';
 }
 

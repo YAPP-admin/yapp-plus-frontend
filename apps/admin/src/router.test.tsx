@@ -1338,6 +1338,63 @@ describe('알림 발송 내역 탐색', () => {
     expect(await screen.findByRole('alertdialog')).toHaveTextContent('예약 알림을 취소할까요?');
     expect(screen.queryByRole('menuitem', { name: '예약 취소' })).not.toBeInTheDocument();
   });
+
+  it('알림 발송 성공 시 모달을 닫고 성공 스낵바를 표시한다', async () => {
+    const user = userEvent.setup();
+    let requestBody: unknown;
+    let idempotencyKey: string | null = null;
+    server.use(
+      http.post(`${apiBaseUrl}/api/admin/notifications`, async ({ request }) => {
+        requestBody = await request.json();
+        idempotencyKey = request.headers.get('Idempotency-Key');
+        return HttpResponse.json(
+          { id: 2001, status: 'QUEUED', scheduledAt: null },
+          { status: 202 },
+        );
+      }),
+    );
+
+    await renderRoute('/notifications');
+    await user.click(await screen.findByRole('button', { name: '알림 보내기' }));
+    await user.type(screen.getByRole('textbox', { name: /내용/ }), '출석 안내를 확인해 주세요.');
+    await user.click(screen.getByRole('button', { name: '보내기' }));
+
+    await waitFor(() => {
+      expect(requestBody).toEqual({
+        content: '출석 안내를 확인해 주세요.',
+        targetRole: 'PLAYER',
+        position: 'ALL',
+        scheduledAt: null,
+      });
+      expect(idempotencyKey).toEqual(expect.any(String));
+    });
+    expect(await screen.findByText('알림을 성공적으로 보냈어요.')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('예약 취소 대상이 없으면 모달을 유지하고 하단 스낵바로 안내한다', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(`${apiBaseUrl}/api/admin/notifications/:notificationId/cancel`, () =>
+        HttpResponse.json({ code: 'NOTIFICATION_NOT_FOUND', message: 'private' }, { status: 404 }),
+      ),
+    );
+
+    await renderRoute('/notifications');
+    await user.click(
+      await screen.findByRole('button', {
+        name: '3차 세미나가 내일 오후 2시에 시작돼요. 장소를 다시 확인해 주세요. 더보기',
+      }),
+    );
+    await user.click(screen.getByRole('menuitem', { name: '예약 취소' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: '예약 취소' }));
+
+    expect(
+      await screen.findByText('예약 알림을 찾을 수 없어요. 목록을 새로고침해 주세요.'),
+    ).toBeVisible();
+    expect(screen.getByRole('alertdialog')).toBeVisible();
+  });
 });
 
 describe('세션 관리 목록', () => {

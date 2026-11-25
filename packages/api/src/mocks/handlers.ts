@@ -49,9 +49,10 @@ function fixedResponse(body: JsonBodyType, schema: ZodType) {
 
 export function createApiMockHandlers(
   baseUrl: string,
-  options: { scenario?: 'default' | 'empty' } = {},
+  options: { scenario?: 'default' | 'empty' | 'cancel-not-found' } = {},
 ) {
   const empty = options.scenario === 'empty';
+  const cancelNotFound = options.scenario === 'cancel-not-found';
   const factory = createMswHandlers({
     baseUrl: normalizeBaseUrl(baseUrl),
     responseFallback: 'error',
@@ -60,6 +61,8 @@ export function createApiMockHandlers(
   const notificationHistory: NotificationHistoryItemResponse[] = empty
     ? []
     : [...fixtures.adminNotifications.items];
+  let nextNotificationId =
+    notificationHistory.reduce((maxId, notification) => Math.max(maxId, notification.id), 0) + 1;
 
   function getNotificationPage(cursor: string | null) {
     const pageSize = 4;
@@ -79,6 +82,49 @@ export function createApiMockHandlers(
         schemas.zHistoryResponse,
         200,
       ),
+    ),
+    http.post(`${normalizedBaseUrl}/api/admin/notifications`, async ({ request }) => {
+      const parsedBody = schemas.zCreateBody.safeParse(await request.json());
+      if (!parsedBody.success) {
+        return new HttpResponse('잘못된 알림 요청입니다.', { status: 400 });
+      }
+
+      const body = parsedBody.data;
+      const id = nextNotificationId;
+      nextNotificationId += 1;
+      const scheduledAt = body.scheduledAt ?? null;
+      notificationHistory.unshift({
+        id,
+        content: body.content,
+        targetRole: body.targetRole,
+        position: body.position,
+        status: scheduledAt === null ? 'IN_PROGRESS' : 'SCHEDULED',
+        referenceAt: scheduledAt ?? new Date().toISOString(),
+      });
+
+      return response(
+        { id, status: scheduledAt === null ? 'QUEUED' : 'SCHEDULED', scheduledAt },
+        schemas.zCreateResponse,
+        202,
+      );
+    }),
+    http.post(
+      `${normalizedBaseUrl}/api/admin/notifications/:notificationId/cancel`,
+      ({ params }) => {
+        if (cancelNotFound) {
+          return HttpResponse.json(
+            { code: 'NOTIFICATION_NOT_FOUND', message: 'private' },
+            { status: 404 },
+          );
+        }
+
+        const notificationId = Number(params.notificationId);
+        const notification = notificationHistory.find((item) => item.id === notificationId);
+        if (notification !== undefined) {
+          notification.status = 'CANCELED';
+        }
+        return new HttpResponse(null, { status: 204 });
+      },
     ),
     http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members`, ({ request }) => {
       const params = new URL(request.url).searchParams;

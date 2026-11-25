@@ -12,8 +12,11 @@ export function startMocking(): Promise<void> {
       throw new Error('모킹할 API base URL이 없습니다.');
     }
 
+    const configuredScenario = import.meta.env.VITE_NOTIFICATION_MOCK_SCENARIO;
     const scenario =
-      import.meta.env.VITE_NOTIFICATION_MOCK_SCENARIO === 'empty' ? 'empty' : 'default';
+      configuredScenario === 'empty' || configuredScenario === 'cancel-not-found'
+        ? configuredScenario
+        : 'default';
     const worker = setupWorker(...createApiMockHandlers(baseUrl, { scenario }));
     await worker.start({
       serviceWorker: { url: '/mockServiceWorker.js' },
