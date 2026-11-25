@@ -7,6 +7,7 @@ import { AuthActions, type NativeAuthRuntime } from './actions';
 import { nativeAuthApi } from './auth-api';
 import type { NativeIdentity } from './providers';
 import { SessionManager } from './session';
+import { NativeAuthenticationCancelledError } from './errors';
 
 import type { StoredSession } from './storage';
 
@@ -74,6 +75,27 @@ const googleActions = () => {
   return { runtime, actions: new AuthActions(runtime) };
 };
 
+const reviewedResponse = (
+  reviewStatus: 'PENDING' | 'APPROVED' | 'REJECTED' | null,
+  userId = 7,
+): AuthenticationResponse => {
+  const response = signedInResponse(1);
+  if (!response.user) {
+    throw new Error('사용자 fixture 누락');
+  }
+  return { ...response, user: { ...response.user, id: userId, reviewStatus } };
+};
+
+const pendingLoginActions = async () => {
+  const context = googleActions();
+  vi.mocked(context.runtime.authenticateGoogle).mockResolvedValueOnce({
+    data: reviewedResponse('PENDING'),
+  });
+  await context.actions.signIn({ provider: 'google' });
+  await context.actions.signOut();
+  return context;
+};
+
 const renewalActions = async () => {
   const { runtime, actions } = googleActions();
   const result = await actions.signIn({ provider: 'google' });
@@ -92,6 +114,259 @@ const renewalActions = async () => {
 };
 
 describe('AuthActions', () => {
+  it('Apple의 대기 응답도 토큰 없이 제한 상태로 유지한다', async () => {
+    const runtime = createRuntime();
+    vi.mocked(runtime.authenticateWithProvider).mockResolvedValue({
+      provider: 'apple',
+      identityToken: 'test',
+      authorizationCode: 'code',
+      nonce: 'nonce',
+    });
+    vi.mocked(runtime.authenticateApple).mockResolvedValue({ data: reviewedResponse('PENDING') });
+    const actions = new AuthActions(runtime);
+    await expect(actions.signIn({ provider: 'apple' })).resolves.toEqual({
+      status: 'REVIEW_REQUIRED',
+      userId: 7,
+      reviewStatus: 'PENDING',
+    });
+    expect(runtime.authenticateGoogle).not.toHaveBeenCalled();
+    expect(storage.setSession).not.toHaveBeenCalled();
+    expect(runtime.session.snapshot).toBeUndefined();
+  });
+
+  it('정상 세션 뒤 제한 응답을 받으면 이전 자격을 제거하고 제한 토큰은 저장하지 않는다', async () => {
+    const { runtime, actions } = googleActions();
+    await actions.signIn({ provider: 'google' });
+    storage.setSession.mockClear();
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({
+      data: reviewedResponse('PENDING'),
+    });
+    await actions.signIn({ provider: 'google' });
+    expect(storage.clearSession).toHaveBeenCalled();
+    expect(storage.setSession).not.toHaveBeenCalled();
+    expect(runtime.session.snapshot).toBeUndefined();
+    await expect(actions.getSession()).resolves.toMatchObject({ status: 'REVIEW_REQUIRED' });
+  });
+
+  it('다른 승인 계정으로 로그인하면 이전 대기 이력을 소비한다', async () => {
+    const { runtime, actions } = await pendingLoginActions();
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({
+      data: reviewedResponse('APPROVED', 8),
+    });
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
+      session: { userId: 8 },
+    });
+    await actions.signOut();
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
+      session: { userId: 7 },
+    });
+  });
+
+  it('다른 대기 계정으로 바뀌면 새 계정의 승인에만 전환을 전달한다', async () => {
+    const { runtime, actions } = await pendingLoginActions();
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({
+      data: reviewedResponse('PENDING', 8),
+    });
+    await actions.signIn({ provider: 'google' });
+    await actions.signOut();
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({
+      data: reviewedResponse('APPROVED', 8),
+    });
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'PENDING_TO_APPROVED',
+      session: { userId: 8 },
+    });
+  });
+
+  it.each(['REJECTED', null] as const)('%s 결과는 이전 대기 이력을 지운다', async (status) => {
+    const { runtime, actions } = await pendingLoginActions();
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({
+      data: reviewedResponse(status, 8),
+    });
+    await actions.signIn({ provider: 'google' });
+    await actions.signOut();
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
+    });
+  });
+
+  it('신규 가입 필요 결과는 이전 대기 이력을 지운다', async () => {
+    const { runtime, actions } = await pendingLoginActions();
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({ data: signupRequiredResponse });
+    vi.mocked(runtime.register).mockResolvedValueOnce({ data: signedInResponse(1) });
+    await actions.signIn({ provider: 'google' });
+    await expect(actions.completeSignup(signupInput)).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
+    });
+  });
+
+  it.each(['cancel', 'network', 'storage'] as const)(
+    '%s 실패 후 같은 계정으로 재시도하면 대기 이력을 보존한다',
+    async (failure) => {
+      const { runtime, actions } = await pendingLoginActions();
+      if (failure === 'cancel') {
+        vi.mocked(runtime.authenticateWithProvider).mockRejectedValueOnce(
+          new NativeAuthenticationCancelledError(),
+        );
+      } else if (failure === 'network') {
+        vi.mocked(runtime.authenticateGoogle).mockRejectedValueOnce(new Error('network'));
+      } else {
+        storage.setSession.mockRejectedValueOnce(new Error('storage'));
+      }
+      const failed = await actions.signIn({ provider: 'google' });
+      expect(failed.status).toBe(
+        { cancel: 'CANCELLED', network: 'UNAVAILABLE', storage: 'ERROR' }[failure],
+      );
+      expect(runtime.session.snapshot).toBeUndefined();
+      await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+        status: 'SIGNED_IN',
+        reviewTransition: 'PENDING_TO_APPROVED',
+      });
+      await actions.signOut();
+      await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+        status: 'SIGNED_IN',
+        reviewTransition: 'NONE',
+      });
+    },
+  );
+
+  it('대기 상태의 로그아웃 정리 실패는 상태와 이력을 유지해 재시도할 수 있다', async () => {
+    const { runtime, actions } = googleActions();
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({
+      data: reviewedResponse('PENDING'),
+    });
+    await actions.signIn({ provider: 'google' });
+    storage.clearSession.mockRejectedValueOnce(new Error('storage'));
+    await expect(actions.signOut()).resolves.toMatchObject({ status: 'ERROR', code: 'STORAGE' });
+    await expect(actions.getSession()).resolves.toEqual({
+      status: 'REVIEW_REQUIRED',
+      userId: 7,
+      reviewStatus: 'PENDING',
+    });
+    await expect(actions.signOut()).resolves.toEqual({ status: 'SIGNED_OUT' });
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'PENDING_TO_APPROVED',
+    });
+  });
+
+  it.each(['PENDING', 'REJECTED', null] as const)(
+    '가입 완료가 %s 상태면 토큰을 저장하지 않는다',
+    async (reviewStatus) => {
+      const { runtime, actions } = googleActions();
+      vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({ data: signupRequiredResponse });
+      const response = signedInResponse(1);
+      if (!response.user) {
+        throw new Error('사용자 fixture 누락');
+      }
+      response.user.reviewStatus = reviewStatus;
+      vi.mocked(runtime.register).mockResolvedValue({ data: response });
+      await actions.signIn({ provider: 'google' });
+      await expect(actions.completeSignup(signupInput)).resolves.toEqual({
+        status: 'REVIEW_REQUIRED',
+        userId: 7,
+        reviewStatus,
+      });
+      expect(storage.setSession).not.toHaveBeenCalled();
+    },
+  );
+
+  it('필드가 누락된 로그인 응답은 승인으로 취급하지 않는다', async () => {
+    const { runtime, actions } = googleActions();
+    const response = signedInResponse(1);
+    if (!response.user) {
+      throw new Error('사용자 fixture 누락');
+    }
+    Reflect.deleteProperty(response.user, 'reviewStatus');
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({ data: response });
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'ERROR',
+      code: 'INVALID_RESPONSE',
+    });
+    expect(storage.setSession).not.toHaveBeenCalled();
+  });
+
+  it('새 runtime은 이전 실행의 대기 이력을 복구하지 않는다', async () => {
+    const { runtime, actions } = googleActions();
+    const response = signedInResponse(1);
+    if (!response.user) {
+      throw new Error('사용자 fixture 누락');
+    }
+    response.user.reviewStatus = 'PENDING';
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({ data: response });
+    await actions.signIn({ provider: 'google' });
+    const restarted = googleActions();
+    await expect(restarted.actions.getSession()).resolves.toEqual({ status: 'SIGNED_OUT' });
+    await expect(restarted.actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
+    });
+  });
+  it.each(['PENDING', 'REJECTED', null] as const)(
+    '%s 계정은 저장 없이 제한 결과만 반환한다',
+    async (reviewStatus) => {
+      const { runtime, actions } = googleActions();
+      const response = signedInResponse(1);
+      if (!response.user) {
+        throw new Error('사용자 fixture 누락');
+      }
+      response.user.reviewStatus = reviewStatus;
+      vi.mocked(runtime.authenticateGoogle).mockResolvedValue({ data: response });
+      const expected = { status: 'REVIEW_REQUIRED', userId: 7, reviewStatus };
+      await expect(actions.signIn({ provider: 'google' })).resolves.toEqual(expected);
+      expect(storage.setSession).not.toHaveBeenCalled();
+      expect(runtime.session.snapshot).toBeUndefined();
+      await expect(actions.getSession()).resolves.toEqual(expected);
+      await expect(actions.refreshSession({ sessionId: 'old', tokenVersion: 1 })).resolves.toEqual(
+        expected,
+      );
+      await expect(actions.signOut()).resolves.toEqual({ status: 'SIGNED_OUT' });
+      await expect(actions.getSession()).resolves.toEqual({ status: 'SIGNED_OUT' });
+    },
+  );
+
+  it('대기 뒤 로그인 복귀 후 같은 계정이 승인되면 전환을 한 번 전달한다', async () => {
+    const { runtime, actions } = googleActions();
+    const response = signedInResponse(1);
+    if (!response.user) {
+      throw new Error('사용자 fixture 누락');
+    }
+    response.user.reviewStatus = 'PENDING';
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({ data: response });
+    await actions.signIn({ provider: 'google' });
+    await actions.signOut();
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'PENDING_TO_APPROVED',
+    });
+    await expect(actions.getSession()).resolves.toMatchObject({
+      status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
+    });
+  });
+
+  it('제한 상태 정리에 실패하면 저장 오류를 반환하고 정상 세션을 만들지 않는다', async () => {
+    const { runtime, actions } = googleActions();
+    const response = signedInResponse(1);
+    if (!response.user) {
+      throw new Error('사용자 fixture 누락');
+    }
+    response.user.reviewStatus = 'PENDING';
+    storage.clearSession.mockRejectedValueOnce(new Error('storage'));
+    vi.mocked(runtime.authenticateGoogle).mockResolvedValueOnce({ data: response });
+    await expect(actions.signIn({ provider: 'google' })).resolves.toMatchObject({
+      status: 'ERROR',
+      code: 'STORAGE',
+    });
+    expect(storage.setSession).not.toHaveBeenCalled();
+  });
   beforeEach(() => {
     storage.clearSession.mockReset().mockResolvedValue(undefined);
     storage.getSession.mockReset().mockResolvedValue(null);

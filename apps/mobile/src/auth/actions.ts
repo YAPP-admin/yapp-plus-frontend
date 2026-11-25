@@ -7,6 +7,7 @@ import {
   type CompleteSignupInput,
   type RefreshSessionInput,
   type SignInInput,
+  type ReviewRequired,
 } from '@yapp-plus/app-bridge';
 import type { AuthenticationResponse } from '@yapp-plus/api/generated';
 
@@ -42,6 +43,8 @@ export class AuthActions {
   private readonly runtime: NativeAuthRuntime;
   private registration: SignupRegistration | undefined;
   private authenticatingGeneration: number | undefined;
+  private review: ReviewRequired | undefined;
+  private pendingUserId: number | undefined;
 
   public constructor(runtime: NativeAuthRuntime) {
     this.runtime = runtime;
@@ -132,6 +135,9 @@ export class AuthActions {
 
   /** 저장된 refresh token으로 현재 세션을 복구하거나 갱신합니다. */
   public getSession(): Promise<AuthResult> {
+    if (this.review) {
+      return Promise.resolve(this.review);
+    }
     if (this.runtime.session.isSigningOut) {
       const session = this.runtime.session.snapshot;
       return Promise.resolve(
@@ -145,6 +151,9 @@ export class AuthActions {
 
   /** WebView의 401 대응 요청에 대해 최신 access token을 반환합니다. */
   public refreshSession(input: RefreshSessionInput): Promise<AuthResult> {
+    if (this.review) {
+      return Promise.resolve(this.review);
+    }
     if (this.runtime.session.isSigningOut) {
       return Promise.resolve(this.busy());
     }
@@ -169,13 +178,21 @@ export class AuthActions {
   /** 서버 해제를 시도한 뒤 결과와 무관하게 로컬 세션을 제거합니다. */
   public async signOut(): Promise<AuthResult> {
     this.registration = undefined;
-    return this.runtime.session.signOut(async (refreshToken) => {
+    const wasReview = this.review !== undefined;
+    const result = await this.runtime.session.signOut(async (refreshToken) => {
       try {
         return await this.runtime.revoke({ body: { refreshToken } });
       } catch {
         return { ok: false, code: 'NETWORK' };
       }
     });
+    if (result.status === 'SIGNED_OUT') {
+      this.review = undefined;
+      if (!wasReview) {
+        this.pendingUserId = undefined;
+      }
+    }
+    return result;
   }
 
   /** 현재 access token으로 204 탈퇴를 확인한 뒤 현재 세션의 로컬 자격을 제거합니다. */
@@ -228,11 +245,11 @@ export class AuthActions {
       return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.server, retryable: true };
     }
 
-    const credentials = toCredentials(result.data);
-    if (credentials) {
-      return this.runtime.session.establish(credentials, generation);
+    if (result.data.result === 'SIGNED_IN') {
+      return this.acceptCompletedSignup(result.data, generation);
     }
-
+    this.pendingUserId = undefined;
+    this.review = undefined;
     return this.startSignup(result.data);
   }
 
@@ -243,6 +260,40 @@ export class AuthActions {
   ): Promise<AuthResult> {
     if (!this.runtime.session.isCurrent(generation)) {
       return { status: AUTH_STATUS.cancelled };
+    }
+    const user = response?.user;
+    if (
+      response?.result !== 'SIGNED_IN' ||
+      !user ||
+      !Number.isSafeInteger(user.id) ||
+      !['PENDING', 'APPROVED', 'REJECTED', null].includes(user.reviewStatus)
+    ) {
+      return { status: AUTH_STATUS.error, code: AUTH_ERROR_CODE.invalidResponse, retryable: false };
+    }
+    if (user.reviewStatus !== 'APPROVED') {
+      const cleared = this.runtime.session.clear();
+      // clear가 올린 세대를 기록해 정리 중 시작된 새 인증이 이 응답으로 덮이지 않게 합니다.
+      const clearingGeneration = this.runtime.session.captureGeneration();
+      this.authenticatingGeneration = clearingGeneration;
+      try {
+        const result = await cleared;
+        if (!this.runtime.session.isCurrent(clearingGeneration)) {
+          return { status: 'CANCELLED' };
+        }
+        if (result.status !== 'SIGNED_OUT') {
+          return result;
+        }
+        this.registration = undefined;
+        this.pendingUserId = user.reviewStatus === 'PENDING' ? user.id : undefined;
+        this.review = {
+          status: 'REVIEW_REQUIRED',
+          userId: user.id,
+          reviewStatus: user.reviewStatus,
+        };
+        return this.review;
+      } finally {
+        this.finishAuthentication(clearingGeneration);
+      }
     }
     const credentials = response ? toCredentials(response) : undefined;
     if (!credentials) {
@@ -257,6 +308,12 @@ export class AuthActions {
       'storage',
       established.status === AUTH_STATUS.signedIn ? 'succeeded' : 'failed',
     );
+    if (established.status === 'SIGNED_IN') {
+      const reviewTransition = this.pendingUserId === user.id ? 'PENDING_TO_APPROVED' : 'NONE';
+      this.review = undefined;
+      this.pendingUserId = undefined;
+      return { ...established, reviewTransition };
+    }
     return established;
   }
 
