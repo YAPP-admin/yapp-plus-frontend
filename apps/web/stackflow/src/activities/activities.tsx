@@ -162,7 +162,10 @@ export function NoticeDetailActivity() {
   return (
     <ActivityScreen title="게시판 상세">
       <PageShell header={null}>
-        <NoticeDetailPage noticeId={noticeId} />
+        {/* 상세 헤더와 본문이 셸의 단일 본문 행 안에서 함께 흐르도록 묶습니다. */}
+        <div>
+          <NoticeDetailPage noticeId={noticeId} />
+        </div>
       </PageShell>
     </ActivityScreen>
   );

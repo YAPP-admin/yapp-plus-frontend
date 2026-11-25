@@ -14,6 +14,10 @@ export const heading = style({
   color: vars.$color.fg.neutral,
   fontWeight: vars.$fontWeight.bold,
   margin: '28px 0 12px',
+  selectors: {
+    // 공지 메타 영역이 이미 본문 시작 간격을 소유합니다.
+    '&:first-child': { marginTop: 0 },
+  },
 });
 
 export const heading2 = style([

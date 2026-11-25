@@ -9,14 +9,13 @@ export const container = style({
   margin: '0 auto',
   boxSizing: 'border-box',
   background: vars.$color.bg.layerDefault,
-  minHeight: '100%',
   padding: `14px ${vars.$dimension.x5} 60px`,
 });
 
 export const headerSection = style({
   display: 'flex',
   flexDirection: 'column',
-  paddingBottom: '20px',
+  paddingBottom: '28px',
   borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
   marginBottom: '24px',
 });
@@ -137,7 +136,7 @@ export const contentSection = style({
   display: 'flex',
   flexDirection: 'column',
   gap: '20px',
-  marginBottom: '48px',
+  marginBottom: '8px',
 });
 
 export const attachmentSection = style({
