@@ -1,5 +1,6 @@
 import {
   useMutation,
+  useQuery,
   useQueryClient,
   useSuspenseQueries,
   useSuspenseQuery,
@@ -25,8 +26,9 @@ import {
   teamReviewsQueryOptions,
   teamReviewsApiQueryOptions,
   getSessionAttendance,
-  useSessionAttendanceQuery,
-  useSessionsQuery,
+  useSessionAttendanceQueryState,
+  useAttendanceCodeQueryState,
+  useSessionsQueryState,
   updateMemberAttendance,
   updateMemberBadge,
   updateTeamPhotoReview,
@@ -302,18 +304,24 @@ function AttendanceCodeCard({
   code,
   isPending,
   error,
+  isQueryPending,
+  queryError,
   onIssue,
   onReissue,
 }: {
   code: AttendanceCodeViewModel | undefined;
   isPending: boolean;
   error: boolean;
+  isQueryPending: boolean;
+  queryError: boolean;
   onIssue: () => void;
   onReissue: () => void;
 }) {
   return (
-    <section className={styles.card} aria-busy={isPending} aria-label="출석 코드">
+    <section className={styles.card} aria-busy={isPending || isQueryPending} aria-label="출석 코드">
       <h2 className={styles.heading}>출석 코드</h2>
+      {isQueryPending && <output>출석 코드를 불러오는 중입니다.</output>}
+      {queryError && <span role="alert">출석 코드를 불러오지 못했습니다.</span>}
       {isPending && <output>출석 코드를 처리하는 중입니다.</output>}
       {code?.state === 'notIssued' && (
         <div className={styles.codeContent}>
@@ -432,11 +440,23 @@ function ApiSessionAttendanceData({
   sessionId: string;
   part: AttendancePart;
 }) {
-  const { data: sessions } = useSessionsQuery(generationId);
-  const { members } = useSessionAttendanceQuery(generationId, sessionId);
-  const { data: attendanceCode } = useSuspenseQuery(
-    attendanceCodeApiQueryOptions(generationId, sessionId),
-  );
+  // 각 query는 같은 렌더에서 시작하고, 결과는 독립적으로 처리해 allSettled와 같은 부분 성공을 보장한다.
+  const sessionsQuery = useSessionsQueryState(generationId);
+  const attendanceQuery = useSessionAttendanceQueryState(generationId, sessionId);
+  const attendanceCodeQuery = useAttendanceCodeQueryState(generationId, sessionId);
+  const sessions = sessionsQuery.data;
+  const { members } = attendanceQuery;
+
+  if (sessionsQuery.isPending) {
+    return <output>세션 정보를 불러오는 중입니다.</output>;
+  }
+  if (sessionsQuery.isError) {
+    throw new Error('세션 정보를 불러오지 못했습니다.', { cause: sessionsQuery.error });
+  }
+  if (!sessions) {
+    return <output>세션 정보를 불러오는 중입니다.</output>;
+  }
+
   const session = sessions.find((item) => item.id === sessionId);
   if (!session) {
     throw new Error('출석을 조회할 세션을 찾을 수 없습니다.');
@@ -468,7 +488,11 @@ function ApiSessionAttendanceData({
       sessionId={sessionId}
       part={part}
       attendance={attendance}
-      attendanceCode={attendanceCode}
+      attendanceLoading={attendanceQuery.isPending}
+      attendanceError={attendanceQuery.isError}
+      attendanceCode={attendanceCodeQuery.data}
+      attendanceCodeLoading={attendanceCodeQuery.isPending}
+      attendanceCodeError={attendanceCodeQuery.isError}
       generationId={generationId}
     />
   );
@@ -478,7 +502,11 @@ function SessionAttendanceView({
   sessionId,
   part,
   attendance,
+  attendanceLoading = false,
+  attendanceError = false,
   attendanceCode,
+  attendanceCodeLoading = false,
+  attendanceCodeError = false,
   generationId,
 }: {
   sessionId: string;
@@ -487,7 +515,11 @@ function SessionAttendanceView({
     session: AttendanceSessionViewModel;
     members: AttendanceMemberViewModel[];
   };
+  attendanceLoading?: boolean;
+  attendanceError?: boolean;
   attendanceCode: AttendanceCodeViewModel | undefined;
+  attendanceCodeLoading?: boolean;
+  attendanceCodeError?: boolean;
   generationId?: number;
 }) {
   const [historyMember, setHistoryMember] = useState<AttendanceMemberViewModel | null>(null);
@@ -589,33 +621,29 @@ function SessionAttendanceView({
       code={attendanceCode}
       isPending={issueCodeMutation.isPending || reissueCodeMutation.isPending}
       error={issueCodeMutation.isError || reissueCodeMutation.isError}
+      isQueryPending={attendanceCodeLoading}
+      queryError={attendanceCodeError}
       onIssue={() => issueCodeMutation.mutate()}
       onReissue={() => reissueCodeMutation.mutate()}
     />
   );
   if (session.type === 'team') {
     return (
-      <AttendanceQueryBoundary
-        fallback={<output>팀 사진 검수 목록을 불러오는 중입니다.</output>}
-        errorMessage="팀 사진 검수 목록을 불러오지 못했습니다."
-        resetKey={`team-reviews-${sessionId}`}
-      >
-        <TeamSessionContent
-          sessionId={sessionId}
-          session={session}
-          generationId={generationId}
-          attendanceCodeCard={attendanceCodeCard}
-          closePending={closeMutation.isPending}
-          closeError={closeMutation.isError}
-          onClose={() => closeMutation.mutate()}
-          cancelPending={cancelMutation.isPending}
-          cancelError={cancelMutation.isError}
-          onCancel={() => cancelMutation.mutate()}
-          teamDecisionPending={teamReviewMutation.isPending}
-          teamDecisionError={teamReviewMutation.isError}
-          onTeamDecision={(input) => teamReviewMutation.mutate(input)}
-        />
-      </AttendanceQueryBoundary>
+      <TeamSessionContent
+        sessionId={sessionId}
+        session={session}
+        generationId={generationId}
+        attendanceCodeCard={attendanceCodeCard}
+        closePending={closeMutation.isPending}
+        closeError={closeMutation.isError}
+        onClose={() => closeMutation.mutate()}
+        cancelPending={cancelMutation.isPending}
+        cancelError={cancelMutation.isError}
+        onCancel={() => cancelMutation.mutate()}
+        teamDecisionPending={teamReviewMutation.isPending}
+        teamDecisionError={teamReviewMutation.isError}
+        onTeamDecision={(input) => teamReviewMutation.mutate(input)}
+      />
     );
   }
   const visibleMembers = members.filter((member) => part === 'all' || member.part === part);
@@ -626,6 +654,8 @@ function SessionAttendanceView({
       session={session}
       visibleMembers={visibleMembers}
       reportedMembers={reportedMembers}
+      attendanceLoading={attendanceLoading}
+      attendanceError={attendanceError}
       attendanceCodeCard={attendanceCodeCard}
       attendancePending={attendanceMutation.isPending}
       onAttendanceChange={(input) => attendanceMutation.mutate(input)}
@@ -678,11 +708,12 @@ function TeamSessionContent({
   teamDecisionError: boolean;
   onTeamDecision: (input: TeamDecisionInput) => void;
 }) {
-  const { data: teamReviews } = useSuspenseQuery(
+  const teamReviewsQuery = useQuery(
     generationId === undefined
       ? teamReviewsQueryOptions(sessionId)
       : teamReviewsApiQueryOptions(generationId, sessionId),
   );
+  const teamReviews = teamReviewsQuery.data ?? [];
   const pendingReviewCount = teamReviews.filter(
     (review) => review.reviewState === 'pending',
   ).length;
@@ -692,7 +723,7 @@ function TeamSessionContent({
     onClose,
     cancelPending,
     onCancel,
-    blockClose: pendingReviewCount > 0,
+    blockClose: pendingReviewCount > 0 || teamReviewsQuery.isPending || teamReviewsQuery.isError,
   });
 
   return (
@@ -728,7 +759,13 @@ function TeamSessionContent({
             />
           ))}
         </ul>
-        {teamReviews.length === 0 && <output>검수할 팀 사진이 없습니다.</output>}
+        {teamReviewsQuery.isPending && <output>팀 사진 검수 목록을 불러오는 중입니다.</output>}
+        {teamReviewsQuery.isError && (
+          <span role="alert">팀 사진 검수 목록을 불러오지 못했습니다.</span>
+        )}
+        {!teamReviewsQuery.isPending && !teamReviewsQuery.isError && teamReviews.length === 0 && (
+          <output>검수할 팀 사진이 없습니다.</output>
+        )}
       </section>
     </>
   );
@@ -739,6 +776,8 @@ function RegularSessionContent({
   session,
   visibleMembers,
   reportedMembers,
+  attendanceLoading,
+  attendanceError,
   attendanceCodeCard,
   attendancePending,
   onAttendanceChange,
@@ -758,6 +797,8 @@ function RegularSessionContent({
   session: AttendanceSessionViewModel;
   visibleMembers: AttendanceMemberViewModel[];
   reportedMembers: AttendanceMemberViewModel[];
+  attendanceLoading: boolean;
+  attendanceError: boolean;
   attendanceCodeCard: ReactNode;
   attendancePending: boolean;
   onAttendanceChange: (input: AttendanceEditInput) => void;
@@ -861,7 +902,11 @@ function RegularSessionContent({
               ))}
             </tbody>
           </table>
-          {reportedMembers.length === 0 && <output>사전 보고 기록이 없습니다.</output>}
+          {attendanceLoading && <output>출석 명단을 불러오는 중입니다.</output>}
+          {attendanceError && <span role="alert">출석 명단을 불러오지 못했습니다.</span>}
+          {!attendanceLoading && !attendanceError && reportedMembers.length === 0 && (
+            <output>사전 보고 기록이 없습니다.</output>
+          )}
         </section>
       ) : (
         <section
@@ -905,7 +950,11 @@ function RegularSessionContent({
               ))}
             </tbody>
           </table>
-          {visibleMembers.length === 0 && <output>해당 직군의 출석 대상자가 없습니다.</output>}
+          {attendanceLoading && <output>출석 명단을 불러오는 중입니다.</output>}
+          {attendanceError && <span role="alert">출석 명단을 불러오지 못했습니다.</span>}
+          {!attendanceLoading && !attendanceError && visibleMembers.length === 0 && (
+            <output>해당 직군의 출석 대상자가 없습니다.</output>
+          )}
         </section>
       )}
       {historyMember && (

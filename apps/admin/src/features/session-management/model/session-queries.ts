@@ -2,6 +2,8 @@ import {
   mutationOptions,
   queryOptions,
   useMutation,
+  useInfiniteQuery,
+  useQuery,
   useQueryClient,
   useSuspenseInfiniteQuery,
   useSuspenseQuery,
@@ -389,6 +391,23 @@ export function useSessionAttendanceQuery(generationId: number, sessionId: strin
   };
 }
 
+/** 화면의 다른 API 실패가 출석 명단 조회를 막지 않도록 non-suspense query로 제공합니다. */
+export function useSessionAttendanceQueryState(generationId: number, sessionId: string) {
+  const query = useInfiniteQuery(sessionAttendanceQueryOptions(generationId, sessionId));
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = query;
+
+  useEffect(() => {
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
+    }
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
+
+  return {
+    ...query,
+    members: data?.pages.flatMap((page) => page.items.map(toMemberViewModel)) ?? [],
+  };
+}
+
 function toAttendanceCodeViewModel(response: AttendanceCodeResponse): AttendanceCodeViewModel {
   if (response.status === 'NOT_ISSUED' || response.code === null) {
     return { state: 'notIssued', code: null, expiresAt: null };
@@ -421,6 +440,10 @@ export const attendanceCodeApiQueryOptions = (generationId: number, sessionId: s
     },
   });
 };
+
+export function useAttendanceCodeQueryState(generationId: number, sessionId: string) {
+  return useQuery(attendanceCodeApiQueryOptions(generationId, sessionId));
+}
 
 function toTeamMemberViewModel(teamId: number, membershipId: number, name: string | null) {
   return {
@@ -524,6 +547,10 @@ export const attendanceCodeQueryOptions = (sessionId: string) =>
 
 export function useSessionsQuery(generationId: number) {
   return useSuspenseQuery(sessionsQueryOptions(generationId));
+}
+
+export function useSessionsQueryState(generationId: number) {
+  return useQuery(sessionsQueryOptions(generationId));
 }
 
 export function useMemberScoresQuery(generationId: number) {
