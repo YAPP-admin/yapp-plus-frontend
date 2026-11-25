@@ -23,12 +23,18 @@ type TeamCreateDialogProps = {
   snapshot: TeamMappingSnapshot;
   onClose: () => void;
   onCreate?: (values: TeamDraftValues) => void;
+  onCreateAsync?: (values: TeamDraftValues) => Promise<void>;
   team?: TeamMappingTeam;
   onUpdate?: (
     team: TeamMappingTeam,
     values: TeamDraftValues,
     destinationTeamIds?: Readonly<Record<string, string>>,
   ) => void;
+  onUpdateAsync?: (
+    team: TeamMappingTeam,
+    values: TeamDraftValues,
+    destinationTeamIds?: Readonly<Record<string, string>>,
+  ) => Promise<void>;
 };
 
 const initialValues: TeamDraftValues = {
@@ -75,12 +81,16 @@ export function TeamCreateDialog({
   snapshot,
   onClose,
   onCreate,
+  onCreateAsync,
   team,
   onUpdate,
+  onUpdateAsync,
 }: TeamCreateDialogProps) {
   const { setCreateDirty } = useTeamMappingDraft();
   const isEdit = team !== undefined;
   const [destinationTeamIds, setDestinationTeamIds] = useState<Record<string, string>>({});
+  const [submitError, setSubmitError] = useState<string>();
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const defaultValues: TeamDraftValues = team
     ? {
         name: team.name,
@@ -94,20 +104,45 @@ export function TeamCreateDialog({
     validators: {
       onDynamic: createTeamDraftSchema(snapshot, team?.id),
     },
-    onSubmit: ({ value }) => {
-      if (team !== undefined) {
-        if (Object.keys(destinationTeamIds).length > 0) {
-          onUpdate?.(team, value, destinationTeamIds);
-        } else {
-          onUpdate?.(team, value);
+    onSubmit: async ({ value }) => {
+      setSubmitError(undefined);
+      setIsSubmitting(true);
+      try {
+        if (team !== undefined) {
+          const hasDestinationTeamChanges = Object.keys(destinationTeamIds).length > 0;
+          if (onUpdateAsync === undefined) {
+            if (hasDestinationTeamChanges) {
+              onUpdate?.(team, value, destinationTeamIds);
+            } else {
+              onUpdate?.(team, value);
+            }
+          } else if (hasDestinationTeamChanges) {
+            await onUpdateAsync(team, value, destinationTeamIds);
+          } else {
+            await onUpdateAsync(team, value);
+          }
+          if (onUpdateAsync === undefined && onUpdate === undefined) {
+            return;
+          }
+          setCreateDirty(false);
+          onClose();
+          return;
         }
-        if (onUpdate !== undefined) {
+
+        if (onCreateAsync === undefined) {
+          onCreate?.(value);
+        } else {
+          await onCreateAsync(value);
           setCreateDirty(false);
           onClose();
         }
-        return;
+      } catch (error) {
+        setSubmitError(
+          error instanceof Error ? error.message : '저장하지 못했어요. 다시 시도해 주세요.',
+        );
+      } finally {
+        setIsSubmitting(false);
       }
-      onCreate?.(value);
     },
     listeners: {
       onChange: ({ formApi }) => setCreateDirty(!formApi.state.isDefaultValue),
@@ -121,6 +156,12 @@ export function TeamCreateDialog({
       onClose();
     },
   });
+  let submitLabel = '팀 만들기';
+  if (isEdit) {
+    submitLabel = '수정하기';
+  } else if (onCreateAsync === undefined) {
+    submitLabel = '팀 만들기 (준비 중)';
+  }
 
   const handleSubmit: FormEventHandler<HTMLFormElement> = (event) => {
     event.preventDefault();
@@ -149,6 +190,11 @@ export function TeamCreateDialog({
               onSubmit={handleSubmit}
             >
               <Dialog.Body className={styles.body}>
+                {submitError !== undefined && (
+                  <p role="alert" aria-live="polite">
+                    {submitError}
+                  </p>
+                )}
                 <div className={styles.fields}>
                   <form.Field name="name">
                     {(field) => (
@@ -286,16 +332,22 @@ export function TeamCreateDialog({
                 </form.Field>
               </Dialog.Body>
               <Dialog.Footer className={styles.footer}>
-                <ActionButton type="button" variant="neutralWeak" onClick={requestLeave}>
+                <ActionButton
+                  type="button"
+                  variant="neutralWeak"
+                  disabled={isSubmitting}
+                  onClick={requestLeave}
+                >
                   취소
                 </ActionButton>
                 <ActionButton
                   type="submit"
                   variant="neutralSolid"
-                  disabled={!isEdit}
-                  aria-label={isEdit ? '수정하기' : '팀 만들기 (준비 중)'}
+                  disabled={isSubmitting || (!isEdit && onCreateAsync === undefined)}
+                  loading={isSubmitting}
+                  aria-label={submitLabel}
                 >
-                  {isEdit ? '수정하기' : '팀 만들기 (준비 중)'}
+                  {submitLabel}
                 </ActionButton>
               </Dialog.Footer>
             </form>

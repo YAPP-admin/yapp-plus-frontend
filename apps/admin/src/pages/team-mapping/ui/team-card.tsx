@@ -18,11 +18,13 @@ export function TeamCard({
   team,
   onOpen,
   onEdit,
+  onDelete,
 }: {
   snapshot: TeamMappingSnapshot;
   team: TeamMappingTeam;
   onOpen?: (team: TeamMappingTeam) => void;
   onEdit?: (team: TeamMappingTeam) => void;
+  onDelete?: (team: TeamMappingTeam) => void;
 }) {
   const counts = getTeamPartCounts(snapshot, team);
   const members = team.memberActivityIds
@@ -94,7 +96,7 @@ export function TeamCard({
                     <Menu.ItemLabel>수정하기</Menu.ItemLabel>
                   </Menu.ItemBody>
                 </Menu.Item>
-                <Menu.Item>
+                <Menu.Item onClick={() => onDelete?.(team)}>
                   <Menu.ItemBody>
                     <Menu.ItemLabel>삭제하기</Menu.ItemLabel>
                   </Menu.ItemBody>
