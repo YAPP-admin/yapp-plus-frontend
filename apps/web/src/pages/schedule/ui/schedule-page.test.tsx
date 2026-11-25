@@ -119,7 +119,7 @@ it('최초 실패 후 키보드로 재시도할 수 있다', async () => {
   vi.spyOn(console, 'error').mockImplementation(() => {});
   server.use(http.get(url, () => HttpResponse.json({ code: 'FAILED' }, { status: 500 })));
   renderPage();
-  expect(await screen.findByRole('alert')).toHaveTextContent('예상하지 못한 오류가 발생했습니다.');
+  expect(await screen.findByRole('alert')).toHaveTextContent('일정을 불러오지 못했어요');
   server.use(http.get(url, () => HttpResponse.json(response)));
   await user.tab();
   expect(screen.getByRole('button', { name: '다시 시도' })).toHaveFocus();
@@ -128,31 +128,19 @@ it('최초 실패 후 키보드로 재시도할 수 있다', async () => {
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
 
-it('재조회 실패 시 목록을 유지하고 재시도 요청을 공유한다', async () => {
+it('재조회 실패 시 목록을 오류 화면으로 교체하고 재시도한다', async () => {
   const user = userEvent.setup();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
   const { client } = renderPage();
   await screen.findByText('기획 세션');
   server.use(http.get(url, () => HttpResponse.json({ code: 'FAILED' }, { status: 500 })));
   await act(() => client.invalidateQueries({ queryKey: find7Options().queryKey }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
-  expect(screen.getByText('기획 세션')).toBeVisible();
-  let finish: (() => void) | undefined;
-  const pending = new Promise<void>((resolve) => {
-    finish = resolve;
-  });
-  let requests = 0;
-  server.use(
-    http.get(url, async () => {
-      requests += 1;
-      await pending;
-      return HttpResponse.json(response);
-    }),
-  );
+  expect(await screen.findByRole('alert')).toHaveTextContent('일정을 불러오지 못했어요');
+  expect(screen.queryByText('기획 세션')).not.toBeInTheDocument();
+  server.use(http.get(url, () => HttpResponse.json(response)));
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
-  await user.click(screen.getByRole('button', { name: '다시 시도' }));
-  expect(requests).toBe(1);
-  finish?.();
-  await waitFor(() => expect(screen.queryByRole('alert')).not.toBeInTheDocument());
+  expect(await screen.findByText('기획 세션')).toBeVisible();
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });
 
 it('비목업 브라우저에서는 API를 호출하지 않는다', async () => {
@@ -199,7 +187,7 @@ it('개발용 오류 시나리오에서 재시도하면 정상 목록으로 복�
   server.use(...createSessionHandlers(apiBaseUrl, 'error'));
   const user = userEvent.setup();
   renderPage();
-  expect(await screen.findByRole('alert')).toHaveTextContent('예상하지 못한 오류가 발생했습니다.');
+  expect(await screen.findByRole('alert')).toHaveTextContent('일정을 불러오지 못했어요');
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(await screen.findByRole('list', { name: '세션 일정 목록' })).toBeVisible();
 });
@@ -210,15 +198,15 @@ it('개발용 빈 시나리오에서 빈 화면을 표시한다', async () => {
   expect(await screen.findByText('등록된 세션 일정이 없어요')).toBeVisible();
 });
 
-it('네트워크 오류 후 연결이 복구되면 기존 목록을 유지한 채 자동 재조회한다', async () => {
+it('네트워크 오류 뒤 재시도로 오류 화면에서 목록을 복구한다', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
   const { client } = renderPage();
   await screen.findByText('기획 세션');
   server.use(http.get(url, () => HttpResponse.error()));
   await act(() => client.invalidateQueries({ queryKey: find7Options().queryKey }));
-  expect(await screen.findByRole('alert')).toHaveTextContent('이전 내용을 표시하고 있어요');
-  expect(screen.getByText('기획 세션')).toBeVisible();
-
-  act(() => onlineManager.setOnline(false));
+  expect(await screen.findByRole('alert')).toHaveTextContent('일정을 불러오지 못했어요');
+  expect(screen.queryByText('기획 세션')).not.toBeInTheDocument();
   server.use(
     http.get(url, () =>
       HttpResponse.json({
@@ -227,7 +215,7 @@ it('네트워크 오류 후 연결이 복구되면 기존 목록을 유지한 �
       }),
     ),
   );
-  act(() => onlineManager.setOnline(true));
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
   expect(await screen.findByText('복구된 일정')).toBeVisible();
   expect(screen.queryByRole('alert')).not.toBeInTheDocument();
 });

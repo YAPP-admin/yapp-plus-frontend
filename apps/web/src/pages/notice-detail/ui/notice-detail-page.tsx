@@ -3,6 +3,7 @@
 
 import { staticContentEnabled } from '@/features/static-content';
 
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
@@ -75,15 +76,20 @@ export function NoticeDetailPage({ noticeId }: { noticeId: string }) {
 
 function NoticeDetailContent({ postId }: { postId: number }) {
   const { apiOptions, session } = useNativeAuthSession();
-  const queryOptions = memberNoticeDetailQueryOptions(postId, apiOptions);
-  const query = useSuspenseQuery(queryOptions);
-  useRefetchOnScreenReturn(query);
-  const { data } = query;
   const readMutation = useNoticeRead({
     apiOptions,
     postId,
     owner: session,
   });
+  const queryOptions = memberNoticeDetailQueryOptions(postId, apiOptions);
+  const query = useSuspenseQuery(queryOptions);
+  useRefetchOnScreenReturn(query);
+  useThrowQueryError({
+    ...query,
+    // 읽음 저장 성공은 후속 재조회 실패와 별개로 완료됐으므로 기존 상세를 유지한다.
+    error: readMutation.isSuccess ? null : query.error,
+  });
+  const { data } = query;
   const detail = noticeDetailData(data);
   const categoryChipClass = getCategoryChipClass(detail.type);
   const isAcknowledgeDisabled = detail.read || readMutation.isPending || !navigator.onLine;

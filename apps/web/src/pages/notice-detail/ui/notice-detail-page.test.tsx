@@ -2,12 +2,13 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '../../../mocks/server';
 import { memberNoticeDetailFixture } from '../../../mocks/member-notice-handlers';
+import { memberNoticeDetailQueryOptions } from '../model/notice-detail-query';
 import { NoticeDetailPage } from './notice-detail-page';
 
 const navigation = vi.hoisted(() => ({ isRoot: true, pop: vi.fn<() => void>() }));
@@ -27,13 +28,14 @@ afterEach(() => {
 
 function renderPage(noticeId = '2') {
   const client = createAppQueryClient();
-  return render(
+  const rendered = render(
     <QueryClientProvider client={client}>
       <NativeAuthSessionProvider>
         <NoticeDetailPage noticeId={noticeId} />
       </NativeAuthSessionProvider>
     </QueryClientProvider>,
   );
+  return { client, ...rendered };
 }
 
 it('API 공지의 Markdown·제출 안내·첨부 이미지를 표시한다', async () => {
@@ -151,6 +153,7 @@ it('읽음 PUT 응답이 유실되면 낙관적 상태를 복원하고 재시도
 
 it('읽음 저장 뒤 상세 재조회가 실패해도 확인 상태와 본문을 유지한다', async () => {
   const user = userEvent.setup();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
   let detailRequests = 0;
   server.use(
     http.get(`${apiBaseUrl}/api/posts/2`, () => {
@@ -167,6 +170,31 @@ it('읽음 저장 뒤 상세 재조회가 실패해도 확인 상태와 본문�
   await waitFor(() => expect(detailRequests).toBe(2));
   expect(screen.getByRole('button', { name: '확인했어요' })).toBeDisabled();
   expect(screen.getByText('기한 안에 과제를 제출해 주세요.')).toBeVisible();
+});
+
+it('일반 재조회 실패는 헤더를 유지한 오류 화면으로 교체하고 재시도한다', async () => {
+  const user = userEvent.setup();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  const { client } = renderPage();
+  const url = `${apiBaseUrl}/api/posts/2`;
+
+  await screen.findByRole('heading', { level: 1, name: '사용자 테스트 결과 제출' });
+  server.use(http.get(url, () => HttpResponse.json({ code: 'FAILED' }, { status: 503 })));
+  await act(() =>
+    client.invalidateQueries({ queryKey: memberNoticeDetailQueryOptions(2).queryKey }),
+  );
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('공지 상세를 불러오지 못했어요');
+  expect(screen.getByText('공지사항')).toBeVisible();
+  expect(
+    screen.queryByRole('heading', { level: 1, name: '사용자 테스트 결과 제출' }),
+  ).not.toBeInTheDocument();
+
+  server.use(http.get(url, () => HttpResponse.json(memberNoticeDetailFixture)));
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(
+    await screen.findByRole('heading', { level: 1, name: '사용자 테스트 결과 제출' }),
+  ).toBeVisible();
 });
 
 it('첨부 이미지 로드 실패 시 대체 안내를 표시한다', async () => {
