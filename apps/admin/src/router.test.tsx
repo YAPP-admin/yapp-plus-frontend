@@ -133,9 +133,8 @@ beforeEach(() => {
     http.get(`${apiBaseUrl}/api/admin/generations/:generationId/posts/:postId`, () =>
       HttpResponse.json(noticeDetailResponse),
     ),
-    http.get(
-      `${apiBaseUrl}/api/admin/generations/:generationId/posts/:postId/recipients`,
-      () => HttpResponse.json(noticeRecipientsResponse),
+    http.get(`${apiBaseUrl}/api/admin/generations/:generationId/posts/:postId/recipients`, () =>
+      HttpResponse.json(noticeRecipientsResponse),
     ),
   );
 });
