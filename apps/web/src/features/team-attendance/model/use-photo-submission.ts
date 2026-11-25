@@ -1,9 +1,11 @@
 /** 생성 mutation options로 API를 호출하고, 인증 설정과 분리한 PUT으로 JPEG를 업로드한다. */
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useRef } from 'react';
 import ky from 'ky';
 import { ApiError } from '@yapp-plus/api';
 import {
+  find1QueryKey,
+  find6QueryKey,
   presignMutation,
   submitMutation,
   zTeamPhotoSubmitted,
@@ -46,8 +48,9 @@ const createSubmissionUncertainError = () =>
     '접수 여부를 확인하지 못했어요. 다시 제출하지 말고 홈으로 돌아가 주세요.',
   );
 
-/** 최종 확인에서 presign·PUT·접수를 순서대로 실행한다. 사진 바이트는 mutation 변수·결과에 저장하지 않는다. */
+/** presign·PUT·접수 후 주간 상태와 해당 세션 사진 캐시를 무효화한다. 재조회 완료는 기다리지 않으며 사진 바이트는 mutation 변수·결과에 저장하지 않는다. */
 export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
+  const queryClient = useQueryClient();
   const uploadRequest = useRef<{
     photo: File;
     destination: TeamPhotoUploadUrl;
@@ -152,6 +155,10 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
       if (!Number.isSafeInteger(photoId) || photoId <= 0 || receipt.status !== 'PENDING') {
         throw createSubmissionUncertainError();
       }
+      void queryClient.invalidateQueries({ queryKey: find6QueryKey(apiOptions) });
+      void queryClient.invalidateQueries({
+        queryKey: find1QueryKey({ ...apiOptions, path: { sessionId: input.target.sessionId } }),
+      });
       return {
         photoId,
         submittedAt: receipt.submittedAt,
