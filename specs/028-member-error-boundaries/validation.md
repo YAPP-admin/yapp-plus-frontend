@@ -87,3 +87,13 @@
 - 집중 회귀: 사진 제출 모델·폼·화면·Stackflow 계정 경계 5개 파일 79개 테스트와 웹 타입 검사가 통과했다. presign/최종 제출401 원본 보존, PUT403 로컬 실패, 201 이외 접수 불명, 중복 제출·폼 이탈·성공 접수, 실제 presign401 뒤 Login 한 번 이동과 GET 갱신 미실행을 확인했다.
 - 사용자가 제외를 명시한 이전 계정의 늦은 오류 경합은 테스트·구현 범위에 다시 넣지 않았고 T043의 과거 작업 문구도 이를 반영했다.
 - `node --run check`는 새 테스트 파일의 포맷과 type import 두 건을 정리한 재실행에서 exit 0으로 통과했다. 웹 lint·typecheck·test는 새로 실행했고 나머지 패키지 작업은 Turbo 캐시를 재사용했다. `node --run build`도 exit 0으로 통과했으며 web·admin·Storybook build는 Turbo 캐시를 재사용했다. 기존 500kB 이상 웹 chunk 경고는 유지된다. 실제 WebView 수동 확인은 이 리뷰 단위에서 아직 실행하지 않았다.
+
+## 7단계 통합 정리·자동 검증 완료 — 최종 리뷰 대기
+
+- 공용 호환 래퍼 `QueryBoundary`·`ScreenQueryBoundary`를 제거하고, 일정·공지 상세·홈·프로필·출석·공지 목록·알림 목록 소비자를 각 화면의 `LocalErrorBoundary` 조합으로 이전했다. 404와 업무 전용 오류 화면은 유지했다.
+- 출석의 `AttendanceQueryError`는 경계 reset context를 사용하므로, 해당 화면 안에만 작은 `AttendanceFallbackBoundary` 어댑터를 남겼다. 공용 호환 계층이나 자동 복귀 reset은 다시 추가하지 않았다.
+- `query-recovery`·`account-boundary`와 영향을 받는 화면 집중 회귀 9개 파일, 105개 테스트 및 웹 typecheck가 통과했다. 성공 cache 재조회 실패 시 정상 DOM 교체, 수동 재시도만의 복구, 화면 복귀 시 자동 재요청 없음, 최종 401의 Login 단일 이동을 다시 확인했다.
+- `rg`로 공용 `QueryBoundary`·`ScreenQueryBoundary` 사용처와 파일이 남지 않은 것을 확인했다. 문서의 오류 복구·인증 전환 정책, 조사 근거, quickstart 동시 401 시나리오, 명세 상태를 현재 구현에 맞게 갱신했다.
+- `node --run check`와 `node --run build`는 모두 exit 0으로 통과했다. 마지막 check의 5개 작업은 Turbo 캐시를 재사용했고, build는 웹만 새로 실행하고 admin·Storybook은 캐시를 재사용했다. 의도적으로 오류를 던지는 경계 테스트의 stderr는 성공한 테스트 출력이다. 기존 500kB 이상 웹 chunk 경고는 유지된다.
+- 실제 브라우저 320px, 키보드·스크린 리더·터치와 네이티브 WebView 수동 확인은 이 단계에서 실행하지 않았다. 자동 테스트가 정책 회귀를 보장하지만, 실제 표시·입력 환경의 잔여 위험으로 남는다.
+- 복구가 필요하면 이 단계의 두 공용 파일 삭제와 화면별 `LocalErrorBoundary` 이전만 되돌리면 된다. API·생성 SDK·브리지 공개 계약은 변경하지 않았다. 현재 merge-base 대비 누적 변경은 +1,151/-508, 합계 1,659줄이므로 800줄 제한을 초과한다. PR 생성 전에 기존 단계 커밋을 독립 검토 단위로 분리해야 한다.
