@@ -1257,11 +1257,17 @@ describe('공지 미저장 이탈', () => {
 });
 
 describe('알림 발송 내역 탐색', () => {
-  it('직접 접근하면 알림 안내와 현재 메뉴를 표시한다', async () => {
+  it('직접 접근하면 알림 목록과 현재 메뉴를 표시한다', async () => {
     await renderRoute('/notifications');
 
-    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
-    expect(screen.getByText('알림 발송 내역을 준비 중입니다.')).toBeVisible();
+    expect(await screen.findByRole('heading', { name: '알림 관리' })).toBeVisible();
+    expect(screen.getByRole('table', { name: '알림 발송 내역' })).toBeVisible();
+    expect(
+      await screen.findByText('3차 세미나가 내일 오후 2시에 시작돼요. 장소를 다시 확인해 주세요.'),
+    ).toBeVisible();
+    expect(screen.getByText('예약')).toBeVisible();
+    expect(screen.getAllByText('완료')).toHaveLength(3);
+    expect(screen.queryByText('실패')).not.toBeInTheDocument();
     expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveAttribute(
       'aria-current',
       'page',
@@ -1285,7 +1291,7 @@ describe('알림 발송 내역 탐색', () => {
 
     act(() => router.history.forward());
 
-    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: '알림 관리' })).toBeVisible();
   });
 
   it('키보드로 알림 메뉴에 진입한다', async () => {
@@ -1300,7 +1306,94 @@ describe('알림 발송 내역 탐색', () => {
 
     await user.keyboard('{Enter}');
 
-    expect(await screen.findByRole('heading', { name: '알림 발송 내역' })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: '알림 관리' })).toBeVisible();
+  });
+
+  it('알림 보내기 버튼으로 작성 모달을 열고 닫는다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/notifications');
+
+    await user.click(await screen.findByRole('button', { name: '알림 보내기' }));
+
+    expect(await screen.findByRole('dialog')).toHaveTextContent('알림 보내기');
+    expect(screen.getByRole('button', { name: '보내기' })).toBeVisible();
+
+    await user.click(screen.getByRole('button', { name: '취소' }));
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
+    expect(screen.getByRole('button', { name: '알림 보내기' })).toBeVisible();
+  });
+
+  it('예약된 알림의 메뉴에서 예약 취소 확인창을 연다', async () => {
+    const user = userEvent.setup();
+    await renderRoute('/notifications');
+
+    await user.click(
+      await screen.findByRole('button', {
+        name: '3차 세미나가 내일 오후 2시에 시작돼요. 장소를 다시 확인해 주세요. 더보기',
+      }),
+    );
+    await user.click(screen.getByRole('menuitem', { name: '예약 취소' }));
+
+    expect(await screen.findByRole('alertdialog')).toHaveTextContent('예약 알림을 취소할까요?');
+    expect(screen.queryByRole('menuitem', { name: '예약 취소' })).not.toBeInTheDocument();
+  });
+
+  it('알림 발송 성공 시 모달을 닫고 성공 스낵바를 표시한다', async () => {
+    const user = userEvent.setup();
+    let requestBody: unknown;
+    let idempotencyKey: string | null = null;
+    server.use(
+      http.post(`${apiBaseUrl}/api/admin/notifications`, async ({ request }) => {
+        requestBody = await request.json();
+        idempotencyKey = request.headers.get('Idempotency-Key');
+        return HttpResponse.json(
+          { id: 2001, status: 'QUEUED', scheduledAt: null },
+          { status: 202 },
+        );
+      }),
+    );
+
+    await renderRoute('/notifications');
+    await user.click(await screen.findByRole('button', { name: '알림 보내기' }));
+    await user.type(screen.getByRole('textbox', { name: /내용/ }), '출석 안내를 확인해 주세요.');
+    await user.click(screen.getByRole('button', { name: '보내기' }));
+
+    await waitFor(() => {
+      expect(requestBody).toEqual({
+        content: '출석 안내를 확인해 주세요.',
+        targetRole: 'PLAYER',
+        position: 'ALL',
+        scheduledAt: null,
+      });
+      expect(idempotencyKey).toEqual(expect.any(String));
+    });
+    expect(await screen.findByText('알림을 성공적으로 보냈어요.')).toBeVisible();
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  });
+
+  it('예약 취소 대상이 없으면 모달을 유지하고 하단 스낵바로 안내한다', async () => {
+    const user = userEvent.setup();
+    server.use(
+      http.post(`${apiBaseUrl}/api/admin/notifications/:notificationId/cancel`, () =>
+        HttpResponse.json({ code: 'NOTIFICATION_NOT_FOUND', message: 'private' }, { status: 404 }),
+      ),
+    );
+
+    await renderRoute('/notifications');
+    await user.click(
+      await screen.findByRole('button', {
+        name: '3차 세미나가 내일 오후 2시에 시작돼요. 장소를 다시 확인해 주세요. 더보기',
+      }),
+    );
+    await user.click(screen.getByRole('menuitem', { name: '예약 취소' }));
+    const dialog = await screen.findByRole('alertdialog');
+    await user.click(within(dialog).getByRole('button', { name: '예약 취소' }));
+
+    expect(
+      await screen.findByText('예약 알림을 찾을 수 없어요. 목록을 새로고침해 주세요.'),
+    ).toBeVisible();
+    expect(screen.getByRole('alertdialog')).toBeVisible();
   });
 });
 

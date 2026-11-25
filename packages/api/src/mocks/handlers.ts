@@ -1,6 +1,7 @@
 import { base, en, Faker } from '@faker-js/faker';
 import { http, HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
 import type { ZodType } from 'zod';
+import type { NotificationHistoryItemResponse } from '../generated/types.gen';
 
 import * as generatedFaker from '../generated/@faker-js/faker.gen';
 import { createMswHandlers } from '../generated/msw.gen';
@@ -48,16 +49,83 @@ function fixedResponse(body: JsonBodyType, schema: ZodType) {
 
 export function createApiMockHandlers(
   baseUrl: string,
-  options: { scenario?: 'default' | 'empty' } = {},
+  options: { scenario?: 'default' | 'empty' | 'cancel-not-found' } = {},
 ) {
   const empty = options.scenario === 'empty';
+  const cancelNotFound = options.scenario === 'cancel-not-found';
   const factory = createMswHandlers({
     baseUrl: normalizeBaseUrl(baseUrl),
     responseFallback: 'error',
   });
   const normalizedBaseUrl = normalizeBaseUrl(baseUrl);
+  const notificationHistory: NotificationHistoryItemResponse[] = empty
+    ? []
+    : [...fixtures.adminNotifications.items];
+  let nextNotificationId =
+    notificationHistory.reduce((maxId, notification) => Math.max(maxId, notification.id), 0) + 1;
+
+  function getNotificationPage(cursor: string | null) {
+    const pageSize = 4;
+    const pageIndex = cursor === null ? 0 : Number(cursor.replace('mock-page-', '')) - 1;
+    const start = Number.isInteger(pageIndex) && pageIndex >= 0 ? pageIndex * pageSize : 0;
+    const items = notificationHistory.slice(start, start + pageSize);
+    const nextCursor =
+      start + items.length < notificationHistory.length ? `mock-page-${pageIndex + 2}` : null;
+    return { items, nextCursor };
+  }
+
   // 명시한 Faker·대표 응답이 우선하며, 미연결 API는 생성 핸들러의 명세 예제 또는 501을 사용합니다.
   return [
+    http.get(`${normalizedBaseUrl}/api/admin/notifications`, ({ request }) =>
+      response(
+        getNotificationPage(new URL(request.url).searchParams.get('cursor')),
+        schemas.zHistoryResponse,
+        200,
+      ),
+    ),
+    http.post(`${normalizedBaseUrl}/api/admin/notifications`, async ({ request }) => {
+      const parsedBody = schemas.zCreate1Body.safeParse(await request.json());
+      if (!parsedBody.success) {
+        return new HttpResponse('잘못된 알림 요청입니다.', { status: 400 });
+      }
+
+      const body = parsedBody.data;
+      const id = nextNotificationId;
+      nextNotificationId += 1;
+      const scheduledAt = body.scheduledAt ?? null;
+      notificationHistory.unshift({
+        id,
+        content: body.content,
+        targetRole: body.targetRole,
+        position: body.position,
+        status: scheduledAt === null ? 'IN_PROGRESS' : 'SCHEDULED',
+        referenceAt: scheduledAt ?? new Date().toISOString(),
+      });
+
+      return response(
+        { id, status: scheduledAt === null ? 'QUEUED' : 'SCHEDULED', scheduledAt },
+        schemas.zCreate1Response,
+        202,
+      );
+    }),
+    http.post(
+      `${normalizedBaseUrl}/api/admin/notifications/:notificationId/cancel`,
+      ({ params }) => {
+        if (cancelNotFound) {
+          return HttpResponse.json(
+            { code: 'NOTIFICATION_NOT_FOUND', message: 'private' },
+            { status: 404 },
+          );
+        }
+
+        const notificationId = Number(params.notificationId);
+        const notification = notificationHistory.find((item) => item.id === notificationId);
+        if (notification !== undefined) {
+          notification.status = 'CANCELED';
+        }
+        return new HttpResponse(null, { status: 204 });
+      },
+    ),
     http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members`, ({ request }) => {
       const params = new URL(request.url).searchParams;
       const name = params.get('name');
