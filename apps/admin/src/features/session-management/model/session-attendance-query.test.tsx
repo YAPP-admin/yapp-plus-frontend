@@ -1,5 +1,5 @@
 import { renderHook, waitFor } from '@testing-library/react';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query';
 import { Suspense, type ReactNode } from 'react';
 import { HttpResponse, http } from 'msw';
 import { expect, it } from 'vitest';
@@ -13,6 +13,7 @@ import {
   attendanceCloseMutationOptions,
   attendanceOverrideMutationOptions,
   attendanceCodeApiQueryOptions,
+  memberScoreDetailQueryOptions,
   teamReviewDecisionMutationOptions,
   teamReviewsApiQueryOptions,
   useSessionAttendanceQuery,
@@ -269,4 +270,69 @@ it('출석 코드와 팀 사진 검수 mutation이 생성 SDK 계약에 맞는 �
   expect(issueRequestCount).toBe(1);
   expect(reissueRequestCount).toBe(1);
   expect(decisionBody).toEqual({ decision: 'REJECTED', reason: '사진이 기준과 다릅니다.' });
+});
+
+it('회원별 출석 점수 상세 API 응답을 점수 근거 모델로 변환한다', async () => {
+  server.use(
+    http.get(
+      `${apiBaseUrl}/api/admin/generations/:generationId/memberships/:membershipId/attendance-statistics`,
+      () =>
+        HttpResponse.json({
+          membershipId: 1001,
+          name: '테스트 회원',
+          generationNumber: 12,
+          position: 'IOS',
+          totalScore: 88,
+          deductions: [
+            {
+              sessionId: 101,
+              sessionName: '1회차 정규 세션',
+              status: 'LATE',
+              delta: -4,
+              checkedInAt: '2026-10-31T05:00:00Z',
+              earlyLeaveAt: null,
+            },
+            {
+              sessionId: 102,
+              sessionName: '2회차 팀 세션',
+              status: 'ABSENT',
+              delta: -8,
+              checkedInAt: null,
+              earlyLeaveAt: null,
+            },
+          ],
+        }),
+    ),
+  );
+
+  const { result } = renderHook(() => useSuspenseQuery(memberScoreDetailQueryOptions(33, '1001')), {
+    wrapper: createWrapper(),
+  });
+  await waitFor(() => expect(result.current.data.attendanceEntries).toHaveLength(2));
+  const detail = result.current.data;
+
+  expect(detail).toEqual({
+    totalScore: 88,
+    adjustmentEntries: [],
+    attendanceEntries: [
+      {
+        sessionId: '101',
+        title: '1회차 정규 세션',
+        score: {
+          source: 'server',
+          delta: -4,
+          description: '서버 확정 지각 감점',
+        },
+      },
+      {
+        sessionId: '102',
+        title: '2회차 팀 세션',
+        score: {
+          source: 'server',
+          delta: -8,
+          description: '서버 확정 결석 감점',
+        },
+      },
+    ],
+  });
 });

@@ -17,10 +17,12 @@ import {
   cancel1,
   close,
   decide,
+  detail3Options,
   override,
   reissue,
   start,
   type AdminAttendanceListResponse,
+  type AdminAttendanceStatisticsDetailResponse,
   type AttendanceCodeResponse,
   type OverrideAttendanceRequest,
   type TeamPhotoWithUrl,
@@ -32,6 +34,7 @@ import type { AttendanceEditInput, BadgeEditInput, TeamDecisionInput } from './a
 import type {
   AttendanceCodeViewModel,
   AttendanceMemberViewModel,
+  MemberScoreViewModel,
   TeamReviewViewModel,
 } from './attendance-view-model';
 import {
@@ -84,6 +87,41 @@ export const memberScoresQueryOptions = (generationId: number) => {
         totalScore: item.totalScore,
         warning: item.totalScore !== null && item.totalScore < 40,
       })),
+  });
+};
+
+const deductionStatusLabels = {
+  LATE: '지각',
+  EARLY_LEAVE: '조퇴',
+  ABSENT: '결석',
+} as const;
+
+export function toMemberScoreDetailViewModel(
+  response: AdminAttendanceStatisticsDetailResponse,
+): Pick<MemberScoreViewModel, 'attendanceEntries' | 'adjustmentEntries' | 'totalScore'> {
+  return {
+    attendanceEntries: response.deductions.map((deduction) => ({
+      sessionId: String(deduction.sessionId),
+      title: deduction.sessionName,
+      score: {
+        source: 'server' as const,
+        delta: deduction.delta,
+        description: `서버 확정 ${deductionStatusLabels[deduction.status]} 감점`,
+      },
+    })),
+    adjustmentEntries: [],
+    totalScore: response.totalScore,
+  };
+}
+
+export const memberScoreDetailQueryOptions = (generationId: number, membershipId: string) => {
+  const options = detail3Options({
+    path: { generationId, membershipId: toNumberId(membershipId, '회원 ID') },
+  });
+  return queryOptions({
+    ...options,
+    retry: false,
+    select: toMemberScoreDetailViewModel,
   });
 };
 

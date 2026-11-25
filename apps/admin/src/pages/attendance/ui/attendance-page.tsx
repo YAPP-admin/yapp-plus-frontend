@@ -1,9 +1,11 @@
+import { useQuery } from '@tanstack/react-query';
 import { FilterSelect } from '~/shared/ui/filter-select';
 import { Link } from '@tanstack/react-router';
-import type { ReactNode } from 'react';
+import { useState, type ReactNode, type SyntheticEvent } from 'react';
 import { useAdminGeneration } from '~/features/admin-generation';
 import {
   AttendanceQueryBoundary,
+  memberScoreDetailQueryOptions,
   useMemberScoresQuery,
   useSessionsQuery,
   type MemberScoreViewModel,
@@ -172,7 +174,11 @@ function AttendanceScoresData({ part, emptyLabel }: { part: AttendancePart; empt
         </thead>
         <tbody>
           {scores.map((score) => (
-            <ScoreRow key={score.membershipId} score={score} />
+            <ScoreRow
+              key={score.membershipId}
+              score={score}
+              generationId={currentGeneration.generationId}
+            />
           ))}
         </tbody>
       </table>
@@ -184,7 +190,58 @@ export function filterMemberScores(scores: readonly MemberScoreViewModel[], part
   return scores.filter((score) => part === 'all' || score.part === part);
 }
 
-export function ScoreRow({ score }: { score: MemberScoreViewModel }) {
+export function ScoreRow({
+  score,
+  generationId,
+}: {
+  score: MemberScoreViewModel;
+  generationId?: number;
+}) {
+  if (generationId === undefined) {
+    return <ScoreRowContent score={score} />;
+  }
+  return <ApiScoreRow score={score} generationId={generationId} />;
+}
+
+function ApiScoreRow({
+  score,
+  generationId,
+}: {
+  score: MemberScoreViewModel;
+  generationId: number;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const detailQuery = useQuery({
+    ...memberScoreDetailQueryOptions(generationId, score.membershipId),
+    enabled: isOpen,
+  });
+
+  return (
+    <ScoreRowContent
+      score={score}
+      detail={detailQuery.data}
+      isLoading={isOpen && detailQuery.isPending}
+      isError={isOpen && detailQuery.isError}
+      onToggle={(event) => setIsOpen(event.currentTarget.open)}
+    />
+  );
+}
+
+function ScoreRowContent({
+  score,
+  detail,
+  isLoading = false,
+  isError = false,
+  onToggle,
+}: {
+  score: MemberScoreViewModel;
+  detail?: Pick<MemberScoreViewModel, 'attendanceEntries' | 'adjustmentEntries' | 'totalScore'>;
+  isLoading?: boolean;
+  isError?: boolean;
+  onToggle?: (event: SyntheticEvent<HTMLDetailsElement>) => void;
+}) {
+  const attendanceEntries = detail?.attendanceEntries ?? score.attendanceEntries;
+  const adjustmentEntries = detail?.adjustmentEntries ?? score.adjustmentEntries;
   return (
     <tr>
       <th className={styles.scoreCell} scope="row">
@@ -198,21 +255,37 @@ export function ScoreRow({ score }: { score: MemberScoreViewModel }) {
         {score.warning && <span> · 40점 미만</span>}
       </td>
       <td className={styles.scoreCell}>
-        <details className={styles.scoreDetail} aria-label={`${score.name} 점수 근거`}>
+        <details
+          className={styles.scoreDetail}
+          aria-label={`${score.name} 점수 근거`}
+          onToggle={onToggle}
+        >
           <summary className={styles.scoreDetailSummary}>상세 보기</summary>
           <ul className={styles.scoreDetailList}>
-            {score.attendanceEntries.map((entry) => (
-              <li className={styles.scoreDetailItem} key={entry.sessionId}>
-                <span>{entry.title}</span>
-                <span>{entry.score.delta === null ? '확인 필요' : `${entry.score.delta}점`}</span>
+            {isLoading && (
+              <li className={styles.scoreDetailItem}>상세 점수를 불러오는 중입니다.</li>
+            )}
+            {isError && (
+              <li className={styles.scoreDetailItem} role="alert">
+                상세 점수를 불러오지 못했습니다.
               </li>
-            ))}
-            {score.adjustmentEntries.map((entry) => (
-              <li className={styles.scoreDetailItem} key={entry.id}>
-                <span>{entry.description}</span>
-                <span>{entry.delta}점</span>
-              </li>
-            ))}
+            )}
+            {!isLoading &&
+              !isError &&
+              attendanceEntries.map((entry) => (
+                <li className={styles.scoreDetailItem} key={entry.sessionId}>
+                  <span>{entry.title}</span>
+                  <span>{entry.score.delta === null ? '확인 필요' : `${entry.score.delta}점`}</span>
+                </li>
+              ))}
+            {!isLoading &&
+              !isError &&
+              adjustmentEntries.map((entry) => (
+                <li className={styles.scoreDetailItem} key={entry.id}>
+                  <span>{entry.description}</span>
+                  <span>{entry.delta}점</span>
+                </li>
+              ))}
           </ul>
         </details>
       </td>
