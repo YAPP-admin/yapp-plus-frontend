@@ -73,8 +73,11 @@ describe('공지 입력·저장 경계', () => {
     ).toMatchObject({ submission: { deadlineAt: '2024-02-28T15:00:00.000Z' } });
   });
   it.each([
+    { name: '', url: '' },
     { name: '방법', url: '' },
     { name: '', url: 'https://example.com' },
+    { name: '   ', url: 'https://example.com' },
+    { name: '방법', url: '   ' },
   ])('불완전한 제출 방법을 거절한다: %j', (method) => {
     expect(
       noticeInputSchema.safeParse({

@@ -18,7 +18,7 @@ import { NoticeScheduleField } from './notice-schedule-field';
 
 const categories = [
   { value: 'session', label: '세션' },
-  { value: 'submission', label: '제출' },
+  { value: 'submission', label: '과제' },
   { value: 'operation', label: '기타' },
 ] as const;
 const audiences = [
