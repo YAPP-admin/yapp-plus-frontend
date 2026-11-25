@@ -25,11 +25,11 @@
 
 ## 3-A단계 — 공통 경계 기반·US4 최종 복구
 
-- [ ] T009 `apps/web/src/shared/ui/local-error-boundary.test.tsx`에 일반 오류·상위 전파·reset·첫 활성화·정상 자식 수명 테스트를 추가한다.
-- [ ] T010 `apps/web/src/shared/ui/local-error-boundary.tsx`·`error-boundary-policy.tsx`에 공통 경계·판별 Context·Query reset을 구현한다.
-- [ ] T011 [US4] `apps/web/src/app/app-error-boundary.tsx`와 인접 테스트에 Provider 없이 동작하는 최종 fallback·새로고침·홈 링크를 구현한다.
-- [ ] T012 `apps/web/src/shared/ui/query-boundary.tsx`·`screen-query-boundary.tsx`를 호환 래퍼로 연결하되 기존 소비자의 동작은 유지한다.
-- [ ] T013 [US4] `apps/web/stackflow/src/main.tsx`에서 AppErrorBoundary를 Provider 바깥에 연결한다.
+- [x] T009 `apps/web/src/shared/ui/local-error-boundary.test.tsx`에 일반 오류·상위 전파·수동 reset·정상 자식 수명 테스트를 추가한다.
+- [x] T010 `apps/web/src/shared/ui/local-error-boundary.tsx`·`error-boundary-policy.tsx`에 공통 경계·판별 Context·Query reset을 구현한다.
+- [x] T011 [US4] `apps/web/src/app/app-error-boundary.tsx`와 인접 테스트에 Provider 없이 동작하는 최종 fallback·새로고침·홈 링크를 구현한다.
+- [x] T012 `apps/web/src/shared/ui/query-boundary.tsx`·`screen-query-boundary.tsx`를 호환 래퍼로 연결하되 기존 소비자의 동작은 유지한다.
+- [x] T013 [US4] `apps/web/stackflow/src/main.tsx`에서 AppErrorBoundary를 Provider 바깥에 연결한다.
 - [ ] T014 `specs/028-member-error-boundaries/validation.md`에 3-A 검증·diff·리뷰를 기록한다. 실제 인증 오류 전파는 3-B 연결 전 활성화하지 않는다.
 
 완료 기준: 단독 경계 테스트로 상위 전파와 최종 복구를 확인한다. 앱 전체를 일반 Query 실패로 교체하지 않는다.

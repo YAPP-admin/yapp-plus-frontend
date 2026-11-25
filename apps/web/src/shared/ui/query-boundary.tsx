@@ -1,6 +1,5 @@
-import { QueryErrorResetBoundary } from '@tanstack/react-query';
 import { Suspense, type ReactNode } from 'react';
-import { ErrorBoundary } from 'react-error-boundary';
+import { LocalErrorBoundary } from './local-error-boundary';
 
 export function QueryBoundary({
   children,
@@ -12,12 +11,8 @@ export function QueryBoundary({
   errorFallback: ReactNode;
 }) {
   return (
-    <QueryErrorResetBoundary>
-      {({ reset }) => (
-        <ErrorBoundary onReset={reset} fallback={errorFallback}>
-          <Suspense fallback={pendingFallback}>{children}</Suspense>
-        </ErrorBoundary>
-      )}
-    </QueryErrorResetBoundary>
+    <LocalErrorBoundary fallback={errorFallback}>
+      <Suspense fallback={pendingFallback}>{children}</Suspense>
+    </LocalErrorBoundary>
   );
 }

@@ -27,7 +27,7 @@ node --run dev:web
 | Q01 | 최초 조회500 → 다시 시도200                        | Local 오류 → 로딩 → 콘텐츠                          | Local+대표 일정 테스트     |
 | Q02 | 조회200 → 재조회500                                | 기존 콘텐츠 제거, 실패 영역만 오류                  | 일정·프로필 페이지         |
 | Q03 | 성공 cache 오류 → reset → 다시500/200              | 요청 시작, 로딩 표시, 반복 throw 루프 없음          | Local/query-recovery       |
-| Q04 | 오류 화면 숨김 → 복귀, 정상 화면 숨김 → 복귀       | 오류 복귀당 한 번 복구, 정상 DOM 유지               | Stackflow query-recovery   |
+| Q04 | 오류 화면 숨김 → 복귀, 정상 화면 숨김 → 복귀       | 오류 fallback 유지, 정상 DOM 유지                   | Stackflow query-recovery   |
 | Q05 | GET401 → 갱신 성공 → GET200                        | 원래 조회 한 번 재전송, 로그인 이동 없음            | native-auth-client         |
 | Q06 | GET401 → 갱신 불가 또는 재전송401                  | 보호 콘텐츠 제거, 기본 Login 한 번                  | auth+account-boundary      |
 | Q07 | 동시401 → 새 로그인 → 이전 갱신 성공               | 새 인증만 유지, 왕복·cache 덮어쓰기 없음            | operations+대표 Stackflow  |

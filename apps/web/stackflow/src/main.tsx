@@ -10,6 +10,7 @@ import { ProgressCircle, VStack } from '@seed-design/react';
 import { Suspense } from 'react';
 import { createRoot } from 'react-dom/client';
 import { Providers, createAppQueryClient } from '@/app/providers';
+import { AppErrorBoundary } from '@/app/app-error-boundary';
 import { NativeAuthSessionProvider } from '@/features/auth';
 import { TeamAttendancePhotoDraftProvider } from '@/pages/team-attendance-upload';
 import { createStackflowApp } from './stack';
@@ -54,4 +55,8 @@ function App() {
   );
 }
 
-createRoot(root).render(<App />);
+createRoot(root).render(
+  <AppErrorBoundary>
+    <App />
+  </AppErrorBoundary>,
+);

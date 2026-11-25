@@ -63,7 +63,7 @@ async function settle() {
 }
 
 // 첫 진입의 lazy 화면 로딩과 탐색을 포함하므로 내부 10초 대기보다 긴 한도를 둡니다.
-it('일정 오류는 숨겨진 동안 재시도하지 않고 탭 복귀 시 한 번 복구한다', async () => {
+it('일정 오류는 탭 복귀 뒤에도 수동 재시도 전까지 유지한다', async () => {
   let calls = 0;
   server.use(
     http.get(scheduleUrl, () => {
@@ -80,12 +80,15 @@ it('일정 오류는 숨겨진 동안 재시도하지 않고 탭 복귀 시 한 
   await settle();
   expect(calls).toBe(1);
   await user.click(screen.getByRole('tab', { name: /^일정$/ }));
-  await screen.findByRole('list', { name: '세션 일정 목록' });
+  await screen.findByRole('button', { name: '다시 시도' });
   await settle();
+  expect(calls).toBe(1);
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  await screen.findByRole('list', { name: '세션 일정 목록' });
   expect(calls).toBe(2);
 }, 15000);
 
-it('첫 진입 전에 조회가 실패해도 화면 복귀 전에는 재시도하지 않는다', async () => {
+it('첫 진입 전 캐시 오류도 수동 재시도 전까지 유지한다', async () => {
   let calls = 0;
   server.use(
     http.get(scheduleUrl, () => {
@@ -106,11 +109,14 @@ it('첫 진입 전에 조회가 실패해도 화면 복귀 전에는 재시도�
   await user.click(screen.getByRole('tab', { name: /^홈$/ }));
   await screen.findByRole('heading', { name: '홈' });
   await user.click(screen.getByRole('tab', { name: /^일정$/ }));
+  await screen.findByRole('button', { name: '다시 시도' });
+  expect(calls).toBe(1);
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
   await screen.findByRole('list', { name: '세션 일정 목록' });
   expect(calls).toBe(2);
 });
 
-it('반복 실패해도 복귀당 한 번만 재시도하고 수동 재시도를 유지한다', async () => {
+it('반복 실패해도 화면 복귀는 재시도하지 않고 수동 재시도만 요청한다', async () => {
   let calls = 0;
   server.use(
     http.get(scheduleUrl, () => {
@@ -125,12 +131,14 @@ it('반복 실패해도 복귀당 한 번만 재시도하고 수동 재시도를
   await user.click(screen.getByRole('tab', { name: /^홈$/ }));
   await screen.findByRole('heading', { name: '홈' });
   await user.click(screen.getByRole('tab', { name: /^일정$/ }));
-  await waitFor(() => expect(calls).toBe(2));
   const retry = await screen.findByRole('button', { name: '다시 시도' });
   await settle();
-  expect(calls).toBe(2);
+  expect(calls).toBe(1);
   retry.focus();
   await user.keyboard('{Enter}');
+  await screen.findByRole('button', { name: '다시 시도' });
+  expect(calls).toBe(2);
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
   await screen.findByRole('list', { name: '세션 일정 목록' });
   expect(calls).toBe(3);
 });
@@ -160,7 +168,7 @@ it.each([false, true])('탭 복귀는 기존 stale 재조회 정책을 유지한
   expect(screen.getByRole('list', { name: '세션 일정 목록' })).toBe(list);
 });
 
-it('MY 오류는 상세 화면에서 돌아오면 복구한다', async () => {
+it('MY 오류는 상세 화면에서 돌아와도 수동 재시도 전까지 유지한다', async () => {
   let calls = 0;
   server.use(
     http.get(scoreUrl, () => {
@@ -177,8 +185,11 @@ it('MY 오류는 상세 화면에서 돌아오면 복구한다', async () => {
   act(() => {
     actions.pop();
   });
-  await screen.findByText('92점');
+  await screen.findByText('출석 현황을 불러오지 못했어요.');
   await settle();
+  expect(calls).toBe(1);
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  await screen.findByText('92점');
   expect(calls).toBe(2);
 });
 
