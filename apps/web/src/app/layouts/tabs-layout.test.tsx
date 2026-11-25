@@ -8,13 +8,23 @@ import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 import { tabNames, type TabName } from '../navigation/tab';
 import userEvent from '@testing-library/user-event';
 
+function tabHref(tab: string) {
+  if (tab === 'home') {
+    return '/';
+  }
+  if (tab === 'community') {
+    return '/dining';
+  }
+  return `/${tab}`;
+}
+
 vi.mock('@/app/navigation/tab-link', () => ({
   TabLink: ({
     tab,
     children,
     ...props
   }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { tab: string }) => (
-    <a {...props} href={tab === 'home' ? '/' : `/${tab}`}>
+    <a {...props} href={tabHref(tab)}>
       {children}
     </a>
   ),
@@ -78,6 +88,7 @@ describe('TabsLayout', () => {
     ['/', '홈', 'home'],
     ['/schedule', '일정', 'schedule'],
     ['/notices', '게시판', 'notices'],
+    ['/dining', '커뮤니티', 'community'],
     ['/my', 'MY', 'my'],
   ] as const)('%s에서 현재 메뉴 하나만 표시한다', (pathname, label, activeTab) => {
     render(
@@ -86,10 +97,10 @@ describe('TabsLayout', () => {
       </TabsLayout>,
     );
     const navigation = within(screen.getByRole('navigation', { name: '주요 메뉴' }));
-    expect(navigation.getAllByRole('tab')).toHaveLength(4);
+    expect(navigation.getAllByRole('tab')).toHaveLength(5);
     expect(navigation.getByRole('tab', { selected: true })).toHaveTextContent(label);
     expect(navigation.getByRole('tab', { selected: true })).toHaveAttribute('href', pathname);
-    expect(screen.getAllByRole('banner')).toHaveLength(1);
+    expect(screen.queryAllByRole('banner')).toHaveLength(activeTab === 'community' ? 0 : 1);
     expect(screen.getAllByRole('main')).toHaveLength(1);
   });
 

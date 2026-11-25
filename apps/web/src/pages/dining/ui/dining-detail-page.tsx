@@ -43,7 +43,7 @@ function DiningDetailContent({ diningId }: { diningId: string }) {
     >
       <section aria-label="참석 응답">
         <Text as="h2" textStyle="t5Bold">
-          회식 참여 여부
+          뒤풀이 참여 여부
         </Text>
         <Text as="p" textStyle="t4Regular">
           {{ UNANSWERED: '미응답', ATTENDING: '참석', NOT_ATTENDING: '불참' }[dining.response]}
@@ -82,7 +82,11 @@ function DiningPageFrame({
   return (
     <main className={[page, detailPage].join(' ')}>
       <header className={detailHeader}>
-        <BackButton fallbackActivityName="DiningList" fallbackActivityParams={{}} iconOnly />
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'community' }}
+          iconOnly
+        />
         <Text as="h1" textStyle="t6Bold" className={detailTitle}>
           뒤풀이
         </Text>
@@ -97,7 +101,7 @@ function DiningPageFrame({
         </Text>
         <dl className={informationRows}>
           <Text as="dt" textStyle="t3Medium" color="fg.neutralSubtle">
-            회식 날짜
+            뒤풀이 날짜
           </Text>
           <Text as="dd" textStyle="t3Medium" className={informationValue}>
             {formatDiningDate(dining.startsAt)}

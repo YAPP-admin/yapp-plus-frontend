@@ -1,4 +1,4 @@
-export const tabNames = ['home', 'schedule', 'notices', 'my'] as const;
+export const tabNames = ['home', 'schedule', 'notices', 'community', 'my'] as const;
 
 export type TabName = (typeof tabNames)[number];
 export type NoticeCategory = 'ALL' | 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
@@ -19,6 +19,9 @@ export function isNoticeCategory(value: unknown): value is NoticeCategory {
 }
 
 export function tabPath(tab: TabName): string {
+  if (tab === 'community') {
+    return '/dining';
+  }
   return tab === 'home' ? '/' : `/${tab}`;
 }
 

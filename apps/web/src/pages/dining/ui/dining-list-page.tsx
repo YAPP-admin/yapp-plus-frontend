@@ -68,7 +68,7 @@ function DiningListContent() {
   if (query.error && !query.isFetching) {
     throw query.error instanceof Error
       ? query.error
-      : new Error('회식 정보를 불러오지 못했어요.', { cause: query.error });
+      : new Error('뒤풀이 정보를 불러오지 못했어요.', { cause: query.error });
   }
   const items = query.data;
   return (
@@ -103,7 +103,7 @@ function DiningListContent() {
             ))}
           </ul>
         </fieldset>
-        {items.length === 0 && <DiningQueryState message="초대된 회식이 없어요." />}
+        {items.length === 0 && <DiningQueryState message="초대된 뒤풀이가 없어요." />}
         <ul className={diningList} aria-label="뒤풀이 목록">
           {items.map((dining) => (
             <li key={dining.afterpartyId}>

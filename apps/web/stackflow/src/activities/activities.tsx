@@ -35,7 +35,6 @@ import {
   useTeamAttendancePhotoDraft,
 } from '@/pages/team-attendance-upload';
 import { AuthLayout } from '@/app/layouts/auth-layout';
-import { BottomNavigation } from '@/app/layouts/bottom-navigation';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabPanel, TabsLayout } from '@/app/layouts/tabs-layout';
@@ -58,6 +57,7 @@ const TAB_TITLES: Record<TabName, string> = {
   home: '홈',
   schedule: '일정',
   notices: '게시판',
+  community: '커뮤니티',
   my: '마이페이지',
 };
 
@@ -115,6 +115,9 @@ export function TabsActivity() {
               );
             }}
           />
+        </TabPanel>
+        <TabPanel tab="community" active={activeTab === 'community'}>
+          <DiningListPage />
         </TabPanel>
         <TabPanel tab="my" active={activeTab === 'my'}>
           <MyPage />
@@ -411,19 +414,10 @@ export function DevRoutesActivity() {
   );
 }
 
-export function DiningListActivity() {
-  return (
-    <ActivityScreen title="회식">
-      <PageShell header={null} navigation={<BottomNavigation activeTab="community" />}>
-        <DiningListPage />
-      </PageShell>
-    </ActivityScreen>
-  );
-}
 export function DiningDetailActivity() {
   const { diningId } = useActivityParams<'DiningDetail'>();
   return (
-    <ActivityScreen title="회식" snackbarPosition="safeArea">
+    <ActivityScreen title="뒤풀이" snackbarPosition="safeArea">
       <PageShell header={null} plain>
         <DiningDetailPage diningId={diningId} />
       </PageShell>
