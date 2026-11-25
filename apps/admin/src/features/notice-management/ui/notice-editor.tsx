@@ -11,13 +11,22 @@ import { editorRoot } from './notice-editor.css';
 
 type NoticeEditorProps = {
   initialValue?: JSONContent;
+  initialMarkdown?: string;
   onChange?: (value: JSONContent) => void;
+  onMarkdownChange?: (value: string) => void;
   labelId: string;
   errorId?: string;
 };
 
 /** 초기 본문을 한 번 설정하고 편집 결과를 상위로 전달한다. */
-export function NoticeEditor({ initialValue, onChange, labelId, errorId }: NoticeEditorProps) {
+export function NoticeEditor({
+  initialValue,
+  initialMarkdown,
+  onChange,
+  onMarkdownChange,
+  labelId,
+  errorId,
+}: NoticeEditorProps) {
   const [content] = useState(() => initialValue);
   const [extensions] = useState(() => [
     ...noticeExtensions(),
@@ -26,7 +35,8 @@ export function NoticeEditor({ initialValue, onChange, labelId, errorId }: Notic
   const editor = useEditor({
     extensions,
     immediatelyRender: false,
-    content,
+    content: initialMarkdown ?? content,
+    ...(initialMarkdown === undefined ? {} : { contentType: 'markdown' as const }),
     editorProps: {
       attributes: {
         role: 'textbox',
@@ -36,7 +46,10 @@ export function NoticeEditor({ initialValue, onChange, labelId, errorId }: Notic
         ...(errorId ? { 'aria-describedby': errorId } : {}),
       },
     },
-    onUpdate: ({ editor: current }) => onChange?.(current.getJSON()),
+    onUpdate: ({ editor: current }) => {
+      onChange?.(current.getJSON());
+      onMarkdownChange?.(current.getMarkdown());
+    },
   });
 
   return (
