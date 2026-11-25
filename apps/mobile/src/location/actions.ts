@@ -22,7 +22,8 @@ export type LocationRuntime = {
   requestPermission: () => Promise<LocationPermission>;
   isActive: () => boolean;
   isBackground: () => boolean;
-  getPosition: () => Promise<LocationReading>;
+  /** 요청 이후 측정한 5초 이내 표본 한 건을 반환하며 15초 안에 없으면 null을 반환한다. */
+  getPosition: () => Promise<LocationReading | null>;
   openSettings: () => Promise<void>;
 };
 
@@ -40,48 +41,36 @@ const resolvePermission = async (runtime: LocationRuntime): Promise<LocationPerm
     : permission;
 };
 
-/** 측정 응답 대기와 결과 검증을 묶고, 타이머는 이 함수 안에서 정리한다. */
+/** 측정 결과와 공용 응답 형식 검증을 묶는다. 측정 제한과 구독 정리는 OS 어댑터가 담당한다. */
 const measureLocation = async (
   runtime: LocationRuntime,
   precision: LocationPermission['precision'],
 ): Promise<LocationResult> => {
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  const reading = await runtime.getPosition();
 
-  try {
-    // 대기만 끝낸다. Expo 단발 요청은 취소할 수 없으며 늦은 결과는 사용하지 않는다.
-    const reading = await Promise.race([
-      runtime.getPosition(),
-      new Promise<null>((resolve) => {
-        timer = setTimeout(() => resolve(null), 15_000);
-      }),
-    ]);
-
-    if (reading === null) {
-      return error('TIMEOUT');
-    }
-
-    if (runtime.isBackground()) {
-      return error('APP_INACTIVE');
-    }
-
-    const location = locationSampleSchema.safeParse({
-      ...reading,
-      accuracy:
-        reading.accuracy !== null && Number.isFinite(reading.accuracy) && reading.accuracy < 0
-          ? null
-          : reading.accuracy,
-      precision,
-    });
-
-    // OS가 방금 측정한 표본도 반환할 수 있으므로 수신 시점 기준 5초까지 허용한다.
-    if (!location.success || Date.now() - location.data.timestamp > 5_000) {
-      return error('LOCATION_UNAVAILABLE');
-    }
-
-    return { status: 'SUCCESS', location: location.data };
-  } finally {
-    clearTimeout(timer);
+  if (reading === null) {
+    return error('TIMEOUT');
   }
+
+  if (runtime.isBackground()) {
+    return error('APP_INACTIVE');
+  }
+
+  const location = locationSampleSchema.safeParse({
+    ...reading,
+    accuracy:
+      reading.accuracy !== null && Number.isFinite(reading.accuracy) && reading.accuracy < 0
+        ? null
+        : reading.accuracy,
+    precision,
+  });
+
+  // 표본 신선도는 OS 어댑터에서 검사하고 이 경계에서는 공용 응답 형식을 검증한다.
+  if (!location.success) {
+    return error('LOCATION_UNAVAILABLE');
+  }
+
+  return { status: 'SUCCESS', location: location.data };
 };
 
 /**
@@ -113,7 +102,7 @@ export const createLocationActions = (runtime: LocationRuntime) => {
 
   /**
    * 필요하면 권한을 요청한 뒤 위치 한 건을 반환한다. 진행 중 재호출은 BUSY다.
-   * 권한 선택에는 시간 제한이 없고, 측정 대기는 15초다. OS 측정 취소는 보장하지 않는다.
+   * 권한 선택에는 시간 제한이 없고, 측정 대기는 OS 어댑터가 15초로 제한하고 구독을 해제한다.
    */
   const requestCurrentLocation = async (): Promise<LocationResult> => {
     if (busy) {
