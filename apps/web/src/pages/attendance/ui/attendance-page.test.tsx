@@ -2,6 +2,7 @@ import { Activity } from 'react';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
+import { memberScoreQueryOptions } from '@/features/member-attendance';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -94,6 +95,17 @@ it.each([9, 10])('결석 %i회의 경고 경계를 적용한다', async (absentC
       absentCount === 10 ? screen.getByText(/10번 이상 결석/) : null,
     ),
   );
+});
+
+it('결석 경고 재조회 실패는 내역을 유지한 오류 영역으로 교체한다', async () => {
+  const { client } = renderPage();
+  expect(await screen.findByText('세션 1')).toBeVisible();
+  vi.spyOn(console, 'error').mockImplementation(() => {});
+  server.use(http.get(`${apiBaseUrl}/api/attendance-scores/me`, () => HttpResponse.error()));
+  await act(() => client.invalidateQueries({ queryKey: memberScoreQueryOptions().queryKey }));
+
+  expect(await screen.findByRole('alert')).toHaveTextContent('결석 경고 정보를 불러오지 못했어요');
+  expect(screen.getByText('세션 1')).toBeVisible();
 });
 it('점수 실패가 목록을 막지 않고 최초 내역 오류는 재시도로 복구한다', async () => {
   let fail = true;

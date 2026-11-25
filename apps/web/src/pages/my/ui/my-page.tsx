@@ -1,8 +1,8 @@
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { Grid, HStack, VStack } from '@seed-design/react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Suspense } from 'react';
-import { ActionButton } from '@yapp-plus/ui';
 import { useNativeAuthSession } from '@/features/auth';
 import { memberScoreQueryOptions } from '@/features/member-attendance';
 import { IconQuestionmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
@@ -142,36 +142,7 @@ function ScoreContent() {
   const { apiOptions } = useNativeAuthSession();
   const query = useSuspenseQuery(memberScoreQueryOptions(apiOptions));
   useRefetchOnScreenReturn(query);
-  const { data, error, isFetching, refetch } = query;
-  return (
-    <ScoreSummary
-      score={data.status === 'available' ? data.score : undefined}
-      notice={
-        error ? (
-          <VStack
-            gridColumn="1 / -1"
-            align="flex-start"
-            gap="x2"
-            p="x4"
-            className={queryNotice}
-            role="alert"
-          >
-            <p>출석 현황을 새로 불러오지 못했어요. 이전 내용을 표시하고 있어요.</p>
-            <ActionButton
-              type="button"
-              variant="neutralWeak"
-              size="small"
-              loading={isFetching}
-              disabled={isFetching}
-              onClick={() => {
-                void refetch({ cancelRefetch: false });
-              }}
-            >
-              다시 시도
-            </ActionButton>
-          </VStack>
-        ) : null
-      }
-    />
-  );
+  useThrowQueryError(query);
+  const { data } = query;
+  return <ScoreSummary score={data.status === 'available' ? data.score : undefined} />;
 }

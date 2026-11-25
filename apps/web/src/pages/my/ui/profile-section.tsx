@@ -1,13 +1,14 @@
 /** 마이페이지 프로필의 조회·오류 수명과 표시를 출석 현황과 분리합니다. */
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { Box, HStack, VStack } from '@seed-design/react';
 import { useSuspenseQuery } from '@tanstack/react-query';
-import { ActionButton } from '@yapp-plus/ui';
 import { Suspense, type ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
 import { Image } from '@/app/navigation/image';
+import { ErrorState } from '@/shared/ui/error-state';
 import { toProfileDisplay } from '../model/profile-model';
 import { profileQueryOptions } from '../model/profile-query';
 import { activeChip, avatar, name, queryNotice, subDivider, subText } from './my-page.css';
@@ -29,25 +30,18 @@ function ProfileContent() {
   const { apiOptions } = useNativeAuthSession();
   const query = useSuspenseQuery(profileQueryOptions(apiOptions));
   useRefetchOnScreenReturn(query);
+  useThrowQueryError(query);
   return <ProfileSummary profile={toProfileDisplay(query.data)} />;
 }
 
 function ProfileError({ resetErrorBoundary }: FallbackProps) {
   return (
-    <ProfileSummary
-      notice={
-        <ProfileNotice>
-          <p>프로필을 불러오지 못했어요.</p>
-          <ActionButton
-            type="button"
-            variant="neutralWeak"
-            size="small"
-            onClick={resetErrorBoundary}
-          >
-            프로필 다시 시도
-          </ActionButton>
-        </ProfileNotice>
-      }
+    <ErrorState
+      variant="section"
+      title="프로필을 불러오지 못했어요"
+      titleAs="h2"
+      retryLabel="프로필 다시 시도"
+      onRetry={resetErrorBoundary}
     />
   );
 }
@@ -86,14 +80,6 @@ function ProfileLoading() {
   return (
     <VStack as="output" gap="x2" className={queryNotice} aria-live="polite">
       프로필을 불러오는 중이에요
-    </VStack>
-  );
-}
-
-function ProfileNotice({ children }: { children: ReactNode }) {
-  return (
-    <VStack gap="x2" className={queryNotice} role="alert" aria-live="polite">
-      {children}
     </VStack>
   );
 }

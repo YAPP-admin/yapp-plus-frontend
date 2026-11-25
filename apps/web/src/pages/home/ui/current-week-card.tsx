@@ -1,19 +1,21 @@
 import { staticContentEnabled } from '@/features/static-content';
 import { useRefetchOnScreenReturn, useScreenActiveContext } from '@/shared/lib/screen-activity';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import {
   find1Options,
   type CurrentWeekSessionDetailResponse,
   type UserTeamPhotoDetailResponse,
 } from '@yapp-plus/api/generated';
-import { ActionButton, ResultSection } from '@yapp-plus/ui';
+import { ActionButton } from '@yapp-plus/ui';
 import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
 import { useFlow } from '@stackflow/react';
 import { IconCameraFill } from '@karrotmarket/react-monochrome-icon';
-import { ErrorBoundary, useErrorBoundary } from 'react-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
 import { Image } from '@/app/navigation/image';
-import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
+import { ErrorState } from '@/shared/ui/error-state';
 import { useNativeAuthSession } from '@/features/auth';
 import {
   formatKoreanTime,
@@ -66,11 +68,11 @@ export function CurrentWeekCard() {
   return (
     <section className={sessionCard} aria-label="이번 주 세션">
       {canQuery ? (
-        <ScreenQueryBoundary renderFallback={() => <WeekError />}>
+        <LocalErrorBoundary fallbackRender={renderWeekError}>
           <Suspense fallback={<CurrentWeekLoading />}>
             <CurrentWeekContent />
           </Suspense>
-        </ScreenQueryBoundary>
+        </LocalErrorBoundary>
       ) : (
         <output>세션은 YAPP+ 앱에 로그인한 후 확인할 수 있어요.</output>
       )}
@@ -98,14 +100,13 @@ function CurrentWeekLoading() {
   );
 }
 
-function WeekError() {
-  const { resetBoundary } = useErrorBoundary();
+function renderWeekError({ resetErrorBoundary }: FallbackProps) {
   return (
-    <ResultSection
-      role="alert"
-      size="medium"
+    <ErrorState
+      variant="section"
       title="이번 주 세션을 불러오지 못했어요"
-      primaryActionProps={{ children: '다시 시도', onClick: resetBoundary }}
+      titleAs="h2"
+      onRetry={resetErrorBoundary}
     />
   );
 }
@@ -122,6 +123,7 @@ function CurrentWeekContent() {
     refetchOnWindowFocus: active ? 'always' : false,
   });
   useRefetchOnScreenReturn(query, 'always');
+  useThrowQueryError(query);
   const { data, dataUpdatedAt } = query;
   const today = koreanDateString(dataUpdatedAt);
   const days = Array.from({ length: 7 }, (_, index) => {
@@ -206,20 +208,32 @@ function SessionAttendanceAction({ session }: { session: CurrentWeekSessionDetai
   }
 
   return (
-    <ErrorBoundary
+    <LocalErrorBoundary
       resetKeys={[session.sessionId]}
-      fallback={<TeamAttendanceAction disabled>인증 사진 검토 중</TeamAttendanceAction>}
+      fallbackRender={renderTeamAttendancePhotoError}
     >
       <Suspense fallback={<TeamAttendancePhotoLoading />}>
         <TeamAttendancePhotoContent sessionId={session.sessionId} />
       </Suspense>
-    </ErrorBoundary>
+    </LocalErrorBoundary>
+  );
+}
+
+function renderTeamAttendancePhotoError({ resetErrorBoundary }: FallbackProps) {
+  return (
+    <ErrorState
+      variant="section"
+      title="인증 사진 상태를 불러오지 못했어요"
+      titleAs="h3"
+      onRetry={resetErrorBoundary}
+    />
   );
 }
 
 function TeamAttendancePhotoContent({ sessionId }: { sessionId: number }) {
   const { apiOptions } = useNativeAuthSession();
   const photoQuery = useSuspenseQuery(find1Options({ ...apiOptions, path: { sessionId } }));
+  useThrowQueryError(photoQuery);
 
   if (photoQuery.data.photo === null) {
     return <TeamAttendanceAction disabled>인증 사진 검토 중</TeamAttendanceAction>;

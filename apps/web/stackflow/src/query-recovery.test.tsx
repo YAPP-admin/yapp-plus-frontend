@@ -177,7 +177,7 @@ it('MY 오류는 상세 화면에서 돌아와도 수동 재시도 전까지 유
     }),
   );
   const { user, actions } = await renderStack('/my');
-  await screen.findByText('출석 현황을 불러오지 못했어요.');
+  await screen.findByText('출석 현황을 불러오지 못했어요');
   await user.click(screen.getByRole('link', { name: '설정' }));
   await waitFor(() => expect(document.title).toBe('설정 | YAPP+'));
   await settle();
@@ -185,12 +185,42 @@ it('MY 오류는 상세 화면에서 돌아와도 수동 재시도 전까지 유
   act(() => {
     actions.pop();
   });
-  await screen.findByText('출석 현황을 불러오지 못했어요.');
+  await screen.findByText('출석 현황을 불러오지 못했어요');
   await settle();
   expect(calls).toBe(1);
   await user.click(screen.getByRole('button', { name: '다시 시도' }));
   await screen.findByText('92점');
   expect(calls).toBe(2);
+});
+
+it('성공 cache의 MY 재조회 실패도 복귀 중 재요청 없이 수동 재시도로 복구한다', async () => {
+  let calls = 0;
+  server.use(
+    http.get(scoreUrl, () => {
+      calls++;
+      return calls === 2 ? HttpResponse.json({}, { status: 500 }) : HttpResponse.json(scoreFixture);
+    }),
+  );
+  const { client, user, actions } = await renderStack('/my');
+  await screen.findByText('92점');
+
+  await act(() =>
+    client.invalidateQueries({ queryKey: memberScoreQueryOptions().queryKey, exact: true }),
+  );
+  expect(await screen.findByRole('alert')).toHaveTextContent('출석 현황을 불러오지 못했어요');
+  expect(calls).toBe(2);
+
+  await user.click(screen.getByRole('link', { name: '설정' }));
+  await waitFor(() => expect(document.title).toBe('설정 | YAPP+'));
+  act(() => {
+    actions.pop();
+  });
+  expect(await screen.findByRole('alert')).toHaveTextContent('출석 현황을 불러오지 못했어요');
+  expect(calls).toBe(2);
+
+  await user.click(screen.getByRole('button', { name: '다시 시도' }));
+  expect(await screen.findByText('92점')).toBeVisible();
+  expect(calls).toBe(3);
 });
 
 it.each([false, true])(

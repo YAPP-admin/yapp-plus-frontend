@@ -1,6 +1,6 @@
 /** 홈 공지 조회 실패를 세션·출석 영역과 분리해 재시도시키는 오류 경계다. */
 import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
-import { ResultSection } from '@yapp-plus/ui';
+import { ErrorState } from '@/shared/ui/error-state';
 import type { ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 
@@ -15,11 +15,11 @@ export function WeeklyNoticesErrorBoundary({ children }: { children: ReactNode }
 
 function WeeklyNoticesError({ resetErrorBoundary }: FallbackProps) {
   return (
-    <ResultSection
-      role="alert"
-      size="medium"
+    <ErrorState
+      variant="section"
       title="이번 주 공지를 불러오지 못했어요"
-      primaryActionProps={{ children: '다시 시도', onClick: resetErrorBoundary }}
+      titleAs="h3"
+      onRetry={resetErrorBoundary}
     />
   );
 }

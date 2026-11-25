@@ -1,5 +1,4 @@
-import { VStack } from '@seed-design/react';
-import { ActionButton } from '@yapp-plus/ui';
+import { ErrorState } from '@/shared/ui/error-state';
 import { useErrorBoundary } from 'react-error-boundary';
 
 export function AttendanceQueryError({
@@ -11,11 +10,12 @@ export function AttendanceQueryError({
 }) {
   const { resetBoundary } = useErrorBoundary();
   return (
-    <VStack gap="x2" role="alert">
-      <p>{message}</p>
-      <ActionButton size="small" variant="neutralWeak" onClick={resetBoundary}>
-        {retryLabel}
-      </ActionButton>
-    </VStack>
+    <ErrorState
+      variant="section"
+      title={message}
+      titleAs="h2"
+      onRetry={resetBoundary}
+      retryLabel={retryLabel}
+    />
   );
 }

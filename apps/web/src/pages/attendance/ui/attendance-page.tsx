@@ -1,4 +1,5 @@
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
 import type { AttendanceHistoryItemResponse } from '@yapp-plus/api/generated';
 import { Box, Grid, HStack, ProgressCircle, Skeleton, VStack } from '@seed-design/react';
@@ -199,25 +200,10 @@ function AbsenceWarning() {
   const { apiOptions } = useNativeAuthSession();
   const score = useSuspenseQuery(memberScoreQueryOptions(apiOptions));
   useRefetchOnScreenReturn(score);
-  const showWarning =
-    !score.error && score.data.status === 'available' && score.data.score.absentCount >= 10;
+  useThrowQueryError(score);
+  const showWarning = score.data.status === 'available' && score.data.score.absentCount >= 10;
   return (
     <>
-      {score.error && (
-        <VStack gap="x2" role="alert">
-          <p>결석 경고 정보를 불러오지 못했어요.</p>
-          <ActionButton
-            size="small"
-            variant="neutralWeak"
-            disabled={score.isFetching}
-            onClick={() => {
-              void score.refetch({ cancelRefetch: false });
-            }}
-          >
-            경고 정보 다시 시도
-          </ActionButton>
-        </VStack>
-      )}
       {showWarning && (
         <HStack mt="x2_5" className={warningBanner} role="alert">
           <Image src="/images/my/info.svg" alt="" width={18} height={18} />
