@@ -1,6 +1,7 @@
 /** 조회 상태와 필터 결과를 공지 목록으로 표현한다. */
 import { Skeleton, VStack } from '@seed-design/react';
-import type { Notice, Member } from '~/features/notice-management';
+import { ActionButton } from '@yapp-plus/ui';
+import type { AdminPostListItemResponse } from '@yapp-plus/api/generated';
 import type { NoticeCategory } from '../model/notice-search';
 import { NoticeCard } from './notice-card';
 import * as styles from './notice-list.css';
@@ -8,37 +9,60 @@ import * as styles from './notice-list.css';
 /** 조회·필터 변경으로 렌더링할 때 현재 시각으로 마감을 다시 계산한다. */
 export function NoticeList({
   category,
+  generationId,
   notices,
-  members,
+  totalPostCount,
+  hasNextPage,
+  isFetchingNextPage,
+  onFetchNextPage,
 }: {
   category: NoticeCategory;
-  notices: Notice[];
-  members: Member[];
+  generationId: number;
+  notices: AdminPostListItemResponse[];
+  totalPostCount: number;
+  hasNextPage: boolean;
+  isFetchingNextPage: boolean;
+  onFetchNextPage: () => void;
 }) {
-  const filtered = notices.filter((notice) => category === 'all' || notice.category === category);
   const now = new Date();
+  let emptyMessage = '선택한 종류의 공지가 없습니다.';
+  if (totalPostCount > 0) {
+    emptyMessage = '공지 목록을 불러오지 못했습니다.';
+  } else if (category === 'all') {
+    emptyMessage = '등록된 공지가 없습니다.';
+  }
 
   return (
     <>
       <div className={styles.results}>
         <p aria-live="polite">
-          총 <strong>{filtered.length}</strong>개
+          총 <strong>{totalPostCount}</strong>개
         </p>
-        <p>개발용 예시 데이터입니다.</p>
       </div>
 
-      {filtered.length === 0 ? (
+      {notices.length === 0 ? (
         <p className={styles.placeholder}>
-          {notices.length === 0 ? '등록된 공지가 없습니다.' : '선택한 종류의 공지가 없습니다.'}
+          {emptyMessage}
         </p>
       ) : (
         <ul className={styles.list} aria-label="공지 목록">
-          {filtered.map((notice) => (
-            <li key={notice.id}>
-              <NoticeCard notice={notice} members={members} now={now} />
+          {notices.map((notice) => (
+            <li key={notice.postId}>
+              <NoticeCard notice={notice} generationId={generationId} now={now} />
             </li>
           ))}
         </ul>
+      )}
+
+      {hasNextPage && (
+        <ActionButton
+          type="button"
+          variant="neutralWeak"
+          loading={isFetchingNextPage}
+          onClick={onFetchNextPage}
+        >
+          더 불러오기
+        </ActionButton>
       )}
     </>
   );
