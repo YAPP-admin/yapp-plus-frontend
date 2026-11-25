@@ -27,7 +27,6 @@ import { currentWeekQueryOptions } from '../model/current-week-query';
 import {
   calendarDateBadge,
   calendarDateBadgeActive,
-  calendarDateToday,
   calendarDayItem,
   calendarDayLabel,
   calendarWeek,
@@ -157,7 +156,7 @@ function CurrentWeekContent() {
               dateTime={date}
               aria-current={date === today ? 'date' : undefined}
               aria-label={`${date}${date === session?.date ? ' 세션 예정' : ''}`}
-              className={`${date === session?.date ? calendarDateBadgeActive : calendarDateBadge} ${date === today ? calendarDateToday : ''}`}
+              className={date === today ? calendarDateBadgeActive : calendarDateBadge}
             >
               {Number(date.slice(8))}
             </time>
