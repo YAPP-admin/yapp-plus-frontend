@@ -3,7 +3,9 @@ import { useState, type ReactNode, type MouseEventHandler } from 'react';
 import { flexRender, useTable, type SortingState } from '@tanstack/react-table';
 import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import { ActionButton } from '@yapp-plus/ui';
-import { readerColumns, readerFeatures, type NoticeReader } from './notice-reader-columns';
+import type { AdminPostRecipientResponse } from '@yapp-plus/api/generated';
+import type { getNoticeReaders } from '~/features/notice-management';
+import { readerColumns, readerFeatures } from './notice-reader-columns';
 import * as styles from './notice-readers.css';
 
 const sortPresentation = {
@@ -13,8 +15,37 @@ const sortPresentation = {
 } as const;
 
 /** 정렬 해제 시 전달받은 도메인 기본 순서로 돌아가며 동률은 그 순서를 유지한다. */
-export function NoticeReaders({ readers }: { readers: NoticeReader[] }) {
+type LegacyNoticeReader = ReturnType<typeof getNoticeReaders>[number];
+type SupportedNoticeReader = AdminPostRecipientResponse | LegacyNoticeReader;
+
+function normalizeReaders(readers: SupportedNoticeReader[]): AdminPostRecipientResponse[] {
+  return readers.map((reader) => {
+    if ('userId' in reader) {
+      return reader;
+    }
+
+    const positionByJob = {
+      PM: 'PM',
+      Design: 'DESIGN',
+      Mobile: 'MOBILE',
+      Web: 'WEB',
+      Server: 'SERVER',
+      'AI Native': 'AI_NATIVE',
+    } as const;
+    return {
+      userId: Number(reader.member.id) || 0,
+      name: reader.member.name,
+      generationNumber: reader.member.cohort,
+      position: positionByJob[reader.member.job],
+      read: Boolean(reader.readAt),
+      readAt: reader.readAt,
+    };
+  });
+}
+
+export function NoticeReaders({ readers: inputReaders }: { readers: SupportedNoticeReader[] }) {
   const [sorting, setSorting] = useState<SortingState>([]);
+  const readers = normalizeReaders(inputReaders);
 
   const table = useTable({
     features: readerFeatures,
@@ -22,7 +53,7 @@ export function NoticeReaders({ readers }: { readers: NoticeReader[] }) {
     columns: readerColumns,
     state: { sorting },
     onSortingChange: setSorting,
-    getRowId: (row) => row.member.id,
+    getRowId: (row) => String(row.userId),
     enableMultiSort: false,
     sortDescFirst: false,
   });
