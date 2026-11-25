@@ -310,6 +310,7 @@ function MatchMemberDialog({
 }) {
   const memberName = detail.name ?? '회원';
   const membership = detail.memberships[0];
+  const hasNoCandidates = candidates !== undefined && candidates.length === 0;
 
   return (
     <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
@@ -319,7 +320,11 @@ function MatchMemberDialog({
           <Dialog.Content className={styles.matchDialog} data-seed-color-mode="dark-only">
             <Dialog.Header>
               <div className={styles.eyebrow}>MATCH MEMBER</div>
-              <Dialog.Title>{memberName}님을 명단에서 찾았어요</Dialog.Title>
+              <Dialog.Title>
+                {hasNoCandidates
+                  ? `${memberName}님의 가입을 승인하시겠어요?`
+                  : `${memberName}님을 명단에서 찾았어요`}
+              </Dialog.Title>
               <Dialog.Description>
                 가입 신청 정보와 일치하는 회원을 확인해 주세요.
               </Dialog.Description>
@@ -728,7 +733,7 @@ function getSaveErrorMessage(error: unknown) {
 }
 
 const registrationRoleLabels: Record<ApprovalRole, string> = {
-  PLAYER: '활동회원',
+  PLAYER: '정회원',
   OB: '운영진',
   COMPLETED_MEMBER: '수료회원',
   DEFERRED: '유예회원',
