@@ -2573,6 +2573,134 @@ export const zAdminAttendanceListResponse = z.object({
     .nullable(),
 });
 
+export const zAdminAttendanceDetailEventResponse = z.object({
+  eventId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  type: z.enum([
+    'REPORT_SUBMITTED',
+    'APP_CHECK_IN',
+    'CODE_CHECK_IN',
+    'BADGE_DISTRIBUTED',
+    'BADGE_CANCELLED',
+    'STAFF_CORRECTION',
+    'TEAM_PHOTO_DECISION',
+  ]),
+  occurredAt: z.iso.datetime(),
+  legacy: z.boolean(),
+  reportType: z
+    .union([z.literal('LATE'), z.literal('EARLY_LEAVE'), z.literal('ABSENT')])
+    .nullable(),
+  reason: z.string().nullable(),
+  checkedInAt: z.iso.datetime().nullable(),
+  earlyLeaveAt: z.iso.datetime().nullable(),
+  previousStatus: z
+    .union([
+      z.literal('UNDECIDED'),
+      z.literal('PRESENT'),
+      z.literal('LATE_ONE_HOUR'),
+      z.literal('LATE_THREE_HOUR'),
+      z.literal('EARLY_LEAVE'),
+      z.literal('EARLY_LEAVE_ONE_HOUR'),
+      z.literal('EARLY_LEAVE_THREE_HOUR'),
+      z.literal('ABSENT'),
+      z.literal('EXCUSED_ABSENCE'),
+    ])
+    .nullable(),
+  nextStatus: z
+    .union([
+      z.literal('UNDECIDED'),
+      z.literal('PRESENT'),
+      z.literal('LATE_ONE_HOUR'),
+      z.literal('LATE_THREE_HOUR'),
+      z.literal('EARLY_LEAVE'),
+      z.literal('EARLY_LEAVE_ONE_HOUR'),
+      z.literal('EARLY_LEAVE_THREE_HOUR'),
+      z.literal('ABSENT'),
+      z.literal('EXCUSED_ABSENCE'),
+    ])
+    .nullable(),
+  badgeDistributed: z.boolean().nullable(),
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .nullable(),
+  photoDecision: z.union([z.literal('APPROVED'), z.literal('REJECTED')]).nullable(),
+  photoSelected: z.boolean().nullable(),
+  applied: z.boolean().nullable(),
+  actorStaffId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .nullable(),
+});
+
+export const zAdminAttendanceDetailLatestReportResponse = z.object({
+  type: z.enum(['LATE', 'EARLY_LEAVE', 'ABSENT']),
+  reason: z.string().nullable(),
+  submittedAt: z.iso.datetime(),
+});
+
+export const zAdminAttendanceDetailSummaryResponse = z.object({
+  membershipId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  name: z.string(),
+  position: z
+    .union([
+      z.literal('PM'),
+      z.literal('DESIGN'),
+      z.literal('ANDROID'),
+      z.literal('IOS'),
+      z.literal('WEB'),
+      z.literal('MOBILE'),
+      z.literal('SERVER'),
+      z.literal('AI_NATIVE'),
+    ])
+    .nullable(),
+  latestReport: zAdminAttendanceDetailLatestReportResponse.nullable(),
+  rawAttendanceStatus: z
+    .union([
+      z.literal('UNDECIDED'),
+      z.literal('PRESENT'),
+      z.literal('LATE_ONE_HOUR'),
+      z.literal('LATE_THREE_HOUR'),
+      z.literal('EARLY_LEAVE'),
+      z.literal('EARLY_LEAVE_ONE_HOUR'),
+      z.literal('EARLY_LEAVE_THREE_HOUR'),
+      z.literal('ABSENT'),
+      z.literal('EXCUSED_ABSENCE'),
+    ])
+    .nullable(),
+  badgeDistributed: z.boolean(),
+  badgeDistributedAt: z.iso.datetime().nullable(),
+});
+
+export const zAdminAttendanceDetailResponse = z.object({
+  summary: zAdminAttendanceDetailSummaryResponse,
+  items: z.array(zAdminAttendanceDetailEventResponse),
+  nextCursor: z.string().nullable(),
+});
+
 export const zGenerationRosterListEntryResponse = z.object({
   rosterEntryId: z.coerce
     .bigint()
@@ -3982,6 +4110,42 @@ export const zLoginBody = zStaffLoginRequest;
  * 로그인 성공
  */
 export const zLoginResponse = zStaffLoginResponse;
+
+export const zGet1Path = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  membershipId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+export const zGet1Query = z.object({
+  cursor: z.string().max(512).optional(),
+});
+
+/**
+ * 조회 성공
+ */
+export const zGet1Response = zAdminAttendanceDetailResponse;
 
 export const zOverrideBody = zOverrideAttendanceRequest;
 

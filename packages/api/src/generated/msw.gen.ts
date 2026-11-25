@@ -71,6 +71,7 @@ import type {
   FindDetailResponses,
   FindPendingResponses,
   FindResponses,
+  Get1Responses,
   GetResponses,
   GroupsResponses,
   HistoryResponses,
@@ -2525,6 +2526,56 @@ export function handleLogin(
   );
 }
 
+export type HandleGet1Response = {
+  body: Get1Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}` operation.
+ */
+export function handleGet1(
+  response?:
+    | HandleGet1Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          sessionId: string;
+          membershipId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+      sessionId: string;
+      membershipId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/sessions/:sessionId/attendance/:membershipId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleOverrideResponse = {
   body: OverrideResponses[200];
   status?: 200;
@@ -4717,6 +4768,10 @@ export type MswHandlerFactories = {
    */
   login: typeof handleLogin;
   /**
+   * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}` operation.
+   */
+  get1: typeof handleGet1;
+  /**
    * Handler for the `PATCH /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}` operation.
    */
   override: typeof handleOverride;
@@ -4977,6 +5032,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     list2: wrap(handleList2),
     create5: wrap(handleCreate5),
     login: wrap(handleLogin),
+    get1: wrap(handleGet1),
     override: wrap(handleOverride),
     badge: wrap(handleBadge),
     delete2: wrap(handleDelete2),
@@ -5037,6 +5093,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.badge, overrides.badge),
       invoke(pick.close, overrides.close),
       invoke(pick.reissue, overrides.reissue),
+      invoke(pick.get1, overrides.get1),
       invoke(pick.override, overrides.override),
       invoke(pick.replaceMembers, overrides.replaceMembers),
       invoke(pick.respond1, overrides.respond1),

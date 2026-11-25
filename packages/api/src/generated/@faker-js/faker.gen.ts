@@ -9,6 +9,10 @@ import type {
   AdminAfterpartyResponse,
   AdminAfterpartyResponseRequest,
   AdminAttendanceDeductionResponse,
+  AdminAttendanceDetailEventResponse,
+  AdminAttendanceDetailLatestReportResponse,
+  AdminAttendanceDetailResponse,
+  AdminAttendanceDetailSummaryResponse,
   AdminAttendanceListResponse,
   AdminAttendanceRow,
   AdminAttendanceStatisticsDetailResponse,
@@ -166,6 +170,8 @@ import type {
   GenerationRosterRegistrationErrorResponse,
   GenerationRosterRegistrationResult,
   GenerationRosterRowResult,
+  Get1Errors,
+  Get1Responses,
   GetErrors,
   GetResponses,
   GoogleNativeAuthenticationRequest,
@@ -2524,6 +2530,120 @@ export const fakeAdminAttendanceListResponse = (options?: Options): AdminAttenda
   };
 };
 
+export const fakeAdminAttendanceDetailEventResponse = (
+  options?: Options,
+): AdminAttendanceDetailEventResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    eventId: f.number.int(),
+    type: f.helpers.arrayElement([
+      'REPORT_SUBMITTED',
+      'APP_CHECK_IN',
+      'CODE_CHECK_IN',
+      'BADGE_DISTRIBUTED',
+      'BADGE_CANCELLED',
+      'STAFF_CORRECTION',
+      'TEAM_PHOTO_DECISION',
+    ]),
+    occurredAt: f.date.recent().toISOString(),
+    legacy: f.datatype.boolean(),
+    reportType: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT', null]) as any,
+    reason: f.datatype.boolean() ? f.string.sample() : null,
+    checkedInAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    earlyLeaveAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    previousStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    nextStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    badgeDistributed: f.datatype.boolean() ? f.datatype.boolean() : null,
+    photoId: f.datatype.boolean() ? f.number.int() : null,
+    photoDecision: f.helpers.arrayElement(['APPROVED', 'REJECTED', null]) as any,
+    photoSelected: f.datatype.boolean() ? f.datatype.boolean() : null,
+    applied: f.datatype.boolean() ? f.datatype.boolean() : null,
+    actorStaffId: f.datatype.boolean() ? f.number.int() : null,
+  };
+};
+
+export const fakeAdminAttendanceDetailLatestReportResponse = (
+  options?: Options,
+): AdminAttendanceDetailLatestReportResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    type: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT']),
+    reason: f.datatype.boolean() ? f.string.sample() : null,
+    submittedAt: f.date.recent().toISOString(),
+  };
+};
+
+export const fakeAdminAttendanceDetailSummaryResponse = (
+  options?: Options,
+): AdminAttendanceDetailSummaryResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    membershipId: f.number.int(),
+    name: f.string.sample(),
+    position: f.helpers.arrayElement([
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'WEB',
+      'MOBILE',
+      'SERVER',
+      'AI_NATIVE',
+      null,
+    ]) as any,
+    latestReport: f.datatype.boolean()
+      ? fakeAdminAttendanceDetailLatestReportResponse(options)
+      : null,
+    rawAttendanceStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    badgeDistributed: f.datatype.boolean(),
+    badgeDistributedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+  };
+};
+
+export const fakeAdminAttendanceDetailResponse = (
+  options?: Options,
+): AdminAttendanceDetailResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    summary: fakeAdminAttendanceDetailSummaryResponse(options),
+    items: f.helpers.multiple(() => fakeAdminAttendanceDetailEventResponse(options)),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
+  };
+};
+
 export const fakeGenerationRosterListEntryResponse = (
   options?: Options,
 ): GenerationRosterListEntryResponse => {
@@ -3666,6 +3786,21 @@ export const fakeLoginResponse400 = (options?: Options): LoginErrors[400] =>
   fakeErrorResponse(options);
 
 export const fakeLoginResponse401 = (options?: Options): LoginErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeGet1Response200 = (options?: Options): Get1Responses[200] =>
+  fakeAdminAttendanceDetailResponse(options);
+
+export const fakeGet1Response400 = (options?: Options): Get1Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeGet1Response401 = (options?: Options): Get1Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeGet1Response404 = (options?: Options): Get1Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeGet1Response503 = (options?: Options): Get1Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeOverrideResponse200 = (): OverrideResponses[200] => undefined;

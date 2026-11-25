@@ -151,6 +151,9 @@ import type {
   FindPendingErrors,
   FindPendingResponses,
   FindResponses,
+  Get1Data,
+  Get1Errors,
+  Get1Responses,
   GetData,
   GetErrors,
   GetResponses,
@@ -1465,6 +1468,26 @@ export const login = <ThrowOnError extends boolean = false>(
       'Content-Type': 'application/json',
       ...options.headers,
     },
+  });
+
+/**
+ * 세션별 회원 출결 상세·사건 이력 조회
+ *
+ * 동일 기수 소속의 현재 원출결·최신 보고와 발생 사건 20건을 조회한다. 탈퇴자는 일반 상세에서 제외한다.
+ */
+export const get1 = <ThrowOnError extends boolean = false>(
+  options: Options<Get1Data, ThrowOnError>,
+): RequestResult<Get1Responses, Get1Errors, ThrowOnError> =>
+  (options.client ?? client).get<Get1Responses, Get1Errors, ThrowOnError>({
+    security: [
+      {
+        key: 'staffBearerAuth',
+        scheme: 'bearer',
+        type: 'http',
+      },
+    ],
+    url: '/api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}',
+    ...options,
   });
 
 /**
