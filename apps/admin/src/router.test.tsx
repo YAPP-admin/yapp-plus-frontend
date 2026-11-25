@@ -1097,6 +1097,22 @@ describe('공지 상세 탐색', () => {
 
     expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
   });
+
+  it('존재하지 않는 공지는 토스트를 알리고 공지 목록으로 이동한다', async () => {
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations/:generationId/posts/999`, () =>
+        HttpResponse.json(
+          { code: 'POST_NOT_FOUND', message: '공지 정보를 찾을 수 없습니다.' },
+          { status: 404 },
+        ),
+      ),
+    );
+
+    const router = await renderRoute('/notices/999');
+
+    expect(await screen.findByText('존재하지 않는 공지입니다.')).toBeVisible();
+    expect(router.state.location.href).toBe('/notices');
+  });
 });
 
 describe('공지 작성·수정 진입점', () => {
