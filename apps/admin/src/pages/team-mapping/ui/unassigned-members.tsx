@@ -1,5 +1,11 @@
 /** 미배정 회원 목록의 빈 상태·일괄 작업·회원 행을 조합한다. */
-import { getUnassignedMembers, type TeamMappingSnapshot } from '~/features/team-management';
+import {
+  getUnassignedMembers,
+  type TeamMappingSnapshot,
+  type TeamMemberChange,
+} from '~/features/team-management';
+import { ActionButton } from '@yapp-plus/ui';
+import { useState } from 'react';
 import { UnassignedMemberRow } from './unassigned-member-row';
 import { UnassignedTeamSelect } from './unassigned-team-select';
 import { useUnassignedMembers } from './use-unassigned-members';
@@ -19,10 +25,14 @@ function EmptyState({ title, description }: { title: string; description: string
 export function UnassignedMembers({
   snapshot,
   readOnly,
+  onApplyAssignments,
 }: {
   snapshot: TeamMappingSnapshot;
   readOnly?: boolean;
+  onApplyAssignments?: (changes: readonly TeamMemberChange[]) => Promise<void>;
 }) {
+  const [isApplying, setIsApplying] = useState(false);
+  const [applyError, setApplyError] = useState<string>();
   const { setUnassignedDirty } = useTeamMappingDraft();
   const members = getUnassignedMembers(snapshot);
   const {
@@ -33,6 +43,7 @@ export function UnassignedMembers({
     isReadOnly,
     pendingByActivityId,
     cancelAssignment,
+    clearChanges,
     selectMemberDestination,
     toggleChecked,
     updateAssignments,
@@ -42,6 +53,25 @@ export function UnassignedMembers({
     readOnly,
     onDirtyChange: setUnassignedDirty,
   });
+
+  async function applyAssignments() {
+    if (onApplyAssignments === undefined || changes.length === 0 || isApplying) {
+      return;
+    }
+
+    setIsApplying(true);
+    setApplyError(undefined);
+    try {
+      await onApplyAssignments(changes);
+      clearChanges();
+    } catch (error) {
+      setApplyError(
+        error instanceof Error ? error.message : '회원 배정에 실패했어요. 다시 시도해 주세요.',
+      );
+    } finally {
+      setIsApplying(false);
+    }
+  }
 
   if (members.length === 0) {
     return (
@@ -75,6 +105,17 @@ export function UnassignedMembers({
           bulk
           onChange={(destinationTeamId) => updateAssignments(checkedIds, destinationTeamId)}
         />
+        {onApplyAssignments !== undefined && (
+          <ActionButton
+            type="button"
+            variant="neutralSolid"
+            disabled={isReadOnly || changes.length === 0 || isApplying}
+            loading={isApplying}
+            onClick={() => void applyAssignments()}
+          >
+            배정하기
+          </ActionButton>
+        )}
       </div>
 
       <ul className={styles.list} aria-label="미배정 회원">
@@ -94,9 +135,9 @@ export function UnassignedMembers({
           />
         ))}
       </ul>
-      {feedback !== undefined && (
+      {(feedback ?? applyError) !== undefined && (
         <p className={styles.feedback} role="alert">
-          {feedback}
+          {feedback ?? applyError}
         </p>
       )}
     </section>

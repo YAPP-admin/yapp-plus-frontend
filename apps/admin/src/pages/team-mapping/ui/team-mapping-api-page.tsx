@@ -21,6 +21,7 @@ import {
   getMemberTeamId,
   teamMappingSnapshotSchema,
   type TeamDraftValues,
+  type TeamMemberChange,
   type TeamMappingMember,
   type TeamMappingPart,
   type TeamMappingSnapshot,
@@ -343,6 +344,60 @@ export function TeamMappingApiPage({
     }
   }
 
+  async function assignUnassigned(changes: readonly TeamMemberChange[]) {
+    if (snapshot === undefined) {
+      throw new Error('최신 팀 데이터를 불러오는 중이에요. 잠시 후 다시 시도해 주세요.');
+    }
+
+    let hasAppliedAssignment = false;
+    try {
+      const assignmentsByTeam = new Map<string, string[]>();
+      changes.forEach((change) => {
+        if (change.destinationTeamId === null) {
+          return;
+        }
+        const activityIds = assignmentsByTeam.get(change.destinationTeamId) ?? [];
+        activityIds.push(change.activityId);
+        assignmentsByTeam.set(change.destinationTeamId, activityIds);
+      });
+
+      for (const [destinationTeamId, assignedActivityIds] of assignmentsByTeam) {
+        const destinationTeam = snapshot.teams.find(
+          (candidate) => candidate.id === destinationTeamId,
+        );
+        if (destinationTeam === undefined) {
+          throw new Error('배정할 팀 정보를 찾을 수 없어요. 최신 팀 목록을 다시 불러와 주세요.');
+        }
+
+        const nextMemberActivityIds = [
+          ...new Set([...destinationTeam.memberActivityIds, ...assignedActivityIds]),
+        ];
+        await replaceMembers.mutateAsync({
+          path: { generationId, teamId: Number(destinationTeamId) },
+          body: {
+            expectedVersion: getTeamVersion(destinationTeam),
+            members: toMemberRequests(snapshot, nextMemberActivityIds),
+          },
+        });
+        hasAppliedAssignment = true;
+      }
+
+      await invalidateTeamQueries();
+      snackbar.create({
+        render: () => <Snackbar variant="positive" message="회원 배정을 반영했어요." />,
+      });
+    } catch (error) {
+      await invalidateTeamQueries();
+      if (hasAppliedAssignment) {
+        throw new Error(
+          '회원 배정 중 일부 변경이 반영됐어요. 최신 팀 정보를 확인한 뒤 다시 시도해 주세요.',
+          { cause: error },
+        );
+      }
+      throw new Error(getTeamApiErrorMessage(error, 'save'), { cause: error });
+    }
+  }
+
   function openEditDialog(team: TeamMappingTeam, sourceSnapshot = snapshot) {
     if (sourceSnapshot === undefined) {
       return;
@@ -426,6 +481,7 @@ export function TeamMappingApiPage({
       createTeam={createTeam}
       updateTeam={updateTeam}
       onDeleteTeam={openDeleteDialog}
+      assignUnassigned={assignUnassigned}
     />
   );
 }
