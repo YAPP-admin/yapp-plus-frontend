@@ -9,6 +9,12 @@ const LocationCheck = import.meta.env.DEV
   ? lazy(() => import('./location-check').then((module) => ({ default: module.LocationCheck })))
   : null;
 
+const ErrorStatePreview = import.meta.env.DEV
+  ? lazy(() =>
+      import('./error-state-preview').then((module) => ({ default: module.ErrorStatePreview })),
+    )
+  : null;
+
 const routes = [
   { href: '/', label: '홈' },
   { href: '/?session=team', label: '홈 (팀 세션)' },
@@ -41,6 +47,11 @@ export function DevRoutesPage({ isActive = true }: { isActive?: boolean }) {
         로컬 개발에서 페이지 경로를 확인하는 목록입니다. 실제 공지·회원 정보나 가입 결과를 제공하지
         않습니다.
       </p>
+      {isActive && ErrorStatePreview && (
+        <Suspense fallback={null}>
+          <ErrorStatePreview />
+        </Suspense>
+      )}
       {isActive && LocationCheck && (
         <Suspense fallback={<output>위치 도구를 준비하고 있습니다.</output>}>
           <LocationCheck />
