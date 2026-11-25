@@ -117,6 +117,10 @@ export const handleQueryAuthenticationError = (client: QueryClient, error: unkno
   return refreshed ? markAuthRequired(client) : false;
 };
 
+/** 업무 Mutation은 토큰 재전송 경로가 없으므로 최종 401을 즉시 재인증 필요로 처리합니다. */
+export const handleMutationAuthenticationError = (client: QueryClient, error: unknown): boolean =>
+  isAuthenticationError(error) && markAuthRequired(client);
+
 /** 유효한 결과만 cache에 반영합니다. 인증 확정 시 작업 도중 시작된 조회도 무효화합니다. */
 export const applyAuthResult = (
   client: QueryClient,

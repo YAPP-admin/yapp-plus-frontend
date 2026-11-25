@@ -103,6 +103,9 @@ const authMutationOptions = <Input>(
 
   return mutationOptions<AuthResult | undefined, Error, AuthInput<Input>, AuthOperation>({
     mutationKey: ['native-auth', kind],
+    // 인증 작업의 결과는 ErrorBoundary가 아닌 AuthResult와 화면 callback이 소유합니다.
+    meta: { authOperation: true },
+    throwOnError: false,
     retry: false,
     onMutate: (variables) => {
       variables.operation = beginAuthOperation(client, kind);

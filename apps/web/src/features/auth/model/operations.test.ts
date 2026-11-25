@@ -1,5 +1,6 @@
 import { QueryClient, isCancelledError } from '@tanstack/react-query';
 import type { AuthResult } from '@yapp-plus/app-bridge';
+import { ApiError } from '@yapp-plus/api';
 import { expect, it } from 'vitest';
 import {
   beginAuthOperation,
@@ -7,6 +8,7 @@ import {
   finishAuthOperation,
   nativeSessionQueryKey,
   readAuthSession,
+  handleMutationAuthenticationError,
   markAuthRequired,
 } from './operations';
 
@@ -95,6 +97,19 @@ it('최종 인증 실패는 현재 로그인 상태를 재인증 필요로 전�
     retryable: false,
   });
   expect(markAuthRequired(client)).toBe(false);
+});
+
+it('업무 Mutation의 최종 401은 갱신 대기 없이 재인증 필요로 전환한다', () => {
+  const client = new QueryClient();
+  client.setQueryData(nativeSessionQueryKey, session);
+
+  expect(handleMutationAuthenticationError(client, new ApiError(401, {}))).toBe(true);
+  expect(client.getQueryData(nativeSessionQueryKey)).toEqual({
+    status: 'ERROR',
+    code: 'AUTH_REQUIRED',
+    retryable: false,
+  });
+  expect(handleMutationAuthenticationError(client, new ApiError(403, {}))).toBe(false);
 });
 
 it('이전 작업을 해제해도 새 인증의 중복 요청 제한은 유지한다', () => {
