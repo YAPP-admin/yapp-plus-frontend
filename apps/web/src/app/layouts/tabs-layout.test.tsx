@@ -145,7 +145,8 @@ describe('TabsLayout', () => {
       </TabsLayout>,
     );
     const navigation = within(screen.getByRole('navigation', { name: '주요 메뉴' }));
-    expect(navigation.getAllByRole('link')).toHaveLength(4);
+    expect(navigation.getAllByRole('link')).toHaveLength(5);
+    expect(navigation.getByRole('link', { name: '커뮤니티' })).toBeVisible();
     expect(navigation.queryByRole('tablist')).not.toBeInTheDocument();
     expect(navigation.queryByRole('link', { current: 'page' })).not.toBeInTheDocument();
   });
