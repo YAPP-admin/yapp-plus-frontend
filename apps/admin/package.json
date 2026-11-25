@@ -23,6 +23,7 @@
     "@tanstack/react-table": "catalog:",
     "@tiptap/core": "catalog:",
     "@tiptap/extension-placeholder": "catalog:",
+    "@tiptap/markdown": "3.32.0",
     "@tiptap/pm": "catalog:",
     "@tiptap/react": "catalog:",
     "@tiptap/starter-kit": "catalog:",

@@ -1,5 +1,6 @@
 /** 상세 조회 경계와 정상 콘텐츠를 분리한다. */
-import { NoticeQueryBoundary, useNoticeDetailQuery } from '~/features/notice-management';
+import { useAdminGeneration } from '~/features/admin-generation';
+import { NoticeQueryBoundary, useAdminNoticeQuery } from '~/features/notice-management';
 import type { NoticeDetailTab } from '../model/notice-detail-search';
 import { NoticeDetailContent } from './notice-detail-content';
 
@@ -16,11 +17,8 @@ export function NoticeDetailResult(props: Props) {
 
 /** 조회가 완료된 데이터만 받아 없는 공지와 정상 공지를 구분한다. */
 function NoticeDetailData({ noticeId, tab }: Props) {
-  const { notice, members } = useNoticeDetailQuery(noticeId);
+  const { currentGeneration } = useAdminGeneration();
+  const { data: notice } = useAdminNoticeQuery(currentGeneration.generationId, noticeId);
 
-  return notice ? (
-    <NoticeDetailContent notice={notice} members={members} tab={tab} />
-  ) : (
-    <output>공지를 찾을 수 없습니다.</output>
-  );
+  return <NoticeDetailContent notice={notice} generationId={currentGeneration.generationId} tab={tab} />;
 }

@@ -6,10 +6,10 @@ import {
   createSortedRowModel,
   sortFns,
 } from '@tanstack/react-table';
-import type { getNoticeReaders } from '~/features/notice-management';
+import type { AdminPostRecipientResponse } from '@yapp-plus/api/generated';
 import * as styles from './notice-readers.css';
 
-export type NoticeReader = ReturnType<typeof getNoticeReaders>[number];
+export type NoticeReader = AdminPostRecipientResponse;
 
 /** 읽음 표에서 사용하는 정렬 기능과 비교 함수만 등록한다. */
 export const readerFeatures = tableFeatures({
@@ -26,27 +26,28 @@ const dateFormat = new Intl.DateTimeFormat('ko-KR', {
 });
 
 export const readerColumns = column.columns([
-  column.accessor('member.name', {
+  column.accessor('name', {
     header: '이름',
     cell: (info) => (
       <span className={styles.memberCell}>
         <span className={styles.avatar} aria-hidden="true">
           {info.getValue().slice(0, 1)}
         </span>
-        <span>{info.getValue()}</span>
+      <span>{info.getValue()}</span>
       </span>
     ),
-    sortFn: (a, b) => a.original.member.name.localeCompare(b.original.member.name, 'ko'),
+    sortFn: (a, b) => a.original.name.localeCompare(b.original.name, 'ko'),
   }),
-  column.accessor((row) => `${row.member.cohort}기 · ${row.member.job}`, {
+  column.accessor((row) => `${row.generationNumber ? `${row.generationNumber}기` : '기수 미지정'} · ${row.position ?? '직군 미지정'}`, {
     id: 'cohortJob',
     header: '기수 · 직군',
     cell: (info) => <span className={styles.memberMeta}>{info.getValue()}</span>,
     sortFn: (a, b) =>
-      a.original.member.cohort - b.original.member.cohort ||
-      a.original.member.job.localeCompare(b.original.member.job, 'ko'),
+      (a.original.generationNumber ?? Number.MAX_SAFE_INTEGER) -
+        (b.original.generationNumber ?? Number.MAX_SAFE_INTEGER) ||
+      (a.original.position ?? '').localeCompare(b.original.position ?? '', 'ko'),
   }),
-  column.accessor((row) => (row.readAt ? 1 : 0), {
+  column.accessor((row) => (row.read ? 1 : 0), {
     id: 'read',
     header: '읽음 여부',
     cell: (info) => (
