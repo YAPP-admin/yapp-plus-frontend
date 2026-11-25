@@ -6,6 +6,7 @@ export type NoticeCategory = z.infer<typeof noticeCategorySchema>;
 
 export const noticeSearchSchema = z.object({
   category: noticeCategorySchema.default('all').catch('all'),
+  noticeError: z.literal('not-found').optional(),
 });
 
 export const noticeCategoryLabels = {

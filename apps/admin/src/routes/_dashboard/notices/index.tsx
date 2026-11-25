@@ -10,14 +10,18 @@ export const Route = createFileRoute('/_dashboard/notices/')({
 });
 
 function NoticesRoute() {
-  const { category } = Route.useSearch();
+  const { category, noticeError } = Route.useSearch();
   const navigate = Route.useNavigate();
 
   return (
     <NoticesPage
       category={category}
+      noticeError={noticeError}
       onCategoryChange={(nextCategory) => {
         void navigate({ search: { category: nextCategory }, resetScroll: false });
+      }}
+      onNoticeErrorHandled={() => {
+        void navigate({ search: { category }, replace: true });
       }}
     />
   );

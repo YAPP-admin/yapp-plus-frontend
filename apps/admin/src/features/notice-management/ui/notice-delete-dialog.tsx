@@ -1,19 +1,49 @@
 /** 공지 제목을 확인한 뒤 삭제하고 실패 시 같은 창에서 재시도한다. */
 import { useState } from 'react';
+import { useNavigate } from '@tanstack/react-router';
 import { AlertDialog, Portal, ResponsivePair, Text } from '@seed-design/react';
-import { ActionButton } from '@yapp-plus/ui';
-import type { Notice } from '../model/notice';
-import { useNoticeMutations } from '../model/notice-queries';
+import { ActionButton, Snackbar, useSnackbarAdapter } from '@yapp-plus/ui';
+import type { AdminPostListItemResponse } from '@yapp-plus/api/generated';
+import { ApiError } from '@yapp-plus/api';
+import { useAdminNoticeMutations } from '../model/notice-queries';
 
 /** 창 열림은 화면이 소유하고 취소 포커스는 SEED에 맡긴다. */
-export function NoticeDeleteDialog({ notice }: { notice: Notice }) {
+export function NoticeDeleteDialog({
+  notice,
+  generationId,
+}: {
+  notice: AdminPostListItemResponse;
+  generationId: number;
+}) {
   const [open, setOpen] = useState(false);
-  const { remove } = useNoticeMutations();
+  const navigate = useNavigate();
+  const snackbar = useSnackbarAdapter();
+  const { remove } = useAdminNoticeMutations(generationId);
 
   /** 실패하면 mutation 오류를 표시하고 확인 창에서 다시 요청한다. */
   function deleteNotice() {
     if (!remove.isPending) {
-      remove.mutate(notice.id, { onSuccess: () => setOpen(false) });
+      remove.mutate(
+        { path: { generationId, postId: notice.postId } },
+        {
+          onSuccess: () => {
+            setOpen(false);
+            snackbar.create({
+              render: () => <Snackbar variant="positive" message="공지를 삭제했습니다." />,
+            });
+            void navigate({ to: '/notices', search: {} });
+          },
+          onError: (error) => {
+            if (error instanceof ApiError && error.status === 404) {
+              snackbar.create({
+                render: () => <Snackbar variant="critical" message="존재하지 않는 공지입니다." />,
+              });
+              setOpen(false);
+              void navigate({ to: '/notices', search: {} });
+            }
+          },
+        },
+      );
     }
   }
 
