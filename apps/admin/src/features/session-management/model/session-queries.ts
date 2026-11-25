@@ -241,13 +241,13 @@ function toMemberViewModel(
 
 export const sessionAttendanceQueryOptions = (generationId: number, sessionId: string) => {
   const path = { generationId, sessionId: Number(sessionId) };
-  const generated = list4InfiniteOptions({ path, query: { size: 100 } });
+  const generated = list4InfiniteOptions({ path, query: { size: 20 } });
   return {
     ...generated,
     // 생성 타입에는 skipToken도 포함되지만 Suspense는 함수 queryFn만 허용합니다.
     queryFn: typeof generated.queryFn === 'function' ? generated.queryFn : undefined,
     retry: false,
-    initialPageParam: { path, query: { size: 100 } },
+    initialPageParam: { path, query: { size: 20 } },
     getNextPageParam: (lastPage: AdminAttendanceListResponse) => lastPage.nextCursor ?? undefined,
   };
 };
