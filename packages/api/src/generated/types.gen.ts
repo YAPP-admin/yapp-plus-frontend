@@ -1625,6 +1625,87 @@ export type AdminAttendanceRow = {
   badgeVerifiedAt: string | null;
 };
 
+export type AdminAttendanceDetailEventResponse = {
+  eventId: number;
+  type:
+    | 'REPORT_SUBMITTED'
+    | 'APP_CHECK_IN'
+    | 'CODE_CHECK_IN'
+    | 'BADGE_DISTRIBUTED'
+    | 'BADGE_CANCELLED'
+    | 'STAFF_CORRECTION'
+    | 'TEAM_PHOTO_DECISION';
+  occurredAt: string;
+  legacy: boolean;
+  reportType: 'LATE' | 'EARLY_LEAVE' | 'ABSENT' | null;
+  reason: string | null;
+  checkedInAt: string | null;
+  earlyLeaveAt: string | null;
+  previousStatus:
+    | 'UNDECIDED'
+    | 'PRESENT'
+    | 'LATE_ONE_HOUR'
+    | 'LATE_THREE_HOUR'
+    | 'EARLY_LEAVE'
+    | 'EARLY_LEAVE_ONE_HOUR'
+    | 'EARLY_LEAVE_THREE_HOUR'
+    | 'ABSENT'
+    | 'EXCUSED_ABSENCE'
+    | null;
+  nextStatus:
+    | 'UNDECIDED'
+    | 'PRESENT'
+    | 'LATE_ONE_HOUR'
+    | 'LATE_THREE_HOUR'
+    | 'EARLY_LEAVE'
+    | 'EARLY_LEAVE_ONE_HOUR'
+    | 'EARLY_LEAVE_THREE_HOUR'
+    | 'ABSENT'
+    | 'EXCUSED_ABSENCE'
+    | null;
+  badgeDistributed: boolean | null;
+  photoId: number | null;
+  photoDecision: 'APPROVED' | 'REJECTED' | null;
+  photoSelected: boolean | null;
+  applied: boolean | null;
+  actorStaffId: number | null;
+};
+
+export type AdminAttendanceDetailLatestReportResponse = {
+  type: 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
+  reason: string | null;
+  submittedAt: string;
+};
+
+export type AdminAttendanceDetailResponse = {
+  summary: AdminAttendanceDetailSummaryResponse;
+  items: Array<AdminAttendanceDetailEventResponse>;
+  /**
+   * 다음 페이지 커서. 더 없으면 null
+   */
+  nextCursor: string | null;
+};
+
+export type AdminAttendanceDetailSummaryResponse = {
+  membershipId: number;
+  name: string;
+  position: 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE' | null;
+  latestReport: AdminAttendanceDetailLatestReportResponse | null;
+  rawAttendanceStatus:
+    | 'UNDECIDED'
+    | 'PRESENT'
+    | 'LATE_ONE_HOUR'
+    | 'LATE_THREE_HOUR'
+    | 'EARLY_LEAVE'
+    | 'EARLY_LEAVE_ONE_HOUR'
+    | 'EARLY_LEAVE_THREE_HOUR'
+    | 'ABSENT'
+    | 'EXCUSED_ABSENCE'
+    | null;
+  badgeDistributed: boolean;
+  badgeDistributedAt: string | null;
+};
+
 export type GenerationRosterListEntryResponse = {
   rosterEntryId: number;
   name: string;
@@ -3944,6 +4025,52 @@ export type LoginResponses = {
 };
 
 export type LoginResponse = LoginResponses[keyof LoginResponses];
+
+export type Get1Data = {
+  body?: never;
+  path: {
+    generationId: number;
+    sessionId: number;
+    membershipId: number;
+  };
+  query?: {
+    /**
+     * 직전 응답의 nextCursor. 생략 시 첫 20건
+     */
+    cursor?: string;
+  };
+  url: '/api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}';
+};
+
+export type Get1Errors = {
+  /**
+   * INVALID_ATTENDANCE_DETAIL_CURSOR|INVALID_ATTENDANCE_REQUEST
+   */
+  400: ErrorResponse;
+  /**
+   * STAFF_AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * ATTENDANCE_DETAIL_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ATTENDANCE_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type Get1Error = Get1Errors[keyof Get1Errors];
+
+export type Get1Responses = {
+  /**
+   * 조회 성공
+   */
+  200: AdminAttendanceDetailResponse;
+};
+
+export type Get1Response = Get1Responses[keyof Get1Responses];
 
 export type OverrideData = {
   body: OverrideAttendanceRequest;

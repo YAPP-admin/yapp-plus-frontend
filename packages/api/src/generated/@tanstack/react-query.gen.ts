@@ -58,6 +58,7 @@ import {
   findDetail,
   findPending,
   get,
+  get1,
   groups,
   history_,
   list,
@@ -251,6 +252,9 @@ import type {
   FindPendingError,
   FindPendingResponse,
   FindResponse,
+  Get1Data,
+  Get1Error,
+  Get1Response,
   GetData,
   GetError,
   GetResponse,
@@ -2037,6 +2041,70 @@ export const loginMutation = (
     mutationKey: loginMutationKey(options),
   };
   return mutationOptions;
+};
+
+export const get1QueryKey = (options: Options<Get1Data>) => createQueryKey('get1', options);
+
+/**
+ * 세션별 회원 출결 상세·사건 이력 조회
+ *
+ * 동일 기수 소속의 현재 원출결·최신 보고와 발생 사건 20건을 조회한다. 탈퇴자는 일반 상세에서 제외한다.
+ */
+export const get1Options = (options: Options<Get1Data>) =>
+  queryOptions<Get1Response, Get1Error, Get1Response, ReturnType<typeof get1QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await get1({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: get1QueryKey(options),
+  });
+
+export const get1InfiniteQueryKey = (options: Options<Get1Data>): QueryKey<Options<Get1Data>> =>
+  createQueryKey('get1', options, true);
+
+/**
+ * 세션별 회원 출결 상세·사건 이력 조회
+ *
+ * 동일 기수 소속의 현재 원출결·최신 보고와 발생 사건 20건을 조회한다. 탈퇴자는 일반 상세에서 제외한다.
+ */
+export const get1InfiniteOptions = (options: Options<Get1Data>) => {
+  const opts = infiniteQueryOptions<
+    Get1Response,
+    Get1Error,
+    InfiniteData<Get1Response>,
+    QueryKey<Options<Get1Data>>,
+    string | Pick<QueryKey<Options<Get1Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Get1Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await get1({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: get1InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
 };
 
 export const overrideMutationKey = (options?: Partial<Options<OverrideData>>) =>
