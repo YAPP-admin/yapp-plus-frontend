@@ -8,9 +8,9 @@ type FileEntry = NonNullable<AttachmentInputProps['acceptedFileEntries']>[number
 type FileRejection = Parameters<NonNullable<AttachmentInputProps['onFileReject']>>[0][number];
 
 const fileRejectionMessages: Record<string, string> = {
-  INVALID_TYPE: 'CSV 파일만 선택할 수 있어요.',
+  INVALID_TYPE: 'CSV, XLS, XLSX 파일만 선택할 수 있어요.',
   FILE_TOO_LARGE: '파일 크기는 10MB 이하만 업로드할 수 있어요.',
-  TOO_MANY_FILES: 'CSV 파일은 한 번에 하나만 선택할 수 있어요.',
+  TOO_MANY_FILES: '파일은 한 번에 하나만 선택할 수 있어요.',
 };
 
 /** 파일 입력 상태와 로컬 CSV 파싱 mutation을 업로드 화면의 단일 상태로 조합한다. */
