@@ -5,6 +5,34 @@ import { expect, it, vi } from 'vitest';
 import type { NoticeFormContent } from '../model/notice-form';
 import { NoticeForm } from './notice-form';
 
+// 폼 계약 테스트에서는 실제 Picker 조작을 분리하고 날짜·시간 필드를 일반 입력으로 대체한다.
+vi.mock('./notice-schedule-field', () => ({
+  NoticeScheduleField: ({
+    label,
+    value,
+    disabled,
+    errors,
+    onChange,
+  }: {
+    label: string;
+    value: string;
+    disabled: boolean;
+    errors: (string | undefined)[];
+    onChange: (value: string) => void;
+  }) => (
+    <label>
+      {label}
+      <input
+        aria-label={label}
+        value={value}
+        disabled={disabled}
+        onChange={(event) => onChange(event.target.value)}
+      />
+      {errors.length > 0 && <span role="alert">{errors.join(' ')}</span>}
+    </label>
+  ),
+}));
+
 /** 폼을 열고 유효한 제목을 입력한다. */
 async function setup() {
   const onSubmit = vi.fn<(value: NoticeFormContent) => void>();

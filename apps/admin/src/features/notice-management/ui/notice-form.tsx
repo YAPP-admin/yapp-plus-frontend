@@ -14,6 +14,7 @@ import {
   type NoticeFormContent,
 } from '../model/notice-form';
 import * as styles from './notice-form.css';
+import { NoticeScheduleField } from './notice-schedule-field';
 
 const categories = [
   { value: 'session', label: '세션' },
@@ -27,10 +28,34 @@ const audiences = [
   { value: 'completed', label: '수료회원' },
 ] as const;
 const submissionFields = [
-  { name: 'submission.deadline.date', label: '마감 날짜', type: 'date', required: true },
-  { name: 'submission.deadline.time', label: '마감 시각', type: 'time', required: true },
-  { name: 'submission.method.name', label: '제출 방법', type: 'text', required: true },
-  { name: 'submission.method.url', label: '제출 주소', type: 'text', required: true },
+  {
+    name: 'submission.deadline.date',
+    label: '마감 날짜',
+    type: 'date',
+    required: true,
+    picker: true,
+  },
+  {
+    name: 'submission.deadline.time',
+    label: '마감 시각',
+    type: 'time',
+    required: true,
+    picker: true,
+  },
+  {
+    name: 'submission.method.name',
+    label: '제출 방법',
+    type: 'text',
+    required: true,
+    picker: false,
+  },
+  {
+    name: 'submission.method.url',
+    label: '제출 주소',
+    type: 'text',
+    required: true,
+    picker: false,
+  },
 ] as const;
 
 type Props = {
@@ -195,21 +220,34 @@ export function NoticeForm({
                     {category === 'submission' && (
                       <fieldset className={styles.group}>
                         <div className={styles.form}>
-                          {submissionFields.map(({ name, label, type, required }) => (
+                          {submissionFields.map(({ name, label, type, required, picker }) => (
                             <form.Field key={name} name={name}>
-                              {(field) => (
-                                <NoticeTextInput
-                                  disabled={pending}
-                                  name={name}
-                                  label={label}
-                                  type={type}
-                                  required={required}
-                                  value={field.state.value}
-                                  errors={field.state.meta.errors}
-                                  onChange={field.handleChange}
-                                  onBlur={field.handleBlur}
-                                />
-                              )}
+                              {(field) =>
+                                picker ? (
+                                  <NoticeScheduleField
+                                    type={type}
+                                    label={label}
+                                    value={field.state.value}
+                                    required={required}
+                                    disabled={pending}
+                                    errors={field.state.meta.errors}
+                                    onChange={field.handleChange}
+                                    onBlur={field.handleBlur}
+                                  />
+                                ) : (
+                                  <NoticeTextInput
+                                    disabled={pending}
+                                    name={name}
+                                    label={label}
+                                    type={type}
+                                    required={required}
+                                    value={field.state.value}
+                                    errors={field.state.meta.errors}
+                                    onChange={field.handleChange}
+                                    onBlur={field.handleBlur}
+                                  />
+                                )
+                              }
                             </form.Field>
                           ))}
                         </div>
