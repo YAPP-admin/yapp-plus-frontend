@@ -84,17 +84,22 @@ export const memberScoresQueryOptions = (generationId: number) => {
   });
 };
 
-const reportTypeByApiValue = {
-  LATE: 'late',
-  EARLY_LEAVE: 'earlyLeave',
-  ABSENCE: 'absence',
-  ABSENT: 'absence',
-} as const;
-
 function toReportType(value: string | null) {
-  return value
-    ? (reportTypeByApiValue[value.toUpperCase() as keyof typeof reportTypeByApiValue] ?? null)
-    : null;
+  if (value === null) {
+    return null;
+  }
+
+  switch (value.toUpperCase()) {
+    case 'LATE':
+      return 'late' as const;
+    case 'EARLY_LEAVE':
+      return 'earlyLeave' as const;
+    case 'ABSENCE':
+    case 'ABSENT':
+      return 'absence' as const;
+    default:
+      return null;
+  }
 }
 
 function toAttendanceResult(row: AdminAttendanceListResponse['items'][number]) {
@@ -289,16 +294,17 @@ export const attendanceCloseCancelMutationOptions = (generationId: number, sessi
 
 export function useSessionAttendanceQuery(generationId: number, sessionId: string) {
   const query = useSuspenseInfiniteQuery(sessionAttendanceQueryOptions(generationId, sessionId));
+  const { data, fetchNextPage, hasNextPage, isFetchingNextPage } = query;
 
   useEffect(() => {
-    if (query.hasNextPage && !query.isFetchingNextPage) {
-      void query.fetchNextPage();
+    if (hasNextPage && !isFetchingNextPage) {
+      void fetchNextPage();
     }
-  }, [query.fetchNextPage, query.hasNextPage, query.isFetchingNextPage]);
+  }, [fetchNextPage, hasNextPage, isFetchingNextPage]);
 
   return {
     ...query,
-    members: query.data.pages.flatMap((page) => page.items.map(toMemberViewModel)),
+    members: data.pages.flatMap((page) => page.items.map(toMemberViewModel)),
   };
 }
 
