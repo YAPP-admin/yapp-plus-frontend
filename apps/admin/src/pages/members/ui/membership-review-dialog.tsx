@@ -17,6 +17,7 @@ import {
   approvalPositionOptions,
   approvalRoleLabels,
   approvalRoleOptions,
+  formatMembershipReviewDate,
   rejectionReasonMaxLength,
   toMembershipReviewFailure,
   type ApprovalPosition,
@@ -217,7 +218,6 @@ export function MembershipReviewDialog({
   return (
     <MatchMemberDialog
       detail={detail}
-      generationId={effectiveGenerationId}
       candidates={candidateQuery.data}
       candidatesPending={candidateQuery.isPending}
       candidatesError={candidateQuery.error}
@@ -283,7 +283,6 @@ function ReviewDialogShell({
 
 function MatchMemberDialog({
   detail,
-  generationId,
   candidates,
   candidatesPending,
   candidatesError,
@@ -296,7 +295,6 @@ function MatchMemberDialog({
   onConnect,
 }: {
   detail: MemberDetailResponse;
-  generationId: number | undefined;
   candidates: RosterCandidateView[] | undefined;
   candidatesPending: boolean;
   candidatesError: unknown;
@@ -309,7 +307,6 @@ function MatchMemberDialog({
   onConnect: () => void;
 }) {
   const memberName = detail.name ?? '회원';
-  const membership = detail.memberships[0];
   const hasNoCandidates = candidates?.length === 0;
 
   return (
@@ -339,12 +336,16 @@ function MatchMemberDialog({
                   <dd className={styles.requestSummaryValue}>{memberName}</dd>
                 </div>
                 <div className={styles.requestSummaryItem}>
-                  <dt className={styles.requestSummaryLabel}>기수</dt>
-                  <dd className={styles.requestSummaryValue}>{generationId ?? '-'}</dd>
+                  <dt className={styles.requestSummaryLabel}>전화번호</dt>
+                  <dd className={styles.requestSummaryValue}>{detail.phoneNumber ?? '-'}</dd>
                 </div>
                 <div className={styles.requestSummaryItem}>
-                  <dt className={styles.requestSummaryLabel}>파트</dt>
-                  <dd className={styles.requestSummaryValue}>{membership?.position ?? '-'}</dd>
+                  <dt className={styles.requestSummaryLabel}>신청일</dt>
+                  <dd className={styles.requestSummaryValue}>
+                    <time dateTime={detail.signedUpAt}>
+                      {formatMembershipReviewDate(detail.signedUpAt)}
+                    </time>
+                  </dd>
                 </div>
               </dl>
 

@@ -129,6 +129,16 @@ it('PENDING 목록에서 신청일을 표시하고 상태·더보기 버튼 없�
 
   await openApprovalDialog(user);
   expect(await screen.findByText('후보 회원')).toBeVisible();
+
+  const summary = screen.getByLabelText('신청 정보');
+  expect(within(summary).getByText('이름')).toBeVisible();
+  expect(within(summary).getByText('가입 신청자')).toBeVisible();
+  expect(within(summary).getByText('전화번호')).toBeVisible();
+  expect(within(summary).getByText('010-1234-5678')).toBeVisible();
+  expect(within(summary).getByText('신청일')).toBeVisible();
+  expect(within(summary).getByText('2026.11.20')).toBeVisible();
+  expect(within(summary).queryByText('기수')).not.toBeInTheDocument();
+  expect(within(summary).queryByText('파트')).not.toBeInTheDocument();
 });
 
 it('명단 후보가 없으면 회원 이름을 포함한 승인 확인 문구를 표시한다', async () => {
