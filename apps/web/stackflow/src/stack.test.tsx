@@ -42,7 +42,9 @@ vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
 }));
 
 const popstateListeners: EventListenerOrEventListenerObject[] = [];
+const stackflowIntervals = new Set<ReturnType<typeof globalThis.setInterval>>();
 const addWindowListener = window.addEventListener.bind(window);
+const addInterval = globalThis.setInterval.bind(globalThis);
 
 beforeEach(() => {
   vi.mocked(seedPlugin).mockClear();
@@ -56,6 +58,11 @@ beforeEach(() => {
     }
     addWindowListener(type, listener, options);
   });
+  vi.spyOn(globalThis, 'setInterval').mockImplementation((handler, timeout, ...args) => {
+    const interval = addInterval(handler, timeout, ...args);
+    stackflowIntervals.add(interval);
+    return interval;
+  });
   window.history.replaceState({}, '', '/');
   server.use(
     http.get(`${apiBaseUrl}/api/sessions/:sessionId/team-members`, () =>
@@ -65,6 +72,12 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  // Stackflow의 전환 타이머가 다음 테스트의 history를 갱신하지 않도록 정리합니다.
+  // core가 dispose API를 제공하지 않아 이 테스트에서 시작한 interval을 직접 수거합니다.
+  for (const interval of stackflowIntervals) {
+    clearInterval(interval);
+  }
+  stackflowIntervals.clear();
   if (
     'happyDOM' in window &&
     window.happyDOM instanceof Object &&
