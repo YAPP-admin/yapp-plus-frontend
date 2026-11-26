@@ -141,18 +141,16 @@ export const contentSection = style({
 });
 
 export const attachmentSection = style({
-  minWidth: 0,
-  marginBottom: '32px',
-});
-
-export const attachmentList = style({
   display: 'flex',
+  minWidth: 0,
   gap: vars.$dimension.x2,
-  margin: 0,
-  padding: 0,
-  listStyle: 'none',
+  marginBottom: '32px',
   overflowX: 'auto',
   scrollSnapType: 'x mandatory',
+  ':focus-visible': {
+    outline: `2px solid ${vars.$color.fg.neutral}`,
+    outlineOffset: '2px',
+  },
   // 마지막 이미지도 앞선 이미지와 같은 왼쪽 시작점에 맞춰 멈추게 한다.
   '::after': {
     content: '""',
@@ -161,6 +159,7 @@ export const attachmentList = style({
 });
 
 export const attachmentItem = style({
+  margin: 0,
   flex: '0 0 88%',
   minWidth: 0,
   scrollSnapAlign: 'start',
