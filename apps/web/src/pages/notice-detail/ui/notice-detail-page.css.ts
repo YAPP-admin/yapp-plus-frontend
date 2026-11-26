@@ -1,5 +1,6 @@
+/** 공지 상세의 본문 배치와 첨부 이미지 가로 스크롤 스타일을 정의한다. */
 import { vars } from '@seed-design/css/vars';
-import { style } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 
 export const container = style({
   display: 'flex',
@@ -140,57 +141,46 @@ export const contentSection = style({
 });
 
 export const attachmentSection = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '12px',
+  minWidth: 0,
   marginBottom: '32px',
-});
-
-export const attachmentTitle = style({
-  fontSize: vars.$fontSize.t5,
-  lineHeight: vars.$lineHeight.t5,
-  fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.neutral,
-  margin: 0,
 });
 
 export const attachmentList = style({
   display: 'flex',
-  flexDirection: 'column',
-  gap: '8px',
+  gap: vars.$dimension.x2,
   margin: 0,
   padding: 0,
   listStyle: 'none',
+  overflowX: 'auto',
+  scrollSnapType: 'x mandatory',
+  // 마지막 이미지도 앞선 이미지와 같은 왼쪽 시작점에 맞춰 멈추게 한다.
+  '::after': {
+    content: '""',
+    flex: `0 0 calc(12% - ${vars.$dimension.x2})`,
+  },
 });
 
 export const attachmentItem = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '4px',
-  padding: '12px',
-  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
-  borderRadius: '8px',
+  flex: '0 0 88%',
+  minWidth: 0,
+  scrollSnapAlign: 'start',
 });
 
 export const attachmentImage = style({
   width: '100%',
-  borderRadius: '6px',
-  objectFit: 'contain',
-  maxHeight: '320px',
   background: vars.$color.bg.neutralMuted,
 });
 
-export const attachmentName = style({
+// ImageFrame의 기본 cover를 덮어써 공지 이미지 안의 글자까지 모두 보여준다.
+globalStyle(`${attachmentImage} img`, { objectFit: 'contain' });
+
+export const attachmentFallback = style({
+  display: 'grid',
+  placeItems: 'center',
+  aspectRatio: '4 / 5',
+  background: vars.$color.bg.neutralMuted,
   fontSize: vars.$fontSize.t4,
   lineHeight: vars.$lineHeight.t4,
-  fontWeight: vars.$fontWeight.medium,
-  color: vars.$color.fg.neutral,
-  overflowWrap: 'anywhere',
-});
-
-export const attachmentMeta = style({
-  fontSize: vars.$fontSize.t3,
-  lineHeight: vars.$lineHeight.t3,
   color: vars.$color.fg.neutralMuted,
 });
 
