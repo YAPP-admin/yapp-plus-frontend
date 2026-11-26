@@ -259,6 +259,97 @@ it('주간 API만 조회하고 서버 이름·한국 날짜·분과 세션 날�
   expect(scheduleRequest).not.toHaveBeenCalled();
 });
 
+it.each(['REGULAR', 'TEAM'])(
+  '%s 출석 완료일은 오늘의 원 대신 배지와 출석 문구를 표시한다',
+  async (type) => {
+    server.use(
+      http.get(url, () =>
+        HttpResponse.json({
+          ...response,
+          session: { ...response.session, type, attendanceStatus: 'CHECKED_IN' },
+        }),
+      ),
+    );
+    renderHome();
+
+    const date = await screen.findByLabelText('2026-11-07 출석 완료');
+    expect(date).toHaveAttribute('dateTime', '2026-11-07');
+    expect(date).toHaveAttribute('aria-current', 'date');
+    expect(date).toHaveTextContent('7');
+    expect(date).not.toHaveClass(calendarDateBadgeActive);
+    expect(within(date).getByText('2026-11-07 출석 완료')).toBeInTheDocument();
+    expect(within(date).getByAltText('')).toHaveAttribute(
+      'src',
+      '/images/home/calendar-attendance-complete.svg',
+    );
+    expect(within(screen.getByLabelText('주간 일정')).getByText('출석')).toBeVisible();
+    expect(screen.queryByLabelText('2026-11-07 세션 예정')).not.toBeInTheDocument();
+  },
+);
+
+it('같은 주의 지난 출석 완료일을 유지하고 오늘은 별도의 원으로 강조한다', async () => {
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({
+        ...response,
+        session: { ...response.session, date: '2026-11-04', attendanceStatus: 'CHECKED_IN' },
+      }),
+    ),
+  );
+  renderHome();
+
+  const completedDate = await screen.findByLabelText('2026-11-04 출석 완료');
+  expect(completedDate).toHaveTextContent('4');
+  expect(within(completedDate).getByAltText('')).toBeInTheDocument();
+  expect(completedDate).not.toHaveAttribute('aria-current');
+  const today = screen.getByLabelText('2026-11-07');
+  expect(today).toHaveAttribute('aria-current', 'date');
+  expect(today).toHaveClass(calendarDateBadgeActive);
+});
+
+it('완료 배지 안에 두 자리의 실제 세션 날짜를 표시한다', async () => {
+  vi.setSystemTime(new Date('2026-11-14T03:00:00Z'));
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({
+        ...response,
+        weekStartDate: '2026-11-08',
+        weekEndDate: '2026-11-14',
+        session: { ...response.session, date: '2026-11-14', attendanceStatus: 'CHECKED_IN' },
+      }),
+    ),
+  );
+  renderHome();
+
+  const date = await screen.findByLabelText('2026-11-14 출석 완료');
+  expect(date).toHaveTextContent('14');
+  expect(within(date).getByAltText('')).toBeInTheDocument();
+});
+
+it.each(['AVAILABLE', 'NOT_OPEN', 'NOT_ELIGIBLE', 'PENDING_APPROVAL'])(
+  '%s 상태는 완료 배지와 출석 문구를 표시하지 않는다',
+  async (attendanceStatus) => {
+    server.use(
+      http.get(url, () =>
+        HttpResponse.json({
+          ...teamResponse,
+          session: { ...teamResponse.session, attendanceStatus },
+        }),
+      ),
+      http.get(teamPhotoUrl, () => HttpResponse.json({ photo: null })),
+    );
+    renderHome();
+
+    const date = await screen.findByLabelText('2026-11-07 세션 예정');
+    if (attendanceStatus === 'PENDING_APPROVAL') {
+      await screen.findByRole('button', { name: '인증 사진 검토 중' });
+    }
+    expect(date).toHaveClass(calendarDateBadgeActive);
+    expect(within(date).queryByAltText('')).not.toBeInTheDocument();
+    expect(within(screen.getByLabelText('주간 일정')).queryByText('출석')).not.toBeInTheDocument();
+  },
+);
+
 it('오늘과 세션 예정일이 다르면 한국 시간의 오늘만 원형으로 강조한다', async () => {
   vi.setSystemTime(new Date('2026-11-05T15:00:00Z'));
   renderHome();
@@ -293,6 +384,8 @@ it('세션 없는 주에도 응답의 달력을 표시한다', async () => {
     screen.getByLabelText('주간 일정').getElementsByClassName(calendarDateBadgeActive),
   ).toHaveLength(1);
   expect(screen.queryByRole('button', { name: '출석하기' })).not.toBeInTheDocument();
+  expect(screen.queryByLabelText(/출석 완료$/)).not.toBeInTheDocument();
+  expect(within(screen.getByLabelText('주간 일정')).queryByText('출석')).not.toBeInTheDocument();
 });
 
 it('로딩과 오류를 카드에 한정하고 키보드 재시도로 복구한다', async () => {

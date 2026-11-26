@@ -1,3 +1,4 @@
+/** 주간 조회의 세션·본인 출석 상태를 홈 달력과 출석 진입 UI에 반영한다. */
 import { staticContentEnabled } from '@/features/static-content';
 import { useRefetchOnScreenReturn, useScreenActiveContext } from '@/shared/lib/screen-activity';
 import { useThrowQueryError } from '@/shared/lib/query-error-policy';
@@ -27,8 +28,13 @@ import { currentWeekQueryOptions } from '../model/current-week-query';
 import {
   calendarDateBadge,
   calendarDateBadgeActive,
-  calendarDayItem,
+  calendarDateBadgeCompleted,
+  calendarDateBadgeImage,
+  calendarDateSlot,
+  calendarDayItemWithStatus,
   calendarDayLabel,
+  calendarAttendanceLabel,
+  calendarAttendanceSlot,
   calendarWeek,
   locationText,
   sessionCard,
@@ -149,19 +155,42 @@ function CurrentWeekContent() {
         ) : null}
       </div>
       <div className={calendarWeek} aria-label="주간 일정">
-        {days.map(({ date, label }) => (
-          <div key={date} className={calendarDayItem}>
-            <span className={calendarDayLabel}>{label}</span>
-            <time
-              dateTime={date}
-              aria-current={date === today ? 'date' : undefined}
-              aria-label={`${date}${date === session?.date ? ' 세션 예정' : ''}`}
-              className={date === today ? calendarDateBadgeActive : calendarDateBadge}
-            >
-              {Number(date.slice(8))}
-            </time>
-          </div>
-        ))}
+        {days.map(({ date, label }) => {
+          const isCompleted = date === session?.date && session.attendanceStatus === 'CHECKED_IN';
+          const dateLabel = isCompleted
+            ? `${date} 출석 완료`
+            : `${date}${date === session?.date ? ' 세션 예정' : ''}`;
+          let badgeClassName = date === today ? calendarDateBadgeActive : calendarDateBadge;
+          if (isCompleted) {
+            badgeClassName = calendarDateBadgeCompleted;
+          }
+          return (
+            <div key={date} className={calendarDayItemWithStatus}>
+              <span className={calendarDayLabel}>{label}</span>
+              <div className={calendarDateSlot}>
+                <time
+                  dateTime={date}
+                  aria-current={date === today ? 'date' : undefined}
+                  aria-label={dateLabel}
+                  className={badgeClassName}
+                >
+                  {isCompleted ? (
+                    <Image
+                      src="/images/home/calendar-attendance-complete.svg"
+                      alt=""
+                      className={calendarDateBadgeImage}
+                    />
+                  ) : null}
+                  <span aria-hidden={isCompleted || undefined}>{Number(date.slice(8))}</span>
+                  {isCompleted ? <VisuallyHidden>{dateLabel}</VisuallyHidden> : null}
+                </time>
+              </div>
+              <div className={calendarAttendanceSlot} aria-hidden="true">
+                {isCompleted ? <span className={calendarAttendanceLabel}>출석</span> : null}
+              </div>
+            </div>
+          );
+        })}
       </div>
       {session ? <SessionAttendanceAction session={session} now={dataUpdatedAt} /> : null}
     </>
