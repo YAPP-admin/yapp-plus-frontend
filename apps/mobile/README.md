@@ -304,3 +304,7 @@ development build와 TestFlight에서 로그인, 세션 복원·갱신, 로그�
 - [Expo App version 관리](https://docs.expo.dev/build-reference/app-versions/)
 
 Firebase 푸시 SDK·설정이 추가된 앱 runtime은 1.0.6이다. 1.0.5 기반과 구분하며 새 빌드가 필요하다.
+
+Expo Doctor 호환성 수정으로 Expo 58.1.0과 관련 네이티브 패키지를 사용하며 앱 runtime은
+1.0.9다. 1.0.8 설치본에 OTA만 보내지 않고 새 네이티브 빌드가 필요하다. 의존성 변경을
+되돌릴 때는 package.json·lockfile·앱 설정을 함께 복구하고 기존 runtime의 정상 빌드를 사용한다.
