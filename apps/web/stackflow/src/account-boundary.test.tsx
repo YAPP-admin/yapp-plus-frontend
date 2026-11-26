@@ -179,7 +179,7 @@ function TeamAttendancePhotoFixture() {
   return null;
 }
 
-it('구 앱의 전환 필드 없는 세션은 수신 정규화 후 로그인 URL에서 홈으로 이동한다', async () => {
+it('구 앱의 전환 필드 없는 세션은 거부하고 로그인 화면에 머문다', async () => {
   window.history.replaceState(null, '', '/login');
   const approved = session(1);
   if (approved.status !== 'SIGNED_IN') {
@@ -187,11 +187,11 @@ it('구 앱의 전환 필드 없는 세션은 수신 정규화 후 로그인 URL
   }
   bridge.getSession.mockResolvedValue({ status: 'SIGNED_IN', session: approved.session });
   mount(new QueryClient());
-  await screen.findByRole('tab', { name: '일정' }, { timeout: 10000 });
-  await waitFor(() => expect(window.location.pathname).toBe('/'));
-  expect(screen.queryByRole('button', { name: '구글로 계속하기' })).not.toBeInTheDocument();
+  await screen.findByRole('button', { name: '구글로 계속하기' }, { timeout: 10000 });
+  expect(window.location.pathname).toBe('/login');
+  expect(screen.queryByRole('tab', { name: '일정' })).not.toBeInTheDocument();
   expect(bridge.getSession).toHaveBeenCalledTimes(1);
-  expect(replacedActivities.mock.calls).toEqual([['Tabs']]);
+  expect(replacedActivities).not.toHaveBeenCalled();
 }, 15000);
 
 it('대기 상태 없이 승인 대기 URL에 직접 진입하면 로그인으로 복귀한다', async () => {

@@ -1,4 +1,4 @@
-/** 새 인증 계약과 구 앱 입력의 호환 범위가 섞이지 않는지 검증합니다. */
+/** 인증 응답의 필수 필드와 잘못된 입력의 거부를 검증합니다. */
 import { expect, it } from 'vitest';
 import { authResultSchema, normalizeAuthResult, type AuthResult } from '../src/index';
 
@@ -13,9 +13,13 @@ const legacy = {
   },
 };
 
-it('새 계약은 필수 전환 값을 요구하고 구 앱 입력만 NONE으로 보정한다', () => {
+it('전환 값이 없는 구 앱 응답도 필수 계약에 따라 거부한다', () => {
   expect(authResultSchema.safeParse(legacy).success).toBe(false);
-  expect(normalizeAuthResult(legacy)).toEqual({ ...legacy, reviewTransition: 'NONE' });
+  expect(normalizeAuthResult(legacy)).toEqual({
+    status: 'ERROR',
+    code: 'INVALID_RESPONSE',
+    retryable: false,
+  });
   expect(authResultSchema.safeParse({ ...legacy, reviewTransition: 'NONE' }).success).toBe(true);
 });
 
@@ -36,7 +40,7 @@ it.each([
   null,
   { ...legacy, reviewTransition: 'UNKNOWN' },
   { ...legacy, reviewTransition: null },
-  { ...legacy, session: { ...legacy.session, accessToken: '' } },
+  { ...legacy, reviewTransition: 'NONE', session: { ...legacy.session, accessToken: '' } },
   { status: 'REVIEW_REQUIRED', userId: 1, reviewStatus: 'APPROVED' },
   { status: 'REVIEW_REQUIRED', userId: 1 },
   { status: 'REVIEW_REQUIRED', userId: '1', reviewStatus: 'PENDING' },

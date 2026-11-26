@@ -199,19 +199,12 @@ export const authResultSchema = z.discriminatedUnion('status', [
   ...otherAuthResultSchemas,
 ]) satisfies z.ZodType<AuthResult>;
 
-const authWireResultSchema = z.discriminatedUnion('status', [
-  signedInResultSchema.extend({
-    reviewTransition: signedInResultSchema.shape.reviewTransition.default('NONE'),
-  }),
-  ...otherAuthResultSchemas,
-]);
-
-/** 웹 수신 경계에서 구 앱의 누락 필드만 보정하고 잘못된 응답은 자격 없는 오류로 변환합니다. */
+/** 웹 수신 경계에서 인증 계약을 검증하고 잘못된 응답은 자격 없는 오류로 변환합니다. */
 export function normalizeAuthResult(input: unknown): AuthResult | undefined {
   if (input === undefined) {
     return undefined;
   }
-  const result = authWireResultSchema.safeParse(input);
+  const result = authResultSchema.safeParse(input);
   return result.success
     ? result.data
     : { status: 'ERROR', code: 'INVALID_RESPONSE', retryable: false };
