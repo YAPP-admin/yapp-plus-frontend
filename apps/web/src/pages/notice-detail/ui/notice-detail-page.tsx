@@ -7,6 +7,7 @@ import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
+import { ImageFrame } from '@seed-design/react';
 import { ActionButton, PrefixIcon } from '@yapp-plus/ui';
 import { Suspense, useState } from 'react';
 import { useNativeAuthSession } from '@/features/auth';
@@ -17,12 +18,10 @@ import { useNoticeRead } from '../model/use-notice-read';
 import {
   assignmentChip,
   attachmentImage,
+  attachmentFallback,
   attachmentItem,
   attachmentList,
-  attachmentMeta,
-  attachmentName,
   attachmentSection,
-  attachmentTitle,
   confirmCount,
   confirmQuestion,
   confirmSection,
@@ -183,13 +182,10 @@ function NoticeAssignment({
 function NoticeAttachments({ images }: { images: ReturnType<typeof noticeDetailData>['images'] }) {
   return (
     <section className={attachmentSection} aria-label="첨부 이미지">
-      <h2 className={attachmentTitle}>첨부 이미지</h2>
       <ul className={attachmentList}>
         {images.map((image) => (
           <li key={image.imageKey} className={attachmentItem}>
-            <NoticeAttachmentImage src={image.readUrl} alt={image.filename} />
-            <span className={attachmentName}>{image.filename}</span>
-            <span className={attachmentMeta}>{image.contentType}</span>
+            <NoticeAttachmentImage key={image.readUrl} src={image.readUrl} alt={image.filename} />
           </li>
         ))}
       </ul>
@@ -200,9 +196,19 @@ function NoticeAttachments({ images }: { images: ReturnType<typeof noticeDetailD
 function NoticeAttachmentImage({ src, alt }: { src: string; alt: string }) {
   const [failed, setFailed] = useState(false);
   if (failed) {
-    return <output>이미지를 표시하지 못했어요.</output>;
+    return <output className={attachmentFallback}>이미지를 표시하지 못했어요.</output>;
   }
-  return <img className={attachmentImage} src={src} alt={alt} onError={() => setFailed(true)} />;
+  return (
+    <ImageFrame
+      className={attachmentImage}
+      ratio={4 / 5}
+      borderRadius={0}
+      stroke={false}
+      src={src}
+      alt={alt}
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 function getCategoryChipClass(category: ReturnType<typeof noticeDetailData>['type']) {
