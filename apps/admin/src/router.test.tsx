@@ -184,7 +184,6 @@ describe('관리자 라우팅', () => {
   });
 
   it.each([
-    ['/', '대시보드', '대시보드'],
     ['/sessions', '세션 관리', '세션 목록'],
     ['/dining', '뒤풀이 관리', '뒤풀이 관리'],
     ['/dining/new', '뒤풀이 관리', '뒤풀이 만들기'],
@@ -215,31 +214,16 @@ describe('관리자 라우팅', () => {
     expect(screen.getByRole('combobox', { name: '기수 선택' })).toBeVisible();
   });
 
-  it('대시보드 내용과 현재 메뉴, 키보드 탐색 순서를 유지한다', async () => {
-    const user = userEvent.setup();
+  it('대시보드 경로는 세션 관리로 이동하고 대시보드 메뉴를 표시하지 않는다', async () => {
     await renderRoute('/');
 
-    expect(await screen.findByRole('heading', { name: '대시보드', level: 1 })).toBeVisible();
-    expect(screen.getByText('표시할 데이터가 없습니다')).toBeVisible();
-
-    const menu = within(screen.getByRole('navigation', { name: '주요 메뉴' })).getByRole('link', {
-      name: '대시보드',
-      current: 'page',
-    });
-
-    expect(menu).toBeVisible();
-
-    await user.tab();
-
-    expect(screen.getByRole('link', { name: 'YAPP+ Admin' })).toHaveFocus();
-
-    await user.tab();
-
-    expect(screen.getByRole('combobox', { name: '기수 선택' })).toHaveFocus();
-
-    await user.tab();
-
-    expect(menu).toHaveFocus();
+    expect(await screen.findByRole('heading', { name: '세션 관리', level: 1 })).toBeVisible();
+    expect(screen.queryByRole('heading', { name: '대시보드', level: 1 })).not.toBeInTheDocument();
+    expect(
+      within(screen.getByRole('navigation', { name: '주요 메뉴' })).queryByRole('link', {
+        name: '대시보드',
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it('로그인에 직접 접근하면 관리자 셸 없이 로그인 폼을 표시한다', async () => {
@@ -330,7 +314,7 @@ describe('관리자 라우팅', () => {
     expect(screen.queryByRole('textbox', { name: '아이디' })).not.toBeInTheDocument();
   });
 
-  it('404의 복귀 링크를 키보드로 실행하면 대시보드로 이동한다', async () => {
+  it('404의 복귀 링크를 키보드로 실행하면 세션 관리로 이동한다', async () => {
     const user = userEvent.setup();
     const router = await renderRoute('/missing');
     const link = await screen.findByRole('link', { name: '대시보드로 이동' });
@@ -341,8 +325,8 @@ describe('관리자 라우팅', () => {
 
     await user.keyboard('{Enter}');
 
-    expect(await screen.findByRole('heading', { name: '대시보드', level: 1 })).toBeVisible();
-    expect(router.state.location.pathname).toBe('/');
+    expect(await screen.findByRole('heading', { name: '세션 관리', level: 1 })).toBeVisible();
+    expect(router.state.location.pathname).toBe('/sessions');
     expect(
       screen.queryByRole('heading', { name: '페이지를 찾을 수 없어요' }),
     ).not.toBeInTheDocument();
@@ -424,7 +408,7 @@ describe('세션 목록 탐색', () => {
 
     expect(await screen.findByRole('radio', { name: label })).toBeChecked();
     expect(screen.getByRole('link', { name: '세션 관리' })).toHaveAttribute('aria-current', 'page');
-    expect(screen.getByRole('link', { name: '대시보드' })).not.toHaveAttribute('aria-current');
+    expect(screen.queryByRole('link', { name: '대시보드' })).not.toBeInTheDocument();
   });
 
   it('필터 변경을 history에 추가하고 기본값은 URL에서 생략한다', async () => {
@@ -452,29 +436,23 @@ describe('세션 목록 탐색', () => {
     await waitFor(() => expect(router.state.location.href).toBe('/sessions'));
   });
 
-  it.each(['대시보드', 'YAPP+ Admin'])(
-    '%s 이동 시 필터를 전달하지 않고 세션 재진입도 기본값을 사용한다',
-    async (name) => {
-      const user = userEvent.setup();
-      const router = await renderRoute('/sessions?type=team');
+  it('YAPP+ Admin 이동 시 필터를 전달하지 않고 세션 재진입도 기본값을 사용한다', async () => {
+    const user = userEvent.setup();
+    const router = await renderRoute('/sessions?type=team');
 
-      await user.click(await screen.findByRole('link', { name }));
+    await user.click(await screen.findByRole('link', { name: 'YAPP+ Admin' }));
 
-      await waitFor(() => expect(router.state.location.href).toBe('/'));
+    await waitFor(() => expect(router.state.location.href).toBe('/sessions'));
 
-      await user.click(screen.getByRole('link', { name: '세션 관리' }));
-
-      expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
-      expect(router.state.location.href).toBe('/sessions');
-    },
-  );
+    expect(await screen.findByRole('radio', { name: '전체' })).toBeChecked();
+    expect(screen.queryByRole('heading', { name: '대시보드' })).not.toBeInTheDocument();
+  });
 
   it('메뉴에서 키보드로 세션 페이지에 진입하고 유형 필터를 선택한다', async () => {
     const user = userEvent.setup();
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    await user.tab();
     await user.tab();
     await user.tab();
     await user.tab();
@@ -602,20 +580,9 @@ describe('출석 화면 탐색', () => {
 
     expect(backLink).toHaveAttribute('href', '/attendance');
 
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
+    for (let index = 0; index < 40 && document.activeElement !== backLink; index += 1) {
+      await user.tab();
+    }
     expect(backLink).toHaveFocus();
 
     await user.keyboard('{Enter}');
@@ -909,7 +876,7 @@ describe('명단 업로드 진입점', () => {
     await renderRoute('/members');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 13; index += 1) {
+    for (let index = 0; index < 12; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
@@ -1002,7 +969,7 @@ describe('공지 목록 URL 상태', () => {
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 11; index += 1) {
+    for (let index = 0; index < 10; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '공지 목록' })).toHaveFocus();
@@ -1373,7 +1340,7 @@ describe('알림 발송 내역 탐색', () => {
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 12; index += 1) {
+    for (let index = 0; index < 11; index += 1) {
       await user.tab();
     }
     expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveFocus();
