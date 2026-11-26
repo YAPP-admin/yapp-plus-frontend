@@ -18,16 +18,16 @@
 
 ### US1 — 본인 결과 판정 (P1)
 
-- [ ] T006 [US1] `apps/web/src/pages/home/model/team-attendance-result.test.ts`에 본인 확정 우선·미선택·공결·반려 불일치·photo:null·imageUrl:null 테스트를 작성한다.
-- [ ] T007 [US1] `apps/web/src/pages/home/model/team-attendance-result.ts`에 기존 생성 타입을 받는 표시 모델·우선순위·기한·제출 가능 판정을 구현한다.
+- [x] T006 [US1] `apps/web/src/pages/home/model/team-attendance-result.test.ts`에 본인 확정 우선·미선택·공결·반려 불일치·photo:null·imageUrl:null 테스트를 작성한다.
+- [x] T007 [US1] `apps/web/src/pages/home/model/team-attendance-result.ts`에 기존 생성 타입을 받는 표시 모델·기한·제출 가능 판정을 구현한다. 우선순위는 T011의 조회 훅에서 소유한다.
 
 ### US2 — 같은 결과 생략과 새 사진 구분 (P1)
 
-- [ ] T008 [US2] `apps/web/src/pages/home/model/team-attendance-result-storage.test.ts`에 같은 제출자의 재제출을 보는 B, 사용자·기수 구분, 손상 JSON·저장 실패를 검증한다.
-- [ ] T009 [US2] `apps/web/src/pages/home/model/team-attendance-result-storage.ts`에 검증된 localStorage 접근과 현재 실행의 메모리 대체를 구현한다. 재제출 삭제 API는 만들지 않는다.
-- [ ] T010 [US2] `apps/web/src/pages/home/model/use-team-attendance-result.test.tsx`에 커서 탐색·우선순위·첫 미표시 결과에서 중단·조회 실패·시작 전 제외를 검증한다.
-- [ ] T011 [US2] `apps/web/src/pages/home/model/use-team-attendance-result.ts`에 find7·find8Infinite·find1·find6 생성 옵션 조합을 구현한다. 타 페이지 내부 import·직접 HTTP·가짜 Mutation은 추가하지 않는다.
-- [ ] T012 `specs/030-team-attendance-results/validation.md`에 관련 테스트·check·변경량과 2단계 리뷰·3단계 진행 확인을 기록한다.
+- [x] T008 [US2] `apps/web/src/pages/home/model/team-attendance-result-storage.test.ts`에 같은 제출자의 재제출을 보는 B, 사용자·기수 구분, 손상 JSON·저장 실패를 검증한다.
+- [x] T009 [US2] `apps/web/src/pages/home/model/team-attendance-result-storage.ts`에 검증된 localStorage 접근과 현재 실행의 메모리 대체를 구현한다. 재제출 삭제 API는 만들지 않는다.
+- [x] T010 [US2] `apps/web/src/pages/home/model/use-team-attendance-result.test.tsx`에 커서 탐색·우선순위·첫 미표시 결과에서 중단·조회 실패·시작 전 제외를 검증한다.
+- [x] T011 [US2] `apps/web/src/pages/home/model/use-team-attendance-result.ts`에 find7·find8Infinite·find1·find6 생성 옵션 조합을 구현한다. 타 페이지 내부 import·직접 HTTP·가짜 Mutation은 추가하지 않는다.
+- [x] T012 `specs/030-team-attendance-results/validation.md`에 관련 테스트·check·변경량과 2단계 리뷰·3단계 진행 확인을 기록한다.
 
 ## 3단계 — 완료 일러스트 공용화
 
