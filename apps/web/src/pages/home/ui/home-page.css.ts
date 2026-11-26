@@ -174,7 +174,8 @@ export const calendarDateBadgeCompleted = style([
     isolation: 'isolate',
     width: '24px',
     height: '24px',
-    color: vars.$color.fg.neutralInverted,
+    // 배경 SVG는 테마와 무관한 브랜드색이므로 숫자도 흰색을 유지한다.
+    color: vars.$color.fg.onBrandSolid,
   },
 ]);
 

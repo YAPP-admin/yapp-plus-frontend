@@ -147,6 +147,8 @@ it('앞자리 0을 붙여넣고 Enter로 실제 코드·인증을 전송한 뒤 
   expect(request).toHaveBeenCalledWith({ sessionId: 42, code: 0 }, 'Bearer test-token');
   view.close();
   expect(await screen.findByRole('button', { name: '출석했어요!' })).toBeDisabled();
+  expect(screen.getByLabelText('2026-11-07 출석 완료')).toBeVisible();
+  expect(screen.getByText('출석', { exact: true })).toBeVisible();
   view.unmount();
   server.use(http.get(weekUrl, () => HttpResponse.json(week)));
   setup();
@@ -176,6 +178,8 @@ it('출석 성공 후 서버가 AVAILABLE로 정정하면 홈에서 다시 출�
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
   view.close();
   expect(await screen.findByRole('button', { name: '출석하기' })).toBeEnabled();
+  expect(screen.queryByLabelText(/출석 완료$/)).not.toBeInTheDocument();
+  expect(screen.queryByText('출석', { exact: true })).not.toBeInTheDocument();
 });
 
 it('위치 메서드를 지원하지 않으면 위치·출석 요청을 보내지 않는다', async () => {
