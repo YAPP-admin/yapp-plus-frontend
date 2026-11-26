@@ -170,8 +170,8 @@ export const attachmentImage = style({
   background: vars.$color.bg.neutralMuted,
 });
 
-// ImageFrame의 기본 cover를 덮어써 공지 이미지 안의 글자까지 모두 보여준다.
-globalStyle(`${attachmentImage} img`, { objectFit: 'contain' });
+// 원본 비율과 관계없이 이미지를 4:5 프레임에 꽉 채운다.
+globalStyle(`${attachmentImage} img`, { objectFit: 'cover' });
 
 export const attachmentFallback = style({
   display: 'grid',
