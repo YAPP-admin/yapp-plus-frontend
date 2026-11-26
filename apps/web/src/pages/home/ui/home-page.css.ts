@@ -518,6 +518,15 @@ export const quickCardWrapper = style({
   flexDirection: 'column',
 });
 
+// 홈 안내는 본문 위에 표시하되 팀 세션 결과 시트와 배경보다 아래에 둡니다.
+export const helpBubblePositioner = style({
+  selectors: {
+    '&&': {
+      zIndex: 1,
+    },
+  },
+});
+
 export const helpBubbleContent = style({
   backgroundColor: `${vars.$color.bg.neutralSolid} !important`,
   padding: '8px 10px !important',
