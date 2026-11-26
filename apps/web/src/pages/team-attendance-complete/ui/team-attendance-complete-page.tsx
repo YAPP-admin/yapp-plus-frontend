@@ -4,7 +4,7 @@
 import type { TeamAttendanceReceipt } from '@/features/team-attendance';
 import { BackButton } from '@/app/navigation/back-button';
 import { TabLink } from '@/app/navigation/tab-link';
-import { CompleteIllustration } from '@/pages/signup-complete/ui/complete-illustration';
+import { CompleteIllustration } from '@/shared/ui/complete-illustration';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import {
   body,

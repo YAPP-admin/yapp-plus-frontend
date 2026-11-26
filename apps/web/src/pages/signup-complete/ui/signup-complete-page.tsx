@@ -2,7 +2,7 @@ import { body, footer, heading, screen } from '@/shared/ui/step-screen.css';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import { TabLink } from '@/app/navigation/tab-link';
 import { contents, illustration } from './signup-complete-page.css';
-import { CompleteIllustration } from './complete-illustration';
+import { CompleteIllustration } from '@/shared/ui/complete-illustration';
 
 // 피그마 Sign-up_success. 라우팅 정책에 따라 뒤로가기 대신 홈으로 이동합니다.
 export function SignupCompletePage() {

@@ -1,3 +1,4 @@
+/** 완료 일러스트의 기존 일회성 모션과 reduced-motion 설정을 공유합니다. */
 import { style } from '@vanilla-extract/css';
 import { keyframeTrack, playOnce, reducedMotion, type Ease } from '@/shared/lib/keyframe-track';
 
@@ -69,9 +70,10 @@ function confetti(
   return style({ ...groupMotion, animation: playOnce(DURATION, fadeIn, sway, float) });
 }
 
+/** 부엉이 그룹에 일회성 등장·바운스와 reduced-motion 대체를 적용합니다. */
 export const owl = style({ ...groupMotion, animation: playOnce(DURATION, owlFadeIn, owlBounce) });
 
-// 기본 각도 -15.273°
+/** 기본 각도 -15.273°인 왼쪽 꽃가루 그룹의 모션입니다. */
 export const confettiLeft = confetti(
   [0, 0.07, 0.19, 1],
   [0, 0.32, 0.65, 1],
@@ -79,7 +81,7 @@ export const confettiLeft = confetti(
   [0, 0.07, 0.28, 0.475, 0.8, 1],
 );
 
-// 기본 각도 15.682°
+/** 기본 각도 15.682°인 오른쪽 꽃가루 그룹의 모션입니다. */
 export const confettiRight = confetti(
   [0, 0.12, 0.24, 1],
   [0, 0.37, 0.65, 1],

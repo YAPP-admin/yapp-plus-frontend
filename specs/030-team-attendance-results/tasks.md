@@ -33,9 +33,9 @@
 
 목표: 기존 그래픽을 동일하게 재사용할 기반을 마련한다. 새로운 애니메이션을 설계하지 않는다.
 
-- [ ] T013 `apps/web/src/pages/signup-complete/ui/complete-illustration.tsx`와 `.css.ts`를 `apps/web/src/shared/ui/complete-illustration.tsx`와 `.css.ts`로 옮기고 공개 책임 주석을 정리한다.
-- [ ] T014 `apps/web/src/pages/signup-complete/ui/signup-complete-page.tsx`, `apps/web/src/pages/attendance-complete/ui/attendance-complete-page.tsx`, `apps/web/src/pages/team-attendance-complete/ui/team-attendance-complete-page.tsx`의 import를 갱신한다.
-- [ ] T015 `specs/030-team-attendance-results/validation.md`에 기존 완료 화면·모션·reduced motion, check·build·파일 이동 변경량과 3단계 리뷰·4단계 진행 확인을 기록한다.
+- [x] T013 `apps/web/src/pages/signup-complete/ui/complete-illustration.tsx`와 `.css.ts`를 `apps/web/src/shared/ui/complete-illustration.tsx`와 `.css.ts`로 옮기고 공개 책임 주석을 정리한다.
+- [x] T014 `apps/web/src/pages/signup-complete/ui/signup-complete-page.tsx`, `apps/web/src/pages/attendance-complete/ui/attendance-complete-page.tsx`, `apps/web/src/pages/team-attendance-complete/ui/team-attendance-complete-page.tsx`의 import를 갱신한다.
+- [x] T015 `specs/030-team-attendance-results/validation.md`에 기존 완료 화면·모션·reduced motion, check·build·파일 이동 변경량과 3단계 리뷰·4단계 진행 확인을 기록한다.
 
 ## 4단계 — 시트 UI와 후속 행동 계약
 
