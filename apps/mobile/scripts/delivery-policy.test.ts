@@ -35,3 +35,42 @@ describe('모바일 네이티브 버전 규칙', () => {
     expect(() => compareNative(base, { ...base, fingerprint: '' })).toThrow('불완전');
   });
 });
+
+// 실제 승인 구성의 공개 해시를 고정해 일반 버전 감소 허용으로 넓어지는 회귀를 막습니다.
+const restoreBase: NativeSnapshot = {
+  version: '1.0.9',
+  fingerprint: 'a1819243df7163808e9fca08ac295f867fc1d192',
+  nativeBuildDigest: '656aaf1559491a07f8920ecafda8ef5132a08fbd29ee92edacb84742324b61c4',
+};
+const restoreHead: NativeSnapshot = {
+  version: '1.0.8',
+  fingerprint: 'ca9c8ab0ccc6a233e198555d8371b3d82a6921a0',
+  nativeBuildDigest: '6a9145e5aca883724482fb6fb39710e529a202fb0e665f2804b9326b0cd1238f',
+};
+
+describe('승인된 1.0.8 runtime 복구', () => {
+  it('정확한 구성 복구만 허용하고 새 빌드 판정은 보수적으로 유지한다', () => {
+    expect(compareNative(restoreBase, restoreHead)).toEqual({
+      nativeChanged: true,
+      needsBuild: true,
+    });
+  });
+  it.each(['base', 'head'] as const)('%s의 지문·설정·버전 중 하나라도 다르면 거부한다', (side) => {
+    for (const field of ['version', 'fingerprint', 'nativeBuildDigest'] as const) {
+      const original = side === 'base' ? restoreBase : restoreHead;
+      const changed = {
+        ...original,
+        [field]:
+          field === 'version'
+            ? { base: '1.0.10', head: '1.0.7' }[side]
+            : 'f'.repeat(original[field].length),
+      };
+      expect(() =>
+        compareNative(
+          side === 'base' ? changed : restoreBase,
+          side === 'head' ? changed : restoreHead,
+        ),
+      ).toThrow('감소');
+    }
+  });
+});
