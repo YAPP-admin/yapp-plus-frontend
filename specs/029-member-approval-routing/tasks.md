@@ -32,11 +32,11 @@
 목표: native fixture로 보호 내용 비노출과 상태별 화면을 검증한다. 실제 native 판정은 4단계다.
 
 - [x] T013 [US1] `packages/app-bridge/src/index.ts`에 REVIEW_REQUIRED·필수 reviewTransition(NONE | PENDING_TO_APPROVED)과 경계 검증 스키마를 추가하고 `packages/app-bridge/tests/auth-result.test.ts`에 계약 테스트를 작성한다.
-- [x] T014 [US1] `apps/web/src/features/auth/model/operations.test.ts`에서 제한 결과 확정·늦은 조회를, `native-auth.test.ts`와 공용 계약 테스트에서 구버전 결과의 NONE 정규화를 검증한다.
+- [x] T014 [US1] `apps/web/src/features/auth/model/operations.test.ts`에서 제한 결과 확정·늦은 조회를, `native-auth.test.ts`와 공용 계약 테스트에서 구버전 결과의 필수 전환 값 누락 거부를 검증한다.
 - [x] T015 [US1] `apps/web/src/features/auth/model/native-auth.ts`, `operations.ts`, `account.ts`, `session.tsx`, `mutations.ts`에서 새 결과 검증·캐시 정리·phase·callback을 연결한다.
 - [x] T016 [US1] `apps/web/stackflow/src/activities/native-auth-redirect.tsx`, `activities.tsx`와 `apps/web/src/pages/signup/ui/signup-page.tsx`의 이동 판정을 통일해 홈·완료 화면 경쟁을 제거한다.
 - [x] T017 [US1] `apps/web/stackflow/src/account-boundary.tsx`에서 제한 상태의 새 진입·pop 복원·업무 Query를 차단한다.
-- [x] T018 [US1] `apps/web/stackflow/src/account-boundary.test.tsx`에서 상태별 1회 이동, 직접 URL·새 화면 진입·뒤로가기의 보호 화면 차단, 구버전 SIGNED_IN의 NONE 정규화부터 홈 이동까지 검증한다. 실제 기기 딥링크 실행은 T034에서 배포 후 확인한다.
+- [x] T018 [US1] `apps/web/stackflow/src/account-boundary.test.tsx`에서 상태별 1회 이동, 직접 URL·새 화면 진입·뒤로가기의 보호 화면 차단, 구버전 SIGNED_IN의 필드 누락 거부와 로그인 화면 유지를 검증한다. 실제 기기 딥링크 실행은 T034에서 배포 후 확인한다.
 - [ ] T019 [US1] `specs/029-member-approval-routing/validation.md`에 check·build·크기와 2단계 리뷰 결과를 기록한다.
 
 ## 3단계 — US2: 기존 뒤로가기로 로그인 복귀 (P1)

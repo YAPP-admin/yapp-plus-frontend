@@ -32,7 +32,7 @@ it('native fallback 결과는 세션 조회 흐름으로 전달한다', async ()
   expect(bridge.getSession).toHaveBeenCalledTimes(1);
 });
 
-it('구 앱 세션의 전환 값은 웹 수신 시 NONE으로 보정한다', async () => {
+it('전환 값이 없는 구 앱 세션은 INVALID_RESPONSE로 거부한다', async () => {
   vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('YAPPPlusWebView');
   const session = {
     accessToken: 'test',
@@ -43,9 +43,9 @@ it('구 앱 세션의 전환 값은 웹 수신 시 NONE으로 보정한다', asy
   };
   bridge.getSession.mockResolvedValue({ status: 'SIGNED_IN', session });
   expect(await getNativeSession()).toEqual({
-    status: 'SIGNED_IN',
-    session,
-    reviewTransition: 'NONE',
+    status: 'ERROR',
+    code: 'INVALID_RESPONSE',
+    retryable: false,
   });
 });
 

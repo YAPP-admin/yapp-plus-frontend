@@ -26,8 +26,8 @@ type ReviewRequired = Readonly<{
 `reviewTransition: 'NONE' | 'PENDING_TO_APPROVED'`를 추가한다.
 AuthSession과 signIn·completeSignup·getSession·refreshSession·signOut 메서드 인자는 유지한다.
 승인 전환 정보는 직접 인증 성공 결과에만 붙이며 사용자별 1회 전환을 위한 정보다.
-정상 세션을 조회·갱신할 때는 `NONE`을 사용한다. 웹 신뢰 경계는 구버전 native의 필드 없는
-SIGNED_IN을 `NONE`으로 정규화하지만, 웹 내부와 새 native의 결과는 항상 필수 필드를 사용한다.
+정상 세션을 조회·갱신할 때는 `NONE`을 사용한다. 웹 신뢰 경계도 필드 없는 SIGNED_IN을 INVALID_RESPONSE로 거부한다.
+웹 내부와 native의 결과는 항상 필수 필드를 사용한다.
 새 결과와 전환 정보는 신뢰 경계에서 검증하며 타입 단언으로 생략하지 않는다.
 REVIEW_REQUIRED에는 토큰·이름·전화번호·원문 서버 오류를 포함하지 않는다.
 
@@ -64,6 +64,8 @@ Error의 뒤로가기도 제한 상태를 정리하고 Login으로 이동한다.
 
 ## 호환성
 
-새 웹은 구버전 결과의 누락 필드를 `NONE`으로 정규화해 수용한다. 새 native보다 웹을 먼저 배포한다.
-구버전 앱 또는 이미 저장된 세션의 승인 검사 우회는 사용자 확정 예외다.
+새 웹은 구버전 결과의 누락 필드를 INVALID_RESPONSE로 거부한다. 새 native보다 웹을 먼저 배포한다.
+OTA 적용 전 로그인 실패는 허용하며, 재로그인만으로는 이전 앱 코드가 바뀌지 않는다.
+강제 업데이트·자동 재시작 흐름은 추가하지 않는다.
+새 앱에서 이미 저장된 세션을 복원할 때 승인 검사를 생략하는 정책은 유지한다.
 웹의 차단은 서버의 업무 인가를 대체하지 않는다.
