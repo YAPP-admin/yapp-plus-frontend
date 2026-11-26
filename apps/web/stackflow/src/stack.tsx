@@ -4,7 +4,7 @@ import { LinkUrlResolverProvider } from '@stackflow/link';
 import { historySyncPlugin, type Route } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { lazy, stackflow as createStackflow } from '@stackflow/react';
-import { Primitive, seedPlugin } from '@seed-design/stackflow';
+import { seedPlugin } from '@seed-design/stackflow';
 import { type ComponentProps, type ReactNode } from 'react';
 import type { TabsState } from '@/app/navigation/tab';
 import type { QueryClient } from '@tanstack/react-query';
@@ -389,11 +389,8 @@ function reducedMotionPlugin() {
           data-platform={context.platform}
           data-reduced-motion={reducedMotion ? 'true' : 'false'}
         >
-          {reducedMotion ? (
-            stack.render()
-          ) : (
-            <Primitive.GlobalInteraction>{stack.render()}</Primitive.GlobalInteraction>
-          )}
+          {/* 제스처와 전환은 seedPlugin이 관리하므로 컨트롤러를 중복으로 감싸지 않습니다. */}
+          {stack.render()}
         </div>
       );
     },

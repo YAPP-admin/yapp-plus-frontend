@@ -1,8 +1,9 @@
 import { SnackbarProvider } from '@yapp-plus/ui';
+import { seedPlugin } from '@seed-design/stackflow';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Suspense } from 'react';
+import { Suspense, type ComponentPropsWithoutRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
 import { TeamAttendancePhotoDraftProvider } from '@/pages/team-attendance-upload';
@@ -14,6 +15,27 @@ import { createStackflowApp, stackflowConfig } from './stack';
 import type { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
 
 const photoBridge = vi.hoisted(() => ({ pick: vi.fn<typeof pickAttendancePhoto>() }));
+const extraInteraction = vi.hoisted(() => ({ render: vi.fn<() => void>() }));
+vi.mock(import('@seed-design/stackflow'), async (importOriginal) => {
+  const original = await importOriginal();
+  const { forwardRef } = await import('react');
+
+  return {
+    ...original,
+    seedPlugin: vi.fn<typeof original.seedPlugin>(original.seedPlugin),
+    Primitive: {
+      ...original.Primitive,
+      // seedPlugin 내부 구현은 유지하고 앱이 추가하는 공개 컴포넌트만 추적합니다.
+      GlobalInteraction: forwardRef<
+        HTMLDivElement,
+        ComponentPropsWithoutRef<typeof original.Primitive.GlobalInteraction>
+      >((props, ref) => {
+        extraInteraction.render();
+        return <original.Primitive.GlobalInteraction {...props} ref={ref} />;
+      }),
+    },
+  };
+});
 vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
   ...(await importOriginal()),
   pickAttendancePhoto: photoBridge.pick,
@@ -23,6 +45,8 @@ const popstateListeners: EventListenerOrEventListenerObject[] = [];
 const addWindowListener = window.addEventListener.bind(window);
 
 beforeEach(() => {
+  vi.mocked(seedPlugin).mockClear();
+  extraInteraction.render.mockClear();
   photoBridge.pick.mockReset();
   vi.stubEnv('VITE_API_MOCKING', 'true');
   // 각 테스트의 새 문서에서 생성한 history 구독을 수거합니다.
@@ -219,6 +243,16 @@ describe('Stackflow FSD 화면 연결', () => {
       );
     }
     expect(window.history.length).toBe(historyLength);
+  }, 15000);
+
+  it('iOS 탐색은 seedPlugin 외에 전역 인터랙션 컨트롤러를 추가하지 않는다', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('iPhone');
+    window.history.replaceState({}, '', '/alerts?empty=true');
+    renderStack();
+
+    expect(await waitForTopHeading('알림')).toBeTruthy();
+    expect(seedPlugin).toHaveBeenCalledTimes(1);
+    expect(extraInteraction.render).not.toHaveBeenCalled();
   }, 15000);
 
   it('web에서는 화면별 prop을 생략해도 swipe edge를 렌더링하지 않는다', async () => {
