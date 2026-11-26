@@ -43,6 +43,27 @@ describe('toProfileDisplay', () => {
         generationNumber: null,
         position: null,
       }),
-    ).toEqual({ name: '테스트 회원', membershipStatus: '—', generation: '—', position: '—' });
+    ).toEqual({
+      name: '테스트 회원',
+      membershipStatus: '—',
+      generation: '—',
+      position: '—',
+      profileImageSrc: '/images/my/user-profile.svg',
+    });
+  });
+
+  it.each([
+    ['PM', 'pm'],
+    ['DESIGN', 'design'],
+    ['WEB', 'web'],
+    ['MOBILE', 'mobile'],
+    ['ANDROID', 'mobile'],
+    ['IOS', 'mobile'],
+    ['SERVER', 'server'],
+    ['AI_NATIVE', 'ai-native'],
+  ] as const)('직군 %s에 %s 캐릭터를 연결한다', (position, character) => {
+    expect(toProfileDisplay({ ...profile, position }).profileImageSrc).toBe(
+      `/images/my/profile-${character}.svg`,
+    );
   });
 });
