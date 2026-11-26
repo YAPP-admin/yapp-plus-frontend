@@ -55,14 +55,14 @@ it.each([
   expect(screen.getByRole('heading', { name: title })).toBeVisible();
 });
 
-it.each([1, 3] as const)('상태 %i에 없는 사유를 만들지 않는다', async (index) => {
+it.each([0, 1, 3, 4, 5] as const)('반려·결석 상태 %i에 고정 사유를 표시한다', async (index) => {
   await setup(FIXTURES[index].result);
-  expect(screen.queryByText(/^사유:/)).not.toBeInTheDocument();
+  expect(screen.getByText('사유: 사진에서 확인되지 않았어요')).toBeVisible();
 });
 
-it('긴 사유를 생략하지 않고 과거 세션 이름과 날짜를 제공한다', async () => {
+it('과거 세션 이름과 날짜를 고정 사유와 함께 제공한다', async () => {
   await setup(FIXTURES[6].result, true);
-  expect(screen.getByText(/^사유:/).textContent).toBe(`사유: ${FIXTURES[6].result.reason}`);
+  expect(screen.getByText('사유: 사진에서 확인되지 않았어요')).toBeVisible();
   expect(screen.getByText('2026-11-26 · 5주차 팀 세션')).toBeVisible();
 });
 
@@ -104,4 +104,9 @@ it('Escape로 닫아도 후속 행동 없이 포커스가 복귀한다', async (
 it('시트를 호출 화면 안에 렌더링해 Activity의 레이어 경계를 유지한다', async () => {
   const { container, dialog } = await setup();
   expect(container).toContainElement(dialog);
+});
+
+it('출석 완료에는 사유 영역을 표시하지 않는다', async () => {
+  await setup(FIXTURES[2].result);
+  expect(screen.queryByText(/^사유:/)).not.toBeInTheDocument();
 });

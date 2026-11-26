@@ -1,7 +1,6 @@
 /**
  * 조회·저장 없이 결과를 표시합니다. 호출자는 실제 표시 기록과 후속 화면 이동을 담당합니다.
- * 반려 reason은 사진 조회 응답의 photo.rejectionReason이며 값이 없으면 사유 영역을 생략합니다.
- * 결석 사유는 현재 API에서 제공하지 않아 표시하지 않습니다. 개발 미리보기는 fixture를 사용합니다.
+ * 반려·결석 사유는 Figma의 고정 안내 문구이며 서버 photo.rejectionReason과 무관하게 표시합니다.
  */
 import { useActivityZIndexBase } from '@seed-design/stackflow';
 import { ActionButton, BottomSheetContent, BottomSheetRoot } from '@yapp-plus/ui';
@@ -90,7 +89,7 @@ export function TeamAttendanceResultSheet({
               </p>
             )}
           </div>
-          {result.kind === 'REJECTED' && result.reason && (
+          {(result.kind === 'REJECTED' || result.kind === 'ABSENT') && (
             <div className={styles.reason}>
               <img
                 className={styles.notice}
@@ -99,7 +98,7 @@ export function TeamAttendanceResultSheet({
                 height={22}
                 alt=""
               />
-              <p className={styles.reasonText}>사유: {result.reason}</p>
+              <p className={styles.reasonText}>사유: 사진에서 확인되지 않았어요</p>
             </div>
           )}
           {result.kind === 'COMPLETED' && <CompleteIllustration className={styles.illustration} />}

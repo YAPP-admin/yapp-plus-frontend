@@ -7,7 +7,7 @@ import type {
 } from '@yapp-plus/api/generated';
 import { koreanTimestamp } from '@/shared/lib/korean-date-time';
 
-/** 사진 URL 대신 최신 사진 ID와 개인 결과를 보존하며, 반려에만 후속 행동 정보를 제공합니다. */
+/** 최신 사진 ID와 개인 결과·반려 후속 행동만 제공합니다. 사유는 UI 고정 문구이므로 서버 사유를 전달하지 않습니다. */
 export type TeamAttendanceResult = {
   sessionId: number;
   name: string;
@@ -17,7 +17,6 @@ export type TeamAttendanceResult = {
   | { kind: 'ABSENT' | 'COMPLETED' }
   | {
       kind: 'REJECTED';
-      reason: string | null;
       deadline: number;
       reupload: 'AVAILABLE' | 'EXPIRED' | 'UNAVAILABLE';
     }
@@ -64,7 +63,6 @@ export function toTeamAttendanceResult(
       return {
         ...base,
         kind: 'REJECTED',
-        reason: photo.rejectionReason,
         deadline,
         reupload: now >= deadline ? 'EXPIRED' : beforeDeadline,
       };
