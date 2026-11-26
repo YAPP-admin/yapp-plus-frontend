@@ -63,6 +63,7 @@ import {
   srOnly,
 } from './home-page.css';
 import { WeeklyNotices } from './weekly-notices';
+import { TeamAttendanceResult } from './team-attendance-result';
 
 const weekSchedule = [
   { day: '일', date: 1, isToday: false, attended: false },
@@ -250,6 +251,7 @@ export function HomePage({
   return (
     <VStack as="main" className={container}>
       <h1 className={srOnly}>홈</h1>
+      {!showDemo && !staticContentEnabled() && <TeamAttendanceResult />}
 
       <VStack gap="x10" className={content}>
         <VStack as="section" gap="x2_5" aria-label="세션 및 바로가기">

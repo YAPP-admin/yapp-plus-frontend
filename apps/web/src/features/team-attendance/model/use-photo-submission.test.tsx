@@ -7,7 +7,7 @@ import type { ReactNode } from 'react';
 import { ApiError } from '@yapp-plus/api';
 import { apiBaseUrl, server } from '@/mocks/server';
 import { currentWeekFixture } from '@/mocks/session-handlers';
-import { find1QueryKey, find6QueryKey } from '@yapp-plus/api/generated';
+import { find1QueryKey, find6QueryKey, find8InfiniteQueryKey } from '@yapp-plus/api/generated';
 import {
   teamAttendanceTargetSchema,
   type SubmissionError,
@@ -29,6 +29,7 @@ const input: SubmissionInput = {
 };
 
 const apiOptions = { baseUrl: apiBaseUrl, auth: 'test-token' };
+const historyKey = find8InfiniteQueryKey(apiOptions);
 const weekKey = find6QueryKey(apiOptions);
 const photoKey = find1QueryKey({ ...apiOptions, path: { sessionId: 1 } });
 const otherPhotoKey = find1QueryKey({ ...apiOptions, path: { sessionId: 2 } });
@@ -39,6 +40,7 @@ beforeEach(() => {
 
 function setup() {
   const client = new QueryClient();
+  client.setQueryData(historyKey, { pages: [], pageParams: [] });
   client.setQueryData(weekKey, currentWeekFixture);
   client.setQueryData(photoKey, { photo: null });
   client.setQueryData(otherPhotoKey, { photo: null });
@@ -90,6 +92,7 @@ it('확인 시 imageKey와 명단을 생성 API에 접수한다', async () => {
       hook.result.current.submitPhoto(input, new AbortController().signal),
     ).resolves.toMatchObject({ teamName: '팀', status: 'PENDING' });
   });
+  expect(client.getQueryState(historyKey)?.isInvalidated).toBe(true);
   expect(body).toEqual({ imageKey: 'uploaded-key', selectedMembershipIds: [10] });
   expect(client.getQueryState(weekKey)?.isInvalidated).toBe(true);
   expect(client.getQueryState(photoKey)?.isInvalidated).toBe(true);
@@ -110,6 +113,9 @@ it('presign 최종 401은 원본 인증 오류를 보존한다', async () => {
     ).rejects.toBeInstanceOf(ApiError);
   });
 
+  expect(client.getQueryState(historyKey)?.isInvalidated).toBe(false);
+  expect(client.getQueryState(weekKey)?.isInvalidated).toBe(false);
+  expect(client.getQueryState(photoKey)?.isInvalidated).toBe(false);
   hook.unmount();
   client.clear();
 });
@@ -127,6 +133,9 @@ it('최종 제출 401은 원본 인증 오류를 보존한다', async () => {
     ).rejects.toBeInstanceOf(ApiError);
   });
 
+  expect(client.getQueryState(historyKey)?.isInvalidated).toBe(false);
+  expect(client.getQueryState(weekKey)?.isInvalidated).toBe(false);
+  expect(client.getQueryState(photoKey)?.isInvalidated).toBe(false);
   hook.unmount();
   client.clear();
 });
@@ -151,6 +160,9 @@ it('서명 URL PUT 실패는 재제출 가능한 로컬 오류로 바꾼다', as
     ).rejects.toMatchObject<Partial<SubmissionError>>({ kind: 'failed' });
   });
 
+  expect(client.getQueryState(historyKey)?.isInvalidated).toBe(false);
+  expect(client.getQueryState(weekKey)?.isInvalidated).toBe(false);
+  expect(client.getQueryState(photoKey)?.isInvalidated).toBe(false);
   hook.unmount();
   client.clear();
 });
@@ -173,6 +185,9 @@ it('접수 결과가 불명이면 자동 재제출하지 않는 로컬 오류로
     ).rejects.toMatchObject<Partial<SubmissionError>>({ kind: 'unknown' });
   });
 
+  expect(client.getQueryState(historyKey)?.isInvalidated).toBe(false);
+  expect(client.getQueryState(weekKey)?.isInvalidated).toBe(false);
+  expect(client.getQueryState(photoKey)?.isInvalidated).toBe(false);
   hook.unmount();
   client.clear();
 });

@@ -57,16 +57,16 @@
 
 ### US1·US2 — 활성 홈에서 실제 표시
 
-- [ ] T022 [US1] `apps/web/src/pages/home/ui/home-page.test.tsx`에 홈 진입·복귀·과거 결과 한 건·조회 실패 유지 흐름을 추가한다.
-- [ ] T023 [US1] `apps/web/src/pages/home/ui/home-page.tsx`에 결과 조회와 시트를 연결하고 활성 홈만 열리게 한다. 기존 API 조회 키와 화면 활성 경계를 사용한다.
-- [ ] T024 [US2] `apps/web/src/pages/home/ui/home-page.test.tsx`에 실제 열린 뒤 기록·숨은 홈·계정 전환·재진입·늦은 응답·단순 닫기 후 중복 없음 흐름을 검증한다.
-- [ ] T025 [US2] `apps/web/src/pages/home/model/use-team-attendance-result.ts`에 진입 수명·실제 표시 기록·복귀 갱신을 연결한다. 서버 결과를 중복 state에 복사하지 않는다.
+- [x] T022 [US1] `apps/web/src/pages/home/ui/home-result.test.tsx`에 홈 진입·복귀·과거 결과 한 건·조회 실패 유지 흐름을 추가한다.
+- [x] T023 [US1] `apps/web/src/pages/home/ui/home-page.tsx`에 결과 조회와 시트를 연결하고 활성 홈만 열리게 한다. 기존 API 조회 키와 화면 활성 경계를 사용한다.
+- [x] T024 [US2] `apps/web/src/pages/home/ui/home-result.test.tsx`에 실제 열린 뒤 기록·숨은 홈·계정 전환·재진입·늦은 응답·단순 닫기 후 중복 없음 흐름을 검증한다.
+- [x] T025 [US2] `apps/web/src/pages/home/model/use-team-attendance-result.ts`에 진입 수명·실제 표시 기록·복귀 갱신을 연결한다. 서버 결과를 중복 state에 복사하지 않는다.
 
 ### US3 — 제출·문의 연결
 
-- [ ] T026 [US3] `apps/web/src/features/team-attendance/model/use-photo-submission.test.tsx`에 접수 성공 시 본인 내역 무효화·실패 시 무효화 없음 회귀 검증을 추가한다.
-- [ ] T027 [US3] `apps/web/src/features/team-attendance/model/use-photo-submission.ts`에 실제 사용하는 find8Infinite Query key 무효화를 추가하고 최신 main의 인증 오류 전파를 보존한다.
-- [ ] T028 [US3] `apps/web/stackflow/src/stack.test.tsx`에 결과 시트 → 해당 세션 안내 → 사진 선택 취소·재제출 → 홈 복귀의 대표 흐름과 문의 링크 동작을 검증한다.
+- [x] T026 [US3] `apps/web/src/features/team-attendance/model/use-photo-submission.test.tsx`에 접수 성공 시 본인 내역 무효화·실패 시 무효화 없음 회귀 검증을 추가한다.
+- [x] T027 [US3] `apps/web/src/features/team-attendance/model/use-photo-submission.ts`에 실제 사용하는 find8Infinite Query key 무효화를 추가하고 최신 main의 인증 오류 전파를 보존한다.
+- [x] T028 [US3] `apps/web/stackflow/src/stack.test.tsx`에 결과 시트 → 해당 세션 안내 → 사진 선택 취소·재제출 → 홈 복귀의 대표 흐름을 검증하고 `home-result.test.tsx`에서 문의 링크 동작을 검증한다.
 
 ### 전체 검증과 리뷰
 

@@ -4,7 +4,7 @@
  */
 import { useActivityZIndexBase } from '@seed-design/stackflow';
 import { ActionButton, BottomSheetContent, BottomSheetRoot } from '@yapp-plus/ui';
-import { useId } from 'react';
+import { useEffect, useEffectEvent, useId, useRef } from 'react';
 import { CompleteIllustration } from '@/shared/ui/complete-illustration';
 import type { TeamAttendanceResult } from '../model/team-attendance-result';
 import { sheetDescription, sheetHandleBar, sheetTitle } from './home-page.css';
@@ -46,6 +46,7 @@ export function TeamAttendanceResultSheet({
   onReupload,
   onContact,
   showSession = false,
+  onShown,
 }: {
   result: TeamAttendanceResult;
   open: boolean;
@@ -53,7 +54,26 @@ export function TeamAttendanceResultSheet({
   onReupload: (sessionId: number) => void;
   onContact: () => void;
   showSession?: boolean;
+  /** 열린 시트가 마운트되고 화면에 그려진 뒤 호출합니다. */
+  onShown?: () => void;
 }) {
+  const contentRef = useRef<HTMLDivElement>(null);
+  const reportShown = useEffectEvent(() => onShown?.());
+  const trackShown = Boolean(onShown);
+  useEffect(() => {
+    if (!open || !trackShown) {
+      return undefined;
+    }
+    // DOM 연결만으로 기록하지 않고 첫 페인트를 기다립니다. 숨은 홈은 상위에서 언마운트합니다.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        if (contentRef.current?.isConnected) {
+          reportShown();
+        }
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [open, trackShown]);
   const titleId = useId();
   const descriptionId = useId();
   const layerIndex = useActivityZIndexBase();
@@ -66,6 +86,7 @@ export function TeamAttendanceResultSheet({
   return (
     <BottomSheetRoot open={open} onOpenChange={onOpenChange} lazyMount unmountOnExit>
       <BottomSheetContent
+        ref={contentRef}
         layerIndex={layerIndex}
         className={styles.content}
         showCloseButton={false}

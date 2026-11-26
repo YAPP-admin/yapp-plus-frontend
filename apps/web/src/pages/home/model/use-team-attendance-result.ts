@@ -17,7 +17,7 @@ import {
 import { useEffect, useState } from 'react';
 import { z } from 'zod';
 import { koreanTimestamp } from '@/shared/lib/korean-date-time';
-import { toTeamAttendanceResult } from './team-attendance-result';
+import { type TeamAttendanceResult, toTeamAttendanceResult } from './team-attendance-result';
 import type { TeamAttendanceResultStorage } from './team-attendance-result-storage';
 
 // 생성 int64 스키마의 bigint 변환 결과는 사용하지 않고, 실제 소비하는 ID는 안전한 number만 허용합니다.
@@ -58,7 +58,11 @@ export function useTeamAttendanceResult({
   now: number;
 }) {
   const [index, setIndex] = useState(0);
-  const fresh = { enabled, staleTime: 0, refetchOnMount: 'always' as const };
+  const [shown, setShown] = useState<Pick<
+    TeamAttendanceResult,
+    'sessionId' | 'photoId' | 'kind'
+  > | null>(null);
+  const fresh = { enabled: enabled && !shown, staleTime: 0, refetchOnMount: 'always' as const };
   const schedule = useQuery({
     ...find7Options({
       ...apiOptions,
@@ -133,7 +137,7 @@ export function useTeamAttendanceResult({
       responseValidator: (value) => PHOTO_SCHEMA.parseAsync(value),
     }),
     ...fresh,
-    enabled: ready && eligible === true,
+    enabled: !shown && ready && eligible === true,
   });
   const photoReady = photo.isFetchedAfterMount && !photo.isFetching && !photo.isError;
   const result =
@@ -144,21 +148,34 @@ export function useTeamAttendanceResult({
   const unseen =
     result &&
     (!priorityOnly || (result.kind === 'REJECTED' && result.reupload === 'AVAILABLE')) &&
-    !storage.hasShown(scope, result)
+    (shown
+      ? shown.sessionId === result.sessionId &&
+        shown.photoId === result.photoId &&
+        shown.kind === result.kind
+      : !storage.hasShown(scope, result))
       ? result
       : null;
-  const skip = ready && eligible && photoReady && !unseen;
+  const skip = !shown && ready && eligible && photoReady && !unseen;
   if (skip) {
     setIndex(candidateIndex + 1);
   }
   const { hasNextPage, fetchNextPage } = history;
   useEffect(() => {
-    if (ready && session && !attendance && hasNextPage) {
+    if (!shown && ready && session && !attendance && hasNextPage) {
       void fetchNextPage();
     }
-  }, [ready, session, attendance, hasNextPage, fetchNextPage]);
+  }, [shown, ready, session, attendance, hasNextPage, fetchNextPage]);
   return {
     result: unseen,
+    currentSessionId: week.data?.session?.sessionId,
+    /** 실제 표시 callback에서만 기록하며 한 진입의 후보를 고정합니다. */
+    markShown: () => {
+      if (!enabled || !unseen || shown || !schedule.data) {
+        return;
+      }
+      storage.markShown(scope, unseen);
+      setShown({ sessionId: unseen.sessionId, photoId: unseen.photoId, kind: unseen.kind });
+    },
     isComplete: ready && session === undefined,
     generationId: schedule.data?.generationId,
     error: schedule.error ?? week.error ?? history.error ?? photo.error,
