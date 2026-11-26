@@ -5,7 +5,6 @@ const BASE = { sessionId: 101, name: '5주차 팀 세션', date: '2026-11-26', p
 const REJECTED = {
   ...BASE,
   kind: 'REJECTED',
-  reason: '사진에서 확인되지 않았어요',
   deadline: Date.parse('2026-11-26T18:00:00+09:00'),
   reupload: 'AVAILABLE',
 } as const;
@@ -15,12 +14,12 @@ export const TEAM_ATTENDANCE_RESULT_FIXTURES = [
   { label: '인증 반려', result: REJECTED, showSession: false },
   { label: '결석', result: { ...BASE, kind: 'ABSENT' }, showSession: false },
   { label: '출석 완료', result: { ...BASE, kind: 'COMPLETED' }, showSession: false },
-  { label: '사유 없는 반려', result: { ...REJECTED, reason: null }, showSession: false },
+  { label: '과거 세션 결석', result: { ...BASE, kind: 'ABSENT' }, showSession: true },
   { label: '기한 종료', result: { ...REJECTED, reupload: 'EXPIRED' }, showSession: true },
   { label: '현재 제출 불가', result: { ...REJECTED, reupload: 'UNAVAILABLE' }, showSession: false },
   {
-    label: '긴 사유·과거 세션',
-    result: { ...REJECTED, reason: '사진에서 참석자를 확인할 수 없어요.\n'.repeat(40) },
+    label: '과거 세션 반려',
+    result: REJECTED,
     showSession: true,
   },
 ] as const satisfies readonly {

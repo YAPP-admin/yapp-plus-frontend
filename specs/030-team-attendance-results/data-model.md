@@ -4,7 +4,7 @@
 
 생성 DTO를 복제하지 않고 기존 세션·내역·사진 타입을 그대로 소비한다. UI가 사용하는 변환 결과는
 홈 슬라이스 내부의 TeamAttendanceResult이며 sessionId·세션 이름·날짜·photoId·kind를 가진다.
-kind는 REJECTED | ABSENT | COMPLETED다. 반려만 reason·마감 시각·재업로드 가능 여부를 가진다.
+kind는 REJECTED | ABSENT | COMPLETED다. 반려만 마감 시각·재업로드 가능 여부를 가진다. 사유는 UI 고정 문구이며 모델에 포함하지 않는다.
 새 공개 API·브리지 타입과 패키지 export는 추가하지 않는다.
 
 판정 순서와 조회 일관성은 [계약](contracts/team-attendance-results.md)을 따른다.

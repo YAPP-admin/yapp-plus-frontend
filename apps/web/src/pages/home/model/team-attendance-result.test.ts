@@ -103,7 +103,6 @@ describe('본인 팀 세션 결과', () => {
     expect(toTeamAttendanceResult(SESSION, ATTENDANCE, PHOTO, WEEK, NOW)).toMatchObject({
       kind: 'REJECTED',
       photoId: 203,
-      reason: null,
       reupload: 'AVAILABLE',
     });
   });
@@ -155,4 +154,15 @@ describe('본인 팀 세션 결과', () => {
       ),
     ).not.toBeNull();
   });
+});
+
+it('서버 반려 사유는 표시 모델에 포함하지 않는다', () => {
+  const result = toTeamAttendanceResult(
+    SESSION,
+    ATTENDANCE,
+    { photo: { ...PHOTO.photo, rejectionReason: '서버의 별도 사유' } },
+    WEEK,
+    NOW,
+  );
+  expect(result).not.toHaveProperty('reason');
 });

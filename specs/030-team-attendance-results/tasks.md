@@ -43,7 +43,7 @@
 
 ### US1 — 결과 시트 (P1)
 
-- [x] T016 [US1] `apps/web/src/pages/home/ui/team-attendance-result-sheet.test.tsx`에 세 결과의 문구·접근성 이름·사유 없음·긴 사유·과거 세션 표시를 검증한다.
+- [x] T016 [US1] `apps/web/src/pages/home/ui/team-attendance-result-sheet.test.tsx`에 세 결과의 문구·접근성 이름·반려·결석 고정 사유·과거 세션 표시를 검증한다.
 - [x] T017 [US1] `apps/web/src/pages/home/ui/team-attendance-result-sheet.tsx`와 `.css.ts`에 기존 BottomSheet·토큰·공용 완료 일러스트로 표시 전용 UI를 구현한다.
 
 ### US3 — 확인·재업로드·문의 (P2)
