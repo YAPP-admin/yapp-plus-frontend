@@ -40,6 +40,7 @@ import {
   content,
   helpBubbleArrowTip,
   helpBubbleContent,
+  helpBubblePositioner,
   helpBubbleTitle,
   locationPin,
   locationRow,
@@ -133,7 +134,7 @@ function AttendanceReportQuickCard({
     <HelpBubbleRoot defaultOpen closeOnInteractOutside={false} placement="bottom" gutter={6}>
       <HelpBubbleAnchor asChild>{button}</HelpBubbleAnchor>
 
-      <HelpBubblePositioner>
+      <HelpBubblePositioner className={helpBubblePositioner}>
         <HelpBubbleContent className={helpBubbleContent}>
           <HelpBubbleArrow>
             <HelpBubbleArrowTip className={helpBubbleArrowTip} />
@@ -219,7 +220,7 @@ export function HomePage({
               </HelpBubbleCloseButton>
             </HelpBubbleAnchor>
 
-            <HelpBubblePositioner>
+            <HelpBubblePositioner className={helpBubblePositioner}>
               <HelpBubbleContent className={helpBubbleContent}>
                 <HelpBubbleArrow>
                   <HelpBubbleArrowTip className={helpBubbleArrowTip} />
