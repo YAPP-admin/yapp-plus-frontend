@@ -1,5 +1,5 @@
 /** URL·step params를 화면 슬라이스와 연결하며 탭의 선택과 패널 수명을 소유합니다. */
-import { Suspense, useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { find5Options } from '@yapp-plus/api/generated';
 import { teamAttendanceTargetSchema, type TeamAttendanceReceipt } from '@/features/team-attendance';
@@ -419,13 +419,28 @@ export function SignupUnregisteredActivity() {
   );
 }
 
+const TeamAttendanceResultPreview = import.meta.env.DEV
+  ? lazy(() =>
+      import('@/pages/home').then((module) => ({ default: module.TeamAttendanceResultPreview })),
+    )
+  : null;
+
 export function DevRoutesActivity() {
   const { isActive } = useActivity();
 
   return (
     <ActivityScreen title="개발 경로">
       <PageShell>
-        <DevRoutesPage isActive={isActive} />
+        <DevRoutesPage
+          isActive={isActive}
+          resultPreview={
+            TeamAttendanceResultPreview && (
+              <Suspense fallback={null}>
+                <TeamAttendanceResultPreview />
+              </Suspense>
+            )
+          }
+        />
       </PageShell>
     </ActivityScreen>
   );

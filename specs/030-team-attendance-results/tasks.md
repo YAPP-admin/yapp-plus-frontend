@@ -43,14 +43,14 @@
 
 ### US1 — 결과 시트 (P1)
 
-- [ ] T016 [US1] `apps/web/src/pages/home/ui/team-attendance-result-sheet.test.tsx`에 세 결과의 문구·접근성 이름·사유 없음·긴 사유·과거 세션 표시를 검증한다.
-- [ ] T017 [US1] `apps/web/src/pages/home/ui/team-attendance-result-sheet.tsx`와 `.css.ts`에 기존 BottomSheet·토큰·공용 완료 일러스트로 표시 전용 UI를 구현한다.
+- [x] T016 [US1] `apps/web/src/pages/home/ui/team-attendance-result-sheet.test.tsx`에 세 결과의 문구·접근성 이름·사유 없음·긴 사유·과거 세션 표시를 검증한다.
+- [x] T017 [US1] `apps/web/src/pages/home/ui/team-attendance-result-sheet.tsx`와 `.css.ts`에 기존 BottomSheet·토큰·공용 완료 일러스트로 표시 전용 UI를 구현한다.
 
 ### US3 — 확인·재업로드·문의 (P2)
 
-- [ ] T018 [US3] `apps/web/src/pages/home/ui/team-attendance-result-sheet.test.tsx`에 기한 종료·제출 불가·재업로드·문의·확인의 callback과 닫기 동작을 검증한다.
-- [ ] T019 [US3] `apps/web/src/pages/home/ui/team-attendance-result-sheet.tsx`에 CTA·기한·문의 연결 계약과 포커스 복귀를 적용한다.
-- [ ] T020 [US3] `apps/web/src/pages/home/model/team-attendance-result-fixtures.ts`에 읽기 전용 UI 입력을 두고 테스트·기존 개발 전용 진입에서 사용한다. 운영 홈에 fixture를 공급하지 않는다.
+- [x] T018 [US3] `apps/web/src/pages/home/ui/team-attendance-result-sheet.test.tsx`에 기한 종료·제출 불가·재업로드·문의·확인의 callback과 닫기 동작을 검증한다.
+- [x] T019 [US3] `apps/web/src/pages/home/ui/team-attendance-result-sheet.tsx`에 CTA·기한·문의 연결 계약과 포커스 복귀를 적용한다.
+- [x] T020 [US3] `apps/web/src/pages/home/model/team-attendance-result-fixtures.ts`에 읽기 전용 UI 입력을 두고 테스트·기존 개발 전용 진입에서 사용한다. 운영 홈에 fixture를 공급하지 않는다.
 - [ ] T021 `specs/030-team-attendance-results/validation.md`에 Figma·작은 화면·safe-area·접근성·다크 모드, check·build와 4단계 리뷰·5단계 진행 확인을 기록한다.
 
 ## 5단계 — 홈 연결과 통합 검증
