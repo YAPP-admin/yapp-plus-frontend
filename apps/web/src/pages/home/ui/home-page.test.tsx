@@ -552,6 +552,8 @@ it.each(['화면 복귀', '앱 복귀'])(
     );
     const view = render(tree(true));
     expect(await screen.findByRole('button', { name: '출석했어요!' })).toBeDisabled();
+    expect(screen.getByLabelText('2026-11-07 출석 완료')).toBeVisible();
+    expect(within(screen.getByLabelText('주간 일정')).getByText('출석')).toBeVisible();
     if (trigger === '화면 복귀') {
       view.rerender(tree(false));
       act(() => {
@@ -566,6 +568,9 @@ it.each(['화면 복귀', '앱 복귀'])(
       });
     }
     expect(await screen.findByRole('button', { name: '출석하기' })).toBeEnabled();
+    expect(screen.queryByLabelText('2026-11-07 출석 완료')).not.toBeInTheDocument();
+    expect(screen.getByLabelText('2026-11-07 세션 예정')).toHaveClass(calendarDateBadgeActive);
+    expect(within(screen.getByLabelText('주간 일정')).queryByText('출석')).not.toBeInTheDocument();
     expect(calls).toBe(2);
   },
 );
@@ -579,13 +584,14 @@ it('주 경계가 지나도 타이머로 조회하지 않고 화면 복귀 시 �
       calls += 1;
       return HttpResponse.json(
         calls === 1
-          ? response
+          ? { ...response, session: { ...response.session, attendanceStatus: 'CHECKED_IN' } }
           : { weekStartDate: '2026-11-08', weekEndDate: '2026-11-14', session: null },
       );
     }),
   );
   renderHome();
   await screen.findByRole('heading', { name: /설계 리뷰/ });
+  expect(screen.getByLabelText('2026-11-07 출석 완료')).toBeVisible();
   vi.setSystemTime(new Date('2026-11-07T15:00:00Z'));
   expect(calls).toBe(1);
   act(() => {
@@ -594,6 +600,8 @@ it('주 경계가 지나도 타이머로 조회하지 않고 화면 복귀 시 �
   });
   await waitFor(() => expect(screen.getByText('이번 주 예정된 세션이 없어요')).toBeVisible());
   expect(calls).toBe(2);
+  expect(screen.queryByLabelText(/출석 완료$/)).not.toBeInTheDocument();
+  expect(within(screen.getByLabelText('주간 일정')).queryByText('출석')).not.toBeInTheDocument();
   expect(screen.getByLabelText('2026-11-08')).toHaveAttribute('aria-current', 'date');
   expect(screen.getByLabelText('2026-11-08')).toHaveClass(calendarDateBadgeActive);
   expect(
