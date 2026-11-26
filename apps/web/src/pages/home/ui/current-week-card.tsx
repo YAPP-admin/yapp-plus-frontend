@@ -208,8 +208,10 @@ function getAttendanceLabel(session: CurrentWeekSessionDetailResponse, now: numb
   if (session.date !== today) {
     return `${Number(session.date.slice(8))}일 ${session.startTime.slice(0, 5)}에 세션이 시작돼요`;
   }
-  // 서버의 20분 전 개방 정책을 문구에만 반영하며, 버튼 활성 여부는 attendanceStatus를 따른다.
-  const opensAt = koreanTimestamp(session.date, session.startTime) - 20 * 60_000;
+  // 정기 세션은 시작 20분 전, 팀 세션은 시작 시간부터 안내하며 버튼 활성 여부는 attendanceStatus를 따른다.
+  const opensAt =
+    koreanTimestamp(session.date, session.startTime) -
+    (session.type === 'REGULAR' ? 20 * 60_000 : 0);
   const openingDate = koreanDateString(opensAt);
   const time = new Intl.DateTimeFormat('en-GB', {
     timeZone: 'Asia/Seoul',
