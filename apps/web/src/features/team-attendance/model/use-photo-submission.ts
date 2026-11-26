@@ -6,6 +6,7 @@ import { ApiError } from '@yapp-plus/api';
 import {
   find1QueryKey,
   find6QueryKey,
+  find8InfiniteQueryKey,
   presignMutation,
   submitMutation,
   zTeamPhotoSubmitted,
@@ -50,7 +51,7 @@ const createSubmissionUncertainError = () =>
 const isFinalAuthenticationError = (error: unknown): error is ApiError =>
   error instanceof ApiError && error.status === 401;
 
-/** presign·PUT·접수 후 주간 상태와 해당 세션 사진 캐시를 무효화한다. 재조회 완료는 기다리지 않으며 사진 바이트는 mutation 변수·결과에 저장하지 않는다. */
+/** presign·PUT·접수 후 주간 상태·본인 출석 내역·해당 세션 사진 캐시를 무효화한다. 재조회 완료는 기다리지 않으며 사진 바이트는 mutation 변수·결과에 저장하지 않는다. */
 export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
   const queryClient = useQueryClient();
   const uploadRequest = useRef<{
@@ -161,6 +162,7 @@ export function usePhotoSubmission(apiOptions: SubmissionApiOptions) {
         throw createSubmissionUncertainError();
       }
       void queryClient.invalidateQueries({ queryKey: find6QueryKey(apiOptions) });
+      void queryClient.invalidateQueries({ queryKey: find8InfiniteQueryKey(apiOptions) });
       void queryClient.invalidateQueries({
         queryKey: find1QueryKey({ ...apiOptions, path: { sessionId: input.target.sessionId } }),
       });

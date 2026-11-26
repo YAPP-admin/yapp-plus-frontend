@@ -8,6 +8,7 @@ mise의 저장소 고정 Node.js·pnpm과 설치된 의존성을 사용한다. �
 ```sh
 pnpm --filter @yapp-plus/web exec vitest run src/pages/home/model/team-attendance-result.test.ts src/pages/home/model/team-attendance-result-storage.test.ts src/pages/home/model/use-team-attendance-result.test.tsx
 pnpm --filter @yapp-plus/web exec vitest run src/pages/home/ui/team-attendance-result-sheet.test.tsx
+pnpm --filter @yapp-plus/web exec vitest run src/pages/home/ui/home-result.test.tsx stackflow/src/stack.test.tsx src/features/team-attendance/model/use-photo-submission.test.tsx
 node --run check
 node --run build
 ```
@@ -47,3 +48,6 @@ fixture는 개발 전용으로 제한하고 운영에 가짜 결과·접수 성�
 작은 화면·safe-area·가로 스크롤·다크 모드, Tab/Shift+Tab·Esc·터치 닫기, VoiceOver 제목·설명·
 버튼 탐색·포커스 복귀와 reduced motion을 확인한다. 문의는 기존 채널의 브라우저·WebView 이동 규칙을 따른다.
 실제 사진 제출·실기기·VoiceOver를 실행하지 못하면 자동 테스트 통과와 분리해 미검증으로 기록한다.
+
+홈 자동 표시는 인증된 WebView의 활성 홈에서 확인한다. `/dev/routes`의 결과 미리보기는
+UI만 확인하며 실제 API를 조회하거나 표시 이력을 저장하지 않는다.

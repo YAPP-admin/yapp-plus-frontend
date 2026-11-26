@@ -591,8 +591,9 @@ it.each([
   ['앨범에서 선택하기', 'library'],
   ['직접 사진 찍기', 'camera'],
 ] as const)(
-  '%s에서 취소·재선택 후 팀원 선택·제출·완료·홈 복귀를 연결한다',
+  '반려 결과에서 %s 취소·재선택·재제출·홈 복귀를 연결한다',
   async (label, source) => {
+    localStorage.clear();
     vi.stubEnv('DEV', false);
     vi.stubEnv('VITE_API_MOCKING', 'false');
     photoBridge.pick.mockResolvedValueOnce({ status: 'CANCELLED' }).mockResolvedValueOnce({
@@ -611,14 +612,40 @@ it.each([
     const requests: string[] = [];
     const submitBody = vi.fn<(body: unknown) => void>();
     const endpoint = `${apiBaseUrl}/api/sessions/42/team-attendance-photos`;
+    const teamSession = {
+      ...currentWeekFixture.session,
+      sessionId: 42,
+      type: 'TEAM',
+      date: koreanDateString(Date.now()),
+      dayOfWeek: 'THURSDAY',
+      startTime: '00:00',
+      endTime: '23:59:59',
+    };
     server.use(
+      http.get(`${apiBaseUrl}/api/generations/current/sessions`, () =>
+        HttpResponse.json({ generationId: 28, generationNumber: 28, sessions: [teamSession] }),
+      ),
+      http.get(`${apiBaseUrl}/api/attendance-history`, () =>
+        HttpResponse.json({
+          summary: { totalSessionCount: 1, startedSessionCount: 1 },
+          nextCursor: null,
+          items: [
+            {
+              sessionId: 42,
+              sessionName: '팀 세션',
+              attendanceStatus: 'UNDECIDED',
+              staffDecisionStatus: submitted ? 'PENDING' : 'REJECTED',
+            },
+          ],
+        }),
+      ),
       http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
         HttpResponse.json({
           ...currentWeekFixture,
+          weekStartDate: teamSession.date,
+          weekEndDate: koreanDateString(Date.now() + 6 * 86_400_000),
           session: {
-            ...currentWeekFixture.session,
-            sessionId: 42,
-            type: 'TEAM',
+            ...teamSession,
             attendanceStatus: submitted ? 'PENDING_APPROVAL' : 'AVAILABLE',
           },
         }),
@@ -639,7 +666,20 @@ it.each([
                 uploader: { userId: 1, name: '김야뿌' },
                 selectedMemberCount: 2,
               }
-            : null,
+            : {
+                photoId: 200,
+                teamId: 1,
+                teamName: 'Web 팀',
+                status: 'REJECTED',
+                imageUrl: null,
+                imageUrlExpiresAt: null,
+                rejectionReason: null,
+                uploadedAt: '2026-11-26T05:00:00Z',
+                uploadedTime: '14:00',
+                submittedAt: '2026-11-26T05:00:00Z',
+                uploader: { userId: 1, name: '김야뿌' },
+                selectedMemberCount: 2,
+              },
         }),
       ),
       http.post(`${endpoint}/presign`, () => {
@@ -668,8 +708,16 @@ it.each([
     );
     const user = userEvent.setup();
     renderStack({ native: true, staleTime: Infinity });
-    const home = await waitForTopHeading('홈');
-    await user.click(await home.findByRole('button', { name: '인증 사진 올리기' }));
+    const result = await screen.findByRole(
+      'dialog',
+      { name: '팀 세션 인증이 반려됐어요' },
+      { timeout: 5000 },
+    );
+    await waitFor(() =>
+      expect(localStorage.getItem('yapp-plus:team-attendance:shown:v1:1:28')).toContain('200'),
+    );
+    result.style.transform = 'none';
+    await user.click(within(result).getByRole('button', { name: '다시 업로드하기' }));
     await waitFor(() => expect(window.location.pathname).toBe('/team-attendance/guide'));
     // happy-dom은 Drawer의 기본 transform을 계산하지 않는다.
     (await screen.findByRole('dialog')).style.transform = 'none';
@@ -701,6 +749,11 @@ it.each([
     await user.click(screen.getByRole('link', { name: '확인' }));
     const returnedHome = await waitForTopHeading('홈');
     expect(await returnedHome.findByText('운영진이 확인하고 있어요')).toBeVisible();
+    expect(
+      screen.queryByRole('dialog', { name: '팀 세션 인증이 반려됐어요' }),
+    ).not.toBeInTheDocument();
+    expect(localStorage.getItem('yapp-plus:team-attendance:shown:v1:1:28')).toContain('200');
+    localStorage.clear();
     expect(
       returnedHome.queryByRole('button', { name: '인증 사진 올리기' }),
     ).not.toBeInTheDocument();

@@ -1,10 +1,10 @@
 # 구현 계획: 팀 세션 출석 결과 안내
 
-**브랜치**: `DongjaJ/622-result-sheet` (base: `DongjaJ/622-complete-illustration`) · **날짜**: 2026-11-26 · [명세](spec.md) · [이슈 #622](https://github.com/YAPP-admin/yapp-plus-frontend/issues/622)
-**상태**: 4단계 사용자 리뷰 완료, 커밋과 5단계 진행 승인. 일부 실기기·시각 검증은 남아 있다.
+**브랜치**: `DongjaJ/622-result-home` (base: `DongjaJ/622-result-sheet`) · **날짜**: 2026-11-26 · [명세](spec.md) · [이슈 #622](https://github.com/YAPP-admin/yapp-plus-frontend/issues/622)
+**상태**: 5단계 홈 연결 구현 완료, 사용자 리뷰 대기. 실기기·시각 검증은 남아 있다.
 
 사용자 승인으로 문서 커밋 위에 구현 브랜치를 분리했다. 2단계 결과 판정·표시 이력·조회 조합을
-구현했고 사용자 리뷰를 완료했다. 우선순위는 조회 훅이 소유하며 실제 홈 수명과 표시 연결은 5단계다.
+구현했고 사용자 리뷰를 완료했다. 우선순위는 조회 훅이 소유하며 5단계에서 실제 홈 수명과 표시를 연결했다.
 
 ## 요약
 
