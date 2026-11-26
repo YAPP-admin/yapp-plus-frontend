@@ -49,7 +49,13 @@ function ProfileError({ resetErrorBoundary }: FallbackProps) {
 }
 
 function ProfileSummary({
-  profile = { name: '—', membershipStatus: '—', generation: '—', position: '—' },
+  profile = {
+    name: '—',
+    membershipStatus: '—',
+    generation: '—',
+    position: '—',
+    profileImageSrc: '/images/my/user-profile.svg',
+  },
   notice,
 }: {
   profile?: ReturnType<typeof toProfileDisplay>;
@@ -59,7 +65,7 @@ function ProfileSummary({
     <VStack gap="x1">
       <HStack align="center" py="x4_5" gap="x4">
         <Box className={avatar} width="66px" height="66px" borderRadius="full" flexShrink={0}>
-          <Image src="/images/my/user-profile.svg" alt="프로필" width={66} height={66} />
+          <Image src={profile.profileImageSrc} alt="프로필" width={66} height={66} />
         </Box>
         <VStack gap="x1" minWidth="0px">
           <HStack align="center" gap="x2">
