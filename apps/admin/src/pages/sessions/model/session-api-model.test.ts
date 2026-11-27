@@ -125,3 +125,16 @@ it('팀 세션은 장소 필드를 모두 null로 변환한다', () => {
     longitude: null,
   });
 });
+
+it('종료일이 다음 날이면 종료 시간이 더 빨라도 요청으로 변환한다', () => {
+  expect(() =>
+    toCreateSessionRequest({
+      name: '야간 팀 세션',
+      startDate: '2026-11-20',
+      endDate: '2026-11-21',
+      startTime: '23:00',
+      endTime: '01:00',
+      type: 'team',
+    }),
+  ).not.toThrow();
+});

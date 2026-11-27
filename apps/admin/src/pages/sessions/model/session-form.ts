@@ -39,12 +39,26 @@ const teamSessionInputSchema = z.object({
   type: z.literal('team'),
 });
 
+type SessionScheduleInput = Pick<
+  z.infer<typeof regularSessionInputSchema>,
+  'startDate' | 'endDate' | 'startTime' | 'endTime'
+>;
+
+function isSessionScheduleValid({
+  startDate,
+  endDate,
+  startTime,
+  endTime,
+}: SessionScheduleInput) {
+  return endDate > startDate || (endDate === startDate && endTime > startTime);
+}
+
 /** API 연결용 폼 입력은 정규의 장소 필수와 팀의 장소 미입력을 구분한다. */
 export const sessionInputSchema = z
   .discriminatedUnion('type', [regularSessionInputSchema, teamSessionInputSchema])
-  .refine(({ startTime, endTime }) => endTime > startTime, {
-    message: '종료 시간은 시작 시간보다 늦어야 합니다.',
-    path: ['endTime'],
+  .refine(isSessionScheduleValid, {
+    message: '종료 일시는 시작 일시보다 늦어야 합니다.',
+    path: ['endDate'],
   });
 
 export type SessionInput = z.infer<typeof sessionInputSchema>;
@@ -104,7 +118,7 @@ export function createSessionFormSchema(initial?: SessionInput) {
             message: '종료일은 시작일보다 빠를 수 없습니다.',
             path: ['endDate'],
           });
-        } else if (value.endDate === value.startDate && endTime <= startTime) {
+        } else if (!isSessionScheduleValid({ ...value, startTime, endTime })) {
           context.addIssue({
             code: 'custom',
             message: '종료 시간은 시작 시간보다 늦어야 합니다.',
