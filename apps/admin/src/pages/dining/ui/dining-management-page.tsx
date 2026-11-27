@@ -1,21 +1,34 @@
-import { Plus } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Link } from '@tanstack/react-router';
 import { ActionButton, Badge } from '@yapp-plus/ui';
+import { useAdminGeneration } from '~/features/admin-generation';
+import {
+  afterpartyStatusLabel,
+  afterpartyStatusTone,
+  asCount,
+  asDisplayValue,
+  getAfterpartyApiErrorMessage,
+  responseRate,
+  useDiningListQuery,
+} from '../model/dining-api';
+import { diningPeriodLabels, type DiningPeriod } from '../model/dining-search';
 import {
   createButton,
   description,
-  eyebrow,
+  disabledTitleLink,
   emptyState,
+  error,
   filter,
   filterActive,
   filterCountLabel,
   filterGroup,
   heading,
+  eyebrow,
+  listLoading,
   page,
   progress,
   progressGroup,
-  responseRate,
+  responseRate as responseRateStyle,
   table,
   tableCell,
   tableHeader,
@@ -26,141 +39,51 @@ import {
   visuallyHidden,
 } from './dining-management-page.css';
 
-export type DiningStatus = 'OPEN' | 'CLOSED';
-type DiningFilter = 'OPEN' | 'CLOSED';
+const PERIODS: readonly DiningPeriod[] = ['UPCOMING', 'PAST'];
 
-export type DiningItem = Readonly<{
-  id: string;
-  title: string;
-  date: string;
-  dateTime: string;
-  deadline: string;
-  deadlineDateTime: string;
-  inviteScope: string;
-  responseRate: number;
-  attendeeCount: number;
-  status: DiningStatus;
-}>;
-
-export const DINING_ITEMS: readonly DiningItem[] = [
+// 상세 API 연결 PR이 반영되기 전까지 기존 상세 화면이 사용하는 임시 호환 fixture입니다.
+export const DINING_ITEMS = [
   {
     id: 'ot-afterparty',
     title: '33기 OT 뒤풀이',
     date: '03.21 (토) 18:30',
-    dateTime: '2026-03-21T18:30:00+09:00',
     deadline: '03.20 (금) 23:59',
-    deadlineDateTime: '2026-03-20T23:59:00+09:00',
-    inviteScope: '33기 운영진 · 활동회원',
-    responseRate: 63,
-    attendeeCount: 32,
-    status: 'OPEN',
+    status: 'OPEN' as const,
   },
-  {
-    id: 'staff-afterparty',
-    title: '운영진 MT 뒤풀이',
-    date: '04.04 (토) 19:00',
-    dateTime: '2026-04-04T19:00:00+09:00',
-    deadline: '04.01 (수) 23:59',
-    deadlineDateTime: '2026-04-01T23:59:00+09:00',
-    inviteScope: '33기 운영진',
-    responseRate: 43,
-    attendeeCount: 5,
-    status: 'OPEN',
-  },
-  {
-    id: 'april-afterparty',
-    title: '4월 정기 뒤풀이',
-    date: '04.25 (토) 18:30',
-    dateTime: '2026-04-25T18:30:00+09:00',
-    deadline: '04.22 (수) 23:59',
-    deadlineDateTime: '2026-04-22T23:59:00+09:00',
-    inviteScope: '33기 활동회원',
-    responseRate: 12,
-    attendeeCount: 7,
-    status: 'OPEN',
-  },
-  {
-    id: 'march-afterparty',
-    title: '3월 정기 뒤풀이',
-    date: '03.28 (토) 18:30',
-    dateTime: '2026-03-28T18:30:00+09:00',
-    deadline: '03.25 (수) 23:59',
-    deadlineDateTime: '2026-03-25T23:59:00+09:00',
-    inviteScope: '33기 활동회원',
-    responseRate: 100,
-    attendeeCount: 41,
-    status: 'CLOSED',
-  },
-  {
-    id: 'team-afterparty',
-    title: '팀별 뒤풀이',
-    date: '03.14 (토) 18:30',
-    dateTime: '2026-03-14T18:30:00+09:00',
-    deadline: '03.11 (수) 23:59',
-    deadlineDateTime: '2026-03-11T23:59:00+09:00',
-    inviteScope: '33기 활동회원',
-    responseRate: 88,
-    attendeeCount: 35,
-    status: 'CLOSED',
-  },
-  {
-    id: 'winter-afterparty',
-    title: '겨울 정기 뒤풀이',
-    date: '02.28 (토) 18:30',
-    dateTime: '2026-02-28T18:30:00+09:00',
-    deadline: '02.25 (수) 23:59',
-    deadlineDateTime: '2026-02-25T23:59:00+09:00',
-    inviteScope: '33기 활동회원',
-    responseRate: 76,
-    attendeeCount: 29,
-    status: 'CLOSED',
-  },
-  {
-    id: 'new-year-afterparty',
-    title: '새해 맞이 뒤풀이',
-    date: '02.07 (토) 18:30',
-    dateTime: '2026-02-07T18:30:00+09:00',
-    deadline: '02.04 (수) 23:59',
-    deadlineDateTime: '2026-02-04T23:59:00+09:00',
-    inviteScope: '33기 운영진 · 활동회원',
-    responseRate: 91,
-    attendeeCount: 38,
-    status: 'CLOSED',
-  },
-  {
-    id: 'graduation-afterparty',
-    title: '32기 수료 뒤풀이',
-    date: '01.24 (토) 18:30',
-    dateTime: '2026-01-24T18:30:00+09:00',
-    deadline: '01.21 (수) 23:59',
-    deadlineDateTime: '2026-01-21T23:59:00+09:00',
-    inviteScope: '32기 활동회원',
-    responseRate: 95,
-    attendeeCount: 44,
-    status: 'CLOSED',
-  },
-  {
-    id: 'welcome-afterparty',
-    title: '32기 OT 뒤풀이',
-    date: '01.10 (토) 18:30',
-    dateTime: '2026-01-10T18:30:00+09:00',
-    deadline: '01.07 (수) 23:59',
-    deadlineDateTime: '2026-01-07T23:59:00+09:00',
-    inviteScope: '32기 운영진 · 활동회원',
-    responseRate: 84,
-    attendeeCount: 37,
-    status: 'CLOSED',
-  },
-];
+] as const;
 
-const FILTERS: readonly { value: DiningFilter; label: string }[] = [
-  { value: 'OPEN', label: '진행 중' },
-  { value: 'CLOSED', label: '마감' },
-];
+export function DiningManagementPage({
+  period,
+  onPeriodChange,
+}: {
+  period: DiningPeriod;
+  onPeriodChange: (period: DiningPeriod) => void;
+}) {
+  const { currentGeneration } = useAdminGeneration();
+  const query = useDiningListQuery(currentGeneration.generationId, period);
+  const sentinelRef = useRef<HTMLDivElement>(null);
+  const { fetchNextPage, hasNextPage, isFetchingNextPage } = query;
+  const canFetchNextPage = hasNextPage && !isFetchingNextPage;
 
-export function DiningManagementPage() {
-  const [filterValue, setFilterValue] = useState<DiningFilter>('OPEN');
-  const filteredItems = DINING_ITEMS.filter(({ status }) => status === filterValue);
+  useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel || !canFetchNextPage) {
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry?.isIntersecting) {
+          void fetchNextPage();
+        }
+      },
+      { rootMargin: '320px' },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [canFetchNextPage, fetchNextPage]);
+
+  const countLabel = query.isPending ? '-' : String(query.items.length);
 
   return (
     <main className={page}>
@@ -172,114 +95,202 @@ export function DiningManagementPage() {
         </div>
         <ActionButton asChild variant="brandSolid" className={createButton}>
           <Link to="/dining/new">
-            <Plus size={16} aria-hidden="true" />
+            <span aria-hidden="true">＋</span>
             뒤풀이 만들기
           </Link>
         </ActionButton>
       </header>
 
       <nav className={filterGroup} aria-label="뒤풀이 상태 필터">
-        {FILTERS.map(({ value, label }) => {
-          const isActive = filterValue === value;
-          const itemCount = DINING_ITEMS.filter(({ status }) => status === value).length;
+        {PERIODS.map((nextPeriod) => {
+          const isActive = period === nextPeriod;
           return (
             <button
-              key={value}
+              key={nextPeriod}
               className={[filter, isActive ? filterActive : ''].join(' ')}
               type="button"
               aria-pressed={isActive}
-              onClick={() => setFilterValue(value)}
+              onClick={() => onPeriodChange(nextPeriod)}
             >
-              {label}
-              <span className={filterCountLabel}>{itemCount}</span>
+              {diningPeriodLabels[nextPeriod]}
+              <span className={filterCountLabel}>{isActive ? countLabel : '-'}</span>
             </button>
           );
         })}
       </nav>
 
-      <div className={tableRegion}>
-        <table className={table}>
-          <caption className={visuallyHidden}>뒤풀이 목록</caption>
-          <colgroup>
-            <col className={titleCell} />
-            <col />
-            <col />
-            <col />
-            <col />
-            <col />
-            <col />
-          </colgroup>
-          <thead>
-            <tr>
-              <th className={tableHeader} scope="col">
-                제목
-              </th>
-              <th className={tableHeader} scope="col">
-                뒤풀이 날짜
-              </th>
-              <th className={tableHeader} scope="col">
-                조사 기한
-              </th>
-              <th className={tableHeader} scope="col">
-                초대 범위
-              </th>
-              <th className={tableHeader} scope="col">
-                응답률
-              </th>
-              <th className={tableHeader} scope="col">
-                참석
-              </th>
-              <th className={tableHeader} scope="col">
-                상태
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {filteredItems.map((item) => (
-              <DiningRow key={item.id} item={item} />
-            ))}
-          </tbody>
-        </table>
-        {filteredItems.length === 0 ? (
-          <p className={emptyState}>등록된 뒤풀이가 없습니다.</p>
-        ) : null}
-      </div>
+      {query.isPending ? <p className={listLoading}>뒤풀이 목록을 불러오는 중입니다.</p> : null}
+      {query.error && query.items.length === 0 ? (
+        <div className={error} role="alert">
+          <span>{getAfterpartyApiErrorMessage(query.error, 'list')}</span>
+          <ActionButton
+            type="button"
+            variant="neutralWeak"
+            loading={query.isFetching}
+            onClick={() => void query.refetch()}
+          >
+            다시 시도
+          </ActionButton>
+        </div>
+      ) : (
+        <div className={tableRegion} aria-busy={query.isFetching && !query.isFetchingNextPage}>
+          <table className={table}>
+            <caption className={visuallyHidden}>뒤풀이 목록</caption>
+            <colgroup>
+              <col className={titleCell} />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+              <col />
+            </colgroup>
+            <thead>
+              <tr>
+                <th className={tableHeader} scope="col">
+                  제목
+                </th>
+                <th className={tableHeader} scope="col">
+                  뒤풀이 날짜
+                </th>
+                <th className={tableHeader} scope="col">
+                  조사 기한
+                </th>
+                <th className={tableHeader} scope="col">
+                  초대 범위
+                </th>
+                <th className={tableHeader} scope="col">
+                  응답률
+                </th>
+                <th className={tableHeader} scope="col">
+                  참석
+                </th>
+                <th className={tableHeader} scope="col">
+                  상태
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {query.items.map((item, index) => (
+                <DiningRow key={item.afterpartyId ?? `missing-${index}`} item={item} />
+              ))}
+            </tbody>
+          </table>
+          {query.items.length === 0 ? (
+            <p className={emptyState}>등록된 뒤풀이가 없습니다.</p>
+          ) : null}
+          {query.error && query.items.length > 0 ? (
+            <div className={error} role="alert">
+              <span>{getAfterpartyApiErrorMessage(query.error, 'list')}</span>
+              <ActionButton
+                type="button"
+                variant="neutralWeak"
+                loading={query.isFetching}
+                onClick={() => void query.refetch()}
+              >
+                다시 시도
+              </ActionButton>
+            </div>
+          ) : null}
+          <div ref={sentinelRef} aria-hidden="true" />
+          {query.isFetchingNextPage ? (
+            <p className={listLoading}>다음 뒤풀이를 불러오는 중입니다.</p>
+          ) : null}
+        </div>
+      )}
     </main>
   );
 }
 
-function DiningRow({ item }: { item: DiningItem }) {
+function DiningRow({
+  item,
+}: {
+  item: {
+    afterpartyId?: number;
+    generationNumber?: number;
+    title?: string;
+    startsAt?: string;
+    startsAtDisplay?: string;
+    deadline?: string;
+    deadlineDisplay?: string;
+    invitationRoles?: ('PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF')[];
+    state?: 'OPEN' | 'CLOSED' | 'ENDED';
+    counts?: {
+      totalCount?: number;
+      respondedCount?: number;
+      attendingCount?: number;
+    };
+  };
+}) {
+  const rate = responseRate(item.counts?.respondedCount, item.counts?.totalCount);
+  const attendeeCount = asCount(item.counts?.attendingCount);
+  const numericRate = rate === '-' ? undefined : Number.parseInt(rate, 10);
+  const label = asDisplayValue(item.title);
+  const inviteScope = formatInvitationScope(item.generationNumber, item.invitationRoles);
+
   return (
     <tr>
       <th className={`${tableCell} ${titleCell}`} scope="row">
-        <Link to="/dining/$diningId" params={{ diningId: item.id }} className={titleLink}>
-          {item.title}
-        </Link>
+        {item.afterpartyId == null ? (
+          <span className={disabledTitleLink}>{label}</span>
+        ) : (
+          <Link
+            to="/dining/$diningId"
+            params={{ diningId: String(item.afterpartyId) }}
+            className={titleLink}
+          >
+            {label}
+          </Link>
+        )}
       </th>
       <td className={tableCell}>
-        <time dateTime={item.dateTime}>{item.date}</time>
+        <time dateTime={dateTimeValue(item.startsAt)}>{asDisplayValue(item.startsAtDisplay)}</time>
       </td>
       <td className={tableCell}>
-        <time dateTime={item.deadlineDateTime}>{item.deadline}</time>
+        <time dateTime={dateTimeValue(item.deadline)}>{asDisplayValue(item.deadlineDisplay)}</time>
       </td>
-      <td className={tableCell}>{item.inviteScope}</td>
+      <td className={tableCell}>{inviteScope}</td>
       <td className={tableCell}>
         <div className={progressGroup}>
           <progress
             className={progress}
             max={100}
-            value={item.responseRate}
-            aria-label={`${item.title} 응답률`}
+            value={numericRate}
+            aria-label={`${label} 응답률`}
           />
-          <span className={responseRate}>{item.responseRate}%</span>
+          <span className={responseRateStyle}>{rate}</span>
         </div>
       </td>
-      <td className={tableCell}>{item.attendeeCount}</td>
+      <td className={tableCell}>{attendeeCount}</td>
       <td className={tableCell}>
-        <Badge variant="weak" tone={item.status === 'OPEN' ? 'positive' : 'neutral'}>
-          {item.status === 'OPEN' ? '진행 중' : '마감'}
+        <Badge variant="weak" tone={afterpartyStatusTone(item.state)}>
+          {afterpartyStatusLabel(item.state)}
         </Badge>
       </td>
     </tr>
   );
+}
+
+function formatInvitationScope(
+  generationNumber: number | undefined,
+  roles: readonly ('PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF')[] | undefined,
+) {
+  const generation = generationNumber == null ? '-' : `${generationNumber}기`;
+  const labels = roles
+    ?.map((role) => {
+      if (role === 'PLAYER') {
+        return '활동회원';
+      }
+      if (role === 'STAFF') {
+        return '운영진';
+      }
+      return '기타';
+    })
+    .join(' · ');
+  return labels ? `${generation} ${labels}` : generation;
+}
+
+function dateTimeValue(value: string | undefined) {
+  const trimmed = value?.trim();
+  return trimmed ?? undefined;
 }
