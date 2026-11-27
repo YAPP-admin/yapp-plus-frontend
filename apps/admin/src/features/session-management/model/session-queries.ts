@@ -32,7 +32,13 @@ import {
 import { useEffect } from 'react';
 import type { CreateSessionInput } from './session';
 import { attendanceResultSchema } from './attendance';
-import type { AttendanceEditInput, BadgeEditInput, TeamDecisionInput } from './attendance-input';
+import { attendanceEditInputSchema } from './attendance-input';
+import type {
+  AttendanceEditInput,
+  AttendanceMutationInput,
+  BadgeEditInput,
+  TeamDecisionInput,
+} from './attendance-input';
 import type {
   AttendanceCodeViewModel,
   AttendanceMemberViewModel,
@@ -46,6 +52,16 @@ import {
   getTeamReviews,
   updateSession,
 } from '../service';
+
+type MockAttendanceSelection = Pick<
+  AttendanceEditInput,
+  'status' | 'penaltyCategory' | 'durationBand'
+> & {
+  reason?: string | null;
+};
+type MockAttendanceRow = AdminAttendanceListResponse['items'][number] & {
+  mockSelections?: MockAttendanceSelection[];
+};
 
 export const sessionsQueryOptions = (generationId: number) => {
   const options = find2Options({
@@ -212,12 +228,22 @@ function toMemberViewModel(
   row: AdminAttendanceListResponse['items'][number],
 ): AttendanceMemberViewModel {
   const reportType = toReportType(row.latestReportType);
+  const mockSelections = (row as MockAttendanceRow).mockSelections;
+  const attendanceEdits = mockSelections?.flatMap((selection) => {
+    const parsed = attendanceEditInputSchema.safeParse({
+      membershipId: String(row.membershipId),
+      reason: selection.reason ?? null,
+      ...selection,
+    });
+    return parsed.success ? [parsed.data] : [];
+  });
   return {
     membershipId: String(row.membershipId),
     name: row.userName,
     part: row.position?.toLowerCase() ?? null,
     teamId: null,
     attendance: toAttendanceResult(row),
+    ...(attendanceEdits !== undefined && attendanceEdits.length > 0 ? { attendanceEdits } : {}),
     latestReport:
       reportType === null
         ? null
@@ -285,18 +311,58 @@ export function toAttendanceOverrideRequest(input: AttendanceEditInput): Overrid
   return { status, reason: input.reason };
 }
 
+function toMockAttendanceSelection(input: AttendanceEditInput): MockAttendanceSelection {
+  return {
+    status: input.status,
+    penaltyCategory: input.penaltyCategory,
+    durationBand: input.durationBand,
+    reason: input.reason,
+  };
+}
+
+function toAttendanceOverridePath(
+  generationId: number,
+  sessionId: string,
+  input: AttendanceEditInput,
+) {
+  return {
+    generationId,
+    sessionId: toNumberId(sessionId, '세션 ID'),
+    membershipId: toNumberId(input.membershipId, '회원 ID'),
+  };
+}
+
 export const attendanceOverrideMutationOptions = (generationId: number, sessionId: string) =>
   mutationOptions({
-    mutationFn: async (input: AttendanceEditInput) => {
-      await override({
-        path: {
-          generationId,
-          sessionId: toNumberId(sessionId, '세션 ID'),
-          membershipId: toNumberId(input.membershipId, '회원 ID'),
-        },
-        body: toAttendanceOverrideRequest(input),
-        throwOnError: true,
-      });
+    mutationFn: async (input: AttendanceMutationInput) => {
+      const inputs = Array.isArray(input) ? input : [input];
+      const [primaryInput] = inputs;
+      if (primaryInput === undefined) {
+        return;
+      }
+
+      if (import.meta.env.VITE_API_MOCKING === 'true') {
+        const body: OverrideAttendanceRequest & {
+          mockSelections: MockAttendanceSelection[];
+        } = {
+          ...toAttendanceOverrideRequest(primaryInput),
+          mockSelections: inputs.map(toMockAttendanceSelection),
+        };
+        await override({
+          path: toAttendanceOverridePath(generationId, sessionId, primaryInput),
+          body,
+          throwOnError: true,
+        });
+        return;
+      }
+
+      for (const edit of inputs) {
+        await override({
+          path: toAttendanceOverridePath(generationId, sessionId, edit),
+          body: toAttendanceOverrideRequest(edit),
+          throwOnError: true,
+        });
+      }
     },
   });
 
