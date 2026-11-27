@@ -71,11 +71,11 @@ function scoreDeltaForStatus(status: AdminAttendanceListResponse['items'][number
       return 0;
     case 'LATE_ONE_HOUR':
     case 'EARLY_LEAVE':
-      return -10;
+      return -4;
     case 'LATE_THREE_HOUR':
-      return -15;
+      return -8;
     case 'ABSENT':
-      return -20;
+      return -12;
     case 'EXCUSED_ABSENCE':
       return 0;
   }
@@ -87,11 +87,11 @@ function scoreDeltaForMockSelection(selection: MockAttendanceSelection) {
     case 'late':
     case 'earlyLeave':
       if (selection.durationBand === 'withinThreeHours') {
-        return selection.penaltyCategory === 'unauthorized' ? -20 : -15;
+        return selection.penaltyCategory === 'unauthorized' ? -14 : -8;
       }
-      return selection.penaltyCategory === 'unauthorized' ? -15 : -10;
+      return selection.penaltyCategory === 'unauthorized' ? -10 : -4;
     case 'absent':
-      return selection.penaltyCategory === 'unauthorized' ? -30 : -20;
+      return selection.penaltyCategory === 'unauthorized' ? -20 : -12;
     case 'present':
     case 'undecided':
       return 0;

@@ -323,8 +323,8 @@ const createPickerOption = (
 
 const singleAttendancePickerOptions: AttendancePickerOption[] = [
   createPickerOption('present', '0점'),
-  createPickerOption('absent', '-20점'),
-  createPickerOption('unauthorizedAbsent', '-30점'),
+  createPickerOption('absent', '-12점'),
+  createPickerOption('unauthorizedAbsent', '-20점'),
 ];
 
 const attendancePickerGroups: AttendancePickerGroup[] = [
@@ -333,8 +333,8 @@ const attendancePickerGroups: AttendancePickerGroup[] = [
     label: '지각',
     dotClass: styles.attendanceStatusDotLateOneHour,
     options: [
-      createPickerOption('lateWithinOneHour', '-10점', '1시간'),
-      createPickerOption('lateWithinThreeHours', '-15점', '3시간'),
+      createPickerOption('lateWithinOneHour', '-4점', '1시간'),
+      createPickerOption('lateWithinThreeHours', '-8점', '3시간'),
     ],
   },
   {
@@ -342,8 +342,8 @@ const attendancePickerGroups: AttendancePickerGroup[] = [
     label: '무단지각',
     dotClass: styles.attendanceStatusDotUnauthorizedLateOneHour,
     options: [
-      createPickerOption('unauthorizedLateWithinOneHour', '-15점', '1시간'),
-      createPickerOption('unauthorizedLateWithinThreeHours', '-20점', '3시간'),
+      createPickerOption('unauthorizedLateWithinOneHour', '-10점', '1시간'),
+      createPickerOption('unauthorizedLateWithinThreeHours', '-14점', '3시간'),
     ],
   },
   {
@@ -351,8 +351,8 @@ const attendancePickerGroups: AttendancePickerGroup[] = [
     label: '조퇴',
     dotClass: styles.attendanceStatusDotEarlyLeaveOneHour,
     options: [
-      createPickerOption('earlyLeaveWithinOneHour', '-10점', '1시간'),
-      createPickerOption('earlyLeaveWithinThreeHours', '-15점', '3시간'),
+      createPickerOption('earlyLeaveWithinOneHour', '-4점', '1시간'),
+      createPickerOption('earlyLeaveWithinThreeHours', '-8점', '3시간'),
     ],
   },
   {
@@ -360,8 +360,8 @@ const attendancePickerGroups: AttendancePickerGroup[] = [
     label: '무단조퇴',
     dotClass: styles.attendanceStatusDotUnauthorizedEarlyLeaveOneHour,
     options: [
-      createPickerOption('unauthorizedEarlyLeaveWithinOneHour', '-15점', '1시간'),
-      createPickerOption('unauthorizedEarlyLeaveWithinThreeHours', '-20점', '3시간'),
+      createPickerOption('unauthorizedEarlyLeaveWithinOneHour', '-10점', '1시간'),
+      createPickerOption('unauthorizedEarlyLeaveWithinThreeHours', '-14점', '3시간'),
     ],
   },
 ];

@@ -239,7 +239,7 @@ it('출결 상태와 명찰 확인은 서로 독립적으로 mock mutation을 �
   }
   expect(within(picker).getAllByText('1시간', { exact: true })).toHaveLength(4);
   expect(within(picker).getAllByText('3시간', { exact: true })).toHaveLength(4);
-  await userEvent.click(within(picker).getByRole('button', { name: /^무단결석 -30점/ }));
+  await userEvent.click(within(picker).getByRole('button', { name: /^무단결석 -20점/ }));
   const badgeButton = screen.getAllByRole('button', { name: '명찰 확인' })[0];
   if (!badgeButton) {
     throw new Error('명찰 버튼이 없습니다.');
@@ -281,7 +281,7 @@ it('시간 상태는 여러 그룹을 선택해 함께 적용한다', async () =
   await screen.findByRole('table', { name: /출석 체크/ });
   await userEvent.click(screen.getByRole('button', { name: /가상 회원 1 출결 상태/ }));
   const picker = await screen.findByRole('dialog', { name: '현재 출결 선택' });
-  const oneHourOptions = within(picker).getAllByRole('button', { name: '1시간 -10점' });
+  const oneHourOptions = within(picker).getAllByRole('button', { name: '1시간 -4점' });
   const lateOption = oneHourOptions[0];
   const earlyLeaveOption = oneHourOptions[1];
   if (!lateOption || !earlyLeaveOption) {

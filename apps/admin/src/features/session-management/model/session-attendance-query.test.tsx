@@ -235,10 +235,10 @@ it('mock 출결 수정 결과가 다시 조회한 명단에 반영된다', async
   );
 
   expect(updateResponse.ok).toBe(true);
-  expect(refreshedMember).toMatchObject({ status: 'ABSENT', scoreDelta: -20 });
+  expect(refreshedMember).toMatchObject({ status: 'ABSENT', scoreDelta: -12 });
 });
 
-it('mock 무단결석 선택은 -30점과 선택 정보를 다시 조회해도 유지한다', async () => {
+it('mock 무단결석 선택은 -20점과 선택 정보를 다시 조회해도 유지한다', async () => {
   const attendanceUrl = `${apiBaseUrl}/api/admin/generations/1001/sessions/1002/attendance`;
   const initialResponse = await fetch(attendanceUrl);
   const initial = zList7Response.parse(await initialResponse.json());
@@ -270,7 +270,7 @@ it('mock 무단결석 선택은 -30점과 선택 정보를 다시 조회해도 �
       expect.objectContaining({
         membershipId: Number(membershipId),
         status: 'ABSENT',
-        scoreDelta: -30,
+        scoreDelta: -20,
         mockSelections: [
           expect.objectContaining({ status: 'absent', penaltyCategory: 'unauthorized' }),
         ],
