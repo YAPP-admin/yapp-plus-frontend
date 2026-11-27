@@ -61,6 +61,26 @@ it('기수 입력에서 숫자만 추출해 정규화한다', () => {
   expect(rows[0]).toMatchObject({ status: 'valid', generation: 29 });
 });
 
+it.each([
+  ['PM', 'pm'],
+  ['Design', 'design'],
+  ['Mobile', 'mobile'],
+  ['Web', 'web'],
+  ['Server', 'server'],
+  ['AI Native', 'ai-native'],
+] as const)('표시용 직군 %s을 내부 값 %s로 정규화한다', (part, normalizedPart) => {
+  const rows = validateMemberImportRows([
+    row(2, ['이름', '01012345678', '29기', part, '활동회원']),
+  ]);
+
+  expect(rows[0]).toMatchObject({
+    status: 'valid',
+    generation: 29,
+    part: normalizedPart,
+    role: 'active-member',
+  });
+});
+
 it('기수 표기가 달라도 같은 전화번호·기수 중복으로 분류한다', () => {
   const rows = validateMemberImportRows([
     validRow(2, '01012345678', '29'),

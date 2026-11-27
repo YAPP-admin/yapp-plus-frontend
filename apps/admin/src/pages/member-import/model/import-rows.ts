@@ -107,6 +107,52 @@ export type MemberImportSummary = {
   planned: number;
 };
 
+const memberPartAliases: Readonly<Record<string, MemberPart>> = {
+  pm: 'pm',
+  design: 'design',
+  android: 'android',
+  ios: 'ios',
+  web: 'web',
+  server: 'server',
+  mobile: 'mobile',
+  ainative: 'ai-native',
+};
+
+const memberRoleAliases: Readonly<Record<string, MemberRole>> = {
+  admin: 'admin',
+  staff: 'admin',
+  관리자: 'admin',
+  운영진: 'admin',
+  activemember: 'active-member',
+  활동회원: 'active-member',
+  player: 'active-member',
+  regularmember: 'regular-member',
+  정회원: 'regular-member',
+  ob: 'regular-member',
+  completedmember: 'completed-member',
+  수료회원: 'completed-member',
+  deferredmember: 'deferred-member',
+  유예회원: 'deferred-member',
+};
+
+/** 표시용 직군·권한 값 비교를 위해 공백·하이픈·밑줄을 제거한다. */
+function normalizeImportLabel(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[\s_-]+/g, '');
+}
+
+/** CSV·Excel의 표시용 직군을 화면 내부 값으로 정규화한다. */
+function normalizeMemberPart(value: string) {
+  return memberPartAliases[normalizeImportLabel(value)];
+}
+
+/** CSV·Excel의 표시용 권한을 화면 내부 값으로 정규화한다. */
+function normalizeMemberRole(value: string) {
+  return memberRoleAliases[normalizeImportLabel(value)];
+}
+
 /** 원본 행 정보를 유지한 오류 결과를 만든다. */
 function errorRow(
   sourceRow: number,
@@ -158,7 +204,7 @@ function validateRow(row: MemberImportRow, values: readonly string[]): Validated
     });
   }
 
-  const parsedPart = memberPartSchema.safeParse(part);
+  const parsedPart = memberPartSchema.safeParse(normalizeMemberPart(part));
   if (!parsedPart.success) {
     return errorRow(row.sourceRow, values, {
       code: 'invalid-part',
@@ -166,7 +212,7 @@ function validateRow(row: MemberImportRow, values: readonly string[]): Validated
     });
   }
 
-  const parsedRole = memberRoleSchema.safeParse(role);
+  const parsedRole = memberRoleSchema.safeParse(normalizeMemberRole(role));
   if (!parsedRole.success || parsedRole.data === 'admin') {
     return errorRow(row.sourceRow, values, {
       code: 'invalid-role',
