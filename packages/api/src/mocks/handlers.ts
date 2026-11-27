@@ -1,7 +1,10 @@
 import { base, en, Faker } from '@faker-js/faker';
 import { http, HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
 import type { ZodType } from 'zod';
-import type { NotificationHistoryItemResponse } from '../generated/types.gen';
+import type {
+  AdminAfterpartyResponse,
+  NotificationHistoryItemResponse,
+} from '../generated/types.gen';
 
 import * as generatedFaker from '../generated/@faker-js/faker.gen';
 import { createMswHandlers } from '../generated/msw.gen';
@@ -63,6 +66,13 @@ export function createApiMockHandlers(
     : [...fixtures.adminNotifications.items];
   let nextNotificationId =
     notificationHistory.reduce((maxId, notification) => Math.max(maxId, notification.id), 0) + 1;
+  const afterpartyHistory: AdminAfterpartyResponse[] = empty
+    ? []
+    : fixtures.adminAfterparties.map((afterparty) => ({
+        ...afterparty,
+        invitationRoles: afterparty.invitationRoles ? [...afterparty.invitationRoles] : undefined,
+        counts: afterparty.counts ? { ...afterparty.counts } : undefined,
+      }));
 
   function getNotificationPage(cursor: string | null) {
     const pageSize = 4;
@@ -124,6 +134,157 @@ export function createApiMockHandlers(
           notification.status = 'CANCELED';
         }
         return new HttpResponse(null, { status: 204 });
+      },
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/afterparties`,
+      ({ request, params }) => {
+        const generationId = Number(params.generationId);
+        const period = new URL(request.url).searchParams.get('period') ?? 'UPCOMING';
+        const items = afterpartyHistory.filter(
+          (afterparty) =>
+            afterparty.generationId === generationId &&
+            (period === 'PAST' ? afterparty.state === 'ENDED' : afterparty.state !== 'ENDED'),
+        );
+        return response({ items, nextCursor: null }, schemas.zAdminAfterpartyPageResponse, 200);
+      },
+    ),
+    http.post(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/afterparties`,
+      async ({ request, params }) => {
+        const rawBody = await request.json();
+        const requestBody =
+          typeof rawBody === 'object' && rawBody !== null && !Array.isArray(rawBody)
+            ? (rawBody as Record<string, unknown>)
+            : {};
+        const parsedBody = schemas.zAfterpartyCreateRequest.safeParse({
+          ...requestBody,
+          // 생성 계약은 offset 포함 ISO8601이므로, offset을 허용하지 않는 생성 Zod 스키마에
+          // 전달할 때만 UTC 문자열로 정규화한다. 응답에는 원래 입력을 그대로 보존한다.
+          startsAt: normalizeMockDateForSchema(requestBody.startsAt),
+          deadline: normalizeMockDateForSchema(requestBody.deadline),
+        });
+        if (!parsedBody.success) {
+          return new HttpResponse('잘못된 뒤풀이 생성 요청입니다.', { status: 400 });
+        }
+
+        const generationId = Number(params.generationId);
+        const generation = fixtures.adminGenerations.generations.find(
+          (item) => item.generationId === generationId,
+        );
+        if (generation === undefined) {
+          return HttpResponse.json(
+            { code: 'GENERATION_NOT_FOUND', message: '기수를 찾을 수 없습니다.' },
+            { status: 404 },
+          );
+        }
+
+        const body = {
+          ...parsedBody.data,
+          startsAt:
+            typeof requestBody.startsAt === 'string'
+              ? requestBody.startsAt
+              : parsedBody.data.startsAt,
+          deadline:
+            typeof requestBody.deadline === 'string'
+              ? requestBody.deadline
+              : parsedBody.data.deadline,
+        };
+        const afterpartyId =
+          afterpartyHistory.reduce(
+            (maxId, afterparty) => Math.max(maxId, afterparty.afterpartyId ?? 0),
+            9000,
+          ) + 1;
+        const totalCount = body.invitationRoles.reduce(
+          (count, role) => count + getMockRecipientCount(role),
+          0,
+        );
+        const created: AdminAfterpartyResponse = {
+          afterpartyId,
+          generationId,
+          generationNumber: generation.generationNumber,
+          title: body.title,
+          content: body.content,
+          startsAt: body.startsAt,
+          startsAtDisplay: formatMockDateTime(body.startsAt),
+          deadline: body.deadline,
+          deadlineDisplay: formatMockDateTime(body.deadline),
+          invitationRoles: body.invitationRoles,
+          state: 'OPEN',
+          counts: {
+            totalCount,
+            respondedCount: 0,
+            attendingCount: 0,
+            notAttendingCount: 0,
+            unansweredCount: totalCount,
+          },
+        };
+        afterpartyHistory.unshift(created);
+        return response(created, schemas.zAdminAfterpartyResponse, 201);
+      },
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/afterparties/recipient-count`,
+      ({ request, params }) => {
+        const roles = new URL(request.url).searchParams
+          .getAll('roles')
+          .filter(isMockInvitationRole);
+        const recipientCount = roles.reduce(
+          (count, role) => count + getMockRecipientCount(role),
+          0,
+        );
+        return response(
+          { generationId: Number(params.generationId), invitationRoles: roles, recipientCount },
+          schemas.zAfterpartyRecipientCountResponse,
+          200,
+        );
+      },
+    ),
+    http.get(`${normalizedBaseUrl}/api/admin/afterparties/:afterpartyId`, ({ params }) => {
+      const afterparty = afterpartyHistory.find(
+        (item) => item.afterpartyId === Number(params.afterpartyId),
+      );
+      return afterparty === undefined
+        ? HttpResponse.json(
+            { code: 'AFTERPARTY_NOT_FOUND', message: '뒤풀이를 찾을 수 없습니다.' },
+            { status: 404 },
+          )
+        : response(afterparty, schemas.zAdminAfterpartyResponse, 200);
+    }),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/afterparties/:afterpartyId/team-responses`,
+      ({ params }) => {
+        const afterpartyId = Number(params.afterpartyId);
+        const groups = fixtures.adminAfterpartyGroups[afterpartyId];
+        return groups === undefined
+          ? HttpResponse.json(
+              { code: 'AFTERPARTY_NOT_FOUND', message: '뒤풀이를 찾을 수 없습니다.' },
+              { status: 404 },
+            )
+          : response({ afterpartyId, groups }, schemas.zAfterpartyGroupsResponse, 200);
+      },
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/afterparties/:afterpartyId/recipients`,
+      ({ request, params }) => {
+        const afterpartyId = Number(params.afterpartyId);
+        const allItems = fixtures.adminAfterpartyRecipients[afterpartyId];
+        if (allItems === undefined) {
+          return HttpResponse.json(
+            { code: 'AFTERPARTY_NOT_FOUND', message: '뒤풀이를 찾을 수 없습니다.' },
+            { status: 404 },
+          );
+        }
+        const filter = new URL(request.url).searchParams.get('response');
+        const items =
+          filter === null || filter === 'ALL'
+            ? allItems
+            : allItems.filter((item) => item.response === filter);
+        return response(
+          { afterpartyId, totalCount: allItems.length, items, nextCursor: null },
+          schemas.zAfterpartyRecipientsResponse,
+          200,
+        );
       },
     ),
     http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members`, ({ request }) => {
@@ -308,6 +469,38 @@ export function createApiMockHandlers(
       },
     }),
   ];
+}
+
+function formatMockDateTime(value: string) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Seoul',
+  }).format(new Date(value));
+}
+
+function normalizeMockDateForSchema(value: unknown) {
+  if (typeof value !== 'string' || value.endsWith('Z')) {
+    return value;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
+}
+
+type MockInvitationRole = 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF';
+
+function isMockInvitationRole(value: string): value is MockInvitationRole {
+  return ['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'STAFF'].includes(value);
+}
+
+function getMockRecipientCount(role: MockInvitationRole) {
+  if (role === 'STAFF') {
+    return 1;
+  }
+  if (role === 'PLAYER') {
+    return 2;
+  }
+  return 0;
 }
 
 export function onUnhandledApiRequest(baseUrl: string) {
