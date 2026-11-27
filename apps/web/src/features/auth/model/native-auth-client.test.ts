@@ -44,6 +44,7 @@ it.each([find6, find7])(
     );
     vi.mocked(refreshNativeSession).mockResolvedValue({
       status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
       session: { ...session, tokenVersion: 2, accessToken: 'test-new' },
     });
     await expect(
@@ -73,6 +74,7 @@ it('공지 상세 GET도 401 갱신 후 새 토큰으로 한 번 재시도한다
   );
   vi.mocked(refreshNativeSession).mockResolvedValue({
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: { ...session, tokenVersion: 2, accessToken: 'test-new' },
   });
 
@@ -97,6 +99,7 @@ it.each([401, 403, 500])('HTTP %i에서 재시도 상한을 지킨다', async (s
   );
   vi.mocked(refreshNativeSession).mockResolvedValue({
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: { ...session, tokenVersion: 2 },
   });
   await expect(
@@ -130,6 +133,7 @@ it.each(['account', 'cancel', 'older', 'signed-out', 'unavailable'] as const)(
       }
       return Promise.resolve({
         status: 'SIGNED_IN',
+        reviewTransition: 'NONE',
         session: {
           ...session,
           sessionId: scenario === 'account' ? 'other' : session.sessionId,
@@ -150,11 +154,16 @@ it('갱신 뒤에도 401이면 현재 세션을 재인증 필요로 전환한다
   );
   vi.mocked(refreshNativeSession).mockResolvedValue({
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: { ...session, tokenVersion: 2, accessToken: 'test-new' },
   });
   const client = createAppQueryClient();
   const operation = beginAuthOperation(client, 'authenticate');
-  applyAuthResult(client, operation, 'authenticate', { status: 'SIGNED_IN', session });
+  applyAuthResult(client, operation, 'authenticate', {
+    status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
+    session,
+  });
 
   const error = await client
     .fetchQuery(find6Options(nativeAuthClientOptions(session, client)))
@@ -182,7 +191,11 @@ it('브리지의 AUTH_REQUIRED 갱신 결과도 재인증 필요로 전환한다
   });
   const client = createAppQueryClient();
   const operation = beginAuthOperation(client, 'authenticate');
-  applyAuthResult(client, operation, 'authenticate', { status: 'SIGNED_IN', session });
+  applyAuthResult(client, operation, 'authenticate', {
+    status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
+    session,
+  });
 
   await expect(
     client.fetchQuery(find6Options(nativeAuthClientOptions(session, client))),
@@ -216,6 +229,7 @@ it('생성 queryOptions가 401 갱신 후 응답을 성공 데이터로 저장�
   );
   vi.mocked(refreshNativeSession).mockResolvedValue({
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: { ...session, tokenVersion: 2 },
   });
   const queryClient = new QueryClient();
@@ -304,6 +318,7 @@ it.each(sessionQueries)(
     await expect(fetch(client, nextSession)).resolves.toEqual({ account: 'new' });
     finishRefresh({
       status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
       session: { ...session, tokenVersion: 2, accessToken: 'test-refreshed-old' },
     });
     await refreshResult;

@@ -44,6 +44,7 @@ import type {
   Create5Responses,
   CreateData,
   CreateResponses,
+  CurrentWeekResponses,
   DecideData,
   DecideResponses,
   Delete1Responses,
@@ -71,6 +72,7 @@ import type {
   FindDetailResponses,
   FindPendingResponses,
   FindResponses,
+  Get1Responses,
   GetResponses,
   GroupsResponses,
   HistoryResponses,
@@ -118,8 +120,10 @@ import type {
   RemoveResponses,
   RenewData,
   RenewResponses,
+  ReplaceData,
   ReplaceMembersData,
   ReplaceMembersResponses,
+  ReplaceResponses,
   Respond1Data,
   Respond1Responses,
   RespondData,
@@ -276,6 +280,52 @@ export function handleAcknowledge(
       const body = response?.body;
       if (body !== undefined) {
         return new HttpResponse(body, { status: response?.status ?? 204 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleReplaceResponse = {
+  body: ReplaceResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `PUT /api/attendance-reports/{reportId}` operation.
+ */
+export function handleReplace(
+  response?:
+    | HandleReplaceResponse
+    | HttpResponseResolver<
+        {
+          reportId: string;
+        },
+        ReplaceData['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.put<
+    {
+      reportId: string;
+    },
+    ReplaceData['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/attendance-reports/:reportId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
       }
       if (options?.responseFallback === 'passthrough') {
         return;
@@ -2525,6 +2575,56 @@ export function handleLogin(
   );
 }
 
+export type HandleGet1Response = {
+  body: Get1Responses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}` operation.
+ */
+export function handleGet1(
+  response?:
+    | HandleGet1Response
+    | HttpResponseResolver<
+        {
+          generationId: string;
+          sessionId: string;
+          membershipId: string;
+        },
+        never
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<
+    {
+      generationId: string;
+      sessionId: string;
+      membershipId: string;
+    },
+    never
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/admin/generations/:generationId/sessions/:sessionId/attendance/:membershipId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleOverrideResponse = {
   body: OverrideResponses[200];
   status?: 200;
@@ -3249,6 +3349,40 @@ export function handleMine(
 ): HttpHandler {
   return http.get<never, never>(
     `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/attendance-scores/me`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleCurrentWeekResponse = {
+  body: CurrentWeekResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/attendance-reports/current-week` operation.
+ */
+export function handleCurrentWeek(
+  response?: HandleCurrentWeekResponse | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/attendance-reports/current-week`,
     (info) => {
       if (typeof response === 'function') {
         return response(info);
@@ -4513,6 +4647,10 @@ export type MswHandlerFactories = {
    */
   acknowledge: typeof handleAcknowledge;
   /**
+   * Handler for the `PUT /api/attendance-reports/{reportId}` operation.
+   */
+  replace: typeof handleReplace;
+  /**
    * Handler for the `GET /api/afterparties/{afterpartyId}/settlements/{settlementId}` operation.
    */
   detail: typeof handleDetail;
@@ -4717,6 +4855,10 @@ export type MswHandlerFactories = {
    */
   login: typeof handleLogin;
   /**
+   * Handler for the `GET /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}` operation.
+   */
+  get1: typeof handleGet1;
+  /**
    * Handler for the `PATCH /api/admin/generations/{generationId}/sessions/{sessionId}/attendance/{membershipId}` operation.
    */
   override: typeof handleOverride;
@@ -4792,6 +4934,10 @@ export type MswHandlerFactories = {
    * Handler for the `GET /api/attendance-scores/me` operation.
    */
   mine: typeof handleMine;
+  /**
+   * Handler for the `GET /api/attendance-reports/current-week` operation.
+   */
+  currentWeek: typeof handleCurrentWeek;
   /**
    * Handler for the `GET /api/attendance-history` operation.
    */
@@ -4926,6 +5072,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     remove: wrap(handleRemove),
     register: wrap(handleRegister),
     acknowledge: wrap(handleAcknowledge),
+    replace: wrap(handleReplace),
     detail: wrap(handleDetail),
     update: wrap(handleUpdate),
     payment: wrap(handlePayment),
@@ -4977,6 +5124,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     list2: wrap(handleList2),
     create5: wrap(handleCreate5),
     login: wrap(handleLogin),
+    get1: wrap(handleGet1),
     override: wrap(handleOverride),
     badge: wrap(handleBadge),
     delete2: wrap(handleDelete2),
@@ -4996,6 +5144,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     startGoogleAuthorization: wrap(handleStartGoogleAuthorization),
     startAppleAuthorization: wrap(handleStartAppleAuthorization),
     mine: wrap(handleMine),
+    currentWeek: wrap(handleCurrentWeek),
     find8: wrap(handleFind8),
     list4: wrap(handleList4),
     detail4: wrap(handleDetail4),
@@ -5037,6 +5186,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.badge, overrides.badge),
       invoke(pick.close, overrides.close),
       invoke(pick.reissue, overrides.reissue),
+      invoke(pick.get1, overrides.get1),
       invoke(pick.override, overrides.override),
       invoke(pick.replaceMembers, overrides.replaceMembers),
       invoke(pick.respond1, overrides.respond1),
@@ -5123,8 +5273,10 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.find3, overrides.find3),
       invoke(pick.find6, overrides.find6),
       invoke(pick.mine, overrides.mine),
+      invoke(pick.currentWeek, overrides.currentWeek),
       invoke(pick.findPending, overrides.findPending),
       invoke(pick.list5, overrides.list5),
+      invoke(pick.replace, overrides.replace),
       invoke(pick.detail3, overrides.detail3),
       invoke(pick.detail4, overrides.detail4),
       invoke(pick.register1, overrides.register1),

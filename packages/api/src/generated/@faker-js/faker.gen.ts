@@ -9,6 +9,10 @@ import type {
   AdminAfterpartyResponse,
   AdminAfterpartyResponseRequest,
   AdminAttendanceDeductionResponse,
+  AdminAttendanceDetailEventResponse,
+  AdminAttendanceDetailLatestReportResponse,
+  AdminAttendanceDetailResponse,
+  AdminAttendanceDetailSummaryResponse,
   AdminAttendanceListResponse,
   AdminAttendanceRow,
   AdminAttendanceStatisticsDetailResponse,
@@ -106,6 +110,9 @@ import type {
   CurrentGenerationSessionItemResponse,
   CurrentGenerationSessionsResponse,
   CurrentTeamResponse,
+  CurrentWeekAttendanceReportResponse,
+  CurrentWeekErrors,
+  CurrentWeekResponses,
   CurrentWeekSessionDetailResponse,
   CurrentWeekSessionResponse,
   DecideErrors,
@@ -166,6 +173,8 @@ import type {
   GenerationRosterRegistrationErrorResponse,
   GenerationRosterRegistrationResult,
   GenerationRosterRowResult,
+  Get1Errors,
+  Get1Responses,
   GetErrors,
   GetResponses,
   GoogleNativeAuthenticationRequest,
@@ -174,6 +183,7 @@ import type {
   HistoryErrors,
   HistoryResponses,
   KakaoNativeAuthenticationRequest,
+  LegacySubmitAttendanceReportRequest,
   List10Errors,
   List10Responses,
   List1Errors,
@@ -256,8 +266,10 @@ import type {
   RenewErrors,
   RenewResponses,
   RenewSessionRequest,
+  ReplaceErrors,
   ReplaceMembersErrors,
   ReplaceMembersResponses,
+  ReplaceResponses,
   ReplaceTeamMembersRequest,
   Respond1Errors,
   Respond1Responses,
@@ -370,6 +382,27 @@ export const fakeRegisterNotificationDeviceRequest = (
   };
 };
 
+export const fakeSubmitAttendanceReportRequest = (
+  options?: Options,
+): SubmitAttendanceReportRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    types: f.helpers.multiple(() => f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT']), {
+      count: { min: 1, max: 2 },
+    }),
+    reason: f.string.alpha({ length: { min: 2, max: 30 } }),
+  };
+};
+
+export const fakeAttendanceReportResponse = (options?: Options): AttendanceReportResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    sessionId: f.number.int(),
+    submittedAt: f.date.recent().toISOString(),
+    reportId: f.number.int(),
+  };
+};
+
 export const fakeSettlementUpdateRequest = (options?: Options): SettlementUpdateRequest => {
   const f = options?.faker ?? faker;
   return {
@@ -422,6 +455,7 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
   const f = options?.faker ?? faker;
   return {
     code: f.helpers.arrayElement([
+      'ATTENDANCE_DETAIL_NOT_FOUND',
       'INVALID_SETTLEMENT_REQUEST',
       'SETTLEMENT_NOT_FOUND',
       'SETTLEMENT_FORBIDDEN',
@@ -443,8 +477,10 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'ATTENDANCE_CODE_NOT_ISSUED',
       'ATTENDANCE_CODE_UPDATE_FAILED',
       'ATTENDANCE_REPORT_NOT_ELIGIBLE',
+      'ATTENDANCE_REPORT_NOT_FOUND',
       'ATTENDANCE_REPORT_SESSION_CONFLICT',
       'ATTENDANCE_REPORT_SESSION_CHANGED',
+      'ATTENDANCE_REPORT_ALREADY_EXISTS',
       'ATTENDANCE_REPORT_UNAVAILABLE',
       'ATTENDANCE_SCORE_NOT_ELIGIBLE',
       'ATTENDANCE_SCORE_INCONSISTENT',
@@ -452,6 +488,8 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'ATTENDANCE_UNAVAILABLE',
       'TEAM_ATTENDANCE_PENDING',
       'AUTHENTICATION_FAILED',
+      'MEMBER_APPROVAL_REQUIRED',
+      'MEMBER_APPROVAL_CHECK_UNAVAILABLE',
       'AUTHENTICATION_STATE_INVALID',
       'CURRENT_GENERATION_NOT_FOUND',
       'CURRENT_WEEK_SESSION_CONFLICT',
@@ -459,9 +497,11 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'GENERATION_NOT_FOUND',
       'GENERATION_QUERY_FAILED',
       'INVALID_ATTENDANCE_CODE',
+      'INVALID_ATTENDANCE_DETAIL_CURSOR',
       'INVALID_ATTENDANCE_HISTORY_CURSOR',
       'INVALID_ATTENDANCE_REPORT',
       'INVALID_ATTENDANCE_REQUEST',
+      'ATTENDANCE_CORRECTION_CLOSED',
       'INVALID_HISTORY_REQUEST',
       'INVALID_MEMBER_REQUEST',
       'MEMBER_APPROVAL_UNAVAILABLE',
@@ -491,6 +531,8 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'POST_IMAGE_CONFLICT',
       'POST_IMAGE_STORAGE_FAILED',
       'POST_NOT_FOUND',
+      'POST_QUERY_UNAVAILABLE',
+      'POST_QUERY_FAILED',
       'RETAINED_HISTORY_UNAVAILABLE',
       'ROSTER_CONFLICT',
       'ROSTER_PERSISTENCE_FAILED',
@@ -731,7 +773,9 @@ export const fakeCreateSessionRequest = (options?: Options): CreateSessionReques
   return {
     name: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
-    date: f.date.recent().toISOString().slice(0, 10),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { date: f.datatype.boolean() ? f.date.recent().toISOString().slice(0, 10) : null }),
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
@@ -747,6 +791,12 @@ export const fakeCreateSessionRequest = (options?: Options): CreateSessionReques
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { detailAddress: f.datatype.boolean() ? f.string.sample() : null }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { startDate: f.datatype.boolean() ? f.date.recent().toISOString().slice(0, 10) : null }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { endDate: f.datatype.boolean() ? f.date.recent().toISOString().slice(0, 10) : null }),
   };
 };
 
@@ -885,6 +935,7 @@ export const fakeUserResponse = (options?: Options): UserResponse => {
     id: f.number.int(),
     name: f.string.sample(),
     phoneNumber: f.phone.number(),
+    reviewStatus: f.helpers.arrayElement(['PENDING', 'APPROVED', 'REJECTED', null]) as any,
   };
 };
 
@@ -1023,21 +1074,13 @@ export const fakeVerifyAttendanceCodeResponse = (
   };
 };
 
-export const fakeSubmitAttendanceReportRequest = (
+export const fakeLegacySubmitAttendanceReportRequest = (
   options?: Options,
-): SubmitAttendanceReportRequest => {
+): LegacySubmitAttendanceReportRequest => {
   const f = options?.faker ?? faker;
   return {
     type: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT']),
     reason: f.string.alpha({ length: { min: 2, max: 30 } }),
-  };
-};
-
-export const fakeAttendanceReportResponse = (options?: Options): AttendanceReportResponse => {
-  const f = options?.faker ?? faker;
-  return {
-    sessionId: f.number.int(),
-    submittedAt: f.date.recent().toISOString(),
   };
 };
 
@@ -1134,7 +1177,17 @@ export const fakeCreateNotificationRequest = (options?: Options): CreateNotifica
       'OB_AND_PLAYER',
       'COMPLETED_MEMBER',
     ]),
-    position: f.string.sample(),
+    position: f.helpers.arrayElement([
+      'ALL',
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'MOBILE',
+      'WEB',
+      'SERVER',
+      'AI_NATIVE',
+    ]),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { scheduledAt: f.datatype.boolean() ? f.date.recent().toISOString() : null }),
@@ -1396,6 +1449,7 @@ export const fakePostAudienceRequest = (options?: Options): PostAudienceRequest 
       : {
           positions: f.helpers.multiple(() =>
             f.helpers.arrayElement([
+              'ALL',
               'PM',
               'DESIGN',
               'ANDROID',
@@ -1419,7 +1473,7 @@ export const fakeCreateAdminPostRequest = (options?: Options): CreateAdminPostRe
     contentMarkdown: f.string.sample(),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
-      : { imageKeys: f.helpers.multiple(() => f.string.sample()) }),
+      : { imageKeys: f.helpers.multiple(() => f.string.sample(), { count: { min: 0, max: 20 } }) }),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { assignment: f.datatype.boolean() ? fakeAssignmentPostRequest(options) : null }),
@@ -1563,24 +1617,24 @@ export const fakeStaffLoginResponse = (options?: Options): StaffLoginResponse =>
 export const fakeOverrideAttendanceRequest = (options?: Options): OverrideAttendanceRequest => {
   const f = options?.faker ?? faker;
   return {
-    status: f.helpers.arrayElement([
-      'UNDECIDED',
-      'PRESENT',
-      'LATE_ONE_HOUR',
-      'LATE_THREE_HOUR',
-      'EARLY_LEAVE',
-      'ABSENT',
-      'EXCUSED_ABSENCE',
-    ]),
+    statuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { reason: f.datatype.boolean() ? f.string.sample() : null }),
-    ...(!resolveCondition(options?.includeOptional ?? true, f)
-      ? {}
-      : { checkedInAt: f.datatype.boolean() ? f.date.recent().toISOString() : null }),
-    ...(!resolveCondition(options?.includeOptional ?? true, f)
-      ? {}
-      : { earlyLeaveAt: f.datatype.boolean() ? f.date.recent().toISOString() : null }),
   };
 };
 
@@ -1598,7 +1652,7 @@ export const fakeUpdateAdminPostRequest = (options?: Options): UpdateAdminPostRe
     contentMarkdown: f.string.sample(),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
-      : { imageKeys: f.helpers.multiple(() => f.string.sample()) }),
+      : { imageKeys: f.helpers.multiple(() => f.string.sample(), { count: { min: 0, max: 20 } }) }),
   };
 };
 
@@ -1708,7 +1762,15 @@ export const fakeUserNotificationListItemResponse = (
       'AFTER_REGULAR_START',
       null,
     ]) as any,
-    navigationTarget: f.helpers.arrayElement(['SESSION_SCHEDULE', 'SETTLEMENT', null]) as any,
+    navigationTarget: f.helpers.arrayElement([
+      'SESSION_SCHEDULE',
+      'SETTLEMENT',
+      'NOTIFICATION_LIST',
+      'HOME',
+      'POST_DETAIL',
+      'AFTERPARTY_DETAIL',
+      null,
+    ]) as any,
     settlementId: f.datatype.boolean() ? f.number.int() : null,
     afterpartyId: f.datatype.boolean() ? f.number.int() : null,
     title: f.datatype.boolean() ? f.lorem.words() : null,
@@ -1772,6 +1834,7 @@ export const fakeUserTeamPhotoDetailResponse = (options?: Options): UserTeamPhot
     teamId: f.number.int(),
     teamName: f.string.sample(),
     status: f.helpers.arrayElement(['PENDING', 'APPROVED', 'REJECTED']),
+    rejectionReason: f.datatype.boolean() ? f.string.sample() : null,
     imageUrl: f.datatype.boolean() ? f.image.url() : null,
     imageUrlExpiresAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
     uploadedAt: f.date.recent().toISOString(),
@@ -1798,6 +1861,7 @@ export const fakeCurrentWeekSessionDetailResponse = (
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
     name: f.string.sample(),
     date: f.date.recent().toISOString().slice(0, 10),
+    endDate: f.date.recent().toISOString().slice(0, 10),
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
@@ -1930,6 +1994,19 @@ export const fakeMyAttendanceScoreResponse = (options?: Options): MyAttendanceSc
     lateCount: f.number.int({ min: 0 }),
     absentCount: f.number.int({ min: 0, max: 100 }),
     earlyLeaveCount: f.number.int({ min: 0 }),
+  };
+};
+
+export const fakeCurrentWeekAttendanceReportResponse = (
+  options?: Options,
+): CurrentWeekAttendanceReportResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    type: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT', null]) as any,
+    reason: f.datatype.boolean() ? f.string.sample() : null,
+    reportId: f.datatype.boolean() ? f.number.int() : null,
+    types: f.helpers.multiple(() => f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT'])),
+    submittedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -2254,7 +2331,17 @@ export const fakeNotificationHistoryItemResponse = (
       'OB_AND_PLAYER',
       'COMPLETED_MEMBER',
     ]),
-    position: f.string.sample(),
+    position: f.helpers.arrayElement([
+      'ALL',
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'MOBILE',
+      'WEB',
+      'SERVER',
+      'AI_NATIVE',
+    ]),
     status: f.helpers.arrayElement([
       'SCHEDULED',
       'IN_PROGRESS',
@@ -2395,6 +2482,8 @@ export const fakeAdminSessionResponse = (options?: Options): AdminSessionRespons
     name: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
     date: f.date.recent().toISOString().slice(0, 10),
+    startDate: f.date.recent().toISOString().slice(0, 10),
+    endDate: f.date.recent().toISOString().slice(0, 10),
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
@@ -2403,6 +2492,8 @@ export const fakeAdminSessionResponse = (options?: Options): AdminSessionRespons
     latitude: f.datatype.boolean() ? f.number.float() : null,
     longitude: f.datatype.boolean() ? f.number.float() : null,
     detailAddress: f.datatype.boolean() ? f.string.sample() : null,
+    attendancePhase: f.helpers.arrayElement(['OPEN', 'CLOSED']),
+    attendanceClosedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -2423,6 +2514,7 @@ export const fakeTeamPhotoReportView = (options?: Options): TeamPhotoReportView 
     type: f.string.sample(),
     reported: f.datatype.boolean(),
     reason: f.datatype.boolean() ? f.string.sample() : null,
+    submittedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -2475,12 +2567,42 @@ export const fakeAdminAttendanceRow = (options?: Options): AdminAttendanceRow =>
       'LATE_ONE_HOUR',
       'LATE_THREE_HOUR',
       'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
       'ABSENT',
       'EXCUSED_ABSENCE',
     ]),
     scoreDelta: f.datatype.boolean() ? f.number.int({ min: -10, max: 0 }) : null,
     badgeVerified: f.datatype.boolean(),
     badgeVerifiedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    selectedStatuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
+    effectiveStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE',
+      'EARLY_LEAVE',
+      'LATE_AND_EARLY_LEAVE',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    correctedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    latestReportTypes: f.helpers.multiple(() => f.string.sample()),
+    latestReportSubmittedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -2489,6 +2611,178 @@ export const fakeAdminAttendanceListResponse = (options?: Options): AdminAttenda
   return {
     items: f.helpers.multiple(() => fakeAdminAttendanceRow(options)),
     nextCursor: f.datatype.boolean() ? f.number.int() : null,
+  };
+};
+
+export const fakeAdminAttendanceDetailEventResponse = (
+  options?: Options,
+): AdminAttendanceDetailEventResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    eventId: f.number.int(),
+    type: f.helpers.arrayElement([
+      'REPORT_SUBMITTED',
+      'APP_CHECK_IN',
+      'CODE_CHECK_IN',
+      'BADGE_DISTRIBUTED',
+      'BADGE_CANCELLED',
+      'STAFF_CORRECTION',
+      'TEAM_PHOTO_DECISION',
+    ]),
+    occurredAt: f.date.recent().toISOString(),
+    legacy: f.datatype.boolean(),
+    reportType: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT', null]) as any,
+    reason: f.datatype.boolean() ? f.string.sample() : null,
+    checkedInAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    earlyLeaveAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    previousStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    nextStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    badgeDistributed: f.datatype.boolean() ? f.datatype.boolean() : null,
+    photoId: f.datatype.boolean() ? f.number.int() : null,
+    photoDecision: f.helpers.arrayElement(['APPROVED', 'REJECTED', null]) as any,
+    photoSelected: f.datatype.boolean() ? f.datatype.boolean() : null,
+    applied: f.datatype.boolean() ? f.datatype.boolean() : null,
+    actorStaffId: f.datatype.boolean() ? f.number.int() : null,
+    previousSelectedStatuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
+    nextSelectedStatuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
+    automaticPhotoDecision: f.datatype.boolean(),
+  };
+};
+
+export const fakeAdminAttendanceDetailLatestReportResponse = (
+  options?: Options,
+): AdminAttendanceDetailLatestReportResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    type: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT']),
+    reason: f.datatype.boolean() ? f.string.sample() : null,
+    submittedAt: f.date.recent().toISOString(),
+    types: f.helpers.multiple(() => f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT'])),
+  };
+};
+
+export const fakeAdminAttendanceDetailSummaryResponse = (
+  options?: Options,
+): AdminAttendanceDetailSummaryResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    membershipId: f.number.int(),
+    name: f.string.sample(),
+    position: f.helpers.arrayElement([
+      'PM',
+      'DESIGN',
+      'ANDROID',
+      'IOS',
+      'WEB',
+      'MOBILE',
+      'SERVER',
+      'AI_NATIVE',
+      null,
+    ]) as any,
+    latestReport: f.datatype.boolean()
+      ? fakeAdminAttendanceDetailLatestReportResponse(options)
+      : null,
+    rawAttendanceStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'EARLY_LEAVE',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    badgeDistributed: f.datatype.boolean(),
+    badgeDistributedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    selectedStatuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
+    effectiveStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE',
+      'EARLY_LEAVE',
+      'LATE_AND_EARLY_LEAVE',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    correctedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+  };
+};
+
+export const fakeAdminAttendanceDetailResponse = (
+  options?: Options,
+): AdminAttendanceDetailResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    summary: fakeAdminAttendanceDetailSummaryResponse(options),
+    items: f.helpers.multiple(() => fakeAdminAttendanceDetailEventResponse(options)),
+    nextCursor: f.datatype.boolean() ? f.string.sample() : null,
   };
 };
 
@@ -2832,6 +3126,9 @@ export const fakeRemoveResponse400 = (options?: Options): RemoveErrors[400] =>
 export const fakeRemoveResponse401 = (options?: Options): RemoveErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeRemoveResponse403 = (options?: Options): RemoveErrors[403] =>
+  fakeErrorResponse(options);
+
 export const fakeRemoveResponse503 = (options?: Options): RemoveErrors[503] =>
   fakeErrorResponse(options);
 
@@ -2839,6 +3136,9 @@ export const fakeRegisterResponse400 = (options?: Options): RegisterErrors[400] 
   fakeErrorResponse(options);
 
 export const fakeRegisterResponse401 = (options?: Options): RegisterErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRegisterResponse403 = (options?: Options): RegisterErrors[403] =>
   fakeErrorResponse(options);
 
 export const fakeRegisterResponse409 = (options?: Options): RegisterErrors[409] =>
@@ -2853,7 +3153,34 @@ export const fakeAcknowledgeResponse400 = (options?: Options): AcknowledgeErrors
 export const fakeAcknowledgeResponse401 = (options?: Options): AcknowledgeErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeAcknowledgeResponse403 = (options?: Options): AcknowledgeErrors[403] =>
+  fakeErrorResponse(options);
+
 export const fakeAcknowledgeResponse404 = (options?: Options): AcknowledgeErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeAcknowledgeResponse503 = (options?: Options): AcknowledgeErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse200 = (options?: Options): ReplaceResponses[200] =>
+  fakeAttendanceReportResponse(options);
+
+export const fakeReplaceResponse400 = (options?: Options): ReplaceErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse401 = (options?: Options): ReplaceErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse403 = (options?: Options): ReplaceErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse404 = (options?: Options): ReplaceErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse409 = (options?: Options): ReplaceErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse503 = (options?: Options): ReplaceErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeDetailResponse200 = (options?: Options): DetailResponses[200] =>
@@ -2926,6 +3253,9 @@ export const fakeRespondResponse400 = (options?: Options): RespondErrors[400] =>
   fakeErrorResponse(options);
 
 export const fakeRespondResponse401 = (options?: Options): RespondErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeRespondResponse403 = (options?: Options): RespondErrors[403] =>
   fakeErrorResponse(options);
 
 export const fakeRespondResponse404 = (options?: Options): RespondErrors[404] =>
@@ -3163,6 +3493,9 @@ export const fakeAuthenticateKakaoResponse400 = (options?: Options): Authenticat
 export const fakeAuthenticateKakaoResponse401 = (options?: Options): AuthenticateKakaoErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeAuthenticateKakaoResponse503 = (options?: Options): AuthenticateKakaoErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeAuthenticateGoogleResponse200 = (
   options?: Options,
 ): AuthenticateGoogleResponses[200] => fakeAuthenticationResponse(options);
@@ -3174,6 +3507,10 @@ export const fakeAuthenticateGoogleResponse400 = (
 export const fakeAuthenticateGoogleResponse401 = (
   options?: Options,
 ): AuthenticateGoogleErrors[401] => fakeErrorResponse(options);
+
+export const fakeAuthenticateGoogleResponse503 = (
+  options?: Options,
+): AuthenticateGoogleErrors[503] => fakeErrorResponse(options);
 
 export const fakeReceiveResponse200 = (): ReceiveResponses[200] => undefined;
 
@@ -3220,10 +3557,16 @@ export const fakeVerifyResponse400 = (options?: Options): VerifyErrors[400] =>
 export const fakeVerifyResponse401 = (options?: Options): VerifyErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeVerifyResponse403 = (options?: Options): VerifyErrors[403] =>
+  fakeErrorResponse(options);
+
 export const fakeVerifyResponse404 = (options?: Options): VerifyErrors[404] =>
   fakeErrorResponse(options);
 
 export const fakeVerifyResponse409 = (options?: Options): VerifyErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeVerifyResponse503 = (options?: Options): VerifyErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeSubmit1Response200 = (options?: Options): Submit1Responses[200] =>
@@ -3242,6 +3585,9 @@ export const fakeSubmit1Response404 = (options?: Options): Submit1Errors[404] =>
   fakeErrorResponse(options);
 
 export const fakeSubmit1Response409 = (options?: Options): Submit1Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeSubmit1Response503 = (options?: Options): Submit1Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeListResponse200 = (options?: Options): ListResponses[200] =>
@@ -3447,6 +3793,9 @@ export const fakeDecideResponse404 = (options?: Options): DecideErrors[404] =>
 export const fakeDecideResponse409 = (options?: Options): DecideErrors[409] =>
   fakeErrorResponse(options);
 
+export const fakeDecideResponse503 = (options?: Options): DecideErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeCloseResponse200 = (): CloseResponses[200] => undefined;
 
 export const fakeCloseResponse401 = (options?: Options): CloseErrors[401] =>
@@ -3455,7 +3804,7 @@ export const fakeCloseResponse401 = (options?: Options): CloseErrors[401] =>
 export const fakeCloseResponse404 = (options?: Options): CloseErrors[404] =>
   fakeErrorResponse(options);
 
-export const fakeCloseResponse409 = (options?: Options): CloseErrors[409] =>
+export const fakeCloseResponse503 = (options?: Options): CloseErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeCancel1Response200 = (): Cancel1Responses[200] => undefined;
@@ -3530,6 +3879,12 @@ export const fakeList1Response401 = (options?: Options): List1Errors[401] =>
 export const fakeList1Response404 = (options?: Options): List1Errors[404] =>
   fakeErrorResponse(options);
 
+export const fakeList1Response500 = (options?: Options): List1Errors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeList1Response503 = (options?: Options): List1Errors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeCreate4Response201 = (options?: Options): Create4Responses[201] =>
   fakeCreatedPostResponse(options);
 
@@ -3602,6 +3957,21 @@ export const fakeLoginResponse400 = (options?: Options): LoginErrors[400] =>
 export const fakeLoginResponse401 = (options?: Options): LoginErrors[401] =>
   fakeErrorResponse(options);
 
+export const fakeGet1Response200 = (options?: Options): Get1Responses[200] =>
+  fakeAdminAttendanceDetailResponse(options);
+
+export const fakeGet1Response400 = (options?: Options): Get1Errors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeGet1Response401 = (options?: Options): Get1Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeGet1Response404 = (options?: Options): Get1Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeGet1Response503 = (options?: Options): Get1Errors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeOverrideResponse200 = (): OverrideResponses[200] => undefined;
 
 export const fakeOverrideResponse400 = (options?: Options): OverrideErrors[400] =>
@@ -3613,12 +3983,21 @@ export const fakeOverrideResponse401 = (options?: Options): OverrideErrors[401] 
 export const fakeOverrideResponse404 = (options?: Options): OverrideErrors[404] =>
   fakeErrorResponse(options);
 
+export const fakeOverrideResponse409 = (options?: Options): OverrideErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeOverrideResponse503 = (options?: Options): OverrideErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeBadgeResponse200 = (): BadgeResponses[200] => undefined;
 
 export const fakeBadgeResponse401 = (options?: Options): BadgeErrors[401] =>
   fakeErrorResponse(options);
 
 export const fakeBadgeResponse404 = (options?: Options): BadgeErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeBadgeResponse503 = (options?: Options): BadgeErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeDelete2Response400 = (options?: Options): Delete2Errors[400] =>
@@ -3639,6 +4018,12 @@ export const fakeDetail2Response401 = (options?: Options): Detail2Errors[401] =>
 export const fakeDetail2Response404 = (options?: Options): Detail2Errors[404] =>
   fakeErrorResponse(options);
 
+export const fakeDetail2Response500 = (options?: Options): Detail2Errors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail2Response503 = (options?: Options): Detail2Errors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeUpdate3Response200 = (options?: Options): Update3Responses[200] =>
   fakeAdminPostDetailResponse(options);
 
@@ -3652,6 +4037,9 @@ export const fakeUpdate3Response404 = (options?: Options): Update3Errors[404] =>
   fakeErrorResponse(options);
 
 export const fakeUpdate3Response409 = (options?: Options): Update3Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeUpdate3Response500 = (options?: Options): Update3Errors[500] =>
   fakeErrorResponse(options);
 
 export const fakeUpdate3Response503 = (options?: Options): Update3Errors[503] =>
@@ -3682,6 +4070,9 @@ export const fakeFind4Response400 = (options?: Options): Find4Errors[400] =>
   fakeErrorResponse(options);
 
 export const fakeFind4Response401 = (options?: Options): Find4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeFind4Response403 = (options?: Options): Find4Errors[403] =>
   fakeErrorResponse(options);
 
 export const fakeFind4Response503 = (options?: Options): Find4Errors[503] =>
@@ -3761,6 +4152,10 @@ export const fakeCompleteKakaoAuthorizationResponse401 = (
   options?: Options,
 ): CompleteKakaoAuthorizationErrors[401] => fakeErrorResponse(options);
 
+export const fakeCompleteKakaoAuthorizationResponse503 = (
+  options?: Options,
+): CompleteKakaoAuthorizationErrors[503] => fakeErrorResponse(options);
+
 export const fakeStartKakaoAuthorizationResponse400 = (
   options?: Options,
 ): StartKakaoAuthorizationErrors[400] => fakeErrorResponse(options);
@@ -3776,6 +4171,10 @@ export const fakeCompleteGoogleAuthorizationResponse400 = (
 export const fakeCompleteGoogleAuthorizationResponse401 = (
   options?: Options,
 ): CompleteGoogleAuthorizationErrors[401] => fakeErrorResponse(options);
+
+export const fakeCompleteGoogleAuthorizationResponse503 = (
+  options?: Options,
+): CompleteGoogleAuthorizationErrors[503] => fakeErrorResponse(options);
 
 export const fakeStartGoogleAuthorizationResponse400 = (
   options?: Options,
@@ -3815,6 +4214,27 @@ export const fakeMineResponse409 = (options?: Options): MineErrors[409] =>
 export const fakeMineResponse500 = (options?: Options): MineErrors[500] =>
   fakeErrorResponse(options);
 
+export const fakeMineResponse503 = (options?: Options): MineErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse200 = (options?: Options): CurrentWeekResponses[200] =>
+  fakeCurrentWeekAttendanceReportResponse(options);
+
+export const fakeCurrentWeekResponse401 = (options?: Options): CurrentWeekErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse403 = (options?: Options): CurrentWeekErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse404 = (options?: Options): CurrentWeekErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse409 = (options?: Options): CurrentWeekErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse503 = (options?: Options): CurrentWeekErrors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeFind8Response200 = (options?: Options): Find8Responses[200] =>
   fakeAttendanceHistoryResponse(options);
 
@@ -3824,7 +4244,13 @@ export const fakeFind8Response400 = (options?: Options): Find8Errors[400] =>
 export const fakeFind8Response401 = (options?: Options): Find8Errors[401] =>
   fakeErrorResponse(options);
 
+export const fakeFind8Response403 = (options?: Options): Find8Errors[403] =>
+  fakeErrorResponse(options);
+
 export const fakeFind8Response409 = (options?: Options): Find8Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeFind8Response503 = (options?: Options): Find8Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeList4Response200 = (options?: Options): List4Responses[200] =>
@@ -3834,6 +4260,9 @@ export const fakeList4Response400 = (options?: Options): List4Errors[400] =>
   fakeErrorResponse(options);
 
 export const fakeList4Response401 = (options?: Options): List4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeList4Response403 = (options?: Options): List4Errors[403] =>
   fakeErrorResponse(options);
 
 export const fakeList4Response404 = (options?: Options): List4Errors[404] =>
@@ -3849,6 +4278,9 @@ export const fakeDetail4Response400 = (options?: Options): Detail4Errors[400] =>
   fakeErrorResponse(options);
 
 export const fakeDetail4Response401 = (options?: Options): Detail4Errors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail4Response403 = (options?: Options): Detail4Errors[403] =>
   fakeErrorResponse(options);
 
 export const fakeDetail4Response404 = (options?: Options): Detail4Errors[404] =>
@@ -4044,10 +4476,16 @@ export const fakeList6Response503 = (options?: Options): List6Errors[503] =>
 export const fakeList7Response200 = (options?: Options): List7Responses[200] =>
   fakeAdminAttendanceListResponse(options);
 
+export const fakeList7Response400 = (options?: Options): List7Errors[400] =>
+  fakeErrorResponse(options);
+
 export const fakeList7Response401 = (options?: Options): List7Errors[401] =>
   fakeErrorResponse(options);
 
 export const fakeList7Response404 = (options?: Options): List7Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList7Response503 = (options?: Options): List7Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeList8Response200 = (options?: Options): List8Responses[200] =>

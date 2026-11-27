@@ -79,15 +79,42 @@ describe('알림 설정', () => {
     expect(screen.getByRole('switch', { name: '알림' })).toBeDisabled();
   });
 
-  it('조회 실패 위치에서 다시 불러와 저장된 선택을 표시한다', async () => {
+  it('일반 조회 실패는 설정 항목을 공통 오류 UI로 교체하고 수동 재시도로 복구한다', async () => {
     vi.mocked(getNotificationSettings).mockResolvedValueOnce({
       status: 'ERROR',
       code: 'NETWORK',
       retryable: true,
     });
     const { user } = setup();
-    await user.click(await screen.findByRole('button', { name: '알림 설정 다시 불러오기' }));
+    expect(
+      await screen.findByRole('heading', { name: '알림 설정을 불러오지 못했어요' }),
+    ).toBeVisible();
+    expect(screen.queryByRole('switch', { name: '알림' })).not.toBeInTheDocument();
+    await user.click(screen.getByRole('button', { name: '알림 설정 다시 불러오기' }));
     await waitFor(() => expect(screen.getByRole('switch', { name: '알림' })).toBeChecked());
+  });
+
+  it('성공한 선택의 재조회 실패도 이전 선택과 공존하지 않는다', async () => {
+    const { user } = setup();
+    await waitFor(() => expect(screen.getByRole('switch', { name: '알림' })).toBeChecked());
+    vi.mocked(getNotificationSettings).mockResolvedValue({
+      status: 'ERROR',
+      code: 'NETWORK',
+      retryable: true,
+    });
+
+    act(() => {
+      focusManager.setFocused(false);
+      focusManager.setFocused(true);
+    });
+
+    expect(
+      await screen.findByRole('heading', { name: '알림 설정을 불러오지 못했어요' }),
+    ).toBeVisible();
+    expect(screen.queryByRole('switch', { name: '알림' })).not.toBeInTheDocument();
+    vi.mocked(getNotificationSettings).mockResolvedValue(allowed(false));
+    await user.click(screen.getByRole('button', { name: '알림 설정 다시 불러오기' }));
+    await waitFor(() => expect(screen.getByRole('switch', { name: '알림' })).not.toBeChecked());
   });
 
   it('변경 중 이전 선택을 유지하고 실패 후 같은 선택을 재시도한다', async () => {

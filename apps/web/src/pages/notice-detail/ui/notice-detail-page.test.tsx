@@ -2,7 +2,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { delay, http, HttpResponse } from 'msw';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -54,11 +54,55 @@ it('API 공지의 Markdown·제출 안내·첨부 이미지를 표시한다', as
     'https://example.com/submissions',
   );
   expect(screen.getByRole('heading', { level: 2, name: '제출 안내' })).toBeVisible();
+  // DOM 테스트 환경은 이미지 파일을 로드하지 않으므로 브라우저의 load 이벤트를 전달한다.
+  fireEvent.load(screen.getByAltText('assignment-guide.png'));
   expect(screen.getByRole('img', { name: 'assignment-guide.png' })).toHaveAttribute(
     'src',
     'https://images.example.com/notice-1.png',
   );
+  expect(screen.queryByRole('heading', { name: '첨부 이미지' })).not.toBeInTheDocument();
+  expect(screen.queryByText('assignment-guide.png')).not.toBeInTheDocument();
+  expect(screen.queryByText('image/png')).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: '확인했어요' })).toBeEnabled();
+});
+
+it('첨부 이미지가 없으면 이미지 영역을 표시하지 않는다', async () => {
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts/2`, () =>
+      HttpResponse.json({ ...memberNoticeDetailFixture, images: [] }),
+    ),
+  );
+  renderPage();
+
+  await screen.findByRole('heading', { level: 1, name: '사용자 테스트 결과 제출' });
+  expect(screen.queryByRole('region', { name: '첨부 이미지' })).not.toBeInTheDocument();
+});
+
+it('여러 첨부 이미지는 서버 응답 순서와 대체 텍스트를 유지한다', async () => {
+  const images = ['두 번째 안내.png', '첫 번째 안내.png', '마지막 안내.png'].map(
+    (filename, index) => ({
+      ...memberNoticeDetailFixture.images[0],
+      imageKey: `image-${index}`,
+      filename,
+      displayOrder: index + 1,
+      readUrl: `https://images.example.com/image-${index}.png`,
+    }),
+  );
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts/2`, () =>
+      HttpResponse.json({ ...memberNoticeDetailFixture, images }),
+    ),
+  );
+  renderPage();
+
+  const attachments = await screen.findByRole('region', { name: '첨부 이미지' });
+  images.forEach((image) => fireEvent.load(within(attachments).getByAltText(image.filename)));
+  expect(
+    within(attachments)
+      .getAllByRole('img')
+      .map((image) => image.getAttribute('alt')),
+  ).toEqual(images.map((image) => image.filename));
+  expect(within(attachments).queryAllByText('image/png')).toHaveLength(0);
 });
 
 it('읽음 저장 성공 뒤 서버 읽음 상태를 다시 조회하고 인원 수를 임의로 늘리지 않는다', async () => {
@@ -199,8 +243,9 @@ it('일반 재조회 실패는 헤더를 유지한 오류 화면으로 교체하
 
 it('첨부 이미지 로드 실패 시 대체 안내를 표시한다', async () => {
   renderPage();
-  const image = await screen.findByRole('img', { name: 'assignment-guide.png' });
+  const image = await screen.findByAltText('assignment-guide.png');
 
+  // 실제 이미지 요청 실패는 userEvent로 만들 수 없어 error 이벤트를 전달한다.
   fireEvent.error(image);
 
   expect(screen.getByText('이미지를 표시하지 못했어요.')).toBeVisible();

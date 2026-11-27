@@ -1,15 +1,13 @@
 import { Box } from '@seed-design/react';
-import { ScreenQueryBoundary } from '@/shared/ui/screen-query-boundary';
 import { ErrorState } from '@/shared/ui/error-state';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
 import type { ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 
+const renderScoreError = (props: FallbackProps) => <ScoreError {...props} />;
+
 export function ScoreErrorBoundary({ children }: { children: ReactNode }) {
-  return (
-    <ScreenQueryBoundary renderFallback={(props) => <ScoreError {...props} />}>
-      {children}
-    </ScreenQueryBoundary>
-  );
+  return <LocalErrorBoundary fallbackRender={renderScoreError}>{children}</LocalErrorBoundary>;
 }
 
 function ScoreError({ resetErrorBoundary }: FallbackProps) {

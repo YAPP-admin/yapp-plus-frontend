@@ -38,6 +38,11 @@ export function createMockSessionMembers(session: Session): AttendanceMemberView
       part: parts[index % parts.length] ?? null,
       teamId: `mock-team-${Math.floor(index / 5) + 1}`,
       attendance,
+      selectedStatuses: [],
+      effectiveStatus: null,
+      correctedAt: null,
+      latestReportTypes: index < reported ? ['LATE'] : [],
+      latestReportSubmittedAt: null,
       latestReport:
         index < reported
           ? {

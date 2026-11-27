@@ -21,7 +21,10 @@ export {
   useNativeWithdrawMutation,
 } from './model/mutations';
 export { isAuthenticationError, isAuthenticationRequiredResult } from './model/auth-error';
-export { handleQueryAuthenticationError } from './model/operations';
+export {
+  handleMutationAuthenticationError,
+  handleQueryAuthenticationError,
+} from './model/operations';
 export {
   NativeAuthSessionProvider,
   nativeSessionQueryKey,

@@ -117,6 +117,10 @@ export const handleQueryAuthenticationError = (client: QueryClient, error: unkno
   return refreshed ? markAuthRequired(client) : false;
 };
 
+/** 업무 Mutation은 토큰 재전송 경로가 없으므로 최종 401을 즉시 재인증 필요로 처리합니다. */
+export const handleMutationAuthenticationError = (client: QueryClient, error: unknown): boolean =>
+  isAuthenticationError(error) && markAuthRequired(client);
+
 /** 유효한 결과만 cache에 반영합니다. 인증 확정 시 작업 도중 시작된 조회도 무효화합니다. */
 export const applyAuthResult = (
   client: QueryClient,
@@ -132,16 +136,19 @@ export const applyAuthResult = (
     kind === 'logout' && (!response || response.status === 'CANCELLED') ? unavailable : response;
   // 진행 상태는 mutation이 소유합니다. 서버 해제 실패로 로그인 cache를 지우지 않습니다.
   const localDeletionFailed = result?.status === 'ERROR' && result.code === 'STORAGE';
+  const reviewRequired =
+    client.getQueryData<AuthResult>(nativeSessionQueryKey)?.status === 'REVIEW_REQUIRED';
   if (
     kind === 'logout' &&
     result?.status !== 'SIGNED_OUT' &&
     result?.status !== 'WITHDRAWN' &&
-    !localDeletionFailed
+    (!localDeletionFailed || reviewRequired)
   ) {
     return result;
   }
   if (
     result?.status === 'SIGNED_IN' ||
+    result?.status === 'REVIEW_REQUIRED' ||
     result?.status === 'SIGNED_OUT' ||
     result?.status === 'WITHDRAWN'
   ) {

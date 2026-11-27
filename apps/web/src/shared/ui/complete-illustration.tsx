@@ -1,3 +1,4 @@
+/** 여러 완료 화면에서 사용하는 장식용 SVG입니다. 화면별 문구와 탐색은 호출자가 소유합니다. */
 import { confettiLeft, confettiRight, owl } from './complete-illustration.css';
 
 // 피그마 Sign-up_success Graphic-point(222:40089)에서 내보낸 SVG입니다. 움직이는 그룹에만 클래스를 붙입니다.

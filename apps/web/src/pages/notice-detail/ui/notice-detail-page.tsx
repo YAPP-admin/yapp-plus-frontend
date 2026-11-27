@@ -8,7 +8,7 @@ import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, PrefixIcon } from '@yapp-plus/ui';
-import { Suspense, useState } from 'react';
+import { Suspense } from 'react';
 import { useNativeAuthSession } from '@/features/auth';
 import { NoticeErrorContent } from '@/features/member-notice';
 import { noticeDetailData } from '../model/notice-detail-data';
@@ -16,13 +16,6 @@ import { memberNoticeDetailQueryOptions, noticeIdFromParam } from '../model/noti
 import { useNoticeRead } from '../model/use-notice-read';
 import {
   assignmentChip,
-  attachmentImage,
-  attachmentItem,
-  attachmentList,
-  attachmentMeta,
-  attachmentName,
-  attachmentSection,
-  attachmentTitle,
   confirmCount,
   confirmQuestion,
   confirmSection,
@@ -45,6 +38,7 @@ import {
 import { NoticeDetailHeader } from './notice-detail-header';
 import { NoticeDetailErrorBoundary } from './notice-detail-error-boundary';
 import { NoticeMarkdown } from './notice-markdown';
+import { NoticeAttachments } from './notice-attachments';
 
 /** Stackflow에서 문자열로 전달한 공지 ID를 상세 query 경계에 연결한다. */
 export function NoticeDetailPage({ noticeId }: { noticeId: string }) {
@@ -178,31 +172,6 @@ function NoticeAssignment({
       </div>
     </section>
   );
-}
-
-function NoticeAttachments({ images }: { images: ReturnType<typeof noticeDetailData>['images'] }) {
-  return (
-    <section className={attachmentSection} aria-label="첨부 이미지">
-      <h2 className={attachmentTitle}>첨부 이미지</h2>
-      <ul className={attachmentList}>
-        {images.map((image) => (
-          <li key={image.imageKey} className={attachmentItem}>
-            <NoticeAttachmentImage src={image.readUrl} alt={image.filename} />
-            <span className={attachmentName}>{image.filename}</span>
-            <span className={attachmentMeta}>{image.contentType}</span>
-          </li>
-        ))}
-      </ul>
-    </section>
-  );
-}
-
-function NoticeAttachmentImage({ src, alt }: { src: string; alt: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return <output>이미지를 표시하지 못했어요.</output>;
-  }
-  return <img className={attachmentImage} src={src} alt={alt} onError={() => setFailed(true)} />;
 }
 
 function getCategoryChipClass(category: ReturnType<typeof noticeDetailData>['type']) {

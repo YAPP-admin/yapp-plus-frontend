@@ -12,7 +12,7 @@ import type { NoticeDetailTab } from '../model/notice-detail-search';
 import { NoticeReaders } from './notice-readers';
 import * as styles from './notice-detail-page.css';
 
-const categoryLabels = { SESSION: '세션', OPERATION: '기타', ASSIGNMENT: '제출' } as const;
+const categoryLabels = { SESSION: '세션', OPERATION: '기타', ASSIGNMENT: '과제' } as const;
 
 const audienceLabels = {
   ALL_USERS: '전체 사용자',
@@ -264,7 +264,7 @@ function NoticeDetailTabs({ noticeId, tab }: { noticeId: string; tab: NoticeDeta
   );
 }
 
-/** 제출 공지의 마감과 선택적 제출 링크를 표시한다. */
+/** 제출 공지의 마감과 제출 링크를 표시한다. */
 function NoticeSubmission({
   assignment,
 }: {

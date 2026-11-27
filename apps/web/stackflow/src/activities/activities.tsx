@@ -1,5 +1,5 @@
 /** URL·step params를 화면 슬라이스와 연결하며 탭의 선택과 패널 수명을 소유합니다. */
-import { useEffect, useState } from 'react';
+import { lazy, Suspense, useEffect, useState } from 'react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { find5Options } from '@yapp-plus/api/generated';
 import { teamAttendanceTargetSchema, type TeamAttendanceReceipt } from '@/features/team-attendance';
@@ -26,7 +26,7 @@ import { SchedulePage } from '@/pages/schedule';
 import { SettingsPage } from '@/pages/settings';
 import { SignupCompletePage } from '@/pages/signup-complete';
 import { SignupPage } from '@/pages/signup';
-import { SignupStatusPage } from '@/pages/signup-status';
+import { SignupStatusContent } from './signup-status-content';
 import { SignupUnregisteredPage } from '@/pages/signup-unregistered';
 import { TeamAttendanceCompletePage } from '@/pages/team-attendance-complete';
 import { TeamAttendanceErrorPage } from '@/pages/team-attendance-error';
@@ -35,7 +35,6 @@ import {
   useTeamAttendancePhotoDraft,
 } from '@/pages/team-attendance-upload';
 import { AuthLayout } from '@/app/layouts/auth-layout';
-import { BottomNavigation } from '@/app/layouts/bottom-navigation';
 import { DetailLayout } from '@/app/layouts/detail-layout';
 import { PageShell } from '@/app/layouts/page-shell';
 import { TabPanel, TabsLayout } from '@/app/layouts/tabs-layout';
@@ -52,12 +51,16 @@ import { useTabsUrl } from '@/app/navigation/use-tabs-url';
 import { NativeAuthRedirect } from './native-auth-redirect';
 import { useNativeAuthSession } from '@/features/auth';
 import { staticContentEnabled } from '@/features/static-content';
-import { QueryBoundary } from '@/shared/ui/query-boundary';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
+import { ErrorState } from '@/shared/ui/error-state';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
+import type { FallbackProps } from 'react-error-boundary';
 
 const TAB_TITLES: Record<TabName, string> = {
   home: '홈',
   schedule: '일정',
   notices: '게시판',
+  community: '커뮤니티',
   my: '마이페이지',
 };
 
@@ -116,6 +119,9 @@ export function TabsActivity() {
             }}
           />
         </TabPanel>
+        <TabPanel tab="community" active={activeTab === 'community'}>
+          <DiningListPage />
+        </TabPanel>
         <TabPanel tab="my" active={activeTab === 'my'}>
           <MyPage />
         </TabPanel>
@@ -159,7 +165,10 @@ export function NoticeDetailActivity() {
   return (
     <ActivityScreen title="게시판 상세">
       <PageShell header={null}>
-        <NoticeDetailPage noticeId={noticeId} />
+        {/* 상세 헤더와 본문이 셸의 단일 본문 행 안에서 함께 흐르도록 묶습니다. */}
+        <div>
+          <NoticeDetailPage noticeId={noticeId} />
+        </div>
       </PageShell>
     </ActivityScreen>
   );
@@ -245,22 +254,35 @@ export function TeamAttendanceUploadActivity() {
     );
   }
   return activity.isTop && selectedPhoto ? (
-    <QueryBoundary
-      pendingFallback={<output>팀원을 불러오고 있어요…</output>}
-      errorFallback={<output role="alert">팀원을 불러오지 못했어요. 다시 확인해 주세요.</output>}
-    >
-      <TeamPhotoSubmissionFlow
-        sessionId={sessionId}
-        onSubmitted={(result) => {
-          setReceipt(result);
-          stepFlow.replaceStep(
-            { sessionId: sessionIdParam, stage: 'complete' },
-            { targetActivityId: activity.id },
-          );
-        }}
-      />
-    </QueryBoundary>
+    <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
+      <LocalErrorBoundary fallbackRender={renderTeamMembersError}>
+        <Suspense fallback={<output>팀원을 불러오고 있어요…</output>}>
+          <TeamPhotoSubmissionFlow
+            sessionId={sessionId}
+            onSubmitted={(result) => {
+              setReceipt(result);
+              stepFlow.replaceStep(
+                { sessionId: sessionIdParam, stage: 'complete' },
+                { targetActivityId: activity.id },
+              );
+            }}
+          />
+        </Suspense>
+      </LocalErrorBoundary>
+    </ActivityScreen>
   ) : null;
+}
+
+function renderTeamMembersError({ resetErrorBoundary }: FallbackProps) {
+  return (
+    <ErrorState
+      variant="page"
+      title="팀원을 불러오지 못했어요"
+      titleAs="h2"
+      retryLabel="팀원 다시 확인"
+      onRetry={resetErrorBoundary}
+    />
+  );
 }
 
 /** 입력·완료를 한 화면 수명으로 묶고 계정 변경 시 기존 인증 경계가 함께 폐기한다. */
@@ -272,7 +294,9 @@ function TeamPhotoSubmissionFlow({
   onSubmitted: (receipt: TeamAttendanceReceipt) => void;
 }) {
   const { apiOptions } = useNativeAuthSession();
-  const { data: team } = useSuspenseQuery(find5Options({ ...apiOptions, path: { sessionId } }));
+  const teamQuery = useSuspenseQuery(find5Options({ ...apiOptions, path: { sessionId } }));
+  useThrowQueryError(teamQuery);
+  const { data: team } = teamQuery;
   const target = teamAttendanceTargetSchema.parse({
     sessionId,
     teamId: team.teamId,
@@ -297,11 +321,7 @@ function TeamPhotoSubmissionFlow({
     })),
   });
 
-  return (
-    <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
-      <TeamAttendanceUploadPage target={target} onSubmitted={onSubmitted} />
-    </ActivityScreen>
-  );
+  return <TeamAttendanceUploadPage target={target} onSubmitted={onSubmitted} />;
 }
 
 export function TeamAttendanceErrorActivity() {
@@ -321,6 +341,7 @@ export function LoginActivity() {
   return (
     <ActivityScreen title="로그인" showBack={false} preventSwipeBack>
       <NativeAuthRedirect target="TABS" when="SIGNED_IN" />
+      <NativeAuthRedirect target="REVIEW" when="REVIEW_REQUIRED" />
       <AuthLayout>
         <LoginPage initialError={error === 'true'} />
       </AuthLayout>
@@ -330,7 +351,7 @@ export function LoginActivity() {
 
 export function LoginErrorActivity() {
   return (
-    <ActivityScreen title="오류 안내">
+    <ActivityScreen title="오류 안내" preventSwipeBack>
       <AuthLayout>
         <LoginErrorPage />
       </AuthLayout>
@@ -343,6 +364,7 @@ export function SignupActivity() {
 
   return (
     <ActivityScreen title="회원가입" preventSwipeBack>
+      <NativeAuthRedirect target="REVIEW" when="REVIEW_REQUIRED" />
       <PageShell
         plain
         backButton={
@@ -372,9 +394,7 @@ export function SignupActivity() {
 export function SignupStatusActivity() {
   return (
     <ActivityScreen title="가입 승인 상태" preventSwipeBack>
-      <AuthLayout showBack>
-        <SignupStatusPage />
-      </AuthLayout>
+      <SignupStatusContent />
     </ActivityScreen>
   );
 }
@@ -399,31 +419,37 @@ export function SignupUnregisteredActivity() {
   );
 }
 
+const TeamAttendanceResultPreview = import.meta.env.DEV
+  ? lazy(() =>
+      import('@/pages/home').then((module) => ({ default: module.TeamAttendanceResultPreview })),
+    )
+  : null;
+
 export function DevRoutesActivity() {
   const { isActive } = useActivity();
 
   return (
     <ActivityScreen title="개발 경로">
       <PageShell>
-        <DevRoutesPage isActive={isActive} />
+        <DevRoutesPage
+          isActive={isActive}
+          resultPreview={
+            TeamAttendanceResultPreview && (
+              <Suspense fallback={null}>
+                <TeamAttendanceResultPreview />
+              </Suspense>
+            )
+          }
+        />
       </PageShell>
     </ActivityScreen>
   );
 }
 
-export function DiningListActivity() {
-  return (
-    <ActivityScreen title="회식">
-      <PageShell header={null} navigation={<BottomNavigation activeTab="community" />}>
-        <DiningListPage />
-      </PageShell>
-    </ActivityScreen>
-  );
-}
 export function DiningDetailActivity() {
   const { diningId } = useActivityParams<'DiningDetail'>();
   return (
-    <ActivityScreen title="회식" snackbarPosition="safeArea">
+    <ActivityScreen title="뒤풀이" snackbarPosition="safeArea">
       <PageShell header={null} plain>
         <DiningDetailPage diningId={diningId} />
       </PageShell>

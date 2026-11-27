@@ -159,16 +159,18 @@ it('빈 중간 페이지 추가 요청은 중복을 막고 실패 시 자동 중
   expect(await screen.findByText('세션 1')).toBeVisible();
   expect(calls).toBe(3);
 });
-it('재조회 실패는 이전 목록·요약을 보존한다', async () => {
+it('재조회 실패는 목록·요약을 공통 오류 UI로 교체한다', async () => {
   const { client } = renderPage();
   await screen.findByText('세션 1');
   server.use(http.get(`${apiBaseUrl}/api/attendance-history`, () => HttpResponse.error()));
   await act(async () => {
     await client.invalidateQueries({ queryKey: historyQueryOptions().queryKey });
   });
-  expect(await screen.findByText(/이전 내용을 표시/)).toBeVisible();
-  expect(screen.getByText('세션 1')).toBeVisible();
-  expect(screen.getByText('12회')).toBeVisible();
+  expect(
+    await screen.findByRole('heading', { name: '출석 내역을 불러오지 못했어요.' }),
+  ).toBeVisible();
+  expect(screen.queryByText('세션 1')).not.toBeInTheDocument();
+  expect(screen.queryByText('12회')).not.toBeInTheDocument();
 });
 
 it('비활성 화면에서는 다음 페이지를 관찰하지 않는다', async () => {

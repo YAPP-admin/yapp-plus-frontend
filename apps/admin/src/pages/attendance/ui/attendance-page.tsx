@@ -132,7 +132,7 @@ function AttendanceSessionsData() {
             <strong>{session.name}</strong>
             <span>
               {session.type === 'regular' ? '정규 세션' : '팀 세션'} ·{' '}
-              {session.date.replaceAll('-', '.')} · {session.startTime}
+              {session.startDate.replaceAll('-', '.')} · {session.startTime}
             </span>
             <span>
               출석 {session.attendance.present}명 · 미정 {session.attendance.pending}명

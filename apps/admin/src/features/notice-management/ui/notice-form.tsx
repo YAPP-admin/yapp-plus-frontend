@@ -14,10 +14,11 @@ import {
   type NoticeFormContent,
 } from '../model/notice-form';
 import * as styles from './notice-form.css';
+import { NoticeScheduleField } from './notice-schedule-field';
 
 const categories = [
   { value: 'session', label: '세션' },
-  { value: 'submission', label: '제출' },
+  { value: 'submission', label: '과제' },
   { value: 'operation', label: '기타' },
 ] as const;
 const audiences = [
@@ -27,10 +28,34 @@ const audiences = [
   { value: 'completed', label: '수료회원' },
 ] as const;
 const submissionFields = [
-  { name: 'submission.deadline.date', label: '마감 날짜', type: 'date' },
-  { name: 'submission.deadline.time', label: '마감 시각', type: 'time' },
-  { name: 'submission.method.name', label: '제출 방법 (선택)', type: 'text' },
-  { name: 'submission.method.url', label: '제출 주소 (선택)', type: 'text' },
+  {
+    name: 'submission.deadline.date',
+    label: '마감 날짜',
+    type: 'date',
+    required: true,
+    picker: true,
+  },
+  {
+    name: 'submission.deadline.time',
+    label: '마감 시각',
+    type: 'time',
+    required: true,
+    picker: true,
+  },
+  {
+    name: 'submission.method.name',
+    label: '제출 방법',
+    type: 'text',
+    required: true,
+    picker: false,
+  },
+  {
+    name: 'submission.method.url',
+    label: '제출 주소',
+    type: 'text',
+    required: true,
+    picker: false,
+  },
 ] as const;
 
 type Props = {
@@ -195,20 +220,34 @@ export function NoticeForm({
                     {category === 'submission' && (
                       <fieldset className={styles.group}>
                         <div className={styles.form}>
-                          {submissionFields.map(({ name, label, type }) => (
+                          {submissionFields.map(({ name, label, type, required, picker }) => (
                             <form.Field key={name} name={name}>
-                              {(field) => (
-                                <NoticeTextInput
-                                  disabled={pending}
-                                  name={name}
-                                  label={label}
-                                  type={type}
-                                  value={field.state.value}
-                                  errors={field.state.meta.errors}
-                                  onChange={field.handleChange}
-                                  onBlur={field.handleBlur}
-                                />
-                              )}
+                              {(field) =>
+                                picker ? (
+                                  <NoticeScheduleField
+                                    type={type}
+                                    label={label}
+                                    value={field.state.value}
+                                    required={required}
+                                    disabled={pending}
+                                    errors={field.state.meta.errors}
+                                    onChange={field.handleChange}
+                                    onBlur={field.handleBlur}
+                                  />
+                                ) : (
+                                  <NoticeTextInput
+                                    disabled={pending}
+                                    name={name}
+                                    label={label}
+                                    type={type}
+                                    required={required}
+                                    value={field.state.value}
+                                    errors={field.state.meta.errors}
+                                    onChange={field.handleChange}
+                                    onBlur={field.handleBlur}
+                                  />
+                                )
+                              }
                             </form.Field>
                           ))}
                         </div>
@@ -227,7 +266,11 @@ export function NoticeForm({
       {onSubmit && (
         <form.Subscribe selector={(state) => state.isSubmitting || isPending}>
           {(pending) => (
-            <ActionButton type="submit" disabled={pending || submitDisabled} loading={pending}>
+            <ActionButton
+              type="submit"
+              disabled={pending ? true : submitDisabled}
+              loading={pending}
+            >
               {submitLabel}
             </ActionButton>
           )}
@@ -254,6 +297,7 @@ function NoticeTextInput({
   name,
   label,
   type = 'text',
+  required = false,
   value,
   errors,
   onChange,
@@ -263,6 +307,7 @@ function NoticeTextInput({
   name: string;
   label: string;
   type?: string;
+  required?: boolean;
   disabled: boolean;
   value: string;
   errors: (string | undefined)[];
@@ -270,10 +315,10 @@ function NoticeTextInput({
   onBlur: () => void;
 }) {
   return (
-    <Field.Root invalid={errors.length > 0} disabled={disabled}>
+    <Field.Root required={required} invalid={errors.length > 0} disabled={disabled}>
       <Field.Label>{label}</Field.Label>
       <TextField.Root value={value} onValueChange={onChange}>
-        <TextField.Input name={name} type={type} onBlur={onBlur} />
+        <TextField.Input name={name} type={type} required={required} onBlur={onBlur} />
       </TextField.Root>
       <FieldErrors errors={errors} />
     </Field.Root>

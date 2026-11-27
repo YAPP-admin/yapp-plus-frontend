@@ -8,13 +8,23 @@ import { ScreenActiveContext } from '@/shared/lib/screen-activity';
 import { tabNames, type TabName } from '../navigation/tab';
 import userEvent from '@testing-library/user-event';
 
+function tabHref(tab: string) {
+  if (tab === 'home') {
+    return '/';
+  }
+  if (tab === 'community') {
+    return '/dining';
+  }
+  return `/${tab}`;
+}
+
 vi.mock('@/app/navigation/tab-link', () => ({
   TabLink: ({
     tab,
     children,
     ...props
   }: React.AnchorHTMLAttributes<HTMLAnchorElement> & { tab: string }) => (
-    <a {...props} href={tab === 'home' ? '/' : `/${tab}`}>
+    <a {...props} href={tabHref(tab)}>
       {children}
     </a>
   ),
@@ -78,6 +88,7 @@ describe('TabsLayout', () => {
     ['/', '홈', 'home'],
     ['/schedule', '일정', 'schedule'],
     ['/notices', '게시판', 'notices'],
+    ['/dining', '커뮤니티', 'community'],
     ['/my', 'MY', 'my'],
   ] as const)('%s에서 현재 메뉴 하나만 표시한다', (pathname, label, activeTab) => {
     render(
@@ -86,10 +97,10 @@ describe('TabsLayout', () => {
       </TabsLayout>,
     );
     const navigation = within(screen.getByRole('navigation', { name: '주요 메뉴' }));
-    expect(navigation.getAllByRole('tab')).toHaveLength(4);
+    expect(navigation.getAllByRole('tab')).toHaveLength(5);
     expect(navigation.getByRole('tab', { selected: true })).toHaveTextContent(label);
     expect(navigation.getByRole('tab', { selected: true })).toHaveAttribute('href', pathname);
-    expect(screen.getAllByRole('banner')).toHaveLength(1);
+    expect(screen.queryAllByRole('banner')).toHaveLength(activeTab === 'community' ? 0 : 1);
     expect(screen.getAllByRole('main')).toHaveLength(1);
   });
 
@@ -109,14 +120,22 @@ describe('TabsLayout', () => {
     expect(within(navigation).getByRole('tab', { selected: true })).toHaveTextContent('게시판');
   });
 
-  it('홈 탭에서는 상단 헤더에 YAPP 로고와 알림 링크를 렌더링한다', () => {
+  it('홈 헤더의 로고와 알림 링크에 이름과 키보드 포커스를 제공한다', async () => {
+    const user = userEvent.setup();
     render(
       <TabsLayout activeTab="home" onTabChange={vi.fn<() => void>()}>
         <main>홈</main>
       </TabsLayout>,
     );
-    expect(screen.getByRole('link', { name: 'YAPP 홈' })).toHaveAttribute('href', '/');
-    expect(screen.getByRole('link', { name: '알림' })).toHaveAttribute('href', '/alerts');
+    const homeLink = screen.getByRole('link', { name: 'YAPP 홈' });
+    const alertsLink = screen.getByRole('link', { name: '알림' });
+    expect(homeLink).toHaveAttribute('href', '/');
+    expect(alertsLink).toHaveAttribute('href', '/alerts');
+
+    await user.tab();
+    expect(homeLink).toHaveFocus();
+    await user.tab();
+    expect(alertsLink).toHaveFocus();
   });
 
   it('마이페이지 탭에서는 상단 헤더에 마이페이지 타이틀과 설정 링크를 렌더링한다', () => {
@@ -149,6 +168,24 @@ describe('TabsLayout', () => {
     expect(navigation.getByRole('link', { name: '커뮤니티' })).toBeVisible();
     expect(navigation.queryByRole('tablist')).not.toBeInTheDocument();
     expect(navigation.queryByRole('link', { current: 'page' })).not.toBeInTheDocument();
+  });
+
+  it('알림 화면이 자체 헤더를 소유하므로 공통 헤더를 추가하지 않는다', () => {
+    render(
+      <TabsLayout activeTab={null}>
+        <div>
+          <header>
+            <h1>알림</h1>
+          </header>
+          <main>알림 목록</main>
+        </div>
+      </TabsLayout>,
+    );
+
+    expect(screen.getAllByRole('banner')).toHaveLength(1);
+    expect(screen.getByRole('banner')).toContainElement(
+      screen.getByRole('heading', { name: '알림' }),
+    );
   });
 
   it('방문한 패널의 DOM·입력·스크롤을 숨김이나 재마운트 없이 보존한다', async () => {

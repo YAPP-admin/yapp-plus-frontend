@@ -42,6 +42,9 @@ export function nativeEntryGuard(client: QueryClient, activities: readonly { nam
               result?.status === 'WITHDRAWN' ||
               result?.status === 'SIGNUP_REQUIRED' ||
               isAuthenticationRequiredResult(result);
+            if (isNativeWebView() && result?.status === 'REVIEW_REQUIRED') {
+              return redirect(result.reviewStatus === 'PENDING' ? 'SignupStatus' : 'Error', {});
+            }
             return isNativeWebView() && signedOut ? redirect('Login', {}) : true;
           },
         ]),
@@ -66,16 +69,43 @@ function AccountScreen({
   activity: { name: string; isTop: boolean };
   children: ReactNode;
 }) {
-  const { isNative, phase, session } = useNativeAuthSession();
+  const { isNative, phase, reviewStatus, reviewTransition, session } = useNativeAuthSession();
   const protectedScreen = !isPublicActivity(activity.name);
-  const blocked = isNative && protectedScreen && phase !== 'SIGNED_IN';
+  const invalidStatusScreen =
+    isNative &&
+    activity.name === 'SignupStatus' &&
+    !(phase === 'REVIEW_REQUIRED' && reviewStatus === 'PENDING');
+  const blocked = invalidStatusScreen || (isNative && protectedScreen && phase !== 'SIGNED_IN');
   const flow = useFlow();
 
   useEffect(() => {
-    if (blocked && activity.isTop && (phase === 'SIGNED_OUT' || phase === 'AUTH_REQUIRED')) {
+    if (!blocked || !activity.isTop) {
+      return;
+    }
+    // 직접 URL·history 복원에서도 실제 대기 상태만 대기 화면을 볼 수 있습니다.
+    if (invalidStatusScreen) {
+      if (phase === 'LOADING') {
+        return;
+      }
+      if (phase === 'SIGNED_IN') {
+        if (reviewTransition === 'PENDING_TO_APPROVED') {
+          flow.replace('SignupComplete', {});
+        } else {
+          flow.replace('Tabs', { initialTab: 'home' });
+        }
+      } else {
+        flow.replace(phase === 'REVIEW_REQUIRED' ? 'Error' : 'Login', {});
+      }
+      return;
+    }
+    if (phase === 'REVIEW_REQUIRED') {
+      flow.replace(reviewStatus === 'PENDING' ? 'SignupStatus' : 'Error', {});
+      return;
+    }
+    if (phase === 'SIGNED_OUT' || phase === 'AUTH_REQUIRED') {
       flow.replace('Login', {});
     }
-  }, [blocked, activity.isTop, phase, flow]);
+  }, [blocked, invalidStatusScreen, activity.isTop, phase, reviewStatus, reviewTransition, flow]);
 
   if (isNative && phase === 'UNAVAILABLE' && protectedScreen) {
     return activity.isTop ? (
@@ -83,6 +113,10 @@ function AccountScreen({
     ) : null;
   }
   if (blocked) {
+    return null;
+  }
+  // 직접 진입의 부모 Login은 현재 화면의 로그인 버튼과 중복 노출하지 않습니다.
+  if (isNative && activity.name === 'Login' && !activity.isTop) {
     return null;
   }
   // Stack은 유지하고 계정이 바뀐 보호 화면의 로컬 상태만 초기화합니다.

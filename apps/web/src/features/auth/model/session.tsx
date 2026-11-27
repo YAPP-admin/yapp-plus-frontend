@@ -15,6 +15,7 @@ export type NativeAuthSessionPhase =
   | 'LOADING'
   | 'SIGNED_OUT'
   | 'SIGNED_IN'
+  | 'REVIEW_REQUIRED'
   | 'AUTH_REQUIRED'
   | 'UNAVAILABLE';
 
@@ -22,6 +23,8 @@ type NativeAuthSessionContextValue = Readonly<{
   isNative: boolean;
   phase: NativeAuthSessionPhase;
   session?: AuthSession;
+  reviewStatus?: 'PENDING' | 'REJECTED' | null;
+  reviewTransition?: 'NONE' | 'PENDING_TO_APPROVED';
   apiOptions: ReturnType<typeof nativeAuthClientOptions>;
   unsupported: boolean;
   canRetry: boolean;
@@ -67,18 +70,31 @@ export const nativeSessionQueryOptions = (isNative: boolean) =>
 
 const resultToState = (
   result: AuthResult | undefined,
-): Readonly<{ phase: NativeAuthSessionPhase; session?: AuthSession }> | undefined => {
+):
+  | Readonly<{
+      phase: NativeAuthSessionPhase;
+      session?: AuthSession;
+      reviewStatus?: 'PENDING' | 'REJECTED' | null;
+      reviewTransition?: 'NONE' | 'PENDING_TO_APPROVED';
+    }>
+  | undefined => {
   if (!result) {
     return undefined;
   }
 
   switch (result.status) {
     case 'SIGNED_IN':
-      return { phase: 'SIGNED_IN', session: result.session };
+      return {
+        phase: 'SIGNED_IN',
+        session: result.session,
+        reviewTransition: result.reviewTransition,
+      };
     case 'SIGNUP_REQUIRED':
     case 'SIGNED_OUT':
     case 'WITHDRAWN':
       return { phase: 'SIGNED_OUT' };
+    case 'REVIEW_REQUIRED':
+      return { phase: 'REVIEW_REQUIRED', reviewStatus: result.reviewStatus };
     case 'ERROR':
       if (isAuthenticationRequiredResult(result)) {
         return { phase: 'AUTH_REQUIRED' };
@@ -113,6 +129,8 @@ export function NativeAuthSessionProvider({ children }: { children: ReactNode })
         isNative,
         phase: state.phase,
         session: state.session,
+        reviewStatus: state.reviewStatus,
+        reviewTransition: state.reviewTransition,
         apiOptions: nativeAuthClientOptions(state.session, client),
         unsupported:
           (query.data.status === 'UNAVAILABLE' || query.data.status === 'ERROR') &&

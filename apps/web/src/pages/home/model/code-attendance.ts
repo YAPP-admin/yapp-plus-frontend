@@ -18,6 +18,7 @@ import {
 import type { LocationFailure } from '@yapp-plus/app-bridge';
 import { getAppBridge, openAppSettings, requestCurrentLocation } from '@yapp-plus/app-bridge/web';
 import { useNativeAuthSession } from '@/features/auth';
+import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { currentWeekQueryOptions } from './current-week-query';
 import { staticContentEnabled } from '@/features/static-content';
 import {
@@ -168,6 +169,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
   const client = useQueryClient();
   const options = currentWeekQueryOptions(apiOptions);
   const week = useSuspenseQuery(options);
+  useThrowQueryError(week);
   const session = week.data.session;
 
   const attendanceMutation = useMutation({
@@ -252,13 +254,6 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
   const isPending =
     locationCheckMutation.isPending || attendanceMutation.isPending || settingsMutation.isPending;
   const available = session?.type === 'REGULAR' && session.attendanceStatus === 'AVAILABLE';
-  const queryIssue =
-    week.error &&
-    new AttendanceFlowError(
-      'SESSION',
-      '세션을 불러오지 못했어요. 다시 확인해 주세요.',
-      'REFRESH_SESSION',
-    );
   const attendanceErrorCode = getAttendanceErrorCode(attendanceMutation.error);
   let submissionIssue: AttendanceFlowError | null = null;
   if (attendanceMutation.error && attendanceErrorCode !== invalidAttendanceCode) {
@@ -295,7 +290,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
     settingsMutation.reset();
   };
   const issue =
-    [queryIssue, settingsIssue, locationIssue, submissionIssue, availabilityIssue].find(
+    [settingsIssue, locationIssue, submissionIssue, availabilityIssue].find(
       (candidate): candidate is AttendanceFlowError => candidate != null,
     ) ?? null;
 
@@ -304,7 +299,7 @@ export function useCodeAttendance(onComplete: () => void, isSheetOpen: boolean) 
     checkingLocation: locationCheckMutation.isPending,
     submittingAttendance: attendanceMutation.isPending,
     openingSettings: settingsMutation.isPending,
-    disabled: !available || week.isFetching || !!week.error || isPending,
+    disabled: !available || week.isFetching || isPending,
     issue,
     reset,
     refresh: () => {

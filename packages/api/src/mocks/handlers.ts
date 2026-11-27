@@ -2,8 +2,10 @@ import { base, en, Faker } from '@faker-js/faker';
 import { http, HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
 import { z, type ZodType } from 'zod';
 import type {
+  AdminAfterpartyResponse,
   AdminAttendanceListResponse,
   NotificationHistoryItemResponse,
+  OverrideAttendanceRequest,
 } from '../generated/types.gen';
 
 import * as generatedFaker from '../generated/@faker-js/faker.gen';
@@ -64,22 +66,123 @@ function fixedResponse(body: JsonBodyType, schema: ZodType) {
   return () => response(body, schema, 200);
 }
 
-function scoreDeltaForStatus(status: AdminAttendanceListResponse['items'][number]['status']) {
+type AttendanceOverrideStatus = OverrideAttendanceRequest['statuses'][number];
+
+function scoreDeltaForStatus(status: AttendanceOverrideStatus) {
   switch (status) {
     case 'PRESENT':
-    case 'UNDECIDED':
       return 0;
     case 'LATE_ONE_HOUR':
-    case 'EARLY_LEAVE':
+    case 'EARLY_LEAVE_ONE_HOUR':
       return -4;
     case 'LATE_THREE_HOUR':
+    case 'EARLY_LEAVE_THREE_HOUR':
       return -8;
+    case 'UNEXCUSED_LATE_ONE_HOUR':
+    case 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR':
+      return -10;
+    case 'UNEXCUSED_LATE_THREE_HOUR':
+    case 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR':
+      return -14;
     case 'ABSENT':
       return -12;
-    case 'EXCUSED_ABSENCE':
-      return 0;
+    case 'UNEXCUSED_ABSENT':
+      return -20;
   }
   return 0;
+}
+
+function scoreDeltaForStatuses(statuses: AttendanceOverrideStatus[]) {
+  return statuses.reduce((total, status) => total + scoreDeltaForStatus(status), 0);
+}
+
+function statusForStatuses(
+  statuses: AttendanceOverrideStatus[],
+): AdminAttendanceListResponse['items'][number]['status'] {
+  const [firstStatus] = statuses;
+  if (firstStatus === undefined) {
+    return 'UNDECIDED';
+  }
+  switch (firstStatus) {
+    case 'LATE_ONE_HOUR':
+    case 'LATE_THREE_HOUR':
+    case 'UNEXCUSED_LATE_ONE_HOUR':
+    case 'UNEXCUSED_LATE_THREE_HOUR':
+    case 'EARLY_LEAVE_ONE_HOUR':
+    case 'EARLY_LEAVE_THREE_HOUR':
+    case 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR':
+    case 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR':
+      if (firstStatus.includes('LATE')) {
+        return firstStatus.includes('THREE') ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
+      }
+      return firstStatus.includes('THREE') ? 'EARLY_LEAVE_THREE_HOUR' : 'EARLY_LEAVE_ONE_HOUR';
+    case 'PRESENT':
+      return 'PRESENT';
+    case 'ABSENT':
+    case 'UNEXCUSED_ABSENT':
+      return 'ABSENT';
+    default:
+      return 'UNDECIDED';
+  }
+}
+
+function effectiveStatusForStatuses(
+  statuses: AttendanceOverrideStatus[],
+): AdminAttendanceListResponse['items'][number]['effectiveStatus'] {
+  const hasLate = statuses.some((status) => status.includes('LATE'));
+  const hasEarlyLeave = statuses.some((status) => status.includes('EARLY_LEAVE'));
+  if (hasLate && hasEarlyLeave) {
+    return 'LATE_AND_EARLY_LEAVE';
+  }
+  if (hasLate) {
+    return 'LATE';
+  }
+  if (hasEarlyLeave) {
+    return 'EARLY_LEAVE';
+  }
+  if (statuses.includes('PRESENT')) {
+    return 'PRESENT';
+  }
+  if (statuses.includes('ABSENT') || statuses.includes('UNEXCUSED_ABSENT')) {
+    return 'ABSENT';
+  }
+  return 'UNDECIDED';
+}
+
+function statusForMockSelection(
+  selection: MockAttendanceSelection,
+): AttendanceOverrideStatus | null {
+  switch (selection.status) {
+    case 'present':
+      return 'PRESENT';
+    case 'absent':
+      return selection.penaltyCategory === 'unauthorized' ? 'UNEXCUSED_ABSENT' : 'ABSENT';
+    case 'late':
+      if (selection.durationBand === null) {
+        return null;
+      }
+      if (selection.penaltyCategory === 'unauthorized') {
+        return selection.durationBand === 'withinThreeHours'
+          ? 'UNEXCUSED_LATE_THREE_HOUR'
+          : 'UNEXCUSED_LATE_ONE_HOUR';
+      }
+      return selection.durationBand === 'withinThreeHours' ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
+    case 'earlyLeave':
+      if (selection.durationBand === null) {
+        return null;
+      }
+      if (selection.penaltyCategory === 'unauthorized') {
+        return selection.durationBand === 'withinThreeHours'
+          ? 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR'
+          : 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR';
+      }
+      return selection.durationBand === 'withinThreeHours'
+        ? 'EARLY_LEAVE_THREE_HOUR'
+        : 'EARLY_LEAVE_ONE_HOUR';
+    case 'undecided':
+      return null;
+  }
+  return null;
 }
 
 function scoreDeltaForMockSelection(selection: MockAttendanceSelection) {
@@ -120,6 +223,13 @@ export function createApiMockHandlers(
   let nextNotificationId =
     notificationHistory.reduce((maxId, notification) => Math.max(maxId, notification.id), 0) + 1;
   const attendanceBySession = new Map<string, AdminAttendanceListResponse>();
+  const afterpartyHistory: AdminAfterpartyResponse[] = empty
+    ? []
+    : fixtures.adminAfterparties.map((afterparty) => ({
+        ...afterparty,
+        invitationRoles: afterparty.invitationRoles ? [...afterparty.invitationRoles] : undefined,
+        counts: afterparty.counts ? { ...afterparty.counts } : undefined,
+      }));
 
   function getNotificationPage(cursor: string | null) {
     const pageSize = 4;
@@ -201,6 +311,157 @@ export function createApiMockHandlers(
           notification.status = 'CANCELED';
         }
         return new HttpResponse(null, { status: 204 });
+      },
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/afterparties`,
+      ({ request, params }) => {
+        const generationId = Number(params.generationId);
+        const period = new URL(request.url).searchParams.get('period') ?? 'UPCOMING';
+        const items = afterpartyHistory.filter(
+          (afterparty) =>
+            afterparty.generationId === generationId &&
+            (period === 'PAST' ? afterparty.state === 'ENDED' : afterparty.state !== 'ENDED'),
+        );
+        return response({ items, nextCursor: null }, schemas.zAdminAfterpartyPageResponse, 200);
+      },
+    ),
+    http.post(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/afterparties`,
+      async ({ request, params }) => {
+        const rawBody = await request.json();
+        const requestBody =
+          typeof rawBody === 'object' && rawBody !== null && !Array.isArray(rawBody)
+            ? (rawBody as Record<string, unknown>)
+            : {};
+        const parsedBody = schemas.zAfterpartyCreateRequest.safeParse({
+          ...requestBody,
+          // 생성 계약은 offset 포함 ISO8601이므로, offset을 허용하지 않는 생성 Zod 스키마에
+          // 전달할 때만 UTC 문자열로 정규화한다. 응답에는 원래 입력을 그대로 보존한다.
+          startsAt: normalizeMockDateForSchema(requestBody.startsAt),
+          deadline: normalizeMockDateForSchema(requestBody.deadline),
+        });
+        if (!parsedBody.success) {
+          return new HttpResponse('잘못된 뒤풀이 생성 요청입니다.', { status: 400 });
+        }
+
+        const generationId = Number(params.generationId);
+        const generation = fixtures.adminGenerations.generations.find(
+          (item) => item.generationId === generationId,
+        );
+        if (generation === undefined) {
+          return HttpResponse.json(
+            { code: 'GENERATION_NOT_FOUND', message: '기수를 찾을 수 없습니다.' },
+            { status: 404 },
+          );
+        }
+
+        const body = {
+          ...parsedBody.data,
+          startsAt:
+            typeof requestBody.startsAt === 'string'
+              ? requestBody.startsAt
+              : parsedBody.data.startsAt,
+          deadline:
+            typeof requestBody.deadline === 'string'
+              ? requestBody.deadline
+              : parsedBody.data.deadline,
+        };
+        const afterpartyId =
+          afterpartyHistory.reduce(
+            (maxId, afterparty) => Math.max(maxId, afterparty.afterpartyId ?? 0),
+            9000,
+          ) + 1;
+        const totalCount = body.invitationRoles.reduce(
+          (count, role) => count + getMockRecipientCount(role),
+          0,
+        );
+        const created: AdminAfterpartyResponse = {
+          afterpartyId,
+          generationId,
+          generationNumber: generation.generationNumber,
+          title: body.title,
+          content: body.content,
+          startsAt: body.startsAt,
+          startsAtDisplay: formatMockDateTime(body.startsAt),
+          deadline: body.deadline,
+          deadlineDisplay: formatMockDateTime(body.deadline),
+          invitationRoles: body.invitationRoles,
+          state: 'OPEN',
+          counts: {
+            totalCount,
+            respondedCount: 0,
+            attendingCount: 0,
+            notAttendingCount: 0,
+            unansweredCount: totalCount,
+          },
+        };
+        afterpartyHistory.unshift(created);
+        return response(created, schemas.zAdminAfterpartyResponse, 201);
+      },
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/afterparties/recipient-count`,
+      ({ request, params }) => {
+        const roles = new URL(request.url).searchParams
+          .getAll('roles')
+          .filter(isMockInvitationRole);
+        const recipientCount = roles.reduce(
+          (count, role) => count + getMockRecipientCount(role),
+          0,
+        );
+        return response(
+          { generationId: Number(params.generationId), invitationRoles: roles, recipientCount },
+          schemas.zAfterpartyRecipientCountResponse,
+          200,
+        );
+      },
+    ),
+    http.get(`${normalizedBaseUrl}/api/admin/afterparties/:afterpartyId`, ({ params }) => {
+      const afterparty = afterpartyHistory.find(
+        (item) => item.afterpartyId === Number(params.afterpartyId),
+      );
+      return afterparty === undefined
+        ? HttpResponse.json(
+            { code: 'AFTERPARTY_NOT_FOUND', message: '뒤풀이를 찾을 수 없습니다.' },
+            { status: 404 },
+          )
+        : response(afterparty, schemas.zAdminAfterpartyResponse, 200);
+    }),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/afterparties/:afterpartyId/team-responses`,
+      ({ params }) => {
+        const afterpartyId = Number(params.afterpartyId);
+        const groups = fixtures.adminAfterpartyGroups[afterpartyId];
+        return groups === undefined
+          ? HttpResponse.json(
+              { code: 'AFTERPARTY_NOT_FOUND', message: '뒤풀이를 찾을 수 없습니다.' },
+              { status: 404 },
+            )
+          : response({ afterpartyId, groups }, schemas.zAfterpartyGroupsResponse, 200);
+      },
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/afterparties/:afterpartyId/recipients`,
+      ({ request, params }) => {
+        const afterpartyId = Number(params.afterpartyId);
+        const allItems = fixtures.adminAfterpartyRecipients[afterpartyId];
+        if (allItems === undefined) {
+          return HttpResponse.json(
+            { code: 'AFTERPARTY_NOT_FOUND', message: '뒤풀이를 찾을 수 없습니다.' },
+            { status: 404 },
+          );
+        }
+        const filter = new URL(request.url).searchParams.get('response');
+        const items =
+          filter === null || filter === 'ALL'
+            ? allItems
+            : allItems.filter((item) => item.response === filter);
+        return response(
+          { afterpartyId, totalCount: allItems.length, items, nextCursor: null },
+          schemas.zAfterpartyRecipientsResponse,
+          200,
+        );
       },
     ),
     http.get(`${normalizedBaseUrl}/api/admin/generations/:generationId/members`, ({ request }) => {
@@ -319,17 +580,24 @@ export function createApiMockHandlers(
           return HttpResponse.json({ code: 'MEMBERSHIP_NOT_FOUND' }, { status: 404 });
         }
 
-        member.status = parsedBody.data.status;
         const mockMember = member as MockAttendanceRow;
         const selections = parsedBody.data.mockSelections;
         if (selections === undefined) {
-          member.scoreDelta = scoreDeltaForStatus(parsedBody.data.status);
+          member.selectedStatuses = parsedBody.data.statuses;
+          member.effectiveStatus = effectiveStatusForStatuses(parsedBody.data.statuses);
+          member.status = statusForStatuses(parsedBody.data.statuses);
+          member.scoreDelta = scoreDeltaForStatuses(parsedBody.data.statuses);
         } else {
           mockMember.mockSelections = selections;
+          const selectedStatuses = selections.flatMap((selection) => {
+            const status = statusForMockSelection(selection);
+            return status === null ? [] : [status];
+          });
+          member.selectedStatuses = selectedStatuses;
+          member.effectiveStatus = effectiveStatusForStatuses(selectedStatuses);
+          member.status = statusForStatuses(selectedStatuses);
           member.scoreDelta = scoreDeltaForSelections(selections);
         }
-        member.checkedInAt = parsedBody.data.checkedInAt ?? member.checkedInAt;
-        member.earlyLeaveAt = parsedBody.data.earlyLeaveAt ?? member.earlyLeaveAt;
         return HttpResponse.json({}, { status: 200 });
       },
     ),
@@ -430,6 +698,38 @@ export function createApiMockHandlers(
       },
     }),
   ];
+}
+
+function formatMockDateTime(value: string) {
+  return new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+    timeZone: 'Asia/Seoul',
+  }).format(new Date(value));
+}
+
+function normalizeMockDateForSchema(value: unknown) {
+  if (typeof value !== 'string' || value.endsWith('Z')) {
+    return value;
+  }
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString();
+}
+
+type MockInvitationRole = 'PLAYER' | 'OB' | 'COMPLETED_MEMBER' | 'DEFERRED' | 'STAFF';
+
+function isMockInvitationRole(value: string): value is MockInvitationRole {
+  return ['PLAYER', 'OB', 'COMPLETED_MEMBER', 'DEFERRED', 'STAFF'].includes(value);
+}
+
+function getMockRecipientCount(role: MockInvitationRole) {
+  if (role === 'STAFF') {
+    return 1;
+  }
+  if (role === 'PLAYER') {
+    return 2;
+  }
+  return 0;
 }
 
 export function onUnhandledApiRequest(baseUrl: string) {

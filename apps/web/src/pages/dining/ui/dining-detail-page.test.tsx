@@ -91,7 +91,7 @@ it('목록 다음 페이지와 상태 필터를 서버에 전달한다', async (
   await userEvent.click(screen.getByRole('button', { name: '더 보기' }));
   expect(await screen.findByText('다음 회식')).toBeVisible();
   await userEvent.click(screen.getByRole('button', { name: '투표 마감' }));
-  expect(await screen.findByText('초대된 회식이 없어요.')).toBeVisible();
+  expect(await screen.findByText('초대된 뒤풀이가 없어요.')).toBeVisible();
   expect(requests.some((query) => query.includes('cursor=next'))).toBe(true);
   expect(requests.some((query) => query.includes('filter=CLOSED'))).toBe(true);
 });

@@ -7,6 +7,34 @@ export const zRegisterNotificationDeviceRequest = z.object({
   registrationToken: z.string(),
 });
 
+export const zSubmitAttendanceReportRequest = z.object({
+  types: z
+    .array(z.enum(['LATE', 'EARLY_LEAVE', 'ABSENT']))
+    .min(1)
+    .max(2),
+  reason: z.string().min(2).max(30),
+});
+
+export const zAttendanceReportResponse = z.object({
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  submittedAt: z.iso.datetime(),
+  reportId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
 export const zSettlementUpdateRequest = z.object({
   bank: z.enum([
     'HANA',
@@ -77,6 +105,7 @@ export const zRegistrationFieldError = z.object({
 
 export const zErrorResponse = z.object({
   code: z.enum([
+    'ATTENDANCE_DETAIL_NOT_FOUND',
     'INVALID_SETTLEMENT_REQUEST',
     'SETTLEMENT_NOT_FOUND',
     'SETTLEMENT_FORBIDDEN',
@@ -98,8 +127,10 @@ export const zErrorResponse = z.object({
     'ATTENDANCE_CODE_NOT_ISSUED',
     'ATTENDANCE_CODE_UPDATE_FAILED',
     'ATTENDANCE_REPORT_NOT_ELIGIBLE',
+    'ATTENDANCE_REPORT_NOT_FOUND',
     'ATTENDANCE_REPORT_SESSION_CONFLICT',
     'ATTENDANCE_REPORT_SESSION_CHANGED',
+    'ATTENDANCE_REPORT_ALREADY_EXISTS',
     'ATTENDANCE_REPORT_UNAVAILABLE',
     'ATTENDANCE_SCORE_NOT_ELIGIBLE',
     'ATTENDANCE_SCORE_INCONSISTENT',
@@ -107,6 +138,8 @@ export const zErrorResponse = z.object({
     'ATTENDANCE_UNAVAILABLE',
     'TEAM_ATTENDANCE_PENDING',
     'AUTHENTICATION_FAILED',
+    'MEMBER_APPROVAL_REQUIRED',
+    'MEMBER_APPROVAL_CHECK_UNAVAILABLE',
     'AUTHENTICATION_STATE_INVALID',
     'CURRENT_GENERATION_NOT_FOUND',
     'CURRENT_WEEK_SESSION_CONFLICT',
@@ -114,9 +147,11 @@ export const zErrorResponse = z.object({
     'GENERATION_NOT_FOUND',
     'GENERATION_QUERY_FAILED',
     'INVALID_ATTENDANCE_CODE',
+    'INVALID_ATTENDANCE_DETAIL_CURSOR',
     'INVALID_ATTENDANCE_HISTORY_CURSOR',
     'INVALID_ATTENDANCE_REPORT',
     'INVALID_ATTENDANCE_REQUEST',
+    'ATTENDANCE_CORRECTION_CLOSED',
     'INVALID_HISTORY_REQUEST',
     'INVALID_MEMBER_REQUEST',
     'MEMBER_APPROVAL_UNAVAILABLE',
@@ -146,6 +181,8 @@ export const zErrorResponse = z.object({
     'POST_IMAGE_CONFLICT',
     'POST_IMAGE_STORAGE_FAILED',
     'POST_NOT_FOUND',
+    'POST_QUERY_UNAVAILABLE',
+    'POST_QUERY_FAILED',
     'RETAINED_HISTORY_UNAVAILABLE',
     'ROSTER_CONFLICT',
     'ROSTER_PERSISTENCE_FAILED',
@@ -473,7 +510,7 @@ export const zReplaceTeamMembersRequest = z.object({
 export const zCreateSessionRequest = z.object({
   name: z.string(),
   location: z.string().nullable(),
-  date: z.iso.date(),
+  date: z.iso.date().nullish(),
   startTime: z.string(),
   endTime: z.string(),
   type: z.enum(['REGULAR', 'TEAM']),
@@ -481,6 +518,8 @@ export const zCreateSessionRequest = z.object({
   latitude: z.number().nullish(),
   longitude: z.number().nullish(),
   detailAddress: z.string().nullish(),
+  startDate: z.iso.date().nullish(),
+  endDate: z.iso.date().nullish(),
 });
 
 export const zAdminMemberUpdateRequest = z.object({
@@ -643,6 +682,9 @@ export const zUserResponse = z.object({
     }),
   name: z.string(),
   phoneNumber: z.string(),
+  reviewStatus: z
+    .union([z.literal('PENDING'), z.literal('APPROVED'), z.literal('REJECTED')])
+    .nullable(),
 });
 
 export const zAuthenticationResponse = z.object({
@@ -763,21 +805,9 @@ export const zVerifyAttendanceCodeResponse = z.object({
   checkedInAt: z.iso.datetime(),
 });
 
-export const zSubmitAttendanceReportRequest = z.object({
+export const zLegacySubmitAttendanceReportRequest = z.object({
   type: z.enum(['LATE', 'EARLY_LEAVE', 'ABSENT']),
   reason: z.string().min(2).max(30),
-});
-
-export const zAttendanceReportResponse = z.object({
-  sessionId: z.coerce
-    .bigint()
-    .min(BigInt('-9223372036854775808'), {
-      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
-    })
-    .max(BigInt('9223372036854775807'), {
-      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
-    }),
-  submittedAt: z.iso.datetime(),
 });
 
 export const zSettlementWriteRequest = z.object({
@@ -881,7 +911,17 @@ export const zSettlementPhotoUploadResponse = z.object({
 export const zCreateNotificationRequest = z.object({
   content: z.string(),
   targetRole: z.enum(['ALL_USERS', 'PLAYER', 'OB_AND_PLAYER', 'COMPLETED_MEMBER']),
-  position: z.string(),
+  position: z.enum([
+    'ALL',
+    'PM',
+    'DESIGN',
+    'ANDROID',
+    'IOS',
+    'MOBILE',
+    'WEB',
+    'SERVER',
+    'AI_NATIVE',
+  ]),
   scheduledAt: z.iso.datetime().nullish(),
 });
 
@@ -1174,7 +1214,9 @@ export const zPostAudienceRequest = z.object({
     ])
     .nullish(),
   positions: z
-    .array(z.enum(['PM', 'DESIGN', 'ANDROID', 'IOS', 'WEB', 'MOBILE', 'SERVER', 'AI_NATIVE']))
+    .array(
+      z.enum(['ALL', 'PM', 'DESIGN', 'ANDROID', 'IOS', 'WEB', 'MOBILE', 'SERVER', 'AI_NATIVE']),
+    )
     .optional(),
 });
 
@@ -1183,7 +1225,7 @@ export const zCreateAdminPostRequest = z.object({
   audience: zPostAudienceRequest,
   title: z.string(),
   contentMarkdown: z.string(),
-  imageKeys: z.array(z.string()).optional(),
+  imageKeys: z.array(z.string()).max(20).optional(),
   assignment: zAssignmentPostRequest.nullish(),
 });
 
@@ -1317,18 +1359,22 @@ export const zStaffLoginResponse = z.object({
 });
 
 export const zOverrideAttendanceRequest = z.object({
-  status: z.enum([
-    'UNDECIDED',
-    'PRESENT',
-    'LATE_ONE_HOUR',
-    'LATE_THREE_HOUR',
-    'EARLY_LEAVE',
-    'ABSENT',
-    'EXCUSED_ABSENCE',
-  ]),
+  statuses: z.array(
+    z.enum([
+      'PRESENT',
+      'ABSENT',
+      'UNEXCUSED_ABSENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'UNEXCUSED_LATE_ONE_HOUR',
+      'UNEXCUSED_LATE_THREE_HOUR',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+    ]),
+  ),
   reason: z.string().nullish(),
-  checkedInAt: z.iso.datetime().nullish(),
-  earlyLeaveAt: z.iso.datetime().nullish(),
 });
 
 export const zBadgeRequest = z.object({
@@ -1338,7 +1384,7 @@ export const zBadgeRequest = z.object({
 export const zUpdateAdminPostRequest = z.object({
   title: z.string(),
   contentMarkdown: z.string(),
-  imageKeys: z.array(z.string()).optional(),
+  imageKeys: z.array(z.string()).max(20).optional(),
 });
 
 export const zAssignmentPostResponse = z.object({
@@ -1509,7 +1555,16 @@ export const zUserNotificationListItemResponse = z.object({
       z.literal('AFTER_REGULAR_START'),
     ])
     .nullable(),
-  navigationTarget: z.union([z.literal('SESSION_SCHEDULE'), z.literal('SETTLEMENT')]).nullable(),
+  navigationTarget: z
+    .union([
+      z.literal('SESSION_SCHEDULE'),
+      z.literal('SETTLEMENT'),
+      z.literal('NOTIFICATION_LIST'),
+      z.literal('HOME'),
+      z.literal('POST_DETAIL'),
+      z.literal('AFTERPARTY_DETAIL'),
+    ])
+    .nullable(),
   settlementId: z.coerce
     .bigint()
     .min(BigInt('-9223372036854775808'), {
@@ -1606,6 +1661,7 @@ export const zUserTeamPhotoDetailResponse = z.object({
     }),
   teamName: z.string(),
   status: z.enum(['PENDING', 'APPROVED', 'REJECTED']),
+  rejectionReason: z.string().nullable(),
   imageUrl: z.string().nullable(),
   imageUrlExpiresAt: z.iso.datetime().nullable(),
   uploadedAt: z.iso.datetime(),
@@ -1634,6 +1690,7 @@ export const zCurrentWeekSessionDetailResponse = z.object({
   type: z.enum(['REGULAR', 'TEAM']),
   name: z.string(),
   date: z.iso.date(),
+  endDate: z.iso.date(),
   startTime: z.string(),
   endTime: z.string(),
   location: z.string().nullable(),
@@ -1812,6 +1869,22 @@ export const zMyAttendanceScoreResponse = z.object({
     .int()
     .gte(0)
     .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' }),
+});
+
+export const zCurrentWeekAttendanceReportResponse = z.object({
+  type: z.union([z.literal('LATE'), z.literal('EARLY_LEAVE'), z.literal('ABSENT')]).nullable(),
+  reason: z.string().nullable(),
+  reportId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .nullable(),
+  types: z.array(z.enum(['LATE', 'EARLY_LEAVE', 'ABSENT'])),
+  submittedAt: z.iso.datetime().nullable(),
 });
 
 export const zAttendanceHistoryItemResponse = z.object({
@@ -2218,7 +2291,17 @@ export const zNotificationHistoryItemResponse = z.object({
     }),
   content: z.string(),
   targetRole: z.enum(['ALL_USERS', 'PLAYER', 'OB_AND_PLAYER', 'COMPLETED_MEMBER']),
-  position: z.string(),
+  position: z.enum([
+    'ALL',
+    'PM',
+    'DESIGN',
+    'ANDROID',
+    'IOS',
+    'MOBILE',
+    'WEB',
+    'SERVER',
+    'AI_NATIVE',
+  ]),
   status: z.enum([
     'SCHEDULED',
     'IN_PROGRESS',
@@ -2405,6 +2488,8 @@ export const zAdminSessionResponse = z.object({
   name: z.string(),
   location: z.string().nullable(),
   date: z.iso.date(),
+  startDate: z.iso.date(),
+  endDate: z.iso.date(),
   startTime: z.string(),
   endTime: z.string(),
   type: z.enum(['REGULAR', 'TEAM']),
@@ -2413,6 +2498,8 @@ export const zAdminSessionResponse = z.object({
   latitude: z.number().nullable(),
   longitude: z.number().nullable(),
   detailAddress: z.string().nullable(),
+  attendancePhase: z.enum(['OPEN', 'CLOSED']),
+  attendanceClosedAt: z.iso.datetime().nullable(),
 });
 
 export const zSessionListResponse = z.object({
@@ -2439,6 +2526,7 @@ export const zTeamPhotoReportView = z.object({
   type: z.string(),
   reported: z.boolean(),
   reason: z.string().nullable(),
+  submittedAt: z.iso.datetime().nullable(),
 });
 
 export const zTeamPhotoMemberView = z.object({
@@ -2514,6 +2602,8 @@ export const zAdminAttendanceRow = z.object({
     'LATE_ONE_HOUR',
     'LATE_THREE_HOUR',
     'EARLY_LEAVE',
+    'EARLY_LEAVE_ONE_HOUR',
+    'EARLY_LEAVE_THREE_HOUR',
     'ABSENT',
     'EXCUSED_ABSENCE',
   ]),
@@ -2524,6 +2614,35 @@ export const zAdminAttendanceRow = z.object({
     .nullable(),
   badgeVerified: z.boolean(),
   badgeVerifiedAt: z.iso.datetime().nullable(),
+  selectedStatuses: z.array(
+    z.enum([
+      'PRESENT',
+      'ABSENT',
+      'UNEXCUSED_ABSENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'UNEXCUSED_LATE_ONE_HOUR',
+      'UNEXCUSED_LATE_THREE_HOUR',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+    ]),
+  ),
+  effectiveStatus: z
+    .union([
+      z.literal('UNDECIDED'),
+      z.literal('PRESENT'),
+      z.literal('LATE'),
+      z.literal('EARLY_LEAVE'),
+      z.literal('LATE_AND_EARLY_LEAVE'),
+      z.literal('ABSENT'),
+      z.literal('EXCUSED_ABSENCE'),
+    ])
+    .nullable(),
+  correctedAt: z.iso.datetime().nullable(),
+  latestReportTypes: z.array(z.string()),
+  latestReportSubmittedAt: z.iso.datetime().nullable(),
 });
 
 export const zAdminAttendanceListResponse = z.object({
@@ -2537,6 +2656,193 @@ export const zAdminAttendanceListResponse = z.object({
       error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
     })
     .nullable(),
+});
+
+export const zAdminAttendanceDetailEventResponse = z.object({
+  eventId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  type: z.enum([
+    'REPORT_SUBMITTED',
+    'APP_CHECK_IN',
+    'CODE_CHECK_IN',
+    'BADGE_DISTRIBUTED',
+    'BADGE_CANCELLED',
+    'STAFF_CORRECTION',
+    'TEAM_PHOTO_DECISION',
+  ]),
+  occurredAt: z.iso.datetime(),
+  legacy: z.boolean(),
+  reportType: z
+    .union([z.literal('LATE'), z.literal('EARLY_LEAVE'), z.literal('ABSENT')])
+    .nullable(),
+  reason: z.string().nullable(),
+  checkedInAt: z.iso.datetime().nullable(),
+  earlyLeaveAt: z.iso.datetime().nullable(),
+  previousStatus: z
+    .union([
+      z.literal('UNDECIDED'),
+      z.literal('PRESENT'),
+      z.literal('LATE_ONE_HOUR'),
+      z.literal('LATE_THREE_HOUR'),
+      z.literal('EARLY_LEAVE'),
+      z.literal('EARLY_LEAVE_ONE_HOUR'),
+      z.literal('EARLY_LEAVE_THREE_HOUR'),
+      z.literal('ABSENT'),
+      z.literal('EXCUSED_ABSENCE'),
+    ])
+    .nullable(),
+  nextStatus: z
+    .union([
+      z.literal('UNDECIDED'),
+      z.literal('PRESENT'),
+      z.literal('LATE_ONE_HOUR'),
+      z.literal('LATE_THREE_HOUR'),
+      z.literal('EARLY_LEAVE'),
+      z.literal('EARLY_LEAVE_ONE_HOUR'),
+      z.literal('EARLY_LEAVE_THREE_HOUR'),
+      z.literal('ABSENT'),
+      z.literal('EXCUSED_ABSENCE'),
+    ])
+    .nullable(),
+  badgeDistributed: z.boolean().nullable(),
+  photoId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .nullable(),
+  photoDecision: z.union([z.literal('APPROVED'), z.literal('REJECTED')]).nullable(),
+  photoSelected: z.boolean().nullable(),
+  applied: z.boolean().nullable(),
+  actorStaffId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    })
+    .nullable(),
+  previousSelectedStatuses: z.array(
+    z.enum([
+      'PRESENT',
+      'ABSENT',
+      'UNEXCUSED_ABSENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'UNEXCUSED_LATE_ONE_HOUR',
+      'UNEXCUSED_LATE_THREE_HOUR',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+    ]),
+  ),
+  nextSelectedStatuses: z.array(
+    z.enum([
+      'PRESENT',
+      'ABSENT',
+      'UNEXCUSED_ABSENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'UNEXCUSED_LATE_ONE_HOUR',
+      'UNEXCUSED_LATE_THREE_HOUR',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+    ]),
+  ),
+  automaticPhotoDecision: z.boolean(),
+});
+
+export const zAdminAttendanceDetailLatestReportResponse = z.object({
+  type: z.enum(['LATE', 'EARLY_LEAVE', 'ABSENT']),
+  reason: z.string().nullable(),
+  submittedAt: z.iso.datetime(),
+  types: z.array(z.enum(['LATE', 'EARLY_LEAVE', 'ABSENT'])),
+});
+
+export const zAdminAttendanceDetailSummaryResponse = z.object({
+  membershipId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  name: z.string(),
+  position: z
+    .union([
+      z.literal('PM'),
+      z.literal('DESIGN'),
+      z.literal('ANDROID'),
+      z.literal('IOS'),
+      z.literal('WEB'),
+      z.literal('MOBILE'),
+      z.literal('SERVER'),
+      z.literal('AI_NATIVE'),
+    ])
+    .nullable(),
+  latestReport: zAdminAttendanceDetailLatestReportResponse.nullable(),
+  rawAttendanceStatus: z
+    .union([
+      z.literal('UNDECIDED'),
+      z.literal('PRESENT'),
+      z.literal('LATE_ONE_HOUR'),
+      z.literal('LATE_THREE_HOUR'),
+      z.literal('EARLY_LEAVE'),
+      z.literal('EARLY_LEAVE_ONE_HOUR'),
+      z.literal('EARLY_LEAVE_THREE_HOUR'),
+      z.literal('ABSENT'),
+      z.literal('EXCUSED_ABSENCE'),
+    ])
+    .nullable(),
+  badgeDistributed: z.boolean(),
+  badgeDistributedAt: z.iso.datetime().nullable(),
+  selectedStatuses: z.array(
+    z.enum([
+      'PRESENT',
+      'ABSENT',
+      'UNEXCUSED_ABSENT',
+      'LATE_ONE_HOUR',
+      'LATE_THREE_HOUR',
+      'UNEXCUSED_LATE_ONE_HOUR',
+      'UNEXCUSED_LATE_THREE_HOUR',
+      'EARLY_LEAVE_ONE_HOUR',
+      'EARLY_LEAVE_THREE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+      'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+    ]),
+  ),
+  effectiveStatus: z
+    .union([
+      z.literal('UNDECIDED'),
+      z.literal('PRESENT'),
+      z.literal('LATE'),
+      z.literal('EARLY_LEAVE'),
+      z.literal('LATE_AND_EARLY_LEAVE'),
+      z.literal('ABSENT'),
+      z.literal('EXCUSED_ABSENCE'),
+    ])
+    .nullable(),
+  correctedAt: z.iso.datetime().nullable(),
+});
+
+export const zAdminAttendanceDetailResponse = z.object({
+  summary: zAdminAttendanceDetailSummaryResponse,
+  items: z.array(zAdminAttendanceDetailEventResponse),
+  nextCursor: z.string().nullable(),
 });
 
 export const zGenerationRosterListEntryResponse = z.object({
@@ -3027,6 +3333,24 @@ export const zAcknowledgePath = z.object({
  */
 export const zAcknowledgeResponse = z.void();
 
+export const zReplaceBody = zSubmitAttendanceReportRequest;
+
+export const zReplacePath = z.object({
+  reportId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+/**
+ * 수정 결과
+ */
+export const zReplaceResponse = zAttendanceReportResponse;
+
 export const zDetailPath = z.object({
   afterpartyId: z.coerce
     .bigint()
@@ -3473,7 +3797,10 @@ export const zVerifyBody = zVerifyAttendanceCodeRequest;
  */
 export const zVerifyResponse = zVerifyAttendanceCodeResponse;
 
-export const zSubmit1Body = zSubmitAttendanceReportRequest;
+export const zSubmit1Body = z.union([
+  zSubmitAttendanceReportRequest,
+  zLegacySubmitAttendanceReportRequest,
+]);
 
 /**
  * 보고 제출 성공
@@ -3859,7 +4186,7 @@ export const zList1Query = z.object({
 });
 
 /**
- * OK
+ * 공지 조회 성공
  */
 export const zList1Response = zAdminPostListResponse;
 
@@ -3948,6 +4275,42 @@ export const zLoginBody = zStaffLoginRequest;
  * 로그인 성공
  */
 export const zLoginResponse = zStaffLoginResponse;
+
+export const zGet1Path = z.object({
+  generationId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  sessionId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+  membershipId: z.coerce
+    .bigint()
+    .min(BigInt('-9223372036854775808'), {
+      error: 'Invalid value: Expected int64 to be >= -9223372036854775808',
+    })
+    .max(BigInt('9223372036854775807'), {
+      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+    }),
+});
+
+export const zGet1Query = z.object({
+  cursor: z.string().max(512).optional(),
+});
+
+/**
+ * 조회 성공
+ */
+export const zGet1Response = zAdminAttendanceDetailResponse;
 
 export const zOverrideBody = zOverrideAttendanceRequest;
 
@@ -4051,7 +4414,7 @@ export const zDetail2Path = z.object({
 });
 
 /**
- * OK
+ * 공지 조회 성공
  */
 export const zDetail2Response = zAdminPostDetailResponse;
 
@@ -4077,7 +4440,7 @@ export const zUpdate3Path = z.object({
 });
 
 /**
- * OK
+ * 공지 조회 성공
  */
 export const zUpdate3Response = zAdminPostDetailResponse;
 
@@ -4117,7 +4480,7 @@ export const zFind5Path = z.object({
 export const zFind5Response = zUserTeamMembersResponse;
 
 /**
- * 조회 성공. 토요일 세션이 없으면 session은 null
+ * 조회 성공. 오늘 세션과 미래 세션이 모두 없으면 session은 null
  */
 export const zFind6Response = zCurrentWeekSessionResponse;
 
@@ -4170,6 +4533,11 @@ export const zStartAppleAuthorizationQuery = z.object({
  * OK
  */
 export const zMineResponse = zMyAttendanceScoreResponse;
+
+/**
+ * 최신 보고 또는 미제출 null 필드 응답
+ */
+export const zCurrentWeekResponse = zCurrentWeekAttendanceReportResponse;
 
 export const zFind8Query = z.object({
   cursor: z.string().optional(),
@@ -4462,7 +4830,7 @@ export const zList6Path = z.object({
 });
 
 /**
- * OK
+ * 팀 사진 목록
  */
 export const zList6Response = zTeamPhotoListResponse;
 
@@ -4495,16 +4863,11 @@ export const zList7Query = z.object({
       error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
     })
     .optional(),
-  size: z
-    .int()
-    .min(-2147483648, { error: 'Invalid value: Expected int32 to be >= -2147483648' })
-    .max(2147483647, { error: 'Invalid value: Expected int32 to be <= 2147483647' })
-    .optional()
-    .default(20),
+  size: z.string().optional().default('20'),
 });
 
 /**
- * OK
+ * PLAYER 출석 목록. nextCursor는 추가 페이지가 있을 때 마지막 반환 membershipId이며 마지막 페이지에서는 null이다.
  */
 export const zList7Response = zAdminAttendanceListResponse;
 

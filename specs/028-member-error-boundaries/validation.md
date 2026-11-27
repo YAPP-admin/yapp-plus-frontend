@@ -51,3 +51,49 @@
 - 이번 4-B 작업 트리는 +184/-149, 합계 333줄이다. 현재 커밋 기준 `origin/main...HEAD`는 +1463/-194, 합계 1657줄이므로 4-B를 커밋하면 누적 PR은 약 1990줄이 된다. 800줄 제한을 충족하려면 PR 생성 전에 기존 커밋을 독립 검토 단위로 분리해야 한다.
 - 성공 cache 재조회 실패의 이전 DOM 교체와 복귀 중 자동 재요청 방지는 화면 수동 확인으로 재현할 수 없는 흐름이므로, 집중 회귀로 검증했다. 사용자는 그 자동 검증을 정책 근거로 승인했다.
 - 실제 320px 화면·키보드·스크린 리더·터치·WebView 수동 확인은 대기한다. 4-C는 별도 사용자 진행 승인 뒤에만 시작한다.
+
+## 4-C 구현·자동 검증 완료 — 리뷰 대기
+
+- 코드 출석·사전 출결 보고는 `BottomSheet` 셸 안에 Local 경계를 둔다. 완료된 주간 조회 오류는 공통 `ErrorState(section)`로 내부 폼을 교체하고, 수동 재시도 뒤 새 폼으로 열어 입력을 초기화한다. 제출 Mutation·위치·입력 검증 오류는 경계 밖 정책으로 유지한다.
+- 팀 사진은 선택한 사진 Provider를 경계 밖에 유지하고, 팀원 조회·선택 폼만 `ActivityScreen` 안의 Local/page 경계로 교체한다. 재시도는 기존 사진으로 새 팀원 선택 폼을 연다.
+- 알림 설정의 일반 조회 오류는 항목 전체를 `ErrorState(section)`로 교체한다. `UNSUPPORTED`·`PERMISSION_REQUIRED` 브리지 결과와 OS 권한 거부, 변경 Mutation 실패·재시도는 기존 전용 안내를 유지한다.
+- 집중 회귀: 코드 출석·출결 보고·알림 설정 3개 파일 48개, Stackflow 팀 사진 1개 파일 37개 테스트가 통과했다. 성공 cache 재조회 실패의 이전 선택 제거와 수동 재시도, 일반 제출 실패의 입력 보존, 미지원 예외를 확인했다.
+- `node --run check`와 `node --run build`가 통과했다(exit 0). 최초 check에서 웹·관리자·모바일 lint/typecheck/test와 API lint/typecheck, build에서 웹·관리자는 새로 실행했고 UI·브리지·Storybook 작업은 Turbo 캐시를 재사용했다. 기존 500kB 이상 chunk 경고는 유지된다.
+- 실제 320px 화면·키보드·스크린 리더·터치·WebView 수동 확인은 대기하며, 4-C 사용자 리뷰 후에만 5단계를 진행한다.
+
+## 5단계 구현·자동 검증 완료 — 리뷰 대기
+
+- 공지·알림·출석 목록은 첫 조회와 성공 cache 재조회의 일반 실패를 가까운 `ErrorState`로 교체한다. 다음 페이지의 일반 실패만 기존 항목을 유지하고 observer를 해제해 자동 재요청하지 않으며, 사용자의 `다시 시도`로만 복구한다.
+- `useThrowQueryError`는 다음 페이지 오류 중에서도 상위 정책이 위임 대상으로 판별한 오류를 다시 던진다. 따라서 최종 401은 목록 안의 안내로 남지 않고 `AuthErrorBoundary`·계정 가드로 전달된다.
+- 집중 회귀: query 정책·공지·알림·출석·Stackflow 계정 경계 5개 파일 52개 테스트와 웹 타입 검사가 통과했다. 공지·알림의 재조회 교체, 다음 페이지 실패 뒤 항목 유지·observer 중단·수동 복구, 출석의 동일 흐름, 다음 페이지 최종 401 뒤 Login 한 번 이동을 확인했다.
+- `node --run check`와 `node --run build`는 모두 exit 0으로 통과했다. check에서는 웹 lint·typecheck·test가 새로 실행되고 나머지 패키지 작업은 Turbo 캐시를 재사용했다. build에서는 웹 build가 새로 실행되고 admin·Storybook은 캐시를 재사용했다. 기존 500kB 이상 웹 chunk 경고는 유지된다.
+- 전체 check 중 기존 홈의 TEAM APPROVED 사진 상태 테스트가 한 번 일시적으로 실패한 로그가 있었으나, 명령은 exit 0이었고 같은 테스트 단독 재실행 및 웹 전체 테스트 재실행은 exit 0으로 통과했다. 이번 목록 오류 변경과 직접 관련 없는 기존 비결정성 가능성으로 기록한다.
+- 현재 `origin/main` 대비 작업 트리는 문서 포함 800줄 제한을 초과한다. PR 생성 전 4-C와 5단계를 독립 검토 단위로 분리해야 한다. 실제 좁은 화면·키보드·스크린 리더·터치·WebView 수동 확인은 다음 리뷰에서 대기한다.
+
+## 6-A 구현·자동 검증 완료 — 리뷰 대기
+
+- `MutationCache`는 업무 Mutation의 최종 `ApiError(401)`만 현재 로그인 세션의 `AUTH_REQUIRED`로 바꾼다. 기본 `throwOnError`도 같은 조건에서만 활성화해 보호 Activity의 `AuthErrorBoundary`까지 전달한다. 일반 400·403·네트워크·브리지 오류는 각 입력·롤백 UI가 계속 소유한다.
+- 네이티브 로그인·가입·로그아웃·탈퇴 Mutation은 `meta.authOperation`과 `throwOnError: false`로 업무 정책에서 제외했다. 기존 `AuthResult`·callback·중복 인증 수명은 변경하지 않았다.
+- 공지 읽음 저장의 최종 401은 낙관적 상태를 남기지 않고 Login으로 한 번 이동한다. GET 전용 토큰 갱신은 Mutation에서 시작하지 않는다. 출석 코드의 기존 401 로컬 복구 기대는 제거하고, 일반 검증·서버·응답 유실 실패의 입력 보존은 유지했다.
+- 집중 회귀: Provider·인증 작업·Account 경계·공지 상세·코드 출석·사전 보고·알림 설정 9개 파일 117개 테스트와 웹 타입 검사가 통과했다. 일반 읽음 롤백, 사전 보고 입력 보존, 성공 뒤 재조회 실패의 분리, 알림 브리지 실패 유지, 인증 Mutation 자체의 정책 제외를 확인했다.
+- `node --run check`는 포맷 1건을 수정한 재실행에서 exit 0으로 통과했다. 웹 lint·typecheck·test는 새로 실행했고 나머지 패키지 작업은 Turbo 캐시를 재사용했다. `node --run build`도 exit 0으로 통과했으며 웹 build만 새로 실행, admin·Storybook은 캐시 재사용했다. 기존 500kB 이상 웹 chunk 경고는 유지된다.
+- 팀 사진 제출의 presign·최종 제출·PUT·결과 불명 원인 보존(T043–T045)은 아직 변경하지 않았다. 이 6-A 리뷰 뒤 별도 단계로 진행한다.
+
+## 6-B 구현·자동 검증 완료 — 리뷰 대기
+
+- 팀 사진 제출은 presign과 최종 접수의 최종 `ApiError(401)`을 `SubmissionError`로 변환하지 않고 바깥 제출 Mutation까지 보존한다. 전역 `MutationCache`와 `AuthErrorBoundary`가 이를 소유하므로 사진 폼에는 원문 오류나 로컬 재시도 안내가 남지 않고 Login으로 한 번 이동한다. Mutation에서 GET 토큰 갱신이나 자동 재제출은 시작하지 않는다.
+- 서명 URL `PUT` 실패와 presign의 일반 실패는 재제출 가능한 `SubmissionError('failed')`로 유지한다. 최종 접수가 201이 아니거나 결과 형식이 유효하지 않으면 `SubmissionError('unknown')`으로 바꿔 기존 홈 복귀·재제출 차단을 유지한다. 성공 접수와 이후 조회 실패를 하나의 실패로 합치지 않는다.
+- 바깥 제출 Mutation은 `SubmissionError | ApiError`를 정확히 표현하되, 폼에는 `SubmissionError`만 반환한다. 따라서 인증 원문의 메시지가 화면에 노출되지 않으며, 일반 오류의 선택값·사진 초안·재제출 정책은 유지된다.
+- 집중 회귀: 사진 제출 모델·폼·화면·Stackflow 계정 경계 5개 파일 79개 테스트와 웹 타입 검사가 통과했다. presign/최종 제출401 원본 보존, PUT403 로컬 실패, 201 이외 접수 불명, 중복 제출·폼 이탈·성공 접수, 실제 presign401 뒤 Login 한 번 이동과 GET 갱신 미실행을 확인했다.
+- 사용자가 제외를 명시한 이전 계정의 늦은 오류 경합은 테스트·구현 범위에 다시 넣지 않았고 T043의 과거 작업 문구도 이를 반영했다.
+- `node --run check`는 새 테스트 파일의 포맷과 type import 두 건을 정리한 재실행에서 exit 0으로 통과했다. 웹 lint·typecheck·test는 새로 실행했고 나머지 패키지 작업은 Turbo 캐시를 재사용했다. `node --run build`도 exit 0으로 통과했으며 web·admin·Storybook build는 Turbo 캐시를 재사용했다. 기존 500kB 이상 웹 chunk 경고는 유지된다. 실제 WebView 수동 확인은 이 리뷰 단위에서 아직 실행하지 않았다.
+
+## 7단계 통합 정리·자동 검증 완료 — 최종 리뷰 대기
+
+- 공용 호환 래퍼 `QueryBoundary`·`ScreenQueryBoundary`를 제거하고, 일정·공지 상세·홈·프로필·출석·공지 목록·알림 목록 소비자를 각 화면의 `LocalErrorBoundary` 조합으로 이전했다. 404와 업무 전용 오류 화면은 유지했다.
+- 출석의 `AttendanceQueryError`는 경계 reset context를 사용하므로, 해당 화면 안에만 작은 `AttendanceFallbackBoundary` 어댑터를 남겼다. 공용 호환 계층이나 자동 복귀 reset은 다시 추가하지 않았다.
+- `query-recovery`·`account-boundary`와 영향을 받는 화면 집중 회귀 9개 파일, 105개 테스트 및 웹 typecheck가 통과했다. 성공 cache 재조회 실패 시 정상 DOM 교체, 수동 재시도만의 복구, 화면 복귀 시 자동 재요청 없음, 최종 401의 Login 단일 이동을 다시 확인했다.
+- `rg`로 공용 `QueryBoundary`·`ScreenQueryBoundary` 사용처와 파일이 남지 않은 것을 확인했다. 문서의 오류 복구·인증 전환 정책, 조사 근거, quickstart 동시 401 시나리오, 명세 상태를 현재 구현에 맞게 갱신했다.
+- `node --run check`와 `node --run build`는 모두 exit 0으로 통과했다. 마지막 check의 5개 작업은 Turbo 캐시를 재사용했고, build는 웹만 새로 실행하고 admin·Storybook은 캐시를 재사용했다. 의도적으로 오류를 던지는 경계 테스트의 stderr는 성공한 테스트 출력이다. 기존 500kB 이상 웹 chunk 경고는 유지된다.
+- 실제 브라우저 320px, 키보드·스크린 리더·터치와 네이티브 WebView 수동 확인은 이 단계에서 실행하지 않았다. 자동 테스트가 정책 회귀를 보장하지만, 실제 표시·입력 환경의 잔여 위험으로 남는다.
+- 복구가 필요하면 이 단계의 두 공용 파일 삭제와 화면별 `LocalErrorBoundary` 이전만 되돌리면 된다. API·생성 SDK·브리지 공개 계약은 변경하지 않았다. 현재 merge-base 대비 누적 변경은 +1,151/-508, 합계 1,659줄이므로 800줄 제한을 초과한다. PR 생성 전에 기존 단계 커밋을 독립 검토 단위로 분리해야 한다.

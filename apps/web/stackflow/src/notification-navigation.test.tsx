@@ -113,7 +113,8 @@ function renderStack() {
 
 it('수신만으로 이동하지 않고 탭은 알림함으로 이동한 뒤 ack한다', async () => {
   renderStack();
-  await waitFor(() => expect(native.listeners.size).toBe(1));
+  // 첫 Stack의 lazy 모듈 로딩까지 기다린 뒤 알림 구독 동작을 검증합니다.
+  await waitFor(() => expect(native.listeners.size).toBe(1), { timeout: 10000 });
 
   publish(null, 1);
   expect(window.location.pathname).toBe('/');
@@ -122,7 +123,7 @@ it('수신만으로 이동하지 않고 탭은 알림함으로 이동한 뒤 ack
   publish({ eventId: 'open-1', destination: { type: 'ALERTS' } }, 1);
   await waitFor(() => expect(native.ack).toHaveBeenCalledWith({ eventId: 'open-1' }));
   expect(window.location.pathname).toBe('/alerts');
-});
+}, 15000);
 
 it('인증 복원 전 탭을 보존하고 준비 후 공지 상세로 이동한다', async () => {
   native.phase = 'LOADING';

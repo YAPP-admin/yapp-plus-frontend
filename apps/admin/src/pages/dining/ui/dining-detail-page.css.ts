@@ -239,6 +239,23 @@ export const emptyState = style({
   textAlign: 'center',
 });
 
+export const loading = style({
+  margin: 0,
+  padding: vars.$dimension.x6,
+  color: vars.$color.fg.neutralMuted,
+  textAlign: 'center',
+});
+
+export const error = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  flexWrap: 'wrap',
+  gap: vars.$dimension.x3,
+  padding: vars.$dimension.x6,
+  color: vars.$color.fg.critical,
+});
+
 export const visuallyHidden = style({
   position: 'absolute',
   width: 1,

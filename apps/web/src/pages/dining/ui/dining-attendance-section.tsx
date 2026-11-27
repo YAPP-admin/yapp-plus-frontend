@@ -127,7 +127,7 @@ function SurveyForm({ onSubmit }: { onSubmit: (draft: DiningDraft) => void }) {
     <>
       <section className={surveySection} aria-labelledby="survey-heading">
         <Text as="h2" id="survey-heading" textStyle="t5Bold">
-          회식 참여 여부
+          뒤풀이 참여 여부
         </Text>
         <RoundChoices draft={draft} onChange={setDraft} />
         <SurveyNotice>
@@ -173,7 +173,7 @@ function AnsweredSurvey({
       <section className={surveySection} aria-labelledby="survey-heading">
         <div className={surveyHeading}>
           <Text as="h2" id="survey-heading" textStyle="t5Bold">
-            회식 참여 여부
+            뒤풀이 참여 여부
           </Text>
           {canRespond ? (
             <button className={editButton} type="button" onClick={onEdit}>

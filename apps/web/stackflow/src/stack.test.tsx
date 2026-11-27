@@ -1,8 +1,9 @@
 import { SnackbarProvider } from '@yapp-plus/ui';
+import { seedPlugin } from '@seed-design/stackflow';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { Suspense } from 'react';
+import { Suspense, type ComponentPropsWithoutRef } from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
 import { TeamAttendancePhotoDraftProvider } from '@/pages/team-attendance-upload';
@@ -14,15 +15,40 @@ import { createStackflowApp, stackflowConfig } from './stack';
 import type { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
 
 const photoBridge = vi.hoisted(() => ({ pick: vi.fn<typeof pickAttendancePhoto>() }));
+const extraInteraction = vi.hoisted(() => ({ render: vi.fn<() => void>() }));
+vi.mock(import('@seed-design/stackflow'), async (importOriginal) => {
+  const original = await importOriginal();
+  const { forwardRef } = await import('react');
+
+  return {
+    ...original,
+    seedPlugin: vi.fn<typeof original.seedPlugin>(original.seedPlugin),
+    Primitive: {
+      ...original.Primitive,
+      // seedPlugin 내부 구현은 유지하고 앱이 추가하는 공개 컴포넌트만 추적합니다.
+      GlobalInteraction: forwardRef<
+        HTMLDivElement,
+        ComponentPropsWithoutRef<typeof original.Primitive.GlobalInteraction>
+      >((props, ref) => {
+        extraInteraction.render();
+        return <original.Primitive.GlobalInteraction {...props} ref={ref} />;
+      }),
+    },
+  };
+});
 vi.mock(import('@yapp-plus/app-bridge/web'), async (importOriginal) => ({
   ...(await importOriginal()),
   pickAttendancePhoto: photoBridge.pick,
 }));
 
 const popstateListeners: EventListenerOrEventListenerObject[] = [];
+const stackflowIntervals = new Set<ReturnType<typeof globalThis.setInterval>>();
 const addWindowListener = window.addEventListener.bind(window);
+const addInterval = globalThis.setInterval.bind(globalThis);
 
 beforeEach(() => {
+  vi.mocked(seedPlugin).mockClear();
+  extraInteraction.render.mockClear();
   photoBridge.pick.mockReset();
   vi.stubEnv('VITE_API_MOCKING', 'true');
   // 각 테스트의 새 문서에서 생성한 history 구독을 수거합니다.
@@ -31,6 +57,11 @@ beforeEach(() => {
       popstateListeners.push(listener);
     }
     addWindowListener(type, listener, options);
+  });
+  vi.spyOn(globalThis, 'setInterval').mockImplementation((handler, timeout, ...args) => {
+    const interval = addInterval(handler, timeout, ...args);
+    stackflowIntervals.add(interval);
+    return interval;
   });
   window.history.replaceState({}, '', '/');
   server.use(
@@ -41,6 +72,12 @@ beforeEach(() => {
 });
 
 afterEach(async () => {
+  // Stackflow의 전환 타이머가 다음 테스트의 history를 갱신하지 않도록 정리합니다.
+  // core가 dispose API를 제공하지 않아 이 테스트에서 시작한 interval을 직접 수거합니다.
+  for (const interval of stackflowIntervals) {
+    clearInterval(interval);
+  }
+  stackflowIntervals.clear();
   if (
     'happyDOM' in window &&
     window.happyDOM instanceof Object &&
@@ -60,6 +97,7 @@ afterEach(async () => {
 
 const signedIn = {
   status: 'SIGNED_IN' as const,
+  reviewTransition: 'NONE' as const,
   session: {
     userId: 1,
     sessionId: 'test-session',
@@ -168,9 +206,10 @@ describe('Stackflow FSD 화면 연결', () => {
     act(() => navigation.getByRole('tab', { name: '게시판' }).focus());
 
     for (const [key, label, path] of [
-      ['ArrowRight', 'MY', '/my'],
+      ['ArrowRight', '커뮤니티', '/dining'],
       ['Home', '홈', '/'],
       ['End', 'MY', '/my'],
+      ['ArrowLeft', '커뮤니티', '/dining'],
       ['ArrowLeft', '게시판', '/notices'],
     ] as const) {
       await user.keyboard(`{${key}}`);
@@ -217,6 +256,16 @@ describe('Stackflow FSD 화면 연결', () => {
       );
     }
     expect(window.history.length).toBe(historyLength);
+  }, 15000);
+
+  it('iOS 탐색은 seedPlugin 외에 전역 인터랙션 컨트롤러를 추가하지 않는다', async () => {
+    vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('iPhone');
+    window.history.replaceState({}, '', '/alerts?empty=true');
+    renderStack();
+
+    expect(await waitForTopHeading('알림')).toBeTruthy();
+    expect(seedPlugin).toHaveBeenCalledTimes(1);
+    expect(extraInteraction.render).not.toHaveBeenCalled();
   }, 15000);
 
   it('web에서는 화면별 prop을 생략해도 swipe edge를 렌더링하지 않는다', async () => {
@@ -388,6 +437,7 @@ describe('Stackflow FSD 화면 연결', () => {
 
     const statusScreen = await waitForTopHeading('운영진 승인을 기다리고 있어요...');
     await user.click(statusScreen.getByRole('button', { name: '뒤로가기' }));
+    await user.click(await screen.findByRole('button', { name: '로그인으로 돌아가기' }));
     await waitFor(() => expect(window.location.pathname.replace(/\/+$/, '')).toBe('/login'));
 
     const loginScreen = await waitForTopHeading(/당신의 작은 아이디어가/);
@@ -505,7 +555,6 @@ describe('Stackflow FSD 화면 연결', () => {
       'SignupComplete',
       'SignupUnregistered',
       'DevRoutes',
-      'DiningList',
       'DiningDetail',
       'NotFound',
     ]);
@@ -542,8 +591,9 @@ it.each([
   ['앨범에서 선택하기', 'library'],
   ['직접 사진 찍기', 'camera'],
 ] as const)(
-  '%s에서 취소·재선택 후 팀원 선택·제출·완료·홈 복귀를 연결한다',
+  '반려 결과에서 %s 취소·재선택·재제출·홈 복귀를 연결한다',
   async (label, source) => {
+    localStorage.clear();
     vi.stubEnv('DEV', false);
     vi.stubEnv('VITE_API_MOCKING', 'false');
     photoBridge.pick.mockResolvedValueOnce({ status: 'CANCELLED' }).mockResolvedValueOnce({
@@ -562,14 +612,41 @@ it.each([
     const requests: string[] = [];
     const submitBody = vi.fn<(body: unknown) => void>();
     const endpoint = `${apiBaseUrl}/api/sessions/42/team-attendance-photos`;
+    const teamSession = {
+      ...currentWeekFixture.session,
+      sessionId: 42,
+      type: 'TEAM',
+      date: koreanDateString(Date.now()),
+      endDate: koreanDateString(Date.now()),
+      dayOfWeek: 'THURSDAY',
+      startTime: '00:00',
+      endTime: '23:59:59',
+    };
     server.use(
+      http.get(`${apiBaseUrl}/api/generations/current/sessions`, () =>
+        HttpResponse.json({ generationId: 28, generationNumber: 28, sessions: [teamSession] }),
+      ),
+      http.get(`${apiBaseUrl}/api/attendance-history`, () =>
+        HttpResponse.json({
+          summary: { totalSessionCount: 1, startedSessionCount: 1 },
+          nextCursor: null,
+          items: [
+            {
+              sessionId: 42,
+              sessionName: '팀 세션',
+              attendanceStatus: 'UNDECIDED',
+              staffDecisionStatus: submitted ? 'PENDING' : 'REJECTED',
+            },
+          ],
+        }),
+      ),
       http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
         HttpResponse.json({
           ...currentWeekFixture,
+          weekStartDate: teamSession.date,
+          weekEndDate: koreanDateString(Date.now() + 6 * 86_400_000),
           session: {
-            ...currentWeekFixture.session,
-            sessionId: 42,
-            type: 'TEAM',
+            ...teamSession,
             attendanceStatus: submitted ? 'PENDING_APPROVAL' : 'AVAILABLE',
           },
         }),
@@ -590,7 +667,20 @@ it.each([
                 uploader: { userId: 1, name: '김야뿌' },
                 selectedMemberCount: 2,
               }
-            : null,
+            : {
+                photoId: 200,
+                teamId: 1,
+                teamName: 'Web 팀',
+                status: 'REJECTED',
+                imageUrl: null,
+                imageUrlExpiresAt: null,
+                rejectionReason: null,
+                uploadedAt: '2026-11-26T05:00:00Z',
+                uploadedTime: '14:00',
+                submittedAt: '2026-11-26T05:00:00Z',
+                uploader: { userId: 1, name: '김야뿌' },
+                selectedMemberCount: 2,
+              },
         }),
       ),
       http.post(`${endpoint}/presign`, () => {
@@ -619,8 +709,16 @@ it.each([
     );
     const user = userEvent.setup();
     renderStack({ native: true, staleTime: Infinity });
-    const home = await waitForTopHeading('홈');
-    await user.click(await home.findByRole('button', { name: '인증 사진 올리기' }));
+    const result = await screen.findByRole(
+      'dialog',
+      { name: '팀 세션 인증이 반려됐어요' },
+      { timeout: 5000 },
+    );
+    await waitFor(() =>
+      expect(localStorage.getItem('yapp-plus:team-attendance:shown:v1:1:28')).toContain('200'),
+    );
+    result.style.transform = 'none';
+    await user.click(within(result).getByRole('button', { name: '다시 업로드하기' }));
     await waitFor(() => expect(window.location.pathname).toBe('/team-attendance/guide'));
     // happy-dom은 Drawer의 기본 transform을 계산하지 않는다.
     (await screen.findByRole('dialog')).style.transform = 'none';
@@ -636,6 +734,12 @@ it.each([
     await user.click(screen.getByRole('checkbox', { name: /강야뿌/ }));
     await user.click(screen.getByRole('button', { name: '인증 사진 제출하기' }));
     await waitFor(() => expect(requests).toEqual(['presign', 'put', 'submit']));
+    await waitFor(() =>
+      expect(document.querySelector('[data-global-transition-state]')).toHaveAttribute(
+        'data-global-transition-state',
+        'enter-done',
+      ),
+    );
     expect(await screen.findByRole('heading', { name: '인증 사진을 올렸어요!' })).toBeVisible();
     expect(requests).toEqual(['presign', 'put', 'submit']);
     expect(uploadedBytes).toBe(4);
@@ -647,11 +751,62 @@ it.each([
     const returnedHome = await waitForTopHeading('홈');
     expect(await returnedHome.findByText('운영진이 확인하고 있어요')).toBeVisible();
     expect(
+      screen.queryByRole('dialog', { name: '팀 세션 인증이 반려됐어요' }),
+    ).not.toBeInTheDocument();
+    expect(localStorage.getItem('yapp-plus:team-attendance:shown:v1:1:28')).toContain('200');
+    localStorage.clear();
+    expect(
       returnedHome.queryByRole('button', { name: '인증 사진 올리기' }),
     ).not.toBeInTheDocument();
   },
   15000,
 );
+
+it('팀원 조회 실패는 사진 선택을 유지한 채 화면 안 오류 UI로 교체하고 수동 재시도로 폼을 연다', async () => {
+  vi.stubEnv('DEV', false);
+  vi.stubEnv('VITE_API_MOCKING', 'false');
+  photoBridge.pick.mockResolvedValue({
+    status: 'SUCCESS',
+    photo: {
+      filename: 'team-attendance.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 4,
+      width: 1,
+      height: 1,
+      base64: '/9j/2Q==',
+    },
+  });
+  server.use(
+    http.get(`${apiBaseUrl}/api/sessions/current-week`, () =>
+      HttpResponse.json({
+        ...currentWeekFixture,
+        session: {
+          ...currentWeekFixture.session,
+          sessionId: 42,
+          type: 'TEAM',
+          attendanceStatus: 'AVAILABLE',
+        },
+      }),
+    ),
+    http.get(`${apiBaseUrl}/api/sessions/42/team-members`, () =>
+      HttpResponse.json({ code: 'UNAVAILABLE' }, { status: 500 }),
+    ),
+  );
+  const user = userEvent.setup();
+  renderStack({ native: true, staleTime: Infinity });
+  const home = await waitForTopHeading('홈');
+  await user.click(await home.findByRole('button', { name: '인증 사진 올리기' }));
+  (await screen.findByRole('dialog')).style.transform = 'none';
+  await user.click(await screen.findByRole('button', { name: '앨범에서 선택하기' }));
+
+  expect(await screen.findByRole('heading', { name: '팀원을 불러오지 못했어요' })).toBeVisible();
+  expect(screen.queryByRole('form', { name: '팀 인증 사진 제출' })).not.toBeInTheDocument();
+  server.use(
+    http.get(`${apiBaseUrl}/api/sessions/42/team-members`, () => HttpResponse.json(teamMembers)),
+  );
+  await user.click(screen.getByRole('button', { name: '팀원 다시 확인' }));
+  expect(await screen.findByRole('form', { name: '팀 인증 사진 제출' })).toBeVisible();
+});
 
 it('팀 안내 시트는 사진 도구를 열기 전까지 홈 위에 유지한다', async () => {
   window.history.replaceState({}, '', '/?session=team');
@@ -786,15 +941,9 @@ it('프로덕션 회원은 커뮤니티에서 뒤풀이 상세를 조회하고 �
   vi.stubEnv('VITE_API_MOCKING', 'false');
   renderStack({ native: true });
   const home = await waitForTopHeading('홈');
-  await userEvent.click(home.getByRole('link', { name: '커뮤니티' }));
-  const list = await waitForTopHeading('커뮤니티');
-  await userEvent.click(await list.findByRole('link', { name: /^D-.*세션 뒤풀이/ }));
-  const detail = await waitForTopHeading('뒤풀이');
-  expect(detail.getByRole('heading', { name: '세션 뒤풀이' })).toBeVisible();
-  expect(detail.queryByRole('button', { name: '정산 추가하기' })).toBeNull();
-  await userEvent.click(detail.getByRole('button', { name: '뒤로가기' }));
-  await waitForTopHeading('커뮤니티');
-  expect(window.location.pathname).toBe('/dining');
+  await userEvent.click(home.getByRole('tab', { name: '커뮤니티' }));
+  await waitFor(() => expect(window.location.pathname).toBe('/dining'));
+  expect(screen.getByRole('tab', { name: '커뮤니티', selected: true })).toBeVisible();
 });
 
 it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', async () => {
@@ -803,6 +952,6 @@ it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', a
   renderStack({ native: true });
   const detail = await waitForTopHeading('뒤풀이');
   await userEvent.click(detail.getByRole('button', { name: '뒤로가기' }));
-  await waitForTopHeading('커뮤니티');
-  expect(window.location.pathname).toBe('/dining');
+  await waitFor(() => expect(window.location.pathname).toBe('/dining'));
+  expect(screen.getByRole('tab', { name: '커뮤니티', selected: true })).toBeVisible();
 });

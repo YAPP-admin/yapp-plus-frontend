@@ -148,7 +148,7 @@ function SessionListData({
   const sessions = sessionData.sessions
     .map(toSessionViewModel)
     .toSorted((left, right) =>
-      `${right.date}T${right.startTime}`.localeCompare(`${left.date}T${left.startTime}`),
+      `${right.startDate}T${right.startTime}`.localeCompare(`${left.startDate}T${left.startTime}`),
     )
     .filter((session) => type === 'all' || session.type === type);
 

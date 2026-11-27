@@ -113,7 +113,8 @@ it('수정 폼에서 날짜·시간을 바꿔도 부모 폼을 유지하고 새 
                 initialValues={{
                   name: '수정 세션',
                   type: 'team',
-                  date: '2020-01-01',
+                  startDate: '2020-01-01',
+                  endDate: '2020-01-02',
                   startTime: '14:07:35',
                   endTime: '17:00:40',
                 }}
@@ -133,14 +134,14 @@ it('수정 폼에서 날짜·시간을 바꿔도 부모 폼을 유지하고 새 
   );
   const user = userEvent.setup();
   await user.click(screen.getByRole('button', { name: '수정 열기' }));
-  await user.click(screen.getByRole('button', { name: '날짜 (한국 시간), 2020-01-01' }));
+  await user.click(screen.getByRole('button', { name: '세션 시작일 (한국 시간), 2020-01-01' }));
   await user.click(screen.getByRole('button', { name: '2020년 1월 2일 목요일' }));
   await user.keyboard('{Escape}');
   expect(await screen.findByRole('dialog', { name: '세션 수정' })).toBeVisible();
   expect(close).not.toHaveBeenCalled();
   expect(screen.getByLabelText('세션명')).toHaveValue('수정 세션');
 
-  await user.click(screen.getByRole('button', { name: '날짜 (한국 시간), 2020-01-01' }));
+  await user.click(screen.getByRole('button', { name: '세션 시작일 (한국 시간), 2020-01-01' }));
   await user.click(screen.getByRole('button', { name: '2020년 1월 2일 목요일' }));
   await user.click(screen.getByRole('button', { name: '확인' }));
   await user.click(await screen.findByRole('button', { name: '시작 시간, 14:07' }));
@@ -155,7 +156,8 @@ it('수정 폼에서 날짜·시간을 바꿔도 부모 폼을 유지하고 새 
   expect(save).toHaveBeenCalledWith({
     name: '수정 세션',
     type: 'team',
-    date: '2020-01-02',
+    startDate: '2020-01-02',
+    endDate: '2020-01-02',
     startTime: '14:08:00',
     endTime: '17:00:40',
   });

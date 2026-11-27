@@ -1,5 +1,6 @@
+/** 공지 상세의 본문 배치와 첨부 이미지 가로 스크롤 스타일을 정의한다. */
 import { vars } from '@seed-design/css/vars';
-import { style } from '@vanilla-extract/css';
+import { globalStyle, style } from '@vanilla-extract/css';
 
 export const container = style({
   display: 'flex',
@@ -9,14 +10,13 @@ export const container = style({
   margin: '0 auto',
   boxSizing: 'border-box',
   background: vars.$color.bg.layerDefault,
-  minHeight: '100%',
   padding: `14px ${vars.$dimension.x5} 60px`,
 });
 
 export const headerSection = style({
   display: 'flex',
   flexDirection: 'column',
-  paddingBottom: '20px',
+  paddingBottom: '28px',
   borderBottom: `1px solid ${vars.$color.stroke.neutralMuted}`,
   marginBottom: '24px',
 });
@@ -137,61 +137,49 @@ export const contentSection = style({
   display: 'flex',
   flexDirection: 'column',
   gap: '20px',
-  marginBottom: '48px',
+  marginBottom: '8px',
 });
 
 export const attachmentSection = style({
   display: 'flex',
-  flexDirection: 'column',
-  gap: '12px',
+  minWidth: 0,
+  gap: vars.$dimension.x2,
   marginBottom: '32px',
-});
-
-export const attachmentTitle = style({
-  fontSize: vars.$fontSize.t5,
-  lineHeight: vars.$lineHeight.t5,
-  fontWeight: vars.$fontWeight.bold,
-  color: vars.$color.fg.neutral,
-  margin: 0,
-});
-
-export const attachmentList = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '8px',
-  margin: 0,
-  padding: 0,
-  listStyle: 'none',
+  overflowX: 'auto',
+  scrollSnapType: 'x mandatory',
+  ':focus-visible': {
+    outline: `2px solid ${vars.$color.fg.neutral}`,
+    outlineOffset: '2px',
+  },
+  // 마지막 이미지도 앞선 이미지와 같은 왼쪽 시작점에 맞춰 멈추게 한다.
+  '::after': {
+    content: '""',
+    flex: `0 0 calc(12% - ${vars.$dimension.x2})`,
+  },
 });
 
 export const attachmentItem = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '4px',
-  padding: '12px',
-  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
-  borderRadius: '8px',
+  margin: 0,
+  flex: '0 0 88%',
+  minWidth: 0,
+  scrollSnapAlign: 'start',
 });
 
 export const attachmentImage = style({
   width: '100%',
-  borderRadius: '6px',
-  objectFit: 'contain',
-  maxHeight: '320px',
   background: vars.$color.bg.neutralMuted,
 });
 
-export const attachmentName = style({
+// 원본 비율과 관계없이 이미지를 4:5 프레임에 꽉 채운다.
+globalStyle(`${attachmentImage} img`, { objectFit: 'cover' });
+
+export const attachmentFallback = style({
+  display: 'grid',
+  placeItems: 'center',
+  aspectRatio: '4 / 5',
+  background: vars.$color.bg.neutralMuted,
   fontSize: vars.$fontSize.t4,
   lineHeight: vars.$lineHeight.t4,
-  fontWeight: vars.$fontWeight.medium,
-  color: vars.$color.fg.neutral,
-  overflowWrap: 'anywhere',
-});
-
-export const attachmentMeta = style({
-  fontSize: vars.$fontSize.t3,
-  lineHeight: vars.$lineHeight.t3,
   color: vars.$color.fg.neutralMuted,
 });
 

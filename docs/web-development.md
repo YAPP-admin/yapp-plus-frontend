@@ -110,6 +110,20 @@ Stackflow step params이며 별도 로컬 선택 상태를 만들지 않습니�
 긴 본문만 스크롤하게 하며, 홈 인디케이터를 위한 임의의 고정 빈 여백을 새 화면에 추가하지
 않습니다.
 
+## 오류 복구와 인증 전환
+
+회원 웹의 오류 정책은 [회원 웹 오류 경계 명세](../specs/028-member-error-boundaries/spec.md)를
+단일 기준으로 삼습니다. 화면의 완료된 일반 Query 오류는 `useThrowQueryError`로 가까운
+`LocalErrorBoundary`에 전달해 해당 영역을 `ErrorState`로 교체합니다. 숨김 Activity로 복귀해도
+오류 fallback을 자동으로 reset하거나 요청하지 않으며, 사용자의 재시도나 조회 대상 변경만 복구를
+시작합니다. `QueryBoundary`와 `ScreenQueryBoundary` 같은 범용 호환 래퍼를 새로 사용하지 않습니다.
+
+기존 목록의 다음 페이지 일반 오류만 예외로 항목을 유지하고 해당 목록의 수동 재시도를 제공합니다.
+최종 `ApiError(401)`은 일반 fallback으로 표시하지 않습니다. Query의 기존 토큰 갱신·재전송 뒤에도
+남은 401과 업무 Mutation의 401은 `AuthErrorBoundary`와 AccountScreen이 보호 콘텐츠를 차단하고
+Login으로 이동하게 합니다. Mutation에서 토큰 갱신이나 자동 재제출을 시작하지 않으며, 일반 제출
+오류·입력·낙관적 롤백·결과 불명은 현재 폼 또는 화면이 소유합니다.
+
 새 `features` 슬라이스와 `shared` 하위 모듈은 실제 사용처가 생길 때 생성합니다. 빈 레이어·역할별 폴더·슬라이스 그룹을
 미리 만들지 않습니다.
 

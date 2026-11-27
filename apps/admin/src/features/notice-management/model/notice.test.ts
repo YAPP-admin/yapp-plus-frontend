@@ -18,7 +18,7 @@ const submission = {
   category: 'submission',
   submission: {
     deadline: { date: '2026-10-23', time: '09:30' },
-    method: { name: '', url: '' },
+    method: { name: '제출 폼', url: 'https://example.com/submit' },
   },
 };
 const readAt = '2026-10-22T00:00:00.000Z';
@@ -41,10 +41,13 @@ describe('공지 입력·저장 경계', () => {
   it('60자 제목을 허용한다', () => {
     expect(noticeInputSchema.safeParse({ ...general, title: '가'.repeat(60) }).success).toBe(true);
   });
-  it('한국 시간 입력을 UTC로 변환하고 빈 제출 방법은 null로 저장한다', () => {
+  it('한국 시간 입력을 UTC로 변환하고 제출 방법을 필수로 저장한다', () => {
     const result = noticeInputSchema.parse(submission);
     expect(result).toMatchObject({
-      submission: { deadlineAt: '2026-10-23T00:30:00.000Z', method: null },
+      submission: {
+        deadlineAt: '2026-10-23T00:30:00.000Z',
+        method: { name: '제출 폼', url: 'https://example.com/submit' },
+      },
     });
     expect(noticeContentSchema.parse(result)).toEqual(result);
   });
@@ -70,8 +73,11 @@ describe('공지 입력·저장 경계', () => {
     ).toMatchObject({ submission: { deadlineAt: '2024-02-28T15:00:00.000Z' } });
   });
   it.each([
+    { name: '', url: '' },
     { name: '방법', url: '' },
     { name: '', url: 'https://example.com' },
+    { name: '   ', url: 'https://example.com' },
+    { name: '방법', url: '   ' },
   ])('불완전한 제출 방법을 거절한다: %j', (method) => {
     expect(
       noticeInputSchema.safeParse({

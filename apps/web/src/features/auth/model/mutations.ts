@@ -26,6 +26,7 @@ import {
 export type NativeAuthCallbacks = Readonly<{
   onSignedIn?: () => void;
   onSignupRequired?: () => void;
+  onReviewRequired?: (result: Extract<AuthResult, { status: 'REVIEW_REQUIRED' }>) => void;
   onSignedOut?: () => void;
   onWithdrawn?: () => void;
   onFailure?: (result: AuthResult | undefined) => void;
@@ -39,6 +40,9 @@ const notifyResult = (callbacks: NativeAuthCallbacks, result: AuthResult | undef
       break;
     case 'SIGNUP_REQUIRED':
       callbacks.onSignupRequired?.();
+      break;
+    case 'REVIEW_REQUIRED':
+      callbacks.onReviewRequired?.(result);
       break;
     case 'SIGNED_OUT':
       callbacks.onSignedOut?.();
@@ -99,6 +103,9 @@ const authMutationOptions = <Input>(
 
   return mutationOptions<AuthResult | undefined, Error, AuthInput<Input>, AuthOperation>({
     mutationKey: ['native-auth', kind],
+    // 인증 작업의 결과는 ErrorBoundary가 아닌 AuthResult와 화면 callback이 소유합니다.
+    meta: { authOperation: true },
+    throwOnError: false,
     retry: false,
     onMutate: (variables) => {
       variables.operation = beginAuthOperation(client, kind);

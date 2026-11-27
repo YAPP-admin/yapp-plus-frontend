@@ -4,7 +4,7 @@ import { LinkUrlResolverProvider } from '@stackflow/link';
 import { historySyncPlugin, type Route } from '@stackflow/plugin-history-sync';
 import { basicRendererPlugin } from '@stackflow/plugin-renderer-basic';
 import { lazy, stackflow as createStackflow } from '@stackflow/react';
-import { Primitive, seedPlugin } from '@seed-design/stackflow';
+import { seedPlugin } from '@seed-design/stackflow';
 import { type ComponentProps, type ReactNode } from 'react';
 import type { TabsState } from '@/app/navigation/tab';
 import type { QueryClient } from '@tanstack/react-query';
@@ -51,7 +51,6 @@ declare module '@stackflow/config' {
     SignupComplete: EmptyActivityParams;
     SignupUnregistered: EmptyActivityParams;
     DevRoutes: EmptyActivityParams;
-    DiningList: EmptyActivityParams;
     DiningDetail: { diningId: string };
   }
 }
@@ -165,11 +164,6 @@ export const activityComponents = {
       default: DevRoutesActivity,
     })),
   ),
-  DiningList: lazy<EmptyActivityParams>(() =>
-    import('./activities/activities').then(({ DiningListActivity }) => ({
-      default: DiningListActivity,
-    })),
-  ),
   DiningDetail: lazy<{ diningId: string }>(() =>
     import('./activities/activities').then(({ DiningDetailActivity }) => ({
       default: DiningDetailActivity,
@@ -197,6 +191,7 @@ const tabRoutes = [
     }),
   },
   { path: '/my', decode: () => ({ initialTab: 'my' as const }) },
+  { path: '/dining', decode: () => ({ initialTab: 'community' as const }) },
 ];
 
 /** 초기 부모 화면을 한 번에 구성해 가드가 차단한 뒤 추가 진입이 예약되지 않게 합니다. */
@@ -360,12 +355,13 @@ export const stackflowConfig = defineConfig({
     { name: 'SignupComplete', route: '/signup/complete' },
     { name: 'SignupUnregistered', route: '/signup/unregistered' },
     { name: 'DevRoutes', route: '/dev/routes' },
-    { name: 'DiningList', route: '/dining' },
     {
       name: 'DiningDetail',
       route: {
         path: '/dining/:diningId',
-        defaultHistory: initialHistory(() => [{ activityName: 'DiningList', activityParams: {} }]),
+        defaultHistory: initialHistory(() => [
+          { activityName: 'Tabs', activityParams: { initialTab: 'community' } },
+        ]),
       },
     },
     { name: 'NotFound', route: '*' },
@@ -393,11 +389,8 @@ function reducedMotionPlugin() {
           data-platform={context.platform}
           data-reduced-motion={reducedMotion ? 'true' : 'false'}
         >
-          {reducedMotion ? (
-            stack.render()
-          ) : (
-            <Primitive.GlobalInteraction>{stack.render()}</Primitive.GlobalInteraction>
-          )}
+          {/* 제스처와 전환은 seedPlugin이 관리하므로 컨트롤러를 중복으로 감싸지 않습니다. */}
+          {stack.render()}
         </div>
       );
     },

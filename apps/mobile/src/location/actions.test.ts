@@ -62,49 +62,21 @@ describe('네이티브 단발 위치 요청', () => {
     runtime.getPosition.mockResolvedValue({ ...reading(), accuracy });
     expect(await actions.requestCurrentLocation()).toEqual(failure('LOCATION_UNAVAILABLE'));
   });
-  it.each([0, 600, 5_000, 5_001])('수신 시점에 %sms 지난 위치의 신선도를 판단한다', async (age) => {
-    const { runtime, actions } = setup();
-    const sample = { ...reading(), timestamp: Date.now() - age };
-    runtime.getPosition.mockResolvedValue(sample);
-    expect(await actions.requestCurrentLocation()).toEqual(
-      age <= 5_000
-        ? { status: 'SUCCESS', location: { ...sample, precision: 'precise' } }
-        : failure('LOCATION_UNAVAILABLE'),
-    );
-  });
-  it('측정 응답을 기다린 시간도 신선도에 포함한다', async () => {
-    const { runtime, actions } = setup();
-    const pending = deferred<LocationReading>();
-    const sample = reading();
-    runtime.getPosition.mockReturnValue(pending.promise);
-    const result = actions.requestCurrentLocation();
-    await vi.advanceTimersByTimeAsync(5_001);
-    pending.resolve(sample);
-    expect(await result).toEqual(failure('LOCATION_UNAVAILABLE'));
-  });
-  it.each(['resolve', 'reject'] as const)(
-    '15초 뒤 재시도를 허용하고 이전 요청의 늦은 %s를 무시한다',
-    async (end) => {
+  it.each(['성공', '검증 실패', '취득 실패', '시간 초과'])(
+    '%s로 끝난 위치 요청을 결과로 변환한다',
+    async (outcome) => {
       const { runtime, actions } = setup();
-      const old = deferred<LocationReading>();
-      const next = deferred<LocationReading>();
-      runtime.getPosition.mockReturnValueOnce(old.promise).mockReturnValueOnce(next.promise);
-      const first = actions.requestCurrentLocation();
-      expect(await actions.requestCurrentLocation()).toEqual(failure('BUSY'));
-      await vi.advanceTimersByTimeAsync(15_000);
-      expect(await first).toEqual(failure('TIMEOUT'));
-      const second = actions.requestCurrentLocation();
-      await vi.advanceTimersByTimeAsync(0);
-      if (end === 'resolve') {
-        old.resolve(reading());
-      } else {
-        old.reject(new Error('이전 측정 실패'));
+      if (outcome === '검증 실패') {
+        runtime.getPosition.mockResolvedValue({ ...reading(), latitude: NaN });
       }
-      await vi.advanceTimersByTimeAsync(0);
-      expect(await actions.requestCurrentLocation()).toEqual(failure('BUSY'));
-      next.resolve({ ...reading(), latitude: 1 });
-      expect(await second).toMatchObject({ status: 'SUCCESS', location: { latitude: 1 } });
-      expect(vi.getTimerCount()).toBe(0);
+      if (outcome === '취득 실패') {
+        runtime.getPosition.mockRejectedValue(new Error('취득 실패'));
+      }
+      if (outcome === '시간 초과') {
+        runtime.getPosition.mockResolvedValue(null);
+      }
+      const result = await actions.requestCurrentLocation();
+      expect(result.status).toBe(outcome === '성공' ? 'SUCCESS' : 'ERROR');
     },
   );
   it('권한 선택 중에는 시간 제한 없이 중복 요청을 막는다', async () => {

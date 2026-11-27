@@ -12,8 +12,8 @@
 
 ## 경계와 인증
 
-- 근거: shared QueryBoundary·ScreenQueryBoundary에 인증 판별이 없고 홈 사진 상태는 일반 ErrorBoundary로 모든 오류를 삼킨다.
-- 결정: Local/Auth/App 세 경계만 사용한다. 판별 Context는 app에서 주입해 FSD 방향을 유지한다.
+- 근거: 이전 shared QueryBoundary·ScreenQueryBoundary에는 인증 판별이 없었고, 화면마다 fallback 수명이 달라 재사용 경계가 정책을 숨겼다.
+- 결정: 호환 래퍼를 제거하고 Local/Auth/App 세 경계만 사용한다. 각 화면은 `LocalErrorBoundary`를 직접 조합하며, 판별 Context는 app에서 주입해 FSD 방향을 유지한다.
 - 근거: native-auth-client는 GET 401을 한 번 갱신·재전송하지만 결과가 SIGNED_IN/SIGNED_OUT일 때만 세션 cache에 반영한다.
   AccountScreen은 세션 phase를 보고 보호 화면을 차단하며 LoginActivity는 SIGNED_IN이면 Tabs로 이동한다.
 - 결정: 업무 요청의 최종 인증 실패는 재인증 필요로 반영하고 기본 Login으로 이동한다. 로그인 이동만 추가하면 왕복할 수 있다.

@@ -12,6 +12,6 @@ export const noticeSearchSchema = z.object({
 export const noticeCategoryLabels = {
   all: '전체',
   session: '세션',
-  submission: '제출',
+  submission: '과제',
   operation: '기타',
 } satisfies Record<NoticeCategory, string>;

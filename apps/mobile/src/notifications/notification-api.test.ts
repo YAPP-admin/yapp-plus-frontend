@@ -91,6 +91,7 @@ it('204 응답만 기기 등록 성공으로 처리한다', async () => {
     getSessionSnapshot: () => input,
     refreshSession: vi.fn<AuthRequestRuntime['refreshSession']>().mockResolvedValue({
       status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
       session: {
         ...input,
         expiresAt: Date.now() + 60_000,
@@ -114,6 +115,7 @@ it('401은 최신 access token으로 한 번만 재시도한다', async () => {
   vi.mocked(remove).mockResolvedValueOnce(sdkResponse(401)).mockResolvedValueOnce(sdkResponse(204));
   const refreshSession = vi.fn<AuthRequestRuntime['refreshSession']>().mockResolvedValue({
     status: 'SIGNED_IN',
+    reviewTransition: 'NONE',
     session: { ...input, expiresAt: Date.now() + 60_000, accessToken: 'access-2', tokenVersion: 2 },
   });
   const api = createNotificationApi({ refreshSession, getSessionSnapshot: () => input });
@@ -132,6 +134,7 @@ it('409와 재시도 뒤 401을 성공으로 숨기지 않는다', async () => {
     getSessionSnapshot: () => input,
     refreshSession: vi.fn<AuthRequestRuntime['refreshSession']>().mockResolvedValue({
       status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
       session: {
         ...input,
         expiresAt: Date.now() + 60_000,
@@ -157,6 +160,7 @@ it.each([{ userId: 2 }, { sessionId: 'other' }, { tokenVersion: 0 }])(
       getSessionSnapshot: () => input,
       refreshSession: vi.fn<AuthRequestRuntime['refreshSession']>().mockResolvedValue({
         status: 'SIGNED_IN',
+        reviewTransition: 'NONE',
         session: { ...input, expiresAt: Date.now() + 60_000, ...changed },
       }),
     });

@@ -25,8 +25,9 @@ import * as styles from './session-form.css';
 
 const SESSION_FIELDS = [
   { name: 'name', label: '세션명', type: 'text' },
-  { name: 'date', label: '날짜 (한국 시간)', type: 'date' },
+  { name: 'startDate', label: '세션 시작일 (한국 시간)', type: 'date' },
   { name: 'startTime', label: '시작 시간', type: 'time' },
+  { name: 'endDate', label: '세션 종료일 (한국 시간)', type: 'date' },
   { name: 'endTime', label: '종료 시간', type: 'time' },
 ] as const;
 

@@ -31,6 +31,7 @@ import {
   create3,
   create4,
   create5,
+  currentWeek,
   decide,
   delete_,
   delete1,
@@ -58,6 +59,7 @@ import {
   findDetail,
   findPending,
   get,
+  get1,
   groups,
   history_,
   list,
@@ -93,6 +95,7 @@ import {
   reject,
   remove,
   renew,
+  replace,
   replaceMembers,
   respond,
   respond1,
@@ -173,6 +176,9 @@ import type {
   CreateData,
   CreateError,
   CreateResponse,
+  CurrentWeekData,
+  CurrentWeekError,
+  CurrentWeekResponse,
   DecideData,
   DecideError,
   DecideResponse,
@@ -251,6 +257,9 @@ import type {
   FindPendingError,
   FindPendingResponse,
   FindResponse,
+  Get1Data,
+  Get1Error,
+  Get1Response,
   GetData,
   GetError,
   GetResponse,
@@ -354,9 +363,12 @@ import type {
   RenewData,
   RenewError,
   RenewResponse,
+  ReplaceData,
+  ReplaceError,
   ReplaceMembersData,
   ReplaceMembersError,
   ReplaceMembersResponse,
+  ReplaceResponse,
   Respond1Data,
   Respond1Error,
   Respond1Response,
@@ -447,7 +459,7 @@ export const removeMutationKey = (options?: Partial<Options<RemoveData>>) =>
 /**
  * 현재 세션 기기 등록 해제
  *
- * 없는 기기 또는 타인 소유 FID도 204로 응답한다.
+ * APPROVED 또는 PENDING 회원의 현재 유효 세션만 허용하고 REJECTED·Member 없음은 403 MEMBER_APPROVAL_REQUIRED다. 없는 기기 또는 타인 소유 FID도 204로 응답한다. APPROVED/PENDING만 현재 세션의 기기 관리를 허용한다. REJECTED/Member 없음은 MEMBER_APPROVAL_REQUIRED이며 다른 앱 업무의 승인 조건은 유지한다.
  */
 export const removeMutation = (
   options?: Partial<Options<RemoveData>>,
@@ -472,7 +484,7 @@ export const registerMutationKey = (options?: Partial<Options<RegisterData>>) =>
 /**
  * 현재 세션 기기 등록·갱신
  *
- * installationId는 FID이며 전송 대상은 registrationToken이다. 토큰 원문은 응답하지 않는다.
+ * installationId는 FID이며 전송 대상은 registrationToken이다. 토큰 원문은 응답하지 않는다. APPROVED 또는 PENDING 회원의 현재 유효 세션만 허용하고 REJECTED·Member 없음은 403 MEMBER_APPROVAL_REQUIRED다. 이 예외는 기기 PUT·DELETE에만 적용된다. APPROVED/PENDING만 현재 세션의 기기 관리를 허용한다. REJECTED/Member 없음은 MEMBER_APPROVAL_REQUIRED이며 다른 앱 업무의 승인 조건은 유지한다.
  */
 export const registerMutation = (
   options?: Partial<Options<RegisterData>>,
@@ -520,6 +532,31 @@ export const acknowledgeMutation = (
       return data;
     },
     mutationKey: acknowledgeMutationKey(options),
+  };
+  return mutationOptions;
+};
+
+export const replaceMutationKey = (options?: Partial<Options<ReplaceData>>) =>
+  createMutationKey('replace', options);
+
+/**
+ * 본인 사전 출결 보고 전체 수정
+ *
+ * 보고 ID에 연결된 원래 세션에서 본인 PLAYER의 현재 보고를 교체한다. 세션 시작 전이고 출석 미마감이어야 한다. 지각·조퇴만 복수 선택할 수 있고 사유 하나를 공유한다. 실제 변경 시 최종 보고 시각을 갱신하며, 같은 내용은 기존 시각을 유지한다. 감점은 현재 보고의 최종 시각으로 판정하며 결석의 48시간 기준을 유지한다.
+ */
+export const replaceMutation = (
+  options?: Partial<Options<ReplaceData>>,
+): UseMutationOptions<ReplaceResponse, ReplaceError, Options<ReplaceData>> => {
+  const mutationOptions: UseMutationOptions<ReplaceResponse, ReplaceError, Options<ReplaceData>> = {
+    mutationFn: async (fnOptions) => {
+      const { data } = await replace({
+        ...options,
+        ...fnOptions,
+        throwOnError: true,
+      });
+      return data;
+    },
+    mutationKey: replaceMutationKey(options),
   };
   return mutationOptions;
 };
@@ -761,7 +798,7 @@ export const delete1MutationKey = (options?: Partial<Options<Delete1Data>>) =>
 /**
  * 기수 세션 삭제
  *
- * 출석이 시작되지 않은 세션 한 건을 soft delete한다.
+ * 출석 코드·출석 레코드·현행 사전보고가 없는 세션 한 건을 soft delete한다. 현행 사전보고만 있어도 SESSION_DELETE_CONFLICT다.
  */
 export const delete1Mutation = (
   options?: Partial<Options<Delete1Data>>,
@@ -786,7 +823,7 @@ export const update2MutationKey = (options?: Partial<Options<Update2Data>>) =>
 /**
  * 기수 세션 수정
  *
- * 생성과 동일한 본문으로 세션 정보를 전체 덮어쓴다. 연결된 출결 자료에 영향을 주는 시각·유형 변경은 제한한다.
+ * 생성과 동일한 본문으로 세션 정보를 전체 덮어쓴다. 현행 사전보고가 있으면 시각·유형 변경을 제한하며 이름·장소 변경은 허용한다. 연결된 다른 출결 자료의 보호 정책도 유지한다.
  */
 export const update2Mutation = (
   options?: Partial<Options<Update2Data>>,
@@ -915,7 +952,7 @@ export const find1QueryKey = (options: Options<Find1Data>) => createQueryKey('fi
 /**
  * 본인 팀의 최신 출석 사진과 제출 정보 조회
  *
- * 해당 세션 기수의 현재 PLAYER이며 제출 당시 팀원 명단에 포함된 사용자만 조회한다. 미선택자도 허용하고 팀 이동 후에도 스냅샷 권한을 유지한다. 팀별 최신 사진 선정 후 권한을 검사하며 REPLACED는 제외한다. PENDING·APPROVED·REJECTED 모두 조회 가능하다. 업로드 URL 예약/S3 PUT만 완료한 미제출은 photo:null. URL은 최대 5분이며 업로드 6개월 또는 객체 삭제 후에는 URL만 null이다. 응답은 Cache-Control: no-store.
+ * 해당 세션 기수의 현재 PLAYER이며 제출 당시 팀원 명단에 포함된 사용자만 조회한다. 미선택자도 허용하고 팀 이동 후에도 스냅샷 권한을 유지한다. 팀별 최신 사진 선정 후 권한을 검사하며 REPLACED는 제외한다. PENDING·APPROVED·REJECTED 모두 조회 가능하다. rejectionReason은 REJECTED의 저장된 사유만 제공하고 나머지 상태와 사유 없는 기존 거절 사진에는 null이다. 업로드 URL 예약/S3 PUT만 완료한 미제출은 photo:null. URL은 최대 5분이며 업로드 6개월 또는 객체 삭제 후에는 URL만 null이다. 응답은 Cache-Control: no-store.
  */
 export const find1Options = (options: Options<Find1Data>) =>
   queryOptions<Find1Response, Find1Error, Find1Response, ReturnType<typeof find1QueryKey>>({
@@ -936,6 +973,8 @@ export const submitMutationKey = (options?: Partial<Options<SubmitData>>) =>
 
 /**
  * 팀 출석 사진 최종 제출
+ *
+ * TEAM 세션 시작 정각부터 종료 직전까지 가능하다. 서버는 제출 트랜잭션의 필수 잠금 이후 DB 시각으로 시간창을 다시 검사하며, 종료 정각 이후나 출석 마감 후에는 409 TEAM_PHOTO_UNAVAILABLE이다.
  */
 export const submitMutation = (
   options?: Partial<Options<SubmitData>>,
@@ -959,6 +998,8 @@ export const presignMutationKey = (options?: Partial<Options<PresignData>>) =>
 
 /**
  * 팀 출석 사진 업로드 URL 발급
+ *
+ * TEAM 세션 시작 정각부터 종료 직전까지 가능하다. 출석 마감이나 시간창 밖이면 409 TEAM_PHOTO_UNAVAILABLE이다. URL 발급은 출석 인증이 아니며 최종 제출 때 다시 검사한다.
  */
 export const presignMutation = (
   options?: Partial<Options<PresignData>>,
@@ -1216,9 +1257,9 @@ export const submit1MutationKey = (options?: Partial<Options<Submit1Data>>) =>
   createMutationKey('submit1', options);
 
 /**
- * 이번 주 세션 사전 출결 보고
+ * 홈 선택 세션 사전 출결 보고
  *
- * 지각·조퇴·결석 보고는 서버 DB 시각이 세션 시작 시각보다 이전이고 출석 미마감일 때만 접수한다. 시작 정각부터 또는 조기 마감 후에는 409 ATTENDANCE_REPORT_UNAVAILABLE이다. 토요일 종료 시각까지는 당일 세션을 대상으로 하므로 시작 이후 요청을 다음 주로 넘기지 않는다. 종료 후에만 다음 토요일로 연결한다. 결석 보고 접수 기한과 감점 인정은 별개이며, 일반 결석 감점은 시작 48시간 전까지 제출한 보고만 인정한다. reason은 필수 JSON 문자열이며 공백만 불가, 2~30 Unicode 코드포인트의 원문을 보존한다.
+ * 대상은 GET /api/sessions/current-week가 같은 시각에 보여주는 현재 기수의 세션이다. 오늘 진행 중·예정·종료 세션을 우선하며 오늘 세션이 없으면 가장 가까운 미래 세션을 선택한다. 지각·조퇴·결석 보고는 서버 DB 시각이 세션 시작 시각보다 이전이고 출석 미마감일 때만 접수한다. 시작 정각부터 또는 조기 마감 후에는 409 ATTENDANCE_REPORT_UNAVAILABLE이다. 홈이 오늘 종료한 세션을 보여주면 그 세션을 대상으로 판정하고 다음 세션으로 건너뛰지 않는다. 결석 보고 접수 기한과 감점 인정은 별개이며, 일반 결석 감점은 시작 48시간 전까지 제출한 보고만 인정한다. types 배열은 지각과 조퇴의 복수 선택을 지원하며 결석은 단독이다. 기존 단건 type과 types를 함께 보낼 수 없다. reason은 공통 사유이며 공백만 불가, 2~30 Unicode 코드포인트의 원문을 보존한다. 같은 세션에 본인의 등록이 이미 있으면 409 ATTENDANCE_REPORT_ALREADY_EXISTS이다.
  */
 export const submit1Mutation = (
   options?: Partial<Options<Submit1Data>>,
@@ -1395,7 +1436,7 @@ export const historyQueryKey = (options?: Options<HistoryData>) =>
 /**
  * 알림 발송 이력 조회
  *
- * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다.
+ * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다. position은 필수 문자열 enum이며 전체 직군은 ALL, 개별 직군은 기존 8개 값을 반환한다.
  */
 export const historyOptions = (options?: Options<HistoryData>) =>
   queryOptions<HistoryResponse, HistoryError, HistoryResponse, ReturnType<typeof historyQueryKey>>({
@@ -1418,7 +1459,7 @@ export const historyInfiniteQueryKey = (
 /**
  * 알림 발송 이력 조회
  *
- * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다.
+ * 20건 고정 커서로 현재 원본 작업 상태를 조회한다. referenceAt은 처리 결과 기록 시각이며 FCM 호출·전달 시각이 아니다. 상태 전이 중 페이지 간 중복·일시적 누락이 가능하다. position은 필수 문자열 enum이며 전체 직군은 ALL, 개별 직군은 기존 8개 값을 반환한다.
  */
 export const historyInfiniteOptions = (options?: Options<HistoryData>) => {
   const opts = infiniteQueryOptions<
@@ -1461,7 +1502,7 @@ export const create1MutationKey = (options?: Partial<Options<Create1Data>>) =>
 /**
  * 알림 즉시·예약 발송 접수
  *
- * Idempotency-Key가 필수다. 발송 기능이 비활성화된 환경에서는 503을 반환한다.
+ * Idempotency-Key가 필수다. 발송 기능이 비활성화된 환경에서는 503을 반환한다. position은 모든 targetRole에서 ALL 또는 개별 직군 8개를 받는 필수 non-null 문자열 enum이다. 숫자 ordinal 및 문자열 외 타입은 허용하지 않는다.
  */
 export const create1Mutation = (
   options?: Partial<Options<Create1Data>>,
@@ -1625,7 +1666,7 @@ export const create3MutationKey = (options?: Partial<Options<Create3Data>>) =>
 /**
  * 기수 세션 등록
  *
- * 한 기수에 세션 한 건을 등록한다.
+ * KST startDate와 endDate를 함께 받는다. 기존 date만 보내면 같은 날짜로 처리한다. 종료 일시는 시작 일시보다 늦어야 한다.
  */
 export const create3Mutation = (
   options?: Partial<Options<Create3Data>>,
@@ -1649,6 +1690,8 @@ export const decideMutationKey = (options?: Partial<Options<DecideData>>) =>
 
 /**
  * 팀 출석 사진 승인 또는 거절
+ *
+ * 승인된 사진의 선택 회원은 사진 제출 시각을 유지하며 지각 없이 정상 출석(0점)으로 처리한다. 운영진의 별도 출결 정정은 우선한다.
  */
 export const decideMutation = (
   options?: Partial<Options<DecideData>>,
@@ -1670,6 +1713,11 @@ export const decideMutation = (
 export const closeMutationKey = (options?: Partial<Options<CloseData>>) =>
   createMutationKey('close', options);
 
+/**
+ * 세션 출석 마감
+ *
+ * 판단 대기 TEAM 사진을 자동 승인하며 선택된 참여자는 정상 출석으로 확정한다. 거부된 사진은 바꾸지 않고 운영진 수동 정정이 우선한다.
+ */
 export const closeMutation = (
   options?: Partial<Options<CloseData>>,
 ): UseMutationOptions<unknown, CloseError, Options<CloseData>> => {
@@ -2035,9 +2083,78 @@ export const loginMutation = (
   return mutationOptions;
 };
 
+export const get1QueryKey = (options: Options<Get1Data>) => createQueryKey('get1', options);
+
+/**
+ * 세션별 회원 출결 상세·사건 이력 조회
+ *
+ * 동일 기수 소속의 현재 원출결·최신 보고와 발생 사건 20건을 조회한다. 탈퇴자는 일반 상세에서 제외한다.
+ */
+export const get1Options = (options: Options<Get1Data>) =>
+  queryOptions<Get1Response, Get1Error, Get1Response, ReturnType<typeof get1QueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await get1({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: get1QueryKey(options),
+  });
+
+export const get1InfiniteQueryKey = (options: Options<Get1Data>): QueryKey<Options<Get1Data>> =>
+  createQueryKey('get1', options, true);
+
+/**
+ * 세션별 회원 출결 상세·사건 이력 조회
+ *
+ * 동일 기수 소속의 현재 원출결·최신 보고와 발생 사건 20건을 조회한다. 탈퇴자는 일반 상세에서 제외한다.
+ */
+export const get1InfiniteOptions = (options: Options<Get1Data>) => {
+  const opts = infiniteQueryOptions<
+    Get1Response,
+    Get1Error,
+    InfiniteData<Get1Response>,
+    QueryKey<Options<Get1Data>>,
+    string | Pick<QueryKey<Options<Get1Data>>[0], 'body' | 'headers' | 'path' | 'query'>
+  >(
+    // @ts-ignore
+    {
+      queryFn: async ({ pageParam, queryKey, signal }) => {
+        // @ts-ignore
+        const page: Pick<QueryKey<Options<Get1Data>>[0], 'body' | 'headers' | 'path' | 'query'> =
+          typeof pageParam === 'object'
+            ? pageParam
+            : {
+                query: {
+                  cursor: pageParam,
+                },
+              };
+        const params = createInfiniteParams(queryKey, page);
+        const { data } = await get1({
+          ...options,
+          ...params,
+          signal,
+          throwOnError: true,
+        });
+        return data;
+      },
+      queryKey: get1InfiniteQueryKey(options),
+    },
+  );
+  return opts as Omit<typeof opts, 'initialData'>;
+};
+
 export const overrideMutationKey = (options?: Partial<Options<OverrideData>>) =>
   createMutationKey('override', options);
 
+/**
+ * 회원 출결 상태 정정
+ *
+ * 선택 상태를 전체 교체한다. 지각과 조퇴는 각각 한 종류까지 함께 선택할 수 있다. 사전 보고·출석 시각·정정 시각과 무관하게 선택별 지정 점수를 적용한다. 빈 배열은 자동 판정으로 복원한다. 마감 이후에는 모든 상태 정정을 거절한다.
+ */
 export const overrideMutation = (
   options?: Partial<Options<OverrideData>>,
 ): UseMutationOptions<unknown, OverrideError, Options<OverrideData>> => {
@@ -2202,7 +2319,7 @@ export const find4QueryKey = (options?: Options<Find4Data>) => createQueryKey('f
 /**
  * 본인 알림 목록 조회
  *
- * 일반 알림·새 공지 발행·세션 자동 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. SESSION_REMINDER는 sessionId와 reminderKind를 포함하며 navigationTarget=SESSION_SCHEDULE 일정 화면으로 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다. SETTLEMENT는 settlementId/afterpartyId와 navigationTarget=SETTLEMENT를 제공한다. 정산자 탈퇴 시 복사된 이름 문구를 비식별화하고 상세는404다.
+ * 일반 알림·새 공지 발행·세션 자동 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. SESSION_REMINDER는 sessionId와 reminderKind를 포함한다. 신규 전날 안내는 SESSION_SCHEDULE, 신규 출석 요청은 HOME이며 과거 스냅샷 없는 기록은 SESSION_SCHEDULE이다. 신규 GENERAL은 NOTIFICATION_LIST, 신규 POST는 POST_DETAIL이다. 기존 content는 유지한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다. SETTLEMENT는 settlementId/afterpartyId와 navigationTarget=SETTLEMENT를 제공한다. 정산자 탈퇴 시 복사된 이름 문구를 비식별화하고 상세는404다.
  */
 export const find4Options = (options?: Options<Find4Data>) =>
   queryOptions<Find4Response, Find4Error, Find4Response, ReturnType<typeof find4QueryKey>>({
@@ -2224,7 +2341,7 @@ export const find4InfiniteQueryKey = (options?: Options<Find4Data>): QueryKey<Op
 /**
  * 본인 알림 목록 조회
  *
- * 일반 알림·새 공지 발행·세션 자동 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. SESSION_REMINDER는 sessionId와 reminderKind를 포함하며 navigationTarget=SESSION_SCHEDULE 일정 화면으로 이동한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다. SETTLEMENT는 settlementId/afterpartyId와 navigationTarget=SETTLEMENT를 제공한다. 정산자 탈퇴 시 복사된 이름 문구를 비식별화하고 상세는404다.
+ * 일반 알림·새 공지 발행·세션 자동 알림의 본인 수신 기록을 생성 시각·ID 역순으로 20건 조회한다. 날짜는 Asia/Seoul 기준이다. POST는 postId로 기존 공지 상세에 이동한다. SESSION_REMINDER는 sessionId와 reminderKind를 포함한다. 신규 전날 안내는 SESSION_SCHEDULE, 신규 출석 요청은 HOME이며 과거 스냅샷 없는 기록은 SESSION_SCHEDULE이다. 신규 GENERAL은 NOTIFICATION_LIST, 신규 POST는 POST_DETAIL이다. 기존 content는 유지한다. 삭제한 공지 알림은 목록에 남고 상세는 404다. 기기·푸시 결과와 무관하게 표시한다. SETTLEMENT는 settlementId/afterpartyId와 navigationTarget=SETTLEMENT를 제공한다. 정산자 탈퇴 시 복사된 이름 문구를 비식별화하고 상세는404다.
  */
 export const find4InfiniteOptions = (options?: Options<Find4Data>) => {
   const opts = infiniteQueryOptions<
@@ -2287,7 +2404,7 @@ export const find6QueryKey = (options?: Options<Find6Data>) => createQueryKey('f
 /**
  * 이번 주 세션 조회
  *
- * 현재 활동 중인 기수의 돌아오는 토요일 세션과 로그인 사용자의 출석 UI 상태를 조회한다. 현재 기수 PLAYER가 아니면 NOT_ELIGIBLE, 본인의 현재 체크인 기록이 있으면 CHECKED_IN을 우선 반환하며 세션 종료 후에도 유지한다. TEAM 최종 제출 사진에 본인이 참석자로 선택되어 PENDING 심사 중이면 PENDING_APPROVAL을 반환하며 종료 후에도 유지한다. REGULAR에는 적용하지 않는다. 개인 STAFF 정정과 CHECKED_IN이 확인 중보다 우선한다. 사진 제출만으로 체크인이 완료되지는 않으며 운영진 승인 등으로 체크인 기록이 생성되어야 한다.
+ * 현재 활동 기수의 비삭제 REGULAR·TEAM을 요일과 무관하게 조회한다. 진행 중(startsAt<=now<endsAt)은 시작시각·ID 역순, 오늘 예정은 시작시각·ID 오름차순, 종료는 종료시각·시작시각·ID 역순으로 우선 선택한다. 오늘 세션이 없으면 가장 가까운 미래 세션을 시작시각·ID 오름차순으로 선택하며 주차 제한은 없다. 오늘은 KST 자정 이상 다음 날 자정 미만이다. 전날 시작한 세션도 아직 진행 중이면 우선 후보에 포함하며 endDate는 KST 종료 날짜다. weekStartDate/weekEndDate는 현재 KST 일요일~토요일이며 선택 세션은 이 범위 밖일 수 있다. 현재 기수 PLAYER가 아니면 NOT_ELIGIBLE이다. 운영진이 출석·지각·조퇴로 확정하면 실제 시각 없이도 CHECKED_IN이며, 결석·공결로 확정하면 보존된 실제 시각과 무관하게 NOT_OPEN으로 추가 인증을 막는다. 그 외에는 본인의 현재 체크인 기록이 있으면 CHECKED_IN을 우선 반환하며 세션 종료 후에도 유지한다. TEAM 최종 제출 사진에 본인이 참석자로 선택되어 PENDING 심사 중이면 PENDING_APPROVAL을 반환하며 종료 후에도 유지한다. REGULAR에는 적용하지 않는다. 개인 STAFF 정정과 CHECKED_IN이 확인 중보다 우선한다. 미인증·미마감 상태에서 REGULAR는 시작 20분 전부터, TEAM은 시작 정각부터 종료 직전까지 AVAILABLE이다. 그 외 미인증 상태는 NOT_OPEN이다. 사진 제출만으로 체크인이 완료되지는 않으며 운영진 승인 등으로 체크인 기록이 생성되어야 한다.
  */
 export const find6Options = (options?: Options<Find6Data>) =>
   queryOptions<Find6Response, Find6Error, Find6Response, ReturnType<typeof find6QueryKey>>({
@@ -2568,6 +2685,33 @@ export const mineOptions = (options?: Options<MineData>) =>
       return data;
     },
     queryKey: mineQueryKey(options),
+  });
+
+export const currentWeekQueryKey = (options?: Options<CurrentWeekData>) =>
+  createQueryKey('currentWeek', options);
+
+/**
+ * 홈 선택 세션의 본인 사전 출결 보고 조회
+ *
+ * 승인된 현재 기수 PLAYER 본인의 보고를 조회한다. 대상은 같은 시각 홈 GET /api/sessions/current-week 및 보고 POST가 선택하는 세션이다. 활성 보고 아이디·전체 유형·최종 제출 시각을 반환하며, 구형 필드 type과 reason을 함께 제공한다. 미제출이면 types는 빈 배열이고 나머지 필드는 null이다. 과거 보고는 reason이 null일 수 있다. 세션 시작·출석 마감·당일 종료 후에도 홈 대상 보고를 읽을 수 있다. 제출 이력·출결·감점은 변경하지 않는다.
+ */
+export const currentWeekOptions = (options?: Options<CurrentWeekData>) =>
+  queryOptions<
+    CurrentWeekResponse,
+    CurrentWeekError,
+    CurrentWeekResponse,
+    ReturnType<typeof currentWeekQueryKey>
+  >({
+    queryFn: async ({ queryKey, signal }) => {
+      const { data } = await currentWeek({
+        ...options,
+        ...queryKey[0],
+        signal,
+        throwOnError: true,
+      });
+      return data;
+    },
+    queryKey: currentWeekQueryKey(options),
   });
 
 export const find8QueryKey = (options?: Options<Find8Data>) => createQueryKey('find8', options);
@@ -2990,7 +3134,7 @@ export const find9QueryKey = (options: Options<Find9Data>) => createQueryKey('fi
 /**
  * 탈퇴 사용자 보존 사유 이력 조회
  *
- * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ * 인증된 운영진이 현행 ATTENDANCE_SUBMISSION 사전보고·심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 구형 출결 보고 구조는 조회하지 않는다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
  */
 export const find9Options = (options: Options<Find9Data>) =>
   queryOptions<Find9Response, Find9Error, Find9Response, ReturnType<typeof find9QueryKey>>({
@@ -3012,7 +3156,7 @@ export const find9InfiniteQueryKey = (options: Options<Find9Data>): QueryKey<Opt
 /**
  * 탈퇴 사용자 보존 사유 이력 조회
  *
- * 인증된 운영진이 심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
+ * 인증된 운영진이 현행 ATTENDANCE_SUBMISSION 사전보고·심사·가입 신청·출결·팀 사진 판단의 원문 사유를 시간순으로 조회한다. 구형 출결 보고 구조는 조회하지 않는다. 이름·전화번호·OIDC 식별자는 제공하지 않는다.
  */
 export const find9InfiniteOptions = (options: Options<Find9Data>) => {
   const opts = infiniteQueryOptions<
@@ -3227,6 +3371,8 @@ export const list6QueryKey = (options: Options<List6Data>) => createQueryKey('li
 
 /**
  * 팀 출석 사진 및 전체 팀원 보고 조회
+ *
+ * 모든 Staff가 기수·세션의 전체 사진과 제출 당시 팀원·최신 종류별 보고를 조회한다. 사진은 제출 시각·ID 내림차순, 팀원은 membershipId 오름차순이다. 사진이 없으면 items는 빈 배열이며 6개월이 지난 사진의 readUrl은 null이다.
  */
 export const list6Options = (options: Options<List6Data>) =>
   queryOptions<List6Response, List6Error, List6Response, ReturnType<typeof list6QueryKey>>({
@@ -3246,6 +3392,8 @@ export const list7QueryKey = (options: Options<List7Data>) => createQueryKey('li
 
 /**
  * 세션 출석 현황 조회
+ *
+ * 새 운영진 정정의 selectedStatuses는 최종 저장 선택, effectiveStatus는 점수 적용 상태, correctedAt은 운영진 정정 기록 시각이다. status는 기존 형식과 호환되며 scoreDelta는 마감 전 예상 감점, 마감 후 확정 감점이다.
  */
 export const list7Options = (options: Options<List7Data>) =>
   queryOptions<List7Response, List7Error, List7Response, ReturnType<typeof list7QueryKey>>({
@@ -3266,6 +3414,8 @@ export const list7InfiniteQueryKey = (options: Options<List7Data>): QueryKey<Opt
 
 /**
  * 세션 출석 현황 조회
+ *
+ * 새 운영진 정정의 selectedStatuses는 최종 저장 선택, effectiveStatus는 점수 적용 상태, correctedAt은 운영진 정정 기록 시각이다. status는 기존 형식과 호환되며 scoreDelta는 마감 전 예상 감점, 마감 후 확정 감점이다.
  */
 export const list7InfiniteOptions = (options: Options<List7Data>) => {
   const opts = infiniteQueryOptions<

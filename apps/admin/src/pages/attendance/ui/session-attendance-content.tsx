@@ -947,8 +947,8 @@ function ApiSessionAttendanceData({
       generationId: String(generationId),
       title: session.name,
       type: session.type === 'team' ? ('team' as const) : ('regular' as const),
-      startsAt: `${session.date}T${session.startTime}+09:00`,
-      endsAt: `${session.date}T${session.endTime}+09:00`,
+      startsAt: `${session.startDate}T${session.startTime}+09:00`,
+      endsAt: `${session.endDate}T${session.endTime}+09:00`,
       phase: session.phase,
       canCancelClose: false,
       summary: {

@@ -12,12 +12,13 @@ import {
   TextFieldInput,
   type BottomSheetRootProps,
 } from '@yapp-plus/ui';
-import { useId, useState, type FormEvent, type ReactNode } from 'react';
-import { useErrorBoundary } from 'react-error-boundary';
+import { Suspense, useEffect, useId, useState, type FormEvent, type ReactNode } from 'react';
+import type { FallbackProps } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
 import { staticContentEnabled } from '@/features/static-content';
 import { formatKoreanTime } from '@/shared/lib/korean-date-time';
-import { QueryBoundary } from '@/shared/ui/query-boundary';
+import { ErrorState } from '@/shared/ui/error-state';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
 import {
   attendanceReportInputSchema,
   type AttendanceReportInput,
@@ -56,7 +57,7 @@ type AttendanceReportSheetProps = BottomSheetRootProps & {
   onComplete: () => void;
 };
 
-type AttendanceReportContentProps = BottomSheetRootProps & {
+type AttendanceReportContentProps = {
   step: AttendanceReportStep;
   onReasonStep: () => void;
   onTypeStep: () => void;
@@ -85,6 +86,7 @@ export function AttendanceReportSheet({
   ...props
 }: AttendanceReportSheetProps) {
   const { isNative } = useNativeAuthSession();
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   if (staticContentEnabled()) {
     return (
@@ -102,26 +104,19 @@ export function AttendanceReportSheet({
   }
 
   return (
-    <QueryBoundary
-      errorFallback={
-        <ReportSheetShell {...props} step={step}>
-          <ReportSheetError />
-        </ReportSheetShell>
-      }
-      pendingFallback={
-        <ReportSheetShell {...props} step={step}>
-          <ReportSheetMessage message="보고할 세션을 불러오고 있어요…" />
-        </ReportSheetShell>
-      }
-    >
-      <AttendanceReportContent
-        {...props}
-        step={step}
-        onReasonStep={onReasonStep}
-        onTypeStep={onTypeStep}
-        onComplete={onComplete}
-      />
-    </QueryBoundary>
+    <ReportSheetShell {...props} step={step} dismissible={!isSubmitting}>
+      <LocalErrorBoundary fallbackRender={renderReportError}>
+        <Suspense fallback={<ReportSheetMessage message="보고할 세션을 불러오고 있어요…" />}>
+          <AttendanceReportContent
+            step={step}
+            onReasonStep={onReasonStep}
+            onTypeStep={onTypeStep}
+            onComplete={onComplete}
+            onSubmittingChange={setIsSubmitting}
+          />
+        </Suspense>
+      </LocalErrorBoundary>
+    </ReportSheetShell>
   );
 }
 
@@ -162,20 +157,15 @@ function ReportSheetMessage({ message }: { message: string }) {
   );
 }
 
-function ReportSheetError() {
-  const { resetBoundary } = useErrorBoundary();
+function renderReportError({ resetErrorBoundary }: FallbackProps) {
   return (
-    <VStack gap="x5" className={sheetContainer}>
-      <p role="alert">보고할 세션을 불러오지 못했어요. 다시 확인해 주세요.</p>
-      <ActionButton
-        variant="brandSolid"
-        size="large"
-        className={sheetPrimaryButton}
-        onClick={resetBoundary}
-      >
-        세션 다시 확인
-      </ActionButton>
-    </VStack>
+    <ErrorState
+      variant="section"
+      title="보고할 세션을 불러오지 못했어요"
+      titleAs="h2"
+      retryLabel="세션 다시 확인"
+      onRetry={resetErrorBoundary}
+    />
   );
 }
 
@@ -184,8 +174,8 @@ function AttendanceReportContent({
   onReasonStep,
   onTypeStep,
   onComplete,
-  ...props
-}: AttendanceReportContentProps) {
+  onSubmittingChange,
+}: AttendanceReportContentProps & { onSubmittingChange: (isSubmitting: boolean) => void }) {
   const report = useAttendanceReport(onComplete);
   const [submissionMessage, setSubmissionMessage] = useState('');
   const reasonCharacterCountId = useId();
@@ -204,28 +194,27 @@ function AttendanceReportContent({
     },
   });
 
+  useEffect(() => {
+    onSubmittingChange(report.pending);
+    return () => onSubmittingChange(false);
+  }, [onSubmittingChange, report.pending]);
+
   if (!report.target) {
-    return (
-      <ReportSheetShell {...props} step={step}>
-        <ReportSheetMessage message="이번 주에는 보고할 세션이 없어요." />
-      </ReportSheetShell>
-    );
+    return <ReportSheetMessage message="이번 주에는 보고할 세션이 없어요." />;
   }
   if (!report.reportable) {
     return (
-      <ReportSheetShell {...props} step={step}>
-        <VStack gap="x5" className={sheetContainer}>
-          <VStack gap="x1_5" width="full">
-            <h2 className={sheetTitle}>사전 출결 보고가 마감됐어요</h2>
-            <p className={sheetDescription}>
-              {report.target.name}은(는) {formatKoreanTime(report.target.startTime)}에 시작했어요.
-            </p>
-          </VStack>
-          <ActionButton variant="brandSolid" size="large" className={sheetPrimaryButton} disabled>
-            확인
-          </ActionButton>
+      <VStack gap="x5" className={sheetContainer}>
+        <VStack gap="x1_5" width="full">
+          <h2 className={sheetTitle}>사전 출결 보고가 마감됐어요</h2>
+          <p className={sheetDescription}>
+            {report.target.name}은(는) {formatKoreanTime(report.target.startTime)}에 시작했어요.
+          </p>
         </VStack>
-      </ReportSheetShell>
+        <ActionButton variant="brandSolid" size="large" className={sheetPrimaryButton} disabled>
+          확인
+        </ActionButton>
+      </VStack>
     );
   }
 
@@ -238,125 +227,123 @@ function AttendanceReportContent({
   }
 
   return (
-    <ReportSheetShell {...props} step={step} dismissible={!report.pending}>
-      <VStack as="form" gap="x5" className={sheetContainer} onSubmit={handleSubmit}>
-        {step === 'type' ? (
-          <VStack gap="x5" width="full">
-            <VStack gap="x1_5" width="full">
-              <h2 className={sheetTitle}>출결을 보고해 주세요</h2>
-              <p className={sheetDescription}>미리 알려주시면 점수 차감이 줄어들어요.</p>
-            </VStack>
-            <form.Field
-              name="type"
-              validators={{ onDynamic: ({ value }) => validateReportType(value) }}
-            >
-              {(field) => {
-                const error = field.state.meta.errors[0];
-                return (
-                  <RadioGroup
-                    label="출결 유형"
-                    showRequiredIndicator
-                    invalid={Boolean(error)}
-                    errorMessage={error}
-                    value={field.state.value}
-                    onValueChange={(value) => {
-                      if (isAttendanceReportType(value)) {
-                        field.handleChange(value);
-                      }
-                      setSubmissionMessage('');
-                    }}
-                  >
-                    {reportTypes.map(({ value, label }, index) => (
-                      <RadioGroupItem
-                        key={value}
-                        value={value}
-                        label={label}
-                        disabled={report.pending}
-                        inputProps={{ 'aria-required': index === 0 || undefined }}
-                      />
-                    ))}
-                  </RadioGroup>
-                );
-              }}
-            </form.Field>
-            <ActionButton
-              variant="brandSolid"
-              size="large"
-              className={sheetPrimaryButton}
-              type="submit"
-              disabled={report.pending}
-            >
-              다음
-            </ActionButton>
+    <VStack as="form" gap="x5" className={sheetContainer} onSubmit={handleSubmit}>
+      {step === 'type' ? (
+        <VStack gap="x5" width="full">
+          <VStack gap="x1_5" width="full">
+            <h2 className={sheetTitle}>출결을 보고해 주세요</h2>
+            <p className={sheetDescription}>미리 알려주시면 점수 차감이 줄어들어요.</p>
           </VStack>
-        ) : (
-          <VStack gap="x5" width="full">
-            <VStack gap="x1_5" width="full">
-              <h2 className={sheetTitle}>사유를 입력해 주세요</h2>
-              <p className={sheetDescription}>사유는 30자 이내로 입력해 주세요.</p>
-            </VStack>
-            <form.Field
-              name="reason"
-              validators={{ onDynamic: ({ value }) => validateReportReason(value) }}
-            >
-              {(field) => {
-                const error = field.state.meta.errors[0];
-                return (
-                  <TextField
-                    label="사유"
-                    indicator={
-                      <output id={reasonCharacterCountId}>{field.state.value.length}/30</output>
-                    }
-                    required
-                    showRequiredIndicator
-                    invalid={Boolean(error)}
-                    errorMessage={error}
-                    value={field.state.value}
-                    onValueChange={({ value }) => {
+          <form.Field
+            name="type"
+            validators={{ onDynamic: ({ value }) => validateReportType(value) }}
+          >
+            {(field) => {
+              const error = field.state.meta.errors[0];
+              return (
+                <RadioGroup
+                  label="출결 유형"
+                  showRequiredIndicator
+                  invalid={Boolean(error)}
+                  errorMessage={error}
+                  value={field.state.value}
+                  onValueChange={(value) => {
+                    if (isAttendanceReportType(value)) {
                       field.handleChange(value);
-                      report.reset();
-                      setSubmissionMessage('');
-                    }}
-                  >
-                    <TextFieldInput
-                      name="reason"
-                      placeholder="사유를 입력해 주세요"
-                      maxLength={30}
-                      autoComplete="off"
-                      enterKeyHint="done"
+                    }
+                    setSubmissionMessage('');
+                  }}
+                >
+                  {reportTypes.map(({ value, label }, index) => (
+                    <RadioGroupItem
+                      key={value}
+                      value={value}
+                      label={label}
                       disabled={report.pending}
-                      aria-describedby={reasonCharacterCountId}
-                      onBlur={field.handleBlur}
+                      inputProps={{ 'aria-required': index === 0 || undefined }}
                     />
-                  </TextField>
-                );
-              }}
-            </form.Field>
-            {report.error || submissionMessage ? (
-              <p role="alert">{report.error || submissionMessage}</p>
-            ) : null}
-            <ActionButton
-              variant="brandSolid"
-              size="large"
-              className={sheetPrimaryButton}
-              type="submit"
-              loading={report.pending}
-              disabled={report.pending}
-            >
-              제출하기
-            </ActionButton>
-            <ActionButton
-              type="button"
-              variant="ghost"
-              className={sheetSecondaryButton}
-              disabled={report.pending}
-              onClick={onTypeStep}
-            >
-              이전
-            </ActionButton>
+                  ))}
+                </RadioGroup>
+              );
+            }}
+          </form.Field>
+          <ActionButton
+            variant="brandSolid"
+            size="large"
+            className={sheetPrimaryButton}
+            type="submit"
+            disabled={report.pending}
+          >
+            다음
+          </ActionButton>
+        </VStack>
+      ) : (
+        <VStack gap="x5" width="full">
+          <VStack gap="x1_5" width="full">
+            <h2 className={sheetTitle}>사유를 입력해 주세요</h2>
+            <p className={sheetDescription}>사유는 30자 이내로 입력해 주세요.</p>
           </VStack>
-        )}
-      </VStack>
-    </ReportSheetShell>
+          <form.Field
+            name="reason"
+            validators={{ onDynamic: ({ value }) => validateReportReason(value) }}
+          >
+            {(field) => {
+              const error = field.state.meta.errors[0];
+              return (
+                <TextField
+                  label="사유"
+                  indicator={
+                    <output id={reasonCharacterCountId}>{field.state.value.length}/30</output>
+                  }
+                  required
+                  showRequiredIndicator
+                  invalid={Boolean(error)}
+                  errorMessage={error}
+                  value={field.state.value}
+                  onValueChange={({ value }) => {
+                    field.handleChange(value);
+                    report.reset();
+                    setSubmissionMessage('');
+                  }}
+                >
+                  <TextFieldInput
+                    name="reason"
+                    placeholder="사유를 입력해 주세요"
+                    maxLength={30}
+                    autoComplete="off"
+                    enterKeyHint="done"
+                    disabled={report.pending}
+                    aria-describedby={reasonCharacterCountId}
+                    onBlur={field.handleBlur}
+                  />
+                </TextField>
+              );
+            }}
+          </form.Field>
+          {report.error || submissionMessage ? (
+            <p role="alert">{report.error || submissionMessage}</p>
+          ) : null}
+          <ActionButton
+            variant="brandSolid"
+            size="large"
+            className={sheetPrimaryButton}
+            type="submit"
+            loading={report.pending}
+            disabled={report.pending}
+          >
+            제출하기
+          </ActionButton>
+          <ActionButton
+            type="button"
+            variant="ghost"
+            className={sheetSecondaryButton}
+            disabled={report.pending}
+            onClick={onTypeStep}
+          >
+            이전
+          </ActionButton>
+        </VStack>
+      )}
+    </VStack>
   );
 }

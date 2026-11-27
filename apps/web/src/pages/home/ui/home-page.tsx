@@ -18,11 +18,15 @@ import {
 } from '@seed-design/react';
 import { ActionButton, Badge } from '@yapp-plus/ui';
 import { useFlow } from '@stackflow/react';
+import { useQuery } from '@tanstack/react-query';
 import { Image } from '@/app/navigation/image';
 import { TabLink } from '@/app/navigation/tab-link';
 import { useNativeAuthSession } from '@/features/auth';
 import { staticContentEnabled } from '@/features/static-content';
+import { useScreenActiveContext } from '@/shared/lib/screen-activity';
 import { useState } from 'react';
+import { isAttendanceReportHelpBubbleOpen } from '../model/attendance-report-help-bubble';
+import { currentWeekQueryOptions } from '../model/current-week-query';
 import {
   attendanceButton,
   attendedBadge,
@@ -36,6 +40,7 @@ import {
   content,
   helpBubbleArrowTip,
   helpBubbleContent,
+  helpBubblePositioner,
   helpBubbleTitle,
   locationPin,
   locationRow,
@@ -59,6 +64,7 @@ import {
   srOnly,
 } from './home-page.css';
 import { WeeklyNotices } from './weekly-notices';
+import { TeamAttendanceResult } from './team-attendance-result';
 
 const weekSchedule = [
   { day: '일', date: 1, isToday: false, attended: false },
@@ -79,6 +85,71 @@ function getReportCardCopy(canOpenReport: boolean) {
   return { actionLabel: '출결 보고 준비 중', subtitle: '준비 중' };
 }
 
+function AttendanceReportQuickCard({
+  canOpenReport,
+  onOpenReport,
+}: {
+  canOpenReport: boolean;
+  onOpenReport: () => void;
+}) {
+  const active = useScreenActiveContext();
+  const { apiOptions } = useNativeAuthSession();
+  const week = useQuery({ ...currentWeekQueryOptions(apiOptions), enabled: canOpenReport });
+  const shouldShowHelpBubble =
+    canOpenReport && active && week.data && isAttendanceReportHelpBubbleOpen(week.data);
+  const reportCopy = getReportCardCopy(canOpenReport);
+  const button = (
+    <ActionButton
+      variant="ghost"
+      size="small"
+      type="button"
+      className={reportCardButton}
+      disabled={!canOpenReport}
+      onClick={onOpenReport}
+      aria-label={reportCopy.actionLabel}
+      data-testid="report-attendance-button"
+    >
+      <span className={quickCard}>
+        <span className={quickCardContent}>
+          <span className={quickCardTitle}>출결 보고</span>
+          <span className={quickCardSubtitle}>{reportCopy.subtitle}</span>
+        </span>
+        <Image
+          src="/images/home/graphic-spot-attendance.svg"
+          alt=""
+          width={150}
+          height={106}
+          className={quickCardGraphicAttendance}
+        />
+      </span>
+    </ActionButton>
+  );
+
+  if (!shouldShowHelpBubble) {
+    return button;
+  }
+
+  // 탭이 가려진 동안에는 위치 계산 요소까지 제거해 0px 가용 폭이 복귀 화면에 남지 않게 한다.
+  return (
+    <HelpBubbleRoot defaultOpen closeOnInteractOutside={false} placement="bottom" gutter={6}>
+      <HelpBubbleAnchor asChild>{button}</HelpBubbleAnchor>
+
+      <HelpBubblePositioner className={helpBubblePositioner}>
+        <HelpBubbleContent className={helpBubbleContent}>
+          <HelpBubbleArrow>
+            <HelpBubbleArrowTip className={helpBubbleArrowTip} />
+          </HelpBubbleArrow>
+          <HelpBubbleBody>
+            <HelpBubbleTitle className={helpBubbleTitle}>
+              세션 시작 전에{'\n'}미리 보고해 주세요
+            </HelpBubbleTitle>
+          </HelpBubbleBody>
+        </HelpBubbleContent>
+      </HelpBubblePositioner>
+    </HelpBubbleRoot>
+  );
+}
+
 export function HomePage({
   initialSession,
   initialAttendance,
@@ -90,7 +161,6 @@ export function HomePage({
   const { isNative } = useNativeAuthSession();
   const canPreview = import.meta.env.DEV && import.meta.env.VITE_API_MOCKING === 'true';
   const canOpenReport = !staticContentEnabled() && isNative;
-  const reportCopy = getReportCardCopy(canOpenReport);
   const [internalSessionMode, setInternalSessionMode] = useState<'team' | 'offline' | null>(null);
   const showDemo =
     canPreview && Boolean(internalSessionMode ?? initialSession ?? initialAttendance);
@@ -150,7 +220,7 @@ export function HomePage({
               </HelpBubbleCloseButton>
             </HelpBubbleAnchor>
 
-            <HelpBubblePositioner>
+            <HelpBubblePositioner className={helpBubblePositioner}>
               <HelpBubbleContent className={helpBubbleContent}>
                 <HelpBubbleArrow>
                   <HelpBubbleArrowTip className={helpBubbleArrowTip} />
@@ -182,6 +252,7 @@ export function HomePage({
   return (
     <VStack as="main" className={container}>
       <h1 className={srOnly}>홈</h1>
+      {!showDemo && !staticContentEnabled() && <TeamAttendanceResult />}
 
       <VStack gap="x10" className={content}>
         <VStack as="section" gap="x2_5" aria-label="세션 및 바로가기">
@@ -264,56 +335,10 @@ export function HomePage({
             </VStack>
 
             <VStack className={quickCardCol}>
-              <HelpBubbleRoot
-                unmountOnExit
-                defaultOpen={canOpenReport && attendanceState !== 'attended'}
-                placement="bottom"
-                gutter={6}
-              >
-                <HelpBubbleAnchor asChild>
-                  <HelpBubbleCloseButton asChild>
-                    <ActionButton
-                      variant="ghost"
-                      size="small"
-                      type="button"
-                      className={reportCardButton}
-                      disabled={!canOpenReport}
-                      onClick={handleOpenReport}
-                      aria-label={reportCopy.actionLabel}
-                      data-testid="report-attendance-button"
-                    >
-                      <span className={quickCard}>
-                        <span className={quickCardContent}>
-                          <span className={quickCardTitle}>출결 보고</span>
-                          <span className={quickCardSubtitle}>{reportCopy.subtitle}</span>
-                        </span>
-                        <Image
-                          src="/images/home/graphic-spot-attendance.svg"
-                          alt=""
-                          width={150}
-                          height={106}
-                          className={quickCardGraphicAttendance}
-                        />
-                      </span>
-                    </ActionButton>
-                  </HelpBubbleCloseButton>
-                </HelpBubbleAnchor>
-
-                {canOpenReport ? (
-                  <HelpBubblePositioner>
-                    <HelpBubbleContent className={helpBubbleContent}>
-                      <HelpBubbleArrow>
-                        <HelpBubbleArrowTip className={helpBubbleArrowTip} />
-                      </HelpBubbleArrow>
-                      <HelpBubbleBody>
-                        <HelpBubbleTitle className={helpBubbleTitle}>
-                          세션 시작 전에{'\n'}미리 보고해 주세요
-                        </HelpBubbleTitle>
-                      </HelpBubbleBody>
-                    </HelpBubbleContent>
-                  </HelpBubblePositioner>
-                ) : null}
-              </HelpBubbleRoot>
+              <AttendanceReportQuickCard
+                canOpenReport={canOpenReport}
+                onOpenReport={handleOpenReport}
+              />
             </VStack>
           </HStack>
         </VStack>

@@ -145,14 +145,14 @@ it('SEED 탭 클릭은 step을 한 번만 교체하고 현재 탭 재선택은 �
   expect(onValueChange).not.toHaveBeenCalled();
 });
 
-it('커뮤니티 메뉴는 기존 하단 navigation 안에서 다섯 번째 항목으로 표시한다', () => {
+it('커뮤니티 메뉴는 다른 탭처럼 현재 선택 상태를 표시한다', () => {
   render(
-    <Tabs.Root value="home">
+    <Tabs.Root value="community">
       <BottomNavigation activeTab="community" />
     </Tabs.Root>,
   );
 
-  expect(screen.getByRole('link', { name: '커뮤니티' })).toHaveAttribute('aria-current', 'page');
+  expect(screen.getByRole('tab', { name: '커뮤니티' })).toHaveAttribute('aria-selected', 'true');
   expect(screen.getByRole('navigation', { name: '주요 메뉴' })).toHaveTextContent(
     '홈일정게시판커뮤니티MY',
   );
@@ -235,5 +235,5 @@ it('프로덕션 홈에서도 커뮤니티 진입 링크를 표시한다', () =>
       <BottomNavigation activeTab="home" />
     </Tabs.Root>,
   );
-  expect(screen.getByRole('link', { name: '커뮤니티' })).toHaveAttribute('href', '/dining');
+  expect(screen.getByRole('tab', { name: '커뮤니티' })).toHaveAttribute('href', '/dining');
 });

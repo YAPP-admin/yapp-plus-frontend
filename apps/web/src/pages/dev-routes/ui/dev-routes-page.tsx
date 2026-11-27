@@ -1,6 +1,6 @@
 /** 개발 경로와 개발 빌드 전용 검증 도구를 제공한다. 위치 도구는 화면 이탈 시 폐기한다. */
 
-import { lazy, Suspense } from 'react';
+import { lazy, Suspense, type ReactNode } from 'react';
 import { content, description, title } from '../../../shared/ui/page.css';
 import { link, links } from '../../../shared/ui/page-links.css';
 
@@ -38,8 +38,14 @@ const routes = [
   { href: '/signup/unregistered', label: '미등록 회원 안내' },
 ];
 
-/** Stackflow의 활성 상태를 받아 숨겨진 화면의 위치 결과 반영을 차단한다. */
-export function DevRoutesPage({ isActive = true }: { isActive?: boolean }) {
+/** 활성 화면에서만 도구를 표시한다. 결과 미리보기는 페이지 간 의존 없이 상위 Activity가 주입한다. */
+export function DevRoutesPage({
+  isActive = true,
+  resultPreview,
+}: {
+  isActive?: boolean;
+  resultPreview?: ReactNode;
+}) {
   return (
     <main className={content}>
       <h1 className={title}>개발용 화면 목록</h1>
@@ -52,6 +58,7 @@ export function DevRoutesPage({ isActive = true }: { isActive?: boolean }) {
           <ErrorStatePreview />
         </Suspense>
       )}
+      {isActive && resultPreview}
       {isActive && LocationCheck && (
         <Suspense fallback={<output>위치 도구를 준비하고 있습니다.</output>}>
           <LocationCheck />

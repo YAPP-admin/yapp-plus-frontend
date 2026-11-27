@@ -42,6 +42,7 @@ const week = {
 };
 const signedIn = {
   status: 'SIGNED_IN' as const,
+  reviewTransition: 'NONE' as const,
   session: {
     userId: 1,
     sessionId: 'session-a',
@@ -146,6 +147,8 @@ it('앞자리 0을 붙여넣고 Enter로 실제 코드·인증을 전송한 뒤 
   expect(request).toHaveBeenCalledWith({ sessionId: 42, code: 0 }, 'Bearer test-token');
   view.close();
   expect(await screen.findByRole('button', { name: '출석했어요!' })).toBeDisabled();
+  expect(screen.getByLabelText('2026-11-07 출석 완료')).toBeVisible();
+  expect(screen.getByText('출석', { exact: true })).toBeVisible();
   view.unmount();
   server.use(http.get(weekUrl, () => HttpResponse.json(week)));
   setup();
@@ -175,6 +178,8 @@ it('출석 성공 후 서버가 AVAILABLE로 정정하면 홈에서 다시 출�
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
   view.close();
   expect(await screen.findByRole('button', { name: '출석하기' })).toBeEnabled();
+  expect(screen.queryByLabelText(/출석 완료$/)).not.toBeInTheDocument();
+  expect(screen.queryByText('출석', { exact: true })).not.toBeInTheDocument();
 });
 
 it('위치 메서드를 지원하지 않으면 위치·출석 요청을 보내지 않는다', async () => {
@@ -408,7 +413,7 @@ it('최초 조회 대기와 오류를 시트 안에 표시하고 재시도로 �
     respond();
     await response;
   });
-  expect(await screen.findByRole('alert')).toHaveTextContent('세션을 불러오지 못했어요.');
+  expect(await screen.findByRole('heading', { name: '세션을 불러오지 못했어요' })).toBeVisible();
   server.use(http.get(weekUrl, () => HttpResponse.json(week)));
   await userEvent.click(screen.getByRole('button', { name: '세션 다시 확인' }));
   await enter();
@@ -450,11 +455,6 @@ it.each([
     '출석 결과를 확인하지 못했어요',
   ],
   ['응답 유실', HttpResponse.error(), '출석 결과를 확인하지 못했어요'],
-  [
-    '인증 만료',
-    HttpResponse.json({ code: 'AUTHENTICATION_FAILED' }, { status: 401 }),
-    '인증이 만료됐어요',
-  ],
 ] as const)('%s에서는 완료·자동 재전송 없이 복구를 안내한다', async (_, response, message) => {
   const request = vi.fn<() => typeof response>(() => response);
   server.use(http.post(verifyUrl, request));

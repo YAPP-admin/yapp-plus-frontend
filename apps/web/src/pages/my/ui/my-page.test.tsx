@@ -46,6 +46,7 @@ function renderPage(native = false, name?: string) {
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue('YAPPPlusWebView');
     const result = {
       status: 'SIGNED_IN',
+      reviewTransition: 'NONE',
       session: {
         userId: 1,
         sessionId: 'test-session',
@@ -77,6 +78,10 @@ describe('MyPage', () => {
     expect(screen.getByText('28기')).toBeVisible();
     expect(screen.getByText('Web')).toBeVisible();
     expect(screen.getByRole('img', { name: '프로필' })).toBeVisible();
+    expect(screen.getByRole('img', { name: '프로필' })).toHaveAttribute(
+      'src',
+      '/images/my/profile-web.svg',
+    );
   });
 
   it('긴 API 이름을 줄바꿈 가능한 프로필 영역에 표시한다', async () => {
@@ -125,6 +130,10 @@ describe('MyPage', () => {
     expect(await screen.findByText('0점')).toBeVisible();
     expect(within(screen.getByLabelText('내 출석 현황')).getAllByText('0')).toHaveLength(3);
     expect(screen.getByText('소속 없는 회원')).toBeVisible();
+    expect(screen.getByRole('img', { name: '프로필' })).toHaveAttribute(
+      'src',
+      '/images/my/user-profile.svg',
+    );
     expect(screen.getAllByText('—')).toHaveLength(4);
   });
 
@@ -148,6 +157,10 @@ describe('MyPage', () => {
     );
     renderPage(true, '세션 이름');
     expect(await screen.findByRole('status')).toHaveTextContent('프로필을 불러오는 중이에요');
+    expect(screen.getByRole('img', { name: '프로필' })).toHaveAttribute(
+      'src',
+      '/images/my/user-profile.svg',
+    );
     expect(await screen.findByText('92점')).toBeVisible();
     expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
     await userEvent.setup().click(screen.getByRole('button', { name: '출석 규칙 안내' }));
@@ -161,6 +174,10 @@ describe('MyPage', () => {
       }),
     );
     expect(await screen.findByText('늦게 도착한 회원')).toBeVisible();
+    expect(screen.getByRole('img', { name: '프로필' })).toHaveAttribute(
+      'src',
+      '/images/my/profile-web.svg',
+    );
   });
 
   it.each(['ineligible', 'no-generation'])(
@@ -214,6 +231,10 @@ describe('MyPage', () => {
     expect(await screen.findByRole('status')).toHaveTextContent('앱에 로그인한 후');
     expect(scoreRequested).not.toHaveBeenCalled();
     expect(profileRequested).not.toHaveBeenCalled();
+    expect(screen.getByRole('img', { name: '프로필' })).toHaveAttribute(
+      'src',
+      '/images/my/user-profile.svg',
+    );
   });
 
   it.each([

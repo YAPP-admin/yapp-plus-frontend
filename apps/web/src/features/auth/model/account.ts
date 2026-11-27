@@ -17,15 +17,20 @@ export function applyAccountBoundary(client: QueryClient, result: AuthResult): v
   if (
     result.status !== 'SIGNED_IN' &&
     result.status !== 'SIGNED_OUT' &&
+    result.status !== 'REVIEW_REQUIRED' &&
     result.status !== 'WITHDRAWN'
   ) {
     return;
   }
 
-  const identity =
-    result.status === 'SIGNED_IN'
-      ? JSON.stringify([result.session.userId, result.session.sessionId])
-      : null;
+  let identity: string | null;
+  if (result.status === 'SIGNED_IN') {
+    identity = JSON.stringify([result.session.userId, result.session.sessionId]);
+  } else if (result.status === 'REVIEW_REQUIRED') {
+    identity = JSON.stringify(['review', result.userId]);
+  } else {
+    identity = null;
+  }
   const previous = client.getQueryData(accountScopeOptions.queryKey) ?? initialScope;
   if (previous.identity === identity) {
     return;

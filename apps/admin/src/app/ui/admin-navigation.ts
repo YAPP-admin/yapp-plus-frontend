@@ -6,7 +6,7 @@ export const memberNavigationItems = [
 export const teamMappingNavigationItem = { to: '/members/teams', label: '팀 매핑' } as const;
 
 export const navigationItems = {
-  dashboard: { to: '/', label: '대시보드', section: '워크스페이스', exact: true },
+  // dashboard: { to: '/', label: '대시보드', section: '워크스페이스', exact: true },
   sessions: { to: '/sessions', label: '세션 관리', section: '활동 관리', exact: false },
   dining: { to: '/dining', label: '뒤풀이 관리', section: '활동 관리', exact: true },
   attendance: { to: '/attendance', label: '출석부', section: '활동 관리', exact: true },

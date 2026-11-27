@@ -22,23 +22,23 @@
     "@webview-bridge/react-native": "1.8.0",
     "@yapp-plus/api": "workspace:*",
     "@yapp-plus/app-bridge": "workspace:*",
-    "expo": "~58.0.26",
+    "expo": "~58.1.0",
     "expo-apple-authentication": "~58.0.3",
     "expo-build-properties": "58.0.12",
     "expo-constants": "~58.0.16",
-    "expo-crypto": "~58.0.8",
-    "expo-dev-client": "~58.0.21",
-    "expo-file-system": "~58.0.14",
+    "expo-crypto": "~58.0.9",
+    "expo-dev-client": "~58.0.22",
+    "expo-file-system": "~58.0.15",
     "expo-font": "~58.0.12",
     "expo-image-manipulator": "~58.0.16",
     "expo-image-picker": "~58.0.10",
     "expo-linking": "~58.0.17",
-    "expo-location": "~58.0.22",
-    "expo-router": "~58.0.32",
+    "expo-location": "~58.0.23",
+    "expo-router": "~58.0.33",
     "expo-secure-store": "~58.0.3",
-    "expo-splash-screen": "~58.0.14",
+    "expo-splash-screen": "~58.0.15",
     "expo-system-ui": "58.0.7",
-    "expo-updates": "~58.0.22",
+    "expo-updates": "~58.0.23",
     "p-mutex": "catalog:",
     "react": "catalog:expo",
     "react-dom": "catalog:expo",
@@ -63,5 +63,19 @@
     "typescript": "catalog:",
     "vitest": "catalog:",
     "yaml": "2.9.0"
+  },
+  "expo": {
+    "install": {
+      "exclude": [
+        "expo@~58.1.0",
+        "expo-crypto@~58.0.9",
+        "expo-dev-client@~58.0.22",
+        "expo-file-system@~58.0.15",
+        "expo-location@~58.0.23",
+        "expo-router@~58.0.33",
+        "expo-splash-screen@~58.0.15",
+        "expo-updates@~58.0.23"
+      ]
+    }
   }
 }

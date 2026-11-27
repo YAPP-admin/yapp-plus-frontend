@@ -181,6 +181,13 @@ export const inviteDescription = style({
   lineHeight: vars.$lineHeight.t1,
 });
 
+export const previewError = style({
+  margin: `${vars.$dimension.x2} 0 0`,
+  color: vars.$color.fg.critical,
+  fontSize: vars.$fontSize.t1,
+  lineHeight: vars.$lineHeight.t1,
+});
+
 export const maxAttendeesField = style({
   width: '9rem',
   '@media': {

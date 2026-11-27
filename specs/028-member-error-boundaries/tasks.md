@@ -57,41 +57,41 @@
 - [x] T028 [US1] `apps/web/src/pages/my/ui/profile-section.tsx`·`my-page.tsx`와 `pages/attendance/ui/attendance-page.tsx`의 경고 영역에 독립 오류 교체를 적용한다.
 - [x] T029 [US1] `apps/web/stackflow/src/query-recovery.test.tsx`에 성공 cache 이후 재조회 실패·복귀·정상 DOM 유지·reset 로딩·반복 실패를 추가한다.
 - [x] T030 [US1] `specs/028-member-error-boundaries/validation.md`에 홈·프로필·경고 4-B 검증·화면·diff·리뷰를 기록한다.
-- [ ] T031 [US1] `apps/web/src/pages/home/ui/attendance-report-sheet.tsx`·`home-demo-sheets.tsx`와 `model/code-attendance.ts`·`attendance-report.ts`에서 셸/Mutation 소유 수명과 조회 fallback을 분리한다.
-- [ ] T032 [US1] `apps/web/stackflow/src/activities/activities.tsx`의 팀원 조회와 `apps/web/src/pages/settings/model/notification-settings.ts`·`ui/notification-setting.tsx`를 공통 정책에 연결한다.
-- [ ] T033 [US1] `apps/web/src/pages/home/ui/attendance-code.test.tsx`·`attendance-report-sheet.test.tsx` 및 팀 사진·설정 인접 테스트에 입력 초기화·셸 유지·제출 완료 보존·미지원 예외를 추가한다.
-- [ ] T034 [US1] `specs/028-member-error-boundaries/validation.md`에 입력 흐름·설정 4-C 검증·diff·리뷰를 기록한다.
+- [x] T031 [US1] `apps/web/src/pages/home/ui/attendance-report-sheet.tsx`·`home-demo-sheets.tsx`와 `model/code-attendance.ts`·`attendance-report.ts`에서 셸/Mutation 소유 수명과 조회 fallback을 분리한다.
+- [x] T032 [US1] `apps/web/stackflow/src/activities/activities.tsx`의 팀원 조회와 `apps/web/src/pages/settings/model/notification-settings.ts`·`ui/notification-setting.tsx`를 공통 정책에 연결한다.
+- [x] T033 [US1] `apps/web/src/pages/home/ui/attendance-code.test.tsx`·`attendance-report-sheet.test.tsx` 및 팀 사진·설정 인접 테스트에 입력 초기화·셸 유지·제출 완료 보존·미지원 예외를 추가한다.
+- [x] T034 [US1] `specs/028-member-error-boundaries/validation.md`에 입력 흐름·설정 4-C 검증·diff·리뷰를 기록한다.
 
 완료 기준: 오류와 이전 콘텐츠가 같은 영역에 공존하지 않는다. 일반 재조회 중 정상 콘텐츠 유지와 실패 후 교체를 구분한다.
 
 ## 5단계 — US3 무한 목록 적용
 
-- [ ] T035 [US3] `apps/web/src/pages/notices/ui/notices-page.test.tsx`·`alerts/ui/alerts-page.test.tsx`·`attendance/ui/attendance-page.test.tsx`에 첫 조회/재조회/다음 페이지 오류·중복 방지·조건 변경 회귀를 추가한다.
-- [ ] T036 [US3] `apps/web/src/pages/notices/ui/notices-page.tsx`·`pages/alerts/ui/alerts-page.tsx`·`pages/attendance/ui/attendance-page.tsx`에서 일반 추가 오류만 목록을 유지하고 나머지는 Local로 전달한다. 분류 컨트롤·reset key·observer를 연결한다.
-- [ ] T037 [US3] `apps/web/stackflow/src/account-boundary.test.tsx`에 다음 페이지 인증 오류의 로그인 이동을 대표 흐름 하나로 검증한다.
-- [ ] T038 [US3] `specs/028-member-error-boundaries/validation.md`에 5단계 check/build·목록 화면·diff·리뷰를 기록한다.
+- [x] T035 [US3] `apps/web/src/pages/notices/ui/notices-page.test.tsx`·`alerts/ui/alerts-page.test.tsx`·`attendance/ui/attendance-page.test.tsx`에 첫 조회/재조회/다음 페이지 오류·중복 방지·조건 변경 회귀를 추가한다.
+- [x] T036 [US3] `apps/web/src/pages/notices/ui/notices-page.tsx`·`pages/alerts/ui/alerts-page.tsx`·`pages/attendance/ui/attendance-page.tsx`에서 일반 추가 오류만 목록을 유지하고 나머지는 Local로 전달한다. 분류 컨트롤·reset key·observer를 연결한다.
+- [x] T037 [US3] `apps/web/stackflow/src/account-boundary.test.tsx`에 다음 페이지 인증 오류의 로그인 이동을 대표 흐름 하나로 검증한다.
+- [x] T038 [US3] `specs/028-member-error-boundaries/validation.md`에 5단계 check/build·목록 화면·diff·리뷰를 기록한다.
 
 완료 기준: 추가 페이지 실패 뒤 기존 항목이 남고 재시도 성공 뒤 중복이 없으며 인증 실패는 예외 없이 상위로 전달된다.
 
 ## 6단계 — US2 업무 Mutation 인증 전파
 
-- [ ] T039 [US2] `apps/web/src/pages/notice-detail/model/use-notice-read.ts`의 인접 테스트와 home·settings 테스트에 인증 실패/일반 실패/성공 후 재조회 실패를 구분한다.
-- [ ] T040 [US2] `apps/web/src/app/providers.tsx`에 인증 오류만 throw하는 업무 Mutation 기본 정책을 연결하고 `features/auth/model/mutations.ts`에서 인증 작업 자체의 기존 결과 처리를 보장한다.
-- [ ] T041 [US2] `apps/web/src/pages/home/model/code-attendance.ts`·`attendance-report.ts`, `pages/notice-detail/model/use-notice-read.ts`, `pages/settings/model/notification-settings.ts`에 필요한 인증 원인 보존을 적용한다.
-- [ ] T042 [US2] `specs/028-member-error-boundaries/validation.md`에 6-A 일반 입력·공지 롤백·로그인 이동·자동 재전송 없음·diff·리뷰를 기록한다.
-- [ ] T043 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.test.tsx`·`use-team-attendance.test.tsx`에 presign/최종 제출401·PUT 실패·접수 불명·계정 경합 회귀를 추가한다.
-- [ ] T044 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.ts`·`use-team-attendance.ts`의 오류 타입·catch·reset을 정리해 원본 API 인증 오류를 바깥 소유 Mutation까지 전달한다.
-- [ ] T045 [US2] `specs/028-member-error-boundaries/validation.md`에 6-B 검증·diff·리뷰를 기록한다.
+- [x] T039 [US2] `apps/web/src/pages/notice-detail/model/use-notice-read.ts`의 인접 테스트와 home·settings 테스트에 인증 실패/일반 실패/성공 후 재조회 실패를 구분한다.
+- [x] T040 [US2] `apps/web/src/app/providers.tsx`에 인증 오류만 throw하는 업무 Mutation 기본 정책을 연결하고 `features/auth/model/mutations.ts`에서 인증 작업 자체의 기존 결과 처리를 보장한다.
+- [x] T041 [US2] `apps/web/src/pages/home/model/code-attendance.ts`·`attendance-report.ts`, `pages/notice-detail/model/use-notice-read.ts`, `pages/settings/model/notification-settings.ts`에 필요한 인증 원인 보존을 적용한다.
+- [x] T042 [US2] `specs/028-member-error-boundaries/validation.md`에 6-A 일반 입력·공지 롤백·로그인 이동·자동 재전송 없음·diff·리뷰를 기록한다.
+- [x] T043 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.test.tsx`·`use-team-attendance.test.tsx`에 presign/최종 제출401·PUT 실패·접수 불명 회귀를 추가한다. 이전 계정의 늦은 오류 경합은 제품 정책에서 제외한다.
+- [x] T044 [US2] `apps/web/src/features/team-attendance/model/use-photo-submission.ts`·`use-team-attendance.ts`의 오류 타입·catch·reset을 정리해 원본 API 인증 오류를 바깥 소유 Mutation까지 전달한다.
+- [x] T045 [US2] `specs/028-member-error-boundaries/validation.md`에 6-B 검증·diff·리뷰를 기록한다.
 
 완료 기준: 일반 제출 실패는 입력을 유지하고 인증 오류만 로그인으로 이동한다. 성공 결과와 후속 재조회 실패를 합치지 않는다.
 
 ## 7단계 — 통합 검증·정리
 
-- [ ] T046 `apps/web/src/shared/ui/query-boundary.tsx`·`screen-query-boundary.tsx` 및 이전 화면별 fallback을 전체 사용처 이전 후 제거한다. 404·업무 전용 오류 화면은 유지한다.
-- [ ] T047 `docs/web-development.md`와 `research.md`의 변경 대상 기존 명세에 새 정책 참조를 연결한다. 과거 validation의 실행 이력은 수정하지 않는다.
-- [ ] T048 `apps/web/stackflow/src/query-recovery.test.tsx`·`account-boundary.test.tsx`에서 최종 탐색·재인증·캐시 수명 통합 흐름을 검증한다.
-- [ ] T049 `specs/028-member-error-boundaries/quickstart.md`의 전체 시나리오와 check/build·브라우저/WebView·접근성 결과를 `validation.md`에 기록한다.
-- [ ] T050 `specs/028-member-error-boundaries/validation.md`에 최종 diff 크기·PR 분리·미실행 위험·복구 절차·사용자 최종 리뷰를 기록한다.
+- [x] T046 `apps/web/src/shared/ui/query-boundary.tsx`·`screen-query-boundary.tsx` 및 이전 화면별 fallback을 전체 사용처 이전 후 제거한다. 404·업무 전용 오류 화면은 유지한다.
+- [x] T047 `docs/web-development.md`와 `research.md`의 변경 대상 기존 명세에 새 정책 참조를 연결한다. 과거 validation의 실행 이력은 수정하지 않는다.
+- [x] T048 `apps/web/stackflow/src/query-recovery.test.tsx`·`account-boundary.test.tsx`에서 최종 탐색·재인증·캐시 수명 통합 흐름을 검증한다.
+- [x] T049 `specs/028-member-error-boundaries/quickstart.md`의 전체 시나리오와 check/build·브라우저/WebView·접근성 결과를 `validation.md`에 기록한다.
+- [x] T050 `specs/028-member-error-boundaries/validation.md`에 최종 diff 크기·PR 분리·미실행 위험·복구 절차·사용자 최종 리뷰를 기록한다.
 
 ## 의존 순서와 병렬 가능 범위
 

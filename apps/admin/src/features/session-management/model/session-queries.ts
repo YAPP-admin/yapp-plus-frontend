@@ -76,7 +76,9 @@ export const sessionsQueryOptions = (generationId: number) => {
         id: String(session.sessionId),
         name: session.name,
         type: session.type === 'TEAM' ? 'team' : 'regular',
-        date: session.date,
+        startDate: session.startDate,
+        endDate: session.endDate,
+        date: session.startDate,
         startTime: session.startTime,
         endTime: session.endTime,
         phase:
@@ -205,6 +207,20 @@ function toAttendanceResult(row: AdminAttendanceListResponse['items'][number]) {
         penaltyCategory: 'unknown',
         durationBand: null,
       });
+    case 'EARLY_LEAVE_ONE_HOUR':
+      return attendanceResultSchema.parse({
+        ...common,
+        status: 'earlyLeave',
+        penaltyCategory: 'unknown',
+        durationBand: 'withinOneHour',
+      });
+    case 'EARLY_LEAVE_THREE_HOUR':
+      return attendanceResultSchema.parse({
+        ...common,
+        status: 'earlyLeave',
+        penaltyCategory: 'unknown',
+        durationBand: 'withinThreeHours',
+      });
     case 'ABSENT':
       return attendanceResultSchema.parse({
         ...common,
@@ -227,7 +243,10 @@ function toAttendanceResult(row: AdminAttendanceListResponse['items'][number]) {
 function toMemberViewModel(
   row: AdminAttendanceListResponse['items'][number],
 ): AttendanceMemberViewModel {
-  const reportType = toReportType(row.latestReportType);
+  const reportType =
+    toReportType(row.latestReportType) ??
+    row.latestReportTypes.map(toReportType).find((type) => type !== null) ??
+    null;
   const mockSelections = (row as MockAttendanceRow).mockSelections;
   const attendanceEdits = mockSelections?.flatMap((selection) => {
     const parsed = attendanceEditInputSchema.safeParse({
@@ -244,6 +263,11 @@ function toMemberViewModel(
     teamId: null,
     attendance: toAttendanceResult(row),
     ...(attendanceEdits !== undefined && attendanceEdits.length > 0 ? { attendanceEdits } : {}),
+    selectedStatuses: row.selectedStatuses,
+    effectiveStatus: row.effectiveStatus,
+    correctedAt: row.correctedAt,
+    latestReportTypes: row.latestReportTypes,
+    latestReportSubmittedAt: row.latestReportSubmittedAt,
     latestReport:
       reportType === null
         ? null
@@ -252,7 +276,7 @@ function toMemberViewModel(
             membershipId: String(row.membershipId),
             type: reportType,
             reason: row.latestReportReason ?? '사유 없음',
-            submittedAt: null,
+            submittedAt: row.latestReportSubmittedAt,
             eligibility: 'unknown',
           },
     badge: {
@@ -269,13 +293,13 @@ function toMemberViewModel(
 
 export const sessionAttendanceQueryOptions = (generationId: number, sessionId: string) => {
   const path = { generationId, sessionId: Number(sessionId) };
-  const generated = list7InfiniteOptions({ path, query: { size: 50 } });
+  const generated = list7InfiniteOptions({ path, query: { size: '50' } });
   return {
     ...generated,
     // 생성 타입에는 skipToken도 포함되지만 Suspense는 함수 queryFn만 허용합니다.
     queryFn: typeof generated.queryFn === 'function' ? generated.queryFn : undefined,
     retry: false,
-    initialPageParam: { path, query: { size: 50 } },
+    initialPageParam: { path, query: { size: '50' } },
     getNextPageParam: (lastPage: AdminAttendanceListResponse) => lastPage.nextCursor ?? undefined,
   };
 };
@@ -288,27 +312,53 @@ function toNumberId(id: string, label: string) {
   return value;
 }
 
+type TimedAttendanceEditInput = Extract<AttendanceEditInput, { status: 'late' | 'earlyLeave' }>;
+
+function toLateOverrideStatus(
+  input: Extract<TimedAttendanceEditInput, { status: 'late' | 'earlyLeave' }>,
+) {
+  if (input.penaltyCategory === 'unauthorized') {
+    return input.durationBand === 'withinThreeHours'
+      ? 'UNEXCUSED_LATE_THREE_HOUR'
+      : 'UNEXCUSED_LATE_ONE_HOUR';
+  }
+  return input.durationBand === 'withinThreeHours' ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
+}
+
+function toEarlyLeaveOverrideStatus(
+  input: Extract<TimedAttendanceEditInput, { status: 'late' | 'earlyLeave' }>,
+) {
+  if (input.penaltyCategory === 'unauthorized') {
+    return input.durationBand === 'withinThreeHours'
+      ? 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR'
+      : 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR';
+  }
+  return input.durationBand === 'withinThreeHours'
+    ? 'EARLY_LEAVE_THREE_HOUR'
+    : 'EARLY_LEAVE_ONE_HOUR';
+}
+
 export function toAttendanceOverrideRequest(input: AttendanceEditInput): OverrideAttendanceRequest {
-  let status: OverrideAttendanceRequest['status'];
+  let statuses: OverrideAttendanceRequest['statuses'];
   switch (input.status) {
     case 'late':
-      status = input.durationBand === 'withinThreeHours' ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
+      statuses = [toLateOverrideStatus(input)];
       break;
     case 'earlyLeave':
-      status = 'EARLY_LEAVE';
+      statuses = [toEarlyLeaveOverrideStatus(input)];
       break;
     case 'absent':
-      status = 'ABSENT';
+      statuses = [input.penaltyCategory === 'unauthorized' ? 'UNEXCUSED_ABSENT' : 'ABSENT'];
       break;
     case 'present':
-      status = 'PRESENT';
+      statuses = ['PRESENT'];
       break;
     case 'undecided':
-      status = 'UNDECIDED';
+      statuses = [];
       break;
   }
 
-  return { status, reason: input.reason };
+  return { statuses, reason: input.reason };
 }
 
 function toMockAttendanceSelection(input: AttendanceEditInput): MockAttendanceSelection {
@@ -527,6 +577,11 @@ function toTeamMemberViewModel(teamId: number, membershipId: number, name: strin
       durationBand: null,
     }),
     latestReport: null,
+    selectedStatuses: [],
+    effectiveStatus: null,
+    correctedAt: null,
+    latestReportTypes: [],
+    latestReportSubmittedAt: null,
     badge: { verified: false, verifiedAt: null },
     score: { source: 'unknown' as const, delta: null, description: '점수 확인 필요' },
     isEditable: false,

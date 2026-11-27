@@ -1,3 +1,4 @@
+/** 홈의 주간 일정·출석 상태와 바로가기·개발용 미리보기 스타일을 정의한다. */
 import { vars } from '@seed-design/css/vars';
 import { style } from '@vanilla-extract/css';
 
@@ -149,6 +150,60 @@ export const calendarDateBadgeActive = style([
     color: vars.$color.fg.onNeutralSolid,
   },
 ]);
+
+/** 운영 달력은 완료 문구 공간을 별도로 확보해 상태 변경 시 높이를 유지한다. */
+export const calendarDayItemWithStatus = style([
+  calendarDayItem,
+  { gap: vars.$dimension.x0_5, paddingBottom: 0 },
+]);
+
+/** 20px 오늘 표시와 24px 완료 배지를 같은 영역 중앙에 정렬한다. */
+export const calendarDateSlot = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: '24px',
+  height: '24px',
+});
+
+/** 날짜 텍스트 뒤에 Figma 원본 배경을 배치하는 완료 표시다. */
+export const calendarDateBadgeCompleted = style([
+  calendarDateBadge,
+  {
+    position: 'relative',
+    isolation: 'isolate',
+    width: '24px',
+    height: '24px',
+    // 배경 SVG는 테마와 무관한 브랜드색이므로 숫자도 흰색을 유지한다.
+    color: vars.$color.fg.onBrandSolid,
+  },
+]);
+
+/** 원본 SVG의 고유 크기를 유지하고 날짜 숫자 뒤에 중앙 정렬한다. */
+export const calendarDateBadgeImage = style({
+  position: 'absolute',
+  zIndex: -1,
+  top: '50%',
+  left: '50%',
+  transform: 'translate(-50%, -50%)',
+});
+
+/** 완료 여부와 무관하게 한 줄의 상태 문구 높이를 확보한다. */
+export const calendarAttendanceSlot = style({
+  width: '100%',
+  minHeight: vars.$lineHeight.t1,
+  fontSize: vars.$fontSize.t1,
+  lineHeight: vars.$lineHeight.t1,
+  fontWeight: vars.$fontWeight.regular,
+  textAlign: 'center',
+});
+
+/** 출석 완료 문구를 날짜 열 너비의 브랜드 배경 위에 표시한다. */
+export const calendarAttendanceLabel = style({
+  display: 'block',
+  background: vars.$color.bg.brandWeak,
+  color: vars.$color.fg.brand,
+});
 
 export const attendanceButton = style({
   width: '100%',
@@ -463,6 +518,15 @@ export const quickCardWrapper = style({
   flexDirection: 'column',
 });
 
+// 홈 안내는 본문 위에 표시하되 팀 세션 결과 시트와 배경보다 아래에 둡니다.
+export const helpBubblePositioner = style({
+  selectors: {
+    '&&': {
+      zIndex: 1,
+    },
+  },
+});
+
 export const helpBubbleContent = style({
   backgroundColor: `${vars.$color.bg.neutralSolid} !important`,
   padding: '8px 10px !important',
@@ -683,9 +747,4 @@ export const sheetSecondaryButton = style({
   color: `${vars.$color.fg.neutralSubtle} !important`,
   fontSize: '16px !important',
   fontWeight: '700 !important',
-});
-
-export const calendarDateToday = style({
-  textDecoration: 'underline',
-  textUnderlineOffset: '4px',
 });

@@ -108,14 +108,15 @@ vi.mock('./session-location-map', () => ({
   ),
 }));
 const lookup = vi.mocked(lookupCoordinates);
-const initial: SessionInput = {
+const initial = {
   name: '기존 세션',
-  date: '2020-01-01',
+  startDate: '2020-01-01',
+  endDate: '2020-01-01',
   startTime: '13:00:10',
   endTime: '17:00:20',
   type: 'regular',
   location: { roadAddress: '저장된 주소', detailAddress: '3층', latitude: 37, longitude: 127 },
-};
+} satisfies Extract<SessionInput, { type: 'regular' }>;
 function setup(
   initialValues?: SessionInput,
   save = vi.fn<(value: SessionInput) => Promise<void>>().mockResolvedValue(undefined),
@@ -196,7 +197,8 @@ it('정규 장소 초안을 보존하고 팀 세션에는 장소 입력과 값�
   await user.click(screen.getByRole('button', { name: '저장' }));
   expect(save).toHaveBeenLastCalledWith({
     name: initial.name,
-    date: initial.date,
+    startDate: initial.startDate,
+    endDate: initial.endDate,
     startTime: initial.startTime,
     endTime: initial.endTime,
     type: 'team',
@@ -216,7 +218,8 @@ it('제출 시 필수 입력과 종료 시간을 검증하고 이후 변경 시 
   expect(screen.getByText('주소를 선택하고 좌표 조회를 완료해 주세요.')).toBeInTheDocument();
   fill('세션명', '  새 세션  ');
   expect(screen.queryByText('세션명을 입력하세요.')).not.toBeInTheDocument();
-  fill('날짜 (한국 시간)', '2020-01-01');
+  fill('세션 시작일 (한국 시간)', '2020-01-01');
+  fill('세션 종료일 (한국 시간)', '2020-01-01');
   fill('시작 시간', '14:00');
   fill('종료 시간', '13:00');
   await user.click(screen.getByRole('radio', { name: '팀 세션' }));
@@ -226,7 +229,8 @@ it('제출 시 필수 입력과 종료 시간을 검증하고 이후 변경 시 
   await user.click(screen.getByRole('button', { name: '저장' }));
   expect(save).toHaveBeenCalledWith({
     name: '새 세션',
-    date: '2020-01-01',
+    startDate: '2020-01-01',
+    endDate: '2020-01-01',
     startTime: '14:00:00',
     endTime: '15:00:00',
     type: 'team',
@@ -235,7 +239,8 @@ it('제출 시 필수 입력과 종료 시간을 검증하고 이후 변경 시 
 it('같은 분의 수정 시간을 바꾸지 않으면 초 단위 원본을 보존한다', async () => {
   const sameMinute = {
     name: '같은 분 세션',
-    date: '2020-01-01',
+    startDate: '2020-01-01',
+    endDate: '2020-01-01',
     startTime: '14:00:10',
     endTime: '14:00:30',
     type: 'team',
@@ -247,7 +252,8 @@ it('같은 분의 수정 시간을 바꾸지 않으면 초 단위 원본을 보�
 it('도로명주소와 상세주소는 각각 255자까지만 허용한다', () => {
   const values = {
     name: '장소 길이 검증',
-    date: '2020-01-01',
+    startDate: '2020-01-01',
+    endDate: '2020-01-01',
     startTime: '13:00',
     endTime: '17:00',
     type: 'regular',
@@ -334,7 +340,8 @@ it('조회 중에도 팀 세션을 저장하고 정규 세션 복귀 시 완료�
   await user.click(screen.getByRole('button', { name: '저장' }));
   expect(save).toHaveBeenLastCalledWith({
     name: initial.name,
-    date: initial.date,
+    startDate: initial.startDate,
+    endDate: initial.endDate,
     startTime: initial.startTime,
     endTime: initial.endTime,
     type: 'team',

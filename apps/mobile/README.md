@@ -304,3 +304,24 @@ development build와 TestFlight에서 로그인, 세션 복원·갱신, 로그�
 - [Expo App version 관리](https://docs.expo.dev/build-reference/app-versions/)
 
 Firebase 푸시 SDK·설정이 추가된 앱 runtime은 1.0.6이다. 1.0.5 기반과 구분하며 새 빌드가 필요하다.
+
+## Expo 버전 검사 임시 예외
+
+기존 1.0.8 설치본의 네이티브 의존성을 유지하기 위해 Expo Doctor가 권장한 업데이트를
+이번에는 적용하지 않는다. package.json의 `expo.install.exclude`는 아래 권장 범위의
+버전 경고만 임시 제외한다. 나머지 Doctor 검사와 pnpm 공급망 정책은 유지한다.
+
+| 패키지             | 유지하는 lockfile 버전 | 제외하는 권장 범위 |
+| ------------------ | ---------------------- | ------------------ |
+| expo               | 58.0.26                | ~58.1.0            |
+| expo-crypto        | 58.0.8                 | ~58.0.9            |
+| expo-dev-client    | 58.0.21                | ~58.0.22           |
+| expo-file-system   | 58.0.14                | ~58.0.15           |
+| expo-location      | 58.0.22                | ~58.0.23           |
+| expo-router        | 58.0.32                | ~58.0.33           |
+| expo-splash-screen | 58.0.14                | ~58.0.15           |
+| expo-updates       | 58.0.22                | ~58.0.23           |
+
+exclude의 버전 범위는 설치 버전이 아닌 Expo가 제안하는 권장 범위에 적용된다. 다음
+네이티브 업데이트에서 의존성을 함께 검증할 때 이 8개 예외를 제거한다. 앱 버전과 runtime은
+1.0.8을 유지한다. 예외 적용은 기존 설치본의 OTA·실기기 검증을 대신하지 않는다.
