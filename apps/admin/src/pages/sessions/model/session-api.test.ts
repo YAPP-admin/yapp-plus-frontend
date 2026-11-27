@@ -12,7 +12,8 @@ import {
 
 const CREATE_INPUT = {
   name: '정규 세션',
-  date: '2026-11-21',
+  startDate: '2026-11-21',
+  endDate: '2026-11-22',
   startTime: '14:00:00',
   endTime: '18:00:00',
   type: 'regular',
@@ -78,7 +79,8 @@ it('기수 경로와 유형별 전체 본문을 보내고 생성된 세션 ID를
   expect(requestedBody).toEqual({
     name: '정규 세션',
     location: '서울특별시 중구 세종대로 110 예시 교육장',
-    date: '2026-11-21',
+    startDate: '2026-11-21',
+    endDate: '2026-11-22',
     startTime: '14:00:00',
     endTime: '18:00:00',
     type: 'REGULAR',

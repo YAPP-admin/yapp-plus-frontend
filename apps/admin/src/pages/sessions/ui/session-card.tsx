@@ -91,12 +91,14 @@ function SessionDetails({ session }: { session: SessionViewModel }) {
       <div className={styles.detail}>
         <dt className={styles.term}>일정</dt>
         <dd className={styles.value}>
-          <time dateTime={`${session.date}T${session.startTime}+09:00`}>
-            {session.date.replaceAll('-', '.')} · {session.startTime.slice(0, 5)}
+          <time dateTime={`${session.startDate}T${session.startTime}+09:00`}>
+            {session.startDate.replaceAll('-', '.')} · {session.startTime.slice(0, 5)}
           </time>
           {' – '}
-          <time dateTime={`${session.date}T${session.endTime}+09:00`}>
-            {session.endTime.slice(0, 5)}
+          <time dateTime={`${session.endDate}T${session.endTime}+09:00`}>
+            {session.endDate === session.startDate
+              ? session.endTime.slice(0, 5)
+              : `${session.endDate.replaceAll('-', '.')} · ${session.endTime.slice(0, 5)}`}
           </time>
         </dd>
       </div>

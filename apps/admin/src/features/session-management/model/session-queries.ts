@@ -60,7 +60,9 @@ export const sessionsQueryOptions = (generationId: number) => {
         id: String(session.sessionId),
         name: session.name,
         type: session.type === 'TEAM' ? 'team' : 'regular',
-        date: session.date,
+        startDate: session.startDate,
+        endDate: session.endDate,
+        date: session.startDate,
         startTime: session.startTime,
         endTime: session.endTime,
         phase:

@@ -7,7 +7,8 @@ const response = {
   sessionId: 12,
   name: '정규 세션',
   location: '서울특별시 중구 세종대로 110 예시 교육장',
-  date: '2026-11-20',
+  startDate: '2026-11-20',
+  endDate: '2026-11-21',
   startTime: '14:00:10',
   endTime: '14:00:30',
   type: 'REGULAR' as const,
@@ -43,10 +44,20 @@ it('조회 응답의 초 단위 시간과 출석 상태를 보존한다', () => 
   });
 });
 
+it('legacy 단일 날짜 응답은 동일한 시작일·종료일로 복원한다', () => {
+  const { startDate: _startDate, endDate: _endDate, ...legacyResponse } = response;
+
+  expect(toSessionViewModel({ ...legacyResponse, date: '2026-11-20' })).toMatchObject({
+    startDate: '2026-11-20',
+    endDate: '2026-11-20',
+  });
+});
+
 it('수정 입력은 조회한 정규 장소와 초 단위 시간을 그대로 복원한다', () => {
   expect(toSessionInput(toSessionViewModel(response))).toEqual({
     name: '정규 세션',
-    date: '2026-11-20',
+    startDate: '2026-11-20',
+    endDate: '2026-11-21',
     startTime: '14:00:10',
     endTime: '14:00:30',
     type: 'regular',
@@ -63,7 +74,8 @@ it('정규 세션은 장소 전체를 API 요청으로 변환한다', () => {
   expect(
     toCreateSessionRequest({
       name: ' 정규 세션 ',
-      date: '2026-11-20',
+      startDate: '2026-11-20',
+      endDate: '2026-11-21',
       startTime: '14:00',
       endTime: '15:00',
       type: 'regular',
@@ -77,7 +89,8 @@ it('정규 세션은 장소 전체를 API 요청으로 변환한다', () => {
   ).toEqual({
     name: '정규 세션',
     location: '서울특별시 중구 세종대로 110 예시 교육장',
-    date: '2026-11-20',
+    startDate: '2026-11-20',
+    endDate: '2026-11-21',
     startTime: '14:00',
     endTime: '15:00',
     type: 'REGULAR',
@@ -92,7 +105,8 @@ it('팀 세션은 장소 필드를 모두 null로 변환한다', () => {
   expect(
     toCreateSessionRequest({
       name: '팀 세션',
-      date: '2026-11-20',
+      startDate: '2026-11-20',
+      endDate: '2026-11-21',
       startTime: '14:00',
       endTime: '15:00',
       type: 'team',
@@ -100,7 +114,8 @@ it('팀 세션은 장소 필드를 모두 null로 변환한다', () => {
   ).toEqual({
     name: '팀 세션',
     location: null,
-    date: '2026-11-20',
+    startDate: '2026-11-20',
+    endDate: '2026-11-21',
     startTime: '14:00',
     endTime: '15:00',
     type: 'TEAM',

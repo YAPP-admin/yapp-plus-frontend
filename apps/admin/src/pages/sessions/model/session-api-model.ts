@@ -20,10 +20,27 @@ const teamSessionResponseSchema = zAdminSessionResponse.extend({
   longitude: z.null(),
 });
 
-const sessionResponseSchema = z.discriminatedUnion('type', [
-  regularSessionResponseSchema,
-  teamSessionResponseSchema,
-]);
+const sessionResponseSchema = z.preprocess(
+  (input) => {
+    // 관리자 API 계약이 배포되는 동안 기존 date 응답도 동일 날짜의 기간으로 복원한다.
+    if (typeof input !== 'object' || input === null) {
+      return input;
+    }
+    const parsed = z.record(z.string(), z.unknown()).safeParse(input);
+    if (!parsed.success) {
+      return input;
+    }
+    const value = parsed.data;
+    if (typeof value.startDate === 'string' && typeof value.endDate === 'string') {
+      return value;
+    }
+    if (typeof value.date === 'string') {
+      return { ...value, startDate: value.date, endDate: value.date };
+    }
+    return value;
+  },
+  z.discriminatedUnion('type', [regularSessionResponseSchema, teamSessionResponseSchema]),
+);
 
 type SessionAttendanceViewModel = {
   started: boolean;
@@ -38,7 +55,8 @@ type SessionAttendanceViewModel = {
 type SessionViewModelBase = {
   id: number;
   name: string;
-  date: string;
+  startDate: string;
+  endDate: string;
   startTime: string;
   endTime: string;
   attendance: SessionAttendanceViewModel;
@@ -64,7 +82,8 @@ export function toSessionViewModel(response: unknown): SessionViewModel {
   const base = {
     id: Number(data.sessionId),
     name: data.name,
-    date: data.date,
+    startDate: data.startDate,
+    endDate: data.endDate,
     startTime: data.startTime,
     endTime: data.endTime,
     attendance: {
@@ -95,7 +114,8 @@ export function toSessionViewModel(response: unknown): SessionViewModel {
 export function toSessionInput(session: SessionViewModel): SessionInput {
   const common = {
     name: session.name,
-    date: session.date,
+    startDate: session.startDate,
+    endDate: session.endDate,
     startTime: session.startTime,
     endTime: session.endTime,
   };
@@ -119,7 +139,8 @@ export function toCreateSessionRequest(input: SessionInput): CreateSessionReques
     return {
       name: data.name,
       location: null,
-      date: data.date,
+      startDate: data.startDate,
+      endDate: data.endDate,
       startTime: data.startTime,
       endTime: data.endTime,
       type: 'TEAM',
@@ -135,7 +156,8 @@ export function toCreateSessionRequest(input: SessionInput): CreateSessionReques
   return {
     name: data.name,
     location: [data.location.roadAddress, detailAddress].filter(Boolean).join(' '),
-    date: data.date,
+    startDate: data.startDate,
+    endDate: data.endDate,
     startTime: data.startTime,
     endTime: data.endTime,
     type: 'REGULAR',

@@ -738,10 +738,12 @@ export const fakeReplaceTeamMembersRequest = (options?: Options): ReplaceTeamMem
 
 export const fakeCreateSessionRequest = (options?: Options): CreateSessionRequest => {
   const f = options?.faker ?? faker;
+  const startDate = f.date.recent().toISOString().slice(0, 10);
   return {
     name: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
-    date: f.date.recent().toISOString().slice(0, 10),
+    startDate,
+    endDate: startDate,
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
@@ -2424,11 +2426,13 @@ export const fakeAttendanceSummaryResponse = (options?: Options): AttendanceSumm
 
 export const fakeAdminSessionResponse = (options?: Options): AdminSessionResponse => {
   const f = options?.faker ?? faker;
+  const startDate = f.date.recent().toISOString().slice(0, 10);
   return {
     sessionId: f.number.int(),
     name: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
-    date: f.date.recent().toISOString().slice(0, 10),
+    startDate,
+    endDate: startDate,
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),

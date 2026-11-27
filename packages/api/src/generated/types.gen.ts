@@ -295,7 +295,8 @@ export type CreateSessionRequest = {
    * REGULAR 세션 장소. TEAM이면 null
    */
   location: string | null;
-  date: string;
+  startDate: string;
+  endDate: string;
   startTime: string;
   endTime: string;
   type: 'REGULAR' | 'TEAM';
@@ -1497,7 +1498,8 @@ export type AdminSessionResponse = {
   sessionId: number;
   name: string;
   location: string | null;
-  date: string;
+  startDate: string;
+  endDate: string;
   startTime: string;
   endTime: string;
   type: 'REGULAR' | 'TEAM';
