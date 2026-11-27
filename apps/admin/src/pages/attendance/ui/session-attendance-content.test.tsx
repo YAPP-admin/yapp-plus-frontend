@@ -85,6 +85,7 @@ it('열린 정규 세션에서 출석 마감 요청을 보낸다', async () => {
   await screen.findByRole('table', { name: /출석 체크/ });
   await userEvent.click(screen.getByRole('button', { name: '출석 마감' }));
   expect(closeAttendance).toHaveBeenCalledWith(data.session.id);
+  expect(await screen.findByRole('button', { name: '마감 취소' })).toBeVisible();
 });
 
 it('출석 코드를 발급하고 재발급하면 코드 조회를 갱신한다', async () => {
@@ -218,6 +219,11 @@ it('출결 상태와 명찰 확인은 서로 독립적으로 mock mutation을 �
     throw new Error('mock 회원이 없습니다.');
   }
   vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(getAttendanceCode).mockResolvedValue({
+    state: 'notIssued',
+    code: null,
+    expiresAt: null,
+  });
   vi.mocked(updateMemberAttendance).mockResolvedValue(member);
   vi.mocked(updateMemberBadge).mockResolvedValue(member);
   render(
@@ -226,10 +232,14 @@ it('출결 상태와 명찰 확인은 서로 독립적으로 mock mutation을 �
     </QueryClientProvider>,
   );
   await screen.findByRole('table', { name: /출석 체크/ });
-  await userEvent.selectOptions(
-    screen.getByRole('combobox', { name: '가상 회원 1 출결 상태' }),
-    'absent',
-  );
+  await userEvent.click(screen.getByRole('button', { name: /가상 회원 1 출결 상태/ }));
+  const picker = await screen.findByRole('dialog', { name: '현재 출결 선택' });
+  for (const label of ['출석', '결석', '무단결석', '지각', '무단지각', '조퇴', '무단조퇴']) {
+    expect(within(picker).getAllByText(label, { exact: true }).length).toBeGreaterThan(0);
+  }
+  expect(within(picker).getAllByText('1시간', { exact: true })).toHaveLength(4);
+  expect(within(picker).getAllByText('3시간', { exact: true })).toHaveLength(4);
+  await userEvent.click(within(picker).getByRole('button', { name: /^무단결석 -30점/ }));
   const badgeButton = screen.getAllByRole('button', { name: '명찰 확인' })[0];
   if (!badgeButton) {
     throw new Error('명찰 버튼이 없습니다.');
@@ -237,12 +247,63 @@ it('출결 상태와 명찰 확인은 서로 독립적으로 mock mutation을 �
   await userEvent.click(badgeButton);
   expect(updateMemberAttendance).toHaveBeenCalledWith(
     data.session.id,
-    expect.objectContaining({ membershipId: 'mock-member-1', status: 'absent' }),
+    expect.objectContaining({
+      membershipId: 'mock-member-1',
+      status: 'absent',
+      penaltyCategory: 'unauthorized',
+    }),
   );
   expect(updateMemberBadge).toHaveBeenCalledWith(data.session.id, {
     membershipId: 'mock-member-1',
     verified: true,
   });
+});
+
+it('시간 상태는 여러 그룹을 선택해 함께 적용한다', async () => {
+  const data = createSessionStore().getSessionAttendance('demo-regular-session');
+  vi.mocked(getSessionAttendance).mockResolvedValue(data);
+  vi.mocked(getAttendanceCode).mockResolvedValue({
+    state: 'notIssued',
+    code: null,
+    expiresAt: null,
+  });
+  const member = data.members[0];
+  if (!member) {
+    throw new Error('mock 회원이 없습니다.');
+  }
+  vi.mocked(updateMemberAttendance).mockClear().mockResolvedValue(member);
+  render(
+    <QueryClientProvider client={new QueryClient()}>
+      <SessionAttendanceContent sessionId={data.session.id} part="all" />
+    </QueryClientProvider>,
+  );
+
+  await screen.findByRole('table', { name: /출석 체크/ });
+  await userEvent.click(screen.getByRole('button', { name: /가상 회원 1 출결 상태/ }));
+  const picker = await screen.findByRole('dialog', { name: '현재 출결 선택' });
+  const oneHourOptions = within(picker).getAllByRole('button', { name: '1시간 -10점' });
+  const lateOption = oneHourOptions[0];
+  const earlyLeaveOption = oneHourOptions[1];
+  if (!lateOption || !earlyLeaveOption) {
+    throw new Error('지각·조퇴 선택지가 없습니다.');
+  }
+
+  await userEvent.click(lateOption);
+  await userEvent.click(earlyLeaveOption);
+  expect(lateOption).toHaveAttribute('aria-pressed', 'true');
+  expect(earlyLeaveOption).toHaveAttribute('aria-pressed', 'true');
+  await userEvent.click(within(picker).getByRole('button', { name: '선택 적용' }));
+
+  expect(updateMemberAttendance).toHaveBeenNthCalledWith(
+    1,
+    data.session.id,
+    expect.objectContaining({ status: 'late', durationBand: 'withinOneHour' }),
+  );
+  expect(updateMemberAttendance).toHaveBeenNthCalledWith(
+    2,
+    data.session.id,
+    expect.objectContaining({ status: 'earlyLeave', durationBand: 'withinOneHour' }),
+  );
 });
 
 it('팀 세션의 검수 대기 사진은 출석 마감을 막고 승인 후 마감할 수 있다', async () => {
@@ -275,6 +336,7 @@ it('팀 세션의 검수 대기 사진은 출석 마감을 막고 승인 후 마
   );
   await screen.findByText('검수 대기');
   expect(screen.getByRole('region', { name: '팀 사진 검수' })).toHaveTextContent('검수 대기');
+  expect(screen.queryByRole('region', { name: '출석 코드' })).not.toBeInTheDocument();
   expect(screen.getByRole('button', { name: '출석 마감' })).toBeDisabled();
   await userEvent.click(screen.getByRole('button', { name: '승인' }));
   expect(updateTeamPhotoReview).toHaveBeenCalledWith(data.session.id, {
