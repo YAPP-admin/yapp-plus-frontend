@@ -6,7 +6,9 @@ import {
   useSuspenseQuery,
 } from '@tanstack/react-query';
 import { useState, type ReactNode } from 'react';
+import { Popover } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
+import { Check, ChevronDown, X } from 'lucide-react';
 import {
   closeAttendance,
   cancelAttendance,
@@ -35,6 +37,7 @@ import {
   issueAttendanceCode,
   reissueAttendanceCode,
   type AttendanceEditInput,
+  type AttendanceMutationInput,
   type AttendanceMemberViewModel,
   type AttendanceCodeViewModel,
   type AttendanceSessionViewModel,
@@ -62,7 +65,6 @@ const reviewStateLabels = {
   unknown: '상태 확인 필요',
 };
 const summaryStatuses = ['present', 'late', 'earlyLeave', 'absent', 'undecided'] as const;
-const editableStatuses = ['undecided', 'present', 'late', 'earlyLeave', 'absent'] as const;
 const timeFormatter = new Intl.DateTimeFormat('ko-KR', {
   timeZone: 'Asia/Seoul',
   hour: '2-digit',
@@ -72,33 +74,327 @@ const timeFormatter = new Intl.DateTimeFormat('ko-KR', {
 const formatTime = (value: string | null) =>
   value ? timeFormatter.format(new Date(value)) : '기록 없음';
 
-function createAttendanceEdit(
-  member: AttendanceMemberViewModel,
-  status: AttendanceEditInput['status'],
-): AttendanceEditInput {
-  if (status === 'late' || status === 'earlyLeave') {
-    return {
-      membershipId: member.membershipId,
-      status,
+type AttendanceEditDetails =
+  | {
+      status: 'undecided' | 'present';
+      penaltyCategory: null;
+      durationBand: null;
+    }
+  | {
+      status: 'late' | 'earlyLeave';
+      penaltyCategory: 'regular' | 'unauthorized';
+      durationBand: 'withinOneHour' | 'withinThreeHours';
+    }
+  | {
+      status: 'absent';
+      penaltyCategory: 'regular' | 'unauthorized';
+      durationBand: null;
+    };
+
+type AttendanceStatusOption = {
+  value: string;
+  label: string;
+  dotClass: string;
+  edit: AttendanceEditDetails | null;
+};
+
+const attendanceStatusOptions = [
+  {
+    value: 'undecided',
+    label: '미정',
+    dotClass: styles.attendanceStatusDotUndecided,
+    edit: { status: 'undecided', penaltyCategory: null, durationBand: null },
+  },
+  {
+    value: 'present',
+    label: '출석',
+    dotClass: styles.attendanceStatusDotPresent,
+    edit: { status: 'present', penaltyCategory: null, durationBand: null },
+  },
+  {
+    value: 'absent',
+    label: '결석',
+    dotClass: styles.attendanceStatusDotAbsent,
+    edit: { status: 'absent', penaltyCategory: 'regular', durationBand: null },
+  },
+  {
+    value: 'lateWithinOneHour',
+    label: '지각1시간',
+    dotClass: styles.attendanceStatusDotLateOneHour,
+    edit: {
+      status: 'late',
       penaltyCategory: 'regular',
       durationBand: 'withinOneHour',
-      reason: member.attendance.reason,
-    };
-  }
-  if (status === 'absent') {
-    return {
-      membershipId: member.membershipId,
-      status,
+    },
+  },
+  {
+    value: 'lateWithinThreeHours',
+    label: '지각3시간',
+    dotClass: styles.attendanceStatusDotLateThreeHours,
+    edit: {
+      status: 'late',
       penaltyCategory: 'regular',
-      durationBand: null,
-      reason: member.attendance.reason,
-    };
+      durationBand: 'withinThreeHours',
+    },
+  },
+  {
+    value: 'earlyLeaveWithinOneHour',
+    label: '조퇴1시간',
+    dotClass: styles.attendanceStatusDotEarlyLeaveOneHour,
+    edit: {
+      status: 'earlyLeave',
+      penaltyCategory: 'regular',
+      durationBand: 'withinOneHour',
+    },
+  },
+  {
+    value: 'earlyLeaveWithinThreeHours',
+    label: '조퇴3시간',
+    dotClass: styles.attendanceStatusDotEarlyLeaveThreeHours,
+    edit: {
+      status: 'earlyLeave',
+      penaltyCategory: 'regular',
+      durationBand: 'withinThreeHours',
+    },
+  },
+  {
+    value: 'unauthorizedEarlyLeaveWithinOneHour',
+    label: '무단조퇴1시간',
+    dotClass: styles.attendanceStatusDotUnauthorizedEarlyLeaveOneHour,
+    edit: {
+      status: 'earlyLeave',
+      penaltyCategory: 'unauthorized',
+      durationBand: 'withinOneHour',
+    },
+  },
+  {
+    value: 'unauthorizedEarlyLeaveWithinThreeHours',
+    label: '무단조퇴3시간',
+    dotClass: styles.attendanceStatusDotUnauthorizedEarlyLeaveThreeHours,
+    edit: {
+      status: 'earlyLeave',
+      penaltyCategory: 'unauthorized',
+      durationBand: 'withinThreeHours',
+    },
+  },
+  {
+    value: 'unauthorizedLateWithinOneHour',
+    label: '무단지각1시간',
+    dotClass: styles.attendanceStatusDotUnauthorizedLateOneHour,
+    edit: {
+      status: 'late',
+      penaltyCategory: 'unauthorized',
+      durationBand: 'withinOneHour',
+    },
+  },
+  {
+    value: 'unauthorizedLateWithinThreeHours',
+    label: '무단지각3시간',
+    dotClass: styles.attendanceStatusDotUnauthorizedLateThreeHours,
+    edit: {
+      status: 'late',
+      penaltyCategory: 'unauthorized',
+      durationBand: 'withinThreeHours',
+    },
+  },
+  {
+    value: 'unauthorizedAbsent',
+    label: '무단결석',
+    dotClass: styles.attendanceStatusDotUnauthorizedAbsent,
+    edit: { status: 'absent', penaltyCategory: 'unauthorized', durationBand: null },
+  },
+  {
+    value: 'lateOneHourAndEarlyLeaveOneHour',
+    label: '지각1+조퇴1',
+    dotClass: styles.attendanceStatusDotLateOneHourAndEarlyLeaveOneHour,
+    edit: null,
+  },
+  {
+    value: 'lateThreeHoursAndEarlyLeaveOneHour',
+    label: '지각3+조퇴1',
+    dotClass: styles.attendanceStatusDotLateThreeHoursAndEarlyLeaveOneHour,
+    edit: null,
+  },
+  {
+    value: 'lateOneHourAndEarlyLeaveThreeHours',
+    label: '지각1+조퇴3',
+    dotClass: styles.attendanceStatusDotLateOneHourAndEarlyLeaveThreeHours,
+    edit: null,
+  },
+  {
+    value: 'lateThreeHoursAndEarlyLeaveThreeHours',
+    label: '지각3+조퇴3',
+    dotClass: styles.attendanceStatusDotLateThreeHoursAndEarlyLeaveThreeHours,
+    edit: null,
+  },
+] satisfies readonly AttendanceStatusOption[];
+
+type AttendanceStatusOptionValue = (typeof attendanceStatusOptions)[number]['value'];
+
+function getAttendanceStatusOptionValue(
+  attendance: AttendanceMemberViewModel['attendance'],
+): AttendanceStatusOptionValue {
+  if (attendance.status === 'late') {
+    if (attendance.penaltyCategory === 'unauthorized') {
+      return attendance.durationBand === 'withinThreeHours'
+        ? 'unauthorizedLateWithinThreeHours'
+        : 'unauthorizedLateWithinOneHour';
+    }
+    return attendance.durationBand === 'withinThreeHours'
+      ? 'lateWithinThreeHours'
+      : 'lateWithinOneHour';
   }
+  if (attendance.status === 'earlyLeave') {
+    if (attendance.penaltyCategory === 'unauthorized') {
+      return attendance.durationBand === 'withinThreeHours'
+        ? 'unauthorizedEarlyLeaveWithinThreeHours'
+        : 'unauthorizedEarlyLeaveWithinOneHour';
+    }
+    return attendance.durationBand === 'withinThreeHours'
+      ? 'earlyLeaveWithinThreeHours'
+      : 'earlyLeaveWithinOneHour';
+  }
+  if (attendance.status === 'present') {
+    return 'present';
+  }
+  if (attendance.status === 'absent') {
+    return attendance.penaltyCategory === 'unauthorized' ? 'unauthorizedAbsent' : 'absent';
+  }
+  return 'undecided';
+}
+
+function getAttendanceStatusOption(value: AttendanceStatusOptionValue): AttendanceStatusOption {
+  const option = attendanceStatusOptions.find((candidate) => candidate.value === value);
+  if (!option) {
+    throw new Error(`지원하지 않는 출결 선택값입니다: ${value}`);
+  }
+  return option;
+}
+
+function getAttendanceStatusOptionValueFromEdit(
+  edit: Pick<AttendanceEditInput, 'status' | 'penaltyCategory' | 'durationBand'>,
+): AttendanceStatusOptionValue {
+  if (edit.status === 'late') {
+    if (edit.penaltyCategory === 'unauthorized') {
+      return edit.durationBand === 'withinThreeHours'
+        ? 'unauthorizedLateWithinThreeHours'
+        : 'unauthorizedLateWithinOneHour';
+    }
+    return edit.durationBand === 'withinThreeHours' ? 'lateWithinThreeHours' : 'lateWithinOneHour';
+  }
+  if (edit.status === 'earlyLeave') {
+    if (edit.penaltyCategory === 'unauthorized') {
+      return edit.durationBand === 'withinThreeHours'
+        ? 'unauthorizedEarlyLeaveWithinThreeHours'
+        : 'unauthorizedEarlyLeaveWithinOneHour';
+    }
+    return edit.durationBand === 'withinThreeHours'
+      ? 'earlyLeaveWithinThreeHours'
+      : 'earlyLeaveWithinOneHour';
+  }
+  if (edit.status === 'absent') {
+    return edit.penaltyCategory === 'unauthorized' ? 'unauthorizedAbsent' : 'absent';
+  }
+  return edit.status;
+}
+
+type AttendancePickerOption = AttendanceStatusOption & {
+  durationLabel?: '1시간' | '3시간';
+  scoreLabel: string;
+};
+
+type AttendancePickerGroup = {
+  value: 'late' | 'earlyLeave' | 'unauthorizedLate' | 'unauthorizedEarlyLeave';
+  label: string;
+  dotClass: string;
+  options: AttendancePickerOption[];
+};
+type AttendancePickerGroupValue = AttendancePickerGroup['value'];
+
+const createPickerOption = (
+  value: AttendanceStatusOptionValue,
+  scoreLabel: string,
+  durationLabel?: AttendancePickerOption['durationLabel'],
+): AttendancePickerOption => ({
+  ...getAttendanceStatusOption(value),
+  scoreLabel,
+  durationLabel,
+});
+
+const singleAttendancePickerOptions: AttendancePickerOption[] = [
+  createPickerOption('present', '0점'),
+  createPickerOption('absent', '-20점'),
+  createPickerOption('unauthorizedAbsent', '-30점'),
+];
+
+const attendancePickerGroups: AttendancePickerGroup[] = [
+  {
+    value: 'late',
+    label: '지각',
+    dotClass: styles.attendanceStatusDotLateOneHour,
+    options: [
+      createPickerOption('lateWithinOneHour', '-10점', '1시간'),
+      createPickerOption('lateWithinThreeHours', '-15점', '3시간'),
+    ],
+  },
+  {
+    value: 'unauthorizedLate',
+    label: '무단지각',
+    dotClass: styles.attendanceStatusDotUnauthorizedLateOneHour,
+    options: [
+      createPickerOption('unauthorizedLateWithinOneHour', '-15점', '1시간'),
+      createPickerOption('unauthorizedLateWithinThreeHours', '-20점', '3시간'),
+    ],
+  },
+  {
+    value: 'earlyLeave',
+    label: '조퇴',
+    dotClass: styles.attendanceStatusDotEarlyLeaveOneHour,
+    options: [
+      createPickerOption('earlyLeaveWithinOneHour', '-10점', '1시간'),
+      createPickerOption('earlyLeaveWithinThreeHours', '-15점', '3시간'),
+    ],
+  },
+  {
+    value: 'unauthorizedEarlyLeave',
+    label: '무단조퇴',
+    dotClass: styles.attendanceStatusDotUnauthorizedEarlyLeaveOneHour,
+    options: [
+      createPickerOption('unauthorizedEarlyLeaveWithinOneHour', '-15점', '1시간'),
+      createPickerOption('unauthorizedEarlyLeaveWithinThreeHours', '-20점', '3시간'),
+    ],
+  },
+];
+
+function getAttendancePickerGroup(value: AttendanceStatusOptionValue) {
+  return attendancePickerGroups.find((group) =>
+    group.options.some((option) => option.value === value),
+  );
+}
+
+function getAttendancePickerOption(value: AttendanceStatusOptionValue) {
+  return attendancePickerGroups
+    .flatMap((group) => group.options)
+    .find((option) => option.value === value);
+}
+
+function formatAttendancePickerOption(option: AttendancePickerOption) {
+  return option.durationLabel
+    ? `${option.label.replace(/1시간|3시간/, '')} ${option.durationLabel}`
+    : option.label;
+}
+
+function getScoreValue(scoreLabel: string) {
+  return Number.parseInt(scoreLabel.replace('점', ''), 10);
+}
+
+function createAttendanceEdit(
+  member: AttendanceMemberViewModel,
+  edit: AttendanceEditDetails,
+): AttendanceEditInput {
   return {
     membershipId: member.membershipId,
-    status,
-    penaltyCategory: null,
-    durationBand: null,
+    ...edit,
     reason: member.attendance.reason,
   };
 }
@@ -113,13 +409,86 @@ function MemberRow({
   member: AttendanceMemberViewModel;
   onAttendanceChange: (
     member: AttendanceMemberViewModel,
-    status: AttendanceEditInput['status'],
+    edit: AttendanceEditDetails | AttendanceEditDetails[],
   ) => void;
   onBadgeChange: (member: AttendanceMemberViewModel) => void;
   onHistoryOpen: (member: AttendanceMemberViewModel) => void;
   disabled: boolean;
 }) {
   const part = attendancePartSchema.safeParse(member.part);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const serverSelectedOption = getAttendanceStatusOption(
+    getAttendanceStatusOptionValue(member.attendance),
+  );
+  const mockSelectionValues = member.attendanceEdits?.map(getAttendanceStatusOptionValueFromEdit);
+  const mockSingleOptionValue = mockSelectionValues?.find(
+    (value) => getAttendancePickerGroup(value) === undefined,
+  );
+  const selectedSingleOption = mockSingleOptionValue
+    ? getAttendanceStatusOption(mockSingleOptionValue)
+    : serverSelectedOption;
+  const [selectedTimeOptionValues, setSelectedTimeOptionValues] = useState<
+    AttendanceStatusOptionValue[]
+  >(() => {
+    const mockTimeOptionValues = mockSelectionValues?.filter(
+      (value) => getAttendancePickerGroup(value) !== undefined,
+    );
+    if (mockTimeOptionValues !== undefined && mockTimeOptionValues.length > 0) {
+      return mockTimeOptionValues;
+    }
+    return getAttendancePickerGroup(serverSelectedOption.value) ? [serverSelectedOption.value] : [];
+  });
+  const selectedTimeOptions = selectedTimeOptionValues.flatMap((value) => {
+    const option = getAttendancePickerOption(value);
+    return option === undefined ? [] : [option];
+  });
+  const triggerOptions =
+    selectedTimeOptions.length > 0 ? selectedTimeOptions : [selectedSingleOption];
+  const triggerLabel = triggerOptions
+    .map((option) => {
+      const timeOption = selectedTimeOptions.find((candidate) => candidate.value === option.value);
+      return timeOption ? formatAttendancePickerOption(timeOption) : option.label;
+    })
+    .join(' + ');
+  let triggerScore = '점수 확인 필요';
+  if (selectedTimeOptions.length > 0) {
+    triggerScore = `${selectedTimeOptions.reduce((total, option) => total + getScoreValue(option.scoreLabel), 0)}점`;
+  } else if (member.score.delta !== null) {
+    triggerScore = `${member.score.delta}점`;
+  }
+  const isControlDisabled = disabled || !member.isEditable;
+  const handleAttendanceSelect = (option: AttendancePickerOption) => {
+    if (isControlDisabled || !option.edit) {
+      return;
+    }
+    setSelectedTimeOptionValues([]);
+    onAttendanceChange(member, option.edit);
+    setPickerOpen(false);
+  };
+  const handleTimeOptionToggle = (
+    group: AttendancePickerGroupValue,
+    option: AttendancePickerOption,
+  ) => {
+    if (isControlDisabled) {
+      return;
+    }
+    setSelectedTimeOptionValues((current) => {
+      const withoutGroup = current.filter(
+        (value) => getAttendancePickerGroup(value)?.value !== group,
+      );
+      return current.includes(option.value) ? withoutGroup : [...withoutGroup, option.value];
+    });
+  };
+  const handleTimeSelectionApply = () => {
+    const edits = selectedTimeOptions.flatMap((option) =>
+      option.edit === null ? [] : [option.edit],
+    );
+    if (edits.length === 0) {
+      return;
+    }
+    onAttendanceChange(member, edits);
+    setPickerOpen(false);
+  };
   return (
     <tr>
       <th scope="row">
@@ -137,32 +506,143 @@ function MemberRow({
           </span>
         )}
       </td>
-      <td>
-        <label className={styles.inlineControl}>
-          <span className={styles.visuallyHidden}>{member.name} 출결 상태</span>
-          <select
-            aria-label={`${member.name} 출결 상태`}
-            value={
-              member.attendance.status === 'unsupported' ? 'undecided' : member.attendance.status
-            }
-            disabled={disabled || !member.isEditable}
-            onChange={(event) => {
-              const status = editableStatuses.find((option) => option === event.target.value);
-              if (status) {
-                onAttendanceChange(member, status);
-              }
-            }}
+      <td aria-label="현재 출결 및 점수">
+        <div className={styles.inlineControl}>
+          <Popover.Root
+            open={pickerOpen}
+            onOpenChange={(open) => setPickerOpen(open)}
+            placement="bottom-start"
+            flip={false}
+            gutter={6}
           >
-            {editableStatuses.map((status) => (
-              <option key={status} value={status}>
-                {statusLabels[status]}
-              </option>
-            ))}
-          </select>
-        </label>
-        <span className={styles.secondary}>
-          {member.score.delta === null ? '점수 확인 필요' : `${member.score.delta}점`}
-        </span>
+            <Popover.Trigger
+              className={styles.attendanceSelect}
+              aria-label={`${member.name} 출결 상태 ${triggerLabel}`}
+              aria-disabled={isControlDisabled}
+              onClick={(event) => {
+                if (isControlDisabled) {
+                  event.preventDefault();
+                  event.stopPropagation();
+                }
+              }}
+            >
+              <span className={styles.attendanceTriggerValue}>
+                <span
+                  className={`${styles.attendanceStatusDot} ${selectedTimeOptions[0]?.dotClass ?? selectedSingleOption.dotClass}`}
+                  aria-hidden="true"
+                />
+                <span>{triggerLabel}</span>
+              </span>
+              <span className={styles.attendanceTriggerScore}>{triggerScore}</span>
+              <ChevronDown aria-hidden="true" size={16} />
+            </Popover.Trigger>
+            <Popover.Positioner>
+              <Popover.Content
+                className={styles.attendancePicker}
+                aria-label={`${member.name} 출결 선택`}
+              >
+                <div className={styles.attendancePickerHeader}>
+                  <div>
+                    <Popover.Title className={styles.attendancePickerTitle}>
+                      현재 출결 선택
+                    </Popover.Title>
+                    <span className={styles.attendancePickerMember}>{member.name}</span>
+                  </div>
+                  <Popover.CloseButton
+                    className={styles.attendancePickerClose}
+                    aria-label="출결 선택 닫기"
+                    type="button"
+                  >
+                    <X aria-hidden="true" size={16} />
+                  </Popover.CloseButton>
+                </div>
+                <div className={styles.attendancePickerSection}>
+                  <span className={styles.attendancePickerSectionLabel}>
+                    단일 상태 · 하나만 선택
+                  </span>
+                  <div className={styles.attendanceSingleGrid} aria-label="단일 상태">
+                    {singleAttendancePickerOptions.map((option) => {
+                      const isSelected =
+                        selectedTimeOptions.length === 0 &&
+                        option.value === selectedSingleOption.value;
+                      return (
+                        <button
+                          className={`${styles.attendanceChoice} ${styles.attendanceSingleChoice} ${isSelected ? styles.attendanceChoiceSelected : ''}`}
+                          key={option.value}
+                          type="button"
+                          aria-pressed={isSelected}
+                          onClick={() => handleAttendanceSelect(option)}
+                        >
+                          <span className={styles.attendanceChoiceLabel}>
+                            <span
+                              className={`${styles.attendanceStatusDot} ${option.dotClass}`}
+                              aria-hidden="true"
+                            />
+                            {option.label}
+                          </span>
+                          <span className={styles.attendanceChoiceScore}>{option.scoreLabel}</span>
+                          {isSelected && <Check aria-hidden="true" size={14} />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+                <div className={styles.attendancePickerSection}>
+                  <span className={styles.attendancePickerSectionLabel}>
+                    시간 상태 · 복수 선택 가능
+                  </span>
+                  <div className={styles.attendanceTimeList}>
+                    {attendancePickerGroups.map((group) => (
+                      <div className={styles.attendanceTimeRow} key={group.value}>
+                        <span className={styles.attendanceTimeLabel}>
+                          <span
+                            className={`${styles.attendanceStatusDot} ${group.dotClass}`}
+                            aria-hidden="true"
+                          />
+                          {group.label}
+                        </span>
+                        <div className={styles.attendanceTimeOptions}>
+                          {group.options.map((option) => {
+                            const isSelected = selectedTimeOptionValues.includes(option.value);
+                            return (
+                              <button
+                                className={`${styles.attendanceTimeChoice} ${isSelected ? styles.attendanceChoiceSelected : ''}`}
+                                key={option.value}
+                                type="button"
+                                aria-pressed={isSelected}
+                                onClick={() => handleTimeOptionToggle(group.value, option)}
+                              >
+                                <span>{option.durationLabel}</span>
+                                <span className={styles.attendanceChoiceScore}>
+                                  {option.scoreLabel}
+                                </span>
+                                {isSelected && <Check aria-hidden="true" size={14} />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className={styles.attendancePickerActions}>
+                    <span className={styles.attendancePickerSelectionCount}>
+                      {selectedTimeOptions.length}개 선택
+                    </span>
+                    <ActionButton
+                      variant="brandSolid"
+                      size="small"
+                      type="button"
+                      disabled={selectedTimeOptions.length === 0 || isControlDisabled}
+                      onClick={handleTimeSelectionApply}
+                    >
+                      선택 적용
+                    </ActionButton>
+                  </div>
+                </div>
+              </Popover.Content>
+            </Popover.Positioner>
+          </Popover.Root>
+        </div>
       </td>
       <td>
         <ActionButton
@@ -544,8 +1024,11 @@ function SessionAttendanceView({
   const attendanceMutation = useMutation({
     ...(generationId === undefined
       ? {
-          mutationFn: async (input: AttendanceEditInput) => {
-            await updateMemberAttendance(sessionId, input);
+          mutationFn: async (input: AttendanceMutationInput) => {
+            const edits = Array.isArray(input) ? input : [input];
+            for (const edit of edits) {
+              await updateMemberAttendance(sessionId, edit);
+            }
           },
         }
       : attendanceOverrideMutationOptions(generationId, sessionId)),
@@ -616,6 +1099,13 @@ function SessionAttendanceView({
       void queryClient.invalidateQueries({ queryKey: attendanceApiQueryKey });
     },
   });
+  let displayedSession = session;
+  if (closeMutation.isSuccess) {
+    displayedSession = { ...session, phase: 'closed', canCancelClose: true };
+  }
+  if (cancelMutation.isSuccess) {
+    displayedSession = { ...session, phase: 'open', canCancelClose: false };
+  }
   const attendanceCodeCard = (
     <AttendanceCodeCard
       code={attendanceCode}
@@ -631,9 +1121,8 @@ function SessionAttendanceView({
     return (
       <TeamSessionContent
         sessionId={sessionId}
-        session={session}
+        session={displayedSession}
         generationId={generationId}
-        attendanceCodeCard={attendanceCodeCard}
         closePending={closeMutation.isPending}
         closeError={closeMutation.isError}
         onClose={() => closeMutation.mutate()}
@@ -651,7 +1140,7 @@ function SessionAttendanceView({
   return (
     <RegularSessionContent
       sessionId={sessionId}
-      session={session}
+      session={displayedSession}
       visibleMembers={visibleMembers}
       reportedMembers={reportedMembers}
       attendanceLoading={attendanceLoading}
@@ -683,7 +1172,6 @@ function TeamSessionContent({
   sessionId,
   session,
   generationId,
-  attendanceCodeCard,
   closePending,
   closeError,
   onClose,
@@ -697,7 +1185,6 @@ function TeamSessionContent({
   sessionId: string;
   session: AttendanceSessionViewModel;
   generationId?: number;
-  attendanceCodeCard: ReactNode;
   closePending: boolean;
   closeError: boolean;
   onClose: () => void;
@@ -746,7 +1233,6 @@ function TeamSessionContent({
           )}
         </div>
       </section>
-      {attendanceCodeCard}
       <section className={styles.card} aria-label="팀 사진 검수">
         <h2 className={styles.heading}>팀 사진 검수</h2>
         <ul className={styles.reviewList}>
@@ -801,7 +1287,7 @@ function RegularSessionContent({
   attendanceError: boolean;
   attendanceCodeCard: ReactNode;
   attendancePending: boolean;
-  onAttendanceChange: (input: AttendanceEditInput) => void;
+  onAttendanceChange: (input: AttendanceMutationInput) => void;
   badgePending: boolean;
   onBadgeChange: (member: AttendanceMemberViewModel) => void;
   historyMember: AttendanceMemberViewModel | null;
@@ -941,9 +1427,15 @@ function RegularSessionContent({
                   key={member.membershipId}
                   member={member}
                   disabled={attendancePending || badgePending}
-                  onAttendanceChange={(nextMember, status) =>
-                    onAttendanceChange(createAttendanceEdit(nextMember, status))
-                  }
+                  onAttendanceChange={(nextMember, status) => {
+                    const edits = Array.isArray(status) ? status : [status];
+                    const inputs = edits.map((edit) => createAttendanceEdit(nextMember, edit));
+                    const [firstInput] = inputs;
+                    if (firstInput === undefined) {
+                      return;
+                    }
+                    onAttendanceChange(inputs.length === 1 ? firstInput : inputs);
+                  }}
                   onBadgeChange={onBadgeChange}
                   onHistoryOpen={onHistoryOpen}
                 />
