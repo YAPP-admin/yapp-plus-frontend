@@ -160,6 +160,10 @@ export const titleLink = style({
   },
 });
 
+export const disabledTitleLink = style({
+  color: vars.$color.fg.neutralMuted,
+});
+
 export const progressGroup = style({
   display: 'grid',
   gridTemplateColumns: 'minmax(4rem, 1fr) 2.25rem',
@@ -196,6 +200,22 @@ export const emptyState = style({
   color: vars.$color.fg.neutralMuted,
   fontSize: vars.$fontSize.t3,
   textAlign: 'center',
+});
+
+export const listLoading = style({
+  margin: 0,
+  padding: vars.$dimension.x6,
+  color: vars.$color.fg.neutralMuted,
+  textAlign: 'center',
+});
+
+export const error = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  gap: vars.$dimension.x3,
+  padding: vars.$dimension.x6,
+  color: vars.$color.fg.critical,
 });
 
 export const visuallyHidden = style({
