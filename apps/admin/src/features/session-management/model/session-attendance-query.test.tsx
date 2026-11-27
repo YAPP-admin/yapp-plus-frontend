@@ -26,14 +26,19 @@ const attendanceResponse = {
       membershipId: 1001,
       userName: '테스트 회원',
       position: 'IOS',
-      latestReportType: null,
-      latestReportReason: null,
+      latestReportType: 'LATE',
+      latestReportReason: '운영진 확인 필요',
       checkedInAt: '2026-10-31T05:00:00Z',
       earlyLeaveAt: '2026-10-31T07:00:00Z',
       status: 'EARLY_LEAVE',
       scoreDelta: -4,
       badgeVerified: true,
       badgeVerifiedAt: '2026-10-31T05:05:00Z',
+      selectedStatuses: ['EARLY_LEAVE_ONE_HOUR'],
+      effectiveStatus: 'EARLY_LEAVE',
+      correctedAt: '2026-10-31T08:00:00Z',
+      latestReportTypes: ['LATE'],
+      latestReportSubmittedAt: '2026-10-31T04:30:00Z',
     },
   ],
   nextCursor: null,
@@ -75,6 +80,14 @@ it('생성 SDK 출석 명단을 실제 체크인·조퇴 시각이 포함된 회
     },
     badge: { verified: true, verifiedAt: '2026-10-31T05:05:00Z' },
     score: { source: 'server', delta: -4 },
+    latestReport: {
+      type: 'late',
+      reason: '운영진 확인 필요',
+      submittedAt: '2026-10-31T04:30:00Z',
+    },
+    selectedStatuses: ['EARLY_LEAVE_ONE_HOUR'],
+    effectiveStatus: 'EARLY_LEAVE',
+    correctedAt: '2026-10-31T08:00:00Z',
   });
 });
 
@@ -117,7 +130,7 @@ it.each([
       durationBand,
       reason: '운영진 판정',
     }),
-  ).toEqual({ status, reason: '운영진 판정' });
+  ).toEqual({ statuses: [status], reason: '운영진 판정' });
 });
 
 it('생성 SDK 출석 코드와 팀 사진 검수 응답을 화면 모델로 변환한다', async () => {
@@ -241,7 +254,7 @@ it('출결 변경 mutation이 생성 SDK 계약에 맞는 요청을 보낸다', 
     .execute(undefined);
 
   expect(overrideBody).toEqual({
-    status: 'LATE_THREE_HOUR',
+    statuses: ['LATE_THREE_HOUR'],
     reason: '운영진 판정',
   });
   expect(badgeBody).toEqual({ enabled: true });

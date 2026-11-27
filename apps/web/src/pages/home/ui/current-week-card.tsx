@@ -201,7 +201,7 @@ function getAttendanceLabel(session: CurrentWeekSessionDetailResponse, now: numb
   if (session.attendanceStatus !== 'NOT_OPEN') {
     return ATTENDANCE_STATUS_LABEL[session.attendanceStatus];
   }
-  if (now >= koreanTimestamp(session.date, session.endTime)) {
+  if (now >= koreanTimestamp(session.endDate, session.endTime)) {
     return '출석이 마감됐어요';
   }
   const today = koreanDateString(now);

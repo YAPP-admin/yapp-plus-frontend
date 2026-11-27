@@ -20,15 +20,19 @@ beforeEach(startDemo);
 it.each(['LATE', 'EARLY_LEAVE', 'ABSENT'] as const)(
   '%s 사전 보고는 필수 사유와 함께 현재 세션에 접수한다',
   async (type) => {
-    const result = await submit1({ body: { type, reason: '개인 사정' } });
+    const result = await submit1({ body: { types: [type], reason: '개인 사정' } });
 
-    expect(result.data).toMatchObject({ sessionId: 39902, submittedAt: expect.any(String) });
+    expect(result.data).toMatchObject({
+      sessionId: 39902,
+      submittedAt: expect.any(String),
+      reportId: expect.any(Number),
+    });
   },
 );
 
 it('빈 사유 보고는 접수하지 않는다', async () => {
   const result = await submit1({
-    body: { type: 'LATE', reason: ' ' },
+    body: { types: ['LATE'], reason: ' ' },
     kyOptions: { throwHttpErrors: false },
   });
 

@@ -33,6 +33,11 @@ export type AttendanceMemberViewModel = {
   part: string | null;
   teamId: string | null;
   attendance: AttendanceResult;
+  selectedStatuses: string[];
+  effectiveStatus: string | null;
+  correctedAt: string | null;
+  latestReportTypes: string[];
+  latestReportSubmittedAt: string | null;
   latestReport: PriorReportViewModel | null;
   badge: BadgeViewModel;
   score: AttendanceScoreViewModel;

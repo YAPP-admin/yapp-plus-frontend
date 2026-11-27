@@ -95,7 +95,7 @@ it('유형 선택 뒤 사유를 입력해 실제 보고를 제출한다', async 
   server.use(
     http.post(reportUrl, async ({ request: incoming }) => {
       request(await incoming.json(), incoming.headers.get('Authorization'));
-      return HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z' });
+      return HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z', reportId: 1 });
     }),
   );
   setup();
@@ -108,14 +108,14 @@ it('유형 선택 뒤 사유를 입력해 실제 보고를 제출한다', async 
 
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
   expect(request).toHaveBeenCalledWith(
-    { type: 'EARLY_LEAVE', reason: '병원 방문' },
+    { types: ['EARLY_LEAVE'], reason: '병원 방문' },
     'Bearer test-token',
   );
 });
 
 it('유형과 공백 사유는 제출 뒤 오류를 표시하고 요청하지 않는다', async () => {
   const request = vi.fn<() => Response>(() =>
-    HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z' }),
+    HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z', reportId: 1 }),
   );
   server.use(http.post(reportUrl, request));
   setup();
@@ -174,7 +174,13 @@ it('제출 중에는 시트를 닫지 않고 중복 제출을 막는다', async 
         new Promise((resolve) => {
           request();
           resolveRequest = () =>
-            resolve(HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z' }));
+            resolve(
+              HttpResponse.json({
+                sessionId: 1,
+                submittedAt: '2026-11-07T04:00:00Z',
+                reportId: 1,
+              }),
+            );
         }),
     ),
   );

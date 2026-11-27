@@ -20,10 +20,11 @@ it('홈의 출석 대상과 일정이 같은 정규 세션을 가리킨다', () 
     Date.parse('2026-11-08T00:00:00+09:00'),
   );
   const { attendanceStatus, ...session } = currentWeekFixture.session;
+  const { endDate: _endDate, ...scheduleSession } = session;
   expect(attendanceStatus).toBe('AVAILABLE');
   expect(
     scheduleFixture.sessions.find(({ sessionId }) => sessionId === session.sessionId),
-  ).toMatchObject(session);
+  ).toMatchObject(scheduleSession);
   expect(scheduleFixture.sessions.map(({ sessionId, type }) => [sessionId, type])).toEqual([
     [39901, 'REGULAR'],
     [39902, 'REGULAR'],
