@@ -41,6 +41,17 @@ import {
 
 const PERIODS: readonly DiningPeriod[] = ['UPCOMING', 'PAST'];
 
+// 상세 API 연결 PR이 반영되기 전까지 기존 상세 화면이 사용하는 임시 호환 fixture입니다.
+export const DINING_ITEMS = [
+  {
+    id: 'ot-afterparty',
+    title: '33기 OT 뒤풀이',
+    date: '03.21 (토) 18:30',
+    deadline: '03.20 (금) 23:59',
+    status: 'OPEN' as const,
+  },
+] as const;
+
 export function DiningManagementPage({
   period,
   onPeriodChange,
