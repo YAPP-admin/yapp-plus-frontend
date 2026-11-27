@@ -23,7 +23,7 @@ export const choices = style({ display: 'flex', flexDirection: 'row', flexWrap: 
 
 export const schedule = style({
   display: 'grid',
-  gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+  gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
   gap: 20,
   '@media': { '(max-width: 600px)': { gridTemplateColumns: '1fr' } },
 });
