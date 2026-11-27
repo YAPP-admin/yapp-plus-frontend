@@ -44,12 +44,7 @@ type SessionScheduleInput = Pick<
   'startDate' | 'endDate' | 'startTime' | 'endTime'
 >;
 
-function isSessionScheduleValid({
-  startDate,
-  endDate,
-  startTime,
-  endTime,
-}: SessionScheduleInput) {
+function isSessionScheduleValid({ startDate, endDate, startTime, endTime }: SessionScheduleInput) {
   return endDate > startDate || (endDate === startDate && endTime > startTime);
 }
 

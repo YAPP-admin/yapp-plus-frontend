@@ -64,18 +64,12 @@ export const zSettlementUpdateRequest = z.object({
   ]),
   accountNumber: z.string(),
   accountHolder: z.string(),
-  totalAmount: z.coerce
-    .bigint()
-    .gte(BigInt(1))
-    .max(BigInt('9223372036854775807'), {
-      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
-    }),
-  perPersonAmount: z.coerce
-    .bigint()
-    .gte(BigInt(1))
-    .max(BigInt('9223372036854775807'), {
-      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
-    }),
+  totalAmount: z.coerce.bigint().gte(BigInt(1)).max(BigInt('9223372036854775807'), {
+    error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+  }),
+  perPersonAmount: z.coerce.bigint().gte(BigInt(1)).max(BigInt('9223372036854775807'), {
+    error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+  }),
   recipientIds: z.array(
     z.coerce
       .bigint()
@@ -98,12 +92,9 @@ export const zSettlementUpdateRequest = z.object({
         }),
     )
     .max(5),
-  expectedRevision: z.coerce
-    .bigint()
-    .gte(BigInt(0))
-    .max(BigInt('9223372036854775807'), {
-      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
-    }),
+  expectedRevision: z.coerce.bigint().gte(BigInt(0)).max(BigInt('9223372036854775807'), {
+    error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+  }),
 });
 
 export const zRegistrationFieldError = z.object({
@@ -848,18 +839,12 @@ export const zSettlementWriteRequest = z.object({
   ]),
   accountNumber: z.string(),
   accountHolder: z.string(),
-  totalAmount: z.coerce
-    .bigint()
-    .gte(BigInt(1))
-    .max(BigInt('9223372036854775807'), {
-      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
-    }),
-  perPersonAmount: z.coerce
-    .bigint()
-    .gte(BigInt(1))
-    .max(BigInt('9223372036854775807'), {
-      error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
-    }),
+  totalAmount: z.coerce.bigint().gte(BigInt(1)).max(BigInt('9223372036854775807'), {
+    error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+  }),
+  perPersonAmount: z.coerce.bigint().gte(BigInt(1)).max(BigInt('9223372036854775807'), {
+    error: 'Invalid value: Expected int64 to be <= 9223372036854775807',
+  }),
   recipientIds: z.array(
     z.coerce
       .bigint()
