@@ -36,6 +36,7 @@ const session = {
   type: 'TEAM',
   name: '과거 팀 세션',
   date: '2026-11-26',
+  endDate: '2026-11-26',
   startTime: '14:00',
   endTime: '18:00',
 };

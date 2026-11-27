@@ -14,6 +14,7 @@ const week = {
     type: 'REGULAR',
     name: '정규 세션',
     date: '2026-11-07',
+    endDate: '2026-11-07',
     startTime: '13:30:00',
     endTime: '18:00:00',
     location: '교육장 A',

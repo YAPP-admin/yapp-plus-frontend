@@ -44,6 +44,7 @@ import type {
   Create5Responses,
   CreateData,
   CreateResponses,
+  CurrentWeekResponses,
   DecideData,
   DecideResponses,
   Delete1Responses,
@@ -119,8 +120,10 @@ import type {
   RemoveResponses,
   RenewData,
   RenewResponses,
+  ReplaceData,
   ReplaceMembersData,
   ReplaceMembersResponses,
+  ReplaceResponses,
   Respond1Data,
   Respond1Responses,
   RespondData,
@@ -277,6 +280,52 @@ export function handleAcknowledge(
       const body = response?.body;
       if (body !== undefined) {
         return new HttpResponse(body, { status: response?.status ?? 204 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
+export type HandleReplaceResponse = {
+  body: ReplaceResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `PUT /api/attendance-reports/{reportId}` operation.
+ */
+export function handleReplace(
+  response?:
+    | HandleReplaceResponse
+    | HttpResponseResolver<
+        {
+          reportId: string;
+        },
+        ReplaceData['body']
+      >,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.put<
+    {
+      reportId: string;
+    },
+    ReplaceData['body']
+  >(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/attendance-reports/:reportId`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
       }
       if (options?.responseFallback === 'passthrough') {
         return;
@@ -3320,6 +3369,40 @@ export function handleMine(
   );
 }
 
+export type HandleCurrentWeekResponse = {
+  body: CurrentWeekResponses[200];
+  status?: 200;
+};
+
+/**
+ * Handler for the `GET /api/attendance-reports/current-week` operation.
+ */
+export function handleCurrentWeek(
+  response?: HandleCurrentWeekResponse | HttpResponseResolver<never, never>,
+  options?: RequestHandlerOptions,
+): HttpHandler {
+  return http.get<never, never>(
+    `${options?.baseUrl ?? 'https://44nk4mnqi7.execute-api.ap-northeast-2.amazonaws.com'}/api/attendance-reports/current-week`,
+    (info) => {
+      if (typeof response === 'function') {
+        return response(info);
+      }
+      const body = response?.body;
+      if (body !== undefined) {
+        return HttpResponse.json(body, { status: response?.status ?? 200 });
+      }
+      if (options?.responseFallback === 'passthrough') {
+        return;
+      }
+      return new Response('Not Implemented', {
+        status: 501,
+        statusText: 'Not Implemented',
+      });
+    },
+    options,
+  );
+}
+
 export type HandleFind8Response = {
   body: Find8Responses[200];
   status?: 200;
@@ -4564,6 +4647,10 @@ export type MswHandlerFactories = {
    */
   acknowledge: typeof handleAcknowledge;
   /**
+   * Handler for the `PUT /api/attendance-reports/{reportId}` operation.
+   */
+  replace: typeof handleReplace;
+  /**
    * Handler for the `GET /api/afterparties/{afterpartyId}/settlements/{settlementId}` operation.
    */
   detail: typeof handleDetail;
@@ -4848,6 +4935,10 @@ export type MswHandlerFactories = {
    */
   mine: typeof handleMine;
   /**
+   * Handler for the `GET /api/attendance-reports/current-week` operation.
+   */
+  currentWeek: typeof handleCurrentWeek;
+  /**
    * Handler for the `GET /api/attendance-history` operation.
    */
   find8: typeof handleFind8;
@@ -4981,6 +5072,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     remove: wrap(handleRemove),
     register: wrap(handleRegister),
     acknowledge: wrap(handleAcknowledge),
+    replace: wrap(handleReplace),
     detail: wrap(handleDetail),
     update: wrap(handleUpdate),
     payment: wrap(handlePayment),
@@ -5052,6 +5144,7 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
     startGoogleAuthorization: wrap(handleStartGoogleAuthorization),
     startAppleAuthorization: wrap(handleStartAppleAuthorization),
     mine: wrap(handleMine),
+    currentWeek: wrap(handleCurrentWeek),
     find8: wrap(handleFind8),
     list4: wrap(handleList4),
     detail4: wrap(handleDetail4),
@@ -5180,8 +5273,10 @@ export function createMswHandlers(config: RequestHandlerOptions = {}): CreateMsw
       invoke(pick.find3, overrides.find3),
       invoke(pick.find6, overrides.find6),
       invoke(pick.mine, overrides.mine),
+      invoke(pick.currentWeek, overrides.currentWeek),
       invoke(pick.findPending, overrides.findPending),
       invoke(pick.list5, overrides.list5),
+      invoke(pick.replace, overrides.replace),
       invoke(pick.detail3, overrides.detail3),
       invoke(pick.detail4, overrides.detail4),
       invoke(pick.register1, overrides.register1),

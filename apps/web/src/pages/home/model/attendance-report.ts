@@ -114,7 +114,10 @@ export function useAttendanceReport(onComplete: () => void) {
       if (blockMessage) {
         return blockMessage;
       }
-      mutation.mutate({ body: parsed.data }, { onSuccess: onComplete });
+      mutation.mutate(
+        { body: { types: [parsed.data.type], reason: parsed.data.reason } },
+        { onSuccess: onComplete },
+      );
       return undefined;
     },
   };

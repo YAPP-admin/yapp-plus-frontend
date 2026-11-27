@@ -685,6 +685,7 @@ it.each([
           ...teamResponse.session,
           type,
           date: '2026-01-03',
+          endDate: '2026-01-03',
           startTime,
           endTime: '18:00:00',
           attendanceStatus: 'NOT_OPEN',

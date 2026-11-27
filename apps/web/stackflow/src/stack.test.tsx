@@ -617,6 +617,7 @@ it.each([
       sessionId: 42,
       type: 'TEAM',
       date: koreanDateString(Date.now()),
+      endDate: koreanDateString(Date.now()),
       dayOfWeek: 'THURSDAY',
       startTime: '00:00',
       endTime: '23:59:59',

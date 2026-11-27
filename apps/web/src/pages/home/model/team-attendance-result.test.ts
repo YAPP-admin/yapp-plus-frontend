@@ -18,6 +18,7 @@ const SESSION = {
   sessionId: 101,
   type: 'TEAM' as const,
   date: '2026-11-26',
+  endDate: '2026-11-26',
   startTime: '14:00',
   endTime: '18:00',
 };

@@ -30,7 +30,8 @@ it.each(['로딩', '실패'])(
     );
     const initial: SessionInput = {
       name: '외부 장애 중 수정',
-      date: '2020-01-01',
+      startDate: '2020-01-01',
+      endDate: '2020-01-01',
       startTime: '13:00',
       endTime: '17:00',
       type: 'regular',

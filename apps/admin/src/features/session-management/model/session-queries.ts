@@ -60,7 +60,9 @@ export const sessionsQueryOptions = (generationId: number) => {
         id: String(session.sessionId),
         name: session.name,
         type: session.type === 'TEAM' ? 'team' : 'regular',
-        date: session.date,
+        startDate: session.startDate,
+        endDate: session.endDate,
+        date: session.startDate,
         startTime: session.startTime,
         endTime: session.endTime,
         phase:
@@ -225,13 +227,21 @@ function toAttendanceResult(row: AdminAttendanceListResponse['items'][number]) {
 function toMemberViewModel(
   row: AdminAttendanceListResponse['items'][number],
 ): AttendanceMemberViewModel {
-  const reportType = toReportType(row.latestReportType);
+  const reportType =
+    toReportType(row.latestReportType) ??
+    row.latestReportTypes.map(toReportType).find((type) => type !== null) ??
+    null;
   return {
     membershipId: String(row.membershipId),
     name: row.userName,
     part: row.position?.toLowerCase() ?? null,
     teamId: null,
     attendance: toAttendanceResult(row),
+    selectedStatuses: row.selectedStatuses,
+    effectiveStatus: row.effectiveStatus,
+    correctedAt: row.correctedAt,
+    latestReportTypes: row.latestReportTypes,
+    latestReportSubmittedAt: row.latestReportSubmittedAt,
     latestReport:
       reportType === null
         ? null
@@ -240,7 +250,7 @@ function toMemberViewModel(
             membershipId: String(row.membershipId),
             type: reportType,
             reason: row.latestReportReason ?? '사유 없음',
-            submittedAt: null,
+            submittedAt: row.latestReportSubmittedAt,
             eligibility: 'unknown',
           },
     badge: {
@@ -277,29 +287,30 @@ function toNumberId(id: string, label: string) {
 }
 
 export function toAttendanceOverrideRequest(input: AttendanceEditInput): OverrideAttendanceRequest {
-  let status: OverrideAttendanceRequest['status'];
+  let statuses: OverrideAttendanceRequest['statuses'];
   switch (input.status) {
     case 'late':
-      status = input.durationBand === 'withinThreeHours' ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
+      statuses = [input.durationBand === 'withinThreeHours' ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR'];
       break;
     case 'earlyLeave':
-      status =
+      statuses = [
         input.durationBand === 'withinThreeHours'
           ? 'EARLY_LEAVE_THREE_HOUR'
-          : 'EARLY_LEAVE_ONE_HOUR';
+          : 'EARLY_LEAVE_ONE_HOUR',
+      ];
       break;
     case 'absent':
-      status = 'ABSENT';
+      statuses = ['ABSENT'];
       break;
     case 'present':
-      status = 'PRESENT';
+      statuses = ['PRESENT'];
       break;
     case 'undecided':
-      status = 'UNDECIDED';
+      statuses = [];
       break;
   }
 
-  return { status, reason: input.reason };
+  return { statuses, reason: input.reason };
 }
 
 export const attendanceOverrideMutationOptions = (generationId: number, sessionId: string) =>
@@ -478,6 +489,11 @@ function toTeamMemberViewModel(teamId: number, membershipId: number, name: strin
       durationBand: null,
     }),
     latestReport: null,
+    selectedStatuses: [],
+    effectiveStatus: null,
+    correctedAt: null,
+    latestReportTypes: [],
+    latestReportSubmittedAt: null,
     badge: { verified: false, verifiedAt: null },
     score: { source: 'unknown' as const, delta: null, description: '점수 확인 필요' },
     isEditable: false,

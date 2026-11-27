@@ -110,6 +110,9 @@ import type {
   CurrentGenerationSessionItemResponse,
   CurrentGenerationSessionsResponse,
   CurrentTeamResponse,
+  CurrentWeekAttendanceReportResponse,
+  CurrentWeekErrors,
+  CurrentWeekResponses,
   CurrentWeekSessionDetailResponse,
   CurrentWeekSessionResponse,
   DecideErrors,
@@ -180,6 +183,7 @@ import type {
   HistoryErrors,
   HistoryResponses,
   KakaoNativeAuthenticationRequest,
+  LegacySubmitAttendanceReportRequest,
   List10Errors,
   List10Responses,
   List1Errors,
@@ -262,8 +266,10 @@ import type {
   RenewErrors,
   RenewResponses,
   RenewSessionRequest,
+  ReplaceErrors,
   ReplaceMembersErrors,
   ReplaceMembersResponses,
+  ReplaceResponses,
   ReplaceTeamMembersRequest,
   Respond1Errors,
   Respond1Responses,
@@ -376,6 +382,27 @@ export const fakeRegisterNotificationDeviceRequest = (
   };
 };
 
+export const fakeSubmitAttendanceReportRequest = (
+  options?: Options,
+): SubmitAttendanceReportRequest => {
+  const f = options?.faker ?? faker;
+  return {
+    types: f.helpers.multiple(() => f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT']), {
+      count: { min: 1, max: 2 },
+    }),
+    reason: f.string.alpha({ length: { min: 2, max: 30 } }),
+  };
+};
+
+export const fakeAttendanceReportResponse = (options?: Options): AttendanceReportResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    sessionId: f.number.int(),
+    submittedAt: f.date.recent().toISOString(),
+    reportId: f.number.int(),
+  };
+};
+
 export const fakeSettlementUpdateRequest = (options?: Options): SettlementUpdateRequest => {
   const f = options?.faker ?? faker;
   return {
@@ -450,8 +477,10 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'ATTENDANCE_CODE_NOT_ISSUED',
       'ATTENDANCE_CODE_UPDATE_FAILED',
       'ATTENDANCE_REPORT_NOT_ELIGIBLE',
+      'ATTENDANCE_REPORT_NOT_FOUND',
       'ATTENDANCE_REPORT_SESSION_CONFLICT',
       'ATTENDANCE_REPORT_SESSION_CHANGED',
+      'ATTENDANCE_REPORT_ALREADY_EXISTS',
       'ATTENDANCE_REPORT_UNAVAILABLE',
       'ATTENDANCE_SCORE_NOT_ELIGIBLE',
       'ATTENDANCE_SCORE_INCONSISTENT',
@@ -472,6 +501,7 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'INVALID_ATTENDANCE_HISTORY_CURSOR',
       'INVALID_ATTENDANCE_REPORT',
       'INVALID_ATTENDANCE_REQUEST',
+      'ATTENDANCE_CORRECTION_CLOSED',
       'INVALID_HISTORY_REQUEST',
       'INVALID_MEMBER_REQUEST',
       'MEMBER_APPROVAL_UNAVAILABLE',
@@ -501,6 +531,8 @@ export const fakeErrorResponse = (options?: Options): ErrorResponse => {
       'POST_IMAGE_CONFLICT',
       'POST_IMAGE_STORAGE_FAILED',
       'POST_NOT_FOUND',
+      'POST_QUERY_UNAVAILABLE',
+      'POST_QUERY_FAILED',
       'RETAINED_HISTORY_UNAVAILABLE',
       'ROSTER_CONFLICT',
       'ROSTER_PERSISTENCE_FAILED',
@@ -741,7 +773,9 @@ export const fakeCreateSessionRequest = (options?: Options): CreateSessionReques
   return {
     name: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
-    date: f.date.recent().toISOString().slice(0, 10),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { date: f.datatype.boolean() ? f.date.recent().toISOString().slice(0, 10) : null }),
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
@@ -757,6 +791,12 @@ export const fakeCreateSessionRequest = (options?: Options): CreateSessionReques
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { detailAddress: f.datatype.boolean() ? f.string.sample() : null }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { startDate: f.datatype.boolean() ? f.date.recent().toISOString().slice(0, 10) : null }),
+    ...(!resolveCondition(options?.includeOptional ?? true, f)
+      ? {}
+      : { endDate: f.datatype.boolean() ? f.date.recent().toISOString().slice(0, 10) : null }),
   };
 };
 
@@ -1034,21 +1074,13 @@ export const fakeVerifyAttendanceCodeResponse = (
   };
 };
 
-export const fakeSubmitAttendanceReportRequest = (
+export const fakeLegacySubmitAttendanceReportRequest = (
   options?: Options,
-): SubmitAttendanceReportRequest => {
+): LegacySubmitAttendanceReportRequest => {
   const f = options?.faker ?? faker;
   return {
     type: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT']),
     reason: f.string.alpha({ length: { min: 2, max: 30 } }),
-  };
-};
-
-export const fakeAttendanceReportResponse = (options?: Options): AttendanceReportResponse => {
-  const f = options?.faker ?? faker;
-  return {
-    sessionId: f.number.int(),
-    submittedAt: f.date.recent().toISOString(),
   };
 };
 
@@ -1417,6 +1449,7 @@ export const fakePostAudienceRequest = (options?: Options): PostAudienceRequest 
       : {
           positions: f.helpers.multiple(() =>
             f.helpers.arrayElement([
+              'ALL',
               'PM',
               'DESIGN',
               'ANDROID',
@@ -1440,7 +1473,7 @@ export const fakeCreateAdminPostRequest = (options?: Options): CreateAdminPostRe
     contentMarkdown: f.string.sample(),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
-      : { imageKeys: f.helpers.multiple(() => f.string.sample()) }),
+      : { imageKeys: f.helpers.multiple(() => f.string.sample(), { count: { min: 0, max: 20 } }) }),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { assignment: f.datatype.boolean() ? fakeAssignmentPostRequest(options) : null }),
@@ -1584,26 +1617,24 @@ export const fakeStaffLoginResponse = (options?: Options): StaffLoginResponse =>
 export const fakeOverrideAttendanceRequest = (options?: Options): OverrideAttendanceRequest => {
   const f = options?.faker ?? faker;
   return {
-    status: f.helpers.arrayElement([
-      'UNDECIDED',
-      'PRESENT',
-      'LATE_ONE_HOUR',
-      'LATE_THREE_HOUR',
-      'EARLY_LEAVE',
-      'EARLY_LEAVE_ONE_HOUR',
-      'EARLY_LEAVE_THREE_HOUR',
-      'ABSENT',
-      'EXCUSED_ABSENCE',
-    ]),
+    statuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
       : { reason: f.datatype.boolean() ? f.string.sample() : null }),
-    ...(!resolveCondition(options?.includeOptional ?? true, f)
-      ? {}
-      : { checkedInAt: f.datatype.boolean() ? f.date.recent().toISOString() : null }),
-    ...(!resolveCondition(options?.includeOptional ?? true, f)
-      ? {}
-      : { earlyLeaveAt: f.datatype.boolean() ? f.date.recent().toISOString() : null }),
   };
 };
 
@@ -1621,7 +1652,7 @@ export const fakeUpdateAdminPostRequest = (options?: Options): UpdateAdminPostRe
     contentMarkdown: f.string.sample(),
     ...(!resolveCondition(options?.includeOptional ?? true, f)
       ? {}
-      : { imageKeys: f.helpers.multiple(() => f.string.sample()) }),
+      : { imageKeys: f.helpers.multiple(() => f.string.sample(), { count: { min: 0, max: 20 } }) }),
   };
 };
 
@@ -1731,7 +1762,15 @@ export const fakeUserNotificationListItemResponse = (
       'AFTER_REGULAR_START',
       null,
     ]) as any,
-    navigationTarget: f.helpers.arrayElement(['SESSION_SCHEDULE', 'SETTLEMENT', null]) as any,
+    navigationTarget: f.helpers.arrayElement([
+      'SESSION_SCHEDULE',
+      'SETTLEMENT',
+      'NOTIFICATION_LIST',
+      'HOME',
+      'POST_DETAIL',
+      'AFTERPARTY_DETAIL',
+      null,
+    ]) as any,
     settlementId: f.datatype.boolean() ? f.number.int() : null,
     afterpartyId: f.datatype.boolean() ? f.number.int() : null,
     title: f.datatype.boolean() ? f.lorem.words() : null,
@@ -1822,6 +1861,7 @@ export const fakeCurrentWeekSessionDetailResponse = (
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
     name: f.string.sample(),
     date: f.date.recent().toISOString().slice(0, 10),
+    endDate: f.date.recent().toISOString().slice(0, 10),
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
@@ -1954,6 +1994,19 @@ export const fakeMyAttendanceScoreResponse = (options?: Options): MyAttendanceSc
     lateCount: f.number.int({ min: 0 }),
     absentCount: f.number.int({ min: 0, max: 100 }),
     earlyLeaveCount: f.number.int({ min: 0 }),
+  };
+};
+
+export const fakeCurrentWeekAttendanceReportResponse = (
+  options?: Options,
+): CurrentWeekAttendanceReportResponse => {
+  const f = options?.faker ?? faker;
+  return {
+    type: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT', null]) as any,
+    reason: f.datatype.boolean() ? f.string.sample() : null,
+    reportId: f.datatype.boolean() ? f.number.int() : null,
+    types: f.helpers.multiple(() => f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT'])),
+    submittedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -2429,6 +2482,8 @@ export const fakeAdminSessionResponse = (options?: Options): AdminSessionRespons
     name: f.string.sample(),
     location: f.datatype.boolean() ? f.string.sample() : null,
     date: f.date.recent().toISOString().slice(0, 10),
+    startDate: f.date.recent().toISOString().slice(0, 10),
+    endDate: f.date.recent().toISOString().slice(0, 10),
     startTime: f.string.sample(),
     endTime: f.string.sample(),
     type: f.helpers.arrayElement(['REGULAR', 'TEAM']),
@@ -2459,6 +2514,7 @@ export const fakeTeamPhotoReportView = (options?: Options): TeamPhotoReportView 
     type: f.string.sample(),
     reported: f.datatype.boolean(),
     reason: f.datatype.boolean() ? f.string.sample() : null,
+    submittedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -2519,6 +2575,34 @@ export const fakeAdminAttendanceRow = (options?: Options): AdminAttendanceRow =>
     scoreDelta: f.datatype.boolean() ? f.number.int({ min: -10, max: 0 }) : null,
     badgeVerified: f.datatype.boolean(),
     badgeVerifiedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    selectedStatuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
+    effectiveStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE',
+      'EARLY_LEAVE',
+      'LATE_AND_EARLY_LEAVE',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    correctedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    latestReportTypes: f.helpers.multiple(() => f.string.sample()),
+    latestReportSubmittedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -2581,6 +2665,37 @@ export const fakeAdminAttendanceDetailEventResponse = (
     photoSelected: f.datatype.boolean() ? f.datatype.boolean() : null,
     applied: f.datatype.boolean() ? f.datatype.boolean() : null,
     actorStaffId: f.datatype.boolean() ? f.number.int() : null,
+    previousSelectedStatuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
+    nextSelectedStatuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
+    automaticPhotoDecision: f.datatype.boolean(),
   };
 };
 
@@ -2592,6 +2707,7 @@ export const fakeAdminAttendanceDetailLatestReportResponse = (
     type: f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT']),
     reason: f.datatype.boolean() ? f.string.sample() : null,
     submittedAt: f.date.recent().toISOString(),
+    types: f.helpers.multiple(() => f.helpers.arrayElement(['LATE', 'EARLY_LEAVE', 'ABSENT'])),
   };
 };
 
@@ -2630,6 +2746,32 @@ export const fakeAdminAttendanceDetailSummaryResponse = (
     ]) as any,
     badgeDistributed: f.datatype.boolean(),
     badgeDistributedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
+    selectedStatuses: f.helpers.multiple(() =>
+      f.helpers.arrayElement([
+        'PRESENT',
+        'ABSENT',
+        'UNEXCUSED_ABSENT',
+        'LATE_ONE_HOUR',
+        'LATE_THREE_HOUR',
+        'UNEXCUSED_LATE_ONE_HOUR',
+        'UNEXCUSED_LATE_THREE_HOUR',
+        'EARLY_LEAVE_ONE_HOUR',
+        'EARLY_LEAVE_THREE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_ONE_HOUR',
+        'UNEXCUSED_EARLY_LEAVE_THREE_HOUR',
+      ]),
+    ),
+    effectiveStatus: f.helpers.arrayElement([
+      'UNDECIDED',
+      'PRESENT',
+      'LATE',
+      'EARLY_LEAVE',
+      'LATE_AND_EARLY_LEAVE',
+      'ABSENT',
+      'EXCUSED_ABSENCE',
+      null,
+    ]) as any,
+    correctedAt: f.datatype.boolean() ? f.date.recent().toISOString() : null,
   };
 };
 
@@ -3018,6 +3160,27 @@ export const fakeAcknowledgeResponse404 = (options?: Options): AcknowledgeErrors
   fakeErrorResponse(options);
 
 export const fakeAcknowledgeResponse503 = (options?: Options): AcknowledgeErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse200 = (options?: Options): ReplaceResponses[200] =>
+  fakeAttendanceReportResponse(options);
+
+export const fakeReplaceResponse400 = (options?: Options): ReplaceErrors[400] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse401 = (options?: Options): ReplaceErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse403 = (options?: Options): ReplaceErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse404 = (options?: Options): ReplaceErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse409 = (options?: Options): ReplaceErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeReplaceResponse503 = (options?: Options): ReplaceErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeDetailResponse200 = (options?: Options): DetailResponses[200] =>
@@ -3641,7 +3804,7 @@ export const fakeCloseResponse401 = (options?: Options): CloseErrors[401] =>
 export const fakeCloseResponse404 = (options?: Options): CloseErrors[404] =>
   fakeErrorResponse(options);
 
-export const fakeCloseResponse409 = (options?: Options): CloseErrors[409] =>
+export const fakeCloseResponse503 = (options?: Options): CloseErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeCancel1Response200 = (): Cancel1Responses[200] => undefined;
@@ -3714,6 +3877,12 @@ export const fakeList1Response401 = (options?: Options): List1Errors[401] =>
   fakeErrorResponse(options);
 
 export const fakeList1Response404 = (options?: Options): List1Errors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeList1Response500 = (options?: Options): List1Errors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeList1Response503 = (options?: Options): List1Errors[503] =>
   fakeErrorResponse(options);
 
 export const fakeCreate4Response201 = (options?: Options): Create4Responses[201] =>
@@ -3814,6 +3983,9 @@ export const fakeOverrideResponse401 = (options?: Options): OverrideErrors[401] 
 export const fakeOverrideResponse404 = (options?: Options): OverrideErrors[404] =>
   fakeErrorResponse(options);
 
+export const fakeOverrideResponse409 = (options?: Options): OverrideErrors[409] =>
+  fakeErrorResponse(options);
+
 export const fakeOverrideResponse503 = (options?: Options): OverrideErrors[503] =>
   fakeErrorResponse(options);
 
@@ -3846,6 +4018,12 @@ export const fakeDetail2Response401 = (options?: Options): Detail2Errors[401] =>
 export const fakeDetail2Response404 = (options?: Options): Detail2Errors[404] =>
   fakeErrorResponse(options);
 
+export const fakeDetail2Response500 = (options?: Options): Detail2Errors[500] =>
+  fakeErrorResponse(options);
+
+export const fakeDetail2Response503 = (options?: Options): Detail2Errors[503] =>
+  fakeErrorResponse(options);
+
 export const fakeUpdate3Response200 = (options?: Options): Update3Responses[200] =>
   fakeAdminPostDetailResponse(options);
 
@@ -3859,6 +4037,9 @@ export const fakeUpdate3Response404 = (options?: Options): Update3Errors[404] =>
   fakeErrorResponse(options);
 
 export const fakeUpdate3Response409 = (options?: Options): Update3Errors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeUpdate3Response500 = (options?: Options): Update3Errors[500] =>
   fakeErrorResponse(options);
 
 export const fakeUpdate3Response503 = (options?: Options): Update3Errors[503] =>
@@ -4034,6 +4215,24 @@ export const fakeMineResponse500 = (options?: Options): MineErrors[500] =>
   fakeErrorResponse(options);
 
 export const fakeMineResponse503 = (options?: Options): MineErrors[503] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse200 = (options?: Options): CurrentWeekResponses[200] =>
+  fakeCurrentWeekAttendanceReportResponse(options);
+
+export const fakeCurrentWeekResponse401 = (options?: Options): CurrentWeekErrors[401] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse403 = (options?: Options): CurrentWeekErrors[403] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse404 = (options?: Options): CurrentWeekErrors[404] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse409 = (options?: Options): CurrentWeekErrors[409] =>
+  fakeErrorResponse(options);
+
+export const fakeCurrentWeekResponse503 = (options?: Options): CurrentWeekErrors[503] =>
   fakeErrorResponse(options);
 
 export const fakeFind8Response200 = (options?: Options): Find8Responses[200] =>

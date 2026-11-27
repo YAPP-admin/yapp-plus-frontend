@@ -40,7 +40,8 @@ vi.mock('./session-form', () => ({
         {initialValues
           ? [
               initialValues.name,
-              initialValues.date,
+              initialValues.startDate,
+              initialValues.endDate,
               initialValues.startTime,
               initialValues.endTime,
               initialValues.type === 'regular' ? initialValues.location.roadAddress : '',
@@ -57,7 +58,8 @@ vi.mock('./session-form', () => ({
               ? { ...initialValues, name: `${initialValues.name} 수정` }
               : {
                   name: '팀 세션 초안',
-                  date: '2026-11-21',
+                  startDate: '2026-11-21',
+                  endDate: '2026-11-21',
                   startTime: '14:00:00',
                   endTime: '18:00:00',
                   type: 'team',
@@ -74,7 +76,8 @@ vi.mock('./session-form', () => ({
           onClick={() =>
             onSubmit({
               name: `${initialValues.name} 팀 전환`,
-              date: initialValues.date,
+              startDate: initialValues.startDate,
+              endDate: initialValues.endDate,
               startTime: initialValues.startTime,
               endTime: initialValues.endTime,
               type: 'team',
@@ -96,7 +99,8 @@ const REGULAR_SESSION = {
   sessionId: 101,
   name: '정규 세션',
   location: '서울특별시 중구 세종대로 110 예시 교육장',
-  date: '2026-10-31',
+  startDate: '2026-10-31',
+  endDate: '2026-10-31',
   startTime: '14:00:10',
   endTime: '18:00:20',
   type: 'REGULAR' as const,
@@ -119,7 +123,8 @@ const TEAM_SESSION = {
   sessionId: 102,
   name: '팀 세션',
   location: null,
-  date: '2026-11-07',
+  startDate: '2026-11-07',
+  endDate: '2026-11-07',
   startTime: '14:00:00',
   endTime: '18:00:00',
   type: 'TEAM' as const,
@@ -148,7 +153,8 @@ const UPDATED_TEAM_SESSION = {
   ...TEAM_SESSION,
   sessionId: 101,
   name: '정규 세션 팀 전환',
-  date: REGULAR_SESSION.date,
+  startDate: REGULAR_SESSION.startDate,
+  endDate: REGULAR_SESSION.endDate,
   startTime: REGULAR_SESSION.startTime,
   endTime: REGULAR_SESSION.endTime,
 };
@@ -458,7 +464,9 @@ it('저장 장소·초 단위 시간을 복원하고 전체 본문으로 유형�
   const { user } = await setup(25, 'regular');
   const dialog = within(await openEdit(user, '정규 세션'));
   expect(
-    dialog.getByText('정규 세션|2026-10-31|14:00:10|18:00:20|서울특별시 중구 세종대로 110'),
+    dialog.getByText(
+      '정규 세션|2026-10-31|2026-10-31|14:00:10|18:00:20|서울특별시 중구 세종대로 110',
+    ),
   ).toBeVisible();
   await user.click(dialog.getByRole('button', { name: '팀으로 변경 저장' }));
 
@@ -469,7 +477,8 @@ it('저장 장소·초 단위 시간을 복원하고 전체 본문으로 유형�
   expect(requestedBody).toEqual({
     name: '정규 세션 팀 전환',
     location: null,
-    date: '2026-10-31',
+    startDate: '2026-10-31',
+    endDate: '2026-10-31',
     startTime: '14:00:10',
     endTime: '18:00:20',
     type: 'TEAM',

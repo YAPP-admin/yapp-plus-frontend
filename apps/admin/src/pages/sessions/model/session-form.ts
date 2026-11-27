@@ -11,7 +11,8 @@ const apiTimeSchema = z
 
 const inputFields = {
   name: z.string().trim().min(1, '세션명을 입력하세요.'),
-  date: z.iso.date('올바른 날짜를 입력하세요.'),
+  startDate: z.iso.date('올바른 날짜를 입력하세요.'),
+  endDate: z.iso.date('올바른 날짜를 입력하세요.'),
   startTime: apiTimeSchema,
   endTime: apiTimeSchema,
 };
@@ -38,19 +39,29 @@ const teamSessionInputSchema = z.object({
   type: z.literal('team'),
 });
 
+type SessionScheduleInput = Pick<
+  z.infer<typeof regularSessionInputSchema>,
+  'startDate' | 'endDate' | 'startTime' | 'endTime'
+>;
+
+function isSessionScheduleValid({ startDate, endDate, startTime, endTime }: SessionScheduleInput) {
+  return endDate > startDate || (endDate === startDate && endTime > startTime);
+}
+
 /** API 연결용 폼 입력은 정규의 장소 필수와 팀의 장소 미입력을 구분한다. */
 export const sessionInputSchema = z
   .discriminatedUnion('type', [regularSessionInputSchema, teamSessionInputSchema])
-  .refine(({ startTime, endTime }) => endTime > startTime, {
-    message: '종료 시간은 시작 시간보다 늦어야 합니다.',
-    path: ['endTime'],
+  .refine(isSessionScheduleValid, {
+    message: '종료 일시는 시작 일시보다 늦어야 합니다.',
+    path: ['endDate'],
   });
 
 export type SessionInput = z.infer<typeof sessionInputSchema>;
 
 const sessionFormValueSchema = z.object({
   name: z.string().trim().min(1, '세션명을 입력하세요.'),
-  date: z.iso.date('올바른 날짜를 입력하세요.'),
+  startDate: z.iso.date('올바른 날짜를 입력하세요.'),
+  endDate: z.iso.date('올바른 날짜를 입력하세요.'),
   startTime: minuteTimeSchema,
   endTime: minuteTimeSchema,
   type: z.enum(['regular', 'team']),
@@ -67,7 +78,8 @@ export type SessionFormValues = z.input<typeof sessionFormValueSchema>;
 export function sessionFormDefaults(initial?: SessionInput): SessionFormValues {
   return {
     name: initial?.name ?? '',
-    date: initial?.date ?? '',
+    startDate: initial?.startDate ?? '',
+    endDate: initial?.endDate ?? '',
     startTime: initial?.startTime.slice(0, 5) ?? '',
     endTime: initial?.endTime.slice(0, 5) ?? '',
     type: initial?.type ?? 'regular',
@@ -91,12 +103,23 @@ export function createSessionFormSchema(initial?: SessionInput) {
     .superRefine((value, context) => {
       const startTime = toSubmittedTime(value.startTime, initial?.startTime);
       const endTime = toSubmittedTime(value.endTime, initial?.endTime);
-      if (endTime <= startTime) {
-        context.addIssue({
-          code: 'custom',
-          message: '종료 시간은 시작 시간보다 늦어야 합니다.',
-          path: ['endTime'],
-        });
+      const validDates =
+        z.iso.date().safeParse(value.startDate).success &&
+        z.iso.date().safeParse(value.endDate).success;
+      if (validDates) {
+        if (value.endDate < value.startDate) {
+          context.addIssue({
+            code: 'custom',
+            message: '종료일은 시작일보다 빠를 수 없습니다.',
+            path: ['endDate'],
+          });
+        } else if (!isSessionScheduleValid({ ...value, startTime, endTime })) {
+          context.addIssue({
+            code: 'custom',
+            message: '종료 시간은 시작 시간보다 늦어야 합니다.',
+            path: ['endTime'],
+          });
+        }
       }
 
       if (value.type !== 'regular') {
@@ -125,7 +148,8 @@ export function createSessionFormSchema(initial?: SessionInput) {
     .transform((value): SessionInput => {
       const common = {
         name: value.name,
-        date: value.date,
+        startDate: value.startDate,
+        endDate: value.endDate,
         startTime: toSubmittedTime(value.startTime, initial?.startTime),
         endTime: toSubmittedTime(value.endTime, initial?.endTime),
       };

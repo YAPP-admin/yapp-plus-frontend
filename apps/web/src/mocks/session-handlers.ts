@@ -45,6 +45,7 @@ export const createSessionHandlers = (
       return HttpResponse.json({
         sessionId: attendance.sessionId,
         submittedAt: new Date().toISOString(),
+        reportId: 1,
       });
     }),
     pick.find6(() =>

@@ -55,7 +55,9 @@ export function toTeamAttendanceResult(
       if (attendance.staffDecisionStatus !== 'REJECTED' || photo?.status !== 'REJECTED') {
         return null;
       }
-      const deadline = koreanTimestamp(session.date, session.endTime);
+      const endDate =
+        week.session?.sessionId === session.sessionId ? week.session.endDate : session.date;
+      const deadline = koreanTimestamp(endDate, session.endTime);
       const canReupload =
         week.session?.sessionId === session.sessionId &&
         week.session.attendanceStatus === 'AVAILABLE';

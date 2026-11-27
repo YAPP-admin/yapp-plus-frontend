@@ -80,7 +80,7 @@ it('유효한 보고는 sessionId 없이 한 번 제출하고 성공 뒤 주간 
   server.use(
     http.post(reportUrl, async ({ request: incoming }) => {
       request(await incoming.json(), incoming.headers.get('Authorization'));
-      return HttpResponse.json({ sessionId: -1, submittedAt: '2026-11-07T04:00:00Z' });
+      return HttpResponse.json({ sessionId: -1, submittedAt: '2026-11-07T04:00:00Z', reportId: 1 });
     }),
   );
   const { result, client } = setup();
@@ -91,7 +91,10 @@ it('유효한 보고는 sessionId 없이 한 번 제출하고 성공 뒤 주간 
   });
 
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
-  expect(request).toHaveBeenCalledWith({ type: 'LATE', reason: '병원 예약' }, 'Bearer test-token');
+  expect(request).toHaveBeenCalledWith(
+    { types: ['LATE'], reason: '병원 예약' },
+    'Bearer test-token',
+  );
   expect(invalidateQueries).toHaveBeenCalledWith({
     queryKey: currentWeekQueryOptions(apiOptions).queryKey,
   });
@@ -123,7 +126,7 @@ it.each([
 
 it('정각 이후와 오프라인에서는 요청하지 않고 안내를 반환한다', () => {
   const request = vi.fn<() => Response>(() =>
-    HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z' }),
+    HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z', reportId: 1 }),
   );
   server.use(http.post(reportUrl, request));
   const closed = setup('2026-11-07T04:30:00Z');
@@ -152,7 +155,7 @@ it('정각 이후와 오프라인에서는 요청하지 않고 안내를 반환�
 
 it('일반 브라우저에서는 실제 보고 요청을 보내지 않고 안내를 반환한다', () => {
   const request = vi.fn<() => Response>(() =>
-    HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z' }),
+    HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z', reportId: 1 }),
   );
   server.use(http.post(reportUrl, request));
   auth.isNative = false;
@@ -175,7 +178,7 @@ it('제출 중에는 같은 보고를 다시 전송하지 않는다', async () =
   });
   const request = vi.fn<() => Promise<Response>>(async () => {
     await response;
-    return HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z' });
+    return HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z', reportId: 1 });
   });
   server.use(http.post(reportUrl, request));
   const { result } = setup();
@@ -204,7 +207,7 @@ it('화면 이탈 뒤 늦게 도착한 성공은 완료 콜백을 실행하지 �
   server.use(
     http.post(reportUrl, async () => {
       await response;
-      return HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z' });
+      return HttpResponse.json({ sessionId: 1, submittedAt: '2026-11-07T04:00:00Z', reportId: 1 });
     }),
   );
   const hook = setup();

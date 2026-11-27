@@ -9,6 +9,23 @@ export type RegisterNotificationDeviceRequest = {
   registrationToken: string;
 };
 
+export type SubmitAttendanceReportRequest = {
+  /**
+   * LATE와 EARLY_LEAVE만 함께 선택할 수 있으며 ABSENT는 단독으로 선택한다.
+   */
+  types: Array<'LATE' | 'EARLY_LEAVE' | 'ABSENT'>;
+  /**
+   * 필수 공통 사유 원문 문자열. 공백만 불가. 2~30 Unicode 코드포인트이며 trim하지 않는다.
+   */
+  reason: string;
+};
+
+export type AttendanceReportResponse = {
+  sessionId: number;
+  submittedAt: string;
+  reportId: number;
+};
+
 export type SettlementUpdateRequest = {
   bank:
     | 'HANA'
@@ -77,8 +94,10 @@ export type ErrorResponse = {
     | 'ATTENDANCE_CODE_NOT_ISSUED'
     | 'ATTENDANCE_CODE_UPDATE_FAILED'
     | 'ATTENDANCE_REPORT_NOT_ELIGIBLE'
+    | 'ATTENDANCE_REPORT_NOT_FOUND'
     | 'ATTENDANCE_REPORT_SESSION_CONFLICT'
     | 'ATTENDANCE_REPORT_SESSION_CHANGED'
+    | 'ATTENDANCE_REPORT_ALREADY_EXISTS'
     | 'ATTENDANCE_REPORT_UNAVAILABLE'
     | 'ATTENDANCE_SCORE_NOT_ELIGIBLE'
     | 'ATTENDANCE_SCORE_INCONSISTENT'
@@ -99,6 +118,7 @@ export type ErrorResponse = {
     | 'INVALID_ATTENDANCE_HISTORY_CURSOR'
     | 'INVALID_ATTENDANCE_REPORT'
     | 'INVALID_ATTENDANCE_REQUEST'
+    | 'ATTENDANCE_CORRECTION_CLOSED'
     | 'INVALID_HISTORY_REQUEST'
     | 'INVALID_MEMBER_REQUEST'
     | 'MEMBER_APPROVAL_UNAVAILABLE'
@@ -128,6 +148,8 @@ export type ErrorResponse = {
     | 'POST_IMAGE_CONFLICT'
     | 'POST_IMAGE_STORAGE_FAILED'
     | 'POST_NOT_FOUND'
+    | 'POST_QUERY_UNAVAILABLE'
+    | 'POST_QUERY_FAILED'
     | 'RETAINED_HISTORY_UNAVAILABLE'
     | 'ROSTER_CONFLICT'
     | 'ROSTER_PERSISTENCE_FAILED'
@@ -295,7 +317,12 @@ export type CreateSessionRequest = {
    * REGULAR 세션 장소. TEAM이면 null
    */
   location: string | null;
-  date: string;
+  /**
+   * 기존 단일 날짜 요청용. startDate/endDate와 함께 보낼 수 없다.
+   *
+   * @deprecated
+   */
+  date?: string | null;
   startTime: string;
   endTime: string;
   type: 'REGULAR' | 'TEAM';
@@ -315,6 +342,14 @@ export type CreateSessionRequest = {
    * REGULAR 선택 상세주소, TEAM은 null. 최대 255자
    */
   detailAddress?: string | null;
+  /**
+   * KST 시작 날짜. endDate와 함께 전달한다.
+   */
+  startDate?: string | null;
+  /**
+   * KST 종료 날짜. startDate와 함께 전달한다.
+   */
+  endDate?: string | null;
 };
 
 export type AdminMemberUpdateRequest = {
@@ -547,17 +582,9 @@ export type VerifyAttendanceCodeResponse = {
   checkedInAt: string;
 };
 
-export type SubmitAttendanceReportRequest = {
+export type LegacySubmitAttendanceReportRequest = {
   type: 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
-  /**
-   * 필수 원문 문자열, 공백만 불가. 2~30 Unicode 코드포인트이며 trim하지 않는다. NUL·잘못된 Unicode는 거절한다.
-   */
   reason: string;
-};
-
-export type AttendanceReportResponse = {
-  sessionId: number;
-  submittedAt: string;
 };
 
 export type SettlementWriteRequest = {
@@ -775,7 +802,13 @@ export type CreateAdminPostRequest = {
   type: string;
   audience: PostAudienceRequest;
   title: string;
+  /**
+   * 일반 텍스트 본문 원문. 기존 필드명은 호환을 위해 유지하며 Markdown과 post-image:// 문자열을 해석하지 않는다.
+   */
   contentMarkdown: string;
+  /**
+   * 본문과 독립적인 하단 첨부 이미지 키. 중복 없이 최대 20개이며 배열 순서대로 displayOrder=0부터 저장한다.
+   */
   imageKeys?: Array<string>;
   assignment?: AssignmentPostRequest | null;
 };
@@ -783,8 +816,11 @@ export type CreateAdminPostRequest = {
 export type PostAudienceRequest = {
   type: 'GROUP' | 'POSITION';
   target?: 'ALL_USERS' | 'PLAYER' | 'COMPLETED_MEMBER' | 'OB' | null;
+  /**
+   * POSITION 대상 직군. 생략·빈 배열·ALL은 전체 직군이다. ALL과 개별 직군을 함께 보내도 전체로 처리하며 저장·응답은 실제 직군 목록으로 정규화한다. GROUP은 생략 또는 빈 배열만 허용한다.
+   */
   positions?: Array<
-    'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE'
+    'ALL' | 'PM' | 'DESIGN' | 'ANDROID' | 'IOS' | 'WEB' | 'MOBILE' | 'SERVER' | 'AI_NATIVE'
   >;
 };
 
@@ -871,27 +907,22 @@ export type StaffSummaryResponse = {
 
 export type OverrideAttendanceRequest = {
   /**
-   * 운영진 최종 상태. EARLY_LEAVE는 실제 조퇴 시간 기준, EARLY_LEAVE_ONE_HOUR/THREE_HOUR는 선택한 1시간/3시간 감점 구간을 우선 적용한다.
+   * 전체 운영진 선택. 빈 배열은 자동 판정으로 복원한다. 지각 하나와 조퇴 하나만 함께 선택할 수 있다.
    */
-  status:
-    | 'UNDECIDED'
+  statuses: Array<
     | 'PRESENT'
+    | 'ABSENT'
+    | 'UNEXCUSED_ABSENT'
     | 'LATE_ONE_HOUR'
     | 'LATE_THREE_HOUR'
-    | 'EARLY_LEAVE'
+    | 'UNEXCUSED_LATE_ONE_HOUR'
+    | 'UNEXCUSED_LATE_THREE_HOUR'
     | 'EARLY_LEAVE_ONE_HOUR'
     | 'EARLY_LEAVE_THREE_HOUR'
-    | 'ABSENT'
-    | 'EXCUSED_ABSENCE';
+    | 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR'
+  >;
   reason?: string | null;
-  /**
-   * 실제 도착 시각. 출석·지각·조퇴 상태는 요청 또는 기존 기록에 필요하다.
-   */
-  checkedInAt?: string | null;
-  /**
-   * 실제 퇴장 시각. 세 조퇴 상태 모두 요청 또는 기존 기록에 필요하며 조퇴 보고의 선행 여부는 이 실제 시각으로 판단한다.
-   */
-  earlyLeaveAt?: string | null;
 };
 
 export type BadgeRequest = {
@@ -900,13 +931,22 @@ export type BadgeRequest = {
 
 export type UpdateAdminPostRequest = {
   title: string;
+  /**
+   * 일반 텍스트 본문 원문. 기존 필드명은 호환을 위해 유지하며 Markdown과 post-image:// 문자열을 해석하지 않는다.
+   */
   contentMarkdown: string;
+  /**
+   * 본문과 독립적인 하단 첨부 이미지 키. 중복 없이 최대 20개이며 배열 순서대로 displayOrder=0부터 저장한다.
+   */
   imageKeys?: Array<string>;
 };
 
 export type AdminPostDetailResponse = {
   postId: number;
   title: string;
+  /**
+   * 일반 텍스트 본문 원문. 기존 필드명은 호환을 위해 유지하며 Markdown과 post-image:// 문자열을 해석하지 않는다.
+   */
   contentMarkdown: string;
   type: string;
   audience: PostAudienceResponse;
@@ -916,6 +956,9 @@ export type AdminPostDetailResponse = {
   recipientCount: number;
   readCount: number;
   assignment: AssignmentPostResponse | null;
+  /**
+   * 본문 최하단에 표시할 첨부 이미지. 저장된 displayOrder 오름차순이며 본문의 이미지 참조와 무관하다.
+   */
   images: Array<PostImageResponse>;
 };
 
@@ -937,6 +980,9 @@ export type PostImageResponse = {
   filename: string;
   contentType: string;
   sizeBytes: number;
+  /**
+   * 본문 최하단 첨부 이미지 표시 순서. 생성·수정 요청 imageKeys 배열의 0 기반 순서
+   */
   displayOrder: number;
   readUrl: string | null;
 };
@@ -976,7 +1022,14 @@ export type UserNotificationListItemResponse = {
    */
   sessionId: number | null;
   reminderKind: 'DAY_BEFORE_REGULAR' | 'BEFORE_ATTENDANCE_END' | 'AFTER_REGULAR_START' | null;
-  navigationTarget: 'SESSION_SCHEDULE' | 'SETTLEMENT' | null;
+  navigationTarget:
+    | 'SESSION_SCHEDULE'
+    | 'SETTLEMENT'
+    | 'NOTIFICATION_LIST'
+    | 'HOME'
+    | 'POST_DETAIL'
+    | 'AFTERPARTY_DETAIL'
+    | null;
   /**
    * 정산 알림 이동용 ID
    */
@@ -1075,6 +1128,7 @@ export type CurrentWeekSessionDetailResponse = {
    * 세션 날짜
    */
   date: string;
+  endDate: string;
   /**
    * 세션 시작 시간
    */
@@ -1111,15 +1165,15 @@ export type CurrentWeekSessionDetailResponse = {
 
 export type CurrentWeekSessionResponse = {
   /**
-   * 이번 주 시작일(일요일)
+   * 현재 KST 달력 주의 일요일. 선택 세션이 이 주에 속한다는 의미는 아니다.
    */
   weekStartDate: string;
   /**
-   * 이번 주 종료일(토요일)
+   * 현재 KST 달력 주의 토요일. 선택 세션은 다음 주 이후일 수 있다.
    */
   weekEndDate: string;
   /**
-   * 이번 주 토요일 세션. dev QA 설정 시 오늘의 지정 세션을 종료 전까지 우선하며, 없으면 null
+   * 요일과 무관한 홈 선택 세션. 오늘 진행 중·예정·종료 순으로 선택하고 오늘 세션이 없으면 가장 가까운 미래 세션을 반환한다. 대상이 없으면 null
    */
   session: CurrentWeekSessionDetailResponse | null;
 };
@@ -1152,12 +1206,18 @@ export type UserPostDetailResponse = {
   postId: number;
   type: 'SESSION' | 'ASSIGNMENT' | 'OPERATION';
   title: string;
+  /**
+   * 일반 텍스트 본문 원문. 기존 필드명은 호환을 위해 유지하며 Markdown과 post-image:// 문자열을 해석하지 않는다.
+   */
   contentMarkdown: string;
   createdDate: string;
   /**
    * 과제 공지에서만 제공하는 제출 정보
    */
   assignment: UserPostAssignmentResponse | null;
+  /**
+   * 본문 최하단에 표시할 첨부 이미지. 저장된 displayOrder 오름차순이며 본문의 이미지 참조와 무관하다.
+   */
   images: Array<UserPostImageResponse>;
   readCount: number;
   read: boolean;
@@ -1168,6 +1228,9 @@ export type UserPostImageResponse = {
   filename: string;
   contentType: string;
   sizeBytes: number;
+  /**
+   * 본문 최하단 첨부 이미지 표시 순서. 생성·수정 요청 imageKeys 배열의 0 기반 순서
+   */
   displayOrder: number;
   readUrl: string;
   /**
@@ -1237,6 +1300,26 @@ export type MyAttendanceScoreResponse = {
    * 마감 세션의 조퇴 횟수
    */
   earlyLeaveCount: number;
+};
+
+export type CurrentWeekAttendanceReportResponse = {
+  type: 'LATE' | 'EARLY_LEAVE' | 'ABSENT' | null;
+  /**
+   * 최신 보고의 사유 원문. 미제출 또는 사유가 없는 과거 보고이면 null.
+   */
+  reason: string | null;
+  /**
+   * 활성 보고 ID. 미제출이면 null.
+   */
+  reportId: number | null;
+  /**
+   * 활성 보고 유형 전체. 미제출이면 빈 배열.
+   */
+  types: Array<'LATE' | 'EARLY_LEAVE' | 'ABSENT'>;
+  /**
+   * 최종 보고 시각. 미제출이면 null.
+   */
+  submittedAt: string | null;
 };
 
 export type AttendanceHistoryItemResponse = {
@@ -1498,6 +1581,8 @@ export type AdminSessionResponse = {
   name: string;
   location: string | null;
   date: string;
+  startDate: string;
+  endDate: string;
   startTime: string;
   endTime: string;
   type: 'REGULAR' | 'TEAM';
@@ -1583,6 +1668,7 @@ export type TeamPhotoReportView = {
   type: string;
   reported: boolean;
   reason: string | null;
+  submittedAt: string | null;
 };
 
 export type TeamPhotoWithUrl = {
@@ -1623,6 +1709,31 @@ export type AdminAttendanceRow = {
   scoreDelta: number | null;
   badgeVerified: boolean;
   badgeVerifiedAt: string | null;
+  selectedStatuses: Array<
+    | 'PRESENT'
+    | 'ABSENT'
+    | 'UNEXCUSED_ABSENT'
+    | 'LATE_ONE_HOUR'
+    | 'LATE_THREE_HOUR'
+    | 'UNEXCUSED_LATE_ONE_HOUR'
+    | 'UNEXCUSED_LATE_THREE_HOUR'
+    | 'EARLY_LEAVE_ONE_HOUR'
+    | 'EARLY_LEAVE_THREE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR'
+  >;
+  effectiveStatus:
+    | 'UNDECIDED'
+    | 'PRESENT'
+    | 'LATE'
+    | 'EARLY_LEAVE'
+    | 'LATE_AND_EARLY_LEAVE'
+    | 'ABSENT'
+    | 'EXCUSED_ABSENCE'
+    | null;
+  correctedAt: string | null;
+  latestReportTypes: Array<string>;
+  latestReportSubmittedAt: string | null;
 };
 
 export type AdminAttendanceDetailEventResponse = {
@@ -1669,12 +1780,40 @@ export type AdminAttendanceDetailEventResponse = {
   photoSelected: boolean | null;
   applied: boolean | null;
   actorStaffId: number | null;
+  previousSelectedStatuses: Array<
+    | 'PRESENT'
+    | 'ABSENT'
+    | 'UNEXCUSED_ABSENT'
+    | 'LATE_ONE_HOUR'
+    | 'LATE_THREE_HOUR'
+    | 'UNEXCUSED_LATE_ONE_HOUR'
+    | 'UNEXCUSED_LATE_THREE_HOUR'
+    | 'EARLY_LEAVE_ONE_HOUR'
+    | 'EARLY_LEAVE_THREE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR'
+  >;
+  nextSelectedStatuses: Array<
+    | 'PRESENT'
+    | 'ABSENT'
+    | 'UNEXCUSED_ABSENT'
+    | 'LATE_ONE_HOUR'
+    | 'LATE_THREE_HOUR'
+    | 'UNEXCUSED_LATE_ONE_HOUR'
+    | 'UNEXCUSED_LATE_THREE_HOUR'
+    | 'EARLY_LEAVE_ONE_HOUR'
+    | 'EARLY_LEAVE_THREE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR'
+  >;
+  automaticPhotoDecision: boolean;
 };
 
 export type AdminAttendanceDetailLatestReportResponse = {
   type: 'LATE' | 'EARLY_LEAVE' | 'ABSENT';
   reason: string | null;
   submittedAt: string;
+  types: Array<'LATE' | 'EARLY_LEAVE' | 'ABSENT'>;
 };
 
 export type AdminAttendanceDetailResponse = {
@@ -1704,6 +1843,29 @@ export type AdminAttendanceDetailSummaryResponse = {
     | null;
   badgeDistributed: boolean;
   badgeDistributedAt: string | null;
+  selectedStatuses: Array<
+    | 'PRESENT'
+    | 'ABSENT'
+    | 'UNEXCUSED_ABSENT'
+    | 'LATE_ONE_HOUR'
+    | 'LATE_THREE_HOUR'
+    | 'UNEXCUSED_LATE_ONE_HOUR'
+    | 'UNEXCUSED_LATE_THREE_HOUR'
+    | 'EARLY_LEAVE_ONE_HOUR'
+    | 'EARLY_LEAVE_THREE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR'
+    | 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR'
+  >;
+  effectiveStatus:
+    | 'UNDECIDED'
+    | 'PRESENT'
+    | 'LATE'
+    | 'EARLY_LEAVE'
+    | 'LATE_AND_EARLY_LEAVE'
+    | 'ABSENT'
+    | 'EXCUSED_ABSENCE'
+    | null;
+  correctedAt: string | null;
 };
 
 export type GenerationRosterListEntryResponse = {
@@ -1993,6 +2155,53 @@ export type AcknowledgeResponses = {
 };
 
 export type AcknowledgeResponse = AcknowledgeResponses[keyof AcknowledgeResponses];
+
+export type ReplaceData = {
+  body: SubmitAttendanceReportRequest;
+  path: {
+    reportId: number;
+  };
+  query?: never;
+  url: '/api/attendance-reports/{reportId}';
+};
+
+export type ReplaceErrors = {
+  /**
+   * INVALID_ATTENDANCE_REPORT
+   */
+  400: ErrorResponse;
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * ATTENDANCE_REPORT_NOT_ELIGIBLE; MEMBER_APPROVAL_REQUIRED|ATTENDANCE_REPORT_NOT_ELIGIBLE; MEMBER_APPROVAL_REQUIRED
+   */
+  403: ErrorResponse;
+  /**
+   * ATTENDANCE_REPORT_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ATTENDANCE_REPORT_UNAVAILABLE
+   */
+  409: ErrorResponse;
+  /**
+   * ATTENDANCE_UNAVAILABLE; MEMBER_APPROVAL_CHECK_UNAVAILABLE|ATTENDANCE_UNAVAILABLE; MEMBER_APPROVAL_CHECK_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type ReplaceError = ReplaceErrors[keyof ReplaceErrors];
+
+export type ReplaceResponses = {
+  /**
+   * 수정 결과
+   */
+  200: AttendanceReportResponse;
+};
+
+export type ReplaceResponse = ReplaceResponses[keyof ReplaceResponses];
 
 export type DetailData = {
   body?: never;
@@ -2998,7 +3207,7 @@ export type VerifyResponses = {
 export type VerifyResponse = VerifyResponses[keyof VerifyResponses];
 
 export type Submit1Data = {
-  body: SubmitAttendanceReportRequest;
+  body: SubmitAttendanceReportRequest | LegacySubmitAttendanceReportRequest;
   path?: never;
   query?: never;
   url: '/api/attendance-reports';
@@ -3022,7 +3231,7 @@ export type Submit1Errors = {
    */
   404: ErrorResponse;
   /**
-   * ATTENDANCE_REPORT_UNAVAILABLE|ATTENDANCE_REPORT_SESSION_CONFLICT|ATTENDANCE_REPORT_SESSION_CHANGED
+   * ATTENDANCE_REPORT_UNAVAILABLE|ATTENDANCE_REPORT_SESSION_CONFLICT|ATTENDANCE_REPORT_SESSION_CHANGED|ATTENDANCE_REPORT_ALREADY_EXISTS
    */
   409: ErrorResponse;
   /**
@@ -3598,9 +3807,9 @@ export type CloseErrors = {
    */
   404: ErrorResponse;
   /**
-   * TEAM_ATTENDANCE_PENDING
+   * ATTENDANCE_UNAVAILABLE
    */
-  409: ErrorResponse;
+  503: ErrorResponse;
 };
 
 export type CloseError = CloseErrors[keyof CloseErrors];
@@ -3818,13 +4027,21 @@ export type List1Errors = {
    * GENERATION_NOT_FOUND
    */
   404: ErrorResponse;
+  /**
+   * POST_QUERY_FAILED
+   */
+  500: ErrorResponse;
+  /**
+   * POST_QUERY_UNAVAILABLE
+   */
+  503: ErrorResponse;
 };
 
 export type List1Error = List1Errors[keyof List1Errors];
 
 export type List1Responses = {
   /**
-   * OK
+   * 공지 조회 성공
    */
   200: AdminPostListResponse;
 };
@@ -4097,6 +4314,10 @@ export type OverrideErrors = {
    */
   404: ErrorResponse;
   /**
+   * ATTENDANCE_CORRECTION_CLOSED
+   */
+  409: ErrorResponse;
+  /**
    * ATTENDANCE_UNAVAILABLE
    */
   503: ErrorResponse;
@@ -4106,7 +4327,7 @@ export type OverrideError = OverrideErrors[keyof OverrideErrors];
 
 export type OverrideResponses = {
   /**
-   * OK
+   * 출결 정정 성공. 응답 본문 없음.
    */
   200: unknown;
 };
@@ -4201,13 +4422,21 @@ export type Detail2Errors = {
    * GENERATION_NOT_FOUND|POST_NOT_FOUND
    */
   404: ErrorResponse;
+  /**
+   * POST_QUERY_FAILED
+   */
+  500: ErrorResponse;
+  /**
+   * POST_QUERY_UNAVAILABLE
+   */
+  503: ErrorResponse;
 };
 
 export type Detail2Error = Detail2Errors[keyof Detail2Errors];
 
 export type Detail2Responses = {
   /**
-   * OK
+   * 공지 조회 성공
    */
   200: AdminPostDetailResponse;
 };
@@ -4242,7 +4471,11 @@ export type Update3Errors = {
    */
   409: ErrorResponse;
   /**
-   * POST_IMAGE_STORAGE_FAILED
+   * POST_QUERY_FAILED
+   */
+  500: ErrorResponse;
+  /**
+   * POST_QUERY_UNAVAILABLE|POST_IMAGE_STORAGE_FAILED
    */
   503: ErrorResponse;
 };
@@ -4251,7 +4484,7 @@ export type Update3Error = Update3Errors[keyof Update3Errors];
 
 export type Update3Responses = {
   /**
-   * OK
+   * 공지 조회 성공
    */
   200: AdminPostDetailResponse;
 };
@@ -4422,7 +4655,7 @@ export type Find6Errors = {
    */
   404: ErrorResponse;
   /**
-   * ACTIVE_GENERATION_CONFLICT 또는 CURRENT_WEEK_SESSION_CONFLICT
+   * ACTIVE_GENERATION_CONFLICT
    */
   409: ErrorResponse;
 };
@@ -4431,7 +4664,7 @@ export type Find6Error = Find6Errors[keyof Find6Errors];
 
 export type Find6Responses = {
   /**
-   * 조회 성공. 토요일 세션이 없으면 session은 null
+   * 조회 성공. 오늘 세션과 미래 세션이 모두 없으면 session은 null
    */
   200: CurrentWeekSessionResponse;
 };
@@ -4732,6 +4965,47 @@ export type MineResponses = {
 };
 
 export type MineResponse = MineResponses[keyof MineResponses];
+
+export type CurrentWeekData = {
+  body?: never;
+  path?: never;
+  query?: never;
+  url: '/api/attendance-reports/current-week';
+};
+
+export type CurrentWeekErrors = {
+  /**
+   * AUTHENTICATION_FAILED
+   */
+  401: ErrorResponse;
+  /**
+   * MEMBER_APPROVAL_REQUIRED 또는 ATTENDANCE_REPORT_NOT_ELIGIBLE; MEMBER_APPROVAL_REQUIRED
+   */
+  403: ErrorResponse;
+  /**
+   * ATTENDANCE_SESSION_NOT_FOUND
+   */
+  404: ErrorResponse;
+  /**
+   * ATTENDANCE_REPORT_SESSION_CONFLICT
+   */
+  409: ErrorResponse;
+  /**
+   * MEMBER_APPROVAL_CHECK_UNAVAILABLE 또는 ATTENDANCE_UNAVAILABLE; MEMBER_APPROVAL_CHECK_UNAVAILABLE
+   */
+  503: ErrorResponse;
+};
+
+export type CurrentWeekError = CurrentWeekErrors[keyof CurrentWeekErrors];
+
+export type CurrentWeekResponses = {
+  /**
+   * 최신 보고 또는 미제출 null 필드 응답
+   */
+  200: CurrentWeekAttendanceReportResponse;
+};
+
+export type CurrentWeekResponse = CurrentWeekResponses[keyof CurrentWeekResponses];
 
 export type Find8Data = {
   body?: never;
@@ -5346,7 +5620,7 @@ export type List6Errors = {
    */
   404: ErrorResponse;
   /**
-   * TEAM_PHOTO_STORAGE_FAILED
+   * ATTENDANCE_UNAVAILABLE, TEAM_PHOTO_STORAGE_FAILED
    */
   503: ErrorResponse;
 };
@@ -5355,7 +5629,7 @@ export type List6Error = List6Errors[keyof List6Errors];
 
 export type List6Responses = {
   /**
-   * OK
+   * 팀 사진 목록
    */
   200: TeamPhotoListResponse;
 };

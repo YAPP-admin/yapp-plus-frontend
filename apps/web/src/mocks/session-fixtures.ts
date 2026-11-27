@@ -42,6 +42,7 @@ export function createSessionFixtures(now: number) {
         sessionId: currentSession.sessionId,
         name: currentSession.name,
         date: currentSession.date,
+        endDate: currentSession.date,
         startTime: currentSession.startTime,
         endTime: currentSession.endTime,
         type: currentSession.type,
