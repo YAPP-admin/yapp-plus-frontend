@@ -145,9 +145,10 @@ function validateRow(row: MemberImportRow, values: readonly string[]): Validated
     });
   }
 
-  const parsedGeneration = Number(generation);
+  const normalizedGeneration = generation.replace(/\D/g, '');
+  const parsedGeneration = Number(normalizedGeneration);
   if (
-    !/^\d+$/.test(generation) ||
+    !/^\d+$/.test(normalizedGeneration) ||
     !Number.isSafeInteger(parsedGeneration) ||
     parsedGeneration <= 0
   ) {
