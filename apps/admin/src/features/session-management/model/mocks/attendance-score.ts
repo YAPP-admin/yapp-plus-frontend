@@ -12,7 +12,7 @@ export function calculateMockAttendanceDelta(result: AttendanceResult): number |
       if (result.penaltyCategory === 'unknown') {
         return null;
       }
-      return result.penaltyCategory === 'regular' ? -12 : -20;
+      return result.penaltyCategory === 'regular' ? -20 : -30;
     case 'late':
     case 'earlyLeave': {
       if (result.penaltyCategory === 'unknown' || result.durationBand === null) {

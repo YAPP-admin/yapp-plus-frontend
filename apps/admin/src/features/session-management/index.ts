@@ -65,6 +65,7 @@ export {
 export {
   attendanceDraftSchema,
   attendanceEditInputSchema,
+  type AttendanceMutationInput,
   badgeEditInputSchema,
   closeAttendanceInputSchema,
   teamDecisionInputSchema,
