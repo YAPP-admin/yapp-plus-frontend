@@ -145,17 +145,17 @@ it('SEED 탭 클릭은 step을 한 번만 교체하고 현재 탭 재선택은 �
   expect(onValueChange).not.toHaveBeenCalled();
 });
 
-it('커뮤니티 메뉴는 다른 탭처럼 현재 선택 상태를 표시한다', () => {
+it('운영 환경의 커뮤니티 직접 진입 시 네 메뉴를 선택 표시 없이 제공한다', () => {
+  vi.stubEnv('DEV', false);
   render(
     <Tabs.Root value="community">
       <BottomNavigation activeTab="community" />
     </Tabs.Root>,
   );
 
-  expect(screen.getByRole('tab', { name: '커뮤니티' })).toHaveAttribute('aria-selected', 'true');
-  expect(screen.getByRole('navigation', { name: '주요 메뉴' })).toHaveTextContent(
-    '홈일정게시판커뮤니티MY',
-  );
+  expect(screen.queryByRole('tab', { name: '커뮤니티' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('tab', { selected: true })).not.toBeInTheDocument();
+  expect(screen.getByRole('navigation', { name: '주요 메뉴' })).toHaveTextContent('홈일정게시판MY');
 });
 
 it.each(['Control', 'Meta', 'Shift', 'Alt'])(
@@ -228,12 +228,19 @@ it('새 창 대상 링크는 Stackflow 이동으로 가로채지 않는다', asy
   expect(state.push).not.toHaveBeenCalled();
 });
 
-it('프로덕션 홈에서도 커뮤니티 진입 링크를 표시한다', () => {
+it('프로덕션 홈에서 커뮤니티 진입 링크를 숨긴다', () => {
   vi.stubEnv('DEV', false);
   render(
     <Tabs.Root value="home">
       <BottomNavigation activeTab="home" />
     </Tabs.Root>,
   );
-  expect(screen.getByRole('tab', { name: '커뮤니티' })).toHaveAttribute('href', '/dining');
+  expect(screen.queryByRole('tab', { name: '커뮤니티' })).not.toBeInTheDocument();
+});
+
+it.each([true, false])('개발 여부(%s)에 따라 알림 화면의 커뮤니티 링크를 표시한다', (dev) => {
+  vi.stubEnv('DEV', dev);
+  render(<BottomNavigation activeTab={null} />);
+  expect(screen.getAllByRole('link')).toHaveLength(dev ? 5 : 4);
+  expect(screen.queryAllByRole('link', { name: '커뮤니티' })).toHaveLength(dev ? 1 : 0);
 });
