@@ -40,9 +40,13 @@ function renderSettingsPage() {
 }
 
 describe('SettingsPage', () => {
-  it('조회 전 알림 스위치를 비활성화한다', () => {
+  it('조회 전 알림 스위치 대신 스켈레톤을 표시한다', () => {
     renderSettingsPage();
-    expect(screen.getByRole('switch', { name: '알림' })).toBeDisabled();
+    expect(screen.queryByRole('switch', { name: '알림' })).not.toBeInTheDocument();
+    expect(screen.getByRole('region', { name: '알림 설정을 불러오고 있어요' })).toHaveAttribute(
+      'aria-busy',
+      'true',
+    );
   });
 
   it('설정 헤더와 모든 메뉴 항목을 정상적으로 렌더링한다', () => {

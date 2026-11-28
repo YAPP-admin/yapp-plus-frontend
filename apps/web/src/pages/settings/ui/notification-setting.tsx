@@ -2,6 +2,7 @@
 
 import { useId } from 'react';
 import {
+  Skeleton,
   SwitchControl,
   SwitchHiddenInput,
   SwitchRoot,
@@ -11,6 +12,7 @@ import {
 import { ActionButton } from '@yapp-plus/ui';
 import type { FallbackProps } from 'react-error-boundary';
 import { useThrowQueryError } from '@/shared/lib/query-error-policy';
+import { skeletonPlaceholder } from '@/shared/ui/skeleton.css';
 import { ErrorState } from '@/shared/ui/error-state';
 import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
 import { useOpenAppSettingsMutation } from '../model/open-app-settings';
@@ -82,20 +84,32 @@ function NotificationSettingContent() {
     <VStack width="full" align="stretch" gap="x2">
       <div className={menuItem}>
         <span className={menuLabel}>알림</span>
-        <SwitchRoot
-          className={switchRoot}
-          checked={query.data?.enabled ?? false}
-          disabled={!query.data || unsupported || mutation.isPending}
-          onCheckedChange={(enabled) => mutation.mutate(enabled)}
-        >
-          <SwitchHiddenInput
-            aria-label="알림"
-            aria-describedby={message ? descriptionId : undefined}
-          />
-          <SwitchControl className={switchControl}>
-            <SwitchThumb className={switchThumb} />
-          </SwitchControl>
-        </SwitchRoot>
+        {query.isPending ? (
+          <VStack as="section" aria-label="알림 설정을 불러오고 있어요" aria-busy="true">
+            <Skeleton
+              className={skeletonPlaceholder}
+              width="52px"
+              height="28px"
+              radius="full"
+              aria-hidden="true"
+            />
+          </VStack>
+        ) : (
+          <SwitchRoot
+            className={switchRoot}
+            checked={query.data?.enabled ?? false}
+            disabled={!query.data || unsupported || mutation.isPending}
+            onCheckedChange={(enabled) => mutation.mutate(enabled)}
+          >
+            <SwitchHiddenInput
+              aria-label="알림"
+              aria-describedby={message ? descriptionId : undefined}
+            />
+            <SwitchControl className={switchControl}>
+              <SwitchThumb className={switchThumb} />
+            </SwitchControl>
+          </SwitchRoot>
+        )}
       </div>
 
       {message && (

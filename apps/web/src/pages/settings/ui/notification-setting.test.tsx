@@ -50,12 +50,14 @@ afterEach(() => {
 });
 
 describe('알림 설정', () => {
-  it('최초 조회 중에는 설명 없이 스위치를 비활성화하고 완료 후 선택을 표시한다', async () => {
+  it('최초 조회 중에는 스위치 대신 스켈레톤을 표시하고 완료 후 선택을 표시한다', async () => {
     const result = deferred();
     vi.mocked(getNotificationSettings).mockReturnValue(result.promise);
     setup();
-    expect(screen.getByRole('switch')).toBeDisabled();
-    expect(screen.queryByRole('status')).not.toBeInTheDocument();
+    expect(screen.queryByRole('switch')).not.toBeInTheDocument();
+    const loading = screen.getByRole('region', { name: '알림 설정을 불러오고 있어요' });
+    expect(loading).toHaveAttribute('aria-busy', 'true');
+    expect(loading.querySelector('.seed-skeleton')).toBeVisible();
     await act(async () => {
       result.resolve(allowed(true));
       await result.promise;
@@ -76,7 +78,8 @@ describe('알림 설정', () => {
       expect(screen.queryByText('알림 설정을 불러오고 있어요.')).not.toBeInTheDocument(),
     );
     expect(screen.queryByText('알림 설정은 최신 앱에서 사용할 수 있어요.')).not.toBeInTheDocument();
-    expect(screen.getByRole('switch', { name: '알림' })).toBeDisabled();
+    expect(await screen.findByRole('switch', { name: '알림' })).toBeDisabled();
+    expect(screen.queryByLabelText('알림 설정을 불러오고 있어요')).not.toBeInTheDocument();
   });
 
   it('일반 조회 실패는 설정 항목을 공통 오류 UI로 교체하고 수동 재시도로 복구한다', async () => {
@@ -249,4 +252,33 @@ describe('알림 설정', () => {
     });
     expect(client.getQueryData(['notification-settings', undefined, undefined])).toBeUndefined();
   });
+});
+
+it('기존 알림 설정은 재조회 중에도 스켈레톤으로 교체하지 않는다', async () => {
+  const { client } = setup();
+  await waitFor(() => expect(screen.getByRole('switch')).toBeChecked());
+  const result = deferred();
+  vi.mocked(getNotificationSettings).mockReturnValue(result.promise);
+  let refresh: Promise<void> | undefined;
+  act(() => {
+    refresh = client.invalidateQueries({ queryKey: ['notification-settings'] });
+  });
+  expect(screen.getByRole('switch')).toBeChecked();
+  expect(screen.queryByLabelText('알림 설정을 불러오고 있어요')).not.toBeInTheDocument();
+  await act(async () => {
+    result.resolve(allowed(false));
+    await refresh;
+  });
+  await waitFor(() => expect(screen.getByRole('switch')).not.toBeChecked());
+});
+
+it('권한 관련 조회 실패가 스켈레톤에 머물지 않는다', async () => {
+  vi.mocked(getNotificationSettings).mockResolvedValue({
+    status: 'ERROR',
+    code: 'PERMISSION_REQUIRED',
+    retryable: false,
+  });
+  setup();
+  expect(await screen.findByRole('switch', { name: '알림' })).toBeDisabled();
+  expect(screen.queryByLabelText('알림 설정을 불러오고 있어요')).not.toBeInTheDocument();
 });
