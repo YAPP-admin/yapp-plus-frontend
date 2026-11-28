@@ -28,6 +28,7 @@ const responseSchema = z.object({
       .array(
         z.object({
           roadAddr: nonempty,
+          bdNm: z.string().trim().optional(),
           admCd: digits,
           rnMgtSn: digits,
           udrtYn: z.enum(['0', '1']),
@@ -74,6 +75,7 @@ export async function searchAddresses(
     data: {
       items: juso.map((item) => ({
         roadAddress: item.roadAddr,
+        buildingName: item.bdNm === '' ? undefined : item.bdNm,
         lookupReference: {
           administrativeAreaCode: item.admCd,
           roadNameManagementNumber: item.rnMgtSn,

@@ -69,6 +69,7 @@ function Harness({
           onSelect(item);
         }}
       />
+      <output aria-label="부모 선택 주소">{value?.roadAddress}</output>
       <button type="submit">세션 저장</button>
     </form>
   );

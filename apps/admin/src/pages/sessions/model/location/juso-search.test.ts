@@ -63,6 +63,21 @@ describe('주소 검색 ViewModel', () => {
     });
   });
 
+  it.each([
+    ['서울창업허브', '서울창업허브'],
+    ['', undefined],
+    ['   ', undefined],
+    [undefined, undefined],
+  ])('건물명 %s를 선택 안내용으로 정리한다', async (name, expected) => {
+    const payload = response();
+    request.mockResolvedValue({
+      results: { ...payload.results, juso: [{ ...item, bdNm: name }] },
+    });
+    expect(await searchAddresses(input)).toMatchObject({
+      data: { items: [{ buildingName: expected }] },
+    });
+  });
+
   it('지하 코드 1을 boolean으로 변환한다', async () => {
     const payload = response();
     payload.results.juso = [{ ...item, udrtYn: '1' }];

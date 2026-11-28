@@ -1,4 +1,4 @@
-/** 행안부의 단일 좌표 응답을 검증하고 UTM-K 좌표를 화면용 경위도로 변환합니다. */
+/** 행안부 응답에서 선택한 건물의 좌표를 검증하고 UTM-K 좌표를 화면용 경위도로 변환합니다. */
 import proj4 from 'proj4';
 import { z } from 'zod';
 import { jusoClient } from './juso-client';
@@ -23,8 +23,9 @@ const responseSchema = z.object({
   results: z.object({
     juso: z.array(
       z.object({
-        entX: coordinateNumber,
-        entY: coordinateNumber,
+        bdMgtSn: z.string().trim().min(1),
+        entX: z.unknown(),
+        entY: z.unknown(),
       }),
     ),
   }),
@@ -45,7 +46,7 @@ export function convertJusoCoordinates(x: number, y: number): CoordinatesViewMod
   return coordinatesSchema.parse({ latitude, longitude });
 }
 
-/** 요청한 주소의 단일 좌표를 반환합니다. 전송·검증 오류는 호출자에게 전파합니다. */
+/** 같은 도로명주소의 여러 건물 중 관리번호가 유일하게 일치하는 좌표만 반환합니다. */
 export async function lookupCoordinates(
   reference: AddressLookupReference,
   approvalKey: string,
@@ -76,9 +77,16 @@ export async function lookupCoordinates(
     return { status: 'service-error', code: errorCode };
   }
   const { juso } = responseSchema.parse(payload).results;
-  const match = juso[0];
-  if (juso.length !== 1 || !match) {
+  const matches = juso.filter((item) => item.bdMgtSn === reference.buildingManagementNumber);
+  const match = matches[0];
+  if (matches.length !== 1 || !match) {
     throw new Error('선택한 주소에 대응하는 좌표를 하나로 확인할 수 없습니다.');
   }
-  return { status: 'success', data: convertJusoCoordinates(match.entX, match.entY) };
+  return {
+    status: 'success',
+    data: convertJusoCoordinates(
+      coordinateNumber.parse(match.entX),
+      coordinateNumber.parse(match.entY),
+    ),
+  };
 }
