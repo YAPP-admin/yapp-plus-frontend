@@ -14,7 +14,7 @@ import { TabLink } from '@/app/navigation/tab-link';
 import type { TabName } from '@/app/navigation/tab';
 import { bottomBar, homeIndicatorArea, item, itemLabel, navigation } from './bottom-navigation.css';
 
-const destinations = [
+const DESTINATIONS = [
   {
     tab: 'home' as const,
     label: '홈',
@@ -45,6 +45,8 @@ const destinations = [
 /** activeTab이 null이면 SEED Tabs context 없이 알림에서 탭으로 복귀하는 링크를 렌더링합니다. */
 export function BottomNavigation({ activeTab }: { activeTab: TabName | null }) {
   const isTabNavigation = activeTab !== null;
+  // 커뮤니티 진입 메뉴는 개발 실행에서만 노출하고 기존 직접 진입 경로는 유지합니다.
+  const destinations = DESTINATIONS.filter(({ tab }) => tab !== 'community' || import.meta.env.DEV);
   const links = destinations.map(({ tab, label, Icon }) => {
     const content = (
       <>
@@ -85,12 +87,12 @@ export function BottomNavigation({ activeTab }: { activeTab: TabName | null }) {
       <Box as="nav" aria-label="주요 메뉴">
         {isTabNavigation ? (
           <Tabs.List asChild aria-label="주요 메뉴">
-            <Grid columns={5} className={navigation}>
+            <Grid columns={destinations.length} className={navigation}>
               {links}
             </Grid>
           </Tabs.List>
         ) : (
-          <Grid columns={5} className={navigation}>
+          <Grid columns={destinations.length} className={navigation}>
             {links}
           </Grid>
         )}

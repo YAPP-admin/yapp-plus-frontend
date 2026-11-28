@@ -196,20 +196,20 @@ function isVisible(element: HTMLElement) {
 }
 
 describe('Stackflow FSD 화면 연결', () => {
-  it('하단 탭의 키보드 선택은 URL·포커스·query를 동기화하고 history를 늘리지 않는다', async () => {
+  it('운영 하단 탭의 키보드 선택은 URL·포커스·query를 동기화하고 history를 늘리지 않는다', async () => {
+    vi.stubEnv('DEV', false);
     window.history.replaceState({}, '', '/notices?category=ASSIGNMENT');
     const user = userEvent.setup();
-    renderStack();
+    renderStack({ native: true });
     await waitForTopHeading('게시판');
     const navigation = within(screen.getByRole('tablist', { name: '주요 메뉴' }));
     const historyLength = window.history.length;
     act(() => navigation.getByRole('tab', { name: '게시판' }).focus());
 
     for (const [key, label, path] of [
-      ['ArrowRight', '커뮤니티', '/dining'],
+      ['ArrowRight', 'MY', '/my'],
       ['Home', '홈', '/'],
       ['End', 'MY', '/my'],
-      ['ArrowLeft', '커뮤니티', '/dining'],
       ['ArrowLeft', '게시판', '/notices'],
     ] as const) {
       await user.keyboard(`{${key}}`);
@@ -222,7 +222,7 @@ describe('Stackflow FSD 화면 연결', () => {
 
     expect(window.location.search).toBe('?category=ASSIGNMENT');
     const notices = screen.getByRole('tabpanel', { name: '게시판' });
-    expect(within(notices).getByRole('tab', { name: '과제' })).toHaveAttribute(
+    expect(await within(notices).findByRole('tab', { name: '과제' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
@@ -936,14 +936,15 @@ it('운영 로그인 상태여도 접수 정보 없는 완료 단계는 성공�
   expect(screen.queryByText('인증 사진을 올렸어요!')).not.toBeInTheDocument();
 });
 
-it('프로덕션 회원은 커뮤니티에서 뒤풀이 상세를 조회하고 목록으로 복귀한다', async () => {
+it('프로덕션 회원은 커뮤니티 탭을 숨겨도 기존 주소로 직접 진입한다', async () => {
   vi.stubEnv('DEV', false);
   vi.stubEnv('VITE_API_MOCKING', 'false');
+  window.history.replaceState({}, '', '/dining');
   renderStack({ native: true });
-  const home = await waitForTopHeading('홈');
-  await userEvent.click(home.getByRole('tab', { name: '커뮤니티' }));
+  await screen.findByRole('tablist', { name: '주요 메뉴' });
   await waitFor(() => expect(window.location.pathname).toBe('/dining'));
-  expect(screen.getByRole('tab', { name: '커뮤니티', selected: true })).toBeVisible();
+  expect(screen.queryByRole('tab', { name: '커뮤니티' })).not.toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: '홈' })).toBeVisible();
 });
 
 it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', async () => {
@@ -953,5 +954,6 @@ it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', a
   const detail = await waitForTopHeading('뒤풀이');
   await userEvent.click(detail.getByRole('button', { name: '뒤로가기' }));
   await waitFor(() => expect(window.location.pathname).toBe('/dining'));
-  expect(screen.getByRole('tab', { name: '커뮤니티', selected: true })).toBeVisible();
+  expect(screen.queryByRole('tab', { name: '커뮤니티' })).not.toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: '홈' })).toBeVisible();
 });
