@@ -1,15 +1,31 @@
 import { base, en, Faker } from '@faker-js/faker';
 import { http, HttpResponse, type JsonBodyType, onUnhandledRequest } from 'msw';
-import type { ZodType } from 'zod';
+import { z, type ZodType } from 'zod';
 import type {
   AdminAfterpartyResponse,
+  AdminAttendanceListResponse,
   NotificationHistoryItemResponse,
+  OverrideAttendanceRequest,
 } from '../generated/types.gen';
 
 import * as generatedFaker from '../generated/@faker-js/faker.gen';
 import { createMswHandlers } from '../generated/msw.gen';
 import * as schemas from '../generated/zod.gen';
 import * as fixtures from './fixtures';
+
+const mockAttendanceSelectionSchema = z.object({
+  status: z.enum(['undecided', 'present', 'late', 'earlyLeave', 'absent']),
+  penaltyCategory: z.enum(['regular', 'unauthorized']).nullable(),
+  durationBand: z.enum(['withinOneHour', 'withinThreeHours']).nullable(),
+  reason: z.string().nullable().optional(),
+});
+const mockOverrideBodySchema = schemas.zOverrideBody.extend({
+  mockSelections: z.array(mockAttendanceSelectionSchema).min(1).optional(),
+});
+type MockAttendanceSelection = z.infer<typeof mockAttendanceSelectionSchema>;
+type MockAttendanceRow = AdminAttendanceListResponse['items'][number] & {
+  mockSelections?: MockAttendanceSelection[];
+};
 
 function normalizeBaseUrl(value: string): string {
   if (!/^https?:\/\//.test(value)) {
@@ -50,6 +66,146 @@ function fixedResponse(body: JsonBodyType, schema: ZodType) {
   return () => response(body, schema, 200);
 }
 
+type AttendanceOverrideStatus = OverrideAttendanceRequest['statuses'][number];
+
+function scoreDeltaForStatus(status: AttendanceOverrideStatus) {
+  switch (status) {
+    case 'PRESENT':
+      return 0;
+    case 'LATE_ONE_HOUR':
+    case 'EARLY_LEAVE_ONE_HOUR':
+      return -4;
+    case 'LATE_THREE_HOUR':
+    case 'EARLY_LEAVE_THREE_HOUR':
+      return -8;
+    case 'UNEXCUSED_LATE_ONE_HOUR':
+    case 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR':
+      return -10;
+    case 'UNEXCUSED_LATE_THREE_HOUR':
+    case 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR':
+      return -14;
+    case 'ABSENT':
+      return -12;
+    case 'UNEXCUSED_ABSENT':
+      return -20;
+  }
+  return 0;
+}
+
+function scoreDeltaForStatuses(statuses: AttendanceOverrideStatus[]) {
+  return statuses.reduce((total, status) => total + scoreDeltaForStatus(status), 0);
+}
+
+function statusForStatuses(
+  statuses: AttendanceOverrideStatus[],
+): AdminAttendanceListResponse['items'][number]['status'] {
+  const [firstStatus] = statuses;
+  if (firstStatus === undefined) {
+    return 'UNDECIDED';
+  }
+  switch (firstStatus) {
+    case 'LATE_ONE_HOUR':
+    case 'LATE_THREE_HOUR':
+    case 'UNEXCUSED_LATE_ONE_HOUR':
+    case 'UNEXCUSED_LATE_THREE_HOUR':
+    case 'EARLY_LEAVE_ONE_HOUR':
+    case 'EARLY_LEAVE_THREE_HOUR':
+    case 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR':
+    case 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR':
+      if (firstStatus.includes('LATE')) {
+        return firstStatus.includes('THREE') ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
+      }
+      return firstStatus.includes('THREE') ? 'EARLY_LEAVE_THREE_HOUR' : 'EARLY_LEAVE_ONE_HOUR';
+    case 'PRESENT':
+      return 'PRESENT';
+    case 'ABSENT':
+    case 'UNEXCUSED_ABSENT':
+      return 'ABSENT';
+    default:
+      return 'UNDECIDED';
+  }
+}
+
+function effectiveStatusForStatuses(
+  statuses: AttendanceOverrideStatus[],
+): AdminAttendanceListResponse['items'][number]['effectiveStatus'] {
+  const hasLate = statuses.some((status) => status.includes('LATE'));
+  const hasEarlyLeave = statuses.some((status) => status.includes('EARLY_LEAVE'));
+  if (hasLate && hasEarlyLeave) {
+    return 'LATE_AND_EARLY_LEAVE';
+  }
+  if (hasLate) {
+    return 'LATE';
+  }
+  if (hasEarlyLeave) {
+    return 'EARLY_LEAVE';
+  }
+  if (statuses.includes('PRESENT')) {
+    return 'PRESENT';
+  }
+  if (statuses.includes('ABSENT') || statuses.includes('UNEXCUSED_ABSENT')) {
+    return 'ABSENT';
+  }
+  return 'UNDECIDED';
+}
+
+function statusForMockSelection(
+  selection: MockAttendanceSelection,
+): AttendanceOverrideStatus | null {
+  switch (selection.status) {
+    case 'present':
+      return 'PRESENT';
+    case 'absent':
+      return selection.penaltyCategory === 'unauthorized' ? 'UNEXCUSED_ABSENT' : 'ABSENT';
+    case 'late':
+      if (selection.durationBand === null) {
+        return null;
+      }
+      if (selection.penaltyCategory === 'unauthorized') {
+        return selection.durationBand === 'withinThreeHours'
+          ? 'UNEXCUSED_LATE_THREE_HOUR'
+          : 'UNEXCUSED_LATE_ONE_HOUR';
+      }
+      return selection.durationBand === 'withinThreeHours' ? 'LATE_THREE_HOUR' : 'LATE_ONE_HOUR';
+    case 'earlyLeave':
+      if (selection.durationBand === null) {
+        return null;
+      }
+      if (selection.penaltyCategory === 'unauthorized') {
+        return selection.durationBand === 'withinThreeHours'
+          ? 'UNEXCUSED_EARLY_LEAVE_THREE_HOUR'
+          : 'UNEXCUSED_EARLY_LEAVE_ONE_HOUR';
+      }
+      return selection.durationBand === 'withinThreeHours'
+        ? 'EARLY_LEAVE_THREE_HOUR'
+        : 'EARLY_LEAVE_ONE_HOUR';
+    case 'undecided':
+      return null;
+  }
+  return null;
+}
+
+function scoreDeltaForMockSelection(selection: MockAttendanceSelection) {
+  switch (selection.status) {
+    case 'late':
+    case 'earlyLeave':
+      if (selection.durationBand === 'withinThreeHours') {
+        return selection.penaltyCategory === 'unauthorized' ? -14 : -8;
+      }
+      return selection.penaltyCategory === 'unauthorized' ? -10 : -4;
+    case 'absent':
+      return selection.penaltyCategory === 'unauthorized' ? -20 : -12;
+    case 'present':
+    case 'undecided':
+      return 0;
+  }
+  return 0;
+}
+
+function scoreDeltaForSelections(selections: MockAttendanceSelection[]) {
+  return selections.reduce((total, selection) => total + scoreDeltaForMockSelection(selection), 0);
+}
+
 export function createApiMockHandlers(
   baseUrl: string,
   options: { scenario?: 'default' | 'empty' | 'cancel-not-found' } = {},
@@ -66,6 +222,7 @@ export function createApiMockHandlers(
     : [...fixtures.adminNotifications.items];
   let nextNotificationId =
     notificationHistory.reduce((maxId, notification) => Math.max(maxId, notification.id), 0) + 1;
+  const attendanceBySession = new Map<string, AdminAttendanceListResponse>();
   const afterpartyHistory: AdminAfterpartyResponse[] = empty
     ? []
     : fixtures.adminAfterparties.map((afterparty) => ({
@@ -82,6 +239,26 @@ export function createApiMockHandlers(
     const nextCursor =
       start + items.length < notificationHistory.length ? `mock-page-${pageIndex + 2}` : null;
     return { items, nextCursor };
+  }
+
+  function getAttendance(sessionKey: string) {
+    const existing = attendanceBySession.get(sessionKey);
+    if (existing !== undefined) {
+      return existing;
+    }
+
+    const attendance = empty
+      ? { items: [], nextCursor: null }
+      : generatedFaker.fakeList7Response200({
+          faker: (() => {
+            const faker = new Faker({ locale: [en, base] });
+            faker.seed(107);
+            faker.setDefaultRefDate('2026-10-26T00:00:00Z');
+            return faker;
+          })(),
+        });
+    attendanceBySession.set(sessionKey, attendance);
+    return attendance;
   }
 
   // 명시한 Faker·대표 응답이 우선하며, 미연결 API는 생성 핸들러의 명세 예제 또는 501을 사용합니다.
@@ -370,6 +547,58 @@ export function createApiMockHandlers(
               { status: 404 },
             )
           : response(team, schemas.zFindResponse, 200);
+      },
+    ),
+    http.get(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance`,
+      ({ params }) => {
+        const sessionKey = `${String(params.generationId)}:${String(params.sessionId)}`;
+        return response(getAttendance(sessionKey), schemas.zList7Response, 200);
+      },
+    ),
+    http.patch(
+      `${normalizedBaseUrl}/api/admin/generations/:generationId/sessions/:sessionId/attendance/:membershipId`,
+      async ({ params, request }) => {
+        let body: unknown;
+        try {
+          body = await request.json();
+        } catch {
+          return HttpResponse.json({ code: 'INVALID_ATTENDANCE_REQUEST' }, { status: 400 });
+        }
+
+        const parsedBody = mockOverrideBodySchema.safeParse(body);
+        if (!parsedBody.success) {
+          return HttpResponse.json({ code: 'INVALID_ATTENDANCE_REQUEST' }, { status: 400 });
+        }
+
+        const sessionKey = `${String(params.generationId)}:${String(params.sessionId)}`;
+        const attendance = getAttendance(sessionKey);
+        const member = attendance.items.find(
+          (item) => String(item.membershipId) === params.membershipId,
+        );
+        if (member === undefined) {
+          return HttpResponse.json({ code: 'MEMBERSHIP_NOT_FOUND' }, { status: 404 });
+        }
+
+        const mockMember = member as MockAttendanceRow;
+        const selections = parsedBody.data.mockSelections;
+        if (selections === undefined) {
+          member.selectedStatuses = parsedBody.data.statuses;
+          member.effectiveStatus = effectiveStatusForStatuses(parsedBody.data.statuses);
+          member.status = statusForStatuses(parsedBody.data.statuses);
+          member.scoreDelta = scoreDeltaForStatuses(parsedBody.data.statuses);
+        } else {
+          mockMember.mockSelections = selections;
+          const selectedStatuses = selections.flatMap((selection) => {
+            const status = statusForMockSelection(selection);
+            return status === null ? [] : [status];
+          });
+          member.selectedStatuses = selectedStatuses;
+          member.effectiveStatus = effectiveStatusForStatuses(selectedStatuses);
+          member.status = statusForStatuses(selectedStatuses);
+          member.scoreDelta = scoreDeltaForSelections(selections);
+        }
+        return HttpResponse.json({}, { status: 200 });
       },
     ),
     ...factory.all({

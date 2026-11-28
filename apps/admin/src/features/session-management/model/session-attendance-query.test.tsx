@@ -3,6 +3,8 @@ import { QueryClientProvider, useSuspenseQuery } from '@tanstack/react-query';
 import { Suspense, type ReactNode } from 'react';
 import { HttpResponse, http } from 'msw';
 import { expect, it } from 'vitest';
+import { zList7Response } from '@yapp-plus/api/generated';
+import { z } from 'zod';
 import { createAdminQueryClient } from '~/query-client';
 import { apiBaseUrl, server } from '~/mocks/server';
 import {
@@ -260,6 +262,77 @@ it('출결 변경 mutation이 생성 SDK 계약에 맞는 요청을 보낸다', 
   expect(badgeBody).toEqual({ enabled: true });
   expect(closeRequestCount).toBe(1);
   expect(cancelRequestCount).toBe(1);
+});
+
+it('mock 출결 수정 결과가 다시 조회한 명단에 반영된다', async () => {
+  const attendanceUrl = `${apiBaseUrl}/api/admin/generations/997/sessions/998/attendance?size=50`;
+  const initialResponse = await fetch(attendanceUrl);
+  const initial = zList7Response.parse(await initialResponse.json());
+  const [member] = initial.items;
+
+  expect(initialResponse.ok).toBe(true);
+  expect(member).toBeDefined();
+  if (member === undefined) {
+    throw new Error('mock 출석 명단이 비어 있습니다.');
+  }
+
+  const updateResponse = await fetch(
+    `${apiBaseUrl}/api/admin/generations/997/sessions/998/attendance/${String(member.membershipId)}`,
+    {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ statuses: ['ABSENT'], reason: null }),
+    },
+  );
+  const refreshedResponse = await fetch(attendanceUrl);
+  const refreshed = zList7Response.parse(await refreshedResponse.json());
+  const refreshedMember = refreshed.items.find(
+    (candidate) => candidate.membershipId === member.membershipId,
+  );
+
+  expect(updateResponse.ok).toBe(true);
+  expect(refreshedMember).toMatchObject({ status: 'ABSENT', scoreDelta: -12 });
+});
+
+it('mock 무단결석 선택은 -20점과 선택 정보를 다시 조회해도 유지한다', async () => {
+  const attendanceUrl = `${apiBaseUrl}/api/admin/generations/1001/sessions/1002/attendance`;
+  const initialResponse = await fetch(attendanceUrl);
+  const initial = zList7Response.parse(await initialResponse.json());
+  const membershipId = initial.items[0]?.membershipId;
+  expect(membershipId).toBeDefined();
+
+  const updateResponse = await fetch(`${attendanceUrl}/${String(membershipId)}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      statuses: ['UNEXCUSED_ABSENT'],
+      reason: null,
+      mockSelections: [
+        {
+          status: 'absent',
+          penaltyCategory: 'unauthorized',
+          durationBand: null,
+          reason: null,
+        },
+      ],
+    }),
+  });
+  const refreshedResponse = await fetch(attendanceUrl);
+  const refreshed = z.object({ items: z.array(z.unknown()) }).parse(await refreshedResponse.json());
+
+  expect(updateResponse.ok).toBe(true);
+  expect(refreshed.items).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        membershipId: Number(membershipId),
+        status: 'ABSENT',
+        scoreDelta: -20,
+        mockSelections: [
+          expect.objectContaining({ status: 'absent', penaltyCategory: 'unauthorized' }),
+        ],
+      }),
+    ]),
+  );
 });
 
 it('출석 코드와 팀 사진 검수 mutation이 생성 SDK 계약에 맞는 요청을 보낸다', async () => {

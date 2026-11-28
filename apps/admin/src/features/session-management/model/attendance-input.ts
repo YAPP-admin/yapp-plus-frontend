@@ -71,6 +71,7 @@ export const closeAttendanceInputSchema = z
   });
 
 export type AttendanceEditInput = z.infer<typeof attendanceEditInputSchema>;
+export type AttendanceMutationInput = AttendanceEditInput | AttendanceEditInput[];
 export type BadgeEditInput = z.infer<typeof badgeEditInputSchema>;
 export type TeamDecisionInput = z.infer<typeof teamDecisionInputSchema>;
 export type AttendanceDraft = z.infer<typeof attendanceDraftSchema>;
