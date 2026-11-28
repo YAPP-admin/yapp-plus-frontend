@@ -2,7 +2,7 @@
 import type { PostAudienceRequest } from '@yapp-plus/api/generated';
 import type { NoticeFormContent } from '~/features/notice-management';
 
-const apiPositionByJob = {
+const API_POSITION_BY_JOB = {
   PM: 'PM',
   Design: 'DESIGN',
   Mobile: 'MOBILE',
@@ -11,22 +11,27 @@ const apiPositionByJob = {
   'AI Native': 'AI_NATIVE',
 } as const;
 
-const ALL_SUBMISSION_JOBS = ['PM', 'Design', 'Mobile', 'Web', 'Server', 'AI Native'] as const;
+// 전체 선택은 화면의 6개 직군과 달리 ANDROID·IOS도 포함한다.
+const ALL_SUBMISSION_POSITIONS = [
+  'PM',
+  'DESIGN',
+  'ANDROID',
+  'IOS',
+  'WEB',
+  'MOBILE',
+  'SERVER',
+  'AI_NATIVE',
+] as const satisfies readonly NonNullable<PostAudienceRequest['positions']>[number][];
 
-/** 활동회원 전체와 모든 직군 선택을 같은 SDK 대상 계약으로 정규화한다. */
+/** 과제는 전체 또는 선택 직군을 명시하고, 일반 공지는 회원 구분으로 대상을 지정한다. */
 export function getAudience(content: NoticeFormContent): PostAudienceRequest {
   if (content.category === 'submission') {
-    const allJobsSelected =
-      Array.isArray(content.audience) &&
-      content.audience.length === ALL_SUBMISSION_JOBS.length &&
-      ALL_SUBMISSION_JOBS.every((job) => content.audience.includes(job));
-
-    if (content.audience === 'all' || allJobsSelected) {
-      return { type: 'GROUP', target: 'PLAYER' };
-    }
     return {
       type: 'POSITION',
-      positions: content.audience.map((job) => apiPositionByJob[job]),
+      positions:
+        content.audience === 'all'
+          ? [...ALL_SUBMISSION_POSITIONS]
+          : content.audience.map((job) => API_POSITION_BY_JOB[job]),
     };
   }
 
