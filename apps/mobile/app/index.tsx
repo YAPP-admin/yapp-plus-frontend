@@ -41,6 +41,7 @@ export default function WebViewScreen() {
   return (
     <View style={styles.container}>
       <BridgeWebView
+        allowsLinkPreview={false}
         automaticallyAdjustContentInsets={false}
         applicationNameForUserAgent={YAPP_PLUS_WEBVIEW_USER_AGENT_TOKEN}
         onNavigationStateChange={handleNavigationStateChange}
