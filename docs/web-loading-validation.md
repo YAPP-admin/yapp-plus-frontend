@@ -1,6 +1,7 @@
 # 회원 웹 조회 로딩 점검
 
-관련 이슈: [#652](https://github.com/YAPP-admin/yapp-plus-frontend/issues/652). 1단계는 마이페이지의 조회·이미지 로딩만 변경한다.
+1단계 관련 이슈: [#652](https://github.com/YAPP-admin/yapp-plus-frontend/issues/652). 1단계는 마이페이지의 조회·이미지 로딩을 변경했다.
+2단계는 사용자 지시에 따라 새 이슈 없이 홈·기존 목록 로딩을 보완했다.
 안드로이드 비교 기준은 `develop@8cbf4b8`이며, 웹의 표현은 [SEED Loading](https://seed-design.io/patterns/loading)을 따른다.
 
 ## 확정한 정책
@@ -46,3 +47,14 @@
 - 이미지 다운로드 중에도 프로필 텍스트를 표시하고, 실패 시 SEED 사람 placeholder로 전환했다. 다크 모드에서도 확인했다.
 - 로딩 중 출석 규칙 버튼과 메뉴가 유지됐다. reduced motion에서는 스켈레톤의 shimmer를 제거했다.
 - 실제 Android/iOS WebView와 VoiceOver/TalkBack 검증은 아직 수행하지 않았다.
+
+## 2단계 적용 및 확인 결과
+
+- 홈 이번 주 공지의 텍스트 로딩을 배지·제목이 있는 카드 스켈레톤으로 교체했다.
+- 홈 세션·팀 사진, 일정·공지 목록·알림·출석 내역의 조회 로딩은 이름이 있는 section과 aria-busy로 표현하고 장식 윤곽은 접근성 트리에서 숨겼다.
+- 홈·공지 목록·알림·출석 내역과 마이페이지가 같은 모션 감소 CSS를 사용한다. 일정의 기존 정적 스켈레톤은 유지했다.
+- 데이터가 없을 때의 Suspense와 캐시가 있을 때의 기존 콘텐츠 표시, 추가 페이지 진행·오류 처리와 조건부 보조 조회는 유지했다.
+- node --run check 통과: 웹 린트·타입 검사·85개 파일 751개 테스트는 새로 실행했다. 다른 패키지의 린트·타입 검사 6개씩, 테스트 4개는 Turbo 캐시를 재사용했다.
+- node --run build 통과: 웹 빌드는 새로 실행하고 관리자·Storybook 빌드는 캐시를 재사용했다.
+- Chromium 390×844에서 공지 대기 중 정상 세션·바로가기, 가로 넘침 없음, 가짜 공지 링크 없음, 다크 모드와 모션 감소, 키보드 진입 및 로딩 완료 후 터치 탐색을 확인했다.
+- 실제 Android/iOS WebView와 VoiceOver/TalkBack은 미검증이다. 뒤풀이·알림 설정·공지 상세 Structured Activity·출석 시트는 후속 단계다.

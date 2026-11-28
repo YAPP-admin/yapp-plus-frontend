@@ -1,5 +1,6 @@
 'use client';
 
+import { skeletonPlaceholder } from '@/shared/ui/skeleton.css';
 import { HStack, List, ProgressCircle, Skeleton, VStack } from '@seed-design/react';
 import { BackButton } from '@/app/navigation/back-button';
 import { ActivityLink } from '@/app/navigation/activity-link';
@@ -167,11 +168,21 @@ function AlertsEmpty() {
 
 function AlertsLoading() {
   return (
-    <VStack as="output" gap="x4" aria-label="알림을 불러오고 있어요">
-      {[0, 1, 2].map((index) => (
+    <VStack as="section" aria-busy="true" gap="x4" aria-label="알림을 불러오고 있어요">
+      {Array.from({ length: 3 }, (_, index) => (
         <VStack key={index} gap="x2" py="x5">
-          <Skeleton width="70%" height="lineHeight.t5" />
-          <Skeleton width="30%" height="lineHeight.t3" />
+          <Skeleton
+            aria-hidden="true"
+            className={skeletonPlaceholder}
+            width="70%"
+            height="lineHeight.t5"
+          />
+          <Skeleton
+            aria-hidden="true"
+            className={skeletonPlaceholder}
+            width="30%"
+            height="lineHeight.t3"
+          />
         </VStack>
       ))}
     </VStack>

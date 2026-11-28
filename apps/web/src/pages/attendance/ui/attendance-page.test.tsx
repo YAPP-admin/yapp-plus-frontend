@@ -200,7 +200,7 @@ it('내역 Skeleton·초기 실패 중에도 독립된 결석 경고를 표시�
     ),
   );
   renderPage();
-  expect(await screen.findByRole('status', { name: '출석 내역을 불러오고 있어요' })).toBeVisible();
+  expect(await screen.findByRole('region', { name: '출석 내역을 불러오고 있어요' })).toBeVisible();
   expect(await screen.findByText(/10번 이상 결석/)).toBeVisible();
   act(() => finish?.());
   expect(await screen.findByText('출석 내역을 불러오지 못했어요.')).toBeVisible();

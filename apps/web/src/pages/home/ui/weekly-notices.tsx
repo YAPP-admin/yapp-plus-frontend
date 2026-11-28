@@ -1,6 +1,7 @@
 /** 홈의 이번 주 공지를 세션 카드와 독립된 query 경계에서 보여주는 UI다. */
 'use client';
 
+import { skeletonPlaceholder } from '@/shared/ui/skeleton.css';
 import { staticContentEnabled } from '@/features/static-content';
 
 import { useThrowQueryError } from '@/shared/lib/query-error-policy';
@@ -8,7 +9,7 @@ import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconChevronRightFill } from '@karrotmarket/react-monochrome-icon';
 import { Badge } from '@yapp-plus/ui';
-import { HStack, VStack } from '@seed-design/react';
+import { HStack, Skeleton, VStack } from '@seed-design/react';
 import { Suspense } from 'react';
 import { ActivityLink } from '@/app/navigation/activity-link';
 import { useNativeAuthSession } from '@/features/auth';
@@ -22,6 +23,7 @@ import {
   chipBlue,
   chipGray,
   noticeCard,
+  noticeLoadingCard,
   noticeChevron,
   noticeContent,
   noticesSectionTitle,
@@ -42,7 +44,7 @@ export function WeeklyNotices() {
       <h2 className={noticesSectionTitle}>이번 주 공지</h2>
       {canQuery ? (
         <WeeklyNoticesErrorBoundary>
-          <Suspense fallback={<output>이번 주 공지를 불러오고 있어요.</output>}>
+          <Suspense fallback={<WeeklyNoticesLoading />}>
             <WeeklyNoticesContent />
           </Suspense>
         </WeeklyNoticesErrorBoundary>
@@ -101,5 +103,21 @@ function NoticeCategoryBadge({ category }: { category: Exclude<NoticeCategory, '
     >
       {memberNoticeCategoryLabel(category)}
     </Badge>
+  );
+}
+
+/** 실제 공지 카드의 배지·제목 공간을 예약하며 탐색 가능한 가짜 링크는 만들지 않습니다. */
+function WeeklyNoticesLoading() {
+  return (
+    <VStack as="section" gap="x2_5" aria-label="이번 주 공지를 불러오고 있어요" aria-busy="true">
+      {Array.from({ length: 3 }, (_, row) => (
+        <div key={row} className={noticeLoadingCard} aria-hidden="true">
+          <VStack gap="x2" grow className={noticeContent}>
+            <Skeleton className={skeletonPlaceholder} width="64px" height="20px" radius="8" />
+            <Skeleton className={skeletonPlaceholder} width="80%" height="lineHeight.t5" />
+          </VStack>
+        </div>
+      ))}
+    </VStack>
   );
 }
