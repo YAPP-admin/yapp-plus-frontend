@@ -898,7 +898,7 @@ it('출결 보고 시트에서 실제 제출하면 홈으로 돌아가고 알림
   );
   window.history.replaceState({}, '', '/attendance/report');
   renderStack({ native: true });
-  fireEvent.click(await screen.findByRole('radio', { name: '결석' }));
+  fireEvent.click(await screen.findByRole('checkbox', { name: '결석' }));
   fireEvent.click(screen.getByRole('button', { name: '다음' }));
   fireEvent.change(await screen.findByRole('textbox', { name: '사유' }), {
     target: { value: '개인 일정' },
@@ -914,7 +914,7 @@ it('일반 브라우저의 출결 보고 직접 진입은 목업 설정과 무�
   expect(
     await screen.findByText('YAPP+ 앱에 로그인한 후 사전 출결 보고를 할 수 있어요.'),
   ).toBeVisible();
-  expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
 });
 
 it('일반 브라우저의 출석 시트 직접 진입에서는 로그인 안내와 비활성 제출을 제공한다', async () => {

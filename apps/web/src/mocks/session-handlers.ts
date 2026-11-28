@@ -1,6 +1,10 @@
 import { createAttendanceFixtures } from './attendance-fixtures';
 import { createSessionFixtures, type SessionFixtures } from './session-fixtures';
-import { zSubmitAttendanceReportRequest } from '@yapp-plus/api/generated';
+import {
+  zSubmitAttendanceReportRequest,
+  type CurrentWeekAttendanceReportResponse,
+} from '@yapp-plus/api/generated';
+import { z } from 'zod';
 import { createMswHandlers } from '@yapp-plus/api/generated/msw';
 import { delay, HttpResponse } from 'msw';
 
@@ -18,7 +22,59 @@ export const createSessionHandlers = (
   const { currentWeekFixture: currentWeek, scheduleFixture: schedule } = fixtures;
   let failNextScheduleRequest = scheduleState === 'error';
   const { pick } = createMswHandlers({ baseUrl });
+  let report: CurrentWeekAttendanceReportResponse = {
+    reportId: null,
+    types: [],
+    type: null,
+    reason: null,
+    submittedAt: null,
+  };
+  const reportSchema = zSubmitAttendanceReportRequest
+    .extend({
+      reason: z
+        .string()
+        .refine(
+          (value) =>
+            value.trim().length > 0 &&
+            Array.from(value).length >= 2 &&
+            Array.from(value).length <= 30,
+        ),
+    })
+    .refine(
+      ({ types }) =>
+        new Set(types).size === types.length && (!types.includes('ABSENT') || types.length === 1),
+    );
+  const saveReport = (body: unknown) => {
+    const parsed = reportSchema.safeParse(body);
+    if (!parsed.success) {
+      return HttpResponse.json({ code: 'INVALID_ATTENDANCE_REPORT' }, { status: 400 });
+    }
+    if (attendance.sessionId === null) {
+      return HttpResponse.json({ code: 'ATTENDANCE_SESSION_NOT_FOUND' }, { status: 404 });
+    }
+    const unchanged =
+      report.reason === parsed.data.reason &&
+      report.types.length === parsed.data.types.length &&
+      report.types.every((type) => parsed.data.types.includes(type));
+    report = {
+      ...parsed.data,
+      type: parsed.data.types[0] ?? null,
+      reportId: 1,
+      submittedAt: unchanged ? report.submittedAt : new Date().toISOString(),
+    };
+    return HttpResponse.json({
+      sessionId: attendance.sessionId,
+      submittedAt: report.submittedAt,
+      reportId: report.reportId,
+    });
+  };
   return [
+    pick.currentWeek(() => HttpResponse.json(report)),
+    pick.replace(async ({ request, params }) =>
+      report.reportId !== null && String(report.reportId) === params.reportId
+        ? saveReport(await request.json())
+        : HttpResponse.json({ code: 'ATTENDANCE_REPORT_NOT_FOUND' }, { status: 404 }),
+    ),
     pick.verify(async ({ request }) => {
       const { sessionId, code } = await request.json();
       if (attendance.sessionId === null) {
@@ -34,19 +90,9 @@ export const createSessionHandlers = (
       return HttpResponse.json({ verified: true, checkedInAt: attendance.checkedInAt });
     }),
     pick.submit1(async ({ request }) => {
-      const parsed = zSubmitAttendanceReportRequest.safeParse(await request.json());
-      const reason = parsed.success ? parsed.data.reason?.trim() : undefined;
-      if (!reason || reason.length > 30) {
-        return HttpResponse.json({ code: 'INVALID_ATTENDANCE_REPORT' }, { status: 400 });
-      }
-      if (attendance.sessionId === null) {
-        return HttpResponse.json({ code: 'ATTENDANCE_SESSION_NOT_FOUND' }, { status: 404 });
-      }
-      return HttpResponse.json({
-        sessionId: attendance.sessionId,
-        submittedAt: new Date().toISOString(),
-        reportId: 1,
-      });
+      return report.reportId === null
+        ? saveReport(await request.json())
+        : HttpResponse.json({ code: 'ATTENDANCE_REPORT_ALREADY_EXISTS' }, { status: 409 });
     }),
     pick.find6(() =>
       HttpResponse.json({

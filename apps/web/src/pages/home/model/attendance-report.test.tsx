@@ -1,6 +1,10 @@
 /** 사전 출결 보고 모델의 입력·마감·요청·오류 경계를 검증합니다. */
 import { act, renderHook, waitFor } from '@testing-library/react';
 import { QueryClient, QueryClientProvider, onlineManager } from '@tanstack/react-query';
+import {
+  currentWeekOptions,
+  type CurrentWeekAttendanceReportResponse,
+} from '@yapp-plus/api/generated';
 import { http, HttpResponse } from 'msw';
 import type { ReactNode } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -28,12 +32,22 @@ vi.mock('@/features/auth', () => ({
   useNativeAuthSession: () => auth,
 }));
 
-function setup(now = '2026-11-07T04:29:59.999Z') {
+function setup(
+  now = '2026-11-07T04:29:59.999Z',
+  report: CurrentWeekAttendanceReportResponse = {
+    reportId: null,
+    types: [],
+    type: null,
+    reason: null,
+    submittedAt: null,
+  },
+) {
   vi.setSystemTime(new Date(now));
   const client = new QueryClient({
     defaultOptions: { queries: { retry: false, staleTime: Infinity } },
   });
   client.setQueryData(currentWeekQueryOptions(apiOptions).queryKey, currentWeek);
+  client.setQueryData(currentWeekOptions(apiOptions).queryKey, report);
   const hook = renderHook(() => useAttendanceReport(onComplete), {
     wrapper: ({ children }: { children: ReactNode }) => (
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
@@ -56,17 +70,35 @@ afterEach(() => {
   auth.isNative = true;
 });
 
-it('사유는 원문 30자 이내를 검사하고 공백을 제거해 전송한다', () => {
-  expect(attendanceReportInputSchema.parse({ type: 'LATE', reason: ' 병원 예약 ' })).toEqual({
-    type: 'LATE',
-    reason: '병원 예약',
+it('사유는 코드포인트 2~30자를 검사하고 원문을 보존한다', () => {
+  expect(attendanceReportInputSchema.parse({ types: ['LATE'], reason: ' 병원 예약 ' })).toEqual({
+    types: ['LATE'],
+    reason: ' 병원 예약 ',
   });
-  expect(attendanceReportInputSchema.safeParse({ type: 'LATE', reason: '   ' }).success).toBe(
-    false,
-  );
-  expect(
-    attendanceReportInputSchema.safeParse({ type: 'LATE', reason: '😀'.repeat(16) }).success,
-  ).toBe(false);
+  for (const [reason, valid] of [
+    ['', false],
+    ['   ', false],
+    ['가', false],
+    ['가나', true],
+    ['😀'.repeat(30), true],
+    ['가'.repeat(31), false],
+  ] as const) {
+    expect(attendanceReportInputSchema.safeParse({ types: ['LATE'], reason }).success).toBe(valid);
+  }
+});
+
+it('지각·조퇴만 함께 선택하고 결석 혼합·중복·미선택을 거절한다', () => {
+  for (const [types, valid] of [
+    [['LATE', 'EARLY_LEAVE'], true],
+    [['ABSENT'], true],
+    [[], false],
+    [['ABSENT', 'LATE'], false],
+    [['LATE', 'LATE'], false],
+  ] as const) {
+    expect(attendanceReportInputSchema.safeParse({ types, reason: '개인 사정' }).success).toBe(
+      valid,
+    );
+  }
 });
 
 it('한국 시간 세션 시작 직전에는 열리고 정각부터 닫힌다', () => {
@@ -74,6 +106,55 @@ it('한국 시간 세션 시작 직전에는 열리고 정각부터 닫힌다', 
   expect(isAttendanceReportOpen(session, Date.parse('2026-11-07T04:30:00Z'))).toBe(false);
   expect(isAttendanceReportOpen(null, Date.parse('2026-11-07T04:29:59.999Z'))).toBe(false);
 });
+
+it.each([200, 404])(
+  '기존 보고는 재조회 후에도 최초 보고 ID로 수정하고 %s 응답을 처리한다',
+  async (status) => {
+    const put = vi.fn<(body: unknown) => void>();
+    const post = vi.fn<() => void>();
+    server.use(
+      http.post(reportUrl, post),
+      http.put(`${reportUrl}/42`, async ({ request }) => {
+        put(await request.json());
+        return HttpResponse.json(
+          status === 200
+            ? { reportId: 42, sessionId: 1, submittedAt: '2026-11-07T04:00:00Z' }
+            : { code: 'ATTENDANCE_REPORT_NOT_FOUND' },
+          { status },
+        );
+      }),
+    );
+    const { result, client } = setup(undefined, {
+      reportId: 42,
+      types: ['LATE', 'EARLY_LEAVE'],
+      type: 'LATE',
+      reason: null,
+      submittedAt: '2026-11-07T04:00:00Z',
+    });
+    expect(result.current.initialValues).toEqual({ types: ['LATE', 'EARLY_LEAVE'], reason: '' });
+    act(() => {
+      client.setQueryData(currentWeekOptions(apiOptions).queryKey, {
+        reportId: null,
+        types: [],
+        type: null,
+        reason: null,
+        submittedAt: null,
+      });
+    });
+    act(() => {
+      result.current.submit({ types: ['LATE', 'EARLY_LEAVE'], reason: ' 개인 일정 ' });
+    });
+    await waitFor(() =>
+      expect(put).toHaveBeenCalledWith({ types: ['LATE', 'EARLY_LEAVE'], reason: ' 개인 일정 ' }),
+    );
+    await waitFor(() => expect(result.current.pending).toBe(false));
+    expect(onComplete).toHaveBeenCalledTimes(status === 200 ? 1 : 0);
+    expect(result.current.error).toBe(
+      status === 200 ? '' : '수정할 보고를 찾지 못했어요. 보고를 다시 열어 확인해 주세요.',
+    );
+    expect(post).not.toHaveBeenCalled();
+  },
+);
 
 it('유효한 보고는 sessionId 없이 한 번 제출하고 성공 뒤 주간 Query를 무효화한다', async () => {
   const request = vi.fn<(body: unknown, authorization: string | null) => void>();
@@ -87,16 +168,19 @@ it('유효한 보고는 sessionId 없이 한 번 제출하고 성공 뒤 주간 
   const invalidateQueries = vi.spyOn(client, 'invalidateQueries');
 
   act(() => {
-    result.current.submit({ type: 'LATE', reason: ' 병원 예약 ' });
+    result.current.submit({ types: ['LATE'], reason: ' 병원 예약 ' });
   });
 
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
   expect(request).toHaveBeenCalledWith(
-    { types: ['LATE'], reason: '병원 예약' },
+    { types: ['LATE'], reason: ' 병원 예약 ' },
     'Bearer test-token',
   );
   expect(invalidateQueries).toHaveBeenCalledWith({
     queryKey: currentWeekQueryOptions(apiOptions).queryKey,
+  });
+  expect(invalidateQueries).toHaveBeenCalledWith({
+    queryKey: currentWeekOptions(apiOptions).queryKey,
   });
 });
 
@@ -110,13 +194,19 @@ it.each([
     '보고할 세션을 찾지 못했어요. 세션을 다시 확인해 주세요.',
   ],
   ['보고 불가', 409, 'ATTENDANCE_REPORT_UNAVAILABLE', '지금은 사전 출결 보고를 할 수 없어요.'],
+  [
+    '생성 중복',
+    409,
+    'ATTENDANCE_REPORT_ALREADY_EXISTS',
+    '이미 제출한 보고가 있어요. 보고를 다시 열어 확인해 주세요.',
+  ],
 ] as const)('%s 응답은 완료 없이 복구 안내를 남긴다', async (_, status, code, message) => {
   const request = vi.fn<() => Response>(() => HttpResponse.json({ code }, { status }));
   server.use(http.post(reportUrl, request));
   const { result } = setup();
 
   act(() => {
-    result.current.submit({ type: 'ABSENT', reason: '개인 사정' });
+    result.current.submit({ types: ['ABSENT'], reason: '개인 사정' });
   });
 
   await waitFor(() => expect(result.current.error).toBe(message));
@@ -133,7 +223,7 @@ it('정각 이후와 오프라인에서는 요청하지 않고 안내를 반환�
 
   let closedMessage: string | undefined;
   act(() => {
-    closedMessage = closed.result.current.submit({ type: 'EARLY_LEAVE', reason: '병원 방문' });
+    closedMessage = closed.result.current.submit({ types: ['EARLY_LEAVE'], reason: '병원 방문' });
   });
 
   expect(request).not.toHaveBeenCalled();
@@ -145,7 +235,7 @@ it('정각 이후와 오프라인에서는 요청하지 않고 안내를 반환�
   onlineManager.setOnline(false);
   let offlineMessage: string | undefined;
   act(() => {
-    offlineMessage = online.result.current.submit({ type: 'EARLY_LEAVE', reason: '병원 방문' });
+    offlineMessage = online.result.current.submit({ types: ['EARLY_LEAVE'], reason: '병원 방문' });
   });
 
   expect(offlineMessage).toBe('인터넷 연결을 확인한 뒤 다시 제출해 주세요.');
@@ -163,7 +253,7 @@ it('일반 브라우저에서는 실제 보고 요청을 보내지 않고 안내
 
   let message: string | undefined;
   act(() => {
-    message = result.current.submit({ type: 'LATE', reason: '교통 지연' });
+    message = result.current.submit({ types: ['LATE'], reason: '교통 지연' });
   });
 
   expect(message).toBe('현재는 사전 출결 보고를 할 수 없어요.');
@@ -184,11 +274,11 @@ it('제출 중에는 같은 보고를 다시 전송하지 않는다', async () =
   const { result } = setup();
 
   act(() => {
-    result.current.submit({ type: 'LATE', reason: '교통 지연' });
+    result.current.submit({ types: ['LATE'], reason: '교통 지연' });
   });
   await waitFor(() => expect(result.current.pending).toBe(true));
   act(() => {
-    result.current.submit({ type: 'LATE', reason: '교통 지연' });
+    result.current.submit({ types: ['LATE'], reason: '교통 지연' });
   });
   expect(request).toHaveBeenCalledOnce();
 
@@ -213,7 +303,7 @@ it('화면 이탈 뒤 늦게 도착한 성공은 완료 콜백을 실행하지 �
   const hook = setup();
 
   act(() => {
-    hook.result.current.submit({ type: 'LATE', reason: '교통 지연' });
+    hook.result.current.submit({ types: ['LATE'], reason: '교통 지연' });
   });
   await waitFor(() => expect(hook.result.current.pending).toBe(true));
   hook.unmount();
