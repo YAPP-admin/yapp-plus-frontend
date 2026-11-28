@@ -11,7 +11,7 @@ import userEvent from '@testing-library/user-event';
 import { QueryClientProvider, onlineManager } from '@tanstack/react-query';
 import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features/auth';
 import { createAppQueryClient } from '@/app/providers';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { beforeEach, afterEach, expect, it, vi } from 'vitest';
 import { apiBaseUrl, server } from '@/mocks/server';
 import { AttendanceCodeSheet } from './home-demo-sheets';
@@ -406,8 +406,8 @@ it('최초 조회 대기와 오류를 시트 안에 표시하고 재시도로 �
     }),
   );
   setup();
-  expect(await screen.findByText('세션을 불러오고 있어요…')).toBeVisible();
-  expect(screen.getByRole('button', { name: '확인' })).toBeDisabled();
+  expect(await screen.findByRole('region', { name: '출석 코드를 준비하고 있어요' })).toBeVisible();
+  expect(screen.queryByRole('button', { name: '확인' })).not.toBeInTheDocument();
   expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
   await act(async () => {
     respond();
@@ -641,4 +641,22 @@ it('목업 출석 성공은 홈 완료 표시와 이미 조회한 출석 내역�
   expect(after.items.find(({ sessionId }) => sessionId === 39902)?.attendanceStatus).toBe(
     'PRESENT',
   );
+});
+
+it('조회 중 코드 입력을 숨기고 시트를 닫을 수 있다', async () => {
+  server.use(
+    http.get(weekUrl, async () => {
+      await delay('infinite');
+      return HttpResponse.json(week);
+    }),
+  );
+  const { onOpenChange } = setup();
+  expect(
+    await screen.findByRole('region', { name: '출석 코드를 준비하고 있어요' }),
+  ).toHaveAttribute('aria-busy', 'true');
+  expect(screen.getByRole('heading', { name: '출석 코드를 입력해 주세요' })).toBeInTheDocument();
+  expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+  screen.getByRole('dialog').style.transform = 'none';
+  await userEvent.keyboard('{Escape}');
+  expect(onOpenChange.mock.calls.at(-1)?.[0]).toBe(false);
 });

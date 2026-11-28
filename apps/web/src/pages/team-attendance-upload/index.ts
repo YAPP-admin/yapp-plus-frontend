@@ -1,4 +1,4 @@
-export { TeamAttendanceUploadPage } from './ui/team-attendance-upload-page';
+export { TeamAttendanceUploadPage, TeamMembersLoading } from './ui/team-attendance-upload-page';
 export {
   TeamAttendancePhotoDraftProvider,
   useTeamAttendancePhotoDraft,

@@ -31,6 +31,7 @@ import { TeamAttendanceCompletePage } from '@/pages/team-attendance-complete';
 import { TeamAttendanceErrorPage } from '@/pages/team-attendance-error';
 import {
   TeamAttendanceUploadPage,
+  TeamMembersLoading,
   useTeamAttendancePhotoDraft,
 } from '@/pages/team-attendance-upload';
 import { AuthLayout } from '@/app/layouts/auth-layout';
@@ -241,7 +242,7 @@ export function TeamAttendanceUploadActivity() {
   return activity.isTop && selectedPhoto ? (
     <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
       <LocalErrorBoundary fallbackRender={renderTeamMembersError}>
-        <Suspense fallback={<output>팀원을 불러오고 있어요…</output>}>
+        <Suspense fallback={<TeamMembersLoading previewUrl={selectedPhoto.previewUrl} />}>
           <TeamPhotoSubmissionFlow
             sessionId={sessionId}
             onSubmitted={(result) => {

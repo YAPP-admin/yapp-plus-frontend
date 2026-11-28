@@ -1,4 +1,5 @@
 /** 사전 출결 보고의 유형 선택·사유 입력·서버 제출을 바텀시트로 연결합니다. */
+import { AttendanceReportLoading } from './attendance-sheet-loading';
 import { useActivityZIndexBase } from '@seed-design/stackflow';
 import { VStack } from '@seed-design/react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
@@ -106,7 +107,7 @@ export function AttendanceReportSheet({
   return (
     <ReportSheetShell {...props} step={step} dismissible={!isSubmitting}>
       <LocalErrorBoundary fallbackRender={renderReportError}>
-        <Suspense fallback={<ReportSheetMessage message="보고할 세션을 불러오고 있어요…" />}>
+        <Suspense fallback={<AttendanceReportLoading step={step} />}>
           <AttendanceReportContent
             step={step}
             onReasonStep={onReasonStep}

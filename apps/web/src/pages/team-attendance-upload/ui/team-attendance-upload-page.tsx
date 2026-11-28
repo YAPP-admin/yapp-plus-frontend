@@ -1,8 +1,9 @@
 /** 선택한 사진의 참석 명단을 고르고 최종 확인에서 업로드·접수한다. */
 'use client';
 
+import { skeletonPlaceholder } from '@/shared/ui/skeleton.css';
 import { BackButton } from '@/app/navigation/back-button';
-import { Checkbox, HStack, ImageFrame, VStack } from '@seed-design/react';
+import { Checkbox, HStack, ImageFrame, Skeleton, VStack } from '@seed-design/react';
 import { IconCheckmarkLine } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, Text } from '@yapp-plus/ui';
 import {
@@ -78,15 +79,7 @@ function PhotoForm({ target, photo, previewUrl, onSubmitted }: Props & TeamAtten
         }
       }}
     >
-      <HStack as="header" align="center" justify="space-between" className={header}>
-        <BackButton
-          fallbackActivityName="Tabs"
-          fallbackActivityParams={{ initialTab: 'home' }}
-          iconOnly
-        />
-        <h1 className={headerTitle}>팀 세션 인증</h1>
-        <div className={headerSpacer} aria-hidden="true" />
-      </HStack>
+      <TeamPhotoHeader />
 
       <VStack as="main" gap="x5" className={body}>
         <Text as="p">{target.teamName} 팀원과 함께 찍은 사진을 제출해요.</Text>
@@ -166,6 +159,49 @@ function PhotoForm({ target, photo, previewUrl, onSubmitted }: Props & TeamAtten
         >
           {isPending ? '제출 중' : '인증 사진 제출하기'}
         </ActionButton>
+      </VStack>
+    </VStack>
+  );
+}
+
+function TeamPhotoHeader() {
+  return (
+    <HStack as="header" align="center" justify="space-between" className={header}>
+      <BackButton
+        fallbackActivityName="Tabs"
+        fallbackActivityParams={{ initialTab: 'home' }}
+        iconOnly
+      />
+      <h1 className={headerTitle}>팀 세션 인증</h1>
+      <div className={headerSpacer} aria-hidden="true" />
+    </HStack>
+  );
+}
+
+/** 팀원 조회 중에도 선택한 사진과 뒤로가기를 유지하고 가짜 선택 입력을 만들지 않습니다. */
+export function TeamMembersLoading({ previewUrl }: { previewUrl: string }) {
+  return (
+    <VStack className={container}>
+      <TeamPhotoHeader />
+      <VStack as="main" gap="x5" className={body}>
+        <ImageFrame src={previewUrl} alt="선택한 팀 인증 사진" className={imagePreview} />
+        <Text as="h2" className={memberTitle}>
+          사진에 나온 팀원을 선택해 주세요
+        </Text>
+        <Text as="p" className={memberDescription}>
+          체크하지 않은 팀원은 운영진이 확인 후 처리해요
+        </Text>
+        <VStack as="section" gap="x2_5" aria-label="팀원을 불러오고 있어요" aria-busy="true">
+          {Array.from({ length: 3 }, (_, index) => (
+            <Skeleton
+              key={index}
+              className={skeletonPlaceholder}
+              width="full"
+              height="64px"
+              aria-hidden="true"
+            />
+          ))}
+        </VStack>
       </VStack>
     </VStack>
   );
