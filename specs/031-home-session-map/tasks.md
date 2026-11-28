@@ -6,8 +6,8 @@
 
 - [x] T001 `specs/031-home-session-map/spec.md`와 설계·계약·체크리스트·검증 문서를 작성한다.
 - [x] T002 `specs/031-home-session-map/issue-draft.md`에 기존 이슈 검색 결과를 반영한 초안을 준비한다.
-- [ ] T003 `specs/031-home-session-map/validation.md`에 1단계 리뷰와 이슈 생성·연결 결과를 기록한다.
-- [ ] T004 `apps/mobile/app/index.tsx`·홈 로딩 변경을 포함한 최신 main을 승인 후 같은 브랜치에 fast-forward하고 보존 여부를 기록한다.
+- [x] T003 `specs/031-home-session-map/validation.md`에 1단계 리뷰와 이슈 생성·연결 결과를 기록한다.
+- [x] T004 `apps/mobile/app/index.tsx`·홈 로딩 변경을 포함한 최신 main을 승인 후 같은 브랜치에 병합하고 보존 여부를 기록한다.
 
 문서 단계가 끝나면 리뷰받는다. 이슈 번호·리뷰·main 반영이 준비되기 전에는 제품 코드를 변경하지 않는다.
 
@@ -16,10 +16,10 @@
 목표: HTTPS 목적지를 기존 셸에서 앱 우선·웹 대체로 실행한다.
 독립 검증: 테스트 입력 URL과 모의 Linking으로 성공·대체·실패 안내를 검증한다.
 
-- [ ] T005 [US1] `apps/mobile/src/external-navigation.test.ts`에 URL 판정·좌표 순서·앱 성공·웹 대체·최종 실패·일반 링크·중복 실행 테스트를 먼저 작성한다.
-- [ ] T006 [US1] `apps/mobile/src/external-navigation.ts`에 URL 검증과 실행 의존성을 주입받는 외부 탐색 처리를 구현한다.
-- [ ] T007 [US1] `apps/mobile/app/index.tsx`에 처리기를 연결하고 trusted origin·링크 미리보기 비활성화를 보존한다.
-- [ ] T008 [US1] 모바일 관련 테스트와 `node --run check` 결과를 `specs/031-home-session-map/validation.md`에 기록하고 2단계 리뷰를 받는다.
+- [x] T005 [US1] `apps/mobile/src/external-navigation.test.ts`에 URL 판정·좌표 순서·앱 성공·웹 대체·최종 실패·일반 링크·중복 실행 테스트를 먼저 작성한다.
+- [x] T006 [US1] `apps/mobile/src/external-navigation.ts`에 URL 검증과 실행 의존성을 주입받는 외부 탐색 처리를 구현한다.
+- [x] T007 [US1] `apps/mobile/app/index.tsx`에 처리기를 연결하고 trusted origin·링크 미리보기 비활성화를 보존한다.
+- [x] T008 [US1] 모바일 관련 테스트와 `node --run check` 결과를 `specs/031-home-session-map/validation.md`에 기록하고 2단계 리뷰를 요청한다.
 
 리뷰 전 웹 구현을 시작하지 않는다. 이 단계만으로 홈 지도 링크가 추가된 것은 아니다.
 
