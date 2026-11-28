@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@karrotmarket/react-monochrome-icon": "catalog:",
+    "@posthog/react": "catalog:",
     "@seed-design/css": "catalog:",
     "@seed-design/react": "catalog:",
     "@seed-design/stackflow": "catalog:",
@@ -32,6 +33,7 @@
     "@yapp-plus/ui": "workspace:*",
     "geolib": "catalog:",
     "ky": "catalog:",
+    "posthog-js": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
     "react-error-boundary": "catalog:",

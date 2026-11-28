@@ -66,6 +66,8 @@ catalog:
   vitest: 5.0.0
   zod: 4.5.4
   react-markdown: 10.1.0
+  '@posthog/react': 1.11.3
+  posthog-js: 1.455.4
 
 catalogs:
   expo:
@@ -77,6 +79,8 @@ allowBuilds:
   # Firebase JS 유틸리티의 postinstall은 네이티브 모듈에 필요하지 않습니다. 의존성 변경 시 재검토합니다.
   '@firebase/util@1.15.3': false
   '@swc/core': true
+  # PostHog 전이 의존성의 후원 안내만 출력합니다. 빌드에 필요 없어 차단하며 버전 변경 시 재검토합니다.
+  core-js@3.51.0: false
   # EAS CLI의 선택적 관측 모듈입니다. iOS 빌드·제출에는 필요하지 않아 네이티브 설치 스크립트를 허용하지 않습니다.
   dtrace-provider: false
   esbuild: true
