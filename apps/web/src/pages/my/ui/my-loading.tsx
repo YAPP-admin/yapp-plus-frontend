@@ -43,7 +43,7 @@ export function ScoreLoading() {
         p="x1"
         gap="x1"
       >
-        {[0, 1, 2, 3].map((item) => (
+        {Array.from({ length: 4 }, (_, item) => (
           <VStack key={item} grow align="center" py="x3" gap="x1" aria-hidden="true">
             <Skeleton className={placeholder} width="48px" height="lineHeight.t2" />
             <Skeleton className={placeholder} width="24px" height="lineHeight.t4" />

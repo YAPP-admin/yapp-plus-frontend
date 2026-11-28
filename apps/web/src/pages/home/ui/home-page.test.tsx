@@ -398,7 +398,7 @@ it('로딩과 오류를 카드에 한정하고 키보드 재시도로 복구한�
     }),
   );
   renderHome();
-  expect(screen.getByText('이번 주 세션을 불러오고 있어요…')).toBeVisible();
+  expect(screen.getByRole('region', { name: '이번 주 세션을 불러오고 있어요' })).toBeVisible();
   expect(screen.getByRole('navigation', { name: '홈 바로가기' })).toBeVisible();
   expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 세션을 불러오지 못했어요');
   server.use(http.get(url, () => HttpResponse.json(response)));
@@ -790,7 +790,7 @@ it('TEAM 사진을 불러오는 동안 주간 세션 카드와 사진 영역의 
   expect(
     await screen.findByRole('heading', { name: '이번 주는 설계 리뷰 세션이에요' }),
   ).toBeVisible();
-  expect(screen.getByText('인증 사진을 확인하고 있어요…')).toBeInTheDocument();
+  expect(screen.getByRole('region', { name: '인증 사진을 확인하고 있어요' })).toBeInTheDocument();
 
   act(() => {
     releasePhoto();
@@ -849,4 +849,89 @@ it('TEAM 사진 재조회 실패는 사진 상태 오류 안내로 교체한다'
   expect(await screen.findByRole('alert')).toHaveTextContent('인증 사진 상태를 불러오지 못했어요');
   expect(screen.queryByRole('status')).not.toBeInTheDocument();
   expect(screen.queryByRole('button', { name: '인증 사진 올리기' })).not.toBeInTheDocument();
+});
+
+// 공지의 첫 대기·캐시 재시도 모두 세션과 탐색 영역을 유지해야 합니다.
+it.each([false, true])(
+  '공지 재시도는 캐시 유무에 따른 기본 표시를 유지한다 (cache=%s)',
+  async (cached) => {
+    const user = userEvent.setup();
+    const postsUrl = `${apiBaseUrl}/api/posts`;
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    if (!cached) {
+      server.use(http.get(postsUrl, () => HttpResponse.json({}, { status: 500 })));
+    }
+    const { client } = renderHome();
+    if (cached) {
+      await screen.findByText('6주차 세션 안내');
+      server.use(http.get(postsUrl, () => HttpResponse.json({}, { status: 500 })));
+      await act(() =>
+        client.invalidateQueries({ queryKey: memberNoticeListQueryOptions('ALL').queryKey }),
+      );
+    }
+    await screen.findByRole('alert');
+    let finish: (() => void) | undefined;
+    const pending = new Promise<void>((resolve) => {
+      finish = resolve;
+    });
+    server.use(
+      http.get(postsUrl, async () => {
+        await pending;
+        return HttpResponse.json({
+          totalPostCount: memberNoticeFixture.length,
+          items: memberNoticeFixture,
+          nextCursor: null,
+        });
+      }),
+    );
+    await user.click(screen.getByRole('button', { name: '다시 시도' }));
+    const content = cached
+      ? await screen.findByText('6주차 세션 안내')
+      : await screen.findByRole('region', { name: '이번 주 공지를 불러오고 있어요' });
+    expect(content).toBeVisible();
+    expect(screen.queryByLabelText('이번 주 공지를 불러오고 있어요') !== null).toBe(!cached);
+    expect(await screen.findByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
+    expect(screen.getByRole('navigation', { name: '홈 바로가기' })).toBeVisible();
+    await act(async () => {
+      finish?.();
+      await pending;
+    });
+    await waitFor(() =>
+      expect(client.getQueryState(memberNoticeListQueryOptions('ALL').queryKey)?.fetchStatus).toBe(
+        'idle',
+      ),
+    );
+    expect(await screen.findByText('6주차 세션 안내')).toBeVisible();
+    expect(screen.queryByLabelText('이번 주 공지를 불러오고 있어요')).not.toBeInTheDocument();
+  },
+);
+
+it('공지 최초 조회는 카드 스켈레톤을 표시하고 준비된 세션은 사용할 수 있다', async () => {
+  let finish: (() => void) | undefined;
+  const pending = new Promise<void>((resolve) => {
+    finish = resolve;
+  });
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts`, async () => {
+      await pending;
+      return HttpResponse.json({
+        totalPostCount: memberNoticeFixture.length,
+        items: memberNoticeFixture,
+        nextCursor: null,
+      });
+    }),
+  );
+  renderHome();
+  const loading = await screen.findByRole('region', { name: '이번 주 공지를 불러오고 있어요' });
+  expect(loading).toHaveAttribute('aria-busy', 'true');
+  expect(loading.querySelector('.seed-skeleton')).toBeVisible();
+  expect(within(loading).queryByRole('link')).not.toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: /설계 리뷰/ })).toBeVisible();
+  expect(screen.getByRole('navigation', { name: '홈 바로가기' })).toBeVisible();
+  await act(async () => {
+    finish?.();
+    await pending;
+  });
+  expect(await screen.findByText('6주차 세션 안내')).toBeVisible();
+  expect(screen.queryByLabelText('이번 주 공지를 불러오고 있어요')).not.toBeInTheDocument();
 });

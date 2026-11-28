@@ -93,7 +93,10 @@ it('로딩 후 서버 순서·분·장소·정규 세션 칩을 표시한다', a
     }),
   );
   renderPage();
-  expect(await screen.findByRole('status')).toHaveTextContent('일정을 불러오고 있어요…');
+  expect(await screen.findByRole('region', { name: '일정을 불러오고 있어요' })).toHaveAttribute(
+    'aria-busy',
+    'true',
+  );
   expect(screen.queryByRole('list')).not.toBeInTheDocument();
   const list = await screen.findByRole('list', { name: '세션 일정 목록' });
   expect(
@@ -101,7 +104,7 @@ it('로딩 후 서버 순서·분·장소·정규 세션 칩을 표시한다', a
       .getAllByRole('article')
       .map((item) => within(item).getByRole('heading').textContent),
   ).toEqual(['기획 세션', '팀 세션']);
-  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+  expect(screen.queryByRole('region', { name: '일정을 불러오고 있어요' })).not.toBeInTheDocument();
   expect(screen.getByText('오후 1시 30분 ~ 오후 6시')).toBeVisible();
   expect(screen.getByText('-')).toBeVisible();
   expect(screen.getAllByText('정규 세션')).toHaveLength(1);

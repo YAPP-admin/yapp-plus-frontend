@@ -1,3 +1,4 @@
+import { skeletonPlaceholder } from '@/shared/ui/skeleton.css';
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { useSuspenseInfiniteQuery, useSuspenseQuery } from '@tanstack/react-query';
@@ -214,15 +215,42 @@ function AbsenceWarning() {
 function AttendanceSkeleton() {
   return (
     <>
-      <Box as="output" gridRow="1" aria-label="세션 현황을 불러오고 있어요">
-        <Skeleton width="full" height="112px" radius="8" />
+      <Box as="section" aria-busy="true" gridRow="1" aria-label="세션 현황을 불러오고 있어요">
+        <Skeleton
+          aria-hidden="true"
+          className={skeletonPlaceholder}
+          width="full"
+          height="112px"
+          radius="8"
+        />
       </Box>
-      <VStack as="output" gridRow="3" mt="x10" aria-label="출석 내역을 불러오고 있어요">
-        <Skeleton width="130px" height="lineHeight.t6" />
-        {[0, 1, 2, 3, 4, 5].map((row) => (
+      <VStack
+        as="section"
+        aria-busy="true"
+        gridRow="3"
+        mt="x10"
+        aria-label="출석 내역을 불러오고 있어요"
+      >
+        <Skeleton
+          aria-hidden="true"
+          className={skeletonPlaceholder}
+          width="130px"
+          height="lineHeight.t6"
+        />
+        {Array.from({ length: 6 }, (_, row) => (
           <HStack key={row} justify="space-between" align="center" py="x4">
-            <Skeleton width="45%" height="lineHeight.t5" />
-            <Skeleton width="36px" height="lineHeight.t2" />
+            <Skeleton
+              aria-hidden="true"
+              className={skeletonPlaceholder}
+              width="45%"
+              height="lineHeight.t5"
+            />
+            <Skeleton
+              aria-hidden="true"
+              className={skeletonPlaceholder}
+              width="36px"
+              height="lineHeight.t2"
+            />
           </HStack>
         ))}
       </VStack>

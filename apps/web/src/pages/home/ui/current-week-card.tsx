@@ -1,4 +1,5 @@
 /** 주간 조회의 세션·본인 출석 상태를 홈 달력과 출석 진입 UI에 반영한다. */
+import { skeletonPlaceholder } from '@/shared/ui/skeleton.css';
 import { staticContentEnabled } from '@/features/static-content';
 import { useRefetchOnScreenReturn, useScreenActiveContext } from '@/shared/lib/screen-activity';
 import { useThrowQueryError } from '@/shared/lib/query-error-policy';
@@ -89,21 +90,18 @@ export function CurrentWeekCard() {
 
 function CurrentWeekLoading() {
   return (
-    <>
-      <VisuallyHidden asChild>
-        <output>이번 주 세션을 불러오고 있어요…</output>
-      </VisuallyHidden>
+    <section aria-label="이번 주 세션을 불러오고 있어요" aria-busy="true">
       <VStack gap="x4" aria-hidden="true">
-        <Skeleton width="35%" height="lineHeight.t3" />
-        <Skeleton width="80%" height="lineHeight.t7" />
+        <Skeleton className={skeletonPlaceholder} width="35%" height="lineHeight.t3" />
+        <Skeleton className={skeletonPlaceholder} width="80%" height="lineHeight.t7" />
         <HStack justify="space-between" width="full">
           {Array.from({ length: 7 }, (_, day) => (
-            <Skeleton key={day} width="24px" height="48px" />
+            <Skeleton className={skeletonPlaceholder} key={day} width="24px" height="48px" />
           ))}
         </HStack>
-        <Skeleton width="full" height="40px" radius="8" />
+        <Skeleton className={skeletonPlaceholder} width="full" height="40px" radius="8" />
       </VStack>
-    </>
+    </section>
   );
 }
 
@@ -321,12 +319,19 @@ function TeamAttendanceAction({
 
 function TeamAttendancePhotoLoading() {
   return (
-    <div className={teamPhotoActionLoading}>
-      <VisuallyHidden asChild>
-        <output>인증 사진을 확인하고 있어요…</output>
-      </VisuallyHidden>
-      <Skeleton width="full" height="57px" radius="8" aria-hidden="true" />
-    </div>
+    <section
+      className={teamPhotoActionLoading}
+      aria-label="인증 사진을 확인하고 있어요"
+      aria-busy="true"
+    >
+      <Skeleton
+        className={skeletonPlaceholder}
+        width="full"
+        height="57px"
+        radius="8"
+        aria-hidden="true"
+      />
+    </section>
   );
 }
 

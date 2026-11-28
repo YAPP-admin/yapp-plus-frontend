@@ -419,6 +419,9 @@ export const noticeCard = style({
   },
 });
 
+/** 로딩 카드는 탐색 동작이나 눌림 피드백을 제공하지 않습니다. */
+export const noticeLoadingCard = style([noticeCard, { pointerEvents: 'none' }]);
+
 export const noticeContent = style({
   minWidth: 0,
 });
