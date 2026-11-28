@@ -597,6 +597,42 @@ export const sheetDescription = style({
   textAlign: 'left',
 });
 
+export const reportTypeGroup = style({ border: 0, padding: 0, margin: 0 });
+export const reportHandleArea = style({
+  display: 'flex',
+  justifyContent: 'center',
+  padding: '14px 10px',
+});
+export const reportTypeOption = style({
+  minHeight: vars.$dimension.x12,
+  width: '100%',
+  justifyContent: 'space-between',
+  padding: `${vars.$dimension.x3} ${vars.$dimension.x4_5}`,
+  border: `1px solid ${vars.$color.stroke.neutralMuted}`,
+  borderRadius: vars.$radius.r2_5,
+});
+export const reportReasonTextarea = style({ minHeight: '94px' });
+export const reportReasonFooter = style({
+  display: 'flex',
+  justifyContent: 'flex-end',
+  gap: vars.$dimension.x2,
+  fontSize: vars.$fontSize.t4,
+  lineHeight: vars.$lineHeight.t4,
+  color: vars.$color.fg.neutralSubtle,
+  paddingInline: vars.$dimension.x0_5,
+});
+export const reportCount = style({
+  display: 'flex',
+  gap: '4px',
+  flexShrink: 0,
+});
+export const reportCountValue = style({ color: vars.$color.fg.neutral });
+export const reportForm = style({
+  display: 'flex',
+  flexDirection: 'column',
+  gap: vars.$dimension.x5,
+});
+
 export const codeInput = style({
   width: '54px',
   height: '54px',

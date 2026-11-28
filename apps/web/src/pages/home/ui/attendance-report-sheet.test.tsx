@@ -75,7 +75,7 @@ function setup({
 async function openReasonStep(type = '지각') {
   const user = userEvent.setup();
   (await screen.findByRole('dialog')).style.transform = 'none';
-  await user.click(await screen.findByRole('radio', { name: type }));
+  await user.click(await screen.findByRole('checkbox', { name: type }));
   await user.click(screen.getByRole('button', { name: '다음' }));
   screen.getByRole('dialog').style.transform = 'none';
   return user;
@@ -108,12 +108,12 @@ it('유형 선택 뒤 사유를 입력해 실제 보고를 제출한다', async 
   const reason = screen.getByRole('textbox', { name: '사유' });
 
   await user.type(reason, ' 병원 방문 ');
-  expect(screen.getByText('7/30')).toBeVisible();
+  expect(screen.getByRole('status')).toHaveTextContent('7/30');
   await user.click(screen.getByRole('button', { name: '제출하기' }));
 
   await waitFor(() => expect(onComplete).toHaveBeenCalledOnce());
   expect(request).toHaveBeenCalledWith(
-    { types: ['EARLY_LEAVE'], reason: '병원 방문' },
+    { types: ['EARLY_LEAVE'], reason: ' 병원 방문 ' },
     'Bearer test-token',
   );
 });
@@ -129,13 +129,67 @@ it('유형과 공백 사유는 제출 뒤 오류를 표시하고 요청하지 �
   (await screen.findByRole('dialog')).style.transform = 'none';
   await user.click(await screen.findByRole('button', { name: '다음' }));
   expect(await screen.findByText('출결 유형을 선택해 주세요.')).toBeVisible();
-  await user.click(screen.getByRole('radio', { name: '결석' }));
+  await user.click(screen.getByRole('checkbox', { name: '결석' }));
   await user.click(screen.getByRole('button', { name: '다음' }));
   await user.type(screen.getByRole('textbox', { name: '사유' }), '   ');
   await user.click(screen.getByRole('button', { name: '제출하기' }));
 
   expect(await screen.findByText('사유를 입력해 주세요.')).toBeVisible();
   expect(request).not.toHaveBeenCalled();
+});
+
+it('저장한 복수 유형과 사유로 다시 열고 수정한 결과도 재진입에 반영한다', async () => {
+  const first = setup();
+  const user = await openReasonStep();
+  await user.click(screen.getByRole('button', { name: '이전' }));
+  await user.click(screen.getByRole('checkbox', { name: '조퇴' }));
+  await user.click(screen.getByRole('button', { name: '다음' }));
+  await user.type(screen.getByRole('textbox', { name: '사유' }), '개인 일정');
+  await user.click(screen.getByRole('button', { name: '제출하기' }));
+  await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(1));
+  first.unmount();
+  const second = setup();
+  expect(await screen.findByRole('checkbox', { name: '지각' })).toBeChecked();
+  expect(screen.getByRole('checkbox', { name: '조퇴' })).toBeChecked();
+  screen.getByRole('dialog').style.transform = 'none';
+  await user.click(screen.getByRole('button', { name: '다음' }));
+  const reason = screen.getByRole('textbox', { name: '사유' });
+  expect(reason).toHaveValue('개인 일정');
+  await user.clear(reason);
+  await user.type(reason, '병원 방문');
+  expect(fireEvent.keyDown(reason, { key: 'Enter', isComposing: true })).toBe(false);
+  await user.click(screen.getByRole('button', { name: '수정하기' }));
+  await waitFor(() => expect(onComplete).toHaveBeenCalledTimes(2));
+  second.unmount();
+  setup();
+  await screen.findByRole('checkbox', { name: '지각' });
+  screen.getByRole('dialog').style.transform = 'none';
+  await user.click(screen.getByRole('button', { name: '다음' }));
+  expect(screen.getByRole('textbox', { name: '사유' })).toHaveValue('병원 방문');
+});
+
+it('보고 조회 실패를 빈 폼으로 처리하지 않고 재시도로 복구한다', async () => {
+  server.use(http.get(`${reportUrl}/current-week`, () => HttpResponse.json({}, { status: 400 })));
+  setup();
+  expect(await screen.findByText('출결 보고 정보를 불러오지 못했어요')).toBeVisible();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  server.use(
+    http.get(`${reportUrl}/current-week`, () =>
+      HttpResponse.json({
+        reportId: 42,
+        types: ['ABSENT'],
+        type: 'ABSENT',
+        reason: null,
+        submittedAt: '2026-11-07T04:00:00Z',
+      }),
+    ),
+  );
+  screen.getByRole('dialog').style.transform = 'none';
+  await userEvent.click(screen.getByRole('button', { name: '보고 다시 확인' }));
+  expect(await screen.findByRole('checkbox', { name: '결석' })).toBeChecked();
+  await userEvent.click(screen.getByRole('button', { name: '다음' }));
+  expect(screen.getByRole('textbox', { name: '사유' })).toHaveValue('');
+  expect(screen.getByRole('button', { name: '수정하기' })).toBeVisible();
 });
 
 it('사유 단계에서 이전으로 돌아와도 유형과 사유를 보존한다', async () => {
@@ -145,9 +199,46 @@ it('사유 단계에서 이전으로 돌아와도 유형과 사유를 보존한�
   await user.type(reason, '개인 일정');
 
   await user.click(screen.getByRole('button', { name: '이전' }));
-  expect(screen.getByRole('radio', { name: '결석' })).toBeChecked();
+  expect(screen.getByRole('checkbox', { name: '결석' })).toBeChecked();
   await user.click(screen.getByRole('button', { name: '다음' }));
   expect(screen.getByRole('textbox', { name: '사유' })).toHaveValue('개인 일정');
+});
+
+it('지각·조퇴를 함께 선택하고 결석으로 전환하면 제목·예시와 선택을 갱신한다', async () => {
+  setup();
+  const user = await openReasonStep('지각');
+  expect(screen.getByRole('dialog')).toHaveAccessibleName('지각 사유를 입력해 주세요');
+  await user.click(screen.getByRole('button', { name: '이전' }));
+  await user.click(screen.getByRole('checkbox', { name: '조퇴' }));
+  await user.click(screen.getByRole('button', { name: '다음' }));
+  expect(screen.getByRole('dialog')).toHaveAccessibleName('지각·조퇴 사유를 입력해 주세요');
+  expect(screen.getByText('[예시] 교통 체증으로 지각하고 코딩 테스트로 조퇴합니다.')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '이전' }));
+  await user.click(screen.getByRole('checkbox', { name: '결석' }));
+  expect(screen.getByRole('checkbox', { name: '지각' })).not.toBeChecked();
+  expect(screen.getByRole('checkbox', { name: '조퇴' })).not.toBeChecked();
+  await user.click(screen.getByRole('checkbox', { name: '조퇴' }));
+  expect(screen.getByRole('checkbox', { name: '결석' })).not.toBeChecked();
+});
+
+it('초과 붙여넣기와 blur에서는 오류를 숨기고 제출 후 입력마다 재검증한다', async () => {
+  setup();
+  const user = await openReasonStep();
+  const reason = screen.getByRole('textbox', { name: '사유' });
+  await user.click(reason);
+  await user.paste('😀'.repeat(31));
+  expect(reason).toHaveValue('😀'.repeat(31));
+  expect(screen.getByRole('status')).toHaveTextContent('31/30');
+  expect(reason.tagName).toBe('TEXTAREA');
+  expect(screen.queryByText('사유는 30자 이내로 입력해 주세요.')).not.toBeInTheDocument();
+  await user.tab();
+  expect(screen.queryByText('사유는 30자 이내로 입력해 주세요.')).not.toBeInTheDocument();
+  await user.click(screen.getByRole('button', { name: '제출하기' }));
+  expect(screen.getByText('사유는 30자 이내로 입력해 주세요.')).toBeVisible();
+  expect(reason).toHaveFocus();
+  await user.clear(reason);
+  await user.type(reason, '병원');
+  expect(screen.queryByText('사유는 30자 이내로 입력해 주세요.')).not.toBeInTheDocument();
 });
 
 it('서버 오류는 입력을 유지하고 수동 수정을 허용한다', async () => {
@@ -212,7 +303,7 @@ it('세션 시작 정각부터는 보고 시트를 마감 상태로 표시한다
   setup();
 
   expect(await screen.findByText('사전 출결 보고가 마감됐어요')).toBeVisible();
-  expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
 });
 
 it.each(['type', 'reason'] as const)(
@@ -234,7 +325,7 @@ it.each(['type', 'reason'] as const)(
         name: initialStep === 'type' ? '출결을 보고해 주세요' : '사유를 입력해 주세요',
       }),
     ).toBeInTheDocument();
-    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
     screen.getByRole('dialog').style.transform = 'none';
     await userEvent.keyboard('{Escape}');
