@@ -13,7 +13,7 @@ import { ActionButton } from '@yapp-plus/ui';
 import { HStack, Skeleton, VStack, VisuallyHidden } from '@seed-design/react';
 import { Suspense } from 'react';
 import { useFlow } from '@stackflow/react';
-import { IconCameraFill } from '@karrotmarket/react-monochrome-icon';
+import { IconCameraFill, IconLocationpinFill } from '@karrotmarket/react-monochrome-icon';
 import type { FallbackProps } from 'react-error-boundary';
 import { Image } from '@/app/navigation/image';
 import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
@@ -25,6 +25,8 @@ import {
   koreanTimestamp,
   nextKoreanMidnight,
 } from '@/shared/lib/korean-date-time';
+import { getSessionMapUrl } from '../model/session-map';
+import { getSessionTitle, getSessionVenue } from '../model/session-label';
 import { currentWeekQueryOptions } from '../model/current-week-query';
 import {
   calendarDateBadge,
@@ -38,6 +40,10 @@ import {
   calendarAttendanceSlot,
   calendarWeek,
   locationText,
+  sessionVenue,
+  locationPin,
+  calendarDateBadgeScheduled,
+  regularSessionButton,
   sessionCard,
   sessionHeader,
   sessionTitle,
@@ -50,6 +56,24 @@ import {
   teamPhotoThumbnailImage,
   teamPhotoTitle,
 } from './home-page.css';
+
+function getCalendarBadgeClassName({
+  isCompleted,
+  isToday,
+  isScheduled,
+}: {
+  isCompleted: boolean;
+  isToday: boolean;
+  isScheduled: boolean;
+}): string {
+  if (isCompleted) {
+    return calendarDateBadgeCompleted;
+  }
+  if (isToday) {
+    return calendarDateBadgeActive;
+  }
+  return isScheduled ? calendarDateBadgeScheduled : calendarDateBadge;
+}
 
 const ATTENDANCE_STATUS_LABEL = {
   AVAILABLE: '출석하기',
@@ -141,27 +165,45 @@ function CurrentWeekContent() {
     };
   });
   const session = data.session;
+  const venue = getSessionVenue(session);
+  const title = getSessionTitle(session, today);
+  const mapUrl = session ? getSessionMapUrl(session) : null;
+  const venueContent = (
+    <>
+      <IconLocationpinFill className={locationPin} width={14} height={14} aria-hidden="true" />
+      <span>{venue}</span>
+    </>
+  );
   return (
     <>
       <div className={sessionHeader}>
-        <span className={locationText}>{session?.location ?? '이번 주 세션'}</span>
-        <h2 className={sessionTitle}>
-          {session ? `이번 주는 ${session.name} 세션이에요` : '이번 주 예정된 세션이 없어요'}
-        </h2>
-        {session && session.attendanceStatus !== 'NOT_OPEN' ? (
+        {session && mapUrl ? (
+          <a className={sessionVenue} href={mapUrl} aria-label={`${venue} 카카오맵에서 보기`}>
+            {venueContent}
+          </a>
+        ) : null}
+        {session && !mapUrl ? <div className={sessionVenue}>{venueContent}</div> : null}
+        {session ? null : <span className={locationText}>이번 주 세션</span>}
+        <h2 className={sessionTitle}>{title}</h2>
+        {session?.type === 'TEAM' && session.attendanceStatus !== 'NOT_OPEN' ? (
           <p>{formatKoreanTime(session.startTime)} 시작</p>
         ) : null}
       </div>
-      <div className={calendarWeek} aria-label="주간 일정">
+      <div
+        className={calendarWeek}
+        aria-label="주간 일정"
+        data-attended={session?.attendanceStatus === 'CHECKED_IN'}
+      >
         {days.map(({ date, label }) => {
           const isCompleted = date === session?.date && session.attendanceStatus === 'CHECKED_IN';
           const dateLabel = isCompleted
             ? `${date} 출석 완료`
             : `${date}${date === session?.date ? ' 세션 예정' : ''}`;
-          let badgeClassName = date === today ? calendarDateBadgeActive : calendarDateBadge;
-          if (isCompleted) {
-            badgeClassName = calendarDateBadgeCompleted;
-          }
+          const badgeClassName = getCalendarBadgeClassName({
+            isCompleted,
+            isToday: date === today,
+            isScheduled: date === session?.date,
+          });
           return (
             <div key={date} className={calendarDayItemWithStatus}>
               <span className={calendarDayLabel}>{label}</span>
@@ -238,8 +280,9 @@ function SessionAttendanceAction({
     const disabled = session.attendanceStatus !== 'AVAILABLE';
     return (
       <ActionButton
-        variant="neutralWeak"
+        variant="neutralSolid"
         size="medium"
+        className={regularSessionButton}
         disabled={disabled}
         onClick={() => flow.push('AttendanceCode', {})}
       >

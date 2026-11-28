@@ -244,9 +244,9 @@ it('주간 API만 조회하고 서버 이름·한국 날짜·분과 세션 날�
   );
   renderHome();
   expect(
-    await screen.findByRole('heading', { level: 2, name: '이번 주는 설계 리뷰 세션이에요' }),
+    await screen.findByRole('heading', { level: 2, name: '오늘은 설계 리뷰 세션이에요' }),
   ).toBeVisible();
-  expect(screen.getByText('오후 1시 30분 시작')).toBeVisible();
+  expect(screen.queryByText('오후 1시 30분 시작')).not.toBeInTheDocument();
   const date = screen.getByLabelText('2026-11-07 세션 예정');
   expect(date).toHaveAttribute('aria-current', 'date');
   expect(date).toHaveClass(calendarDateBadgeActive);
@@ -418,9 +418,7 @@ it('공지 조회 오류가 세션 카드를 막지 않고 재시도로 복구�
   );
   renderHome();
 
-  expect(
-    await screen.findByRole('heading', { name: '이번 주는 설계 리뷰 세션이에요' }),
-  ).toBeVisible();
+  expect(await screen.findByRole('heading', { name: '오늘은 설계 리뷰 세션이에요' })).toBeVisible();
   expect(await screen.findByRole('alert')).toHaveTextContent('이번 주 공지를 불러오지 못했어요');
 
   server.use(
@@ -787,9 +785,7 @@ it('TEAM 사진을 불러오는 동안 주간 세션 카드와 사진 영역의 
   );
   renderHome({}, true);
 
-  expect(
-    await screen.findByRole('heading', { name: '이번 주는 설계 리뷰 세션이에요' }),
-  ).toBeVisible();
+  expect(await screen.findByRole('heading', { name: '오늘은 설계 리뷰 세션이에요' })).toBeVisible();
   expect(screen.getByRole('region', { name: '인증 사진을 확인하고 있어요' })).toBeInTheDocument();
 
   act(() => {
@@ -934,4 +930,63 @@ it('공지 최초 조회는 카드 스켈레톤을 표시하고 준비된 세션
   });
   expect(await screen.findByText('6주차 세션 안내')).toBeVisible();
   expect(screen.queryByLabelText('이번 주 공지를 불러오고 있어요')).not.toBeInTheDocument();
+});
+
+it.each([
+  [
+    '2026-11-06T15:00:00Z',
+    ' 설계 리뷰 세션 ',
+    'REGULAR',
+    '교육장',
+    '오늘은 설계 리뷰 세션이에요',
+    '교육장',
+  ],
+  [
+    '2026-11-06T14:59:59Z',
+    '설계 리뷰',
+    'REGULAR',
+    ' ',
+    '이번 주는 설계 리뷰 세션이에요',
+    '장소 미정',
+  ],
+  ['2026-11-06T15:00:00Z', '세션', 'TEAM', null, '오늘은 세션이 있어요', '팀별 자율 장소'],
+])('한국 날짜와 장소를 표시한다: %s', async (now, name, type, location, title, venue) => {
+  vi.setSystemTime(new Date(now));
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({
+        ...response,
+        session: { ...response.session, name, type, location, latitude: null, longitude: null },
+      }),
+    ),
+  );
+  renderHome();
+  expect(await screen.findByRole('heading', { name: title })).toBeVisible();
+  expect(screen.getByText(venue)).toBeVisible();
+  expect(screen.queryByRole('link', { name: /카카오맵에서 보기/ })).not.toBeInTheDocument();
+});
+
+it('장소 행은 좌표 링크로 키보드 접근할 수 있다', async () => {
+  server.use(
+    http.get(url, () =>
+      HttpResponse.json({
+        ...response,
+        session: {
+          ...response.session,
+          location: '교육장',
+          roadAddress: '서울 중구 세종대로 110',
+          latitude: 37.5665,
+          longitude: 126.978,
+        },
+      }),
+    ),
+  );
+  renderHome();
+  const link = await screen.findByRole('link', { name: '교육장 카카오맵에서 보기' });
+  expect(link).toHaveAttribute(
+    'href',
+    `https://m.map.kakao.com/scheme/search?q=${encodeURIComponent('서울 중구 세종대로 110')}&p=37.5665,126.978`,
+  );
+  await userEvent.setup().tab();
+  expect(link).toHaveFocus();
 });
