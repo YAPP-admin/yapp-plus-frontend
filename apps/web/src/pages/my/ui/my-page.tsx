@@ -1,3 +1,4 @@
+/** 프로필·출석 카드와 메뉴를 조합하고 각 조회 영역의 로딩·오류를 격리합니다. */
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { Grid, HStack, VStack } from '@seed-design/react';
@@ -11,6 +12,7 @@ import { Image } from '@/app/navigation/image';
 import { AttendanceRulesDialog } from './attendance-rules-dialog';
 import { ScoreErrorBoundary } from './score-error-boundary';
 import { ScoreSummary } from './score-summary';
+import { ScoreLoading } from './my-loading';
 import {
   attendanceCard,
   cardTitle,
@@ -24,6 +26,7 @@ import {
 } from './my-page.css';
 import { ProfileSection } from './profile-section';
 
+/** 인증 가능한 회원의 프로필·출석 조회와 마이페이지 탐색을 제공합니다. */
 export function MyPage() {
   const { phase, isNative } = useNativeAuthSession();
   const canQuery =
@@ -75,17 +78,7 @@ export function MyPage() {
           </HStack>
           {canQuery ? (
             <ScoreErrorBoundary>
-              <Suspense
-                fallback={
-                  <ScoreSummary
-                    notice={
-                      <VStack as="output" gridColumn="1 / -1" p="x4" className={queryNotice}>
-                        출석 현황을 불러오고 있어요…
-                      </VStack>
-                    }
-                  />
-                }
-              >
+              <Suspense fallback={<ScoreLoading />}>
                 <ScoreContent />
               </Suspense>
             </ScoreErrorBoundary>
