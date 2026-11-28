@@ -10,7 +10,8 @@ import { TeamAttendancePhotoDraftProvider } from '@/pages/team-attendance-upload
 import { apiBaseUrl, server } from '@/mocks/server';
 import { currentWeekFixture } from '@/mocks/session-handlers';
 import { koreanDateString } from '@/shared/lib/korean-date-time';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
+import { memberNoticeDetailFixture } from '@/mocks/member-notice-handlers';
 import { createStackflowApp, stackflowConfig } from './stack';
 import type { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
 
@@ -196,20 +197,20 @@ function isVisible(element: HTMLElement) {
 }
 
 describe('Stackflow FSD 화면 연결', () => {
-  it('하단 탭의 키보드 선택은 URL·포커스·query를 동기화하고 history를 늘리지 않는다', async () => {
+  it('운영 하단 탭의 키보드 선택은 URL·포커스·query를 동기화하고 history를 늘리지 않는다', async () => {
+    vi.stubEnv('DEV', false);
     window.history.replaceState({}, '', '/notices?category=ASSIGNMENT');
     const user = userEvent.setup();
-    renderStack();
+    renderStack({ native: true });
     await waitForTopHeading('게시판');
     const navigation = within(screen.getByRole('tablist', { name: '주요 메뉴' }));
     const historyLength = window.history.length;
     act(() => navigation.getByRole('tab', { name: '게시판' }).focus());
 
     for (const [key, label, path] of [
-      ['ArrowRight', '커뮤니티', '/dining'],
+      ['ArrowRight', 'MY', '/my'],
       ['Home', '홈', '/'],
       ['End', 'MY', '/my'],
-      ['ArrowLeft', '커뮤니티', '/dining'],
       ['ArrowLeft', '게시판', '/notices'],
     ] as const) {
       await user.keyboard(`{${key}}`);
@@ -222,7 +223,7 @@ describe('Stackflow FSD 화면 연결', () => {
 
     expect(window.location.search).toBe('?category=ASSIGNMENT');
     const notices = screen.getByRole('tabpanel', { name: '게시판' });
-    expect(within(notices).getByRole('tab', { name: '과제' })).toHaveAttribute(
+    expect(await within(notices).findByRole('tab', { name: '과제' })).toHaveAttribute(
       'aria-selected',
       'true',
     );
@@ -386,6 +387,41 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(await waitForTopHeading('앗, 오류가 발생했어요!')).toBeTruthy();
     expect(screen.getByText('잠시 후 다시 시도해 주세요.')).toBeInTheDocument();
     rendered.unmount();
+  });
+
+  it('공지 상세 조회 중 스켈레톤과 뒤로가기를 제공한다', async () => {
+    server.use(
+      http.get(`${apiBaseUrl}/api/posts/2`, async () => {
+        await delay('infinite');
+        return HttpResponse.json(memberNoticeDetailFixture);
+      }),
+    );
+    window.history.replaceState({}, '', '/notices/2');
+    renderStack();
+
+    expect(
+      await screen.findByRole('region', { name: '공지 상세를 불러오고 있어요' }),
+    ).toHaveAttribute('aria-busy', 'true');
+    await userEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+    expect(await waitForTopHeading('게시판')).toBeTruthy();
+  });
+
+  it('Structured Activity의 오류 재시도가 Query 오류를 초기화하고 상세를 복구한다', async () => {
+    server.use(
+      http.get(`${apiBaseUrl}/api/posts/2`, () => new HttpResponse(null, { status: 500 })),
+    );
+    window.history.replaceState({}, '', '/notices/2');
+    renderStack();
+    await screen.findByRole('heading', { name: '공지 상세를 불러오지 못했어요' });
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/posts/2`, () => HttpResponse.json(memberNoticeDetailFixture)),
+    );
+    await userEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+    expect(await waitForTopHeading('사용자 테스트 결과 제출')).toBeTruthy();
+    expect(
+      screen.queryByRole('region', { name: '공지 상세를 불러오고 있어요' }),
+    ).not.toBeInTheDocument();
   });
 
   it('공지 상세 URL 직접 진입은 Notices를 fallback stack에 복원한다', async () => {
@@ -801,11 +837,27 @@ it('팀원 조회 실패는 사진 선택을 유지한 채 화면 안 오류 UI�
 
   expect(await screen.findByRole('heading', { name: '팀원을 불러오지 못했어요' })).toBeVisible();
   expect(screen.queryByRole('form', { name: '팀 인증 사진 제출' })).not.toBeInTheDocument();
+  let release: (() => void) | undefined;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
   server.use(
-    http.get(`${apiBaseUrl}/api/sessions/42/team-members`, () => HttpResponse.json(teamMembers)),
+    http.get(`${apiBaseUrl}/api/sessions/42/team-members`, async () => {
+      await pending;
+      return HttpResponse.json(teamMembers);
+    }),
   );
   await user.click(screen.getByRole('button', { name: '팀원 다시 확인' }));
+  expect(await screen.findByRole('region', { name: '팀원을 불러오고 있어요' })).toHaveAttribute(
+    'aria-busy',
+    'true',
+  );
+  const previewUrl = screen.getByAltText('선택한 팀 인증 사진').getAttribute('src');
+  expect(screen.getByRole('button', { name: '뒤로가기' })).toBeEnabled();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  release?.();
   expect(await screen.findByRole('form', { name: '팀 인증 사진 제출' })).toBeVisible();
+  expect(screen.getByAltText('선택한 팀 인증 사진')).toHaveAttribute('src', previewUrl);
 });
 
 it('팀 안내 시트는 사진 도구를 열기 전까지 홈 위에 유지한다', async () => {
@@ -936,14 +988,15 @@ it('운영 로그인 상태여도 접수 정보 없는 완료 단계는 성공�
   expect(screen.queryByText('인증 사진을 올렸어요!')).not.toBeInTheDocument();
 });
 
-it('프로덕션 회원은 커뮤니티에서 뒤풀이 상세를 조회하고 목록으로 복귀한다', async () => {
+it('프로덕션 회원은 커뮤니티 탭을 숨겨도 기존 주소로 직접 진입한다', async () => {
   vi.stubEnv('DEV', false);
   vi.stubEnv('VITE_API_MOCKING', 'false');
+  window.history.replaceState({}, '', '/dining');
   renderStack({ native: true });
-  const home = await waitForTopHeading('홈');
-  await userEvent.click(home.getByRole('tab', { name: '커뮤니티' }));
+  await screen.findByRole('tablist', { name: '주요 메뉴' });
   await waitFor(() => expect(window.location.pathname).toBe('/dining'));
-  expect(screen.getByRole('tab', { name: '커뮤니티', selected: true })).toBeVisible();
+  expect(screen.queryByRole('tab', { name: '커뮤니티' })).not.toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: '홈' })).toBeVisible();
 });
 
 it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', async () => {
@@ -953,5 +1006,6 @@ it('프로덕션 뒤풀이 상세 직접 진입도 목록으로 복귀한다', a
   const detail = await waitForTopHeading('뒤풀이');
   await userEvent.click(detail.getByRole('button', { name: '뒤로가기' }));
   await waitFor(() => expect(window.location.pathname).toBe('/dining'));
-  expect(screen.getByRole('tab', { name: '커뮤니티', selected: true })).toBeVisible();
+  expect(screen.queryByRole('tab', { name: '커뮤니티' })).not.toBeInTheDocument();
+  expect(screen.getByRole('tab', { name: '홈' })).toBeVisible();
 });

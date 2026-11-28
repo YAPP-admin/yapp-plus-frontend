@@ -20,7 +20,6 @@ import { LoginErrorPage } from '@/pages/login-error';
 import { LoginPage } from '@/pages/login';
 import { MyPage } from '@/pages/my';
 import { NotFoundPage } from '@/pages/not-found';
-import { NoticeDetailPage } from '@/pages/notice-detail';
 import { NoticesPage } from '@/pages/notices';
 import { SchedulePage } from '@/pages/schedule';
 import { SettingsPage } from '@/pages/settings';
@@ -32,6 +31,7 @@ import { TeamAttendanceCompletePage } from '@/pages/team-attendance-complete';
 import { TeamAttendanceErrorPage } from '@/pages/team-attendance-error';
 import {
   TeamAttendanceUploadPage,
+  TeamMembersLoading,
   useTeamAttendancePhotoDraft,
 } from '@/pages/team-attendance-upload';
 import { AuthLayout } from '@/app/layouts/auth-layout';
@@ -160,20 +160,6 @@ export function AlertsActivity() {
   );
 }
 
-export function NoticeDetailActivity() {
-  const { noticeId } = useActivityParams<'NoticeDetail'>();
-  return (
-    <ActivityScreen title="게시판 상세">
-      <PageShell header={null}>
-        {/* 상세 헤더와 본문이 셸의 단일 본문 행 안에서 함께 흐르도록 묶습니다. */}
-        <div>
-          <NoticeDetailPage noticeId={noticeId} />
-        </div>
-      </PageShell>
-    </ActivityScreen>
-  );
-}
-
 export function AttendanceActivity() {
   return (
     <ActivityScreen title="출석 내역" preventSwipeBack>
@@ -256,7 +242,7 @@ export function TeamAttendanceUploadActivity() {
   return activity.isTop && selectedPhoto ? (
     <ActivityScreen title="팀 세션 인증 사진 올리기" preventSwipeBack>
       <LocalErrorBoundary fallbackRender={renderTeamMembersError}>
-        <Suspense fallback={<output>팀원을 불러오고 있어요…</output>}>
+        <Suspense fallback={<TeamMembersLoading previewUrl={selectedPhoto.previewUrl} />}>
           <TeamPhotoSubmissionFlow
             sessionId={sessionId}
             onSubmitted={(result) => {

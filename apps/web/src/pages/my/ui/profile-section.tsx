@@ -2,24 +2,23 @@
 import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useThrowQueryError } from '@/shared/lib/query-error-policy';
 import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
-import { Box, HStack, VStack } from '@seed-design/react';
+import { HStack, VStack } from '@seed-design/react';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { Suspense, type ReactNode } from 'react';
 import type { FallbackProps } from 'react-error-boundary';
 import { useNativeAuthSession } from '@/features/auth';
-import { Image } from '@/app/navigation/image';
+import { ProfileAvatar } from './profile-avatar';
+import { ProfileLoading } from './my-loading';
 import { ErrorState } from '@/shared/ui/error-state';
 import { toProfileDisplay } from '../model/profile-model';
 import { profileQueryOptions } from '../model/profile-query';
-import { activeChip, avatar, name, queryNotice, subDivider, subText } from './my-page.css';
-
-const renderProfileError = (props: FallbackProps) => <ProfileError {...props} />;
+import { activeChip, name, subDivider, subText } from './my-page.css';
 
 /** 인증된 조회와 개발 MSW 조회만 프로필 요청을 허용합니다. */
 export function ProfileSection({ canQuery }: { canQuery: boolean }) {
   return canQuery ? (
-    <LocalErrorBoundary fallbackRender={renderProfileError}>
-      <Suspense fallback={<ProfileSummary notice={<ProfileLoading />} />}>
+    <LocalErrorBoundary fallbackRender={ProfileError}>
+      <Suspense fallback={<ProfileLoading />}>
         <ProfileContent />
       </Suspense>
     </LocalErrorBoundary>
@@ -64,9 +63,7 @@ function ProfileSummary({
   return (
     <VStack gap="x1">
       <HStack align="center" py="x4_5" gap="x4">
-        <Box className={avatar} width="66px" height="66px" borderRadius="full" flexShrink={0}>
-          <Image src={profile.profileImageSrc} alt="프로필" width={66} height={66} />
-        </Box>
+        <ProfileAvatar key={profile.profileImageSrc} src={profile.profileImageSrc} />
         <VStack gap="x1" minWidth="0px">
           <HStack align="center" gap="x2">
             <span className={name}>{profile.name}</span>
@@ -80,14 +77,6 @@ function ProfileSummary({
         </VStack>
       </HStack>
       {notice}
-    </VStack>
-  );
-}
-
-function ProfileLoading() {
-  return (
-    <VStack as="output" gap="x2" className={queryNotice} aria-live="polite">
-      프로필을 불러오는 중이에요
     </VStack>
   );
 }

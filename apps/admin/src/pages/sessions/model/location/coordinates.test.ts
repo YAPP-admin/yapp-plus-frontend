@@ -1,4 +1,4 @@
-/** 독립 PROJ 기준점과 단일 좌표 응답·오류 전파를 검증합니다. */
+/** 독립 PROJ 기준점과 건물별 좌표 선택·오류 전파를 검증합니다. */
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ZodError } from 'zod';
 import { HTTPError } from 'ky';
@@ -93,11 +93,32 @@ describe('좌표 조회', () => {
     expect(result.data.latitude).toBeCloseTo(37.582468731587156, 7);
   });
 
-  it('응답의 부가 식별자 없이 좌표를 변환한다', async () => {
-    respond([{ entX: entry.entX, entY: entry.entY }]);
-    await expect(lookupCoordinates(selected, 'key')).resolves.toMatchObject({
+  it('같은 주소의 여러 건물 중 관리번호가 일치하는 좌표를 선택한다', async () => {
+    respond([
+      { ...entry, bdMgtSn: 'other-1', entX: '1000000', entY: '2000000' },
+      { ...entry, bdMgtSn: 'other-2' },
+      entry,
+      { ...entry, bdMgtSn: 'other-3' },
+    ]);
+    await expect(lookupCoordinates(selected, 'key')).resolves.toEqual({
       status: 'success',
+      data: convertJusoCoordinates(Number(entry.entX), Number(entry.entY)),
     });
+  });
+
+  it('유일한 결과라도 다른 건물의 좌표이면 거부한다', async () => {
+    respond([{ ...entry, bdMgtSn: 'other' }]);
+    await expect(lookupCoordinates(selected, 'key')).rejects.toThrow('좌표를 하나로');
+  });
+
+  it('선택하지 않은 다른 건물의 잘못된 좌표는 선택 건물 조회를 막지 않는다', async () => {
+    respond([{ ...entry, bdMgtSn: 'other', entX: '' }, entry]);
+    await expect(lookupCoordinates(selected, 'key')).resolves.toMatchObject({ status: 'success' });
+  });
+
+  it('건물 관리번호가 누락된 결과를 거부한다', async () => {
+    respond([{ entX: entry.entX, entY: entry.entY }]);
+    await expect(lookupCoordinates(selected, 'key')).rejects.toBeInstanceOf(ZodError);
   });
 
   it('빈 결과를 거부한다', async () => {

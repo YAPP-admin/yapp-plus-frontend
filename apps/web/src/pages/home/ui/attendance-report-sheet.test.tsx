@@ -6,7 +6,7 @@ import { NativeAuthSessionProvider, nativeSessionQueryOptions } from '@/features
 import { createAppQueryClient } from '@/app/providers';
 import { apiBaseUrl, server } from '@/mocks/server';
 import { currentWeekFixture } from '@/mocks/session-handlers';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
 import { useState } from 'react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AttendanceReportSheet, type AttendanceReportStep } from './attendance-report-sheet';
@@ -38,10 +38,12 @@ const onComplete = vi.fn<() => void>();
 
 function SheetFlow({
   onOpenChange = vi.fn<(open: boolean) => void>(),
+  initialStep = 'type',
 }: {
   onOpenChange?: (open: boolean) => void;
+  initialStep?: AttendanceReportStep;
 }) {
-  const [step, setStep] = useState<AttendanceReportStep>('type');
+  const [step, setStep] = useState<AttendanceReportStep>(initialStep);
   return (
     <AttendanceReportSheet
       open
@@ -54,13 +56,16 @@ function SheetFlow({
   );
 }
 
-function setup({ onOpenChange }: { onOpenChange?: (open: boolean) => void } = {}) {
+function setup({
+  onOpenChange,
+  initialStep,
+}: { onOpenChange?: (open: boolean) => void; initialStep?: AttendanceReportStep } = {}) {
   const client = createAppQueryClient();
   client.setQueryData(nativeSessionQueryOptions(true).queryKey, signedIn);
   const view = render(
     <QueryClientProvider client={client}>
       <NativeAuthSessionProvider>
-        <SheetFlow onOpenChange={onOpenChange} />
+        <SheetFlow onOpenChange={onOpenChange} initialStep={initialStep} />
       </NativeAuthSessionProvider>
     </QueryClientProvider>,
   );
@@ -209,3 +214,30 @@ it('세션 시작 정각부터는 보고 시트를 마감 상태로 표시한다
   expect(await screen.findByText('사전 출결 보고가 마감됐어요')).toBeVisible();
   expect(screen.queryByRole('radio')).not.toBeInTheDocument();
 });
+
+it.each(['type', 'reason'] as const)(
+  '조회 중 %s 단계 제목과 스켈레톤을 표시하고 닫기를 허용한다',
+  async (initialStep) => {
+    server.use(
+      http.get(weekUrl, async () => {
+        await delay('infinite');
+        return HttpResponse.json(week);
+      }),
+    );
+    const onOpenChange = vi.fn<(open: boolean) => void>();
+    setup({ initialStep, onOpenChange });
+    expect(
+      await screen.findByRole('region', { name: '출결 보고를 준비하고 있어요' }),
+    ).toHaveAttribute('aria-busy', 'true');
+    expect(
+      screen.getByRole('heading', {
+        name: initialStep === 'type' ? '출결을 보고해 주세요' : '사유를 입력해 주세요',
+      }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole('radio')).not.toBeInTheDocument();
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument();
+    screen.getByRole('dialog').style.transform = 'none';
+    await userEvent.keyboard('{Escape}');
+    expect(onOpenChange.mock.calls.at(-1)?.[0]).toBe(false);
+  },
+);

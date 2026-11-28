@@ -11,6 +11,7 @@ import type { QueryClient } from '@tanstack/react-query';
 import { accountBoundaryPlugin, nativeEntryGuard } from './account-boundary';
 import { notificationNavigationPlugin } from './notification-navigation';
 import type { StackflowInitialContext } from './platform';
+import { NoticeDetailActivity } from './activities/notice-detail-activity';
 
 type TabsParams = ActivityBaseParams & TabsState;
 type TeamPhotoParams = ActivityBaseParams & {
@@ -68,11 +69,7 @@ export const activityComponents = {
       default: AlertsActivity,
     })),
   ),
-  NoticeDetail: lazy<{ noticeId: string }>(() =>
-    import('./activities/activities').then(({ NoticeDetailActivity }) => ({
-      default: NoticeDetailActivity,
-    })),
-  ),
+  NoticeDetail: NoticeDetailActivity,
   NotFound: lazy<EmptyActivityParams>(() =>
     import('./activities/activities').then(({ NotFoundActivity }) => ({
       default: NotFoundActivity,

@@ -1,4 +1,8 @@
 /** 공지 상세의 실제 조회·오류 복구·읽기 전용 동작을 검증한다. */
+import { Suspense } from 'react';
+import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
+import { NoticeDetailLoading } from './notice-detail-loading';
+import { NoticeDetailError } from './notice-detail-error';
 import { QueryClientProvider } from '@tanstack/react-query';
 import { createAppQueryClient } from '@/app/providers';
 import { NativeAuthSessionProvider } from '@/features/auth';
@@ -31,7 +35,15 @@ function renderPage(noticeId = '2') {
   const rendered = render(
     <QueryClientProvider client={client}>
       <NativeAuthSessionProvider>
-        <NoticeDetailPage noticeId={noticeId} />
+        <LocalErrorBoundary
+          fallbackRender={({ resetErrorBoundary }) => (
+            <NoticeDetailError onRetry={resetErrorBoundary} />
+          )}
+        >
+          <Suspense fallback={<NoticeDetailLoading />}>
+            <NoticeDetailPage noticeId={noticeId} />
+          </Suspense>
+        </LocalErrorBoundary>
       </NativeAuthSessionProvider>
     </QueryClientProvider>,
   );

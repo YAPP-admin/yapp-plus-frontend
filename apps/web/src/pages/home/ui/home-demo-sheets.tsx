@@ -1,5 +1,6 @@
 /** 홈에서 사용하는 출석 코드·팀 확인 바텀시트와 입력 상호작용을 제공합니다. */
 import { Box, HStack, VStack } from '@seed-design/react';
+import { AttendanceCodeLoading } from './attendance-sheet-loading';
 import { useActivityZIndexBase } from '@seed-design/stackflow';
 import { Suspense, useEffect, useId, useRef, useState, type ReactNode } from 'react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
@@ -82,7 +83,7 @@ export function AttendanceCodeSheet({ onComplete, ...props }: AttendanceCodeShee
   return (
     <CodeSheetShell {...props} dismissible={!isSubmitting}>
       <LocalErrorBoundary fallbackRender={renderCodeSheetError}>
-        <Suspense fallback={<CodeSheetMessage message="세션을 불러오고 있어요…" />}>
+        <Suspense fallback={<AttendanceCodeLoading />}>
           <AttendanceCodeContent
             onComplete={onComplete}
             isSheetOpen={props.open === true}
@@ -319,7 +320,7 @@ function AttendanceCodeInputGroup({
   return (
     <>
       <HStack gap="x1_5" align="center" justify="center">
-        {[0, 1, 2, 3].map((index) => (
+        {Array.from({ length: 4 }, (_, index) => (
           <input
             key={index}
             ref={(element) => {

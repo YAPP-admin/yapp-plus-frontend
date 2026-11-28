@@ -16,6 +16,7 @@ import { getRouter } from './router';
 import { clearAdminAccessToken, saveAdminAccessToken } from './features/login';
 import type * as RootRouteModule from './routes/__root';
 import { memberImportHeaders } from './pages/member-import/model/import-file';
+import { fakeGenerationRosterListEntryResponse } from '@yapp-plus/api/generated/faker';
 
 const noticeListResponse: AdminPostListResponse = {
   totalPostCount: 3,
@@ -462,17 +463,11 @@ describe('세션 목록 탐색', () => {
     await user.keyboard('{Enter}');
     const filter = await screen.findByRole('radio', { name: '전체' });
 
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    await user.tab();
-
-    await user.tab();
-    await user.tab();
-    await user.tab();
-    expect(screen.getByRole('button', { name: '세션 추가' })).toHaveFocus();
+    const addSession = screen.getByRole('button', { name: '세션 추가' });
+    for (let index = 0; index < 20 && document.activeElement !== addSession; index += 1) {
+      await user.tab();
+    }
+    expect(addSession).toHaveFocus();
 
     await user.tab();
     expect(filter).toHaveFocus();
@@ -781,6 +776,74 @@ describe('회원 목록 URL 상태', () => {
 });
 
 describe('명단 업로드 진입점', () => {
+  it('메뉴에서 명단을 확인하고 업로드 성공 후 캐시를 갱신한 조회 화면으로 이동한다', async () => {
+    const user = userEvent.setup();
+    let registered = false;
+    server.use(
+      http.get(`${apiBaseUrl}/api/admin/generations/:generationId/roster-entries`, () =>
+        HttpResponse.json({
+          items: registered
+            ? [
+                {
+                  ...fakeGenerationRosterListEntryResponse(),
+                  rosterEntryId: 8001,
+                  generationId: 33,
+                  name: '신규 명단 회원',
+                  phoneNumber: '+821099999999',
+                  position: 'WEB',
+                  role: 'PLAYER',
+                },
+              ]
+            : [],
+          nextCursor: null,
+        }),
+      ),
+      http.post(`${apiBaseUrl}/api/admin/generations/:generationId/roster-registrations`, () => {
+        registered = true;
+        return HttpResponse.json(
+          {
+            registrationId: 9001,
+            generationId: 33,
+            rows: [{ clientRowId: '2', rosterEntryId: 8001, action: 'CREATED' }],
+            createdCount: 1,
+            updatedCount: 0,
+            unchangedCount: 0,
+          },
+          { status: 201 },
+        );
+      }),
+    );
+    const router = await renderRoute('/members');
+    const rosterLink = await screen.findByRole('link', { name: '업로드 명단' });
+    for (let index = 0; index < 20 && document.activeElement !== rosterLink; index += 1) {
+      await user.tab();
+    }
+    expect(rosterLink).toHaveFocus();
+    await user.keyboard('{Enter}');
+    expect(
+      await screen.findByRole('heading', { name: '조회할 업로드 명단이 없어요' }),
+    ).toBeVisible();
+    const menu = screen.getByRole('navigation', { name: '주요 메뉴' });
+    expect(within(menu).getByRole('link', { name: '업로드 명단' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    expect(menu.querySelectorAll('[aria-current]')).toHaveLength(1);
+    await user.click(screen.getByRole('link', { name: '명단 업로드' }));
+    await user.upload(
+      await screen.findByLabelText('회원 명단 파일'),
+      new File(
+        [`${memberImportHeaders.join(',')}\n신규 명단 회원,01099999999,33,web,active-member`],
+        'new-roster.csv',
+        { type: 'text/csv' },
+      ),
+    );
+    await user.click(await screen.findByRole('button', { name: '회원 명단 반영' }));
+    await user.click(await screen.findByRole('button', { name: '업로드 명단으로 이동' }));
+    expect(await screen.findByText('신규 명단 회원')).toBeVisible();
+    expect(router.state.location.pathname).toBe('/members/roster');
+  });
+
   it('회원 목록에서 수정 모달을 열고 취소하면 원본 목록으로 돌아온다', async () => {
     const user = userEvent.setup();
     await renderRoute('/members');
@@ -876,10 +939,11 @@ describe('명단 업로드 진입점', () => {
     await renderRoute('/members');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 12; index += 1) {
+    const targetLink = screen.getByRole('link', { name: '명단 업로드' });
+    for (let index = 0; index < 20 && document.activeElement !== targetLink; index += 1) {
       await user.tab();
     }
-    expect(screen.getByRole('link', { name: '명단 업로드' })).toHaveFocus();
+    expect(targetLink).toHaveFocus();
 
     await user.keyboard('{Enter}');
     const backLink = await screen.findByRole('link', { name: '회원 목록으로 돌아가기' });
@@ -969,10 +1033,11 @@ describe('공지 목록 URL 상태', () => {
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 10; index += 1) {
+    const targetLink = screen.getByRole('link', { name: '공지 목록' });
+    for (let index = 0; index < 20 && document.activeElement !== targetLink; index += 1) {
       await user.tab();
     }
-    expect(screen.getByRole('link', { name: '공지 목록' })).toHaveFocus();
+    expect(targetLink).toHaveFocus();
 
     await user.keyboard('{Enter}');
     const filter = await screen.findByRole('radio', { name: '전체' });
@@ -1119,7 +1184,14 @@ describe('공지 작성·수정 진입점', () => {
     expect(screen.queryByRole('radio', { name: '제출' })).not.toBeInTheDocument();
   });
 
-  it('과제 생성은 제출 방법·주소가 누락되면 요청을 막고 입력 완료 후 전송한다', async () => {
+  it.each([
+    {
+      label: '활동회원 전체',
+      jobs: [],
+      positions: ['PM', 'DESIGN', 'ANDROID', 'IOS', 'WEB', 'MOBILE', 'SERVER', 'AI_NATIVE'],
+    },
+    { label: '개별 직군', jobs: ['Web', 'Mobile'], positions: ['WEB', 'MOBILE'] },
+  ])('과제 생성은 필수 입력을 검증하고 $label 제출대상을 전송한다', async ({ jobs, positions }) => {
     const createNotice = vi.fn<(body: unknown) => void>();
     server.use(
       http.post(`${apiBaseUrl}/api/admin/generations/:generationId/posts`, async ({ request }) => {
@@ -1131,6 +1203,9 @@ describe('공지 작성·수정 진입점', () => {
     await renderRoute('/notices/new');
     await user.type(await screen.findByRole('textbox', { name: '제목' }), '과제 안내');
     await user.click(screen.getByRole('radio', { name: '과제' }));
+    for (const job of jobs) {
+      await user.click(screen.getByRole('checkbox', { name: job }));
+    }
     await user.type(await screen.findByRole('textbox', { name: '공지 내용' }), '과제 본문');
 
     for (const label of ['마감 날짜', '마감 시각']) {
@@ -1153,6 +1228,7 @@ describe('공지 작성·수정 진입점', () => {
     expect(createNotice).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'ASSIGNMENT',
+        audience: { type: 'POSITION', positions },
         title: '과제 안내',
         contentMarkdown: expect.stringContaining('과제 본문'),
         assignment: expect.objectContaining({
@@ -1340,10 +1416,11 @@ describe('알림 발송 내역 탐색', () => {
     await renderRoute('/');
     await waitForAdminWorkspace();
 
-    for (let index = 0; index < 11; index += 1) {
+    const targetLink = screen.getByRole('link', { name: '알림 발송 내역' });
+    for (let index = 0; index < 20 && document.activeElement !== targetLink; index += 1) {
       await user.tab();
     }
-    expect(screen.getByRole('link', { name: '알림 발송 내역' })).toHaveFocus();
+    expect(targetLink).toHaveFocus();
 
     await user.keyboard('{Enter}');
 

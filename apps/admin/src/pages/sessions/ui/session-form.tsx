@@ -1,5 +1,5 @@
 /** 생성·수정 공통 모달입니다. 닫을 때 부모에서 해제하고 다른 세션은 새 key로 엽니다. */
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { revalidateLogic, useForm } from '@tanstack/react-form';
 import { useMutation } from '@tanstack/react-query';
 import {
@@ -49,6 +49,8 @@ export function SessionForm({
   const [address, setAddress] = useState<AddressSearchItemViewModel | null>(null);
   const [localSubmissionError, setLocalSubmissionError] = useState('');
   const coordinates = useMutation(coordinatesMutationOptions);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const detailInputRef = useRef<HTMLInputElement>(null);
   const stored = initialValues?.type === 'regular' ? initialValues.location : undefined;
   const form = useForm({
     defaultValues: sessionFormDefaults(initialValues),
@@ -82,6 +84,24 @@ export function SessionForm({
   function close() {
     if (!form.state.isSubmitting && !submissionPending) {
       onClose();
+    }
+  }
+
+  function clearLocation() {
+    // reset은 이전 Mutation의 관찰을 끊어 호출별 콜백이 해제한 폼 값을 복원하지 못하게 합니다.
+    coordinates.reset();
+    setAddress(null);
+    form.setFieldValue('location', {
+      roadAddress: '',
+      detailAddress: '',
+      latitude: undefined,
+      longitude: undefined,
+    });
+    const searchInput = searchInputRef.current;
+    if (searchInput && !searchInput.disabled) {
+      searchInput.focus();
+    } else {
+      detailInputRef.current?.focus();
     }
   }
 
@@ -158,11 +178,16 @@ export function SessionForm({
                     {(field) => (
                       <SessionAddressField
                         value={address}
-                        storedRoadAddress={stored?.roadAddress}
+                        roadAddress={field.state.value}
+                        inputRef={searchInputRef}
+                        onClear={clearLocation}
                         error={getFieldErrorMessage(field.state.meta.errors)}
                         disabled={isPending}
                         onSelect={(next) => {
-                          if (next.roadAddress === field.state.value) {
+                          if (
+                            next.lookupReference.buildingManagementNumber ===
+                            address?.lookupReference.buildingManagementNumber
+                          ) {
                             return;
                           }
                           setAddress(next);
@@ -178,6 +203,7 @@ export function SessionForm({
                   <form.Field name="location.detailAddress">
                     {(field) => (
                       <SessionDetailAddressField
+                        inputRef={detailInputRef}
                         value={field.state.value}
                         error={getFieldErrorMessage(field.state.meta.errors)}
                         disabled={isPending}
@@ -187,7 +213,7 @@ export function SessionForm({
                     )}
                   </form.Field>
                   <SessionCoordinatesField
-                    initialPosition={initialPosition}
+                    initialPosition={location.roadAddress ? initialPosition : undefined}
                     position={position}
                     lookupPending={coordinates.isPending}
                     lookupError={coordinates.isError}

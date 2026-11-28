@@ -1,5 +1,6 @@
 'use client';
 
+import { skeletonPlaceholder } from '@/shared/ui/skeleton.css';
 import { staticContentEnabled } from '@/features/static-content';
 
 /** 공지 목록의 인증·조회·탭 상태를 렌더링하는 페이지 UI다. */
@@ -128,13 +129,29 @@ function NoticeList({ category, onCategoryChange }: Required<NoticesPageProps>) 
 
 function NoticeListLoading() {
   return (
-    <VStack as="output" gap="x4" aria-label="공지사항을 불러오고 있어요">
-      <Skeleton width="full" height="40px" />
-      {[0, 1, 2, 3].map((index) => (
+    <VStack as="section" aria-busy="true" gap="x4" aria-label="공지사항을 불러오고 있어요">
+      <Skeleton aria-hidden="true" className={skeletonPlaceholder} width="full" height="40px" />
+      {Array.from({ length: 4 }, (_, index) => (
         <VStack key={index} gap="x2" py="x4">
-          <Skeleton width="72px" height="20px" radius="8" />
-          <Skeleton width="70%" height="lineHeight.t5" />
-          <Skeleton width="30%" height="lineHeight.t3" />
+          <Skeleton
+            aria-hidden="true"
+            className={skeletonPlaceholder}
+            width="72px"
+            height="20px"
+            radius="8"
+          />
+          <Skeleton
+            aria-hidden="true"
+            className={skeletonPlaceholder}
+            width="70%"
+            height="lineHeight.t5"
+          />
+          <Skeleton
+            aria-hidden="true"
+            className={skeletonPlaceholder}
+            width="30%"
+            height="lineHeight.t3"
+          />
         </VStack>
       ))}
     </VStack>

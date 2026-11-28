@@ -1,5 +1,5 @@
 import type { AttendanceResult, BadgeViewModel, PriorReportViewModel } from './attendance';
-import type { TeamDecisionInput } from './attendance-input';
+import type { AttendanceEditInput, TeamDecisionInput } from './attendance-input';
 
 export type AttendanceSummary = {
   total: number;
@@ -33,6 +33,8 @@ export type AttendanceMemberViewModel = {
   part: string | null;
   teamId: string | null;
   attendance: AttendanceResult;
+  /** mock API가 반환하는 복수 출결 선택 상태입니다. 실제 API 응답에는 없을 수 있습니다. */
+  attendanceEdits?: AttendanceEditInput[];
   selectedStatuses: string[];
   effectiveStatus: string | null;
   correctedAt: string | null;

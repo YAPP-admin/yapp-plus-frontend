@@ -15,6 +15,15 @@ export const selection = style({
   color: vars.$color.fg.neutral,
   overflowWrap: 'anywhere',
 });
+export const selectionHeading = style({
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  flexWrap: 'wrap',
+  gap: 8,
+});
+export const clearButton = style({ minHeight: 48 });
+export const resultText = style({ display: 'grid', gap: 4, minWidth: 0 });
 // 안내 두 줄과 재시도 버튼을 한 행에 배치해 과도한 여백 없이 높이를 유지합니다.
 export const status = style({
   display: 'flex',
@@ -56,9 +65,14 @@ export const result = style({
   cursor: 'pointer',
   overflowWrap: 'anywhere',
   selectors: {
-    '&:hover, &[aria-pressed="true"]': { background: vars.$color.bg.neutralWeak },
+    '&[aria-pressed="true"]': { background: vars.$color.bg.neutralWeak },
     '&:focus-visible': { outline: `2px solid ${vars.$color.fg.neutral}`, outlineOffset: -3 },
     '&:disabled': { cursor: 'default', opacity: 0.5 },
+  },
+  '@media': {
+    '(hover: hover) and (pointer: fine)': {
+      selectors: { '&:hover': { background: vars.$color.bg.neutralWeak } },
+    },
   },
 });
 export const badge = style({ flexShrink: 0, fontSize: 14, color: vars.$color.fg.neutralMuted });

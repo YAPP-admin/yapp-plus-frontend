@@ -1,14 +1,13 @@
 import { List, Skeleton, VStack } from '@seed-design/react';
 import { item } from './schedule-item.css';
-import { list, srOnly } from './schedule-page.css';
+import { list } from './schedule-page.css';
 import { placeholder } from './schedule-loading.css';
 
 export function ScheduleLoading() {
   return (
-    <div>
-      <output className={srOnly}>일정을 불러오고 있어요…</output>
+    <section aria-label="일정을 불러오고 있어요" aria-busy="true">
       <List.Root className={list} aria-hidden="true">
-        {[0, 1, 2, 3].map((row) => (
+        {Array.from({ length: 4 }, (_, row) => (
           <List.Item key={row} className={item} alignItems="flex-start">
             <List.Prefix pr="x4">
               <Skeleton className={placeholder} width="70px" height="lineHeight.t4" />
@@ -23,6 +22,6 @@ export function ScheduleLoading() {
           </List.Item>
         ))}
       </List.Root>
-    </div>
+    </section>
   );
 }

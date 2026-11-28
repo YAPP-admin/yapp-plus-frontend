@@ -462,6 +462,23 @@ it('최종 조회 401은 보호 내용을 숨기고 로그인으로 한 번 이�
   expect(bridge.refreshSession).toHaveBeenCalledTimes(1);
 });
 
+it('공지 상세 Structured Activity의 조회 401은 로컬 오류 대신 로그인으로 위임한다', async () => {
+  const client = createAppQueryClient();
+  bridge.getSession.mockResolvedValue(session(1));
+  bridge.refreshSession.mockResolvedValue(session(1, 2));
+  server.use(
+    http.get(`${apiBaseUrl}/api/posts/2`, () =>
+      HttpResponse.json({ status: 401 }, { status: 401 }),
+    ),
+  );
+  window.history.replaceState(null, '', '/notices/2');
+  mount(client);
+
+  expect(await screen.findByRole('button', { name: '구글로 계속하기' })).toBeInTheDocument();
+  expect(screen.queryByText('공지 상세를 불러오지 못했어요')).not.toBeInTheDocument();
+  await waitFor(() => expect(window.location.pathname).toMatch(/^\/login\/?$/));
+});
+
 it('읽음 저장 401은 낙관적 상태를 남기지 않고 로그인으로 한 번 이동한다', async () => {
   const user = userEvent.setup();
   const client = createAppQueryClient();
