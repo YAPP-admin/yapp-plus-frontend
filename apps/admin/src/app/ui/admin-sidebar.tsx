@@ -1,5 +1,5 @@
 import { Select, SideNavigation, Text } from '@seed-design/react';
-import { Link } from '@tanstack/react-router';
+import { Link, useRouterState } from '@tanstack/react-router';
 import { Badge } from '@yapp-plus/ui';
 import { Check, ChevronDown } from 'lucide-react';
 import { Fragment } from 'react';
@@ -21,6 +21,9 @@ type AdminSidebarProps = {
 
 export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: AdminSidebarProps) {
   const { generations, currentGeneration, selectGeneration } = useAdminGeneration();
+  const isRoster = useRouterState({
+    select: (state) => state.location.pathname === '/members/roster',
+  });
 
   return (
     <SideNavigation.Root className={styles.sidebar} asChild>
@@ -90,7 +93,10 @@ export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: Ad
                       <SideNavigation.Item
                         current={
                           navigationItems[menu].to === item.to &&
-                          !(item.to === '/members' && (memberSearch ?? teamMapping))
+                          !(
+                            item.to === '/members' &&
+                            (memberSearch !== undefined || teamMapping === true || isRoster)
+                          )
                         }
                         asChild
                       >
@@ -98,7 +104,9 @@ export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: Ad
                           <span
                             className={styles.navigationLink}
                             aria-current={
-                              menu === 'members' && !memberSearch ? 'location' : undefined
+                              menu === 'members' && !memberSearch && !isRoster
+                                ? 'location'
+                                : undefined
                             }
                           >
                             <SideNavigation.ItemLabel className={styles.navigationLabel}>
@@ -153,6 +161,17 @@ export function AdminSidebar({ menu, memberSearch, teamMapping, onNavigate }: Ad
                               </Link>
                             </SideNavigation.Item>
                           ))}
+                          <SideNavigation.Item current={isRoster} asChild>
+                            <Link
+                              to="/members/roster"
+                              search={{}}
+                              onClick={onNavigate}
+                              className={styles.navigationLink}
+                              activeOptions={{ exact: true }}
+                            >
+                              <SideNavigation.ItemLabel>업로드 명단</SideNavigation.ItemLabel>
+                            </Link>
+                          </SideNavigation.Item>
                           <SideNavigation.Item current={teamMapping === true} asChild>
                             <Link
                               to={teamMappingNavigationItem.to}
