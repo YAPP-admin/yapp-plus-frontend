@@ -5,11 +5,6 @@ export const container = style({
   boxSizing: 'border-box',
 });
 
-export const avatar = style({
-  background: vars.$color.bg.neutralMuted,
-  overflow: 'hidden',
-});
-
 export const name = style({
   minWidth: 0,
   overflowWrap: 'anywhere',

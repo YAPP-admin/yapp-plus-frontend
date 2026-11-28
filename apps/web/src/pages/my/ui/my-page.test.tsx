@@ -10,11 +10,12 @@ import {
   createMemberAttendanceHandlers,
   scoreFixture,
 } from '../../../mocks/member-attendance-handlers';
-import { act, render, screen, waitFor, within } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MyPage } from './my-page';
 import { name as profileName } from './my-page.css';
 import { profileQueryOptions } from '../model/profile-query';
+import { profileFixture } from '@/mocks/member-profile-handlers';
 
 vi.mock('@/app/navigation/activity-link', () => ({
   ActivityLink: ({
@@ -34,7 +35,11 @@ vi.mock('@/app/navigation/activity-link', () => ({
 
 const scoreUrl = `${apiBaseUrl}/api/attendance-scores/me`;
 const profileUrl = `${apiBaseUrl}/api/users/me`;
-beforeEach(() => vi.stubEnv('VITE_API_MOCKING', 'true'));
+beforeEach(() => {
+  vi.stubEnv('VITE_API_MOCKING', 'true');
+  // happy-dom은 실제 이미지 다운로드를 수행하지 않습니다. 완료는 필요한 테스트에서 전달합니다.
+  vi.spyOn(HTMLImageElement.prototype, 'complete', 'get').mockReturnValue(false);
+});
 afterEach(() => {
   vi.unstubAllEnvs();
   vi.restoreAllMocks();
@@ -77,6 +82,7 @@ describe('MyPage', () => {
     expect(screen.getByText('활동회원')).toBeVisible();
     expect(screen.getByText('28기')).toBeVisible();
     expect(screen.getByText('Web')).toBeVisible();
+    fireEvent.load(screen.getByAltText('프로필'));
     expect(screen.getByRole('img', { name: '프로필' })).toBeVisible();
     expect(screen.getByRole('img', { name: '프로필' })).toHaveAttribute(
       'src',
@@ -156,17 +162,18 @@ describe('MyPage', () => {
       }),
     );
     renderPage(true, '세션 이름');
-    expect(await screen.findByRole('status')).toHaveTextContent('프로필을 불러오는 중이에요');
-    expect(screen.getByRole('img', { name: '프로필' })).toHaveAttribute(
-      'src',
-      '/images/my/user-profile.svg',
-    );
+    const loading = await screen.findByRole('region', { name: '프로필 불러오는 중' });
+    expect(loading).toHaveAttribute('aria-busy', 'true');
+    expect(loading.querySelector('.seed-skeleton')).toBeVisible();
+    expect(screen.queryByAltText('프로필')).not.toBeInTheDocument();
     expect(await screen.findByText('92점')).toBeVisible();
     expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
     await userEvent.setup().click(screen.getByRole('button', { name: '출석 규칙 안내' }));
     expect(await screen.findByRole('dialog', { name: '출석 규칙' })).toBeVisible();
     act(() => finish?.());
-    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+    await waitFor(() =>
+      expect(screen.queryByLabelText('프로필 불러오는 중')).not.toBeInTheDocument(),
+    );
     expect(screen.getByRole('dialog', { name: '출석 규칙' })).toBeVisible();
     await userEvent.setup().click(
       within(screen.getByRole('dialog', { name: '출석 규칙' })).getByRole('button', {
@@ -188,7 +195,8 @@ describe('MyPage', () => {
       await waitFor(() =>
         expect(client.getQueryData(mineQueryKey())).toMatchObject({ status: 'unavailable' }),
       );
-      expect(screen.getAllByText('—')).toHaveLength(9);
+      await screen.findByText('테스트 회원');
+      expect(screen.getAllByText('—')).toHaveLength(5);
       expect(screen.queryByRole('alert')).not.toBeInTheDocument();
     },
   );
@@ -333,3 +341,65 @@ describe('MyPage', () => {
     });
   });
 });
+
+// Query의 캐시 유무와 두 독립 경계의 복구를 실제 요청으로 검증합니다.
+it.each([
+  ['프로필', false],
+  ['프로필', true],
+  ['출석 현황', false],
+  ['출석 현황', true],
+] as const)(
+  '%s 오류 재시도는 캐시가 있으면 기존 값을, 없으면 스켈레톤을 표시한다 (cache=%s)',
+  async (area, cached) => {
+    const profile = area === '프로필';
+    const url = profile ? profileUrl : scoreUrl;
+    const oldText = profile ? '테스트 회원' : '92점';
+    if (!cached) {
+      server.use(http.get(url, () => HttpResponse.json({}, { status: 500 })));
+    }
+    const { client } = renderPage(true);
+    if (cached) {
+      await screen.findByText(oldText);
+      server.use(http.get(url, () => HttpResponse.json({}, { status: 500 })));
+      await act(() =>
+        client.invalidateQueries({
+          queryKey: profile ? profileQueryOptions().queryKey : mineQueryKey(),
+        }),
+      );
+    }
+    await screen.findByRole('alert');
+    let resolveRequest: (() => void) | undefined;
+    const pending = new Promise<void>((resolve) => {
+      resolveRequest = resolve;
+    });
+    server.use(
+      http.get(url, async () => {
+        await pending;
+        return HttpResponse.json(profile ? profileFixture : scoreFixture);
+      }),
+    );
+    await userEvent
+      .setup()
+      .click(screen.getByRole('button', { name: profile ? '프로필 다시 시도' : '다시 시도' }));
+    const content = cached
+      ? await screen.findByText(oldText)
+      : await screen.findByRole('region', { name: `${area} 불러오는 중` });
+    expect(content).toBeVisible();
+    expect(screen.queryByText(oldText) !== null).toBe(cached);
+    const loading = screen.queryByRole('region', { name: `${area} 불러오는 중` });
+    expect(loading !== null).toBe(!cached);
+    expect(loading?.querySelector('.seed-skeleton') != null).toBe(!cached);
+    expect(screen.getByRole('link', { name: '출석 내역' })).toBeVisible();
+    await act(async () => {
+      resolveRequest?.();
+      await pending;
+    });
+    await waitFor(() => {
+      const state = client.getQueryState(profile ? profileQueryOptions().queryKey : mineQueryKey());
+      expect(state?.status).toBe('success');
+      expect(state?.fetchStatus).toBe('idle');
+    });
+    expect(await screen.findByText(oldText)).toBeVisible();
+    expect(screen.queryByLabelText(`${area} 불러오는 중`)).not.toBeInTheDocument();
+  },
+);
