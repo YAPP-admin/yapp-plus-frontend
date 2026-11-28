@@ -8,7 +8,6 @@ import { useRefetchOnScreenReturn } from '@/shared/lib/screen-activity';
 import { useSuspenseQuery } from '@tanstack/react-query';
 import { IconCheckmarkCircleFill } from '@karrotmarket/react-monochrome-icon';
 import { ActionButton, PrefixIcon } from '@yapp-plus/ui';
-import { Suspense } from 'react';
 import { useNativeAuthSession } from '@/features/auth';
 import { NoticeErrorContent } from '@/features/member-notice';
 import { noticeDetailData } from '../model/notice-detail-data';
@@ -36,7 +35,6 @@ import {
   titleText,
 } from './notice-detail-page.css';
 import { NoticeDetailHeader } from './notice-detail-header';
-import { NoticeDetailErrorBoundary } from './notice-detail-error-boundary';
 import { NoticeMarkdown } from './notice-markdown';
 import { NoticeAttachments } from './notice-attachments';
 
@@ -59,13 +57,7 @@ export function NoticeDetailPage({ noticeId }: { noticeId: string }) {
     );
   }
 
-  return (
-    <NoticeDetailErrorBoundary>
-      <Suspense fallback={<NoticeDetailLoading />}>
-        <NoticeDetailContent postId={postId} />
-      </Suspense>
-    </NoticeDetailErrorBoundary>
-  );
+  return <NoticeDetailContent postId={postId} />;
 }
 
 function NoticeDetailContent({ postId }: { postId: number }) {
@@ -187,14 +179,13 @@ function getCategoryChipClass(category: ReturnType<typeof noticeDetailData>['typ
   }
 }
 
-function NoticeDetailLoading() {
-  return <output>공지 상세를 불러오고 있어요.</output>;
-}
-
 function NoticeDetailErrorContent({ descriptionText }: { descriptionText?: string }) {
   return (
-    <main className={container}>
-      <NoticeErrorContent descriptionText={descriptionText} />
-    </main>
+    <>
+      <NoticeDetailHeader categoryLabel="공지사항" />
+      <main className={container}>
+        <NoticeErrorContent descriptionText={descriptionText} />
+      </main>
+    </>
   );
 }

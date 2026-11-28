@@ -1,9 +1,10 @@
 /** 공지 첨부 이미지를 원본 순서대로 표시하고 탐색은 브라우저 기본 스크롤에 맡긴다. */
-import { ImageFrame } from '@seed-design/react';
-import { useState } from 'react';
+import { ImageFrame, Skeleton } from '@seed-design/react';
+import { skeletonPlaceholder } from '@/shared/ui/skeleton.css';
 import type { MemberNoticeDetail } from '../model/notice-detail-query';
 import {
   attachmentFallback,
+  attachmentLoading,
   attachmentImage,
   attachmentItem,
   attachmentSection,
@@ -31,10 +32,6 @@ export function NoticeAttachments({ images }: { images: MemberNoticeDetail['imag
 }
 
 function NoticeAttachmentImage({ src, alt }: { src: string; alt: string }) {
-  const [failed, setFailed] = useState(false);
-  if (failed) {
-    return <output className={attachmentFallback}>이미지를 표시하지 못했어요.</output>;
-  }
   return (
     <ImageFrame
       className={attachmentImage}
@@ -43,7 +40,18 @@ function NoticeAttachmentImage({ src, alt }: { src: string; alt: string }) {
       stroke={false}
       src={src}
       alt={alt}
-      onError={() => setFailed(true)}
+      fallback={
+        <>
+          <Skeleton
+            className={`${skeletonPlaceholder} ${attachmentLoading}`}
+            width="full"
+            height="full"
+            radius="0"
+            aria-hidden="true"
+          />
+          <div className={attachmentFallback}>이미지를 표시하지 못했어요.</div>
+        </>
+      }
     />
   );
 }
