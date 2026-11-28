@@ -1,8 +1,8 @@
 import { useState, type FormEvent } from 'react';
 import { Dialog, Portal, RadioGroup, RadioGroupField, Text } from '@seed-design/react';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigate } from '@tanstack/react-router';
-import { register2Mutation } from '@yapp-plus/api/generated';
+import { list8InfiniteQueryKey, register2Mutation } from '@yapp-plus/api/generated';
 import { ActionButton } from '@yapp-plus/ui';
 import { X } from 'lucide-react';
 import type { Member } from '~/features/member-management';
@@ -122,8 +122,27 @@ function ApiImportPreview({
   const hasTooManyRows = validatedRows.length > MAX_IMPORT_ROWS;
   const canFetchRoster = isValid && !hasGenerationMismatch && !hasTooManyRows;
   const query = useMemberImportRosterQuery({ generationId, enabled: canFetchRoster });
-  const registration = useMutation(register2Mutation());
+  const queryClient = useQueryClient();
+  const registration = useMutation({
+    ...register2Mutation(),
+    onSuccess: () => {
+      // 완료 안내를 유지하고 조회 화면 진입 시 최신 명단을 가져옵니다.
+      void queryClient.invalidateQueries({
+        queryKey: list8InfiniteQueryKey({ path: { generationId } }),
+        refetchType: 'none',
+      });
+    },
+  });
   const navigate = useNavigate();
+
+  if (registration.isSuccess) {
+    return (
+      <MemberImportSuccessDialog
+        result={registration.data}
+        onClose={() => void navigate({ to: '/members/roster', search: {} })}
+      />
+    );
+  }
 
   if (canFetchRoster && query.isFetchingAllPages) {
     return (
@@ -178,12 +197,6 @@ function ApiImportPreview({
         isSubmitting={registration.isPending}
         submitError={registration.isError ? '잠시 후 다시 시도해 주세요.' : undefined}
       />
-      {registration.isSuccess && (
-        <MemberImportSuccessDialog
-          result={registration.data}
-          onClose={() => void navigate({ to: '/members', search: {} })}
-        />
-      )}
     </>
   );
 }
@@ -332,7 +345,7 @@ function ImportPreviewContent({
   );
 }
 
-/** 사전 명단 등록 성공 결과를 안내하고 회원 목록으로 이동한다. */
+/** 사전 명단 등록 성공 결과를 안내하고 업로드 명단으로 이동한다. */
 function MemberImportSuccessDialog({
   result,
   onClose,
@@ -362,7 +375,7 @@ function MemberImportSuccessDialog({
           <Dialog.Content data-seed-color-mode="dark-only">
             <Dialog.Header>
               <Dialog.Title>명단 등록이 완료됐어요.</Dialog.Title>
-              <Dialog.Description>회원 목록에서 반영된 명단을 확인해 주세요.</Dialog.Description>
+              <Dialog.Description>업로드 명단에서 반영된 내용을 확인해 주세요.</Dialog.Description>
               <Dialog.CloseButton aria-label="닫기">
                 <X size={20} aria-hidden="true" />
               </Dialog.CloseButton>
@@ -372,7 +385,7 @@ function MemberImportSuccessDialog({
             </Dialog.Body>
             <Dialog.Footer>
               <ActionButton type="button" onClick={onClose}>
-                회원 목록으로 이동
+                업로드 명단으로 이동
               </ActionButton>
             </Dialog.Footer>
           </Dialog.Content>
