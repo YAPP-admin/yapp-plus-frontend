@@ -1,7 +1,7 @@
 import { createMemberDiningHandlers } from './member-dining-handlers';
 import { createNoticeFixtures } from './notice-fixtures';
 import { createAttendanceFixtures } from './attendance-fixtures';
-import { createUpcomingSessionFixtures } from './session-fixtures';
+import { createSessionFixtures } from './session-fixtures';
 import { createSessionHandlers } from './session-handlers';
 import { createMemberAttendanceHandlers } from './member-attendance-handlers';
 import { createMemberNoticeHandlers } from './member-notice-handlers';
@@ -21,7 +21,20 @@ export function startMocking(): Promise<void> {
       throw new Error('모킹할 API base URL이 없습니다.');
     }
 
-    const fixtures = createUpcomingSessionFixtures(Date.now());
+    const fixtures = createSessionFixtures(Date.now());
+    // 개발 홈에서 장소 표시와 지도 이동을 바로 확인할 수 있는 시연 좌표다.
+    const venue = {
+      location: '서울시청',
+      roadAddress: '서울특별시 중구 세종대로 110',
+      latitude: 37.5665,
+      longitude: 126.978,
+    };
+    Object.assign(fixtures.currentWeekFixture.session, venue);
+    for (const session of fixtures.scheduleFixture.sessions) {
+      if (session.sessionId === fixtures.currentWeekFixture.session.sessionId) {
+        Object.assign(session, venue);
+      }
+    }
     const attendance = createAttendanceFixtures(fixtures);
     const noticeState = new URLSearchParams(window.location.search).get('noticeState');
     const worker = setupWorker(

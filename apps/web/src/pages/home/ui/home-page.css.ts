@@ -77,6 +77,7 @@ export const locationRow = style({
 });
 
 export const locationPin = style({
+  flexShrink: 0,
   display: 'inline-flex',
   alignItems: 'center',
   justifyContent: 'center',
@@ -151,10 +152,19 @@ export const calendarDateBadgeActive = style([
   },
 ]);
 
-/** 운영 달력은 완료 문구 공간을 별도로 확보해 상태 변경 시 높이를 유지한다. */
+/** 운영 달력의 점선·높이는 Android 기준이며 완료 상태에서 문구 공간을 확보한다. */
 export const calendarDayItemWithStatus = style([
   calendarDayItem,
-  { gap: vars.$dimension.x0_5, paddingBottom: 0 },
+  {
+    gap: vars.$dimension.x1,
+    paddingBottom: 0,
+    minHeight: '54px',
+    selectors: {
+      '&:first-child': { borderLeft: `1px dashed ${vars.$color.stroke.neutralSubtle}` },
+      '&:last-child': { borderRight: `1px dashed ${vars.$color.stroke.neutralSubtle}` },
+      [`${calendarWeek}[data-attended="true"] &`]: { gap: vars.$dimension.x0_5, minHeight: '58px' },
+    },
+  },
 ]);
 
 /** 20px 오늘 표시와 24px 완료 배지를 같은 영역 중앙에 정렬한다. */
@@ -750,4 +760,40 @@ export const sheetSecondaryButton = style({
   color: `${vars.$color.fg.neutralSubtle} !important`,
   fontSize: '16px !important',
   fontWeight: '700 !important',
+});
+
+/** 목적지 링크와 정적 장소가 같은 배치를 사용하며 핀보다 넓은 터치 영역을 확보한다. */
+export const sessionVenue = style([
+  locationRow,
+  locationText,
+  {
+    minHeight: '44px',
+    textDecoration: 'none',
+    overflowWrap: 'anywhere',
+    selectors: {
+      '&:focus-visible': { outline: `2px solid ${vars.$color.fg.neutral}`, outlineOffset: '2px' },
+    },
+  },
+]);
+
+/** 오늘·출석 완료 표시가 없는 세션 예정일을 강조한다. */
+export const calendarDateBadgeScheduled = style([
+  calendarDateBadge,
+  { color: vars.$color.fg.brand },
+]);
+
+/** 정규 카드의 활성·비활성 버튼을 같은 크기로 유지하고 Android의 중립색을 사용한다. */
+export const regularSessionButton = style({
+  background: vars.$color.fg.neutral,
+  color: vars.$color.bg.layerDefault,
+  minHeight: '44px',
+  fontSize: vars.$fontSize.t4,
+  fontWeight: vars.$fontWeight.bold,
+  selectors: {
+    '&:disabled': {
+      background: vars.$color.fg.neutral,
+      color: vars.$color.bg.layerDefault,
+      opacity: 0.5,
+    },
+  },
 });

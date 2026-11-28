@@ -1,6 +1,4 @@
-/** 외부 URL 중 좌표 지도 링크만 카카오맵 앱으로 연결하고, 실패하면 원래 웹 링크로 복구한다. */
-
-const MAP_PATH = /^\/link\/map\/(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?),(-?\d+(?:\.\d+)?(?:e[+-]?\d+)?)$/i;
+/** 카카오 주소 검색·기존 좌표 링크를 앱으로 연결하고 실패하면 웹으로 복구한다. */
 
 function getKakaoMapAppUrl(url: string): string | null {
   try {
@@ -14,21 +12,34 @@ function getKakaoMapAppUrl(url: string): string | null {
     ) {
       return null;
     }
-    const coordinates = MAP_PATH.exec(parsed.pathname);
-    if (!coordinates) {
+    if (!parsed.pathname.startsWith('/link/map/')) {
       return null;
     }
-    const latitude = Number(coordinates[1]);
-    const longitude = Number(coordinates[2]);
+    const coordinates = parsed.pathname.slice('/link/map/'.length);
+    return coordinates ? `kakaomap://look?p=${encodeURIComponent(coordinates)}` : null;
+  } catch {
+    return null;
+  }
+}
+
+function getKakaoSearchTarget(url: string): { appUrl: string; webUrl: string } | null {
+  try {
+    const parsed = new URL(url);
+    const query = parsed.searchParams.get('q')?.trim();
+    const point = parsed.searchParams.get('p');
     if (
-      !Number.isFinite(latitude) ||
-      !Number.isFinite(longitude) ||
-      Math.abs(latitude) > 90 ||
-      Math.abs(longitude) > 180
+      parsed.origin !== 'https://m.map.kakao.com' ||
+      parsed.pathname !== '/scheme/search' ||
+      !query ||
+      !point
     ) {
       return null;
     }
-    return `kakaomap://look?p=${latitude},${longitude}`;
+    const encodedQuery = encodeURIComponent(query);
+    return {
+      appUrl: `kakaomap://search?q=${encodedQuery}&p=${encodeURIComponent(point)}`,
+      webUrl: `https://map.kakao.com/link/search/${encodedQuery}`,
+    };
   } catch {
     return null;
   }
@@ -51,7 +62,8 @@ export function createExternalNavigation(runtime: {
     }
     pendingUrls.add(url);
     try {
-      const appUrl = getKakaoMapAppUrl(url);
+      const searchTarget = getKakaoSearchTarget(url);
+      const appUrl = searchTarget?.appUrl ?? getKakaoMapAppUrl(url);
       if (appUrl) {
         try {
           await runtime.openURL(appUrl);
@@ -60,7 +72,7 @@ export function createExternalNavigation(runtime: {
           // 미설치·실행 취소를 구분하지 않고 같은 목적지의 HTTPS 링크로 복구한다.
         }
       }
-      await runtime.openURL(url);
+      await runtime.openURL(searchTarget?.webUrl ?? url);
     } catch {
       runtime.showError();
     } finally {

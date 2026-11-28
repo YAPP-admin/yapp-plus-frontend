@@ -33,3 +33,9 @@
 - [Apple canOpenURL 제한과 open 예외](<https://developer.apple.com/documentation/uikit/uiapplication/canopenurl(_:)>)
 - 이전 계획 조사에서 Modern Web Guidance 1.0.0의 `icons`, `accessibility`를 조회했다.
   구현 시 기존 아이콘 사용, 장식 SVG 숨김, 링크 이름·포커스·터치 영역 기준을 적용한다.
+
+## 후속 리뷰: 주소 검색
+
+주소·좌표가 함께 존재한다는 사용자 확인에 따라 q는 도로명 주소, p는 검색 중심 좌표로 사용한다.
+공식 모바일웹 검색 링크를 웹 href로 사용하고 셸은 앱 검색으로 변환한다. 앱 실패 시 직접 웹 검색 링크로 복구한다.
+HTTPS 모바일웹 엔드포인트의 302 → applink 검색 페이지 200 응답을 확인했다. 실제 iPhone 검색 결과는 별도 확인한다.

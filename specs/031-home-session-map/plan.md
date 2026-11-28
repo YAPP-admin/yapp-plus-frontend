@@ -14,7 +14,7 @@
 - TypeScript, React·SEED·vanilla-extract·Stackflow, React Native 0.88.1·Expo 58.1 계열을 사용한다.
 - Node 24.20.0·pnpm 12.3.4와 기존 Vitest·Testing Library·MSW를 사용한다.
 - 저장소·데이터 마이그레이션은 없다. 조회·캐시·출석 상태 수명은 변경하지 않는다.
-- 추가 네트워크 조회·타이머·현재 위치 요청 없이 기존 좌표로 URL을 만든다.
+- 추가 네트워크 조회·타이머·현재 위치 요청 없이 기존 주소·좌표로 검색 URL을 만든다.
 - 대상은 웹 홈 한 화면과 iOS 외부 탐색 처리다. 웹 호환 범위는 루트 `.mwgrc`를 따른다.
 
 ## 헌법 점검
@@ -32,9 +32,9 @@
 
 ## 구조와 구현
 
-- 웹 `pages/home/model/session-map.ts`: nullable 좌표를 검증해 HTTPS URL 또는 null을 반환한다.
+- 웹 `pages/home/model/session-map.ts`: nullable 주소·좌표를 검증해 HTTPS URL 또는 null을 반환한다.
 - 웹 `pages/home/ui/current-week-card.tsx`와 인접 스타일: 장소 행·제목·정규 시간 줄·달력·버튼을 변경한다.
-- 모바일 `src/external-navigation.ts`: URL 식별·좌표 검증·앱 실행·웹 대체를 담당하며 실행 의존성을 주입해 테스트한다.
+- 모바일 `src/external-navigation.ts`: URL 식별·앱 실행·웹 대체를 담당하며 실행 의존성을 주입해 테스트한다.
 - 모바일 `app/index.tsx`: 같은 origin 탐색은 유지하고 외부 탐색만 위 함수에 넘긴다.
 - 자세한 입력·출력과 화면 기준은 [contracts/home-map.md](contracts/home-map.md)를 따른다.
 
