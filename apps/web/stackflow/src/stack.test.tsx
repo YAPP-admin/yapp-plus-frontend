@@ -837,11 +837,27 @@ it('팀원 조회 실패는 사진 선택을 유지한 채 화면 안 오류 UI�
 
   expect(await screen.findByRole('heading', { name: '팀원을 불러오지 못했어요' })).toBeVisible();
   expect(screen.queryByRole('form', { name: '팀 인증 사진 제출' })).not.toBeInTheDocument();
+  let release: (() => void) | undefined;
+  const pending = new Promise<void>((resolve) => {
+    release = resolve;
+  });
   server.use(
-    http.get(`${apiBaseUrl}/api/sessions/42/team-members`, () => HttpResponse.json(teamMembers)),
+    http.get(`${apiBaseUrl}/api/sessions/42/team-members`, async () => {
+      await pending;
+      return HttpResponse.json(teamMembers);
+    }),
   );
   await user.click(screen.getByRole('button', { name: '팀원 다시 확인' }));
+  expect(await screen.findByRole('region', { name: '팀원을 불러오고 있어요' })).toHaveAttribute(
+    'aria-busy',
+    'true',
+  );
+  const previewUrl = screen.getByAltText('선택한 팀 인증 사진').getAttribute('src');
+  expect(screen.getByRole('button', { name: '뒤로가기' })).toBeEnabled();
+  expect(screen.queryByRole('checkbox')).not.toBeInTheDocument();
+  release?.();
   expect(await screen.findByRole('form', { name: '팀 인증 사진 제출' })).toBeVisible();
+  expect(screen.getByAltText('선택한 팀 인증 사진')).toHaveAttribute('src', previewUrl);
 });
 
 it('팀 안내 시트는 사진 도구를 열기 전까지 홈 위에 유지한다', async () => {
