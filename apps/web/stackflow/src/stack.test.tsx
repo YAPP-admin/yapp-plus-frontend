@@ -10,7 +10,8 @@ import { TeamAttendancePhotoDraftProvider } from '@/pages/team-attendance-upload
 import { apiBaseUrl, server } from '@/mocks/server';
 import { currentWeekFixture } from '@/mocks/session-handlers';
 import { koreanDateString } from '@/shared/lib/korean-date-time';
-import { http, HttpResponse } from 'msw';
+import { delay, http, HttpResponse } from 'msw';
+import { memberNoticeDetailFixture } from '@/mocks/member-notice-handlers';
 import { createStackflowApp, stackflowConfig } from './stack';
 import type { pickAttendancePhoto } from '@yapp-plus/app-bridge/web';
 
@@ -386,6 +387,41 @@ describe('Stackflow FSD 화면 연결', () => {
     expect(await waitForTopHeading('앗, 오류가 발생했어요!')).toBeTruthy();
     expect(screen.getByText('잠시 후 다시 시도해 주세요.')).toBeInTheDocument();
     rendered.unmount();
+  });
+
+  it('공지 상세 조회 중 스켈레톤과 뒤로가기를 제공한다', async () => {
+    server.use(
+      http.get(`${apiBaseUrl}/api/posts/2`, async () => {
+        await delay('infinite');
+        return HttpResponse.json(memberNoticeDetailFixture);
+      }),
+    );
+    window.history.replaceState({}, '', '/notices/2');
+    renderStack();
+
+    expect(
+      await screen.findByRole('region', { name: '공지 상세를 불러오고 있어요' }),
+    ).toHaveAttribute('aria-busy', 'true');
+    await userEvent.click(screen.getByRole('button', { name: '뒤로가기' }));
+    expect(await waitForTopHeading('게시판')).toBeTruthy();
+  });
+
+  it('Structured Activity의 오류 재시도가 Query 오류를 초기화하고 상세를 복구한다', async () => {
+    server.use(
+      http.get(`${apiBaseUrl}/api/posts/2`, () => new HttpResponse(null, { status: 500 })),
+    );
+    window.history.replaceState({}, '', '/notices/2');
+    renderStack();
+    await screen.findByRole('heading', { name: '공지 상세를 불러오지 못했어요' });
+
+    server.use(
+      http.get(`${apiBaseUrl}/api/posts/2`, () => HttpResponse.json(memberNoticeDetailFixture)),
+    );
+    await userEvent.click(screen.getByRole('button', { name: '다시 시도' }));
+    expect(await waitForTopHeading('사용자 테스트 결과 제출')).toBeTruthy();
+    expect(
+      screen.queryByRole('region', { name: '공지 상세를 불러오고 있어요' }),
+    ).not.toBeInTheDocument();
   });
 
   it('공지 상세 URL 직접 진입은 Notices를 fallback stack에 복원한다', async () => {

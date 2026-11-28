@@ -174,7 +174,10 @@ export const attachmentImage = style({
 globalStyle(`${attachmentImage} img`, { objectFit: 'cover' });
 
 export const attachmentFallback = style({
-  display: 'grid',
+  display: 'none',
+  selectors: {
+    '[data-loading-state="error"] > &': { display: 'grid' },
+  },
   placeItems: 'center',
   aspectRatio: '4 / 5',
   background: vars.$color.bg.neutralMuted,
@@ -221,4 +224,11 @@ export const confirmCount = style({
   fontWeight: vars.$fontWeight.medium,
   color: vars.$color.fg.neutralMuted,
   margin: 0,
+});
+
+/** SEED 이미지 상태를 사용해 캐시된 실패에서도 스켈레톤 대신 오류 안내를 표시합니다. */
+export const attachmentLoading = style({
+  selectors: {
+    '[data-loading-state="error"] > &': { display: 'none' },
+  },
 });
