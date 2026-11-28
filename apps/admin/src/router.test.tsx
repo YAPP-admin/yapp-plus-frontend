@@ -1184,7 +1184,14 @@ describe('공지 작성·수정 진입점', () => {
     expect(screen.queryByRole('radio', { name: '제출' })).not.toBeInTheDocument();
   });
 
-  it('과제 생성은 제출 방법·주소가 누락되면 요청을 막고 입력 완료 후 전송한다', async () => {
+  it.each([
+    {
+      label: '활동회원 전체',
+      jobs: [],
+      positions: ['PM', 'DESIGN', 'ANDROID', 'IOS', 'WEB', 'MOBILE', 'SERVER', 'AI_NATIVE'],
+    },
+    { label: '개별 직군', jobs: ['Web', 'Mobile'], positions: ['WEB', 'MOBILE'] },
+  ])('과제 생성은 필수 입력을 검증하고 $label 제출대상을 전송한다', async ({ jobs, positions }) => {
     const createNotice = vi.fn<(body: unknown) => void>();
     server.use(
       http.post(`${apiBaseUrl}/api/admin/generations/:generationId/posts`, async ({ request }) => {
@@ -1196,6 +1203,9 @@ describe('공지 작성·수정 진입점', () => {
     await renderRoute('/notices/new');
     await user.type(await screen.findByRole('textbox', { name: '제목' }), '과제 안내');
     await user.click(screen.getByRole('radio', { name: '과제' }));
+    for (const job of jobs) {
+      await user.click(screen.getByRole('checkbox', { name: job }));
+    }
     await user.type(await screen.findByRole('textbox', { name: '공지 내용' }), '과제 본문');
 
     for (const label of ['마감 날짜', '마감 시각']) {
@@ -1218,6 +1228,7 @@ describe('공지 작성·수정 진입점', () => {
     expect(createNotice).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'ASSIGNMENT',
+        audience: { type: 'POSITION', positions },
         title: '과제 안내',
         contentMarkdown: expect.stringContaining('과제 본문'),
         assignment: expect.objectContaining({
