@@ -64,7 +64,9 @@ UI·폼·Query 캐시는 DTO를 import하거나 `results.common`, `results.juso`
 | `entX`, `entY`              | `longitude`, `latitude`    | 투영 변환 후 이름 있는 좌표 객체 구성  |
 
 좌표 요청을 만들 때만 `lookupReference`를 공공 API 파라미터명으로 역매핑한다.
-`isUnderground`는 `0`/`1`로 직렬화한다. 응답 부가 식별자 대조는 수행하지 않는다.
+`isUnderground`는 `0`/`1`로 직렬화한다. 좌표 응답은 `bdMgtSn`으로 선택 건물과 대조하며,
+유일하게 일치하는 결과의 `entX`·`entY`를 검증·변환한다. 다른 건물의 첫 좌표로 대체하지 않는다.
+검색 응답의 선택적 `bdNm`은 `buildingName`으로 정리해 화면에서만 표시하고 저장 DTO에 넣지 않는다.
 외부 오류 코드는 내부 오류 종류로 변환하고, UI는 그 종류에 맞는 한국어 안내를 제공한다.
 mapper 테스트는 축약 필드가 ViewModel에 남지 않음, 코드의 앞자리 0 보존, 잘못된 지하 코드 거부,
 숫자 문자열 검증, 페이지 경계와 경위도 순서를 확인한다. 실제 응답 필드 계약은 2-5에서 대조한다.

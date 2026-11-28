@@ -53,26 +53,27 @@ vi.mock('./address-search', () => ({
     disabled: boolean;
   }) => (
     <div>
-      {['주소 A', '주소 B'].map((roadAddress) => (
+      {['주소 A', '주소 B', '같은 주소의 다른 건물'].map((label) => (
+        // 마지막 결과는 도로명주소가 같고 건물 관리번호만 다른 공급자 사례입니다.
         <button
-          key={roadAddress}
+          key={label}
           type="button"
           disabled={disabled}
           onClick={() =>
             onSelect({
-              roadAddress,
+              roadAddress: label === '같은 주소의 다른 건물' ? '주소 A' : label,
               lookupReference: {
-                administrativeAreaCode: roadAddress,
+                administrativeAreaCode: '1',
                 roadNameManagementNumber: '1',
                 isUnderground: false,
                 buildingMainNumber: '1',
                 buildingSubNumber: '0',
-                buildingManagementNumber: roadAddress,
+                buildingManagementNumber: label,
               },
             })
           }
         >
-          {roadAddress}
+          {label}
         </button>
       ))}
     </div>
@@ -371,6 +372,7 @@ it('저장 중 입력·닫기·Esc·중복 제출을 막고 실패 후 재시도
   await user.click(screen.getByRole('button', { name: '저장' }));
   expect(screen.getByLabelText('세션명')).toBeDisabled();
   expect(screen.getByRole('button', { name: '마커 조정' })).toBeDisabled();
+  expect(screen.getByRole('button', { name: '장소 해제' })).toBeDisabled();
   expect(screen.getByRole('button', { name: '취소' })).toBeDisabled();
   expect(screen.getByRole('button', { name: '닫기' })).toBeDisabled();
   await user.keyboard('{Escape}');
@@ -441,3 +443,99 @@ it.each(['성공', '실패'])(
     expect(lookup).toHaveBeenCalledOnce();
   },
 );
+
+it('같은 도로명주소의 다른 건물을 선택하면 상세주소와 조정 좌표를 초기화한다', async () => {
+  const { user } = setup(initial);
+  await user.click(screen.getByRole('button', { name: '주소 A' }));
+  await screen.findByText('38, 129');
+  fill('상세주소 (선택)', '이전 건물 3층');
+  await user.click(screen.getByRole('button', { name: '마커 조정' }));
+  lookup.mockResolvedValueOnce({ status: 'success', data: { latitude: 35, longitude: 128 } });
+  await user.click(screen.getByRole('button', { name: '같은 주소의 다른 건물' }));
+  await screen.findByText('35, 128');
+  expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('');
+  expect(lookup).toHaveBeenCalledTimes(2);
+});
+
+it('저장 장소를 해제하면 저장을 막고 폼을 취소했다 다시 열면 저장값을 복원한다', async () => {
+  const { user, save } = setup(initial);
+  await user.click(screen.getByRole('button', { name: '장소 해제' }));
+  expect(screen.queryByText(initial.location.roadAddress)).not.toBeInTheDocument();
+  expect(screen.queryByText('37, 127')).not.toBeInTheDocument();
+  expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('');
+  expect(screen.getByText('장소 선택을 해제했습니다.')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '저장' }));
+  expect(save).not.toHaveBeenCalled();
+  expect(screen.getByText('주소를 선택하고 좌표 조회를 완료해 주세요.')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '취소' }));
+  await user.click(screen.getByRole('button', { name: '폼 열기' }));
+  expect(screen.getByText(initial.location.roadAddress)).toBeVisible();
+  expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('3층');
+});
+
+it.each(['성공', '실패'])('해제한 장소의 늦은 조회 %s를 반영하지 않는다', async (outcome) => {
+  const pending = Promise.withResolvers<Awaited<ReturnType<typeof lookupCoordinates>>>();
+  lookup.mockReturnValueOnce(pending.promise);
+  const { user } = setup();
+  await user.click(screen.getByRole('button', { name: '주소 A' }));
+  await user.click(screen.getByRole('button', { name: '장소 해제' }));
+  await act(async () => {
+    if (outcome === '성공') {
+      pending.resolve({ status: 'success', data: { latitude: 0, longitude: 0 } });
+    } else {
+      pending.reject(new Error('늦은 실패'));
+    }
+    await pending.promise.catch(() => undefined);
+  });
+  expect(screen.queryByText('0, 0')).not.toBeInTheDocument();
+  expect(screen.queryByText('좌표를 조회하지 못했습니다.')).not.toBeInTheDocument();
+  expect(screen.queryByText('좌표를 조회하고 있습니다.')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: '장소 해제' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: '저장' })).toBeEnabled();
+});
+
+it('해제 후 같은 건물을 재선택하면 새 조회만 반영한다', async () => {
+  const pending = Promise.withResolvers<Awaited<ReturnType<typeof lookupCoordinates>>>();
+  lookup.mockReturnValueOnce(pending.promise);
+  const { user } = setup(initial);
+  await user.click(screen.getByRole('button', { name: '주소 A' }));
+  await user.click(screen.getByRole('button', { name: '장소 해제' }));
+  await user.click(screen.getByRole('button', { name: '주소 A' }));
+  await screen.findByText('38, 129');
+  await act(async () => {
+    pending.resolve({ status: 'success', data: { latitude: 0, longitude: 0 } });
+    await pending.promise;
+  });
+  expect(screen.queryByText('0, 0')).not.toBeInTheDocument();
+  expect(screen.getByText('38, 129')).toBeVisible();
+  expect(lookup).toHaveBeenCalledTimes(2);
+});
+
+it.each(['성공', '실패'])(
+  '좌표 조회 %s 후 해제하면 상세주소·좌표·오류를 비운다',
+  async (outcome) => {
+    if (outcome === '실패') {
+      lookup.mockRejectedValueOnce(new Error('조회 실패'));
+    }
+    const { user } = setup(initial);
+    await user.click(screen.getByRole('button', { name: '주소 A' }));
+    await screen.findByText(outcome === '성공' ? '38, 129' : '좌표를 조회하지 못했습니다.');
+    fill('상세주소 (선택)', '비울 상세주소');
+    await user.click(screen.getByRole('button', { name: '장소 해제' }));
+    expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('');
+    expect(screen.getByLabelText('세션명')).toHaveValue(initial.name);
+    expect(screen.queryByRole('region', { name: '선택한 장소' })).not.toBeInTheDocument();
+    expect(screen.queryByText('38, 129')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: '좌표 다시 조회' })).not.toBeInTheDocument();
+    expect(screen.queryByText('좌표를 조회하지 못했습니다.')).not.toBeInTheDocument();
+  },
+);
+
+it('건물 관리번호가 없는 저장 주소를 검색에서 다시 선택하면 새 건물로 조회한다', async () => {
+  const { user } = setup({ ...initial, location: { ...initial.location, roadAddress: '주소 A' } });
+  expect(screen.getByText('37, 127')).toBeVisible();
+  await user.click(screen.getByRole('button', { name: '주소 A' }));
+  await screen.findByText('38, 129');
+  expect(screen.getByLabelText('상세주소 (선택)')).toHaveValue('');
+  expect(lookup).toHaveBeenCalledOnce();
+});

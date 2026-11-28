@@ -8,8 +8,10 @@ export type AddressLookupReference = {
   buildingManagementNumber: string;
 };
 
+/** 건물명은 검색·선택 안내에만 사용하며 세션 저장 계약에는 포함하지 않습니다. */
 export type AddressSearchItemViewModel = {
   roadAddress: string;
+  buildingName?: string;
   lookupReference: AddressLookupReference;
 };
 

@@ -1,7 +1,7 @@
 /** 세션 폼에 넣는 주소 검색 영역입니다. 선택값은 부모가 소유하고 검색 요청만 내부에서 관리합니다. */
 import { useForm, useStore } from '@tanstack/react-form';
 import { useQuery } from '@tanstack/react-query';
-import { useId, useState } from 'react';
+import { useId, useState, type Ref } from 'react';
 import { Field, TextField } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
 import {
@@ -16,24 +16,11 @@ type Props = {
   value: AddressSearchItemViewModel | null;
   onSelect: (address: AddressSearchItemViewModel) => void;
   disabled?: boolean;
+  inputRef?: Ref<HTMLInputElement>;
 };
 
-/** 좌표 조회의 식별자를 모두 포함해 같은 주소 재선택으로 부모 초안을 초기화하지 않습니다. */
-function addressIdentity(item: AddressSearchItemViewModel): string {
-  const ref = item.lookupReference;
-  return JSON.stringify([
-    item.roadAddress,
-    ref.administrativeAreaCode,
-    ref.roadNameManagementNumber,
-    ref.isUnderground,
-    ref.buildingMainNumber,
-    ref.buildingSubNumber,
-    ref.buildingManagementNumber,
-  ]);
-}
-
-/** 입력이 300ms 동안 멈추면 검색하고 페이지 이동은 즉시 조회합니다. */
-export function AddressSearch({ value, onSelect, disabled = false }: Props) {
+/** 입력이 300ms 동안 멈추면 검색합니다. 선택 요약·해제는 부모가 소유합니다. */
+export function AddressSearch({ value, onSelect, disabled = false, inputRef }: Props) {
   const id = useId();
   const [conditions, setConditions] = useState({ keyword: '', page: 1 });
   const form = useForm({
@@ -76,6 +63,7 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
                 }}
               >
                 <TextField.Input
+                  ref={inputRef}
                   type="search"
                   placeholder="예: 세종대로 110"
                   autoComplete="off"
@@ -101,12 +89,6 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
       <p id={`${id}-hint`} className={styles.hint}>
         도로명과 건물번호를 입력하면 자동으로 검색합니다.
       </p>
-      {value && (
-        <div className={styles.selection}>
-          <span>선택한 주소</span>
-          <strong>{value.roadAddress}</strong>
-        </div>
-      )}
       <div className={styles.status}>
         {unavailable || error ? (
           <p role="alert" className={styles.statusMessage}>
@@ -155,9 +137,11 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
           {data.items.length > 0 && (
             <ul className={styles.results} aria-label="주소 검색 결과" aria-busy={loading}>
               {data.items.map((item) => {
-                const selected = !!value && addressIdentity(value) === addressIdentity(item);
+                const selected =
+                  value?.lookupReference.buildingManagementNumber ===
+                  item.lookupReference.buildingManagementNumber;
                 return (
-                  <li key={addressIdentity(item)}>
+                  <li key={item.lookupReference.buildingManagementNumber}>
                     <button
                       type="button"
                       className={styles.result}
@@ -169,7 +153,10 @@ export function AddressSearch({ value, onSelect, disabled = false }: Props) {
                         }
                       }}
                     >
-                      <span>{item.roadAddress}</span>
+                      <span className={styles.resultText}>
+                        {item.buildingName && <strong>{item.buildingName}</strong>}
+                        <span>{item.roadAddress}</span>
+                      </span>
                       <span className={styles.badge}>{selected ? '선택됨' : '선택'}</span>
                     </button>
                   </li>

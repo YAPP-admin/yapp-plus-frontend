@@ -1,6 +1,7 @@
 /** 세션 폼의 이름·유형·장소 입력을 제어형 화면 컴포넌트로 제공합니다. */
 import { Field, RadioGroup, RadioGroupField, TextField } from '@seed-design/react';
 import { ActionButton } from '@yapp-plus/ui';
+import { useState, type Ref } from 'react';
 import type { SessionInput } from '../model/session-form';
 import type {
   AddressSearchItemViewModel,
@@ -9,6 +10,7 @@ import type {
 import { AddressSearch } from './address-search';
 import { SessionLocationMap } from './session-location-map';
 import * as styles from './session-form.css';
+import * as addressStyles from './address-search.css';
 
 /** Standard Schema issue를 필드에 표시할 단일 문구로 바꿉니다. */
 export function getFieldErrorMessage(errors: readonly unknown[]) {
@@ -87,25 +89,61 @@ export function SessionTypeField({
   );
 }
 
-/** 주소 검색 선택과 저장된 도로명주소 안내를 함께 표시합니다. */
+/** 현재 폼의 장소를 표시하고 저장된 장소도 해제합니다. 검색 초안은 해제 시 유지합니다. */
 export function SessionAddressField({
   value,
-  storedRoadAddress,
+  roadAddress,
   error,
   disabled,
   onSelect,
+  onClear,
+  inputRef,
 }: {
   value: AddressSearchItemViewModel | null;
-  storedRoadAddress?: string;
+  roadAddress: string;
   error: string;
   disabled: boolean;
   onSelect: (address: AddressSearchItemViewModel) => void;
+  onClear: () => void;
+  inputRef: Ref<HTMLInputElement>;
 }) {
+  const [cleared, setCleared] = useState(false);
   return (
-    <div>
-      <AddressSearch value={value} disabled={disabled} onSelect={onSelect} />
+    <div className={addressStyles.root}>
+      {roadAddress && (
+        <section className={addressStyles.selection} aria-label="선택한 장소">
+          <div className={addressStyles.selectionHeading}>
+            <span>선택한 장소</span>
+            <ActionButton
+              type="button"
+              variant="neutralWeak"
+              className={addressStyles.clearButton}
+              disabled={disabled}
+              onClick={() => {
+                onClear();
+                setCleared(true);
+              }}
+            >
+              장소 해제
+            </ActionButton>
+          </div>
+          {value?.buildingName && <strong>{value.buildingName}</strong>}
+          <span>{roadAddress}</span>
+        </section>
+      )}
+      <output aria-live="polite">
+        {cleared && !roadAddress ? '장소 선택을 해제했습니다.' : ''}
+      </output>
+      <AddressSearch
+        value={value}
+        disabled={disabled}
+        inputRef={inputRef}
+        onSelect={(next) => {
+          setCleared(false);
+          onSelect(next);
+        }}
+      />
       {error && <p role="alert">{error}</p>}
-      {!value && storedRoadAddress && <p>선택한 주소: {storedRoadAddress}</p>}
     </div>
   );
 }
@@ -117,18 +155,21 @@ export function SessionDetailAddressField({
   disabled,
   onChange,
   onBlur,
+  inputRef,
 }: {
   value: string;
   error: string;
   disabled: boolean;
   onChange: (value: string) => void;
   onBlur: () => void;
+  inputRef?: Ref<HTMLInputElement>;
 }) {
   return (
     <Field.Root disabled={disabled} invalid={Boolean(error)}>
       <Field.Label>상세주소 (선택)</Field.Label>
       <TextField.Root value={value} onValueChange={onChange}>
         <TextField.Input
+          ref={inputRef}
           name="detailAddress"
           maxLength={255}
           placeholder="예: 교육장 3층 세미나실"
