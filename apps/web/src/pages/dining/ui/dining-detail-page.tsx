@@ -22,9 +22,22 @@ import {
 /** 회식 상세는 실제 서버 응답을 표시합니다. 차수별 응답·명단은 계약 확정 전 표시하지 않습니다. */
 export function DiningDetailPage({ diningId }: { diningId: string }) {
   return (
-    <DiningQueryBoundary diningId={diningId}>
-      <DiningDetailContent diningId={diningId} />
-    </DiningQueryBoundary>
+    <main className={[page, detailPage].join(' ')}>
+      <header className={detailHeader}>
+        <BackButton
+          fallbackActivityName="Tabs"
+          fallbackActivityParams={{ initialTab: 'community' }}
+          iconOnly
+        />
+        <Text as="h1" textStyle="t6Bold" className={detailTitle}>
+          뒤풀이
+        </Text>
+      </header>
+
+      <DiningQueryBoundary diningId={diningId}>
+        <DiningDetailContent diningId={diningId} />
+      </DiningQueryBoundary>
+    </main>
   );
 }
 
@@ -68,7 +81,7 @@ function DiningDetailContent({ diningId }: { diningId: string }) {
   );
 }
 
-/** 회식 상세의 정보·뒤로가기 레이아웃입니다. */
+/** 회식 상세의 조회 완료 정보와 참석 응답을 조합합니다. */
 function DiningPageFrame({
   dining,
   now,
@@ -80,18 +93,7 @@ function DiningPageFrame({
 }) {
   const deadline = getDiningDeadline(dining.surveyClosesAt, now);
   return (
-    <main className={[page, detailPage].join(' ')}>
-      <header className={detailHeader}>
-        <BackButton
-          fallbackActivityName="Tabs"
-          fallbackActivityParams={{ initialTab: 'community' }}
-          iconOnly
-        />
-        <Text as="h1" textStyle="t6Bold" className={detailTitle}>
-          뒤풀이
-        </Text>
-      </header>
-
+    <>
       <section className={detailInformation} aria-labelledby="dining-title">
         <Text as="h2" id="dining-title" textStyle="t8Bold">
           {dining.title}
@@ -115,7 +117,7 @@ function DiningPageFrame({
         </dl>
       </section>
       {children}
-    </main>
+    </>
   );
 }
 

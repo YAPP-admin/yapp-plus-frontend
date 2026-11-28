@@ -4,6 +4,7 @@ import { type FallbackProps } from 'react-error-boundary';
 import { LocalErrorBoundary } from '@/shared/ui/local-error-boundary';
 import { useDiningAccess } from '../model/dining-query';
 import { DiningQueryState } from './dining-query-state';
+import { DiningDetailLoading, DiningListLoading } from './dining-loading';
 
 const renderDiningError = ({ resetErrorBoundary }: FallbackProps) => (
   <DiningQueryState message="뒤풀이 정보를 불러오지 못했어요." onRetry={resetErrorBoundary} />
@@ -29,7 +30,7 @@ export function DiningQueryBoundary({
   }
   return (
     <LocalErrorBoundary key={diningId} fallbackRender={renderDiningError}>
-      <Suspense fallback={<DiningQueryState message="뒤풀이 정보를 불러오고 있어요." />}>
+      <Suspense fallback={diningId === undefined ? <DiningListLoading /> : <DiningDetailLoading />}>
         {children}
       </Suspense>
     </LocalErrorBoundary>
